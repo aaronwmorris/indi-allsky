@@ -43,7 +43,7 @@
     "LOCAL_AUTH_ENABLE" : true,
     "OIDC_ENABLE_comment" : "https://github.com/aaronwmorris/indi-allsky/wiki/OIDC-OAuth2-SSO-Auth",
     "OIDC_ENABLE" : false,
-    "OIDC_PROVIDER_NAME" : "[Configure Provider Name]",
+    "OIDC_PROVIDER_NAME" : "",
     "OIDC_CLIENT_ID" : "",
     "OIDC_CLIENT_SECRET" : "",
     "OIDC_DISCOVERY_ENDPOINT" : "",

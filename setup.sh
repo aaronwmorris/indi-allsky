@@ -2563,17 +2563,22 @@ fi
 
 # OIDC Authentication Setup
 if "$WHIPTAIL_BIN" --title "OIDC Authentication" --yesno "Do you want to configure OIDC (OpenID Connect) authentication?\n\nThis allows you to use external identity providers like Keycloak, Google, or GitHub." 10 60 --defaultno; then
+    OIDC_PROVIDER_NAME=$(jq -r '.OIDC_PROVIDER_NAME // ""' "${ALLSKY_ETC}/flask.json")
     OIDC_CLIENT_ID=$(jq -r '.OIDC_CLIENT_ID // ""' "${ALLSKY_ETC}/flask.json")
     OIDC_CLIENT_SECRET=$(jq -r '.OIDC_CLIENT_SECRET // ""' "${ALLSKY_ETC}/flask.json")
-    OIDC_DISCOVERY_URL=$(jq -r '.OIDC_DISCOVERY_URL // ""' "${ALLSKY_ETC}/flask.json")
+    OIDC_DISCOVERY_ENDPOINT=$(jq -r '.OIDC_DISCOVERY_ENDPOINT // ""' "${ALLSKY_ETC}/flask.json")
+    OIDC_USERINFO_ENDPOINT=$(jq -r '.OIDC_USERINFO_ENDPOINT // ""' "${ALLSKY_ETC}/flask.json")
     OIDC_SCOPES=$(jq -r '.OIDC_SCOPES // "openid email profile offline_access"' "${ALLSKY_ETC}/flask.json")
+    OIDC_USERNAME_CLAIM=$(jq -r '.OIDC_USERNAME_CLAIM // "preferred_username"' "${ALLSKY_ETC}/flask.json")
     OIDC_PKCE=$(jq -r '.OIDC_PKCE // true' "${ALLSKY_ETC}/flask.json")
-    OIDC_GROUP_ADMIN=$(jq -r '.OIDC_GROUP_ADMIN // "allsky_admins"' "${ALLSKY_ETC}/flask.json")
 
+    OIDC_PROVIDER_NAME=$("$WHIPTAIL_BIN" --title "OIDC Provider Name" --inputbox "Enter OIDC Provider Name (e.g. Keycloak, Google, GitHub)" 10 60 "$OIDC_PROVIDER_NAME" 3>&1 1>&2 2>&3)
     OIDC_CLIENT_ID=$("$WHIPTAIL_BIN" --title "OIDC Client ID" --inputbox "Enter OIDC Client ID" 10 60 "$OIDC_CLIENT_ID" 3>&1 1>&2 2>&3)
     OIDC_CLIENT_SECRET=$("$WHIPTAIL_BIN" --title "OIDC Client Secret" --inputbox "Enter OIDC Client Secret" 10 60 "$OIDC_CLIENT_SECRET" 3>&1 1>&2 2>&3)
-    OIDC_DISCOVERY_URL=$("$WHIPTAIL_BIN" --title "OIDC Discovery URL" --inputbox "Enter OIDC Discovery URL (e.g., https://auth.example.com/.well-known/openid-configuration)" 10 60 "$OIDC_DISCOVERY_URL" 3>&1 1>&2 2>&3)
+    OIDC_DISCOVERY_ENDPOINT=$("$WHIPTAIL_BIN" --title "OIDC Discovery Endpoint" --inputbox "Enter OIDC Discovery Endpoint (e.g. https://auth.example.com/.well-known/openid-configuration)" 10 60 "$OIDC_DISCOVERY_ENDPOINT" 3>&1 1>&2 2>&3)
+    OIDC_USERINFO_ENDPOINT=$("$WHIPTAIL_BIN" --title "OIDC Userinfo Endpoint" --inputbox "(Optional) Enter OIDC Userinfo Endpoint" 10 60 "$OIDC_USERINFO_ENDPOINT" 3>&1 1>&2 2>&3)
     OIDC_SCOPES=$("$WHIPTAIL_BIN" --title "OIDC Scopes" --inputbox "Enter OIDC Scopes (space separated)" 10 60 "$OIDC_SCOPES" 3>&1 1>&2 2>&3)
+    OIDC_USERNAME_CLAIM=$("$WHIPTAIL_BIN" --title "OIDC Username Claim" --inputbox "Enter OIDC Username Mapping Claim" 10 60 "$OIDC_USERNAME_CLAIM" 3>&1 1>&2 2>&3)
 
     if [[ "$OIDC_PKCE" == "true" ]]; then
         PKCE_DEFAULT=""
@@ -2586,18 +2591,19 @@ if "$WHIPTAIL_BIN" --title "OIDC Authentication" --yesno "Do you want to configu
     else
         OIDC_PKCE="false"
     fi
-    OIDC_GROUP_ADMIN=$("$WHIPTAIL_BIN" --title "OIDC Admin Group" --inputbox "Enter OIDC Group for Admin access (optional)" 10 60 "$OIDC_GROUP_ADMIN" 3>&1 1>&2 2>&3)
 
     TMP_FLASK_OIDC=$(mktemp --suffix=.json)
     jq \
      --argjson oidc_enable "true" \
+     --arg provider_name "$OIDC_PROVIDER_NAME" \
      --arg client_id "$OIDC_CLIENT_ID" \
      --arg client_secret "$OIDC_CLIENT_SECRET" \
-     --arg discovery_url "$OIDC_DISCOVERY_URL" \
+     --arg discovery_endpoint "$OIDC_DISCOVERY_ENDPOINT" \
+     --arg userinfo_endpoint "$OIDC_USERINFO_ENDPOINT" \
      --arg scopes "$OIDC_SCOPES" \
+     --arg username_claim "$OIDC_USERNAME_CLAIM" \
      --argjson pkce "$OIDC_PKCE" \
-     --arg group_admin "$OIDC_GROUP_ADMIN" \
-     '.OIDC_ENABLE = oidc_enable | .OIDC_CLIENT_ID = $client_id | .OIDC_CLIENT_SECRET = $client_secret | .OIDC_DISCOVERY_URL = $discovery_url | .OIDC_SCOPES = $scopes | .OIDC_PKCE = $pkce | .OIDC_GROUP_ADMIN = $group_admin' \
+     '.OIDC_ENABLE = $oidc_enable | .OIDC_PROVIDER_NAME = $provider_name | .OIDC_CLIENT_ID = $client_id | .OIDC_CLIENT_SECRET = $client_secret | .OIDC_DISCOVERY_ENDPOINT = $discovery_endpoint | .OIDC_USERINFO_ENDPOINT = $userinfo_endpoint | .OIDC_SCOPES = $scopes | .OIDC_USERNAME_CLAIM = $username_claim | .OIDC_PKCE = $pkce' \
      "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_OIDC"
 
     cp -f "$TMP_FLASK_OIDC" "${ALLSKY_ETC}/flask.json"
