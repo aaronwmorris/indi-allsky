@@ -454,7 +454,7 @@ if [[ -n "${VIRTUAL_ENV:-}" ]]; then
     echo "\`\`\`json"  # markdown
     # Remove all secrets from config
     # SQLALCHEMY_DATABASE_URI will contain passwords if using mysql
-    jq --arg redacted "REDACTED" '.SQLALCHEMY_DATABASE_URI = $redacted | .SECRET_KEY = $redacted | .PASSWORD_KEY = $redacted' < /etc/indi-allsky/flask.json || true
+    jq --arg redacted "REDACTED" '.SQLALCHEMY_DATABASE_URI = $redacted | .SECRET_KEY = $redacted | .PASSWORD_KEY = $redacted | .OIDC_CLIENT_SECRET = $redacted' < /etc/indi-allsky/flask.json || true
     echo "\`\`\`"  # markdown
 
 

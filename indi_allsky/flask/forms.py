@@ -5074,6 +5074,7 @@ class IndiAllskyConfigForm(FlaskForm):
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 
     RELOAD_ON_SAVE                   = BooleanField('Reload on Save')
+    LOCAL_AUTH_ENABLE                = BooleanField('Enable Local Authentication')
     CONFIG_NOTE                      = StringField('Config Note')
 
     ADMIN_NETWORKS_FLASK             = TextAreaField('Admin Networks', render_kw={'readonly' : True, 'disabled' : 'disabled'})
@@ -8967,10 +8968,16 @@ def USER__NEW_PASSWORD_validator(form, field):
 
 
 class IndiAllskyUserInfoForm(FlaskForm):
+    IDP_choices = (
+        ('local', 'Local'),
+        ('oidc', 'OIDC'),
+    )
+
     USERNAME          = StringField('Username', render_kw={'readonly' : True, 'disabled' : 'disabled'})
     NAME              = StringField('Name', validators=[DataRequired(), USER__NAME_validator])
     EMAIL             = StringField('Email', render_kw={'readonly' : True, 'disabled' : 'disabled'})
     ADMIN             = BooleanField('Admin', render_kw={'disabled' : 'disabled'})
+    IDP               = SelectField('Identity Provider', choices=IDP_choices, validators=[], render_kw={'readonly' : True, 'disabled' : 'disabled'})
     CURRENT_PASSWORD  = PasswordField('Current Password', widget=PasswordInput(), validators=[], render_kw={'autocomplete' : 'new-password'})
     NEW_PASSWORD      = PasswordField('New Password', widget=PasswordInput(), validators=[USER__NEW_PASSWORD_validator], render_kw={'autocomplete' : 'new-password'})
     NEW_PASSWORD2     = PasswordField('', widget=PasswordInput(), validators=[], render_kw={'autocomplete' : 'new-password'})

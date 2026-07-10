@@ -40,6 +40,23 @@
     "PASSWORD_KEY_comment" : "If you lose the PASSWORD_KEY passwords cannot be recovered",
     "PASSWORD_KEY" : "CHANGEME",
 
+    "LOCAL_AUTH_ENABLE" : true,
+    "OIDC_ENABLE_comment" : "https://github.com/aaronwmorris/indi-allsky/wiki/OIDC-OAuth2-SSO-Auth",
+    "OIDC_ENABLE" : false,
+    "OIDC_PROVIDER_NAME" : "[Configure Provider Name]",
+    "OIDC_CLIENT_ID" : "",
+    "OIDC_CLIENT_SECRET" : "",
+    "OIDC_DISCOVERY_ENDPOINT" : "",
+    "OIDC_USERINFO_ENDPOINT" : "",
+    "OIDC_USERNAME_ATTRIBUTE" : "email",
+    "OIDC_SCOPES" : "openid email profile offline_access",
+    "OIDC_PKCE" : true,
+    "OIDC_LOGO_URL" : "",
+    "OIDC_ALLOWED_GROUPS" : [],
+    "OIDC_ADMIN_GROUPS" : [],
+    "OIDC_ALLOWED_USERS" : [],
+    "OIDC_ADMIN_USERS" : [],
+
     "ADMIN_NETWORKS" : [
         "10.0.0.0/8",
         "192.168.0.0/16",

@@ -46,6 +46,7 @@ class IndiAllSkyConfigBase(object):
         "WEBSITE" : {
             "TITLE" : "indi-allsky",
         },
+        "LOCAL_AUTH_ENABLE" : True,
         "LENS_NAME" : "AllSky Lens",
         "LENS_FOCAL_LENGTH" : 2.5,
         "LENS_FOCAL_RATIO"  : 2.0,
