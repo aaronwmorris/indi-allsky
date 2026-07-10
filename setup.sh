@@ -2592,6 +2592,10 @@ if "$WHIPTAIL_BIN" --title "OIDC Authentication" --yesno "Do you want to configu
         OIDC_PKCE="false"
     fi
 
+    "$WHIPTAIL_BIN" \
+        --title "OIDC Customizations" \
+        --msgbox "There are additional OIDC customizations that may be needed, such as allowing individual users and group configuration. These customizations can be made in:\n\n/etc/indi-allsky/flask.json" 0 0
+
     TMP_FLASK_OIDC=$(mktemp --suffix=.json)
     jq \
      --argjson oidc_enable "true" \
