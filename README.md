@@ -5,6 +5,8 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 *Pictured: SpaceX Cargo Dragon (over Georgia) headed for splashdown off the coast of Florida*
 
 ## New Features
+* OIDC (OpenID Connect) Authentication (beta)
+    * Support for external identity providers (Keycloak, Authentik, Google, GitHub, etc.) for Single Sign-On (SSO).
 * Auto-Gain Support
     * Auto-Gain with Exposure Priority automatically tries to scale the exposure to the maximum setting and adjusts gain to maintain consistent image brightness.  Exposure is maximized to ensure you do not miss any events in the sky.
 * Real-Time Keogram
@@ -103,8 +105,6 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 * Satellite tracking and visibility info
 * Wildfire smoke reporting *(North America only)*
 * Aurora prediction and Kp-index reporting
-* OIDC (OpenID Connect) Authentication
-    * Support for external identity providers (Keycloak, Authentik, Google, GitHub, etc.) for Single Sign-On (SSO).
 
 ## Features
 * RAW data is the default and preferred input
