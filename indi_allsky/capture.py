@@ -919,8 +919,12 @@ class CaptureWorker(Process):
                 },
             }
 
-            self.indiclient.configureGpsDevice(gps_config)
-            self.indiclient.refreshGps()
+
+            try:
+                self.indiclient.configureGpsDevice(gps_config)
+                self.indiclient.refreshGps()
+            except TimeOutException as e:
+                logger.error('GPS Device configuration failed: %s', str(e))
 
 
             # GPSD simulation
