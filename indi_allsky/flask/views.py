@@ -8152,7 +8152,7 @@ class JsonImageProcessingView(JsonView):
                 image_processor.flip_h()
 
             # crop
-            image_processor.crop_image()
+            image_processor.crop()
 
             # green removal
             image_processor.scnr()
@@ -8165,11 +8165,11 @@ class JsonImageProcessingView(JsonView):
 
 
             # saturation
-            image_processor.saturation_adjust()
+            image_processor.saturation()
 
 
             # gamma correction
-            image_processor.apply_gamma_correction()
+            image_processor.gamma_correction()
 
 
             # sharpening (unsharp mask)

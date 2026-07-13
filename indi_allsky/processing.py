@@ -1689,13 +1689,13 @@ class ImageProcessor(object):
         return self._draw.main(self.image, i_ref.binning)
 
 
-    def crop_image(self):
+    def crop(self):
         i_ref = self.getLatestImage()
 
-        self.image = self._crop_image(i_ref)
+        self.image = self._crop(i_ref)
 
 
-    def _crop_image(self, i_ref):
+    def _crop(self, i_ref):
         if self.config.get('IMAGE_CROP_IMAGE_CIRCLE'):
             logger.info('Cropping to image circle')
             image_height, image_width = self.image.shape[:2]
@@ -2077,7 +2077,7 @@ class ImageProcessor(object):
         return lut
 
 
-    def saturation_adjust(self):
+    def saturation(self):
         if self.focus_mode:
             # disable processing in focus mode
             return
@@ -2104,11 +2104,11 @@ class ImageProcessor(object):
             return
 
 
-        self._saturation_adjust(SATURATION_FACTOR)
+        self._saturation(SATURATION_FACTOR)
         return True
 
 
-    def _saturation_adjust(self, SATURATION_FACTOR):
+    def _saturation(self, SATURATION_FACTOR):
         image_hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
 
         sat = image_hsv[:, :, 1]
@@ -2198,7 +2198,7 @@ class ImageProcessor(object):
         self.image = (cv2.cvtColor(lab, cv2.COLOR_LAB2BGR) * max_value).astype(numpy_dtype)
 
 
-    def apply_gamma_correction(self):
+    def gamma_correction(self):
         if self.focus_mode:
             # disable processing in focus mode
             return
@@ -2220,11 +2220,11 @@ class ImageProcessor(object):
             return
 
 
-        self._apply_gamma_correction(GAMMA_CORRECTION)
+        self._gamma_correction(GAMMA_CORRECTION)
         return True
 
 
-    def _apply_gamma_correction(self, gamma):
+    def _gamma_correction(self, gamma):
         if isinstance(self._gamma_lut, type(None)):
             range_array = numpy.arange(0, 256, dtype=numpy.float32)
             self._gamma_lut = (((range_array / 255) ** (1.0 / gamma)) * 255).astype(numpy.uint8)
@@ -2387,7 +2387,7 @@ class ImageProcessor(object):
     #    return cv2.cvtColor(ycrcb_img, cv2.COLOR_YCrCb2BGR)
 
 
-    def scale_image(self):
+    def scale(self):
         if self.focus_mode:
             # disable processing in focus mode
             return
@@ -2399,11 +2399,11 @@ class ImageProcessor(object):
             return
 
 
-        self._scale_image(scale)
+        self._scale(scale)
         return True
 
 
-    def _scale_image(self, scale):
+    def _scale(self, scale):
         image_height, image_width = self.image.shape[:2]
 
         new_height = int(image_height * scale / 100.0)

@@ -103,7 +103,7 @@ class MaskProcessor(object):
         self.image = self._flip(self.image, 1)
 
 
-    def crop_image(self):
+    def crop(self):
         # divide the coordinates by binning value
         x1 = int(self.config['IMAGE_CROP_ROI'][0] / self.binning)
         y1 = int(self.config['IMAGE_CROP_ROI'][1] / self.binning)
@@ -120,7 +120,7 @@ class MaskProcessor(object):
         #logger.info('New cropped size: %d x %d', new_width, new_height)
 
 
-    def scale_image(self):
+    def scale(self):
         image_height, image_width = self.image.shape[:2]
 
         logger.info('Scaling mask by %d%%', self.config['IMAGE_SCALE'])

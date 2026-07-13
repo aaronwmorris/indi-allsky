@@ -994,12 +994,12 @@ class BaseView(View):
 
         # crop
         if self.indi_allsky_config.get('IMAGE_CROP_ROI'):
-            mask_processor.crop_image()
+            mask_processor.crop()
 
 
         # scale
         if self.indi_allsky_config['IMAGE_SCALE'] and self.indi_allsky_config['IMAGE_SCALE'] != 100:
-            mask_processor.scale_image()
+            mask_processor.scale()
 
 
         return mask_processor.image

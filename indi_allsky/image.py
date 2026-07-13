@@ -613,7 +613,7 @@ class ImageWorker(Process):
 
 
         # crop
-        self.image_processor.crop_image()
+        self.image_processor.crop()
 
 
         # green removal
@@ -627,11 +627,11 @@ class ImageWorker(Process):
 
 
         # saturation
-        self.image_processor.saturation_adjust()
+        self.image_processor.saturation()
 
 
         # gamma correction
-        self.image_processor.apply_gamma_correction()
+        self.image_processor.gamma_correction()
 
 
         # sharpening (unsharp mask)
@@ -687,7 +687,7 @@ class ImageWorker(Process):
         self.image_processor.apply_logo_overlay(i_ref.binning)
 
 
-        self.image_processor.scale_image()
+        self.image_processor.scale()
 
 
         self.image_processor.add_border()
