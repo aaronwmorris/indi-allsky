@@ -69,6 +69,17 @@
         <div class="col-sm-8"></div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_userinfo.IDP.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_userinfo.IDP(class='form-select bg-secondary') }}
+            <div id="IDP-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">(read-only)</div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -129,6 +140,7 @@ const field_names = [
     'USERNAME',
     'NAME',
     'EMAIL',
+    'IDP',
     'CURRENT_PASSWORD',
     'NEW_PASSWORD',
     'NEW_PASSWORD2',

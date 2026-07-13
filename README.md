@@ -5,6 +5,8 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 *Pictured: SpaceX Cargo Dragon (over Georgia) headed for splashdown off the coast of Florida*
 
 ## New Features
+* OIDC (OpenID Connect) Authentication (beta)
+    * Support for external identity providers (Keycloak, Authentik, Google, GitHub, etc.) for Single Sign-On (SSO).
 * Auto-Gain Support
     * Auto-Gain with Exposure Priority automatically tries to scale the exposure to the maximum setting and adjusts gain to maintain consistent image brightness.  Exposure is maximized to ensure you do not miss any events in the sky.
 * Real-Time Keogram
@@ -475,6 +477,11 @@ In effect, the indi-allsky web interface is its own remote web portal.
 A remote indi-allsky instance can support multiple clients using SyncAPI with a single instance.  Users can easily switch between the cameras in the web interface.  The SyncAPI can also be combined with the S3 Object Storage functionality to offload image storage to a cloud service.
 
 
+### OIDC Authentication
+
+The OIDC (OpenID Connect) feature allows you to offload user authentication to an external identity provider (IdP) such as Keycloak, Authentik, Google, or GitHub. This provides a Single Sign-On (SSO) experience and allows for centralized management of users and permissions.
+
+
 ### Home Hosting
 
 The indi-allsky web interface is designed to be directly exposed to the Internet, if you have sufficient bandwidth on your home Internet connection.  A simple, yet effective, access control system is implemented to let anonymous (or authenticated) users safely browse images and videos without exposing privileged controls.  Only users with assigned administrative authority can make changes.
@@ -578,6 +585,7 @@ ffmpeg video processing is considerably more expensive.  A 2 minute 1920x1080 h.
 | Web interface     | Flask         | https://flask.palletsprojects.com/ |
 |                   | WTForms       | https://wtforms.readthedocs.io/ |
 |                   | flask-login   | https://flask-login.readthedocs.io/ |
+|                   | Authlib       | https://authlib.org/ |
 |                   | Gunicorn      | https://gunicorn.org/ |
 |                   | Apache        | https://httpd.apache.org/ |
 |                   | NGINX         | https://www.nginx.com/ |

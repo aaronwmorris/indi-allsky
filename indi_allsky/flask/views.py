@@ -3953,7 +3953,6 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['SATELLITE_TRACK']['LABEL_LIMIT']       = int(request.json['SATELLITE_TRACK__LABEL_LIMIT'])
         self.indi_allsky_config['SATELLITE_TRACK']['SAT_LABEL_TEMPLATE'] = str(request.json['SATELLITE_TRACK__SAT_LABEL_TEMPLATE'])
         self.indi_allsky_config['SATELLITE_TRACK']['IMAGE_LABEL_TEMPLATE_PREFIX']  = str(request.json['SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX'])
-
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
         self.indi_allsky_config['INDI_CONFIG_DAY']                      = json.loads(str(request.json['INDI_CONFIG_DAY']))
@@ -8703,11 +8702,22 @@ class UserInfoView(TemplateView):
     def get_context(self):
         context = super(UserInfoView, self).get_context()
 
+
+        if current_user.data:
+            current_user_data = dict(current_user.data)
+        else:
+            current_user_data = dict()
+
+
+        idp = current_user_data.get('idp', 'local')
+
+
         form_data = {
             'USERNAME' : current_user.username,
             'NAME'     : current_user.name,
             'EMAIL'    : current_user.email,
             'ADMIN'    : current_user.admin,
+            'IDP'      : idp,
         }
 
         context['form_userinfo'] = IndiAllskyUserInfoForm(data=form_data)

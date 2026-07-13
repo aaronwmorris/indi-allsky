@@ -2561,6 +2561,60 @@ if [[ -z "$INDIALLSKY_FLASK_PASSWORD_KEY" || "$INDIALLSKY_FLASK_PASSWORD_KEY" ==
 fi
 
 
+# OIDC Authentication Setup
+if "$WHIPTAIL_BIN" --title "OIDC Single Sign-On Authentication" --yesno "Do you want to configure OIDC (OpenID Connect) SSO authentication?\n\nThis allows you to use external identity providers like Keycloak, Google, or GitHub." 10 60 --defaultno; then
+    OIDC_PROVIDER_NAME=$(jq -r '.OIDC_PROVIDER_NAME // ""' "${ALLSKY_ETC}/flask.json")
+    OIDC_CLIENT_ID=$(jq -r '.OIDC_CLIENT_ID // ""' "${ALLSKY_ETC}/flask.json")
+    OIDC_CLIENT_SECRET=$(jq -r '.OIDC_CLIENT_SECRET // ""' "${ALLSKY_ETC}/flask.json")
+    OIDC_DISCOVERY_ENDPOINT=$(jq -r '.OIDC_DISCOVERY_ENDPOINT // ""' "${ALLSKY_ETC}/flask.json")
+    OIDC_USERINFO_ENDPOINT=$(jq -r '.OIDC_USERINFO_ENDPOINT // ""' "${ALLSKY_ETC}/flask.json")
+    OIDC_SCOPES=$(jq -r '.OIDC_SCOPES // "openid email profile offline_access"' "${ALLSKY_ETC}/flask.json")
+    OIDC_USERNAME_CLAIM=$(jq -r '.OIDC_USERNAME_CLAIM // "preferred_username"' "${ALLSKY_ETC}/flask.json")
+    OIDC_PKCE=$(jq -r '.OIDC_PKCE // true' "${ALLSKY_ETC}/flask.json")
+
+    OIDC_PROVIDER_NAME=$("$WHIPTAIL_BIN" --title "OIDC Provider Name" --inputbox "Enter OIDC Provider Name (e.g. Keycloak, Google, GitHub)" 10 60 "$OIDC_PROVIDER_NAME" 3>&1 1>&2 2>&3)
+    OIDC_CLIENT_ID=$("$WHIPTAIL_BIN" --title "OIDC Client ID" --inputbox "Enter OIDC Client ID" 10 60 "$OIDC_CLIENT_ID" 3>&1 1>&2 2>&3)
+    OIDC_CLIENT_SECRET=$("$WHIPTAIL_BIN" --title "OIDC Client Secret" --inputbox "Enter OIDC Client Secret" 10 60 "$OIDC_CLIENT_SECRET" 3>&1 1>&2 2>&3)
+    OIDC_DISCOVERY_ENDPOINT=$("$WHIPTAIL_BIN" --title "OIDC Discovery Endpoint" --inputbox "Enter OIDC Discovery Endpoint (e.g. https://auth.example.com/.well-known/openid-configuration)" 10 60 "$OIDC_DISCOVERY_ENDPOINT" 3>&1 1>&2 2>&3)
+    OIDC_USERINFO_ENDPOINT=$("$WHIPTAIL_BIN" --title "OIDC Userinfo Endpoint" --inputbox "(Optional) Enter OIDC Userinfo Endpoint" 10 60 "$OIDC_USERINFO_ENDPOINT" 3>&1 1>&2 2>&3)
+    OIDC_SCOPES=$("$WHIPTAIL_BIN" --title "OIDC Scopes" --inputbox "Enter OIDC Scopes (space separated)" 10 60 "$OIDC_SCOPES" 3>&1 1>&2 2>&3)
+    OIDC_USERNAME_CLAIM=$("$WHIPTAIL_BIN" --title "OIDC Username Claim" --inputbox "Enter OIDC Username Mapping Claim" 10 60 "$OIDC_USERNAME_CLAIM" 3>&1 1>&2 2>&3)
+
+    if [[ "$OIDC_PKCE" == "true" ]]; then
+        PKCE_DEFAULT=""
+    else
+        PKCE_DEFAULT="--defaultno"
+    fi
+
+    if "$WHIPTAIL_BIN" --title "OIDC PKCE" --yesno "Use PKCE (Proof Key for Code Exchange)?" 10 60 $PKCE_DEFAULT; then
+        OIDC_PKCE="true"
+    else
+        OIDC_PKCE="false"
+    fi
+
+    "$WHIPTAIL_BIN" \
+        --title "OIDC Customizations" \
+        --msgbox "There are additional OIDC customizations that may be needed, such as allowing individual users and group configuration. These customizations can be made in:\n\n/etc/indi-allsky/flask.json" 0 0
+
+    TMP_FLASK_OIDC=$(mktemp --suffix=.json)
+    jq \
+     --argjson oidc_enable "true" \
+     --arg provider_name "$OIDC_PROVIDER_NAME" \
+     --arg client_id "$OIDC_CLIENT_ID" \
+     --arg client_secret "$OIDC_CLIENT_SECRET" \
+     --arg discovery_endpoint "$OIDC_DISCOVERY_ENDPOINT" \
+     --arg userinfo_endpoint "$OIDC_USERINFO_ENDPOINT" \
+     --arg scopes "$OIDC_SCOPES" \
+     --arg username_claim "$OIDC_USERNAME_CLAIM" \
+     --argjson pkce "$OIDC_PKCE" \
+     '.OIDC_ENABLE = $oidc_enable | .OIDC_PROVIDER_NAME = $provider_name | .OIDC_CLIENT_ID = $client_id | .OIDC_CLIENT_SECRET = $client_secret | .OIDC_DISCOVERY_ENDPOINT = $discovery_endpoint | .OIDC_USERINFO_ENDPOINT = $userinfo_endpoint | .OIDC_SCOPES = $scopes | .OIDC_USERNAME_CLAIM = $username_claim | .OIDC_PKCE = $pkce' \
+     "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_OIDC"
+
+    cp -f "$TMP_FLASK_OIDC" "${ALLSKY_ETC}/flask.json"
+    [[ -f "$TMP_FLASK_OIDC" ]] && rm -f "$TMP_FLASK_OIDC"
+fi
+
+
 sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/flask.json"
 sudo chmod 660 "${ALLSKY_ETC}/flask.json"
 
