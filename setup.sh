@@ -677,8 +677,6 @@ if [[ "$DISTRO" == "debian_13" ]]; then
     fi
 
 
-    INSTALL_INDI="false"
-
     if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
         echo
         echo
@@ -787,6 +785,14 @@ if [[ "$DISTRO" == "debian_13" ]]; then
     fi
 
 
+    if [[ "$ASTROBERRY3" == "true" ]]; then
+        INSTALL_INDI="true"
+    else
+        # debian does not currently have a repo
+        INSTALL_INDI="false"
+    fi
+
+
     if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
         if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
             INSTALL_INDI="false"
@@ -847,8 +853,6 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     fi
 
-
-    INSTALL_INDI="false"
 
     if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
         echo
@@ -947,6 +951,8 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
     fi
 
 
+    INSTALL_INDI="false"
+
     if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
         if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
             INSTALL_INDI="false"
@@ -1002,8 +1008,6 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         VIRTUALENV_REQ=requirements/requirements_debian11.txt
     fi
 
-
-    INSTALL_INDI="false"
 
     if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
         echo
@@ -1101,6 +1105,8 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
     fi
 
 
+    INSTALL_INDI="false"
+
     if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
         if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
             INSTALL_INDI="false"
@@ -1161,8 +1167,6 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
         exit 1
     fi
 
-
-    INSTALL_INDI="false"
 
     if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
         echo
@@ -1242,6 +1246,8 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
             mariadb-server
     fi
 
+
+    INSTALL_INDI="false"
 
     if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
         if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
@@ -1893,7 +1899,12 @@ if [[ "$STELLARMATE" == "true" ]]; then
     fi
 elif [[ "$ASTROBERRY3" == "true" ]]; then
     # uses caddy
-    :
+
+    # astroberry 3 does not install libindi-dev by default
+    if ! dpkg -s libindi-dev >/dev/null; then
+        sudo apt-get -y install \
+            libindi-dev
+    fi
 elif [[ "$ASTROBERRY2" == "true" ]]; then
     # nginx already installed
     :
