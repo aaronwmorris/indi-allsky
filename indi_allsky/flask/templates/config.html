@@ -15,7 +15,21 @@
     text-decoration: line-through;
 }
 
+.sortable-chosen-ghost {
+  opacity: 0.4;
+  background-color: #e9ecef !important;
+  border: 2px dashed #0d6efd !important;
+}
+/* Cursor handling for the drag area */
+.drag-handle {
+  cursor: grab;
+}
+.drag-handle:active {
+  cursor: grabbing;
+}
+
 </style>
+<script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='Sortable/Sortable.min.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
@@ -1239,6 +1253,38 @@ var camera_id = {{ camera_id }};
 
 </div><!-- end camera tab -->
 <div class="tab-pane fade" id="nav-image" role="tabpanel" aria-labelledby="nav-image-tab">
+
+    <div class="form-group row">
+      <div class="col-sm-6">
+        <div class="card shadow-sm rounded-4 overflow-hidden text-bg-dark border-secondary">
+          <div class="card-header bg-success text-white py-3">
+            <h5 class="card-title mb-0">Enabled Processing Steps</h5>
+          </div>
+
+          <ul id="processing_enabled" class="list-group d-flex flex-column gap-2 p-3">
+            <li class="list-group-item d-flex justify-content-between align-items-center border rounded-3 text-bg-secondary">item 1</li>
+            <li class="list-group-item d-flex justify-content-between align-items-center border rounded-3 text-bg-secondary">item 2</li>
+            <li class="list-group-item d-flex justify-content-between align-items-center border rounded-3 text-bg-secondary">item 3</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col-sm-6">
+        <div class="card shadow-sm rounded-4 overflow-hidden text-bg-dark border-secondary">
+          <div class="card-header bg-secondary text-dark py-3">
+            <h5 class="card-title mb-0">Disabled Processing Steps</h5>
+          </div>
+
+          <ul id="processing_disabled" class="list-group d-flex flex-column gap-2 p-3">
+            <li class="list-group-item d-flex justify-content-between align-items-center border rounded-3 text-bg-secondary">item 4</li>
+            <li class="list-group-item d-flex justify-content-between align-items-center border rounded-3 text-bg-secondary">item 5</li>
+            <li class="list-group-item d-flex justify-content-between align-items-center border rounded-3 text-bg-secondary">item 6</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -11313,6 +11359,22 @@ group_on_change('CIRCULAR_DISPLAY__ENABLE', group_fields_circular_display, group
 
 
 $( document ).ready(function() {
+
+    var processing_enabled = new Sortable(document.getElementById('processing_enabled'), {
+        forceFallback: true,
+        group: 'shared',
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+    });
+
+    var processing_disabled = new Sortable(document.getElementById('processing_disabled'), {
+        forceFallback: true,
+        group: 'shared',
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+    });
+
+
     // Global timelapse
     if (!$('#TIMELAPSE_ENABLE').prop('checked')) {
         $('#DAYTIME_TIMELAPSE').attr({'readonly': true, 'disabled': true});
