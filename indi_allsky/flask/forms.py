@@ -3505,11 +3505,18 @@ def INDI_CONFIG_DAY_validator(*args):
 
 
 def IMAGE_PIPELINE_8BIT_validator(form, field):
-    pipeline_steps = set(str(field.data).split(','))
+    pipeline_steps = str(field.data).split(',')
+    pipeline_steps_set = set(pipeline_steps)
+
+
+    if len(pipeline_steps) != len(pipeline_steps_set):
+        raise ValidationError('Image pipeline steps cannot have duplicate entries')
+
+
     valid_steps = set(constants.IMAGE_PIPELINE_MAP_8BIT.keys())
 
 
-    invalid_steps = pipeline_steps.difference(valid_steps)
+    invalid_steps = pipeline_steps_set.difference(valid_steps)
 
     if invalid_steps:
         raise ValidationError('Image pipeline steps not recognized: {0:s}'.format(', '.join(invalid_steps)))
