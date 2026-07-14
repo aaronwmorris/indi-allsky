@@ -485,3 +485,20 @@ INDISERVER_GPS_MAP = {
     'indi_simulator_gps'    : 'GPS Simulator',
 }
 
+
+PROCESSING_PIPELINE_MAP_8BIT = {
+    'rotate_90'                 : 'Rotate by 90°',
+    'rotate_angle'              : 'Rotate by Arbitrary Angle',
+    'flip_v'                    : 'Vertical Flip',
+    'flip_h'                    : 'Horizontal Flip',
+    'crop'                      : 'Crop',
+    'scnr'                      : 'SCNR',
+    'white_balance_mtf'         : 'White Balance - MTF',
+    'white_balance_manual_bgr'  : 'White Balance - Manual',
+    'white_balance_auto_bgr'    : 'White Balance - Auto',
+    'saturation'                : 'Saturation',
+    'gamma_correction'          : 'Gamma Correction',
+    'sharpen'                   : 'Sharpen',
+    'contrast_clahe'            : 'CLAHE',
+    'colorize'                  : 'Colorize',
+}

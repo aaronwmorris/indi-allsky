@@ -32,24 +32,10 @@
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='Sortable/Sortable.min.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
-var processing_pipeline_8bit = {{ processing_pipeline_8bit | tojson }};
 
-var processing_labels_8bit = {
-  'rotate_90' : 'Rotate by 90°',
-  'rotate_angle' : 'Rotate by Arbitrary Angle',
-  'flip_v' : 'Vertical Flip',
-  'flip_h' : 'Horizontal Flip',
-  'crop' : 'Crop',
-  'scnr' : 'SCNR',
-  'white_balance_mtf' : 'White Balance - MTF',
-  'white_balance_manual_bgr' : 'White Balance - Manual',
-  'white_balance_auto_bgr' : 'White Balance - Auto',
-  'saturation' : 'Saturation',
-  'gamma_correction' : 'Gamma Correction',
-  'sharpen' : 'Sharpen',
-  'contrast_clahe' : 'CLAHE',
-  'colorize' : 'Colorize',
-};
+
+var processing_enabled_8bit = null;
+var processing_labels_8bit = {{ processing_labels_8bit | tojson }};
 </script>
 
 {% endblock %}
@@ -1274,6 +1260,9 @@ var processing_labels_8bit = {
 
     <div class="form-group row">
       <div class="col-sm-6">
+        {{ form_config.PROCESSING_PIPELINE_8BIT(class='form-control bg-secondary') }}
+        <div id="PROCESSING_PIPELINE_8BIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+
         <div class="card shadow-sm rounded-4 overflow-hidden text-bg-dark border-secondary">
           <div class="card-header bg-success text-white py-3">
             <h5 class="card-title mb-0">Enabled Processing Steps (drag to reorder)</h5>
@@ -10041,6 +10030,7 @@ const field_names = [
     'CHARTS__CUSTOM_SLOT_9_MIN',
     'CLAHE_CLIPLIMIT',
     'CLAHE_GRIDSIZE',
+    'PROCESSING_PIPELINE_8BIT',
     'IMAGE_STRETCH__CLASSNAME',
     'IMAGE_STRETCH__MODE1_GAMMA',
     'IMAGE_STRETCH__MODE1_STDDEVS',
@@ -10682,6 +10672,10 @@ $('#form_config').on('submit', function() {
     $('#failure-fields').css({'display' : 'none'});
 
 
+    // processing pipeline back to string
+    fields['PROCESSING_PIPELINE_8BIT'].input.val(processing_enabled_8bit.toArray().join(','));
+
+
     // Populate fields object
     var json_data = {};
     field_names.forEach(item => {
@@ -10697,6 +10691,7 @@ $('#form_config').on('submit', function() {
     checkbox_field_names.forEach(item => {
         json_data[item] = fields[item].input.prop('checked');
     });
+
 
     // reset option
     $("#RELOAD_ON_SAVE").prop('checked', false);
@@ -11369,6 +11364,10 @@ group_on_change('CIRCULAR_DISPLAY__ENABLE', group_fields_circular_display, group
 
 
 function init_processing_order() {
+
+    processing_pipeline_8bit = fields['PROCESSING_PIPELINE_8BIT'].input.val().split(',');
+
+
     processing_labels_8bit_keys = Object.keys(processing_labels_8bit);
     full_processing_steps_8bit_set = new Set(processing_labels_8bit_keys);
     processing_pipeline_8bit_set = new Set(processing_pipeline_8bit);
@@ -11392,7 +11391,7 @@ function init_processing_order() {
         )
     });
 
-    var processing_enabled_8bit = new Sortable(document.getElementById('processing_enabled_8bit'), {
+    processing_enabled_8bit = new Sortable(document.getElementById('processing_enabled_8bit'), {
         forceFallback: true,
         group: 'shared',
         animation: 150,
@@ -11400,7 +11399,7 @@ function init_processing_order() {
         ghostClass: 'sortable-ghost',
     });
 
-    var processing_disabled_8bit = new Sortable(document.getElementById('processing_disabled_8bit'), {
+    processing_disabled_8bit = new Sortable(document.getElementById('processing_disabled_8bit'), {
         forceFallback: true,
         group: 'shared',
         animation: 150,
