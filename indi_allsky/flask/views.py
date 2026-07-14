@@ -2020,6 +2020,8 @@ class ConfigView(FormView):
     def get_context(self):
         context = super(ConfigView, self).get_context()
 
+        context['processing_pipeline_8bit'] = self.indi_allsky_config.get('PROCESSING_PIPELINE_8BIT', [])
+
         context['camera_minGain'] = self.camera.minGain
         context['camera_maxGain'] = self.camera.maxGain
         context['camera_minBinning'] = self.camera.minBinning
