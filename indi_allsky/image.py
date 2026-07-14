@@ -660,7 +660,7 @@ class ImageWorker(Process):
         self.image_processor.colormap()
 
 
-        self.image_processor.apply_image_circle_mask(i_ref.binning)
+        self.image_processor.apply_image_circle_mask()
 
 
         self.image_processor.realtimeKeogramUpdate()
@@ -668,7 +668,7 @@ class ImageWorker(Process):
 
         if self.config.get('FISH2PANO', {}).get('ENABLE'):
             if not self.image_count % self.config.get('FISH2PANO', {}).get('MODULUS', 2):
-                pano_data = self.image_processor.fish2pano(i_ref.binning)
+                pano_data = self.image_processor.fish2pano()
 
 
                 if self.config.get('FISH2PANO', {}).get('ENABLE_CARDINAL_DIRS'):
@@ -680,11 +680,11 @@ class ImageWorker(Process):
 
         if self.config.get('CIRCULAR_DISPLAY', {}).get('ENABLE'):
             if not self.config.get('FOCUS_MODE', False):
-                circular_display_image = self.image_processor.circular_display(i_ref.binning)
+                circular_display_image = self.image_processor.circular_display()
                 self.write_circular_display_img(circular_display_image, jpeg_exif=jpeg_exif)
 
 
-        self.image_processor.apply_logo_overlay(i_ref.binning)
+        self.image_processor.apply_logo_overlay()
 
 
         self.image_processor.scale()

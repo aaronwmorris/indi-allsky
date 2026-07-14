@@ -8101,7 +8101,7 @@ class JsonImageProcessingView(JsonView):
 
 
             # add image after preloading other images
-            i_ref = image_processor.add(
+            image_processor.add(
                 filename_p,
                 exposure,
                 gain,
@@ -8189,7 +8189,7 @@ class JsonImageProcessingView(JsonView):
             image_processor.colormap()
 
 
-            image_processor.apply_image_circle_mask(i_ref.binning)
+            image_processor.apply_image_circle_mask()
 
 
             if not p_config.get('FISH2PANO', {}).get('ENABLE'):
@@ -8206,7 +8206,7 @@ class JsonImageProcessingView(JsonView):
 
             else:
                 # no labels if converting to panorama
-                pano_data = image_processor.fish2pano(i_ref.binning)
+                pano_data = image_processor.fish2pano()
 
 
                 if p_config.get('FISH2PANO', {}).get('FLIP_H'):

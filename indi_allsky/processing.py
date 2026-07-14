@@ -2292,25 +2292,28 @@ class ImageProcessor(object):
             )
 
 
-    def apply_image_circle_mask(self, binning):
+    def apply_image_circle_mask(self):
         if not self.config.get('IMAGE_CIRCLE_MASK', {}).get('ENABLE'):
             return
 
-        if isinstance(self._image_circle_alpha_mask_dict.get(binning), type(None)):
-            self._image_circle_alpha_mask_dict[binning] = self._generate_image_circle_mask(self.image, binning)
+        i_ref = self.getLatestImage()
+
+
+        if isinstance(self._image_circle_alpha_mask_dict.get(i_ref.binning), type(None)):
+            self._image_circle_alpha_mask_dict[i_ref.binning] = self._generate_image_circle_mask(self.image, i_ref.binning)
 
 
         #alpha_start = time.time()
 
-        self.image = (self.image * self._image_circle_alpha_mask_dict[binning]).astype(numpy.uint8)
+        self.image = (self.image * self._image_circle_alpha_mask_dict[i_ref.binning]).astype(numpy.uint8)
 
 
         if self.config.get('IMAGE_CIRCLE_MASK', {}).get('OUTLINE'):
             image_height, image_width = self.image.shape[:2]
 
-            center_x = int(image_width / 2) + int(self.config.get('LENS_OFFSET_X', 0) / binning)
-            center_y = int(image_height / 2) - int(self.config.get('LENS_OFFSET_Y', 0) / binning)  # minus
-            radius = int((self.config['IMAGE_CIRCLE_MASK']['DIAMETER'] / 2) / binning)
+            center_x = int(image_width / 2) + int(self.config.get('LENS_OFFSET_X', 0) / i_ref.binning)
+            center_y = int(image_height / 2) - int(self.config.get('LENS_OFFSET_Y', 0) / i_ref.binning)  # minus
+            radius = int((self.config['IMAGE_CIRCLE_MASK']['DIAMETER'] / 2) / i_ref.binning)
 
             cv2.circle(
                 img=self.image,
@@ -2325,28 +2328,30 @@ class ImageProcessor(object):
         #logger.info('Image circle mask in %0.4f s', alpha_elapsed_s)
 
 
-    def apply_logo_overlay(self, binning):
+    def apply_logo_overlay(self):
         logo_overlay = self.config.get('LOGO_OVERLAY', '')
         if not logo_overlay:
             return
 
 
-        if isinstance(self._overlay_dict.get(binning), bool):
+        i_ref = self.getLatestImage()
+
+        if isinstance(self._overlay_dict.get(i_ref.binning), bool):
             # already failed to load
             logger.error('Logo overlay failed to load')
             return
 
-        elif isinstance(self._overlay_dict.get(binning), type(None)):
-            self._overlay_dict[binning], self._alpha_mask_dict[binning] = self._load_logo_overlay(self.image, binning)
+        elif isinstance(self._overlay_dict.get(i_ref.binning), type(None)):
+            self._overlay_dict[i_ref.binning], self._alpha_mask_dict[i_ref.binning] = self._load_logo_overlay(self.image, i_ref.binning)
 
-            if isinstance(self._overlay_dict.get(binning), bool):
+            if isinstance(self._overlay_dict.get(i_ref.binning), bool):
                 logger.error('Logo overlay failed to load')
                 return
 
 
         #alpha_start = time.time()
 
-        self.image = (self.image * (1 - self._alpha_mask_dict[binning]) + self._overlay_dict[binning] * self._alpha_mask_dict[binning]).astype(numpy.uint8)
+        self.image = (self.image * (1 - self._alpha_mask_dict[i_ref.binning]) + self._overlay_dict[i_ref.binning] * self._alpha_mask_dict[i_ref.binning]).astype(numpy.uint8)
 
         #alpha_elapsed_s = time.time() - alpha_start
         #logger.info('Alpha transparency in %0.4f s', alpha_elapsed_s)
@@ -3640,14 +3645,15 @@ class ImageProcessor(object):
         return self._stretch_o.stretch(self.image, self.max_bit_depth, i_ref.binning)
 
 
-    def fish2pano_warpPolar(self, binning):
+    def fish2pano_warpPolar(self):
         #fish2pano_start = time.time()
+        i_ref = self.getLatestImage()
 
         image_height, image_width = self.image.shape[:2]
 
-        x_offset = int(self.config.get('LENS_OFFSET_X', 0) / binning)
-        y_offset = int(self.config.get('LENS_OFFSET_Y', 0) / binning)
-        image_circle = int(self.config.get('FISH2PANO', {}).get('DIAMETER', 3000) / binning)
+        x_offset = int(self.config.get('LENS_OFFSET_X', 0) / i_ref.binning)
+        y_offset = int(self.config.get('LENS_OFFSET_Y', 0) / i_ref.binning)
+        image_circle = int(self.config.get('FISH2PANO', {}).get('DIAMETER', 3000) / i_ref.binning)
 
         recenter_width = image_width + (abs(x_offset) * 2)
         recenter_height = image_height + (abs(y_offset) * 2)
@@ -3733,8 +3739,8 @@ class ImageProcessor(object):
         return img_pano
 
 
-    def fish2pano(self, binning):
-        return self.fish2pano_warpPolar(binning)
+    def fish2pano(self):
+        return self.fish2pano_warpPolar()
 
 
     def fish2pano_cardinal_dirs_label(self, pano_data):
@@ -3744,17 +3750,19 @@ class ImageProcessor(object):
         return self._cardinal_dirs_label.panorama_label(pano_data)
 
 
-    def circular_display(self, binning):
-        return self._circular_display(binning)
+    def circular_display(self):
+        i_ref = self.getLatestImage()
+
+        return self._circular_display(i_ref)
 
 
-    def _circular_display(self, binning):
+    def _circular_display(self, i_ref):
         logger.info('Cropping to image circle for circular display')
         image_height, image_width = self.image.shape[:2]
 
-        x_offset = int(self.config.get('LENS_OFFSET_X', 0) / binning)
-        y_offset = int(self.config.get('LENS_OFFSET_Y', 0) / binning)
-        image_circle_diameter = int(self.config.get('CIRCULAR_DISPLAY', {}).get('IMAGE_CIRCLE_DIAMETER', 3500) / binning)
+        x_offset = int(self.config.get('LENS_OFFSET_X', 0) / i_ref.binning)
+        y_offset = int(self.config.get('LENS_OFFSET_Y', 0) / i_ref.binning)
+        image_circle_diameter = int(self.config.get('CIRCULAR_DISPLAY', {}).get('IMAGE_CIRCLE_DIAMETER', 3500) / i_ref.binning)
 
 
         border_color_bgr = [0, 0, 0]  # rgb
