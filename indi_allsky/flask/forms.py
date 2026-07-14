@@ -3504,15 +3504,15 @@ def INDI_CONFIG_DAY_validator(*args):
     INDI_CONFIG_DEFAULTS_validator(*args)
 
 
-def PROCESSING_PIPELINE_8BIT_validator(form, field):
-    processing_steps = set(str(field.data).split(','))
-    valid_steps = set(constants.PROCESSING_PIPELINE_MAP_8BIT.keys())
+def IMAGE_PIPELINE_8BIT_validator(form, field):
+    pipeline_steps = set(str(field.data).split(','))
+    valid_steps = set(constants.IMAGE_PIPELINE_MAP_8BIT.keys())
 
 
-    invalid_steps = processing_steps.difference(valid_steps)
+    invalid_steps = pipeline_steps.difference(valid_steps)
 
     if invalid_steps:
-        raise ValidationError('Processing steps not recognized: {0:s}'.format(', '.join(invalid_steps)))
+        raise ValidationError('Image pipeline steps not recognized: {0:s}'.format(', '.join(invalid_steps)))
 
 
 class IndiAllskyConfigForm(FlaskForm):
@@ -5084,7 +5084,7 @@ class IndiAllskyConfigForm(FlaskForm):
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 
-    PROCESSING_PIPELINE_8BIT         = HiddenField('Processing Pipeline 8-bit', validators=[PROCESSING_PIPELINE_8BIT_validator])  # not displayed
+    IMAGE_PIPELINE_8BIT              = HiddenField('Image Pipeline 8-bit', validators=[IMAGE_PIPELINE_8BIT_validator])  # not displayed
 
     RELOAD_ON_SAVE                   = BooleanField('Reload on Save')
     LOCAL_AUTH_ENABLE                = BooleanField('Enable Local Authentication')

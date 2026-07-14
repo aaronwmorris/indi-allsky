@@ -2020,7 +2020,7 @@ class ConfigView(FormView):
     def get_context(self):
         context = super(ConfigView, self).get_context()
 
-        context['processing_labels_8bit'] = constants.PROCESSING_PIPELINE_MAP_8BIT
+        context['image_pipeline_labels_8bit'] = constants.IMAGE_PIPELINE_MAP_8BIT
 
         context['camera_minGain'] = self.camera.minGain
         context['camera_maxGain'] = self.camera.maxGain
@@ -2358,7 +2358,7 @@ class ConfigView(FormView):
             'WEB_EXTRA_TEXT'                 : self.indi_allsky_config.get('WEB_EXTRA_TEXT', ''),
             'WEB_NONLOCAL_IMAGES'            : self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES', False),
             'WEB_LOCAL_IMAGES_ADMIN'         : self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN', False),
-            'PROCESSING_PIPELINE_8BIT'       : ','.join(self.indi_allsky_config.get('PROCESSING_PIPELINE_8BIT', [])),  # str in form
+            'IMAGE_PIPELINE_8BIT'            : ','.join(self.indi_allsky_config.get('IMAGE_PIPELINE_8BIT', [])),  # str in form
             'IMAGE_STRETCH__CLASSNAME'       : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('CLASSNAME', ''),
             'IMAGE_STRETCH__MODE1_GAMMA'     : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 3.0),
             'IMAGE_STRETCH__MODE1_STDDEVS'   : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 2.25),
@@ -3385,7 +3385,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['WEB_EXTRA_TEXT']                       = str(request.json['WEB_EXTRA_TEXT'])
         self.indi_allsky_config['WEB_NONLOCAL_IMAGES']                  = bool(request.json['WEB_NONLOCAL_IMAGES'])
         self.indi_allsky_config['WEB_LOCAL_IMAGES_ADMIN']               = bool(request.json['WEB_LOCAL_IMAGES_ADMIN'])
-        self.indi_allsky_config['PROCESSING_PIPELINE_8BIT']             = str(request.json['PROCESSING_PIPELINE_8BIT']).split(',')  # list in config
+        self.indi_allsky_config['IMAGE_PIPELINE_8BIT']                  = str(request.json['IMAGE_PIPELINE_8BIT']).split(',')  # list in config
         self.indi_allsky_config['IMAGE_STRETCH']['CLASSNAME']           = str(request.json['IMAGE_STRETCH__CLASSNAME'])
         self.indi_allsky_config['IMAGE_STRETCH']['MODE1_GAMMA']         = float(request.json['IMAGE_STRETCH__MODE1_GAMMA'])
         self.indi_allsky_config['IMAGE_STRETCH']['MODE1_STDDEVS']       = float(request.json['IMAGE_STRETCH__MODE1_STDDEVS'])

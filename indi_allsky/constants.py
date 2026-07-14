@@ -486,7 +486,7 @@ INDISERVER_GPS_MAP = {
 }
 
 
-PROCESSING_PIPELINE_MAP_8BIT = {
+IMAGE_PIPELINE_MAP_8BIT = {
     'rotate_90'                 : 'Rotate by 90°',
     'rotate_angle'              : 'Rotate by Arbitrary Angle',
     'flip_v'                    : 'Vertical Flip',

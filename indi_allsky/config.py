@@ -205,12 +205,12 @@ class IndiAllSkyConfigBase(object):
             "DISK_USAGE"     : 90.0,
             "SWAP_USAGE"     : 90.0,
         },
-        "PROCESSING_PIPELINE_16BIT" : [
+        "IMAGE_PIPELINE_16BIT" : [
             'denoise',
             'stretch',
             'contrast_clahe_16bit',
         ],
-        "PROCESSING_PIPELINE_8BIT" : [
+        "IMAGE_PIPELINE_8BIT" : [
             'rotate_90',
             'rotate_angle',
             'flip_v',

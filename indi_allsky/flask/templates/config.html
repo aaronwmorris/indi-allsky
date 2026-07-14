@@ -34,8 +34,8 @@
 var camera_id = {{ camera_id }};
 
 
-var processing_enabled_8bit = null;
-var processing_labels_8bit = {{ processing_labels_8bit | tojson }};
+var image_pipeline_enabled_8bit = null;
+var image_pipeline_labels_8bit = {{ image_pipeline_labels_8bit | tojson }};
 </script>
 
 {% endblock %}
@@ -1260,25 +1260,25 @@ var processing_labels_8bit = {{ processing_labels_8bit | tojson }};
 
     <div class="form-group row">
       <div class="col-sm-6">
-        {{ form_config.PROCESSING_PIPELINE_8BIT(class='form-control bg-secondary') }}
-        <div id="PROCESSING_PIPELINE_8BIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        {{ form_config.IMAGE_PIPELINE_8BIT(class='form-control bg-secondary') }}
+        <div id="IMAGE_PIPELINE_8BIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
 
         <div class="card shadow-sm rounded-4 overflow-hidden text-bg-dark border-secondary">
           <div class="card-header bg-success text-white py-3">
-            <h5 class="card-title mb-0">Enabled Processing Steps (drag to reorder)</h5>
+            <h5 class="card-title mb-0">Enabled Pipeline Steps (drag to reorder)</h5>
           </div>
 
-          <ul id="processing_enabled_8bit" class="list-group d-flex flex-column gap-2 p-3"></ul>
+          <ul id="image_pipeline_enabled_8bit" class="list-group d-flex flex-column gap-2 p-3"></ul>
         </div>
       </div>
 
       <div class="col-sm-6">
         <div class="card shadow-sm rounded-4 overflow-hidden text-bg-dark border-secondary">
           <div class="card-header bg-secondary text-dark py-3">
-            <h5 class="card-title mb-0">Disabled Processing Steps (drag to disable)</h5>
+            <h5 class="card-title mb-0">Disabled Pipeline Steps (drag to disable)</h5>
           </div>
 
-          <ul id="processing_disabled_8bit" class="list-group d-flex flex-column gap-2 p-3"></ul>
+          <ul id="image_pipeline_disabled_8bit" class="list-group d-flex flex-column gap-2 p-3"></ul>
         </div>
       </div>
     </div>
@@ -10030,7 +10030,7 @@ const field_names = [
     'CHARTS__CUSTOM_SLOT_9_MIN',
     'CLAHE_CLIPLIMIT',
     'CLAHE_GRIDSIZE',
-    'PROCESSING_PIPELINE_8BIT',
+    'IMAGE_PIPELINE_8BIT',
     'IMAGE_STRETCH__CLASSNAME',
     'IMAGE_STRETCH__MODE1_GAMMA',
     'IMAGE_STRETCH__MODE1_STDDEVS',
@@ -10673,7 +10673,7 @@ $('#form_config').on('submit', function() {
 
 
     // processing pipeline back to string
-    fields['PROCESSING_PIPELINE_8BIT'].input.val(processing_enabled_8bit.toArray().join(','));
+    fields['IMAGE_PIPELINE_8BIT'].input.val(image_pipeline_enabled_8bit.toArray().join(','));
 
 
     // Populate fields object
@@ -11363,35 +11363,35 @@ var group_checkbox_fields_circular_display = [];
 group_on_change('CIRCULAR_DISPLAY__ENABLE', group_fields_circular_display, group_checkbox_fields_circular_display);
 
 
-function init_processing_order() {
+function init_image_pipeline() {
 
-    processing_pipeline_8bit = fields['PROCESSING_PIPELINE_8BIT'].input.val().split(',');
+    image_pipeline_8bit = fields['IMAGE_PIPELINE_8BIT'].input.val().split(',');
 
 
-    processing_labels_8bit_keys = Object.keys(processing_labels_8bit);
-    full_processing_steps_8bit_set = new Set(processing_labels_8bit_keys);
-    processing_pipeline_8bit_set = new Set(processing_pipeline_8bit);
-    missing_steps_8bit = processing_labels_8bit_keys.filter(item => !processing_pipeline_8bit_set.has(item));
+    image_pipeline_labels_8bit_keys = Object.keys(image_pipeline_labels_8bit);
+    full_pipeline_steps_8bit_set = new Set(image_pipeline_labels_8bit_keys);
+    image_pipeline_8bit_set = new Set(image_pipeline_8bit);
+    missing_steps_8bit = image_pipeline_labels_8bit_keys.filter(item => !image_pipeline_8bit_set.has(item));
 
-    processing_pipeline_8bit.forEach(item => {
-        $("#processing_enabled_8bit").append(
+    image_pipeline_8bit.forEach(item => {
+        $("#image_pipeline_enabled_8bit").append(
             $('<li />', {
                 'class' : 'list-group-item d-flex justify-content-between align-items-center border rounded-3 text-bg-secondary',
                 'data-id' : item,
-            }).text(processing_labels_8bit[item])
+            }).text(image_pipeline_labels_8bit[item])
         )
     });
 
     missing_steps_8bit.forEach(item => {
-        $("#processing_disabled_8bit").append(
+        $("#image_pipeline_disabled_8bit").append(
             $('<li />', {
                 'class' : 'list-group-item d-flex justify-content-between align-items-center border rounded-3 text-bg-secondary',
                 'data-id' : item,
-            }).text(processing_labels_8bit[item])
+            }).text(image_pipeline_labels_8bit[item])
         )
     });
 
-    processing_enabled_8bit = new Sortable(document.getElementById('processing_enabled_8bit'), {
+    image_pipeline_enabled_8bit = new Sortable(document.getElementById('image_pipeline_enabled_8bit'), {
         forceFallback: true,
         group: 'shared',
         animation: 150,
@@ -11399,7 +11399,7 @@ function init_processing_order() {
         ghostClass: 'sortable-ghost',
     });
 
-    processing_disabled_8bit = new Sortable(document.getElementById('processing_disabled_8bit'), {
+    image_pipeline_disabled_8bit = new Sortable(document.getElementById('image_pipeline_disabled_8bit'), {
         forceFallback: true,
         group: 'shared',
         animation: 150,
@@ -11409,7 +11409,7 @@ function init_processing_order() {
 
 
 $( document ).ready(function() {
-    init_processing_order();
+    init_image_pipeline();
 
     // Global timelapse
     if (!$('#TIMELAPSE_ENABLE').prop('checked')) {
