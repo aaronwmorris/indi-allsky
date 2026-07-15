@@ -1,4 +1,5 @@
 #import math
+import numpy
 import cv2
 import logging
 
@@ -12,9 +13,9 @@ class IndiAllSkyDraw(object):
 
         self._sqm_mask_dict = mask
 
-        self._draw_mask_dict = dict()
+        self._draw_alpha_mask_dict = dict()
         for binning in self._sqm_mask_dict.keys():
-            self._draw_mask_dict[binning] = None
+            self._draw_alpha_mask_dict[binning] = None
 
 
     def main(self, data, binning):
@@ -23,6 +24,14 @@ class IndiAllSkyDraw(object):
 
 
         image_height, image_width = data.shape[:2]
+
+
+        if isinstance(self._draw_alpha_mask_dict[binning], type(None)):
+            self._draw_alpha_mask_dict[binning] = self.generate_alpha_mask(data, binning)
+
+
+        # apply mask to image
+        data = (data * self._draw_alpha_mask_dict[binning]).astype(numpy.uint8)
 
 
         # flip image to draw text
@@ -46,70 +55,6 @@ class IndiAllSkyDraw(object):
 
         if self.config.get('IMAGE_FLIP_H'):
             data = cv2.flip(data, 1)
-
-
-        if not isinstance(self._sqm_mask_dict[binning], type(None)):
-            self._draw_mask_dict[binning] = self._sqm_mask_dict[binning]
-
-
-        ### ADU & SQM ROI ###
-        if isinstance(self._draw_mask_dict, type(None)):
-
-            ### Draw ADU ROI if detection mask is not defined
-            ###  Make sure the box calculation matches image.py
-            logger.info('Draw box around ADU_ROI and SQM_ROI')
-
-
-            adu_roi = self.config.get('ADU_ROI', [])
-
-            try:
-                adu_x1 = int(adu_roi[0] / binning)
-                adu_y1 = int(adu_roi[1] / binning)
-                adu_x2 = int(adu_roi[2] / binning)
-                adu_y2 = int(adu_roi[3] / binning)
-            except IndexError:
-                adu_fov_div = self.config.get('ADU_FOV_DIV', 4)
-                adu_x1 = int((image_width / 2) - (image_width / adu_fov_div))
-                adu_y1 = int((image_height / 2) - (image_height / adu_fov_div))
-                adu_x2 = int((image_width / 2) + (image_width / adu_fov_div))
-                adu_y2 = int((image_height / 2) + (image_height / adu_fov_div))
-
-
-            cv2.rectangle(
-                img=data,
-                pt1=(adu_x1, adu_y1),
-                pt2=(adu_x2, adu_y2),
-                color=(128, 64, 64),
-                thickness=1,
-            )
-
-
-            sqm_roi = self.config.get('SQM_ROI', [])
-
-            try:
-                sqm_x1 = int(sqm_roi[0] / binning)
-                sqm_y1 = int(sqm_roi[1] / binning)
-                sqm_x2 = int(sqm_roi[2] / binning)
-                sqm_y2 = int(sqm_roi[3] / binning)
-            except IndexError:
-                sqm_fov_div = self.config.get('SQM_FOV_DIV', 4)
-                sqm_x1 = int((image_width / 2) - (image_width / sqm_fov_div))
-                sqm_y1 = int((image_height / 2) - (image_height / sqm_fov_div))
-                sqm_x2 = int((image_width / 2) + (image_width / sqm_fov_div))
-                sqm_y2 = int((image_height / 2) + (image_height / sqm_fov_div))
-
-
-            cv2.rectangle(
-                img=data,
-                pt1=(sqm_x1, sqm_y1),
-                pt2=(sqm_x2, sqm_y2),
-                color=(64, 64, 128),
-                thickness=1,
-            )
-
-        else:
-            # apply mask to image
-            data = cv2.bitwise_and(data, data, mask=self._draw_mask_dict[binning])
 
 
         ### Keogram meridian ###
@@ -167,3 +112,16 @@ class IndiAllSkyDraw(object):
             thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
         )
 
+
+    def generate_alpha_mask(self, image, binning):
+        alpha = (self._sqm_mask_dict[binning] / 255).astype(numpy.float32)
+
+        # set excluded area to 75% opacity
+        alpha[alpha == 0] = 0.75
+
+        if len(image.shape) == 2:
+            # mono
+            return alpha
+
+        # color
+        return numpy.dstack((alpha, alpha, alpha))
