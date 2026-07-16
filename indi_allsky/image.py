@@ -1780,6 +1780,7 @@ class ImageWorker(Process):
             'smoke_rating'        : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
             'aircraft'            : len(self.adsb_aircraft_list),
             'camera_sqm_raw_mag'  : self.image_processor.camera_sqm_raw_mag,
+            'uptime'              : i_ref.uptime,
         }
 
 
