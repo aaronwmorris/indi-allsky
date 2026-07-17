@@ -865,7 +865,7 @@ class IndiAllSkyConfigBase(object):
         },
         "ADSB" : {
             "ENABLE"                 : False,
-            "DUMP1090_URL"           : 'https://localhost/dump1090/data/aircraft.json',
+            "DUMP1090_URL"           : 'https://localhost/skyaware/data/aircraft.json',
             "CERT_BYPASS"            : True,
             "USERNAME"               : "",
             "PASSWORD"               : "",
