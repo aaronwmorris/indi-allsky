@@ -363,6 +363,7 @@ class CaptureWorker(Process):
         frame_start_time = time.time()
         waiting_for_frame = False
         waiting_for_sqm_frame = False
+        waiting_for_frame_busy_seen = False
 
         camera_ready_time = time.time()
         camera_ready = False
@@ -605,6 +606,15 @@ class CaptureWorker(Process):
 
                     if not exposure_aborted:
                         camera_ready, exposure_state = self.indiclient.getCcdExposureStatus()
+
+                        if waiting_for_frame and not camera_ready:
+                            # confirms this specific exposure actually started on the
+                            # driver side before we trust a later "ready" reading as
+                            # real completion -- closes a race where a stale pre-transition
+                            # property read (still reflecting the *previous* exposure's
+                            # resolved state) gets misinterpreted as instant completion
+                            # of the exposure we just submitted
+                            waiting_for_frame_busy_seen = True
                     else:
                         # Aborted exposure, bypass next checks
                         exposure_aborted = False  # reset
@@ -622,6 +632,15 @@ class CaptureWorker(Process):
                     ###########################################
                     if not last_camera_ready:
                         camera_ready_time = now_time
+
+
+                    if waiting_for_frame and not waiting_for_frame_busy_seen and (now_time - frame_start_time) < 1.0:
+                        # camera reports ready, but we never saw it go busy for *this*
+                        # exposure -- likely a stale state read racing the new exposure
+                        # submission, not a real completion.  Keep waiting, up to a 1s
+                        # safety net in case a very fast exposure's busy state is missed
+                        # entirely between polls.
+                        continue
 
 
                     if waiting_for_frame:
@@ -778,6 +797,7 @@ class CaptureWorker(Process):
 
                         camera_ready = False
                         waiting_for_frame = True
+                        waiting_for_frame_busy_seen = False
 
 
                         # if the image queue grows too large, introduce delays to new exposures
