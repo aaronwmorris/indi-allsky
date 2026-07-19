@@ -9,6 +9,7 @@ import time
 import sys
 import ctypes
 from pprint import pformat  # noqa: F401
+from prettytable import PrettyTable
 import logging
 
 
@@ -141,20 +142,127 @@ class IndiProperties(PyIndi.BaseClient):
             logger.info("ccd connected")
 
 
+            table_number = PrettyTable()
+            table_number.field_names = ['Control', 'Property', 'Label', 'Current', 'Min', 'Max', 'Perm']
+
+            table_text = PrettyTable()
+            table_text.field_names = ['Control', 'Property', 'Label', 'Current', 'Perm']
+
+            table_switch = PrettyTable()
+            table_switch.field_names = ['Control', 'Property', 'Label', 'State', 'Perm']
+
+            table_light = PrettyTable()
+            table_light.field_names = ['Control', 'Property', 'Label', 'State', 'Perm']
+
+            table_blob = PrettyTable()
+            table_blob.field_names = ['Control', 'Property', 'Label', 'Perm']
+
+
             print('#########################################')
             print('########## Start properties #############')
             print('#########################################')
             print('```')  # github formatting
 
+
             prop_dict = self.getDeviceProperties(device_ccd)
-            for k, v in prop_dict.items():
-                print('{0}'.format(k))
+            for prop, prop_v in prop_dict.items():
+                if prop_v['type'] == PyIndi.INDI_NUMBER:
+                    # number
+                    for c in prop_v['controls']:
+                        try:
+                            # try to use embedded C formatting
+                            c_value = c['format'] % c['value']
+                            c_min = c['format'] % c['min']
+                            c_max = c['format'] % c['max']
+                        except ValueError:
+                            c_value = c['value']
+                            c_min = c['min']
+                            c_max = c['max']
 
-                for k2, v2 in v.items():
-                    print('  {0}'.format(k2))
 
-                    for k3, v3 in v2.items():
-                        print('    {0}: {1}'.format(k3, v3))
+                        table_number.add_row([
+                            prop,
+                            c['name'],
+                            '"{0:s}"'.format(c['label']),
+                            #'{0:0.2f}'.format(c['value']),
+                            c_value,
+                            c_min,
+                            c_max,
+                            self.__perm_to_str[prop_v['permissions']],
+                        ])
+
+
+                    table_number.add_divider()
+
+                elif prop_v['type'] == PyIndi.INDI_TEXT:
+                    # text
+                    for c in prop_v['controls']:
+                        table_text.add_row([
+                            prop,
+                            c['name'],
+                            '"{0:s}"'.format(c['label']),
+                            '"{0:s}"'.format(c['text']),
+                            self.__perm_to_str[prop_v['permissions']],
+                        ])
+
+                    table_text.add_divider()
+
+                elif prop_v['type'] == PyIndi.INDI_SWITCH:
+                    # switch
+                    for c in prop_v['controls']:
+                        table_switch.add_row([
+                            prop,
+                            c['name'],
+                            '"{0:s}"'.format(c['label']),
+                            self.__state_to_str_s[c['state']],
+                            self.__perm_to_str[prop_v['permissions']],
+                        ])
+
+                    table_switch.add_divider()
+
+                elif prop_v['type'] == PyIndi.INDI_LIGHT:
+                    # light
+                    for c in prop_v['controls']:
+                        table_light.add_row([
+                            prop,
+                            c['name'],
+                            '"{0:s}"'.format(c['label']),
+                            self.__state_to_str_s[c['state']],
+                            self.__perm_to_str[prop_v['permissions']],
+                        ])
+
+                    table_text.add_divider()
+
+                elif prop_v['type'] == PyIndi.INDI_BLOB:
+                    # blob
+                    for c in prop_v['controls']:
+                        table_blob.add_row([
+                            prop,
+                            c['name'],
+                            '"{0:s}"'.format(c['label']),
+                            self.__perm_to_str[prop_v['permissions']],
+                        ])
+
+
+            print('Control Type: Number')
+            print(table_number)
+
+            print()
+            print('Control Type: Text')
+            print(table_text)
+
+            print()
+            print('Control Type: Switch')
+            print(table_switch)
+
+            print()
+            print('Control Type: Light')
+            print(table_light)
+
+            print()
+            print('Control Type: Blob')
+            print(table_blob)
+
 
             print('```')  # github formatting
             print('#########################################')
@@ -167,43 +275,75 @@ class IndiProperties(PyIndi.BaseClient):
 
         for p in device.getProperties():
             name = p.getName()
-            properties[name] = dict()
+
+            properties[name] = {
+                'type'        : p.getType(),
+                'permissions' : p.getPermission(),
+                'controls'    : list(),
+            }
 
             #logger.info('%s', p.getType())
             if p.getType() == PyIndi.INDI_TEXT:
+
                 for t in p.getText():
-                    properties[name]['{0} [{1}] (text)'.format(t.getName(), t.getLabel())] = {
-                        'current' : t.getText(),
-                        'permissions' : self.__perm_to_str[p.getPermission()],
+                    control = {
+                        'name'    : t.getName(),
+                        'label'   : t.getLabel(),
+                        'text'    : t.getText(),
                     }
+
+                    properties[name]['controls'].append(control)
+
+                continue
             elif p.getType() == PyIndi.INDI_NUMBER:
                 for t in p.getNumber():
-                    properties[name]['{0} [{1}] (number)'.format(t.getName(), t.getLabel())] = {
-                        'current' : t.getValue(),
+                    control = {
+                        'name'    : t.getName(),
+                        'label'   : t.getLabel(),
+                        'value'   : t.getValue(),
                         'min'     : t.getMin(),
                         'max'     : t.getMax(),
-                        'step'    : t.getStep(),
                         'format'  : t.getFormat(),
-                        'permissions' : self.__perm_to_str[p.getPermission()],
                     }
+
+                    properties[name]['controls'].append(control)
+
+                continue
             elif p.getType() == PyIndi.INDI_SWITCH:
                 for t in p.getSwitch():
-                    properties[name]['{0} [{1}] (switch)'.format(t.getName(), t.getLabel())] = {
-                        'state' : self.__state_to_str_s[t.getState()],
-                        'permissions' : self.__perm_to_str[p.getPermission()],
+                    control = {
+                        'name'    : t.getName(),
+                        'label'   : t.getLabel(),
+                        'state'   : t.getState(),
                     }
+
+                    properties[name]['controls'].append(control)
+
+                continue
             elif p.getType() == PyIndi.INDI_LIGHT:
                 for t in p.getLight():
-                    properties[name]['{0} [{1}] (light)'.format(t.getName(), t.getLabel())] = {
-                        'state' : self.__state_to_str_p[t.getState()],
-                        'permissions' : self.__perm_to_str[p.getPermission()],
+                    control = {
+                        'name'    : t.getName(),
+                        'label'   : t.getLabel(),
+                        'state'   : t.getState(),
                     }
+
+                    properties[name]['controls'].append(control)
+
+                continue
             elif p.getType() == PyIndi.INDI_BLOB:
-                pass
-                #for t in p.getBLOB():
-                #    properties[name][t.getName() + ' (blob)'] = {}
+                for t in p.getBLOB():
+                    control = {
+                        'name'    : t.getName(),
+                        'label'   : t.getLabel(),
+                    }
+
+                    properties[name]['controls'].append(control)
+
+                continue
             #else:
             #    logger.info('%s', p.getType())
+
 
         #logger.warning('%s', pformat(properties))
 
