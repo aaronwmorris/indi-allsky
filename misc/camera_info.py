@@ -152,7 +152,14 @@ class IndiProperties(PyIndi.BaseClient):
                     gain_index_dict = self.__map_indexes(ctl_gain, ['GAIN'])
                     gain_index = gain_index_dict['GAIN']
                 except TimeOutException:
-                    logger.error('Gain control not found')
+                    try:
+                        ctl_gain = self.get_control(device_ccd, 'Image Adjustments', 'number')
+                        gain_index_dict = self.__map_indexes(ctl_gain, ['Gain'])
+                        gain_index = gain_index_dict['Gain']
+                    except TimeOutException:
+                        logger.error('Gain control not found')
+                    except KeyError:
+                        logger.error('Gain control not found')
 
 
             if not isinstance(ctl_gain, type(None)):
