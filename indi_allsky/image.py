@@ -548,6 +548,12 @@ class ImageWorker(Process):
         # adu value may be updated below
 
 
+        # white balance
+        self.image_processor.white_balance_mtf()
+        self.image_processor.white_balance_manual_bgr()
+        self.image_processor.white_balance_auto_bgr()
+
+
         self.image_processor.denoise()
 
         self.image_processor.stretch()
@@ -618,12 +624,6 @@ class ImageWorker(Process):
 
         # green removal
         self.image_processor.scnr()
-
-
-        # white balance
-        self.image_processor.white_balance_mtf()
-        self.image_processor.white_balance_manual_bgr()
-        self.image_processor.white_balance_auto_bgr()
 
 
         # saturation
