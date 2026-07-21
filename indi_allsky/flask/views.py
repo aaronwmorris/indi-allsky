@@ -8636,6 +8636,14 @@ class LogIndiserverDownloadView(LogDownloadJournalViewBase):
         self.download_name_tmpl = 'indi-allsky_indiserver_log_{ts:%Y%m%d_%H%M%S}.txt.gz'
 
 
+class LogUpgradeDownloadView(LogDownloadJournalViewBase):
+    def __init__(self, **kwargs):
+        super(LogUpgradeDownloadView, self).__init__(**kwargs)
+
+        self.user_unit_name = app.config['UPGRADE_ALLSKY_SERVICE_NAME']
+        self.download_name_tmpl = 'indi-allsky_upgrade_log_{ts:%Y%m%d_%H%M%S}.txt.gz'
+
+
 class SupportInfoView(TemplateView):
     page_title = 'Support Info'
     decorators = [login_required]
@@ -12042,6 +12050,7 @@ bp_allsky.add_url_rule('/log/webapp_download', view_func=LogWebappDownloadView.a
 bp_allsky.add_url_rule('/log/syslog_download', view_func=LogSyslogDownloadView.as_view('log_syslog_download_view'))
 bp_allsky.add_url_rule('/log/kern_download', view_func=LogKernDownloadView.as_view('log_kern_download_view'))
 bp_allsky.add_url_rule('/log/indiserver_download', view_func=LogIndiserverDownloadView.as_view('log_indiserver_download_view'))
+bp_allsky.add_url_rule('/log/upgrade_download', view_func=LogUpgradeDownloadView.as_view('log_upgrade_download_view'))
 
 bp_allsky.add_url_rule('/support', view_func=SupportInfoView.as_view('support_info_view', template_name='support_info.html'))
 bp_allsky.add_url_rule('/js/support', view_func=JsonSupportInfoView.as_view('js_support_info_view'))
