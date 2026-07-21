@@ -1,2 +1,2 @@
 __version__ = "indi_v2026.02.1"
-__config_level__ = "20260703.0"
+__config_level__ = "20260721.0"
