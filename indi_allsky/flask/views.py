@@ -8354,7 +8354,6 @@ class StreamLogView(StreamLogViewBase):
 
 
 class StreamIndiserverLogView(StreamLogViewBase):
-
     def __init__(self, **kwargs):
         super(StreamIndiserverLogView, self).__init__(**kwargs)
 
@@ -8582,15 +8581,16 @@ class LogKernDownloadView(BaseView):
         return send_file(log_buffer, mimetype='application/octet-stream', download_name=download_name, as_attachment=True)
 
 
-class LogIndiserverDownloadView(BaseView):
+class LogDownloadJournalViewBase(BaseView):
     decorators = [login_required]
     methods = ['GET']
 
 
     def __init__(self, **kwargs):
-        super(LogIndiserverDownloadView, self).__init__(**kwargs)
+        super(LogDownloadJournalViewBase, self).__init__(**kwargs)
 
-        self.user_unit_name = app.config['INDISERVER_SERVICE_NAME']
+        self.user_unit_name = 'changeme'
+        self.download_name_tmpl = 'changeme'
 
 
     def dispatch_request(self):
@@ -8623,9 +8623,17 @@ class LogIndiserverDownloadView(BaseView):
         }
 
 
-        download_name = 'indi-allsky_indiserver_log_{ts:%Y%m%d_%H%M%S}.txt.gz'.format(**data)
+        download_name = self.download_name_tmpl.format(**data)
 
         return send_file(log_buffer, mimetype='application/octet-stream', download_name=download_name, as_attachment=True)
+
+
+class LogIndiserverDownloadView(LogDownloadJournalViewBase):
+    def __init__(self, **kwargs):
+        super(LogIndiserverDownloadView, self).__init__(**kwargs)
+
+        self.user_unit_name = app.config['INDISERVER_SERVICE_NAME']
+        self.download_name_tmpl = 'indi-allsky_indiserver_log_{ts:%Y%m%d_%H%M%S}.txt.gz'
 
 
 class SupportInfoView(TemplateView):
