@@ -8540,6 +8540,52 @@ class LogKernDownloadView(BaseView):
         return send_file(log_buffer, mimetype='application/octet-stream', download_name=download_name, as_attachment=True)
 
 
+class LogIndiserverDownloadView(BaseView):
+    decorators = [login_required]
+    methods = ['GET']
+
+
+    def __init__(self, **kwargs):
+        super(LogIndiserverDownloadView, self).__init__(**kwargs)
+
+        self.unit_name = app.config['INDISERVER_SERVICE_NAME']
+
+
+    def dispatch_request(self):
+        import gzip
+        from systemd import journal
+
+        lines = int(request.args.get('lines', 20000))
+
+
+        reader = journal.Reader()
+
+        reader.add_match(_SYSTEMD_USER_UNIT=self.unit_name)
+
+        reader.seek_head()
+
+
+        log_data_array = list()
+        for entry in reader:
+            message = entry.get('MESSAGE', '')
+            log_data_array.append('{0:s}'.format(message))
+
+
+        log_data = '\n'.join(log_data_array[-lines:]).encode()
+
+        log_buffer = io.BytesIO(gzip.compress(log_data))
+
+
+        data = {
+            'ts'    : datetime.now(),
+        }
+
+
+        download_name = 'indi-allsky_indiserver_log_{ts:%Y%m%d_%H%M%S}.txt.gz'.format(**data)
+
+        return send_file(log_buffer, mimetype='application/octet-stream', download_name=download_name, as_attachment=True)
+
+
 class SupportInfoView(TemplateView):
     page_title = 'Support Info'
     decorators = [login_required]
@@ -11943,6 +11989,7 @@ bp_allsky.add_url_rule('/log/download', view_func=LogDownloadView.as_view('log_d
 bp_allsky.add_url_rule('/log/webapp_download', view_func=LogWebappDownloadView.as_view('log_webapp_download_view'))
 bp_allsky.add_url_rule('/log/syslog_download', view_func=LogSyslogDownloadView.as_view('log_syslog_download_view'))
 bp_allsky.add_url_rule('/log/kern_download', view_func=LogKernDownloadView.as_view('log_kern_download_view'))
+bp_allsky.add_url_rule('/log/indiserver_download', view_func=LogIndiserverDownloadView.as_view('log_indiserver_download_view'))
 
 bp_allsky.add_url_rule('/support', view_func=SupportInfoView.as_view('support_info_view', template_name='support_info.html'))
 bp_allsky.add_url_rule('/js/support', view_func=JsonSupportInfoView.as_view('js_support_info_view'))
