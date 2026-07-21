@@ -22,7 +22,7 @@ var camera_id = {{ camera_id }};
 
 <div class="row">
     <div class="col-sm-12 text-center">
-      <span id="drive-loader" class="spinner-border" aria-hidden="false"></span><span> Streaming Capture Log...</span>
+      <span id="drive-loader" class="spinner-border" aria-hidden="false"></span><span> Streaming Log...</span>
       <pre>
         <textarea id="log_data" rows="35" style="width:95%;background-color:#888888;"></textarea>
       </pre>
@@ -39,7 +39,7 @@ var camera_id = {{ camera_id }};
 
 <script>
 function init() {
-    const eventSource = new EventSource("{{ url_for('indi_allsky.stream_log_view') }}");
+    const eventSource = new EventSource("{{ url_for(log_stream_view) }}");
     const logDiv = document.getElementById("log_data");
 
     logDiv.append("\n");  // Messages on new line
