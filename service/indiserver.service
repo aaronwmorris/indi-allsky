@@ -11,6 +11,8 @@ ExecStop=/bin/kill -TERM $MAINPID
 RestartSec=5
 PrivateTmp=true
 UMask=0022
+SyslogIdentifier=indiserver
+SyslogFacility=local5
 
 [Install]
 WantedBy=default.target

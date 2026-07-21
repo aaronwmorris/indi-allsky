@@ -8,6 +8,8 @@ ExecStart=%ALLSKY_DIRECTORY%/misc/unattended_upgrade.sh
 RemainAfterExit=true
 Type=oneshot
 UMask=0022
+SyslogIdentifier=upgrade-indi-allsky
+SyslogFacility=local4
 
 [Install]
 WantedBy=default.target

@@ -2462,6 +2462,10 @@ else
     sudo chmod 644 /var/log/indi-allsky/indi-allsky.log
     sudo touch /var/log/indi-allsky/webapp-indi-allsky.log
     sudo chmod 644 /var/log/indi-allsky/webapp-indi-allsky.log
+    sudo touch /var/log/indi-allsky/indiserver.log
+    sudo chmod 644 /var/log/indi-allsky/indiserver.log
+    sudo touch /var/log/indi-allsky/upgrade.log
+    sudo chmod 644 /var/log/indi-allsky/upgrade.log
     sudo chown -R "$RSYSLOG_USER":"$RSYSLOG_GROUP" /var/log/indi-allsky
 
 
