@@ -29,6 +29,13 @@ var camera_id = {{ camera_id }};
     </div>
 
     <div class="col-12 text-center">
+    </div>
+
+    <div class="col-12 text-center">
+        <span>
+            <input type="checkbox" id="AUTO_SCROLL" name="AUTO_SCROLL" value="y" checked="checked">
+            <label for="AUTO_SCROLL">Auto-Scroll</label>
+        </span>
         <a href="{{ url_for('indi_allsky.log_download_view') }}"><span class="badge pill bg-success">Capture Log<br>Download</span></a>
         <a href="{{ url_for('indi_allsky.log_webapp_download_view') }}"><span class="badge pill bg-secondary">Webapp Log<br>Download</span></a>
         <a href="{{ url_for('indi_allsky.log_indiserver_download_view') }}"><span class="badge pill bg-info text-dark">indiserver Log<br>Download</span></a>
@@ -40,6 +47,8 @@ var camera_id = {{ camera_id }};
 
 <script>
 function init() {
+    $("#AUTO_SCROLL").prop('checked', true);
+
     const eventSource = new EventSource("{{ url_for(log_stream_view) }}");
     const logDiv = document.getElementById("log_data");
 
@@ -48,22 +57,28 @@ function init() {
     // Listen for message events
     eventSource.onmessage = function(event) {
         logDiv.append(event.data + "\n");
-        //logDiv.scrollTop = logDiv.scrollHeight; // Auto-scroll
-        logDiv.scrollTo({
-          top: logDiv.scrollHeight,
-          behavior: 'smooth'
-        });
+
+        if ($('#AUTO_SCROLL').prop('checked')) {
+            //logDiv.scrollTop = logDiv.scrollHeight; // Auto-scroll
+            logDiv.scrollTo({
+              top: logDiv.scrollHeight,
+              behavior: 'smooth'
+            });
+        }
     };
 
     // Handle connection errors
     eventSource.onerror = function(error) {
         console.error("EventSource failed:", error);
         logDiv.append("Connection lost. Reconnecting...\n");
-        //logDiv.scrollTop = logDiv.scrollHeight; // Auto-scroll
-        logDiv.scrollTo({
-          top: logDiv.scrollHeight,
-          behavior: 'smooth'
-        });
+
+        if ($('#AUTO_SCROLL').prop('checked')) {
+            //logDiv.scrollTop = logDiv.scrollHeight; // Auto-scroll
+            logDiv.scrollTo({
+              top: logDiv.scrollHeight,
+              behavior: 'smooth'
+            });
+        }
     };
 }
 
