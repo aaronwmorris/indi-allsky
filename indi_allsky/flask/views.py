@@ -8265,24 +8265,41 @@ class JsonImageProcessingView(JsonView):
 
 class LogView(TemplateView):
     page_title = 'Log Viewer'
+    log_stream_view = 'indi_allsky.stream_log_view'
     decorators = [login_required]
+
 
     def get_context(self):
         context = super(LogView, self).get_context()
 
+        context['log_stream_view'] = self.log_stream_view
 
         return context
 
 
-class StreamLogView(BaseView):
+class LogIndiserverLogView(TemplateView):
+    page_title = 'Indiserver Log Viewer'
+    log_stream_view = 'indi_allsky.stream_indiserver_log_view'
+    decorators = [login_required]
+
+
+    def get_context(self):
+        context = super(LogIndiserverLogView, self).get_context()
+
+        context['log_stream_view'] = self.log_stream_view
+
+        return context
+
+
+class StreamLogViewBase(BaseView):
     decorators = [login_required]
     methods = ['GET']
 
     def __init__(self, **kwargs):
-        super(StreamLogView, self).__init__(**kwargs)
+        super(StreamLogViewBase, self).__init__(**kwargs)
 
-        #self.unit_name = app.config['ALLSKY_SERVICE_NAME']
-        self.syslog_facility = '22'  # local6
+        self.user_unit_name = 'changeme'
+        self.syslog_facility = None
 
 
     def dispatch_request(self):
@@ -8293,8 +8310,15 @@ class StreamLogView(BaseView):
         def generate():
             reader = journal.Reader()
 
-            #reader.add_match(_SYSTEMD_USER_UNIT=self.unit_name)
-            reader.add_match(SYSLOG_FACILITY=self.syslog_facility)
+
+            if not isinstance(self.syslog_facility, type(None)):
+                app.logger.info('Streaming log from facility %s', self.syslog_facility)
+                reader.add_match(SYSLOG_FACILITY=self.syslog_facility)
+            else:
+                # use unit name
+                app.logger.info('Streaming log from user unit %s', self.user_unit_name)
+                reader.add_match(_SYSTEMD_USER_UNIT=self.user_unit_name)
+
 
             reader.seek_tail()
             reader.get_previous()  # Fixes edge-case pointer positioning
@@ -8318,6 +8342,23 @@ class StreamLogView(BaseView):
             stream_with_context(generate()),
             mimetype='text/event-stream'
         )
+
+
+class StreamLogView(StreamLogViewBase):
+    def __init__(self, **kwargs):
+        super(StreamLogView, self).__init__(**kwargs)
+
+        self.syslog_facility = '22'  # local6
+        #self.user_unit_name = app.config['ALLSKY_SERVICE_NAME']
+        self.user_unit_name = None
+
+
+class StreamIndiserverLogView(StreamLogViewBase):
+    def __init__(self, **kwargs):
+        super(StreamIndiserverLogView, self).__init__(**kwargs)
+
+        self.syslog_facility = None
+        self.user_unit_name = app.config['INDISERVER_SERVICE_NAME']
 
 
 class LogDownloadView(BaseView):
@@ -8538,6 +8579,69 @@ class LogKernDownloadView(BaseView):
         download_name = 'indi-allsky_kern_log_{ts:%Y%m%d_%H%M%S}.txt.gz'.format(**data)
 
         return send_file(log_buffer, mimetype='application/octet-stream', download_name=download_name, as_attachment=True)
+
+
+class LogDownloadJournalViewBase(BaseView):
+    decorators = [login_required]
+    methods = ['GET']
+
+
+    def __init__(self, **kwargs):
+        super(LogDownloadJournalViewBase, self).__init__(**kwargs)
+
+        self.user_unit_name = 'changeme'
+        self.download_name_tmpl = 'changeme'
+
+
+    def dispatch_request(self):
+        import gzip
+        from systemd import journal
+
+        lines = int(request.args.get('lines', 20000))
+
+
+        reader = journal.Reader()
+
+        reader.add_match(_SYSTEMD_USER_UNIT=self.user_unit_name)
+
+        reader.seek_head()
+
+
+        log_data_array = list()
+        for entry in reader:
+            message = entry.get('MESSAGE', '')
+            log_data_array.append('{0:s}'.format(message))
+
+
+        log_data = '\n'.join(log_data_array[-lines:]).encode()
+
+        log_buffer = io.BytesIO(gzip.compress(log_data))
+
+
+        data = {
+            'ts'    : datetime.now(),
+        }
+
+
+        download_name = self.download_name_tmpl.format(**data)
+
+        return send_file(log_buffer, mimetype='application/octet-stream', download_name=download_name, as_attachment=True)
+
+
+class LogIndiserverDownloadView(LogDownloadJournalViewBase):
+    def __init__(self, **kwargs):
+        super(LogIndiserverDownloadView, self).__init__(**kwargs)
+
+        self.user_unit_name = app.config['INDISERVER_SERVICE_NAME']
+        self.download_name_tmpl = 'indi-allsky_indiserver_log_{ts:%Y%m%d_%H%M%S}.txt.gz'
+
+
+class LogUpgradeDownloadView(LogDownloadJournalViewBase):
+    def __init__(self, **kwargs):
+        super(LogUpgradeDownloadView, self).__init__(**kwargs)
+
+        self.user_unit_name = app.config['UPGRADE_ALLSKY_SERVICE_NAME']
+        self.download_name_tmpl = 'indi-allsky_upgrade_log_{ts:%Y%m%d_%H%M%S}.txt.gz'
 
 
 class SupportInfoView(TemplateView):
@@ -11938,11 +12042,15 @@ bp_allsky.add_url_rule('/manual_gpio', view_func=ManualGpioView.as_view('manual_
 bp_allsky.add_url_rule('/ajax/manual_gpio', view_func=AjaxManualGpioView.as_view('ajax_manual_gpio_view'))
 
 bp_allsky.add_url_rule('/log', view_func=LogView.as_view('log_view', template_name='log.html'))
+bp_allsky.add_url_rule('/log/indiserver', view_func=LogIndiserverLogView.as_view('log_indiserver_view', template_name='log.html'))
 bp_allsky.add_url_rule('/stream/log', view_func=StreamLogView.as_view('stream_log_view'))
+bp_allsky.add_url_rule('/stream/indiserver_log', view_func=StreamIndiserverLogView.as_view('stream_indiserver_log_view'))
 bp_allsky.add_url_rule('/log/download', view_func=LogDownloadView.as_view('log_download_view'))
 bp_allsky.add_url_rule('/log/webapp_download', view_func=LogWebappDownloadView.as_view('log_webapp_download_view'))
 bp_allsky.add_url_rule('/log/syslog_download', view_func=LogSyslogDownloadView.as_view('log_syslog_download_view'))
 bp_allsky.add_url_rule('/log/kern_download', view_func=LogKernDownloadView.as_view('log_kern_download_view'))
+bp_allsky.add_url_rule('/log/indiserver_download', view_func=LogIndiserverDownloadView.as_view('log_indiserver_download_view'))
+bp_allsky.add_url_rule('/log/upgrade_download', view_func=LogUpgradeDownloadView.as_view('log_upgrade_download_view'))
 
 bp_allsky.add_url_rule('/support', view_func=SupportInfoView.as_view('support_info_view', template_name='support_info.html'))
 bp_allsky.add_url_rule('/js/support', view_func=JsonSupportInfoView.as_view('js_support_info_view'))

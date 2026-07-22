@@ -925,6 +925,42 @@ echo "**** Enable linger for user ****"
 sudo loginctl enable-linger "$USER"
 
 
+if [[ "$DISTRO" == "arch" ]]; then
+    # no rsyslog for arch
+    :
+else
+    echo "**** Setup rsyslog logging ****"
+    [[ ! -d "/var/log/indi-allsky" ]] && sudo mkdir /var/log/indi-allsky
+    sudo chmod 755 /var/log/indi-allsky
+    sudo touch /var/log/indi-allsky/indi-allsky.log
+    sudo chmod 644 /var/log/indi-allsky/indi-allsky.log
+    sudo touch /var/log/indi-allsky/webapp-indi-allsky.log
+    sudo chmod 644 /var/log/indi-allsky/webapp-indi-allsky.log
+    sudo touch /var/log/indi-allsky/indiserver.log
+    sudo chmod 644 /var/log/indi-allsky/indiserver.log
+    sudo touch /var/log/indi-allsky/upgrade.log
+    sudo chmod 644 /var/log/indi-allsky/upgrade.log
+    sudo chown -R "$RSYSLOG_USER":"$RSYSLOG_GROUP" /var/log/indi-allsky
+
+
+    # 10 prefix so they are process before the defaults in 50
+    sudo cp -f "${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf" /etc/rsyslog.d/10-indi-allsky.conf
+    sudo chown root:root /etc/rsyslog.d/10-indi-allsky.conf
+    sudo chmod 644 /etc/rsyslog.d/10-indi-allsky.conf
+
+
+    # remove old version
+    [[ -f "/etc/rsyslog.d/indi-allsky.conf" ]] && sudo rm -f /etc/rsyslog.d/indi-allsky.conf
+
+    sudo systemctl restart rsyslog
+
+
+    sudo cp -f "${ALLSKY_DIRECTORY}/log/logrotate_indi-allsky" /etc/logrotate.d/indi-allsky
+    sudo chown root:root /etc/logrotate.d/indi-allsky
+    sudo chmod 644 /etc/logrotate.d/indi-allsky
+fi
+
+
 # ensure indiserver is running
 systemctl --user start "${INDISERVER_SERVICE_NAME}.service"
 
