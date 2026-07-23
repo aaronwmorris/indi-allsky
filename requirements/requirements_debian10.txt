@@ -54,6 +54,7 @@ Flask-WTF
 Flask-Login
 Authlib
 werkzeug
+simple-websocket >= 1.0.0
 is-safe-url
 certifi
 # https://www.piwheels.org/project/cryptography/
