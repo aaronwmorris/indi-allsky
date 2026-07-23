@@ -4,7 +4,7 @@
 
 {% block head %}
 <style>
-#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab, #nav-mqtt-tab, #nav-devices-tab, #nav-sensors-tab, #nav-adsb-tab, #nav-sat_track-tab, #nav-timelapse-tab, #nav-overlays-tab {
+#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-allskymap-tab, #nav-youtube-tab, #nav-mqtt-tab, #nav-devices-tab, #nav-sensors-tab, #nav-adsb-tab, #nav-sat_track-tab, #nav-timelapse-tab, #nav-overlays-tab {
     width: 150px;
     margin-top: 10px;
     margin-right: 5px;
@@ -41,6 +41,7 @@ var camera_id = {{ camera_id }};
     <button class="nav-link link-danger bg-dark" id="nav-youtube-tab" data-bs-toggle="tab" data-bs-target="#nav-youtube" type="button" role="tab" aria-controls="nav-youtube" aria-selected="false">YouTube</button>
     <button class="nav-link link-secondary bg-dark" id="nav-s3-tab" data-bs-toggle="tab" data-bs-target="#nav-s3" type="button" role="tab" aria-controls="nav-s3" aria-selected="false">Object Storage</button>
     <button class="nav-link link-light bg-dark" id="nav-syncapi-tab" data-bs-toggle="tab" data-bs-target="#nav-syncapi" type="button" role="tab" aria-controls="nav-syncapi" aria-selected="false">SyncAPI</button>
+    <button class="nav-link link-success bg-dark" id="nav-allskymap-tab" data-bs-toggle="tab" data-bs-target="#nav-allskymap" type="button" role="tab" aria-controls="nav-allskymap" aria-selected="false">Allsky Map</button>
     <button class="nav-link link-primary bg-dark" id="nav-sensors-tab" data-bs-toggle="tab" data-bs-target="#nav-sensors" type="button" role="tab" aria-controls="nav-sensors" aria-selected="false">Sensors</button>
     <button class="nav-link link-danger bg-dark" id="nav-devices-tab" data-bs-toggle="tab" data-bs-target="#nav-devices" type="button" role="tab" aria-controls="nav-devices" aria-selected="false">Devices</button>
     <button class="nav-link link-secondary bg-dark" id="nav-adsb-tab" data-bs-toggle="tab" data-bs-target="#nav-adsb" type="button" role="tab" aria-controls="nav-adsb" aria-selected="false">ADS-B</button>
@@ -9810,6 +9811,132 @@ var camera_id = {{ camera_id }};
 
 </div><!-- end sat_track tab -->
 
+<div class="tab-pane fade" id="nav-allskymap" role="tabpanel" aria-labelledby="nav-allskymap-tab">
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ALLSKYMAP__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.ALLSKYMAP__ENABLE(class='form-check-input') }}
+                <div id="ALLSKYMAP__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            Enable reporting camera status and latest thumbnail image to the central Allsky Map.
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ALLSKYMAP__API_URL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-6">
+            {{ form_config.ALLSKYMAP__API_URL(class='form-control bg-secondary') }}
+            <div id="ALLSKYMAP__API_URL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">
+            Endpoint of the central Allsky Map server API ping endpoint.
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ALLSKYMAP__API_KEY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.ALLSKYMAP__API_KEY(class='form-control bg-secondary') }}
+            <div id="ALLSKYMAP__API_KEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            Unique UUID API Key generated via your Allsky Map account.
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ALLSKYMAP__CAMERA_NAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.ALLSKYMAP__CAMERA_NAME(class='form-control bg-secondary') }}
+            <div id="ALLSKYMAP__CAMERA_NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            Optional override for the camera display name (defaults to system name).
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ALLSKYMAP__CAMERA_OWNER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.ALLSKYMAP__CAMERA_OWNER(class='form-control bg-secondary') }}
+            <div id="ALLSKYMAP__CAMERA_OWNER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            Optional display name/handle of the camera owner.
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ALLSKYMAP__WEBSITE_URL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-6">
+            {{ form_config.ALLSKYMAP__WEBSITE_URL(class='form-control bg-secondary') }}
+            <div id="ALLSKYMAP__WEBSITE_URL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">
+            Optional URL link for your local camera web page.
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ALLSKYMAP__UPLOAD_IMAGE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.ALLSKYMAP__UPLOAD_IMAGE(class='form-check-input') }}
+                <div id="ALLSKYMAP__UPLOAD_IMAGE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            Upload the latest captured image thumbnail along with the ping (highly recommended, works behind NAT/firewalls).
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ALLSKYMAP__INTERVAL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.ALLSKYMAP__INTERVAL(class='form-control bg-secondary') }}
+            <div id="ALLSKYMAP__INTERVAL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            How often the map client sends status pings (in minutes). Recommended: 10 minutes.
+        </div>
+    </div>
+
+</div><!-- end allskymap tab -->
+
 </div>
 
     <hr>
@@ -10424,6 +10551,12 @@ const field_names = [
     'INDI_CONFIG_DEFAULTS',
     'INDI_CONFIG_DAY',
     'CONFIG_NOTE',
+    'ALLSKYMAP__API_URL',
+    'ALLSKYMAP__API_KEY',
+    'ALLSKYMAP__CAMERA_NAME',
+    'ALLSKYMAP__CAMERA_OWNER',
+    'ALLSKYMAP__WEBSITE_URL',
+    'ALLSKYMAP__INTERVAL',
 ];
 
 const checkbox_field_names = [
@@ -10592,6 +10725,8 @@ const checkbox_field_names = [
     'WEB_NONLOCAL_IMAGES',
     'WEB_LOCAL_IMAGES_ADMIN',
     'RELOAD_ON_SAVE',
+    'ALLSKYMAP__ENABLE',
+    'ALLSKYMAP__UPLOAD_IMAGE',
 ];
 
 var fields = {};
