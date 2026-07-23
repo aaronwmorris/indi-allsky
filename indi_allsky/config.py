@@ -558,6 +558,17 @@ class IndiAllSkyConfigBase(object):
             "CERT_BYPASS"            : True,
             "PUBLISH_IMAGE"          : True,
         },
+        "ALLSKYMAP" : {
+            "ENABLE"                 : False,
+            "API_URL"                : "https://allsky-map.hamishwest.xyz",
+            "API_KEY"                : "",
+            "API_KEY_E"              : "",
+            "CAMERA_NAME"            : "",
+            "CAMERA_OWNER"           : "",
+            "WEBSITE_URL"            : "",
+            "UPLOAD_IMAGE"           : True,
+            "INTERVAL"               : 10,
+        },
         "SYNCAPI" : {
             "ENABLE"                 : False,
             "BASEURL"                : "https://example.com/indi-allsky",
@@ -1031,6 +1042,14 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 syncapi__apikey = config.get('SYNCAPI', {}).get('APIKEY', '')
 
 
+            allskymap__apikey_e = config.get('ALLSKYMAP', {}).get('API_KEY_E', '')
+            if allskymap__apikey_e:
+                # not catching InvalidToken
+                allskymap__apikey = f_key.decrypt(allskymap__apikey_e.encode()).decode()
+            else:
+                allskymap__apikey = config.get('ALLSKYMAP', {}).get('API_KEY', '')
+
+
             pycurl_camera__password_e = config.get('PYCURL_CAMERA', {}).get('PASSWORD_E', '')
             if pycurl_camera__password_e:
                 # not catching InvalidToken
@@ -1108,6 +1127,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             s3upload__secret_key = config.get('S3UPLOAD', {}).get('SECRET_KEY', '')
             mqttpublish__password = config.get('MQTTPUBLISH', {}).get('PASSWORD', '')
             syncapi__apikey = config.get('SYNCAPI', {}).get('APIKEY', '')
+            allskymap__apikey = config.get('ALLSKYMAP', {}).get('API_KEY', '')
             pycurl_camera__password = config.get('PYCURL_CAMERA', {}).get('PASSWORD', '')
             temp_sensor__openweathermap_apikey = config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', '')
             temp_sensor__wunderground_apikey = config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY', '')
@@ -1124,6 +1144,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             'FILETRANSFER',
             'S3UPLOAD',
             'MQTTPUBLISH',
+            'ALLSKYMAP',
             'SYNCAPI',
             'PYCURL_CAMERA',
             'TEMP_SENSOR',
@@ -1146,6 +1167,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['MQTTPUBLISH']['PASSWORD_E'] = ''
         config['SYNCAPI']['APIKEY'] = syncapi__apikey
         config['SYNCAPI']['APIKEY_E'] = ''
+        config['ALLSKYMAP']['API_KEY'] = allskymap__apikey
+        config['ALLSKYMAP']['API_KEY_E'] = ''
         config['PYCURL_CAMERA']['PASSWORD'] = pycurl_camera__password
         config['PYCURL_CAMERA']['PASSWORD_E'] = ''
         config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'] = temp_sensor__openweathermap_apikey
@@ -1287,6 +1310,15 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 syncapi__apikey = ''
 
 
+            allskymap__apikey = str(config.get('ALLSKYMAP', {}).get('API_KEY', ''))
+            if allskymap__apikey:
+                allskymap__apikey_e = f_key.encrypt(allskymap__apikey.encode()).decode()
+                allskymap__apikey = ''
+            else:
+                allskymap__apikey_e = ''
+                allskymap__apikey = ''
+
+
             pycurl_camera__password = str(config.get('PYCURL_CAMERA', {}).get('PASSWORD', ''))
             if pycurl_camera__password:
                 pycurl_camera__password_e = f_key.encrypt(pycurl_camera__password.encode()).decode()
@@ -1379,6 +1411,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             mqttpublish__password_e = ''
             syncapi__apikey = str(config.get('SYNCAPI', {}).get('APIKEY', ''))
             syncapi__apikey_e = ''
+            allskymap__apikey = str(config.get('ALLSKYMAP', {}).get('API_KEY', ''))
+            allskymap__apikey_e = ''
             pycurl_camera__password = str(config.get('PYCURL_CAMERA', {}).get('PASSWORD', ''))
             pycurl_camera__password_e = ''
             temp_sensor__openweathermap_apikey = str(config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', ''))
@@ -1404,6 +1438,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             'FILETRANSFER',
             'S3UPLOAD',
             'MQTTPUBLISH',
+            'ALLSKYMAP',
             'SYNCAPI',
             'PYCURL_CAMERA',
             'TEMP_SENSOR',
@@ -1426,6 +1461,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['MQTTPUBLISH']['PASSWORD_E'] = mqttpublish__password_e
         config['SYNCAPI']['APIKEY'] = syncapi__apikey
         config['SYNCAPI']['APIKEY_E'] = syncapi__apikey_e
+        config['ALLSKYMAP']['API_KEY'] = allskymap__apikey
+        config['ALLSKYMAP']['API_KEY_E'] = allskymap__apikey_e
         config['PYCURL_CAMERA']['PASSWORD'] = pycurl_camera__password
         config['PYCURL_CAMERA']['PASSWORD_E'] = pycurl_camera__password_e
         config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'] = temp_sensor__openweathermap_apikey

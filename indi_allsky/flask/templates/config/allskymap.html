@@ -1,0 +1,88 @@
+<div class="tab-pane fade" id="nav-allskymap" role="tabpanel" aria-labelledby="nav-allskymap-tab">
+    <div class="tw:flex tw:flex-col tw:gap-6">
+
+        <!-- Allsky Map Settings Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <div class="tw:flex tw:items-center tw:justify-between">
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Allsky Map Integration</span>
+                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Documentation</a>
+                </div>
+
+                <!-- Enable Allsky Map -->
+                <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ALLSKYMAP__ENABLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Enable reporting camera status and latest thumbnail image to the central Allsky Map</span>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
+                        {{ form_config.ALLSKYMAP__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="ALLSKYMAP__ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- API URL & API Key -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ALLSKYMAP__API_URL.label.text }}</span>
+                        {{ form_config.ALLSKYMAP__API_URL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Endpoint of the central Allsky Map server API ping endpoint</span>
+                        <div id="ALLSKYMAP__API_URL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ALLSKYMAP__API_KEY.label.text }}</span>
+                        {{ form_config.ALLSKYMAP__API_KEY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Unique UUID API Key generated via your Allsky Map account</span>
+                        <div id="ALLSKYMAP__API_KEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Camera Name & Camera Owner -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ALLSKYMAP__CAMERA_NAME.label.text }}</span>
+                        {{ form_config.ALLSKYMAP__CAMERA_NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Optional override for the camera display name (defaults to system name)</span>
+                        <div id="ALLSKYMAP__CAMERA_NAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ALLSKYMAP__CAMERA_OWNER.label.text }}</span>
+                        {{ form_config.ALLSKYMAP__CAMERA_OWNER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Optional display name/handle of the camera owner</span>
+                        <div id="ALLSKYMAP__CAMERA_OWNER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Website URL & Ping Interval -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ALLSKYMAP__WEBSITE_URL.label.text }}</span>
+                        {{ form_config.ALLSKYMAP__WEBSITE_URL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Optional URL link for your local camera web page</span>
+                        <div id="ALLSKYMAP__WEBSITE_URL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ALLSKYMAP__INTERVAL.label.text }}</span>
+                        {{ form_config.ALLSKYMAP__INTERVAL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">How often the map client sends status pings (in minutes). Recommended: 10 minutes</span>
+                        <div id="ALLSKYMAP__INTERVAL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Upload Image Toggle -->
+                <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:pt-2">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ALLSKYMAP__UPLOAD_IMAGE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Upload the latest captured image thumbnail along with the ping (highly recommended, works behind NAT/firewalls)</span>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
+                        {{ form_config.ALLSKYMAP__UPLOAD_IMAGE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="ALLSKYMAP__UPLOAD_IMAGE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div><!-- end allskymap tab -->
