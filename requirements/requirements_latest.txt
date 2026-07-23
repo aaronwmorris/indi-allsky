@@ -24,7 +24,7 @@ paramiko >= 5.0.0
 # https://www.wheelodex.org/projects/pycurl/ or https://www.piwheels.org/project/pycurl/
 pycurl
 # https://www.wheelodex.org/projects/pillow/ or https://www.piwheels.org/project/Pillow/
-Pillow >= 12.2.0
+Pillow >= 12.3.0
 piexif
 imageio
 imageio-ffmpeg
