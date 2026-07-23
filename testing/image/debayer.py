@@ -61,6 +61,11 @@ class Debayer(object):
             sys.exit(1)
 
 
+        if len(data.shape) != 2:
+            logger.error('Image is already debayered')
+            sys.exit(1)
+
+
         #data = cv2.flip(data, 0)  # verticle flip
         #data = cv2.flip(data, 1)  # horizontal flip
 
