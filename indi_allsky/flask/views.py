@@ -8321,7 +8321,11 @@ class StreamLogViewBase(BaseView):
 
 
             reader.seek_tail()
-            reader.get_previous()  # Fixes edge-case pointer positioning
+
+            # return the previous 10 lines of log messages
+            for _ in range(11):
+                reader.get_previous()  # Fixes edge-case pointer positioning
+
 
             poller = select.poll()
             poller.register(reader.fileno(), reader.get_events())
