@@ -12062,6 +12062,109 @@ class WsShellView(BaseView):
         return ''
 
 
+class ESP32ImageView(BaseView):
+    decorators = []
+
+    VALID_SIZES = (240, 280, 320, 720, 800)
+    DEFAULT_SIZE = 240
+
+
+    def dispatch_request(self):
+        import cv2
+
+        try:
+            camera_id = int(request.args.get('camera_id', 0))
+        except (ValueError, TypeError):
+            camera_id = 0
+
+        try:
+            size = int(request.args.get('size', self.DEFAULT_SIZE))
+        except (ValueError, TypeError):
+            size = self.DEFAULT_SIZE
+
+        if size not in self.VALID_SIZES:
+            size = self.DEFAULT_SIZE
+
+        if not camera_id:
+            camera = self.getLatestCamera()
+            camera_id = camera.id
+
+        self.cameraSetup(camera_id=camera_id)
+
+        image_entry = self._getLatestImage(camera_id)
+        if not image_entry:
+            return 'No image available', 404
+
+        image_p = image_entry.getFilesystemPath()
+
+        if not image_p.exists():
+            app.logger.error('ESP32: image file not found: %s', image_p)
+            return 'Image file not found', 404
+
+        image_data = self._readImage(image_p)
+        if image_data is None:
+            return 'Unable to read image', 500
+
+        image_resized = cv2.resize(image_data, (size, size), interpolation=cv2.INTER_AREA)
+
+        jpg_quality = self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('jpg', 90)
+        _, image_bytes = cv2.imencode('.jpg', image_resized, [cv2.IMWRITE_JPEG_QUALITY, jpg_quality])
+        image_buffer = io.BytesIO(image_bytes.tobytes())
+
+        return Response(image_buffer.getvalue(), mimetype='image/jpeg')
+
+
+    def _getLatestImage(self, camera_id):
+        return IndiAllSkyDbImageTable.query\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .first()
+
+
+    def _readImage(self, image_p):
+        import cv2
+
+        if image_p.suffix in ('.jpg', '.jpeg'):
+            import simplejpeg
+            try:
+                with io.open(str(image_p), 'rb') as f:
+                    return simplejpeg.decode_jpeg(f.read(), colorspace='BGR')
+            except ValueError:
+                app.logger.error('Unable to read %s', image_p)
+                return None
+
+        elif image_p.suffix in ('.png',):
+            data = cv2.imread(str(image_p), cv2.IMREAD_COLOR)
+            if isinstance(data, type(None)):
+                app.logger.error('Unable to read %s', image_p)
+                return None
+            return data
+
+        elif image_p.suffix in ('.fit', '.fits'):
+            import numpy
+            from astropy.io import fits
+            try:
+                hdulist = fits.open(image_p)
+            except OSError:
+                app.logger.error('Unable to read %s', image_p)
+                return None
+            image_data = numpy.swapaxes(hdulist[0].data, 0, 2)
+            image_data = numpy.swapaxes(image_data, 0, 1)
+            return cv2.cvtColor(image_data, cv2.COLOR_RGB2BGR)
+
+        else:
+            import numpy
+            import PIL
+            from PIL import Image
+            try:
+                with Image.open(str(image_p)) as img_pil:
+                    return cv2.cvtColor(numpy.array(img_pil), cv2.COLOR_RGB2BGR)
+            except PIL.UnidentifiedImageError:
+                app.logger.error('Unable to read %s', image_p)
+                return None
+
+
 # images are normally served directly by the web server, this is a backup method
 @bp_allsky.route('/images/<path:path>')  # noqa: E302
 def images_folder(path):
@@ -12236,6 +12339,8 @@ bp_allsky.add_url_rule('/latestrawview', view_func=LatestRawImageViewRedirect.as
 bp_allsky.add_url_rule('/latesttimelapsewatch', view_func=LatestTimelapseVideoWatchRedirect.as_view('latest_timelapse_video_watch_redirect_view'))
 bp_allsky.add_url_rule('/lateststartrailvideowatch', view_func=LatestStartrailVideoWatchRedirect.as_view('latest_startrail_video_watch_redirect_view'))
 bp_allsky.add_url_rule('/latestpanoramavideowatch', view_func=LatestPanoramaVideoWatchRedirect.as_view('latest_panorama_video_watch_redirect_view'))
+
+bp_allsky.add_url_rule('/allsky_esp32', view_func=ESP32ImageView.as_view('esp32_image_view'))
 
 # hidden
 bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
