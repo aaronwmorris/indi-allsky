@@ -560,7 +560,7 @@ class IndiAllSkyConfigBase(object):
         },
         "ALLSKYMAP" : {
             "ENABLE"                 : False,
-            "API_URL"                : "https://allsky-map.hamishwest.xyz",
+            "API_URL"                : "https://allsky-map.com",
             "API_KEY"                : "",
             "API_KEY_E"              : "",
             "CAMERA_NAME"            : "",
