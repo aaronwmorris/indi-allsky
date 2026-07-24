@@ -1616,17 +1616,19 @@ class IndiAllSky(object):
             return
 
 
-    def _triggerAllskyMapPing(self):
-        import threading
-        t = threading.Thread(target=self._allskyMapPingWorker)
-        t.daemon = True
-        t.start()
+    def _triggerAllskyMapPing(self, task_state=TaskQueueState.QUEUED):
+        jobdata = {
+            'action' : 'sendAllskyMapPing',
+            'kwargs' : {},
+        }
 
-    def _allskyMapPingWorker(self):
-        from .allsky_map import send_allsky_map_ping
-        
-        def db_notify(category, name, message, expire):
-            self._miscDb.addNotification(category, name, message, expire=expire)
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=task_state,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
 
-        send_allsky_map_ping(self.config, logger, db_notify)
+        self.video_q.put({'task_id' : task.id})
 
