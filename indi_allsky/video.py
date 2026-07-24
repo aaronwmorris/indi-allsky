@@ -1978,6 +1978,24 @@ class VideoWorker(Process):
         self._miscUpload.upload_db_backup(backup_file)
 
 
+    def sendAllskyMapPing(self, task, **kwargs):
+        task.setRunning()
+
+        from .allsky_map import send_allsky_map_ping
+        from .flask.models import NotificationCategory
+
+        def db_notify(category, name, message, expire):
+            self._miscDb.addNotification(category, name, message, expire=expire)
+
+        success, msg = send_allsky_map_ping(self.config, logger, db_notify)
+
+        if success:
+            task.setSuccess(f'Allsky Map Ping successful: {msg}')
+            self._miscDb.clearNotification(NotificationCategory.STATE, 'allskymap_auth_error')
+        else:
+            task.setFailed(f'Allsky Map Ping failed: {msg}')
+
+
     def expireData(self, task, **kwargs):
         camera_id = kwargs['camera_id']
 

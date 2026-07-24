@@ -2733,6 +2733,33 @@ def SYNCAPI__BASEURL_validator(form, field):
         raise ValidationError('Do not sync to localhost, bad things happen')
 
 
+def ALLSKYMAP__API_URL_validator(form, field):
+    if form.ALLSKYMAP__ENABLE.data and not field.data:
+        raise ValidationError('API URL is required when Allsky Map integration is enabled')
+    if field.data:
+        try:
+            r = urlparse(field.data)
+            if not r.scheme or r.scheme not in ('http', 'https'):
+                raise ValidationError('URL must start with http:// or https://')
+        except Exception:
+            raise ValidationError('Invalid URL')
+
+
+def ALLSKYMAP__API_KEY_validator(form, field):
+    if form.ALLSKYMAP__ENABLE.data and not field.data:
+        raise ValidationError('API Key is required when Allsky Map integration is enabled')
+
+
+def ALLSKYMAP__INTERVAL_validator(form, field):
+    if field.data is not None:
+        try:
+            val = int(field.data)
+            if val < 1:
+                raise ValidationError('Interval must be at least 1 minute')
+        except ValueError:
+            raise ValidationError('Please enter a valid number')
+
+
 def YOUTUBE__SECRETS_FILE_validator(form, field):
     if not field.data:
         return
@@ -4794,6 +4821,14 @@ class IndiAllskyConfigForm(FlaskForm):
     SYNCAPI__UPLOAD_VIDEO            = BooleanField('Transfer videos', render_kw={'disabled' : 'disabled'})
     SYNCAPI__CONNECT_TIMEOUT         = FloatField('Connect Timeout', validators=[DataRequired(), SYNCAPI__TIMEOUT_validator])
     SYNCAPI__TIMEOUT                 = FloatField('Read Timeout', validators=[DataRequired(), SYNCAPI__TIMEOUT_validator])
+    ALLSKYMAP__ENABLE                = BooleanField('Enable Allsky Map Ping')
+    ALLSKYMAP__API_URL               = StringField('API URL', validators=[ALLSKYMAP__API_URL_validator])
+    ALLSKYMAP__API_KEY               = PasswordField('API Key', widget=PasswordInput(hide_value=False), validators=[ALLSKYMAP__API_KEY_validator], render_kw={'autocomplete' : 'new-password'})
+    ALLSKYMAP__CAMERA_NAME           = StringField('Camera Name')
+    ALLSKYMAP__CAMERA_OWNER          = StringField('Camera Owner')
+    ALLSKYMAP__WEBSITE_URL           = StringField('Website URL')
+    ALLSKYMAP__UPLOAD_IMAGE          = BooleanField('Upload Latest Image')
+    ALLSKYMAP__INTERVAL              = IntegerField('Interval (Minutes)', validators=[ALLSKYMAP__INTERVAL_validator])
     YOUTUBE__ENABLE                  = BooleanField('Enable')
     YOUTUBE__SECRETS_FILE            = StringField('Client Secrets File', validators=[YOUTUBE__SECRETS_FILE_validator])
     YOUTUBE__PRIVACY_STATUS          = SelectField('Privacy Status', choices=YOUTUBE__PRIVACY_STATUS_choices, validators=[DataRequired(), YOUTUBE__PRIVACY_STATUS_validator])
