@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='xterm/xterm.css') }}" />
+<script src="{{ url_for('indi_allsky.static', filename='xterm/xterm.js') }}"></script>
+<script src="{{ url_for('indi_allsky.static', filename='xterm/xterm-addon-fit.js') }}"></script>
+<script type="text/javascript">
+var camera_id = {{ camera_id }};
+</script>
+<style>
+  .terminal-wrapper {
+    background-color: #1e1e1e;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
+    margin-bottom: 20px;
+  }
+  .terminal-header {
+    background-color: #252526;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    padding: 6px 16px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #2d2d2d;
+    margin: -10px -10px 10px -10px;
+  }
+  .terminal-title {
+    color: #858585;
+    font-size: 13px;
+    font-family: monospace;
+  }
+  #terminal-container {
+    height: calc(100vh - 180px);
+    min-height: 400px;
+  }
+  .xterm {
+    padding: 5px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="terminal-wrapper">
+      <div class="terminal-header">
+        <div class="terminal-title">bash (indi-allsky)</div>
+      </div>
+      <div id="terminal-container"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    const term = new Terminal({
+        cursorBlink: true,
+        cursorStyle: 'block',
+        theme: {
+            background: '#1e1e1e',
+            foreground: '#d4d4d4',
+            cursor: '#c7c7c7',
+            black: '#000000',
+            red: '#cd3131',
+            green: '#0dbc79',
+            yellow: '#e5e510',
+            blue: '#2472c8',
+            magenta: '#bc3fbc',
+            cyan: '#11a8cd',
+            white: '#e5e5e5',
+            brightBlack: '#666666',
+            brightRed: '#f14c4c',
+            brightGreen: '#23d18b',
+            brightYellow: '#f5f543',
+            brightBlue: '#3b8eea',
+            brightMagenta: '#d670d6',
+            brightCyan: '#29b8db',
+            brightWhite: '#e5e5e5'
+        },
+        fontFamily: 'Courier New, Courier, monospace',
+        fontSize: 14
+    });
+
+    const fitAddon = new FitAddon.FitAddon();
+    term.loadAddon(fitAddon);
+    term.open(document.getElementById('terminal-container'));
+    fitAddon.fit();
+
+    let wsUrl = "{{ url_for('indi_allsky.shell_ws', _external=True) }}";
+    if (wsUrl.startsWith('http://')) {
+        wsUrl = 'ws://' + wsUrl.substring(7);
+    } else if (wsUrl.startsWith('https://')) {
+        wsUrl = 'wss://' + wsUrl.substring(8);
+    } else if (!wsUrl.startsWith('ws://') && !wsUrl.startsWith('wss://')) {
+        // Relative path fallback
+        const loc = window.location;
+        const wsProtocol = loc.protocol === 'https:' ? 'wss:' : 'ws:';
+        wsUrl = wsProtocol + '//' + loc.host + (wsUrl.startsWith('/') ? '' : '/') + wsUrl;
+    }
+    const socket = new WebSocket(wsUrl);
+
+    socket.onopen = function() {
+        term.write('\x1b[1;31mWARNING: Interactive shell session. Commands are executed directly on the host system.\x1b[0m\r\n\r\n');
+        const dims = fitAddon.proposeDimensions();
+        if (dims) {
+            socket.send(JSON.stringify({
+                type: 'resize',
+                cols: dims.cols,
+                rows: dims.rows
+            }));
+        }
+    };
+
+    socket.onmessage = function(event) {
+        try {
+            const msg = JSON.parse(event.data);
+            if (msg.type === 'output') {
+                term.write(msg.data);
+            }
+        } catch (e) {
+            console.error("Error parsing socket message:", e);
+        }
+    };
+
+    socket.onclose = function() {
+        term.write('\r\n\x1b[31mConnection closed.\x1b[0m\r\n');
+    };
+
+    socket.onerror = function(err) {
+        term.write('\r\n\x1b[31mConnection error.\x1b[0m\r\n');
+        console.error(err);
+    };
+
+    term.onData(function(data) {
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                type: 'input',
+                data: data
+            }));
+        }
+    });
+
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(function() {
+            fitAddon.fit();
+            const dims = fitAddon.proposeDimensions();
+            if (dims && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'resize',
+                    cols: dims.cols,
+                    rows: dims.rows
+                }));
+            }
+        }, 100);
+    });
+
+    setTimeout(() => {
+        fitAddon.fit();
+    }, 100);
+});
+</script>
+{% endblock %}

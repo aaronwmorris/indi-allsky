@@ -12,7 +12,6 @@ ExecStart=%ALLSKY_DIRECTORY%/virtualenv/indi-allsky/bin/gunicorn --config %ALLSK
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed
 TimeoutStopSec=5
-PrivateTmp=true
 Nice=10
 UMask=0022
 
