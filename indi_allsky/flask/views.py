@@ -2654,7 +2654,7 @@ class ConfigView(FormView):
             'SYNCAPI__CONNECT_TIMEOUT'       : self.indi_allsky_config.get('SYNCAPI', {}).get('CONNECT_TIMEOUT', 10.0),
             'SYNCAPI__TIMEOUT'               : self.indi_allsky_config.get('SYNCAPI', {}).get('TIMEOUT', 60.0),
             'ALLSKYMAP__ENABLE'              : self.indi_allsky_config.get('ALLSKYMAP', {}).get('ENABLE', False),
-            'ALLSKYMAP__API_URL'             : self.indi_allsky_config.get('ALLSKYMAP', {}).get('API_URL', 'https://allsky-map.hamishwest.xyz'),
+            'ALLSKYMAP__API_URL'             : self.indi_allsky_config.get('ALLSKYMAP', {}).get('API_URL', 'https://allsky-map.com'),
             'ALLSKYMAP__API_KEY'             : self.indi_allsky_config.get('ALLSKYMAP', {}).get('API_KEY', ''),
             'ALLSKYMAP__CAMERA_NAME'         : self.indi_allsky_config.get('ALLSKYMAP', {}).get('CAMERA_NAME', ''),
             'ALLSKYMAP__CAMERA_OWNER'        : self.indi_allsky_config.get('ALLSKYMAP', {}).get('CAMERA_OWNER', ''),
