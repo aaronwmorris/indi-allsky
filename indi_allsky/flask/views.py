@@ -11946,14 +11946,6 @@ class AjaxAstroPanelView(BaseView):
         return polaris_data
 
 
-
-# images are normally served directly by the web server, this is a backup method
-@bp_allsky.route('/images/<path:path>')  # noqa: E302
-def images_folder(path):
-    app.logger.warning('Serving image file: %s', path)
-    return send_from_directory(app.config['INDI_ALLSKY_IMAGE_FOLDER'], path)
-
-
 def set_winsize(fd, row, col, xpix=0, ypix=0):
     import fcntl
     import termios
@@ -12071,6 +12063,13 @@ def shell_ws():
                 pass
 
     return ''
+
+
+# images are normally served directly by the web server, this is a backup method
+@bp_allsky.route('/images/<path:path>')  # noqa: E302
+def images_folder(path):
+    app.logger.warning('Serving image file: %s', path)
+    return send_from_directory(app.config['INDI_ALLSKY_IMAGE_FOLDER'], path)
 
 
 bp_allsky.add_url_rule('/ajax/status_update', view_func=AjaxStatusUpdateView.as_view('ajax_status_update_view'))
