@@ -10,6 +10,16 @@
     <link rel="icon" type="image/png" href="{{ url_for('indi_allsky.static', filename='images/favicon_128.png') }}"
         sizes="128x128">
 
+    <script>
+        (function() {
+            var preferredMode = localStorage.getItem('allsky-theme-mode') || 'dark';
+            var lightTheme = localStorage.getItem('allsky-light-theme') || 'emerald';
+            var darkTheme = localStorage.getItem('allsky-dark-theme') || 'dark';
+            var activeTheme = (preferredMode === 'light') ? lightTheme : darkTheme;
+            document.documentElement.setAttribute('data-theme', activeTheme);
+        })();
+    </script>
+
     <link href="{{ url_for('indi_allsky.static', filename='css/dist.css') }}" rel="stylesheet">
     <script src="{{ url_for('indi_allsky.static', filename='js/jquery-3.7.1.min.js') }}"></script>
 
@@ -361,17 +371,25 @@
             setTimeout(getStatusText, 60000);
         }
 
+        window.applyAllskyTheme = function() {
+            var mode = localStorage.getItem('allsky-theme-mode') || 'dark';
+            var lightT = localStorage.getItem('allsky-light-theme') || 'emerald';
+            var darkT = localStorage.getItem('allsky-dark-theme') || 'dark';
+
+            var activeTheme = (mode === 'light') ? lightT : darkT;
+            $('html').attr('data-theme', activeTheme);
+
+            // Sidebar toggle (#theme-toggle): checked = light mode
+            $('#theme-toggle').prop('checked', mode === 'light');
+        };
+
         $(document).ready(function () {
-            const themeToggle = $('#theme-toggle');
-            const savedTheme = localStorage.getItem('theme') || 'dark';
+            window.applyAllskyTheme();
 
-            $('html').attr('data-theme', savedTheme);
-            themeToggle.prop('checked', savedTheme === 'light');
-
-            themeToggle.on('change', function () {
-                const theme = $(this).is(':checked') ? 'light' : 'dark';
-                $('html').attr('data-theme', theme);
-                localStorage.setItem('theme', theme);
+            $('#theme-toggle').on('change', function () {
+                var newMode = $(this).is(':checked') ? 'light' : 'dark';
+                localStorage.setItem('allsky-theme-mode', newMode);
+                window.applyAllskyTheme();
             });
 
             loadNotification();

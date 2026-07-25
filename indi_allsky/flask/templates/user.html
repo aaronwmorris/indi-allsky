@@ -28,7 +28,7 @@
     <div class="tw:w-full tw:flex tw:items-center tw:justify-between tw:bg-base-200 tw:p-4 tw:rounded-2xl tw:border tw:border-base-content/10 tw:shadow-sm">
         <div>
             <h1 class="tw:text-base tw:font-black tw:uppercase tw:tracking-widest tw:text-base-content tw:m-0">User Info</h1>
-            <p class="tw:text-[11px] tw:text-base-content/50 tw:mt-0.5 tw:font-mono">Account identity & authentication credentials</p>
+            <p class="tw:text-[11px] tw:text-base-content/50 tw:mt-0.5 tw:font-mono">Account identity, security & UI appearance settings</p>
         </div>
         <a href="{{ url_for('auth_indi_allsky.logout_view') }}" class="tw:no-underline tw:btn tw:btn-error tw:btn-outline tw:btn-sm tw:h-10 tw:px-4 tw:text-xs tw:font-bold tw:tracking-wide tw:uppercase tw:gap-2">
             <i class="tw:icon-[lucide--log-out] tw:w-4 tw:h-4"></i>
@@ -115,7 +115,7 @@
                 <div class="tw:flex tw:flex-col tw:gap-4 tw:pt-3 tw:border-t tw:border-base-content/10">
                     <button type="submit" class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:w-full tw:text-xs tw:font-bold tw:tracking-wide tw:uppercase tw:gap-2">
                         <i class="tw:icon-[lucide--save] tw:w-4 tw:h-4"></i>
-                        Save Configuration
+                        Save Profile & Password
                     </button>
 
                     <div class="tw:w-full">
@@ -127,6 +127,66 @@
 
         </div>
     </form>
+
+    <!-- CARD 3: THEME & APPEARANCE PREFERENCES -->
+    <div class="tw:w-full tw:bg-base-200 tw:p-6 tw:rounded-2xl tw:border tw:border-base-content/10 tw:shadow-sm tw:flex tw:flex-col tw:gap-6">
+        <div class="tw:border-b tw:border-base-content/10 tw:pb-3">
+            <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:m-0">
+                Theme & Appearance
+            </h4>
+            <p class="tw:text-[11px] tw:text-base-content/40 tw:m-0 tw:mt-0.5">Customize your DaisyUI color palette. Selecting a theme previews it live and switches to that mode.</p>
+        </div>
+
+        <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-6">
+            <!-- Light Theme Dropdown -->
+            <div class="tw:form-control tw:flex tw:flex-col tw:gap-2">
+                <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                    Light Theme Preset
+                </label>
+                <select id="select_light_theme" class="tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full">
+                    <option value="emerald">Emerald (Default Light)</option>
+                    <option value="light">Classic Light</option>
+                    <option value="cupcake">Cupcake</option>
+                    <option value="bumblebee">Bumblebee</option>
+                    <option value="corporate">Corporate</option>
+                    <option value="garden">Garden</option>
+                    <option value="lofi">Lofi</option>
+                    <option value="pastel">Pastel</option>
+                    <option value="fantasy">Fantasy</option>
+                    <option value="cmyk">CMYK</option>
+                    <option value="autumn">Autumn</option>
+                    <option value="acid">Acid</option>
+                    <option value="lemonade">Lemonade</option>
+                    <option value="winter">Winter</option>
+                    <option value="nord">Nord</option>
+                </select>
+                <span class="tw:text-[10px] tw:text-base-content/40">Selecting a light preset switches the UI to Light mode.</span>
+            </div>
+
+            <!-- Dark Theme Dropdown -->
+            <div class="tw:form-control tw:flex tw:flex-col tw:gap-2">
+                <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                    Dark Theme Preset
+                </label>
+                <select id="select_dark_theme" class="tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full">
+                    <option value="dark">Classic Dark (Default Dark)</option>
+                    <option value="synthwave">Synthwave</option>
+                    <option value="halloween">Halloween</option>
+                    <option value="forest">Forest</option>
+                    <option value="aqua">Aqua</option>
+                    <option value="black">Deep Black</option>
+                    <option value="luxury">Luxury</option>
+                    <option value="dracula">Dracula</option>
+                    <option value="business">Business</option>
+                    <option value="night">Night</option>
+                    <option value="coffee">Coffee</option>
+                    <option value="dim">Dim</option>
+                    <option value="sunset">Sunset</option>
+                </select>
+                <span class="tw:text-[10px] tw:text-base-content/40">Selecting a dark preset switches the UI to Dark mode.</span>
+            </div>
+        </div>
+    </div>
 
 </div>
 
@@ -166,6 +226,35 @@ fields['form_global'] = {
     'input' : failureMessage,
     'error' : failureMessage,
 };
+
+// Theme Management Logic
+$(document).ready(function() {
+    var lightT = localStorage.getItem('allsky-light-theme') || 'emerald';
+    var darkT = localStorage.getItem('allsky-dark-theme') || 'dark';
+
+    $('#select_light_theme').val(lightT);
+    $('#select_dark_theme').val(darkT);
+
+    if (window.applyAllskyTheme) {
+        window.applyAllskyTheme();
+    }
+
+    $('#select_light_theme').on('change', function() {
+        localStorage.setItem('allsky-light-theme', $(this).val());
+        localStorage.setItem('allsky-theme-mode', 'light');
+        if (window.applyAllskyTheme) {
+            window.applyAllskyTheme();
+        }
+    });
+
+    $('#select_dark_theme').on('change', function() {
+        localStorage.setItem('allsky-dark-theme', $(this).val());
+        localStorage.setItem('allsky-theme-mode', 'dark');
+        if (window.applyAllskyTheme) {
+            window.applyAllskyTheme();
+        }
+    });
+});
 
 $('#form_userinfo').on('submit', function() {
     successMessage.hide();
