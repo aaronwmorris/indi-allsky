@@ -58,101 +58,133 @@ $(document).ready(function() {
   loadSensorPanel();
 });
 </script>
-
 {% endblock %}
 
 {% block content %}
+<style>
+    /* Direct override block to bypass parent container layout restrictions */
+    .allsky-workspace-grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+        width: 100% !important;
+    }
+    @media (min-width: 1024px) {
+        .allsky-workspace-grid {
+            grid-template-columns: 1fr 1fr !important;
+            align-items: start !important;
+        }
+    }
+</style>
 
-<div class="d-flex align-items-center justify-content-between mb-3">
-    <div>
-        <h3 class="text-light mb-0">Sensor Panel</h3>
-        {% if last_update %}
-            <div class="text-secondary" style="font-size: 12px;">
-                Last update: <span id="sp_last_update">{{ last_update }}</span>
-                {% if last_update_age_s is not none %}
-                    (<span id="sp_last_age">{{ last_update_age_s }}</span>s ago)
+<div class="tw:container tw:h-full tw:mx-auto tw:flex tw:flex-col tw:gap-6">
+
+    <div class="tw:w-full tw:bg-base-200 tw:p-5 tw:rounded-xl tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4 tw:border tw:border-base-content/10">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="tw:p-2 tw:bg-primary/10 tw:text-primary tw:rounded-lg">
+                <i class="tw:icon-[lucide--gauge] tw:w-5 tw:h-5"></i>
+            </div>
+            <div>
+                <h3 class="tw:text-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content tw:m-0">Sensor Panel</h3>
+                
+                {% if last_update %}
+                    <div class="tw:text-[11px] tw:text-base-content/60 tw:mt-1 tw:font-medium tw:flex tw:items-center tw:gap-1.5">
+                        <i class="tw:icon-[lucide--clock] tw:w-3.5 tw:h-3.5 tw:text-base-content/40"></i>
+                        <span>Last update: <span id="sp_last_update" class="tw:font-mono tw:text-base-content tw:font-semibold">{{ last_update }}</span></span>
+                        {% if last_update_age_s is not none %}
+                            <span class="tw:text-base-content/40">(<span id="sp_last_age" class="tw:font-mono tw:text-info tw:font-semibold">{{ last_update_age_s }}</span>s ago)</span>
+                        {% else %}
+                            <span class="tw:text-base-content/40">(<span id="sp_last_age" class="tw:font-mono">-</span>s ago)</span>
+                        {% endif %}
+                    </div>
                 {% else %}
-                    (<span id="sp_last_age">-</span>s ago)
+                    <div class="tw:text-[11px] tw:text-warning tw:mt-1 tw:font-semibold tw:flex tw:items-center tw:gap-1.5">
+                        <i class="tw:icon-[lucide--alert-triangle] tw:w-3.5 tw:h-3.5"></i>
+                        No recent image metadata available (waiting for first capture?)
+                    </div>
                 {% endif %}
             </div>
-        {% else %}
-            <div class="text-warning" style="font-size: 12px;">No recent image metadata available (waiting for first capture?)</div>
-        {% endif %}
-    </div>
+        </div>
 
-    <div>
-        {% if show_all %}
-            <a class="btn btn-sm btn-outline-info" href="{{ url_for('indi_allsky.sensor_panel_view') }}">Show used only</a>
-        {% else %}
-            <a class="btn btn-sm btn-outline-info" href="{{ url_for('indi_allsky.sensor_panel_view', all=1) }}">Show all slots</a>
-        {% endif %}
-    </div>
-</div>
-
-
-<div class="row">
-    <div class="col-12 col-xl-6 mb-4">
-        <div class="card bg-dark border-secondary">
-            <div class="card-header text-light">User sensor slots</div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-dark table-striped table-sm mb-0">
-                        <thead>
-                            <tr>
-                                <th style="width: 120px;">Slot</th>
-                                <th>Label</th>
-                                <th style="width: 160px;" class="text-end">Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for r in user_rows %}
-                            <tr>
-                                <td class="text-secondary">{{ r.slot }}</td>
-                                <td class="text-light">{{ r.label }}</td>
-                                <td class="text-end text-warning">
-                                    <span id="val_sensor_user_{{ r.index }}">
-                                       {% if r.value is number %}{{ '%0.6f'|format(r.value) }}{% else %}{{ r.value }}{% endif %}
-                                    </span>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div>
+            {% if show_all %}
+                <a class="tw:btn tw:btn-outline tw:btn-info tw:btn-sm tw:h-10 tw:text-xs tw:font-bold tw:tracking-wide tw:uppercase tw:gap-2 tw:no-underline tw:px-4" href="{{ url_for('indi_allsky.sensor_panel_view') }}">
+                    <i class="tw:icon-[lucide--filter-x] tw:w-4 tw:h-4"></i>
+                    Show used only
+                </a>
+            {% else %}
+                <a class="tw:btn tw:btn-outline tw:btn-info tw:btn-sm tw:h-10 tw:text-xs tw:font-bold tw:tracking-wide tw:uppercase tw:gap-2 tw:no-underline tw:px-4" href="{{ url_for('indi_allsky.sensor_panel_view', all=1) }}">
+                    <i class="tw:icon-[lucide--filter] tw:w-4 tw:h-4"></i>
+                    Show all slots
+                </a>
+            {% endif %}
         </div>
     </div>
 
-    <div class="col-12 col-xl-6 mb-4">
-        <div class="card bg-dark border-secondary">
-            <div class="card-header text-light">Temp sensor slots</div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-dark table-striped table-sm mb-0">
-                        <thead>
-                            <tr>
-                                <th style="width: 120px;">Slot</th>
-                                <th>Label</th>
-                                <th style="width: 160px;" class="text-end">Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for r in temp_rows %}
-                            <tr>
-                                <td class="text-secondary">{{ r.slot }}</td>
-                                <td class="text-light">{{ r.label }}</td>
-                                <td class="text-end text-warning">
-                                    <span id="val_sensor_temp_{{ r.index }}">
-                                       {% if r.value is number %}{{ '%0.6f'|format(r.value) }}{% else %}{{ r.value }}{% endif %}
-                                    </span> 
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+    <div class="allsky-workspace-grid tw:w-full tw:grow">
+        
+        <div class="tw:flex tw:flex-col tw:bg-base-200 tw:border tw:border-base-content/10 tw:rounded-xl tw:overflow-hidden">
+            <div class="tw:bg-base-300 tw:px-4 tw:py-3.5 tw:border-b tw:border-base-content/10 tw:flex tw:items-center tw:gap-2">
+                <i class="tw:icon-[lucide--sliders] tw:w-4 tw:h-4 tw:text-primary"></i>
+                <h4 class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/90 tw:m-0">User sensor slots</h4>
+            </div>
+            <div class="tw:overflow-x-auto">
+                <table class="tw:table tw:table-xs tw:w-full tw:m-0">
+                    <thead>
+                        <tr class="tw:border-b tw:border-base-content/10 tw:bg-base-300/30 tw:text-[10px] tw:uppercase tw:tracking-wider tw:text-base-content/60">
+                            <th style="width: 120px;" class="tw:pl-4 tw:py-3 tw:font-bold">Slot</th>
+                            <th class="tw:py-3 tw:font-bold">Label</th>
+                            <th style="width: 160px;" class="tw:text-end tw:pr-4 tw:py-3 tw:font-bold">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody class="tw:divide-y tw:divide-base-content/5">
+                        {% for r in user_rows %}
+                        <tr class="tw:border-base-content/5 hover:tw:bg-base-300/40 tw:transition-colors">
+                            <td class="tw:text-xs tw:font-mono tw:text-base-content/60 tw:pl-4 tw:py-2.5">{{ r.slot }}</td>
+                            <td class="tw:text-xs tw:font-semibold tw:text-base-content/90 tw:py-2.5">{{ r.label }}</td>
+                            <td class="tw:text-end tw:pr-4 tw:text-xs tw:font-mono tw:font-bold tw:text-warning tw:py-2.5">
+                                <span id="val_sensor_user_{{ r.index }}">
+                                   {% if r.value is number %}{{ '%0.6f'|format(r.value) }}{% else %}{{ r.value }}{% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
+
+        <div class="tw:flex tw:flex-col tw:bg-base-200 tw:border tw:border-base-content/10 tw:rounded-xl tw:overflow-hidden">
+            <div class="tw:bg-base-300 tw:px-4 tw:py-3.5 tw:border-b tw:border-base-content/10 tw:flex tw:items-center tw:gap-2">
+                <i class="tw:icon-[lucide--thermometer] tw:w-4 tw:h-4 tw:text-error"></i>
+                <h4 class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/90 tw:m-0">Temp sensor slots</h4>
+            </div>
+            <div class="tw:overflow-x-auto">
+                <table class="tw:table tw:table-xs tw:w-full tw:m-0">
+                    <thead>
+                        <tr class="tw:border-b tw:border-base-content/10 tw:bg-base-300/30 tw:text-[10px] tw:uppercase tw:tracking-wider tw:text-base-content/60">
+                            <th style="width: 120px;" class="tw:pl-4 tw:py-3 tw:font-bold">Slot</th>
+                            <th class="tw:py-3 tw:font-bold">Label</th>
+                            <th style="width: 160px;" class="tw:text-end tw:pr-4 tw:py-3 tw:font-bold">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody class="tw:divide-y tw:divide-base-content/5">
+                        {% for r in temp_rows %}
+                        <tr class="tw:border-base-content/5 hover:tw:bg-base-300/40 tw:transition-colors">
+                            <td class="tw:text-xs tw:font-mono tw:text-base-content/60 tw:pl-4 tw:py-2.5">{{ r.slot }}</td>
+                            <td class="tw:text-xs tw:font-semibold tw:text-base-content/90 tw:py-2.5">{{ r.label }}</td>
+                            <td class="tw:text-end tw:pr-4 tw:text-xs tw:font-mono tw:font-bold tw:text-warning tw:py-2.5">
+                                <span id="val_sensor_temp_{{ r.index }}">
+                                   {% if r.value is number %}{{ '%0.6f'|format(r.value) }}{% else %}{{ r.value }}{% endif %}
+                                </span> 
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 </div>
 

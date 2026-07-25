@@ -3,52 +3,47 @@
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
 {% block head %}
-<style>
-pre {
-    white-space: pre-wrap;
-}
-</style>
 <link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
 <script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
+
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
-
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-4 stats-table-container">
 
-<h4>Image stats in 15 minute blocks</h4>
+    <div class="tw:bg-base-200 tw:px-4 tw:py-3 tw:rounded-t-xl tw:border-t tw:border-x tw:border-base-300">
+        <h4 class="tw:text-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content">Image stats in 15 minute blocks</h4>
+    </div>
 
-<div class="row" style="display:block;">
-  <div class="col-sm-12">
-    <table id="adu-table" class="table table-striped compact" data-bs-theme="dark">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Count</th>
-          <th>Exposure Avg</th>
-          <th>ADU Avg</th>
-          <th>jSQM Avg</th>
-          <th>Stars Avg</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for row in rolling_adu_q %}
-        <tr>
-          <td>{{ row.dt.strftime('%Y-%m-%d %H:%M') }}
-          <td>{{ row.i_count }}
-          <td>{{ "%0.4f"|format(row.exposure_avg) }}
-          <td>{{ "%0.2f"|format(row.adu_avg) }}
-          <td>{{ "%0.2f"|format(row.jsqm_avg) }}
-          <td>{{ "%0.1f"|format(row.stars_avg) }}
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
+    <div class="tw:overflow-x-auto tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-b-xl">
+        <table id="adu-table" class="tw:table tw:table-xs tw:w-full tw:m-0">
+            <thead>
+                <tr class="tw:border-b tw:border-base-300 tw:bg-base-300/50 tw:text-[11px] tw:uppercase tw:tracking-wider tw:text-base-content/80">
+                    <th class="tw:pl-4 tw:py-3">Date</th>
+                    <th class="tw:py-3">Count</th>
+                    <th class="tw:py-3">Exposure Avg</th>
+                    <th class="tw:py-3">ADU Avg</th>
+                    <th class="tw:py-3">jSQM Avg</th>
+                    <th class="tw:pr-4 tw:py-3">Stars Avg</th>
+                </tr>
+            </thead>
+            <tbody class="tw:divide-y tw:divide-base-300/40">
+                {% for row in rolling_adu_q %}
+                <tr class="tw:border-base-300/30 hover:tw:bg-base-300/20 tw:transition-colors tw:text-xs">
+                    <td class="tw:pl-4 tw:whitespace-nowrap tw:text-base-content/90">{{ row.dt.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td class="tw:font-mono">{{ row.i_count }}</td>
+                    <td class="tw:font-mono">{{ "%0.4f"|format(row.exposure_avg) }}s</td>
+                    <td class="tw:font-mono tw:text-info">{{ "%0.2f"|format(row.adu_avg) }}</td>
+                    <td class="tw:font-mono tw:text-warning">{{ "%0.2f"|format(row.jsqm_avg) }}</td>
+                    <td class="tw:pr-4 tw:font-mono">{{ "%0.1f"|format(row.stars_avg) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
 </div>
 
