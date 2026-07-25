@@ -28,3 +28,4 @@ ssl.crt
 ssl.key
 de421.bsp
 *.h5
+node_modules/

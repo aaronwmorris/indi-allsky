@@ -1,1 +1,0 @@
-export default {":root:not(span)":{"overflow":"var(--page-overflow)"}};

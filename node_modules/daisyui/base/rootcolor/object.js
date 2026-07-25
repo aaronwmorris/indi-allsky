@@ -1,1 +1,0 @@
-export default {":root, [data-theme]":{"background":"var(--page-scroll-bg, var(--root-bg))","color":"var(--color-base-content)"},":where(:root, [data-theme])":{"--root-bg":"var(--color-base-100)"}};

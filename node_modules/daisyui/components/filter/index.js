@@ -1,7 +1,0 @@
-import filter from './object.js';
-import { addPrefix } from '../../functions/addPrefix.js';
-
-export default ({ addComponents, prefix = '' }) => {
-  const prefixedfilter = addPrefix(filter, prefix);
-  addComponents({ ...prefixedfilter });
-};
