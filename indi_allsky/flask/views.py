@@ -11983,6 +11983,9 @@ def shell_ws():
     if not current_user.is_authenticated:
         return 'Unauthorized', 401
 
+    if not current_user.is_admin:
+        return 'Unauthorized', 401
+
     ws = simple_websocket.Server.accept(request.environ)
 
     # Create pseudo-terminal
