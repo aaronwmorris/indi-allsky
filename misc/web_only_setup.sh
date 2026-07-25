@@ -1627,6 +1627,7 @@ elif [[ "$WEBSERVER" == "apache" ]]; then
              -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
              -e "s|%APACHE_ETC%|$APACHE_ETC|g" \
              -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock\|http://localhost/indi-allsky|g" \
+             -e "s|%UPSTREAM_SERVER_WS%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock\|ws://localhost/indi-allsky/ws|g" \
              "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP_HTTP"
 
 
@@ -1747,6 +1748,7 @@ elif [[ "$WEBSERVER" == "apache" ]]; then
              -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
              -e "s|%APACHE_ETC%|$APACHE_ETC|g" \
              -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock\|http://localhost/indi-allsky|g" \
+             -e "s|%UPSTREAM_SERVER_WS%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock\|ws://localhost/indi-allsky/ws|g" \
              "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP_HTTP"
 
 
