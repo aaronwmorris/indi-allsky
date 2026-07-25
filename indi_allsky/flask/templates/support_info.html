@@ -16,18 +16,18 @@ var camera_id = {{ camera_id }};
     <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3 tw:pb-2">
         
         <button type="button" 
-                class="tw:btn tw:btn-primary tw:btn-sm tw:rounded-lg tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider copy-clipboard" 
+                class="tw:btn tw:btn-primary tw:btn-sm  tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider copy-clipboard" 
                 data-clipboard-target="#support_info">
             Copy Support Info<br>to Clipboard
         </button>
 
         <button type="button" id="dl_support" 
-                class="tw:btn tw:btn-info tw:btn-sm tw:rounded-lg tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-info-content">
+                class="tw:btn tw:btn-info tw:btn-sm  tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-info-content">
             Support Info<br>Download
         </button>
 
         <a href="https://github.com/aaronwmorris/indi-allsky/issues" target="_blank"
-           class="tw:btn tw:btn-error tw:btn-sm tw:rounded-lg tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider">
+           class="tw:btn tw:btn-error tw:btn-sm  tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider">
             indi-allsky<br>GitHub Issues
         </a>
 
@@ -37,17 +37,17 @@ var camera_id = {{ camera_id }};
     </div>
 
     <div class="tw:grid tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-3">
-        <a href="{{ url_for('indi_allsky.log_download_view') }}" class="tw:btn tw:btn-sm tw:btn-success tw:btn-outline tw:rounded-lg tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider">Capture Log</a>
-        <a href="{{ url_for('indi_allsky.log_webapp_download_view') }}" class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-outline tw:rounded-lg tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider">Webapp Log</a>
-        <a href="{{ url_for('indi_allsky.log_syslog_download_view') }}" class="tw:btn tw:btn-sm tw:btn-primary tw:btn-outline tw:rounded-lg tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider">OS System Log</a>
-        <a href="{{ url_for('indi_allsky.log_kern_download_view') }}" class="tw:btn tw:btn-sm tw:btn-warning tw:btn-outline tw:rounded-lg tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider">Kernel Log</a>
+        <a href="{{ url_for('indi_allsky.log_download_view') }}" class="tw:btn tw:btn-sm tw:btn-success tw:btn-outline  tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider">Capture Log</a>
+        <a href="{{ url_for('indi_allsky.log_webapp_download_view') }}" class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-outline  tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider">Webapp Log</a>
+        <a href="{{ url_for('indi_allsky.log_syslog_download_view') }}" class="tw:btn tw:btn-sm tw:btn-primary tw:btn-outline  tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider">OS System Log</a>
+        <a href="{{ url_for('indi_allsky.log_kern_download_view') }}" class="tw:btn tw:btn-sm tw:btn-warning tw:btn-outline  tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider">Kernel Log</a>
     </div>
 
     <div class="tw:text-[11px] tw:font-medium tw:text-base-content/50 tw:px-1">
         Support info can be pasted directly into an issue.
     </div>
 
-    <div class="tw:card tw:bg-base-300 tw:border tw:border-base-300 tw:shadow-inner tw:rounded-xl tw:overflow-hidden">
+    <div class="tw:card tw:bg-base-300 tw:border tw:border-base-300 tw:shadow-inner tw:rounded-[var(--radius-box)] tw:overflow-hidden">
         <div class="tw:card-body tw:p-0">
             <textarea id="support_info" 
                       class="tw:w-full tw:h-[600px] tw:bg-neutral-800 tw:text-neutral-200 tw:font-mono tw:text-[11px] tw:p-4 tw:resize-none tw:border-none tw:focus:outline-none" 

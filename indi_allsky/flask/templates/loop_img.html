@@ -165,17 +165,17 @@ $( document ).ready(function() {
 {% block content %}
 <div class="tw:flex tw:flex-col tw:h-full tw:gap-4">
 
-    <form id="form_history" onsubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-2xl tw:border tw:border-base-content/10">
+    <form id="form_history" onsubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10">
         <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-6">
             
             <div class="tw:flex tw:items-center tw:gap-2">
                 {{ form_history.HISTORY_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
-                {{ form_history.HISTORY_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content tw:rounded-lg') }}
+                {{ form_history.HISTORY_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content ') }}
             </div>
 
             <div class="tw:flex tw:items-center tw:gap-2">
                 {{ form_history.FRAMEDELAY_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
-                {{ form_history.FRAMEDELAY_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content tw:rounded-lg') }}
+                {{ form_history.FRAMEDELAY_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content ') }}
             </div>
 
             <div class="tw:flex tw:items-center tw:gap-3">
@@ -196,9 +196,9 @@ $( document ).ready(function() {
         <div class="tw:text-base-content tw:text-center tw:font-medium" id="message"></div>
     </div>
 
-    <div class="tw:flex-1 tw:bg-base-300 tw:rounded-2xl tw:border tw:border-base-content/10 tw:shadow-inner tw:flex tw:items-center tw:justify-center tw:overflow-hidden tw:min-h-[50vh] tw:relative">
+    <div class="tw:flex-1 tw:bg-base-300 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:shadow-inner tw:flex tw:items-center tw:justify-center tw:overflow-hidden tw:min-h-[50vh] tw:relative">
         <img id="loop-image" 
-             class="tw:mx-auto tw:max-h-full tw:max-w-full tw:object-contain tw:rounded-xl tw:shadow-2xl tw:cursor-zoom-in" 
+             class="tw:mx-auto tw:max-h-full tw:max-w-full tw:object-contain tw:rounded-[var(--radius-box)] tw:shadow-2xl tw:cursor-zoom-in" 
              alt="Capture Loop"
              onerror="this.style.display='none';"
              onload="this.style.display='block';">

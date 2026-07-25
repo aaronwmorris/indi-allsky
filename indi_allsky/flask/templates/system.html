@@ -21,7 +21,7 @@ var camera_id = {{ camera_id }};
     {% endif %}
 
     <!-- Prominent Navigation Tabs -->
-    <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-2xl tw:border tw:border-base-content/10 tw:shadow-md">
+    <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:shadow-md">
         <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-info">Information</button>
         <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-time">Time</button>
         <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-indiserver">INDI Drivers</button>
@@ -154,7 +154,7 @@ var camera_id = {{ camera_id }};
                         <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Network Interfaces</span>
                         <div class="md:tw:col-span-3 tw:flex tw:flex-col tw:gap-4">
                             {% for net in net_list %}
-                            <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-lg">
+                            <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <span class="tw:font-mono tw:font-bold tw:text-info">{{net.name}}</span>
                                 <div class="tw:text-xs tw:font-mono">
                                     <span class="tw:text-[9px] tw:opacity-50 tw:block">IPv4</span>
@@ -175,7 +175,7 @@ var camera_id = {{ camera_id }};
                     <div class="allsky-workspace-grid tw:gap-8">
                         <div class="tw:flex tw:flex-col tw:gap-4">
                             <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Environment</span>
-                            <div class="tw:grid tw:grid-cols-2 tw:gap-2 tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                            <div class="tw:grid tw:grid-cols-2 tw:gap-2 tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
                                 {% for t in temp_list %}
                                 <span class="tw:text-xs tw:opacity-70">{{t['name']}}</span>
                                 <span class="tw:text-xs tw:font-mono tw:text-right">{{"%.1f"|format(t['temp'])}}&deg;{{t['sys']}}</span>
@@ -193,7 +193,7 @@ var camera_id = {{ camera_id }};
 
                         <div class="tw:flex tw:flex-col tw:gap-4">
                             <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Software Versions</span>
-                            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem;" class="tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem;" class="tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
                                 <span class="tw:text-[10px] tw:opacity-60">Python</span><span class="tw:text-[10px] tw:font-mono">{{python_version}}</span>
                                 <span class="tw:text-[10px] tw:opacity-60">gunicorn</span><span class="tw:text-[10px] tw:font-mono">{{gunicorn_version}}</span>
                                 <span class="tw:text-[10px] tw:opacity-60">flask</span><span class="tw:text-[10px] tw:font-mono">{{flask_version}}</span>
@@ -217,21 +217,21 @@ var camera_id = {{ camera_id }};
                         <!-- Time Status -->
                         <div class="tw:flex tw:flex-col tw:gap-4">
                             <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Time Synchronization</span>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;" class="tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;" class="tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
                                 <span class="tw:text-xs">NTP Available</span><span class="tw:text-xs tw:font-bold">{{ timedate1_dict.CanNTP }}</span>
                                 <span class="tw:text-xs">NTP Enabled</span><span class="tw:text-xs tw:font-bold">{{ timedate1_dict.NTP }}</span>
                                 <span class="tw:text-xs">NTP Synchronized</span><span class="tw:text-xs tw:font-bold">{{ timedate1_dict.NTPSynchronized }}</span>
                                 <span class="tw:text-xs">RTC Available</span><span class="tw:text-xs tw:font-bold">{{ timedate1_dict.LocalRTC }}</span>
                                 <span class="tw:text-xs">Timezone</span><span class="tw:text-xs tw:font-bold">{{ timedate1_dict.Timezone }}</span>
                             </div>
-                            <div class="tw:alert tw:alert-info tw:py-2 tw:text-[10px] tw:rounded-md">
+                            <div class="tw:alert tw:alert-info tw:py-2 tw:text-[10px] tw:rounded-[var(--radius-box)]">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-4 tw:w-4" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 <span>Note: RTC almost always reports False even when one is available.</span>
                             </div>
                         </div>
 
                         <!-- System Time Display -->
-                        <div class="tw:flex tw:flex-col tw:gap-4 tw:items-center tw:justify-center tw:bg-base-300/30 tw:p-8 tw:rounded-lg">
+                        <div class="tw:flex tw:flex-col tw:gap-4 tw:items-center tw:justify-center tw:bg-base-300/30 tw:p-8 tw:rounded-[var(--radius-box)]">
                             <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Current System Time</span>
                             <div class="tw:text-3xl tw:font-mono tw:text-info tw:text-center">{{ now.strftime('%m / %d / %Y') }}<br>{{ now.strftime('%I : %M : %S %P') }}</div>
                         </div>
@@ -289,7 +289,7 @@ var camera_id = {{ camera_id }};
                                 <span class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary" id="loader_timezone" style="display: none;"></span>
                             </div>
                         </div>
-                        <div class="tw:alert tw:alert-info tw:py-2 tw:text-[10px] tw:rounded-md">
+                        <div class="tw:alert tw:alert-info tw:py-2 tw:text-[10px] tw:rounded-[var(--radius-box)]">
                             <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-4 tw:w-4" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                             <span>Use modern labels such as <b>America/New_York</b>. Older specifications may not be supported.</span>
                         </div>
@@ -329,7 +329,7 @@ var camera_id = {{ camera_id }};
                             </div>
                         </div>
 
-                        <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                        <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
                             <div class="lg:tw:col-span-3 tw:form-control">
                                 <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                     {{ form_indiserver_change.RESTART_INDISERVER(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -337,7 +337,7 @@ var camera_id = {{ camera_id }};
                                 </label>
                             </div>
                             <div class="lg:tw:col-span-9">
-                                <div class="tw:alert tw:alert-warning tw:py-2 tw:text-[10px] tw:rounded-md">
+                                <div class="tw:alert tw:alert-warning tw:py-2 tw:text-[10px] tw:rounded-[var(--radius-box)]">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-4 tw:w-4" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                                     <span>Warning: This will interrupt image capture if indi-allsky is operational.</span>
                                 </div>
@@ -370,7 +370,7 @@ var camera_id = {{ camera_id }};
                     <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60 tw:mb-4">Service Management</span>
                     
                     <!-- indiserver -->
-                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
                         <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
                             <span class="tw:text-sm tw:font-bold">indiserver</span>
                             <span class="tw:text-[9px] tw:opacity-50">UNIT: indiserver.service</span>
@@ -395,7 +395,7 @@ var camera_id = {{ camera_id }};
                     </div>
 
                     <!-- indi-allsky -->
-                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
                         <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
                             <span class="tw:text-sm tw:font-bold">indi-allsky</span>
                             <span class="tw:text-[9px] tw:opacity-50">UNIT: indi-allsky.service</span>
@@ -421,7 +421,7 @@ var camera_id = {{ camera_id }};
                     </div>
 
                     <!-- gunicorn -->
-                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
                         <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
                             <span class="tw:text-sm tw:font-bold">Web UI Server</span>
                             <span class="tw:text-[9px] tw:opacity-50">UNIT: gunicorn-indi-allsky.service</span>
@@ -457,7 +457,7 @@ var camera_id = {{ camera_id }};
                     <div class="tw:flex tw:flex-col tw:gap-4">
                         <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">System Power</span>
                         <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-4">
-                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
                                 <span class="tw:text-xs tw:font-bold tw:uppercase tw:opacity-60">Reboot System</span>
                                 <div class="tw:flex tw:flex-wrap tw:gap-4 tw:items-center">
                                     <label class="tw:label tw:cursor-pointer tw:gap-2">
@@ -469,7 +469,7 @@ var camera_id = {{ camera_id }};
                                     </label>
                                 </div>
                             </div>
-                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
                                 <span class="tw:text-xs tw:font-bold tw:uppercase tw:opacity-60">Shutdown System</span>
                                 <div class="tw:flex tw:flex-wrap tw:gap-4 tw:items-center">
                                     <label class="tw:label tw:cursor-pointer tw:gap-2">
@@ -491,7 +491,7 @@ var camera_id = {{ camera_id }};
                         <!-- Left Column Utilities -->
                         <div class="tw:flex tw:flex-col tw:gap-6">
                             <!-- Upgrade -->
-                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:flex tw:justify-between tw:items-baseline">
                                     <span class="tw:text-xs tw:font-bold tw:uppercase tw:opacity-60">Upgrade indi-allsky</span>
                                     <span class="tw:text-[9px] tw:font-mono tw:opacity-40">./misc/unattended_upgrade.sh</span>
@@ -507,7 +507,7 @@ var camera_id = {{ camera_id }};
                                 </div>
                             </div>
                             <!-- Backup -->
-                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:flex tw:justify-between tw:items-baseline">
                                     <span class="tw:text-xs tw:font-bold tw:uppercase tw:opacity-60">Database Backup</span>
                                     <span class="tw:text-[9px] tw:font-mono tw:opacity-40">./misc/backup_database.py</span>
@@ -524,7 +524,7 @@ var camera_id = {{ camera_id }};
                         <!-- Right Column Utilities -->
                         <div class="tw:flex tw:flex-col tw:gap-6">
                             <!-- Validate -->
-                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:flex tw:justify-between tw:items-baseline">
                                     <span class="tw:text-xs tw:font-bold tw:uppercase tw:opacity-60">Validate DB Entries</span>
                                     <span class="tw:text-[9px] tw:font-mono tw:opacity-40">./misc/validate_db_entries.py</span>
@@ -537,7 +537,7 @@ var camera_id = {{ camera_id }};
                                 </div>
                             </div>
                             <!-- Expire -->
-                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:flex tw:justify-between tw:items-baseline">
                                     <span class="tw:text-xs tw:font-bold tw:uppercase tw:opacity-60">Expire Data</span>
                                     <span class="tw:text-[9px] tw:font-mono tw:opacity-40">./misc/expire_images.py</span>
@@ -556,7 +556,7 @@ var camera_id = {{ camera_id }};
                     <div class="tw:divider"></div>
 
                     <!-- Danger Zone -->
-                    <div class="tw:flex tw:flex-col tw:gap-4 tw:border tw:border-error/20 tw:p-6 tw:rounded-xl tw:bg-error/5">
+                    <div class="tw:flex tw:flex-col tw:gap-4 tw:border tw:border-error/20 tw:p-6 tw:rounded-[var(--radius-box)] tw:bg-error/5">
                         <div class="tw:flex tw:items-center tw:gap-3 tw:text-error">
                             <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:h-6 tw:w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                             <span class="tw:text-lg tw:font-black tw:uppercase tw:tracking-widest">Danger Zone</span>
@@ -566,7 +566,7 @@ var camera_id = {{ camera_id }};
 
                         <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-4">
                             <!-- Flush Images -->
-                            <div class="tw:card tw:bg-base-200 tw:p-4 tw:rounded-lg tw:flex tw:flex-col tw:gap-3">
+                            <div class="tw:card tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:flex tw:flex-col tw:gap-3">
                                 <span class="tw:text-xs tw:font-bold">Flush Images</span>
                                 <div class="tw:flex tw:gap-3 tw:items-center">
                                     <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_IMAGES_CONFIRM1" type="checkbox">
@@ -575,7 +575,7 @@ var camera_id = {{ camera_id }};
                                 </div>
                             </div>
                             <!-- Flush Timelapses -->
-                            <div class="tw:card tw:bg-base-200 tw:p-4 tw:rounded-lg tw:flex tw:flex-col tw:gap-3">
+                            <div class="tw:card tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:flex tw:flex-col tw:gap-3">
                                 <span class="tw:text-xs tw:font-bold">Flush Timelapses / Keograms / Startrails</span>
                                 <div class="tw:flex tw:gap-3 tw:items-center">
                                     <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_TIMELAPSES_CONFIRM1" type="checkbox">
@@ -584,7 +584,7 @@ var camera_id = {{ camera_id }};
                                 </div>
                             </div>
                             <!-- Flush Daytime -->
-                            <div class="tw:card tw:bg-base-200 tw:p-4 tw:rounded-lg tw:flex tw:flex-col tw:gap-3">
+                            <div class="tw:card tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:flex tw:flex-col tw:gap-3">
                                 <span class="tw:text-xs tw:font-bold">Flush Daytime Content</span>
                                 <div class="tw:flex tw:gap-3 tw:items-center">
                                     <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_DAYTIME_CONFIRM1" type="checkbox">
@@ -593,7 +593,7 @@ var camera_id = {{ camera_id }};
                                 </div>
                             </div>
                             <!-- Flush 16min -->
-                            <div class="tw:card tw:bg-base-200 tw:p-4 tw:rounded-lg tw:flex tw:flex-col tw:gap-3">
+                            <div class="tw:card tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:flex tw:flex-col tw:gap-3">
                                 <span class="tw:text-xs tw:font-bold">Flush Recent (16min)</span>
                                 <div class="tw:flex tw:gap-3 tw:items-center">
                                     <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_16MIN_IMAGES_CONFIRM1" type="checkbox">

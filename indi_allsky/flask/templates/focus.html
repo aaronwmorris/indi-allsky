@@ -281,7 +281,7 @@ function closeFullscreen() {
 
     <form id="form_focus" onSubmit="return false;" class="tw:w-full tw:flex tw:flex-col tw:gap-6 force-desktop-row">
         
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-2xl tw:p-5 tw:flex tw:flex-col tw:justify-center tw:gap-4 shadow-sm">
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-5 tw:flex tw:flex-col tw:justify-center tw:gap-4 shadow-sm">
             <div class="tw:flex tw:items-center tw:gap-4">
                 <label class="tw:w-20 tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">
                     {{ form_focus.REFRESH_SELECT.label.text }}
@@ -300,7 +300,7 @@ function closeFullscreen() {
             </div>
         </div>
 
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-2xl tw:p-5 tw:flex tw:flex-col tw:justify-center tw:gap-4 shadow-sm">
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-5 tw:flex tw:flex-col tw:justify-center tw:gap-4 shadow-sm">
             <div class="tw:flex tw:items-center tw:gap-4">
                 <label class="tw:w-20 tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">
                     {{ form_focus.X_OFFSET.label.text }}
@@ -319,21 +319,21 @@ function closeFullscreen() {
             </div>
         </div>
 
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-2xl tw:p-4 tw:flex tw:items-center tw:justify-center shadow-sm lg:tw:h-[108px]">
-            <div class="tw:w-full tw:h-full tw:bg-base-300/30 tw:border tw:border-base-300/70 tw:rounded-xl tw:p-2 tw:flex tw:items-center tw:justify-center tw:overflow-hidden">
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4 tw:flex tw:items-center tw:justify-center shadow-sm lg:tw:h-[108px]">
+            <div class="tw:w-full tw:h-full tw:bg-base-300/30 tw:border tw:border-base-300/70 tw:rounded-[var(--radius-box)] tw:p-2 tw:flex tw:items-center tw:justify-center tw:overflow-hidden">
                 <canvas id="focus-chart" class="tw:w-full" style="display: block; max-height: 76px !important; height: 76px !important;"></canvas>
             </div>
         </div>
 
     </form>
 
-    <div class="tw:w-full tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-2xl tw:p-4 tw:flex tw:justify-center tw:items-center shadow-sm">
-        <div class="tw:w-full tw:overflow-auto tw:flex tw:justify-center tw:rounded-xl tw:bg-black/10">
+    <div class="tw:w-full tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4 tw:flex tw:justify-center tw:items-center shadow-sm">
+        <div class="tw:w-full tw:overflow-auto tw:flex tw:justify-center tw:rounded-[var(--radius-box)] tw:bg-black/10">
             <canvas id="image-canvas" class="tw:block tw:max-w-full tw:h-auto"></canvas>
         </div>
     </div>
 
-    <div class="tw:w-full tw:alert tw:alert-warning tw:bg-warning/10 tw:border-warning/20 tw:rounded-xl tw:flex tw:items-center tw:gap-3 tw:p-4">
+    <div class="tw:w-full tw:alert tw:alert-warning tw:bg-warning/10 tw:border-warning/20 tw:rounded-[var(--radius-box)] tw:flex tw:items-center tw:gap-3 tw:p-4">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="tw:stroke-warning tw:shrink-0 tw:w-5 tw:h-5">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
@@ -342,7 +342,7 @@ function closeFullscreen() {
         </span>
     </div>
 
-    <div id="focus_controller_div" class="tw:w-full tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-2xl tw:p-6 tw:flex tw:flex-col sm:tw:flex-row tw:items-center tw:justify-center tw:gap-8 shadow-sm" style="display: none;">
+    <div id="focus_controller_div" class="tw:w-full tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-6 tw:flex tw:flex-col sm:tw:flex-row tw:items-center tw:justify-center tw:gap-8 shadow-sm" style="display: none;">
         
         <button id="FOCUS_CCW" class="focuser-btn tw:bg-primary tw:text-primary-content hover:tw:bg-primary/90">
             <span class="tw:text-[10px] tw:opacity-60 tw:font-sans">Focus</span>
@@ -352,7 +352,7 @@ function closeFullscreen() {
         <div class="tw:flex tw:flex-col tw:items-center tw:gap-2 tw:w-full tw:max-w-[200px]">
             <label class="tw:text-[10px] tw:font-black tw:uppercase tw:tracking-[0.15em] tw:text-base-content/40">Step Interval</label>
             {{ form_focuscontroller.STEP_DEGREES(class='tw:select tw:select-bordered tw:bg-base-300 tw:select-sm tw:w-full tw:text-center tw:font-mono') }}
-            <div id="offset_div" class="tw:text-[11px] tw:font-mono tw:font-bold tw:bg-base-300/60 tw:px-3 tw:py-1 tw:rounded-md tw:text-base-content/60 tw:mt-1">
+            <div id="offset_div" class="tw:text-[11px] tw:font-mono tw:font-bold tw:bg-base-300/60 tw:px-3 tw:py-1 tw:rounded-[var(--radius-box)] tw:text-base-content/60 tw:mt-1">
                 0 Steps Offset
             </div>
         </div>

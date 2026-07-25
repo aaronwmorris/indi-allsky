@@ -15,28 +15,28 @@ var pin_states = {{ pin_states | tojson }};
 <div class="tw:w-full tw:space-y-6 tw:p-2">
 
     <div class="tw:space-y-3">
-        <div class="tw:alert tw:alert-info tw:shadow-sm tw:rounded-xl">
+        <div class="tw:alert tw:alert-info tw:shadow-sm tw:rounded-[var(--radius-box)]">
             <span class="tw:text-xs">
                 <strong>Note:</strong> Some pins read HIGH by default (e.g., Raspberry Pi GPIOs 1-8 have internal pull-ups enabled).
             </span>
         </div>
-        <div class="tw:alert tw:alert-warning tw:shadow-sm tw:rounded-xl">
+        <div class="tw:alert tw:alert-warning tw:shadow-sm tw:rounded-[var(--radius-box)]">
             <span class="tw:text-xs">
                 <strong>Warning:</strong> Manual control of Dew Heater and Fan pins can lock GPIOs and interfere with automatic management.
             </span>
         </div>
     </div>
 
-    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-xl">
+    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]">
         <div class="tw:card-body tw:p-6">
             <h2 class="tw:card-title tw:text-xs tw:uppercase tw:tracking-widest tw:mb-4">GPIO Pin State Control</h2>
             
             <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
                 {% for i in range(3) %}
-                <div class="tw:flex tw:items-center tw:justify-between tw:bg-base-300 tw:p-4 tw:rounded-lg tw:border tw:border-base-300">
+                <div class="tw:flex tw:items-center tw:justify-between tw:bg-base-300 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                     <span class="tw:font-mono tw:text-sm tw:font-bold">Pin {{ pin_names[i] }}</span>
                     <button id="pin-{{ i+1 }}-button" 
-                            class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-disabled tw:rounded-lg tw:w-20">
+                            class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-disabled  tw:w-20">
                         N/A
                     </button>
                 </div>

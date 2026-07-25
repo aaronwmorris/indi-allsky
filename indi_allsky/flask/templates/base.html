@@ -98,7 +98,7 @@
 
             <div class="tw:px-6 tw:py-2 tw:mb-2">
                 <form id="form_camera_select" onSubmit="return false;">
-                    {{ form_camera_select.CAMERA_SELECT(class='tw:select tw:select-sm tw:w-full tw:font-semibold tw:text-xs tw:bg-base-300 tw:border tw:border-base-content/10 tw:focus:outline-none tw:focus:border-base-content/20 tw:transition-all tw:rounded-lg') }}
+                    {{ form_camera_select.CAMERA_SELECT(class='tw:select tw:select-sm tw:w-full tw:font-semibold tw:text-xs tw:bg-base-300 tw:border tw:border-base-content/10 tw:focus:outline-none tw:focus:border-base-content/20 tw:transition-all') }}
                 </form>
                 <div class="tw:text-[10px] tw:uppercase tw:tracking-wider tw:opacity-40 tw:mt-2 tw:px-1 tw:font-semibold tw:whitespace-nowrap">
                     Cameras Available: {{ camera_count }}
@@ -111,7 +111,7 @@
 
                 <li class="tw:w-full">
                     <a href="{{ url_for('indi_allsky.index_view') }}"
-                        class="tw:flex tw:items-center tw:w-full tw:px-4 tw:py-2 tw:bg-base-200/50 hover:tw:bg-base-300/80 tw:rounded-lg tw:border tw:border-base-content/10 tw:text-base-content/70 hover:tw:text-base-content tw:transition-all tw:duration-200">
+                        class="tw:flex tw:items-center tw:w-full tw:px-4 tw:py-2 tw:bg-base-200/50 hover:tw:bg-base-300/80 tw:rounded-[var(--radius-selector)] tw:border tw:border-base-content/10 tw:text-base-content/70 hover:tw:text-base-content tw:transition-all tw:duration-200">
                         <div class="tw:flex tw:items-center tw:gap-3">
                             <i class="tw:icon-[lucide--home] tw:w-4 tw:h-4 tw:opacity-50"></i>
                             <span class="tw:font-medium tw:text-[14px]">Latest</span>
@@ -121,7 +121,7 @@
 
                 <li class="tw:w-full">
                     <a href="{{ url_for('indi_allsky.image_loop_view') }}"
-                        class="tw:flex tw:items-center tw:w-full tw:px-4 tw:py-2 tw:bg-base-200/50 hover:tw:bg-base-300/80 tw:rounded-lg tw:border tw:border-base-content/10 tw:text-base-content/70 hover:tw:text-base-content tw:transition-all tw:duration-200">
+                        class="tw:flex tw:items-center tw:w-full tw:px-4 tw:py-2 tw:bg-base-200/50 hover:tw:bg-base-300/80 tw:rounded-[var(--radius-selector)] tw:border tw:border-base-content/10 tw:text-base-content/70 hover:tw:text-base-content tw:transition-all tw:duration-200">
                         <div class="tw:flex tw:items-center tw:gap-3">
                             <i class="tw:icon-[lucide--infinity] tw:w-4 tw:h-4 tw:opacity-50"></i>
                             <span class="tw:font-medium tw:text-[14px]">Loop</span>
@@ -177,7 +177,7 @@
                     <details class="tw:w-full tw:group [&_summary::-webkit-details-marker]:tw:hidden"
                         id="menu-group-{{ group_id }}">
                         <summary
-                            class="tw:flex tw:items-center tw:justify-between tw:w-full tw:px-4 tw:py-2 tw:bg-base-200/50 hover:tw:bg-base-300/80 tw:rounded-lg tw:cursor-pointer tw:list-none tw:border tw:border-base-content/10 tw:text-base-content/70 hover:tw:text-base-content tw:transition-all">
+                            class="tw:flex tw:items-center tw:justify-between tw:w-full tw:px-4 tw:py-2 tw:bg-base-200/50 hover:tw:bg-base-300/80 tw:rounded-[var(--radius-selector)] tw:cursor-pointer tw:list-none tw:border tw:border-base-content/10 tw:text-base-content/70 hover:tw:text-base-content tw:transition-all">
                             <div class="tw:flex tw:items-center tw:gap-3">
                                 <i class="tw:icon-[lucide--{{ group_icon }}] tw:w-4 tw:h-4 tw:opacity-50"></i>
                                 <span class="tw:font-medium tw:text-[14px]">{{ group_label }}</span>
@@ -189,7 +189,7 @@
                             {% if not needs_auth or (current_user.is_authenticated or login_disabled) %}
                             <li>
                                 <a href="{{ url_for(endpoint) }}"
-                                    class="tw:block tw:py-1.5 tw:px-3 tw:text-sm tw:text-base-content/70 hover:tw:text-base-content hover:tw:bg-base-content/5 tw:rounded-md tw:transition-all">
+                                    class="tw:block tw:py-1.5 tw:px-3 tw:text-sm tw:text-base-content/70 hover:tw:text-base-content hover:tw:bg-base-content/5 tw:rounded-[var(--radius-selector)] tw:transition-all">
                                     {{ label }}
                                 </a>
                             </li>
@@ -209,7 +209,7 @@
             <div class="tw:divider tw:my-2.5 tw:opacity-20"></div>
             <div class="tw:flex tw:gap-2 tw:w-full tw:items-center">
                 <a href="{{ url_for('auth_indi_allsky.login_view') if not current_user.is_authenticated else url_for('indi_allsky.user_view') }}"
-                    class="tw:btn tw:btn-sm tw:flex-1 tw:rounded-lg tw:font-semibold tw:text-xs tw:border tw:border-base-content/20 tw:bg-transparent hover:tw:bg-base-content/5 tw:no-underline tw:flex tw:items-center tw:justify-center">
+                    class="tw:btn tw:btn-sm tw:flex-1 tw:font-semibold tw:text-xs tw:border tw:border-base-content/20 tw:bg-transparent hover:tw:bg-base-content/5 tw:no-underline tw:flex tw:items-center tw:justify-center">
                     {{ current_user.username if current_user.is_authenticated else 'Login' }}
                 </a>
                 <label class="tw:flex tw:cursor-pointer tw:gap-2 tw:items-center">
@@ -227,7 +227,7 @@
         <div
             class="tw:flex-shrink-0 tw:bg-base-100 tw:border-b tw:border-base-content/10 tw:px-8 tw:py-4 tw:flex tw:items-center tw:gap-3 tw:sticky tw:top-0 tw:z-30">
             <button id="toggle-btn" onclick="toggleSidebar()" aria-label="Toggle sidebar"
-                class="tw:btn tw:btn-sm tw:btn-ghost tw:rounded-lg tw:border tw:border-base-content/10 tw:p-2 tw:flex-shrink-0 hover:tw:bg-base-content/5 tw:cursor-pointer">
+                class="tw:btn tw:btn-sm tw:btn-ghost tw:border tw:border-base-content/10 tw:p-2 tw:flex-shrink-0 hover:tw:bg-base-content/5 tw:cursor-pointer">
                 <i class="tw:icon-[lucide--menu] tw:w-[18px] tw:h-[18px]"></i>
             </button>
             <h1 class="tw:text-3xl tw:font-black tw:tracking-tight">{% block header_title %}{{ page_title }}{% endblock %}</h1>
@@ -243,7 +243,7 @@
     <dialog id="notificationModal" class="tw:modal">
         <div class="tw:modal-box tw:border tw:border-base-content/10 tw:shadow-2xl tw:bg-base-200">
             <div class="tw:flex tw:items-center tw:gap-3 tw:mb-4">
-                <div class="tw:p-2 tw:bg-primary/10 tw:text-primary tw:rounded-lg">
+                <div class="tw:p-2 tw:bg-primary/10 tw:text-primary tw:rounded-[var(--radius-box)]">
                     <i class="tw:icon-[lucide--bell] tw:w-5 tw:h-5"></i>
                 </div>
                 <div>
@@ -254,13 +254,13 @@
             </div>
 
             <p id="notification_body"
-                class="tw:text-sm tw:leading-relaxed tw:bg-base-300 tw:p-4 tw:rounded-xl tw:border tw:border-base-content/5">
+                class="tw:text-sm tw:leading-relaxed tw:bg-base-300 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/5">
             </p>
 
             <div class="tw:modal-action">
                 <form method="dialog" class="tw:w-full">
                     <button id="ack_button"
-                        class="tw:btn tw:btn-primary tw:btn-sm tw:btn-block tw:rounded-lg tw:font-bold tw:uppercase tw:text-xs">Acknowledge</button>
+                        class="tw:btn tw:btn-primary tw:btn-sm tw:btn-block  tw:font-bold tw:uppercase tw:text-xs">Acknowledge</button>
                 </form>
             </div>
         </div>

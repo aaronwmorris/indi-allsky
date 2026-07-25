@@ -275,7 +275,7 @@ function loadJS(url, data, onDone, onError) {
 {% block content %}
 <div class="tw:w-full tw:space-y-6 tw:p-4">
 
-    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-md tw:rounded-xl">
+    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-md tw:rounded-[var(--radius-box)]">
         <div class="tw:card-body tw:p-6">
             <form id="form_virtualsky" onSubmit="return false;">
                 <div class="tw:space-y-6">
@@ -284,7 +284,7 @@ function loadJS(url, data, onDone, onError) {
                         {% for field in [form_virtualsky.AZIMUTH_ANGLE, form_virtualsky.LATITUDE_OFFSET, form_virtualsky.LONGITUDE_OFFSET] %}
                         <div class="tw:form-control">
                             <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ field.label.text }}</span></label>
-                            {{ field(class='tw:input tw:input-bordered tw:input-sm tw:w-full tw:bg-base-300 tw:rounded-lg tw:text-xs') }}
+                            {{ field(class='tw:input tw:input-bordered tw:input-sm tw:w-full tw:bg-base-300 tw:rounded-[var(--radius-box)] tw:text-xs') }}
                         </div>
                         {% endfor %}
                     </div>
@@ -293,7 +293,7 @@ function loadJS(url, data, onDone, onError) {
                         {% for field in [form_virtualsky.IMAGE_CIRCLE_DIAMETER, form_virtualsky.OFFSET_X, form_virtualsky.OFFSET_Y, form_virtualsky.MAGNITUDE] %}
                         <div class="tw:form-control">
                             <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ field.label.text }}</span></label>
-                            {{ field(class='tw:input tw:input-bordered tw:input-sm tw:w-full tw:bg-base-300 tw:rounded-lg tw:text-xs') }}
+                            {{ field(class='tw:input tw:input-bordered tw:input-sm tw:w-full tw:bg-base-300 tw:rounded-[var(--radius-box)] tw:text-xs') }}
                         </div>
                         {% endfor %}
                     </div>
@@ -321,14 +321,14 @@ function loadJS(url, data, onDone, onError) {
             Calibration settings must be configured under Config -> Location
         </div>
 
-        <div id="wrapper" class="tw:relative tw:bg-neutral-950 tw:rounded-xl tw:border tw:border-base-300/40 tw:overflow-hidden tw:shadow-2xl">
+        <div id="wrapper" class="tw:relative tw:bg-neutral-950 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300/40 tw:overflow-hidden tw:shadow-2xl">
             <img id="latest-image" class="tw:w-full tw:h-auto tw:object-contain" alt="Live Allsky View">
             <div id="starmap_container" class="tw:absolute tw:inset-0">
                 <div id="starmap"></div>
             </div>
         </div>
 
-        <button id="download" class="tw:btn tw:btn-info tw:btn-outline tw:rounded-lg tw:mt-4 tw:px-8">
+        <button id="download" class="tw:btn tw:btn-info tw:btn-outline  tw:mt-4 tw:px-8">
             Download Map Data
         </button>
     </div>

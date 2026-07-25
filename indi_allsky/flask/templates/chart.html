@@ -1000,7 +1000,7 @@ $( document ).ready(function() {
 
 <div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-4">
 
-    <form id="form_history" onSubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-xl">
+    <form id="form_history" onSubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)]">
         <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-6">
             
             <div class="tw:flex tw:items-center tw:gap-2">
@@ -1018,7 +1018,7 @@ $( document ).ready(function() {
     </form>
 
     <div id="chart_note" class="tw:w-full">
-        <div class="tw:alert tw:bg-base-200 tw:border-l-4 tw:border-info tw:py-2.5 tw:px-4 tw:rounded-lg tw:text-xs">
+        <div class="tw:alert tw:bg-base-200 tw:border-l-4 tw:border-info tw:py-2.5 tw:px-4 tw:rounded-[var(--radius-box)] tw:text-xs">
             <div class="tw:flex tw:items-center tw:gap-2">
                 <span class="tw:badge tw:badge-info tw:badge-sm tw:font-bold tw:text-base-200">Note</span>
                 <span class="tw:text-base-content/80 tw:font-medium">If you recently changed the custom charts, a restart will be necessary for the new selections to appear.</span>
@@ -1036,67 +1036,67 @@ $( document ).ready(function() {
 
     <div class="allsky-charts-grid">
         
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-xl tw:p-3 tw:flex tw:items-center tw:justify-center">
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
             <canvas id="exposure-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
 
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-xl tw:p-3 tw:flex tw:items-center tw:justify-center">
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
             <canvas id="gain-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
 
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-xl tw:p-3 tw:flex tw:items-center tw:justify-center">
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
             <canvas id="stars-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
 
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-xl tw:p-3 tw:flex tw:items-center tw:justify-center">
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
             <canvas id="temp-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
 
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-xl tw:p-3 tw:flex tw:items-center tw:justify-center">
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
             <canvas id="jsqm-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
 
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-xl tw:p-3 tw:flex tw:items-center tw:justify-center">
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
             <canvas id="detection-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
 
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-xl tw:p-3 tw:flex tw:items-center tw:justify-center">
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
             <canvas id="custom-1-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
 
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-xl tw:p-3 tw:flex tw:items-center tw:justify-center">
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
             <canvas id="custom-2-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
 
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-xl tw:p-3 tw:flex tw:items-center tw:justify-center">
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
             <canvas id="custom-3-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
 
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-xl tw:p-3 tw:flex tw:items-center tw:justify-center">
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
             <canvas id="custom-4-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
 
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-xl tw:p-3 tw:flex tw:items-center tw:justify-center">
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
             <canvas id="custom-5-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
 
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-xl tw:p-3 tw:flex tw:items-center tw:justify-center">
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
             <canvas id="custom-6-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
 
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-xl tw:p-3 tw:flex tw:items-center tw:justify-center">
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
             <canvas id="custom-7-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
 
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-xl tw:p-3 tw:flex tw:items-center tw:justify-center">
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
             <canvas id="custom-8-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
 
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-xl tw:p-3 tw:flex tw:items-center tw:justify-center">
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
             <canvas id="custom-9-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
 
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-xl tw:p-3 tw:flex tw:items-center tw:justify-center">
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
             <canvas id="histogram-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
 

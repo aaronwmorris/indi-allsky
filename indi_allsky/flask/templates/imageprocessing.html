@@ -67,7 +67,7 @@ var fullscreen = false;  //initial state
                          onload="this.style.display='block';">
                 </div>
 
-                <div class="tw:flex tw:flex-col tw:items-center tw:gap-2 tw:bg-base-200/50 tw:p-3 tw:rounded-lg">
+                <div class="tw:flex tw:flex-col tw:items-center tw:gap-2 tw:bg-base-200/50 tw:p-3 tw:rounded-[var(--radius-box)]">
                     <div class="tw:flex tw:gap-4 tw:text-sm tw:font-mono">
                         <span id="processing_time" class="tw:text-info">Unprocessed image</span>
                         <span id="img_download"></span>
@@ -144,7 +144,7 @@ var fullscreen = false;  //initial state
                                 </div>
                             </div>
 
-                            <div class="tw:alert tw:alert-warning tw:py-2 tw:text-[10px] tw:rounded-md">
+                            <div class="tw:alert tw:alert-warning tw:py-2 tw:text-[10px] tw:rounded-[var(--radius-box)]">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-4 tw:w-4" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                                 <span>Do not enable dark calibration unless you know what you are doing.</span>
                             </div>
@@ -221,7 +221,7 @@ var fullscreen = false;  //initial state
                             <div class="tw:divider tw:my-0"></div>
 
                             <!-- Contrast Section -->
-                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-lg">
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:grid tw:grid-cols-2 tw:gap-4">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
@@ -267,7 +267,7 @@ var fullscreen = false;  //initial state
                                 <div id="IMAGE_STRETCH__CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                             </div>
 
-                            <div class="tw:grid tw:grid-cols-2 tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-lg">
+                            <div class="tw:grid tw:grid-cols-2 tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
                                         <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M1 Gamma</span>
@@ -284,7 +284,7 @@ var fullscreen = false;  //initial state
                                 </div>
                             </div>
 
-                            <div class="tw:grid tw:grid-cols-3 tw:gap-2 tw:bg-base-300/30 tw:p-3 tw:rounded-lg">
+                            <div class="tw:grid tw:grid-cols-3 tw:gap-2 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
                                         <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M2 Shadows</span>
@@ -308,7 +308,7 @@ var fullscreen = false;  //initial state
                                 </div>
                             </div>
 
-                            <div class="tw:grid tw:grid-cols-2 tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-lg">
+                            <div class="tw:grid tw:grid-cols-2 tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
                                         <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M3 Black Clip</span>
@@ -369,7 +369,7 @@ var fullscreen = false;  //initial state
                             <div class="tw:divider tw:my-0"></div>
 
                             <!-- Denoise Section -->
-                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-lg">
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
                                         <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Denoise Method</span>
@@ -405,7 +405,7 @@ var fullscreen = false;  //initial state
                             <div class="tw:divider tw:my-0"></div>
 
                             <!-- White Balance Section -->
-                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-lg">
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                         {{ form_image_processing.AUTO_WB(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
@@ -493,7 +493,7 @@ var fullscreen = false;  //initial state
                             <div class="tw:divider tw:my-0"></div>
 
                             <!-- Border Section -->
-                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-lg">
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Image Border</span>
                                 <div class="tw:grid tw:grid-cols-4 tw:gap-2">
                                     {{ form_image_processing.IMAGE_BORDER__TOP(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full', placeholder='Top') }}
@@ -558,7 +558,7 @@ var fullscreen = false;  //initial state
                         <div class="tw:flex tw:flex-col tw:gap-6">
                             
                             <!-- Stacking Section -->
-                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-lg">
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Stacking</span>
                                 <div class="tw:grid tw:grid-cols-2 tw:gap-4">
                                     <div class="tw:form-control">
@@ -606,7 +606,7 @@ var fullscreen = false;  //initial state
                             <div class="tw:divider tw:my-0"></div>
 
                             <!-- Panorama Section -->
-                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-lg">
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                         {{ form_image_processing.FISH2PANO__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
@@ -673,7 +673,7 @@ var fullscreen = false;  //initial state
                             <div class="tw:divider tw:my-0"></div>
 
                             <!-- Circle Mask Section -->
-                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-lg">
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                         {{ form_image_processing.IMAGE_CIRCLE_MASK__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
@@ -741,7 +741,7 @@ var fullscreen = false;  //initial state
                             <div class="tw:divider tw:my-0"></div>
 
                             <!-- Fonts Section -->
-                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-lg">
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Typography (PIL)</span>
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
@@ -822,7 +822,7 @@ var fullscreen = false;  //initial state
                             <div class="tw:divider tw:my-0"></div>
 
                             <!-- Moon Overlay Section -->
-                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-lg">
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                         {{ form_image_processing.MOON_OVERLAY__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
@@ -876,7 +876,7 @@ var fullscreen = false;  //initial state
                             <div class="tw:divider tw:my-0"></div>
 
                             <!-- Lightgraph Overlay Section -->
-                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-lg">
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                         {{ form_image_processing.LIGHTGRAPH_OVERLAY__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
@@ -991,7 +991,7 @@ var fullscreen = false;  //initial state
                             <div class="tw:divider tw:my-0"></div>
 
                             <!-- Cardinal Directions Section -->
-                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-lg">
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                         {{ form_image_processing.CARDINAL_DIRS__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}

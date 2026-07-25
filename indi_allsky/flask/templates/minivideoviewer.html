@@ -13,7 +13,7 @@ var youtube__enable = {{ youtube__enable }};
 {% block content %}
 <div class="tw:container tw:h-full tw:mx-auto tw:flex tw:flex-col tw:gap-4">
 
-    <form id="form_video_viewer" onsubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-xl">
+    <form id="form_video_viewer" onsubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)]">
         {{ form_mini_video_viewer.csrf_token }}
         <div class="tw:text-error tw:text-sm tw:my-1 tw:font-semibold" id="csrf_token-error"></div>
 
@@ -100,7 +100,7 @@ function populate_videos(video_list) {
     
     // Header
     var header_div = $('<div />', {
-        'class' : "tw:hidden md:tw:grid tw:grid-cols-12 tw:gap-4 tw:px-4 tw:py-2 tw:bg-base-300/50 tw:rounded-lg tw:text-[10px] tw:font-black tw:uppercase tw:tracking-widest tw:text-base-content/40",
+        'class' : "tw:hidden md:tw:grid tw:grid-cols-12 tw:gap-4 tw:px-4 tw:py-2 tw:bg-base-300/50 tw:rounded-[var(--radius-box)] tw:text-[10px] tw:font-black tw:uppercase tw:tracking-widest tw:text-base-content/40",
     });
 
     $('<div />', { 'class' : "tw:col-span-2", 'text' : 'Timestamp' }).appendTo(header_div);
@@ -112,7 +112,7 @@ function populate_videos(video_list) {
 
     video_list.forEach(item => {
         var row_div = $('<div />', {
-            'class' : "tw:grid tw:grid-cols-1 md:tw:grid-cols-12 tw:gap-4 tw:p-4 tw:bg-base-200 tw:border tw:border-base-content/5 tw:rounded-xl tw:items-center",
+            'class' : "tw:grid tw:grid-cols-1 md:tw:grid-cols-12 tw:gap-4 tw:p-4 tw:bg-base-200 tw:border tw:border-base-content/5 tw:rounded-[var(--radius-box)] tw:items-center",
         });
 
 
@@ -149,7 +149,7 @@ function populate_videos(video_list) {
             'href'   : "{{ url_for('indi_allsky.mini_timelapse_video_view')}}?id=" + item['id'],
             'target' : "_blank",
             'rel'    : "noopener noreferrer",
-            'class'  : "tw:group tw:relative tw:block tw:rounded-lg tw:overflow-hidden tw:border tw:border-base-content/10 tw:aspect-video tw:bg-neutral-950",
+            'class'  : "tw:group tw:relative tw:block tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:border tw:border-base-content/10 tw:aspect-video tw:bg-neutral-950",
         }).appendTo(minivideo_div);
 
         $('<img />', {
@@ -165,7 +165,7 @@ function populate_videos(video_list) {
 
         // description
         var desc_div = $('<div />', {
-            'class' : "tw:col-span-7 tw:text-sm tw:text-base-content/70 tw:italic tw:bg-base-300/30 tw:p-4 tw:rounded-lg tw:min-h-[60px] tw:flex tw:items-center",
+            'class' : "tw:col-span-7 tw:text-sm tw:text-base-content/70 tw:italic tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)] tw:min-h-[60px] tw:flex tw:items-center",
             'text'  : item['note'] || "No description provided.",
         }).appendTo(row_div);
 

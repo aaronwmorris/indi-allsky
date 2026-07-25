@@ -15,14 +15,14 @@ var camera_id = {{ camera_id }};
 <div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-4">
 
     {% if docker %}
-    <div class="tw:alert tw:alert-warning tw:shadow-md tw:rounded-xl">
+    <div class="tw:alert tw:alert-warning tw:shadow-md tw:rounded-[var(--radius-box)]">
         <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-6 tw:w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
         <span class="tw:font-bold">Containerized environment detected. Direct log access is limited.</span>
     </div>
     {% endif %}
 
     <!-- Toolbar: Auto-scroll & Log Downloads -->
-    <div class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-2xl tw:border tw:border-base-content/10 tw:shadow-sm tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4">
+    <div class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:shadow-sm tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4">
         
         <div class="tw:flex tw:items-center tw:gap-3">
             <span id="drive-loader" class="tw:loading tw:loading-spinner tw:loading-sm tw:text-primary"></span>
@@ -48,10 +48,10 @@ var camera_id = {{ camera_id }};
     </div>
 
     <!-- Main Log Streaming Terminal Container -->
-    <div class="tw:w-full tw:bg-base-200 tw:p-2 tw:rounded-2xl tw:border tw:border-base-content/10 tw:shadow-inner">
+    <div class="tw:w-full tw:bg-base-200 tw:p-2 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:shadow-inner">
         <textarea id="log_data" 
                   readonly 
-                  class="tw:w-full tw:h-[650px] tw:bg-neutral-900 tw:text-neutral-200 tw:font-mono tw:text-xs tw:p-4 tw:rounded-xl tw:border-none tw:focus:outline-none tw:resize-none tw:leading-relaxed"></textarea>
+                  class="tw:w-full tw:h-[650px] tw:bg-neutral-900 tw:text-neutral-200 tw:font-mono tw:text-xs tw:p-4 tw:rounded-[var(--radius-box)] tw:border-none tw:focus:outline-none tw:resize-none tw:leading-relaxed"></textarea>
     </div>
 
 </div>

@@ -241,7 +241,7 @@ function closeFullscreen() {
         justify-content: space-between !important;
         align-items: center !important;
         background-color: #15191e !important;
-        @apply tw:border tw:border-base-300/80 tw:rounded-xl !important;
+        @apply tw:border tw:border-base-300/80 tw:rounded-[var(--radius-box)] !important;
         padding: 1rem !important;
         margin-top: 1.25rem !important; /* Space above toggle card wrapper */
         box-sizing: border-box !important;
@@ -265,7 +265,7 @@ function closeFullscreen() {
         font-weight: 500 !important;
         box-sizing: border-box !important;
         background-color: #15191e !important; /* Form element container contrast background */
-        @apply tw:rounded-xl tw:border tw:border-base-300 tw:text-base-content !important;
+        @apply tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:text-base-content !important;
         flex: none !important;
         transition: all 0.15s ease-in-out !important;
     }
@@ -317,7 +317,7 @@ function closeFullscreen() {
                             </p>
                         </div>
                     </div>
-                    <div id="message" class="tw:badge tw:badge-neutral tw:border tw:border-base-300 tw:px-4 tw:py-3.5 tw:text-xs tw:font-semibold tw:tracking-wide tw:text-base-content/80 tw:rounded-lg">
+                    <div id="message" class="tw:badge tw:badge-neutral tw:border tw:border-base-300 tw:px-4 tw:py-3.5 tw:text-xs tw:font-semibold tw:tracking-wide tw:text-base-content/80 tw:rounded-[var(--radius-box)]">
                         Loading...
                     </div>
                 </div>
@@ -326,7 +326,7 @@ function closeFullscreen() {
             <div class="allsky-panel-card-inner">
                 <div class="allsky-panel-body tw:p-3 tw:justify-center tw:items-center tw:overflow-auto">
                     <div class="tw:relative tw:max-w-full tw:w-full tw:flex tw:justify-center">
-                        <canvas id="canvas" class="tw:max-w-full tw:h-auto tw:rounded-xl tw:bg-neutral-950 tw:shadow-2xl tw:border tw:border-base-300/30"></canvas>
+                        <canvas id="canvas" class="tw:max-w-full tw:h-auto tw:rounded-[var(--radius-box)] tw:bg-neutral-950 tw:shadow-2xl tw:border tw:border-base-300/30"></canvas>
                     </div>
                 </div>
             </div>

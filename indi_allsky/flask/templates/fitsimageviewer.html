@@ -76,7 +76,7 @@ function closeFullscreen() {
 <div class="tw:container tw:h-full tw:mx-auto tw:flex tw:flex-col tw:gap-4">
 
     <!-- Form Control Toolbar -->
-    <div class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-2xl tw:border tw:border-base-content/10 tw:shadow-md">
+    <div class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:shadow-md">
         <form id="form_fits_viewer" onSubmit="return false;" class="tw:flex tw:flex-col tw:gap-4">
             {{ form_fits_viewer.csrf_token }}
             <div class="tw:text-error tw:text-sm tw:my-1 tw:font-semibold" id="csrf_token-error"></div>
@@ -86,7 +86,7 @@ function closeFullscreen() {
                 <div class="tw:flex tw:items-center tw:gap-2">
                     {{ form_fits_viewer.YEAR_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
                     <div class="tw:flex tw:flex-col">
-                        {{ form_fits_viewer.YEAR_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content tw:rounded-lg') }}
+                        {{ form_fits_viewer.YEAR_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content ') }}
                         <div id="YEAR_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         
                         <div class="tw:hidden">
@@ -99,7 +99,7 @@ function closeFullscreen() {
                 <div class="tw:flex tw:items-center tw:gap-2">
                     {{ form_fits_viewer.MONTH_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
                     <div class="tw:flex tw:flex-col">
-                        {{ form_fits_viewer.MONTH_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content tw:rounded-lg') }}
+                        {{ form_fits_viewer.MONTH_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content ') }}
                         <div id="MONTH_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -107,7 +107,7 @@ function closeFullscreen() {
                 <div class="tw:flex tw:items-center tw:gap-2">
                     {{ form_fits_viewer.DAY_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
                     <div class="tw:flex tw:flex-col">
-                        {{ form_fits_viewer.DAY_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content tw:rounded-lg') }}
+                        {{ form_fits_viewer.DAY_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content ') }}
                         <div id="DAY_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -115,7 +115,7 @@ function closeFullscreen() {
                 <div class="tw:flex tw:items-center tw:gap-2">
                     {{ form_fits_viewer.HOUR_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
                     <div class="tw:flex tw:flex-col">
-                        {{ form_fits_viewer.HOUR_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content tw:rounded-lg') }}
+                        {{ form_fits_viewer.HOUR_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content ') }}
                         <div id="HOUR_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -123,7 +123,7 @@ function closeFullscreen() {
                 <div class="tw:flex tw:items-center tw:gap-2">
                     {{ form_fits_viewer.IMG_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
                     <div class="tw:flex tw:flex-col">
-                        {{ form_fits_viewer.IMG_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content tw:rounded-lg') }}
+                        {{ form_fits_viewer.IMG_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content ') }}
                         <div id="IMG_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -150,9 +150,9 @@ function closeFullscreen() {
     </div>
 
     <!-- Image Viewer Card -->
-    <div class="tw:flex-1 tw:bg-base-300 tw:rounded-2xl tw:border tw:border-base-content/10 tw:shadow-inner tw:flex tw:items-center tw:justify-center tw:overflow-hidden tw:min-h-[55vh] tw:relative">
+    <div class="tw:flex-1 tw:bg-base-300 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:shadow-inner tw:flex tw:items-center tw:justify-center tw:overflow-hidden tw:min-h-[55vh] tw:relative">
         <img id="fits-image" 
-             class="tw:mx-auto tw:max-h-[65vh] tw:max-w-full tw:object-contain tw:rounded-xl tw:shadow-2xl tw:cursor-zoom-in" 
+             class="tw:mx-auto tw:max-h-[65vh] tw:max-w-full tw:object-contain tw:rounded-[var(--radius-box)] tw:shadow-2xl tw:cursor-zoom-in" 
              alt="FITS Capture View"
              style="display: none;"
              onerror="this.style.display='none';"

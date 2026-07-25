@@ -15,7 +15,7 @@ var camera_id = {{ camera_id }};
 {% block content %}
 <div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-4 tw:p-4 tw:w-full">
 
-    <div class="tw:alert tw:alert-info tw:bg-info/5 tw:border-info/10 tw:text-info tw:text-xs tw:rounded-xl tw:py-3">
+    <div class="tw:alert tw:alert-info tw:bg-info/5 tw:border-info/10 tw:text-info tw:text-xs tw:rounded-[var(--radius-box)] tw:py-3">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="tw:w-4 tw:h-4 tw:stroke-current">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
@@ -40,7 +40,7 @@ var camera_id = {{ camera_id }};
 
     <div class="allsky-workspace-grid">
         
-        <div class="tw:bg-base-200 tw:p-5 tw:rounded-xl tw:border tw:border-base-content/5 tw:flex tw:flex-col tw:justify-between tw:w-full">
+        <div class="tw:bg-base-200 tw:p-5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/5 tw:flex tw:flex-col tw:justify-between tw:w-full">
             <form id="form_timelapsegen" onsubmit="return false;" class="tw:flex tw:flex-col tw:justify-between tw:h-full tw:gap-4">
                 <div>
                     {{ form_timelapsegen.csrf_token }}
@@ -69,7 +69,7 @@ var camera_id = {{ camera_id }};
                     </div>
                 </div>
 
-                <div class="tw:flex tw:items-center tw:justify-between tw:bg-base-300/40 tw:p-3 tw:rounded-lg tw:border tw:border-base-content/5 tw:mt-4">
+                <div class="tw:flex tw:items-center tw:justify-between tw:bg-base-300/40 tw:p-3 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/5 tw:mt-4">
                     <label class="tw:label tw:cursor-pointer tw:gap-2.5">
                         <input class="tw:checkbox tw:checkbox-success tw:checkbox-sm" id="CONFIRM1" name="CONFIRM1" type="checkbox" value="y">
                         <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/70">Confirm Asset Execution</span>
@@ -89,7 +89,7 @@ var camera_id = {{ camera_id }};
 
         <div class="tw:flex tw:flex-col tw:gap-4 tw:w-full">
             
-            <div class="tw:bg-base-200 tw:p-4 tw:rounded-xl tw:border tw:border-base-content/5 tw:flex tw:flex-col tw:w-full">
+            <div class="tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/5 tw:flex tw:flex-col tw:w-full">
                 <h3 class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/40 tw:mb-3">Documentation Wiki Links</h3>
                 <div class="tw:flex tw:flex-col tw:gap-2 tw:grow tw:justify-center">
                     <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Timelapses" class="tw:btn tw:btn-neutral tw:btn-sm tw:text-xs tw:justify-between tw:bg-base-100 hover:tw:bg-base-300 tw:w-full tw:no-underline tw:border-none" target="_blank">
@@ -103,16 +103,16 @@ var camera_id = {{ camera_id }};
                 </div>
             </div>
 
-            <div class="tw:bg-base-200 tw:p-4 tw:rounded-xl tw:border tw:border-base-content/5 tw:w-full">
+            <div class="tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/5 tw:w-full">
                 <h3 class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/40 tw:mb-3">Flag Index Legend</h3>
                 <ul style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem;" class="tw:text-xs tw:font-medium tw:text-base-content/70">
-                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-md">T</span> Timelapse</li>
-                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-md">K</span> Keogram</li>
-                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-md">P</span> Panorama</li>
-                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-md">S</span> Star Trail</li>
-                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-md">ST</span> Trail Video</li>
-                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-error tw:text-white tw:font-mono tw:w-6 tw:rounded-md">!</span> Failed</li>
-                    <li class="tw:flex tw:items-center tw:gap-2" style="grid-column: span 2 / span 2;"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-md">#/#</span> Image Fractions</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)]">T</span> Timelapse</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)]">K</span> Keogram</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)]">P</span> Panorama</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)]">S</span> Star Trail</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)]">ST</span> Trail Video</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-error tw:text-white tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)]">!</span> Failed</li>
+                    <li class="tw:flex tw:items-center tw:gap-2" style="grid-column: span 2 / span 2;"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)]">#/#</span> Image Fractions</li>
                 </ul>
             </div>
         </div>
@@ -125,7 +125,7 @@ var camera_id = {{ camera_id }};
     <div class="tw:flex tw:flex-col tw:gap-3 tw:w-full">
         <h2 class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50 tw:pl-1">System Tasks Queue</h2>
         
-        <div class="tw:overflow-x-auto tw:border tw:border-base-content/10 tw:rounded-xl tw:bg-base-200 tw:w-full">
+        <div class="tw:overflow-x-auto tw:border tw:border-base-content/10 tw:rounded-[var(--radius-box)] tw:bg-base-200 tw:w-full">
             <table id="tasks-table" class="tw:table tw:table-xs tw:w-full tw:m-0">
                 <thead>
                     <tr class="tw:bg-base-300/50 tw:text-base-content/70 tw:text-[11px] tw:uppercase tw:tracking-wider tw:border-b tw:border-base-content/10">

@@ -31,7 +31,7 @@ var camera_id = {{ camera_id }};
         </div>
 
         <!-- Prominent Navigation Tabs -->
-        <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-2xl tw:border tw:border-base-content/10 tw:shadow-md">
+        <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:shadow-md">
             <button type="button" class="net-tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-connections">Connections</button>
             <button type="button" class="net-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-wifi">Wi-Fi</button>
             <button type="button" class="net-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-hotspot">Hotspot</button>
@@ -223,7 +223,7 @@ var camera_id = {{ camera_id }};
 
                             <div class="tw:divider"></div>
 
-                            <div class="tw:bg-base-300/30 tw:p-4 tw:rounded-lg tw:text-xs tw:flex tw:flex-col tw:gap-3">
+                            <div class="tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)] tw:text-xs tw:flex tw:flex-col tw:gap-3">
                                 <p>The Hotspot will be created with a static IP of <b>10.42.0.1</b> (/24 or 255.255.255.0) and IPv6 will be configured with a link-local address (fe80::).</p>
                                 <p>It should not be necessary to configure your wifi connection with a static address, a DHCP server should be started with the hotspot connection and the IPv6 link-local connectivity should be sufficient to access by the mDNS name:</p>
                                 <div class="tw:bg-black/40 tw:p-2 tw:rounded tw:font-mono tw:text-info">https://{{ hostname }}.local</div>

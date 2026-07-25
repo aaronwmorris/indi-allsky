@@ -18,11 +18,11 @@ var url = '{{ mask_image_uri }}';
             This image is the original camera output. It is not rotated, flipped, or cropped.
         </div>
 
-        <div class="tw:card tw:bg-base-300 tw:border tw:border-base-300 tw:shadow-2xl tw:rounded-xl tw:overflow-hidden tw:mb-4">
+        <div class="tw:card tw:bg-base-300 tw:border tw:border-base-300 tw:shadow-2xl tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:mb-4">
             <div class="tw:card-body tw:p-3 tw:flex tw:justify-center tw:items-center tw:bg-neutral-950/40 min-tw:h-[300px]">
                 
                 <img id="mask_img" 
-                     class="tw:max-w-full tw:h-auto tw:max-h-[75vh] tw:rounded-lg tw:shadow-md tw:object-contain"
+                     class="tw:max-w-full tw:h-auto tw:max-h-[75vh] tw:rounded-[var(--radius-box)] tw:shadow-md tw:object-contain"
                      onerror="this.style.display='none'; document.getElementById('image-fallback-placeholder').classList.remove('tw:hidden');"
                      alt="Allsky Mask Source Viewport">
 

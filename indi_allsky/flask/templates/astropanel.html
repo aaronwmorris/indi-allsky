@@ -417,7 +417,7 @@ $( document ).ready(function() {
 <div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-6 astropanel-wrapper">
 
     <!-- Header Area -->
-    <div class="tw:w-full tw:bg-base-200 tw:p-5 tw:rounded-2xl tw:flex tw:items-center tw:justify-between tw:border tw:border-base-300">
+    <div class="tw:w-full tw:bg-base-200 tw:p-5 tw:rounded-[var(--radius-box)] tw:flex tw:items-center tw:justify-between tw:border tw:border-base-300">
         <div>
             <h1 class="tw:text-lg tw:font-black tw:uppercase tw:tracking-[0.2em] tw:text-base-content tw:m-0">Astropanel</h1>
             <p class="tw:text-[11px] tw:text-base-content/40 tw:mt-1 tw:font-bold tw:uppercase">Celestial Tracking Intelligence</p>
@@ -429,7 +429,7 @@ $( document ).ready(function() {
     </div>
 
     <!-- Main Navigation Tabs -->
-    <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-2xl tw:border tw:border-base-content/10 tw:shadow-sm">
+    <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:shadow-sm">
         <button type="button" class="astropanel-tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold" data-target="tab-polaris">Polar Finder</button>
         <button type="button" class="astropanel-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold" data-target="tab-moon">Moon</button>
         <button type="button" class="astropanel-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold" data-target="tab-sun">Sun</button>
@@ -443,13 +443,13 @@ $( document ).ready(function() {
         <!-- Polar Finder Tab -->
         <div id="tab-polaris" class="astropanel-tab-pane">
             <div class="allsky-workspace-grid">
-                <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-2xl tw:p-6 tw:flex tw:flex-col tw:items-center tw:justify-center tw:gap-4 shadow-sm">
+                <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-6 tw:flex tw:flex-col tw:items-center tw:justify-center tw:gap-4 shadow-sm">
                     <div class="reticle-container">
                         <img id="polaris_marker" src="{{ url_for('indi_allsky.static', filename='astropanel/img/polaris.png') }}" alt="Polar Finder" class="tw:w-full tw:h-full">
                     </div>
                     <p class="tw:text-[10px] tw:text-base-content/40 tw:font-mono tw:uppercase tw:tracking-[0.2em] tw:m-0">View: Polaris Scope Reticle</p>
                 </div>
-                <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-2xl tw:overflow-hidden shadow-sm">
+                <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:overflow-hidden shadow-sm">
                     <div class="tw:bg-base-300/40 tw:px-5 tw:py-4 tw:border-b tw:border-base-300">
                         <h2 class="tw:text-xs tw:font-black tw:uppercase tw:tracking-widest tw:text-primary m-0">Alignment Vectors</h2>
                     </div>
@@ -470,13 +470,13 @@ $( document ).ready(function() {
         <!-- Moon Tab -->
         <div id="tab-moon" class="astropanel-tab-pane" style="display: none;">
             <div class="allsky-workspace-grid">
-                <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-2xl tw:p-6 tw:flex tw:flex-col tw:items-center tw:justify-center tw:gap-4 shadow-sm">
+                <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-6 tw:flex tw:flex-col tw:items-center tw:justify-center tw:gap-4 shadow-sm">
                     <img src="{{ url_for('indi_allsky.static', filename='astropanel/img/moon_rot.png') }}" alt="Moon" class="tw:w-44 tw:h-44 tw:opacity-95 tw:drop-shadow-2xl">
                     <div class="tw:text-center tw:mt-2">
                         <span id="moon_phase" class="tw:badge tw:badge-outline tw:badge-primary tw:font-black tw:tracking-widest tw:uppercase tw:px-5 tw:text-xs">&nbsp;</span>
                     </div>
                 </div>
-                <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-2xl tw:overflow-hidden shadow-sm">
+                <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:overflow-hidden shadow-sm">
                     <div class="tw:bg-base-300/40 tw:px-5 tw:py-4 tw:border-b tw:border-base-300">
                         <h4 class="tw:text-xs tw:font-black tw:uppercase tw:tracking-widest tw:text-info m-0">Lunar Ephemeris</h4>
                     </div>
@@ -498,13 +498,13 @@ $( document ).ready(function() {
         <!-- Sun Tab -->
         <div id="tab-sun" class="astropanel-tab-pane" style="display: none;">
             <div class="allsky-workspace-grid">
-                <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-2xl tw:p-6 tw:flex tw:flex-col tw:items-center tw:justify-center shadow-sm">
+                <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-6 tw:flex tw:flex-col tw:items-center tw:justify-center shadow-sm">
                     <img src="{{ url_for('indi_allsky.static', filename='astropanel/img/sun.png') }}" alt="Sun" class="tw:w-44 tw:h-44 tw:animate-[spin_240s_linear_infinite] tw:drop-shadow-[0_0_35px_rgba(255,165,0,0.15)]">
                     <div class="tw:text-center tw:mt-4">
                         <h2 class="tw:text-sm tw:font-black tw:text-base-content tw:uppercase tw:tracking-[0.3em] tw:m-0">Solar Core</h2>
                     </div>
                 </div>
-                <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-2xl tw:overflow-hidden shadow-sm">
+                <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:overflow-hidden shadow-sm">
                     <div class="tw:bg-base-300/40 tw:px-5 tw:py-4 tw:border-b tw:border-base-300">
                         <h4 class="tw:text-xs tw:font-black tw:uppercase tw:tracking-widest tw:text-warning m-0">Twilight Horizons</h4>
                     </div>
@@ -526,11 +526,11 @@ $( document ).ready(function() {
         <!-- Solar System Tab -->
         <div id="tab-planets" class="astropanel-tab-pane" style="display: none;">
             <div class="tw:flex tw:flex-col tw:gap-6 tw:w-full">
-                <div class="tw:w-full tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-2xl tw:p-6 tw:flex tw:flex-col tw:items-center tw:justify-center shadow-sm">
+                <div class="tw:w-full tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-6 tw:flex tw:flex-col tw:items-center tw:justify-center shadow-sm">
                     <img src="{{ url_for('indi_allsky.static', filename='astropanel/img/solar_system.png') }}" alt="Solar System" class="tw:h-44 tw:opacity-85 tw:drop-shadow-2xl">
                 </div>
 
-                <div class="tw:w-full tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-2xl tw:overflow-hidden shadow-sm">
+                <div class="tw:w-full tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:overflow-hidden shadow-sm">
                     <div class="tw:bg-base-300/40 tw:px-5 tw:py-4 tw:border-b tw:border-base-300">
                         <h2 class="tw:text-xs tw:font-black tw:uppercase tw:tracking-widest tw:text-info m-0">Planetary Ephemeris Matrix</h2>
                     </div>
@@ -564,7 +564,7 @@ $( document ).ready(function() {
 
         <!-- Satellites Tab -->
         <div id="tab-satellites" class="astropanel-tab-pane" style="display: none;">
-            <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-2xl tw:overflow-hidden shadow-sm">
+            <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:overflow-hidden shadow-sm">
                 <div class="tw:bg-base-300/40 tw:px-5 tw:py-4 tw:border-b tw:border-base-300">
                     <h2 class="tw:text-xs tw:font-black tw:uppercase tw:tracking-widest tw:text-success m-0">Low Earth Satellites</h2>
                 </div>

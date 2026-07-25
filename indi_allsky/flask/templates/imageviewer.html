@@ -72,7 +72,7 @@ function closeFullscreen() {
 {% block content %}
 <div class="tw:container tw:h-full tw:mx-auto tw:flex tw:flex-col tw:gap-4">
 
-    <div class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-xl tw:flex tw:flex-col tw:gap-4 tw:border tw:border-base-content/5">
+    <div class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:flex tw:flex-col tw:gap-4 tw:border tw:border-base-content/5">
         
         <form id="form_viewer" onsubmit="return false;" class="tw:flex tw:flex-col tw:gap-4">
             {{ form_viewer.csrf_token }}

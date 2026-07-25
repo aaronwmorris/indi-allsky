@@ -13,7 +13,7 @@ var youtube__enable = {{ youtube__enable }};
 {% block content %}
 <div class="tw:container tw:h-full tw:mx-auto tw:flex tw:flex-col tw:gap-4">
 
-    <form id="form_video_viewer" onsubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-xl">
+    <form id="form_video_viewer" onsubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)]">
         {{ form_video_viewer.csrf_token }}
         <div class="tw:text-error tw:text-sm tw:my-1 tw:font-semibold" id="csrf_token-error"></div>
 
@@ -118,7 +118,7 @@ function populate_videos(video_list) {
     
     // Header
     var header_div = $('<div />', {
-        'class' : "tw:hidden md:tw:grid tw:grid-cols-12 tw:gap-4 tw:px-4 tw:py-2 tw:bg-base-300/50 tw:rounded-lg tw:text-[10px] tw:font-black tw:uppercase tw:tracking-widest tw:text-base-content/40",
+        'class' : "tw:hidden md:tw:grid tw:grid-cols-12 tw:gap-4 tw:px-4 tw:py-2 tw:bg-base-300/50 tw:rounded-[var(--radius-box)] tw:text-[10px] tw:font-black tw:uppercase tw:tracking-widest tw:text-base-content/40",
     });
 
     $('<div />', { 'class' : "tw:col-span-2", 'text' : 'Timestamp' }).appendTo(header_div);
@@ -130,7 +130,7 @@ function populate_videos(video_list) {
 
     video_list.forEach(item => {
         var row_div = $('<div />', {
-            'class' : "tw:grid tw:grid-cols-1 md:tw:grid-cols-12 tw:gap-4 tw:p-4 tw:bg-base-200 tw:border tw:border-base-content/5 tw:rounded-xl tw:items-start",
+            'class' : "tw:grid tw:grid-cols-1 md:tw:grid-cols-12 tw:gap-4 tw:p-4 tw:bg-base-200 tw:border tw:border-base-content/5 tw:rounded-[var(--radius-box)] tw:items-start",
         });
 
 
@@ -197,7 +197,7 @@ function populate_videos(video_list) {
 
         if (item['night']) {
             if (item['startrail'] != 'None') {
-                var st_content_div = $('<div />', { 'class' : "tw:relative tw:group tw:rounded-lg tw:overflow-hidden tw:border tw:border-base-content/10 tw:bg-neutral-950" }).appendTo(startrail_div);
+                var st_content_div = $('<div />', { 'class' : "tw:relative tw:group tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:border tw:border-base-content/10 tw:bg-neutral-950" }).appendTo(startrail_div);
                 
                 var st_a = $('<a />', {
                     'target' : "_blank",
@@ -252,7 +252,7 @@ function populate_videos(video_list) {
         }).appendTo(row_div);
 
 
-        var k_content_div = $('<div />', { 'class' : "tw:relative tw:group tw:rounded-lg tw:overflow-hidden tw:border tw:border-base-content/10 tw:bg-neutral-950 tw:aspect-[21/9]" }).appendTo(keogram_div);
+        var k_content_div = $('<div />', { 'class' : "tw:relative tw:group tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:border tw:border-base-content/10 tw:bg-neutral-950 tw:aspect-[21/9]" }).appendTo(keogram_div);
 
         var k_a = $('<a />', {
             'href'   : "{{ url_for('indi_allsky.timelapse_video_view')}}?id=" + item['id'],
