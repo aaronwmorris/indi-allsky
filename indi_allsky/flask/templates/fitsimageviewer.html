@@ -2,32 +2,10 @@
 
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
+{% block header_title %}FITS Image Viewer{% endblock %}
+
 {% block head %}
 <meta charset="UTF-8">
-<style>
-.loader {
-  display: block;
-  border: 3px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.fit {
-    max-width: 100%;
-    max-height: 80vh;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-}
-</style>
 <script type="text/javascript">
 var img;
 var fullscreen = false;  //initial state
@@ -52,7 +30,9 @@ function setResizeHandler(callback, timeout) {
 }
 
 function resize_callback() {
-    img.src = $("#IMG_SELECT").val();
+    if (img && fields['IMG_SELECT']) {
+        img.src = fields['IMG_SELECT'].input.val();
+    }
 }
 setResizeHandler(resize_callback, 200);
 
@@ -90,96 +70,100 @@ function closeFullscreen() {
 }
 
 </script>
-
-
 {% endblock %}
 
 {% block content %}
-<div class="container h-100">
+<div class="tw:container tw:h-full tw:mx-auto tw:flex tw:flex-col tw:gap-4">
 
-<form id="form_fits_viewer" onSubmit="return false;">
-    {{ form_fits_viewer.csrf_token }}
-    <div class="text-danger my-2" id="csrf_token-error"></div>
+    <!-- Form Control Toolbar -->
+    <div class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-2xl tw:border tw:border-base-content/10 tw:shadow-md">
+        <form id="form_fits_viewer" onSubmit="return false;" class="tw:flex tw:flex-col tw:gap-4">
+            {{ form_fits_viewer.csrf_token }}
+            <div class="tw:text-error tw:text-sm tw:my-1 tw:font-semibold" id="csrf_token-error"></div>
 
-    <div class="form-group row">
-        <div class="col-sm-1">
-            {{ form_fits_viewer.YEAR_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            <?-- form-control until there is a better layout -->
-            {{ form_fits_viewer.YEAR_SELECT(class='form-control bg-secondary') }}
-            <div id="YEAR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-6">
+                
+                <div class="tw:flex tw:items-center tw:gap-2">
+                    {{ form_fits_viewer.YEAR_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
+                    <div class="tw:flex tw:flex-col">
+                        {{ form_fits_viewer.YEAR_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content tw:rounded-lg') }}
+                        <div id="YEAR_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        
+                        <div class="tw:hidden">
+                            {{ form_fits_viewer.CAMERA_ID(class='tw:input') }}
+                        </div>
+                        <div id="CAMERA_ID-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
 
-            {{ form_fits_viewer.CAMERA_ID(class='form-control bg-secondary') }}
-            <div id="CAMERA_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
+                <div class="tw:flex tw:items-center tw:gap-2">
+                    {{ form_fits_viewer.MONTH_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
+                    <div class="tw:flex tw:flex-col">
+                        {{ form_fits_viewer.MONTH_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content tw:rounded-lg') }}
+                        <div id="MONTH_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
 
-        <div class="col-sm-1">
-            {{ form_fits_viewer.MONTH_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_fits_viewer.MONTH_SELECT(class='form-select bg-secondary') }}
-            <div id="MONTH_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
+                <div class="tw:flex tw:items-center tw:gap-2">
+                    {{ form_fits_viewer.DAY_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
+                    <div class="tw:flex tw:flex-col">
+                        {{ form_fits_viewer.DAY_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content tw:rounded-lg') }}
+                        <div id="DAY_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
 
-        <div class="col-sm-1">
-            {{ form_fits_viewer.DAY_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_fits_viewer.DAY_SELECT(class='form-select bg-secondary') }}
-            <div id="DAY_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
+                <div class="tw:flex tw:items-center tw:gap-2">
+                    {{ form_fits_viewer.HOUR_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
+                    <div class="tw:flex tw:flex-col">
+                        {{ form_fits_viewer.HOUR_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content tw:rounded-lg') }}
+                        <div id="HOUR_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
 
-        <div class="col-sm-1">
-            {{ form_fits_viewer.HOUR_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_fits_viewer.HOUR_SELECT(class='form-select bg-secondary') }}
-            <div id="HOUR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
+                <div class="tw:flex tw:items-center tw:gap-2">
+                    {{ form_fits_viewer.IMG_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
+                    <div class="tw:flex tw:flex-col">
+                        {{ form_fits_viewer.IMG_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content tw:rounded-lg') }}
+                        <div id="IMG_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
 
-        <div class="col-sm-1">
-            {{ form_fits_viewer.IMG_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_fits_viewer.IMG_SELECT(class='form-select bg-secondary') }}
-            <div id="IMG_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+                <div class="tw:flex tw:items-center tw:ml-auto">
+                    <span id="loader_filter" class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary" style="display: none;"></span>
+                </div>
+
+            </div>
+
+            <div id="success-message" class="tw:text-success tw:text-sm tw:font-medium tw:text-center tw:mt-3" style="display: none;"></div>
+            <div id="failure-message" class="tw:text-error tw:text-sm tw:font-medium tw:text-center tw:mt-3" style="display: none;"></div>
+        </form>
+    </div>
+
+    <!-- Shortcut Hint Banner -->
+    <div class="tw:w-full tw:flex tw:justify-center">
+        <div class="tw:badge tw:badge-outline tw:text-[11px] tw:font-medium tw:text-base-content/60 tw:py-3 tw:px-4 tw:gap-1.5 tw:border-base-content/10 tw:bg-base-200/50">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="tw:w-3.5 tw:h-3.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 10.5h18M3 14.25h18M3 6.75h18M3 18h18" />
+            </svg>
+            Controls: Arrow keys, WASD, or VIM keys — Hour: Up/Down | Image: Left/Right
         </div>
     </div>
 
-    <div class="form-group row">
+    <!-- Image Viewer Card -->
+    <div class="tw:flex-1 tw:bg-base-300 tw:rounded-2xl tw:border tw:border-base-content/10 tw:shadow-inner tw:flex tw:items-center tw:justify-center tw:overflow-hidden tw:min-h-[55vh] tw:relative">
+        <img id="fits-image" 
+             class="tw:mx-auto tw:max-h-[65vh] tw:max-w-full tw:object-contain tw:rounded-xl tw:shadow-2xl tw:cursor-zoom-in" 
+             alt="FITS Capture View"
+             style="display: none;"
+             onerror="this.style.display='none';"
+             onload="this.style.display='block';">
     </div>
 
-    <div id="success-message" class="text-success" style="display: none;"></div>
-    <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
-
-</form>
-
-<hr>
-
-<div class="row">
-    <div class="col-12 text-center">
-        <div class="text-center" style="font-size:10px">
-            Use arrow keys, WASD, or VIM keys to cycle images - Hour: Up/Down - Image: Left/Right
-        </div>
+    <!-- Action Bar (Download & FITS Processing buttons) -->
+    <div class="fits-actions tw:flex tw:justify-center tw:items-center tw:gap-3 tw:my-2">
+        <span id="fits_download" class="tw:flex tw:gap-2"></span>
+        <span id="fits_processing" class="tw:flex tw:gap-2"></span>
     </div>
-</div>
-
-
-<div class="row align-items-center">
-    <div class="col-12 text-center">
-        <img id="fits-image" class="fit">
-    </div>
-</div>
-
-<div class="row align-items-center">
-    <div class="col-12 text-center">
-        <div style="margin-top: 20px;">
-            <span id="fits_download"></span>
-            <span id="fits_processing"></span>
-        </div>
-    </div>
-</div>
 
 </div>
 
@@ -224,11 +208,10 @@ fields['form_global'] = {
 
 $("#IMG_SELECT").on("change", function() {
     // hide all errors
-    successMessage.css({'display' : 'none'});
+    successMessage.hide();
     Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
+        fields[key].error.hide();
     });
-
 
     // Populate fields object
     var json_data = {};
@@ -236,12 +219,33 @@ $("#IMG_SELECT").on("change", function() {
         json_data[item] = fields[item].input.val();
     });
 
-    // checkboxes
-    checkbox_field_names.forEach(item => {
-        json_data[item] = fields[item].input.prop('checked');
-    });
+    var current_url = fields['IMG_SELECT'].input.val();
+    img.src = current_url;
 
-    img.src = fields['IMG_SELECT'].input.val();
+    if (typeof image_data !== 'undefined' && image_data.length) {
+        var match = image_data.find(item => item.url === current_url);
+        if (match && match.fits) {
+            $('#fits_download').html(
+                $('<a />', {
+                    'href'   : match.fits,
+                    'rel'    : 'noopener noreferrer',
+                    'class'  : "tw:btn tw:btn-sm tw:btn-error tw:font-bold tw:no-underline",
+                    'download' : '',
+                }).text('Download FITS')
+            );
+            $('#fits_processing').html(
+                $('<a />', {
+                    'href'   : "{{ url_for('indi_allsky.image_processing_view') }}?type=light&id=" + match.id,
+                    'target' : '_blank',
+                    'rel'    : 'noopener noreferrer',
+                    'class'  : "tw:btn tw:btn-sm tw:btn-success tw:font-bold tw:no-underline",
+                }).text('FITS Processing')
+            );
+        } else {
+            $('#fits_download').empty();
+            $('#fits_processing').empty();
+        }
+    }
 
     return false;
 });
@@ -272,14 +276,13 @@ function hour_change(json_data) {
 
             img.src = fields['IMG_SELECT'].input.val();
 
-
-            $("#loader_filter").css({'display' : 'none'});
+            $("#loader_filter").hide();
         },
         error: function(rdata){
-            Object.keys(rdata).forEach((key) => {
-                fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key][0]);
-                fields[key].error.css({'display' : 'block'});
+            var errors = JSON.parse(rdata.responseText);
+            Object.keys(errors).forEach((key) => {
+                fields[key].input.addClass('tw:border-error');
+                fields[key].error.html(errors[key][0]).show();
             });
         },
     });
@@ -288,12 +291,12 @@ function hour_change(json_data) {
 
 $("#HOUR_SELECT").on("change", function() {
     // hide all errors
-    successMessage.css({'display' : 'none'});
+    successMessage.hide();
     Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
+        fields[key].error.hide();
     });
 
-    $("#loader_filter").css({'display' : 'block'});
+    $("#loader_filter").show();
 
     var json_data = {
         'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
@@ -328,13 +331,13 @@ function day_change(json_data) {
 
             img.src = fields['IMG_SELECT'].input.val();
 
-            $("#loader_filter").css({'display' : 'none'});
+            $("#loader_filter").hide();
         },
         error: function(rdata){
-            Object.keys(rdata).forEach((key) => {
-                fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key][0]);
-                fields[key].error.css({'display' : 'block'});
+            var errors = JSON.parse(rdata.responseText);
+            Object.keys(errors).forEach((key) => {
+                fields[key].input.addClass('tw:border-error');
+                fields[key].error.html(errors[key][0]).show();
             });
         },
     });
@@ -343,12 +346,12 @@ function day_change(json_data) {
 
 $("#DAY_SELECT").on("change", function() {
     // hide all errors
-    successMessage.css({'display' : 'none'});
+    successMessage.hide();
     Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
+        fields[key].error.hide();
     });
 
-    $("#loader_filter").css({'display' : 'block'});
+    $("#loader_filter").show();
 
     var json_data = {
         'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
@@ -387,13 +390,13 @@ function month_change(json_data) {
 
             img.src = fields['IMG_SELECT'].input.val();
 
-            $("#loader_filter").css({'display' : 'none'});
+            $("#loader_filter").hide();
         },
         error: function(rdata){
-            Object.keys(rdata).forEach((key) => {
-                fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key][0]);
-                fields[key].error.css({'display' : 'block'});
+            var errors = JSON.parse(rdata.responseText);
+            Object.keys(errors).forEach((key) => {
+                fields[key].input.addClass('tw:border-error');
+                fields[key].error.html(errors[key][0]).show();
             });
         },
     });
@@ -402,12 +405,12 @@ function month_change(json_data) {
 
 $("#MONTH_SELECT").on("change", function() {
     // hide all errors
-    successMessage.css({'display' : 'none'});
+    successMessage.hide();
     Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
+        fields[key].error.hide();
     });
 
-    $("#loader_filter").css({'display' : 'block'});
+    $("#loader_filter").show();
 
     var json_data = {
         'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
@@ -448,15 +451,29 @@ function year_change(json_data) {
                 $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
 
-            img.src = fields['IMG_SELECT'].input.val();
 
-            $("#loader_filter").css({'display' : 'none'});
+            if (! newest_image_default) {
+                // oldest entry is last index
+                month_options_count = $('#MONTH_SELECT option').length;
+                day_options_count = $('#DAY_SELECT option').length;
+                hour_options_count = $('#HOUR_SELECT option').length;
+                img_options_count = $('#IMG_SELECT option').length;
+                $("#MONTH_SELECT").val($("#MONTH_SELECT")[0].options[month_options_count - 1].value);
+                $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[day_options_count - 1].value);
+                $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value);
+                $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[img_options_count - 1].value).change();
+            } else {
+                img.src = fields['IMG_SELECT'].input.val();
+            }
+
+
+            $("#loader_filter").hide();
         },
         error: function(rdata){
-            Object.keys(rdata).forEach((key) => {
-                fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key][0]);
-                fields[key].error.css({'display' : 'block'});
+            var errors = JSON.parse(rdata.responseText);
+            Object.keys(errors).forEach((key) => {
+                fields[key].input.addClass('tw:border-error');
+                fields[key].error.html(errors[key][0]).show();
             });
         },
     });
@@ -465,12 +482,12 @@ function year_change(json_data) {
 
 $("#YEAR_SELECT").on("change", function() {
     // hide all errors
-    successMessage.css({'display' : 'none'});
+    successMessage.hide();
     Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
+        fields[key].error.hide();
     });
 
-    $("#loader_filter").css({'display' : 'block'});
+    $("#loader_filter").show();
 
     var json_data = {
         'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
@@ -482,105 +499,128 @@ $("#YEAR_SELECT").on("change", function() {
 
 
 function init() {
+    img = new Image();
+    img.onload = function() {
+        $('#fits-image').attr({
+            'src': this.src,
+        });
+    };
+
     var json_data = {
         'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
     };
 
     year_change(json_data);
-
-
-    img = new Image();
-    img.onload = function() {
-        $('#fits-image').attr({
-            'src': this.src,
-        });
-
-        $('#IMG_SELECT option').each(function(index, element) {
-            if (element.value == $("#IMG_SELECT").val()) {
-                image_index = index;
-                return false;
-            };
-        });
-
-
-        if (image_index > -1) {
-            // Add FITS download link if it exists
-            if (image_data[image_index]['fits']) {
-                $('#fits_download').html(
-                    $('<a />', {
-                        'href'   : image_data[image_index]['fits'],
-                        'rel'    : 'noopener noreferrer',
-                        'class'  : "text-decoration-none link-warning",
-                        'download' : '',
-                    }).html(
-                        $('<span />', {
-                            'text'  : 'Download',
-                            'class' : "badge pill bg-danger",
-                        })
-                    )
-                );
-
-                $('#fits_processing').html(
-                    $('<a />', {
-                        'href'   : "{{ url_for('indi_allsky.image_processing_view') }}?type=light&id=" + image_data[image_index]['id'],
-                        'target' : '_blank',
-                        'rel'    : 'noopener noreferrer',
-                        'class'  : "text-decoration-none link-warning",
-                    }).html(
-                        $('<span />', {
-                            'text'  : 'FITS Processing',
-                            'class' : "badge pill bg-success",
-                        })
-                    )
-                );
-            } else {
-                $('#fits_download').empty();
-                $('#fits_processing').empty();
-            };
-
-        } else {
-            // this should never happen, but just in case
-            $('#fits_download').empty();
-            $('#fits_processing').empty();
-        };
-
-    };
-
-
-    img.src = $("#IMG_SELECT").val();
-
 }
 
 
-function nextImage() {
-    var img_select_val = $("#IMG_SELECT").val();
+function nextYear() {
+    var year_select_val = $("#YEAR_SELECT").val();
 
-    newest_image_default = false;  // load oldest image when changing hours
+    newest_image_default = false;
 
-    $('#IMG_SELECT option').each(function(index, element) {
-        if (index == 0) {
-            console.log('At newest image');
-        } else if (element.value == img_select_val) {
-            console.log('Next image');
-            $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index - 1].value).change();
+    $('#YEAR_SELECT option').each(function(index, element) {
+        if (index == 0 && element.value == year_select_val) {
+            console.log('At latest year');
+            return false;
+        } else if (element.value == year_select_val) {
+            console.log('Next year');
+            $("#YEAR_SELECT").val($("#YEAR_SELECT")[0].options[index - 1].value).change();
             return false;
         };
     });
 }
 
 
-function previousImage() {
-    var img_select_val = $("#IMG_SELECT").val();
+function previousYear() {
+    var year_select_val = $("#YEAR_SELECT").val();
 
-    newest_image_default = true;  // load newest image when changing hours
+    newest_image_default = true;
 
-    $('#IMG_SELECT option').each(function(index, element) {
-        if (index == $("#IMG_SELECT")[0].options.length - 1) {
-            console.log('At oldest image');
-        } else if (element.value == img_select_val) {
-            console.log('Previous image');
-            $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index + 1].value).change();
+    $('#YEAR_SELECT option').each(function(index, element) {
+        if (index == $("#YEAR_SELECT")[0].options.length - 1) {
+            console.log('At oldest year');
+            return false;
+        } else if (element.value == year_select_val) {
+            console.log('Previous year');
+            $("#YEAR_SELECT").val($("#YEAR_SELECT")[0].options[index + 1].value).change();
+            return false;
+        };
+    });
+}
+
+
+function nextMonth() {
+    var month_select_val = $("#MONTH_SELECT").val();
+
+    newest_image_default = false;
+
+    $('#MONTH_SELECT option').each(function(index, element) {
+        if (index == 0 && element.value == month_select_val) {
+            console.log('At latest month');
+            nextYear();
+            return false;
+        } else if (element.value == month_select_val) {
+            console.log('Next month');
+            $("#MONTH_SELECT").val($("#MONTH_SELECT")[0].options[index - 1].value).change();
+            return false;
+        };
+    });
+}
+
+
+function previousMonth() {
+    var month_select_val = $("#MONTH_SELECT").val();
+
+    newest_image_default = true;
+
+    $('#MONTH_SELECT option').each(function(index, element) {
+        if (index == $("#MONTH_SELECT")[0].options.length - 1) {
+            console.log('At oldest month');
+            previousYear();
+            return false;
+        } else if (element.value == month_select_val) {
+            console.log('Previous month');
+            $("#MONTH_SELECT").val($("#MONTH_SELECT")[0].options[index + 1].value).change();
+            return false;
+        };
+    });
+}
+
+
+function nextDay() {
+    var day_select_val = $("#DAY_SELECT").val();
+
+    newest_image_default = false;
+
+    $('#DAY_SELECT option').each(function(index, element) {
+        if (index == 0 && element.value == day_select_val) {
+            console.log('At latest day');
+            nextMonth();
+            return false;
+        } else if (element.value == day_select_val) {
+            console.log('Next day');
+            $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[index - 1].value).change();
+            return false;
+        };
+    });
+}
+
+
+function previousDay() {
+    var day_select_val = $("#DAY_SELECT").val();
+
+    newest_image_default = true;
+
+    $('#DAY_SELECT option').each(function(index, element) {
+        if (index == $("#DAY_SELECT")[0].options.length - 1) {
+            console.log('At oldest day');
+            previousMonth();
+            return false;
+        } else if (element.value == day_select_val) {
+            console.log('Previous day');
+            $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[index + 1].value).change();
             return false;
         };
     });
@@ -590,11 +630,13 @@ function previousImage() {
 function nextHour() {
     var hour_select_val = $("#HOUR_SELECT").val();
 
-    newest_image_default = false;  // load oldest image when changing hours
+    newest_image_default = false;
 
     $('#HOUR_SELECT option').each(function(index, element) {
-        if (index == 0) {
+        if (index == 0 && element.value == hour_select_val) {
             console.log('At latest hour');
+            nextDay();
+            return false;
         } else if (element.value == hour_select_val) {
             console.log('Next hour');
             $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[index - 1].value).change();
@@ -607,11 +649,13 @@ function nextHour() {
 function previousHour() {
     var hour_select_val = $("#HOUR_SELECT").val();
 
-    newest_image_default = true;  // load newest image when changing hours
+    newest_image_default = true;
 
     $('#HOUR_SELECT option').each(function(index, element) {
         if (index == $("#HOUR_SELECT")[0].options.length - 1) {
             console.log('At oldest hour');
+            previousDay();
+            return false;
         } else if (element.value == hour_select_val) {
             console.log('Previous hour');
             $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[index + 1].value).change();
@@ -621,18 +665,37 @@ function previousHour() {
 }
 
 
-function firstImage() {
-    console.log('First image');
-    $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[0].value).change();
-    return false;
+function nextImage() {
+    var img_select_val = $("#IMG_SELECT").val();
+
+    $('#IMG_SELECT option').each(function(index, element) {
+        if (index == 0 && element.value == img_select_val) {
+            console.log('At latest image');
+            nextHour();
+            return false;
+        } else if (element.value == img_select_val) {
+            console.log('Next image');
+            $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index - 1].value).change();
+            return false;
+        };
+    });
 }
 
 
-function lastImage() {
-    console.log('Last image');
-    var last_index = $("#IMG_SELECT")[0].options.length - 1;
-    $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[last_index].value).change();
-    return false;
+function previousImage() {
+    var img_select_val = $("#IMG_SELECT").val();
+
+    $('#IMG_SELECT option').each(function(index, element) {
+        if (index == $("#IMG_SELECT")[0].options.length - 1) {
+            console.log('At oldest image');
+            previousHour();
+            return false;
+        } else if (element.value == img_select_val) {
+            console.log('Previous image');
+            $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index + 1].value).change();
+            return false;
+        };
+    });
 }
 
 
@@ -651,18 +714,15 @@ $( document ).ready(function() {
             "right" : 39,
             "down"  : 40,
 
-            "w"     : 87,  // up
             "a"     : 65,  // left
+            "w"     : 87,  // up
             "s"     : 83,  // down
             "d"     : 68,  // right
 
-            "h"     : 72,  // right
+            "h"     : 72,  // left
             "j"     : 74,  // down
             "k"     : 75,  // up
-            "l"     : 76,  // left
-            "g"     : 71,  // end
-            "zero"  : 48,  // start
-
+            "l"     : 76,  // right
         };
 
         switch (e.which) {
@@ -670,22 +730,22 @@ $( document ).ready(function() {
             case key_press.left:
                 previousImage();
                 break;
-            case key_press.right:
-                nextImage();
-                break;
             case key_press.up:
                 nextHour();
+                break;
+            case key_press.right:
+                nextImage();
                 break;
             case key_press.down:
                 previousHour();
                 break;
 
             // wasd
-            case key_press.w:
-                nextHour();
-                break;
             case key_press.a:
                 previousImage();
+                break;
+            case key_press.w:
+                nextHour();
                 break;
             case key_press.s:
                 previousHour();
@@ -698,20 +758,14 @@ $( document ).ready(function() {
             case key_press.h:
                 previousImage();
                 break;
-            case key_press.l:
-                nextImage();
-                break;
             case key_press.j:
                 previousHour();
                 break;
             case key_press.k:
                 nextHour();
                 break;
-            case key_press.g:
-                lastImage();
-                break;
-            case key_press.zero:
-                firstImage();
+            case key_press.l:
+                nextImage();
                 break;
 
             default:
