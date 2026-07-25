@@ -3,134 +3,146 @@
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
 {% block head %}
-<style>
-</style>
 {% endblock %}
 
 {% block content %}
+<style>
+    .allsky-workspace-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        width: 100%;
+    }
+    @media (min-width: 1024px) {
+        .allsky-workspace-grid {
+            grid-template-columns: 2fr 1fr !important;
+            align-items: start;
+        }
+    }
+</style>
 
-    <div class="row justify-content-end">
-        <div class="col-sm-1">
-            <a href="{{ url_for('auth_indi_allsky.logout_view') }}" class="text-decoration-none link-danger">
-                <span class="badge pill bg-danger">Logout</span>
-            </a>
-        </div>
+<div class="tw:container tw:h-full tw:mx-auto tw:flex tw:flex-col tw:gap-4">
+
+    <div class="tw:w-full tw:flex tw:items-center tw:justify-end tw:bg-base-200 tw:p-3 tw:rounded-xl tw:border tw:border-base-content/10">
+        <a href="{{ url_for('auth_indi_allsky.logout_view') }}" class="tw:no-underline tw:btn tw:btn-error tw:btn-outline tw:btn-sm tw:h-9 tw:text-xs tw:font-bold tw:tracking-wide tw:uppercase tw:gap-2">
+            <i class="tw:icon-[lucide--log-out] tw:w-4 tw:h-4"></i>
+            Logout
+        </a>
     </div>
 
-<form id="form_userinfo" onSubmit="return false;" autocomplete="off">
+    <div class="allsky-workspace-grid tw:w-full tw:grow">
 
-    <hr>
+        <form id="form_userinfo" onSubmit="return false;" autocomplete="off" class="tw:w-full tw:bg-base-200 tw:p-6 tw:rounded-xl tw:border tw:border-base-content/10 tw:flex tw:flex-col tw:gap-6">
+            
+            <div class="tw:flex tw:flex-col tw:gap-4">
+                <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-2">
+                    Identity Configuration
+                </h4>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_userinfo.USERNAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_userinfo.USERNAME(class='form-control bg-secondary') }}
-            <div id="USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7"></div>
-    </div>
+                <div class="tw:form-control tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:items-start tw:gap-2">
+                    <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60 tw:pt-3">
+                        {{ form_userinfo.USERNAME.label.text }}
+                    </label>
+                    <div class="tw:flex tw:flex-col tw:w-full md:tw:col-span-2">
+                        {{ form_userinfo.USERNAME(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="USERNAME-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                    </div>
+                </div>
 
-    <hr>
+                <div class="tw:form-control tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:items-start tw:gap-2">
+                    <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60 tw:pt-3">
+                        {{ form_userinfo.NAME.label.text }}
+                    </label>
+                    <div class="tw:flex tw:flex-col tw:w-full md:tw:col-span-2">
+                        {{ form_userinfo.NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="NAME-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                    </div>
+                </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_userinfo.NAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_userinfo.NAME(class='form-control bg-secondary') }}
-            <div id="NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7"></div>
-    </div>
+                <div class="tw:form-control tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:items-start tw:gap-2">
+                    <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60 tw:pt-3">
+                        {{ form_userinfo.EMAIL.label.text }}
+                    </label>
+                    <div class="tw:flex tw:flex-col tw:w-full md:tw:col-span-2">
+                        <div class="tw:relative">
+                            {{ form_userinfo.EMAIL(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:bg-base-300 tw:text-base-content/70 tw:w-full tw:cursor-not-allowed', readonly=true) }}
+                        </div>
+                        <span class="tw:text-[10px] tw:font-semibold tw:text-base-content/40 tw:mt-1 tw:italic">(read-only)</span>
+                        <div id="EMAIL-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                    </div>
+                </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_userinfo.EMAIL.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_userinfo.EMAIL(class='form-control bg-secondary') }}
-            <div id="EMAIL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7">(read-only)</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_userinfo.ADMIN.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_userinfo.ADMIN(class='form-check-input') }}
-                <div id="ADMIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+                <div class="tw:form-control tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:items-center tw:gap-2 tw:mt-2">
+                    <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                        {{ form_userinfo.ADMIN.label.text }}
+                    </label>
+                    <div class="tw:flex tw:flex-col tw:w-full md:tw:col-span-2">
+                        <div class="tw:flex tw:items-center">
+                            {{ form_userinfo.ADMIN(class='tw:toggle tw:toggle-primary') }}
+                        </div>
+                        <div id="ADMIN-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="col-sm-8"></div>
+
+            <div class="tw:flex tw:flex-col tw:gap-4 tw:mt-2">
+                <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-2">
+                    Authentication Credentials
+                </h4>
+
+                <div class="tw:form-control tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:items-start tw:gap-2">
+                    <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60 tw:pt-3">
+                        {{ form_userinfo.CURRENT_PASSWORD.label.text }}
+                    </label>
+                    <div class="tw:flex tw:flex-col tw:w-full md:tw:col-span-2">
+                        {{ form_userinfo.CURRENT_PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:bg-base-100 tw:text-base-content tw:w-full', autocomplete='new-password') }}
+                        <div id="CURRENT_PASSWORD-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="tw:form-control tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:items-start tw:gap-2">
+                    <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60 tw:pt-3">
+                        {{ form_userinfo.NEW_PASSWORD.label.text }}
+                    </label>
+                    <div class="tw:flex tw:flex-col tw:w-full md:tw:col-span-2">
+                        {{ form_userinfo.NEW_PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:bg-base-100 tw:text-base-content tw:w-full', autocomplete='new-password') }}
+                        <div id="NEW_PASSWORD-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="tw:form-control tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:items-start tw:gap-2">
+                    <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60 tw:pt-3">
+                        {{ form_userinfo.NEW_PASSWORD2.label.text }}
+                    </label>
+                    <div class="tw:flex tw:flex-col tw:w-full md:tw:col-span-2">
+                        {{ form_userinfo.NEW_PASSWORD2(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:bg-base-100 tw:text-base-content tw:w-full', autocomplete='new-password') }}
+                        <div id="NEW_PASSWORD2-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tw:flex tw:flex-col tw:gap-4 tw:pt-4 tw:border-t tw:border-base-content/10">
+                <div class="tw:flex tw:items-center tw:gap-4">
+                    <button type="submit" class="tw:btn tw:btn-primary tw:btn-sm tw:h-10 tw:px-6 tw:text-xs tw:font-bold tw:tracking-wide tw:uppercase tw:gap-2">
+                        <i class="tw:icon-[lucide--save] tw:w-4 tw:h-4"></i>
+                        Save Configuration
+                    </button>
+                </div>
+
+                <div class="tw:w-full">
+                    <div id="success-message" class="tw:text-success tw:text-sm tw:font-semibold tw:p-3 tw:bg-success/10 tw:rounded-lg" style="display: none;"></div>
+                    <div id="failure-message" class="tw:text-error tw:text-sm tw:font-semibold tw:p-3 tw:bg-error/10 tw:rounded-lg" style="display: none;"></div>
+                </div>
+            </div>
+
+        </form>
+
+        <div class="tw:w-full">
+            </div>
+
     </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_userinfo.IDP.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_userinfo.IDP(class='form-select bg-secondary') }}
-            <div id="IDP-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7">(read-only)</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_userinfo.CURRENT_PASSWORD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_userinfo.CURRENT_PASSWORD(class='form-control bg-secondary') }}
-            <div id="CURRENT_PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_userinfo.NEW_PASSWORD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_userinfo.NEW_PASSWORD(class='form-control bg-secondary') }}
-            <div id="NEW_PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_userinfo.NEW_PASSWORD2.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_userinfo.NEW_PASSWORD2(class='form-control bg-secondary') }}
-            <div id="NEW_PASSWORD2-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-1">
-            <button class="btn btn-primary">Save</button>
-        </div>
-    </div>
-
-    <div class="form-group row" style="height:100px;">
-        <div class="col-sm-8">
-            <div id="success-message" class="text-success" style="display: none;"></div>
-            <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-    </div>
-
-    <hr>
-
-</form>
+</div>
 
 <script>
 const successMessage = $('#success-message');
@@ -140,7 +152,6 @@ const field_names = [
     'USERNAME',
     'NAME',
     'EMAIL',
-    'IDP',
     'CURRENT_PASSWORD',
     'NEW_PASSWORD',
     'NEW_PASSWORD2',
@@ -176,9 +187,12 @@ fields['form_global'] = {
 $('#form_userinfo').on('submit', function() {
 
     // hide all errors
-    successMessage.css({'display' : 'none'});
+    successMessage.hide();
     Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
+        fields[key].error.hide();
+        if(fields[key].input) {
+            fields[key].input.removeClass('tw:border-error');
+        }
     });
 
 
@@ -203,10 +217,9 @@ $('#form_userinfo').on('submit', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
-            successMessage.html(data['success-message']);
-            successMessage.css({'display' : 'block'});
+            successMessage.html(data['success-message']).show();
             setTimeout(function() {
-                successMessage.css({'display' : 'none'});
+                successMessage.fadeOut();
             }, 10000);
 
             $('#CURRENT_PASSWORD').val('');
@@ -216,15 +229,12 @@ $('#form_userinfo').on('submit', function() {
         error: function(data){
             var errors = JSON.parse(data.responseText);
             Object.keys(errors).forEach((key) => {
-                fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key][0]);
-                fields[key].error.css({'display' : 'block'});
+                fields[key].input.addClass('tw:border-error');
+                fields[key].error.html(errors[key][0]).show();
             });
         },
     });
 
 });
-
 </script>
-
 {% endblock %}

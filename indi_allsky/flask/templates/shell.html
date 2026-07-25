@@ -2,7 +2,10 @@
 
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
+{% block header_title %}System Terminal Shell{% endblock %}
+
 {% block head %}
+<meta charset="UTF-8">
 <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='xterm/xterm.css') }}" />
 <script src="{{ url_for('indi_allsky.static', filename='xterm/xterm.js') }}"></script>
 <script src="{{ url_for('indi_allsky.static', filename='xterm/xterm-addon-fit.js') }}"></script>
@@ -12,47 +15,46 @@ var camera_id = {{ camera_id }};
 <style>
   .terminal-wrapper {
     background-color: #1e1e1e;
-    border-radius: 8px;
-    padding: 10px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    border: 1px solid #333;
-    margin-bottom: 20px;
+    border-radius: 0.75rem;
+    padding: 12px;
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
   .terminal-header {
     background-color: #252526;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    padding: 6px 16px;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+    padding: 8px 16px;
     display: flex;
     align-items: center;
-    border-bottom: 1px solid #2d2d2d;
-    margin: -10px -10px 10px -10px;
+    justify-content: space-between;
+    border-bottom: 1px solid #333;
+    margin: -12px -12px 12px -12px;
   }
   .terminal-title {
-    color: #858585;
-    font-size: 13px;
+    color: #a6adbb;
+    font-size: 12px;
     font-family: monospace;
+    font-weight: 700;
   }
   #terminal-container {
-    height: calc(100vh - 180px);
-    min-height: 400px;
+    height: calc(100vh - 220px);
+    min-height: 450px;
   }
   .xterm {
-    padding: 5px;
+    padding: 6px;
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row">
-  <div class="col-12">
-    <div class="terminal-wrapper">
-      <div class="terminal-header">
-        <div class="terminal-title">bash (indi-allsky)</div>
-      </div>
-      <div id="terminal-container"></div>
+<div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-4">
+
+    <!-- Clean Terminal Container Card -->
+    <div class="tw:w-full tw:bg-[#1e1e1e] tw:rounded-2xl tw:p-4 tw:border tw:border-base-content/10 tw:shadow-xl">
+        <div id="terminal-container"></div>
     </div>
-  </div>
+
 </div>
 
 <script>
@@ -96,7 +98,6 @@ $(document).ready(function() {
     } else if (wsUrl.startsWith('https://')) {
         wsUrl = 'wss://' + wsUrl.substring(8);
     } else if (!wsUrl.startsWith('ws://') && !wsUrl.startsWith('wss://')) {
-        // Relative path fallback
         const loc = window.location;
         const wsProtocol = loc.protocol === 'https:' ? 'wss:' : 'ws:';
         wsUrl = wsProtocol + '//' + loc.host + (wsUrl.startsWith('/') ? '' : '/') + wsUrl;

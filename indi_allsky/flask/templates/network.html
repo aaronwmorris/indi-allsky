@@ -4,275 +4,274 @@
 
 {% block head %}
 <meta charset="UTF-8">
-<style>
-#nav-connections-tab, #nav-wificonnect-tab, #nav-hotspot-tab {
-	width: 150px;
-	margin-top: 10px;
-	margin-right: 5px;
-	height: 50px;
-}
-</style>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
 {% endblock %}
 
 {% block content %}
-<div class="container h-100">
-<form id="form_connections" onSubmit="return false;" autocomplete="off">
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6">
+    <form id="form_connections" onSubmit="return false;" autocomplete="off" class="tw:flex tw:flex-col tw:gap-6">
+        
+        <!-- Global Warnings -->
+        <div class="tw:flex tw:flex-col tw:gap-2">
+            {% if docker %}
+            <div class="tw:alert tw:alert-warning tw:py-2 tw:text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-5 tw:w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <span>Containerized environment detected. Network controls will not function.</span>
+            </div>
+            {% endif %}
 
-<nav>
-  <div class="nav nav-tabs" id="nav-tab" role="tablist">
-    <button class="nav-link link-danger bg-dark active" id="nav-connections-tab" data-bs-toggle="tab" data-bs-target="#nav-connections" type="button" role="tab" aria-controls="nav-connections" aria-selected="true">Connections</button>
-    <button class="nav-link link-light bg-dark" id="nav-wificonnect-tab" data-bs-toggle="tab" data-bs-target="#nav-wificonnect" type="button" role="tab" aria-controls="nav-wificonnect" aria-selected="false">Wi-Fi</button>
-    <button class="nav-link link-success bg-dark" id="nav-hotspot-tab" data-bs-toggle="tab" data-bs-target="#nav-hotspot" type="button" role="tab" aria-controls="nav-hotspot" aria-selected="false">Hotspot</button>
-  </div>
-</nav>
+            {% if not nm_installed %}
+            <div class="tw:alert tw:alert-warning tw:py-2 tw:text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-5 tw:w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <span>Network Manager is not available.</span>
+            </div>
+            {% endif %}
+        </div>
 
+        <!-- Prominent Navigation Tabs -->
+        <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-2xl tw:border tw:border-base-content/10 tw:shadow-md">
+            <button type="button" class="net-tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-connections">Connections</button>
+            <button type="button" class="net-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-wifi">Wi-Fi</button>
+            <button type="button" class="net-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-hotspot">Hotspot</button>
+        </div>
 
-<!-- should be above tab contents -->
-{% if docker %}
-<hr>
-<div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Containerized environment detected.  Network controls will not function.</div>
-{% endif %}
+        <div class="tw:w-full tw:mt-4">
+            
+            <!-- TAB: CONNECTIONS -->
+            <div id="tab-connections" class="net-tab-pane">
+                <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm">
+                    <div class="tw:card-body tw:p-6">
+                        <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-8">
+                            <div class="lg:tw:col-span-8 tw:flex tw:flex-col tw:gap-6">
+                                <div class="tw:form-control tw:w-full">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.CONNECTIONS_SELECT.label.text }}</span>
+                                    </label>
+                                    {{ form_connections.CONNECTIONS_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full') }}
+                                    <div id="CONNECTIONS_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                                    <div class="tw:text-[10px] tw:opacity-60 tw:mt-1">* Indicates Auto-start</div>
+                                </div>
 
-{% if not nm_installed %}
-<hr>
-<div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Network Manager is not available</div>
-{% endif %}
-<hr>
+                                <div class="tw:alert tw:alert-warning tw:py-4 tw:text-xs">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-5 tw:w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                    <span><b>Warning:</b> Use care when deactivating connections. If you deactivate the primary connection which is used for management, you will lose access to the web interface. Power cycle to reactivate.</span>
+                                </div>
+                            </div>
 
+                            <div class="lg:tw:col-span-4 tw:flex tw:flex-col tw:gap-3">
+                                <div class="tw:flex tw:flex-wrap tw:gap-2 tw:mb-4">
+                                    <button id="activate-button" class="tw:btn tw:btn-success tw:btn-sm tw:flex-1">Activate</button>
+                                    <button id="deactivate-button" class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1">Deactivate</button>
+                                    <button id="delete-button" class="tw:btn tw:btn-error tw:btn-outline tw:btn-sm tw:flex-1">Delete</button>
+                                </div>
+                                
+                                <div class="tw:divider tw:my-0"></div>
+                                
+                                <div class="tw:flex tw:flex-wrap tw:gap-2 tw:my-2">
+                                    <button id="autostart-button" class="tw:btn tw:btn-info tw:btn-sm tw:flex-1 tw:h-auto tw:py-2">Enable<br>Auto-start</button>
+                                    <button id="no-autostart-button" class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:h-auto tw:py-2">Disable<br>Auto-start</button>
+                                </div>
 
-<div class="tab-content" id="nav-tabContent">
+                                <div class="tw:divider tw:my-0"></div>
 
-  <div class="tab-pane fade show active" id="nav-connections" role="tabpanel" aria-labelledby="nav-connections-tab">
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_connections.CONNECTIONS_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_connections.CONNECTIONS_SELECT(class='form-select bg-secondary') }}
-            <div id="CONNECTIONS_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            <div style="font-size:10px">* Indicates Auto-start</div>
-        </div>
-        <div class="col-sm-3">
-            <button id="activate-button" class="btn btn-success">Activate</button>
-            <button id="deactivate-button" class="btn btn-warning">Deactivate</button>
-            <button id="delete-button" class="btn btn-dark text-danger">Delete</button>
-            <hr>
-            <button id="autostart-button" class="btn btn-info">Enable<br>Auto-start</button>
-            <button id="no-autostart-button" class="btn btn-secondary">Disable<br>Auto-start</button>
-            <hr>
-            <button id="incpriority-button" class="btn btn-primary">+10 priority</button>
-            <button id="decpriority-button" class="btn btn-secondary">-10 priority</button>
-            <hr>
-            <button id="powersavedisable-button" class="btn btn-success">Disable<br>Powersave</button>
-            <button id="powersaveenable-button" class="btn btn-warning">Enable<br>Powersave</button>
-        </div>
-        <div class="col-sm-1">
-            <input class="form-check-input" id="CONN_CONFIRM1" name="CONN_CONFIRM1" type="checkbox" value="y"> Confirm
-        </div>
-    </div>
+                                <div class="tw:flex tw:flex-wrap tw:gap-2 tw:my-2">
+                                    <button id="incpriority-button" class="tw:btn tw:btn-primary tw:btn-sm tw:flex-1">+10 priority</button>
+                                    <button id="decpriority-button" class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1">-10 priority</button>
+                                </div>
 
-    <hr>
+                                <div class="tw:divider tw:my-0"></div>
 
-    <div class="row">
-        <div class="col-sm-6">
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Use care when deactivating connections.  If you deactivate the primary connection which is used for management, you will lose access to the web interface.  If you lose access, you should be able to power cycle and the connection should reactivate.</div>
-        </div>
-    </div>
+                                <div class="tw:flex tw:flex-wrap tw:gap-2 tw:my-2">
+                                    <button id="powersavedisable-button" class="tw:btn tw:btn-success tw:btn-sm tw:flex-1 tw:h-auto tw:py-2">Disable<br>Powersave</button>
+                                    <button id="powersaveenable-button" class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1 tw:h-auto tw:py-2">Enable<br>Powersave</button>
+                                </div>
 
+                                <div class="tw:form-control tw:mt-4">
+                                    <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                        <input class="tw:checkbox tw:checkbox-primary tw:checkbox-sm" id="CONN_CONFIRM1" name="CONN_CONFIRM1" type="checkbox" value="y">
+                                        <span class="tw:label-text tw:text-xs tw:font-bold">Confirm Action</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-</div><!-- end connections tab -->
-<div class="tab-pane fade" id="nav-wificonnect" role="tabpanel" aria-labelledby="nav-wificonnect-tab">
+            <!-- TAB: WI-FI -->
+            <div id="tab-wifi" class="net-tab-pane" style="display: none;">
+                <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm">
+                    <div class="tw:card-body tw:p-6">
+                        <div class="tw:flex tw:flex-col tw:gap-6">
+                            <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
+                                <div class="lg:tw:col-span-8 tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.WIFI_DEVICES_SELECT.label.text }}</span>
+                                    </label>
+                                    {{ form_connections.WIFI_DEVICES_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full') }}
+                                    <div id="WIFI_DEVICES_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                                </div>
+                                <div class="lg:tw:col-span-4">
+                                    <button id="scan-button" class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:w-full">Scan Networks</button>
+                                </div>
+                            </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_connections.WIFI_DEVICES_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_connections.WIFI_DEVICES_SELECT(class='form-select bg-secondary') }}
-            <div id="WIFI_DEVICES_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-1">
-            <button id="scan-button" class="btn btn-primary">Scan</button>
-        </div>
-    </div>
+                            <div class="tw:divider"></div>
 
-    <hr>
+                            <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
+                                <div class="lg:tw:col-span-8 tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.SSID_SELECT.label.text }}</span>
+                                    </label>
+                                    {{ form_connections.SSID_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full') }}
+                                    <div id="SSID_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                                </div>
+                                <div class="lg:tw:col-span-4">
+                                    <button id="connect-button" class="tw:btn tw:btn-success tw:btn-sm tw:h-11 tw:w-full">Connect</button>
+                                </div>
+                            </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_connections.SSID_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_connections.SSID_SELECT(class='form-select bg-secondary') }}
-            <div id="SSID_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-1">
-            <button id="connect-button" class="btn btn-success">Connect</button>
-        </div>
-    </div>
+                            <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-6">
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.SSID_PSK.label.text }}</span>
+                                    </label>
+                                    {{ form_connections.SSID_PSK(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full', placeholder='Wi-Fi Password') }}
+                                    <div id="SSID_PSK-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                                </div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.SSID_PRIORITY.label.text }}</span>
+                                    </label>
+                                    {{ form_connections.SSID_PRIORITY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full') }}
+                                    <div id="SSID_PRIORITY-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                                    <div class="tw:text-[10px] tw:opacity-60 tw:mt-1">Higher numbers have higher priority.</div>
+                                </div>
+                            </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_connections.SSID_PSK.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_connections.SSID_PSK(class='form-control bg-secondary') }}
-            <div id="SSID_PSK-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-    </div>
+                            <div class="tw:form-control tw:max-w-md">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.SSID_RETRIES.label.text }}</span>
+                                </label>
+                                {{ form_connections.SSID_RETRIES(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full') }}
+                                <div id="SSID_RETRIES-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                                <div class="tw:text-[10px] tw:opacity-60 tw:mt-1">0 will retry forever (but never failover to a lower priority).</div>
+                            </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_connections.SSID_PRIORITY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_connections.SSID_PRIORITY(class='form-control bg-secondary') }}
-            <div id="SSID_PRIORITY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-2">
-            Connection Priority
-        </div>
-    </div>
+                            <div class="tw:alert tw:alert-info tw:py-3 tw:text-xs">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-5 tw:w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <span>Powersave is disabled by default on new WiFi connections.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_connections.SSID_RETRIES.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_connections.SSID_RETRIES(class='form-control bg-secondary') }}
-            <div id="SSID_RETRIES-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-2">
-            0 will retry forever (but never failover to a lower priority)
-        </div>
-    </div>
+            <!-- TAB: HOTSPOT -->
+            <div id="tab-hotspot" class="net-tab-pane" style="display: none;">
+                <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm">
+                    <div class="tw:card-body tw:p-6">
+                        <div class="tw:flex tw:flex-col tw:gap-6">
+                            <div class="tw:form-control tw:max-w-lg">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.HOTSPOT_DEVICES_SELECT.label.text }}</span>
+                                </label>
+                                {{ form_connections.HOTSPOT_DEVICES_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full') }}
+                                <div id="HOTSPOT_DEVICES_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                            </div>
 
-    <hr>
+                            <div class="tw:divider"></div>
 
-    <div class="row">
-        <div class="col-sm-6">
-            <div><span class="badge rounded-pill bg-info text-dark">Info</span> Powersave is disabled by default on new WiFi connections</div>
-        </div>
-    </div>
+                            <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
+                                <div class="lg:tw:col-span-8 tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.HOTSPOT_SSID.label.text }}</span>
+                                    </label>
+                                    {{ form_connections.HOTSPOT_SSID(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full', placeholder='Hotspot Name') }}
+                                    <div id="HOTSPOT_SSID-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                                </div>
+                                <div class="lg:tw:col-span-4">
+                                    <button id="create-hotspot-button" class="tw:btn tw:btn-success tw:btn-sm tw:h-11 tw:w-full">Create Hotspot</button>
+                                </div>
+                            </div>
 
+                            <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-6">
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.HOTSPOT_BAND.label.text }}</span>
+                                    </label>
+                                    {{ form_connections.HOTSPOT_BAND(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full') }}
+                                    <div id="HOTSPOT_BAND-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                                </div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.HOTSPOT_PSK.label.text }}</span>
+                                    </label>
+                                    {{ form_connections.HOTSPOT_PSK(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full', placeholder='Password (min 8 chars)') }}
+                                    <div id="HOTSPOT_PSK-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                                </div>
+                            </div>
 
-</div><!-- end wificonnect tab -->
-<div class="tab-pane fade" id="nav-hotspot" role="tabpanel" aria-labelledby="nav-hotspot-tab">
+                            <div class="tw:form-control">
+                                <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                    {{ form_connections.HOTSPOT_NOSECURITY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                                    <span class="tw:label-text tw:text-xs tw:font-bold">{{ form_connections.HOTSPOT_NOSECURITY.label.text }}</span>
+                                </label>
+                            </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_connections.HOTSPOT_DEVICES_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_connections.HOTSPOT_DEVICES_SELECT(class='form-select bg-secondary') }}
-            <div id="HOTSPOT_DEVICES_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-    </div>
+                            <div class="tw:divider"></div>
 
-    <hr>
+                            <div class="tw:bg-base-300/30 tw:p-4 tw:rounded-lg tw:text-xs tw:flex tw:flex-col tw:gap-3">
+                                <p>The Hotspot will be created with a static IP of <b>10.42.0.1</b> (/24 or 255.255.255.0) and IPv6 will be configured with a link-local address (fe80::).</p>
+                                <p>It should not be necessary to configure your wifi connection with a static address, a DHCP server should be started with the hotspot connection and the IPv6 link-local connectivity should be sufficient to access by the mDNS name:</p>
+                                <div class="tw:bg-black/40 tw:p-2 tw:rounded tw:font-mono tw:text-info">https://{{ hostname }}.local</div>
+                                <p>The Hotspot connection is created with a lower priority (-90) than the standard wireless connections, so if the primary wireless connection fails, it should fallback to activating the Hotspot connection.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_connections.HOTSPOT_SSID.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-5">
-            {{ form_connections.HOTSPOT_SSID(class='form-control bg-secondary') }}
-            <div id="HOTSPOT_SSID-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-1">
-            <button id="create-hotspot-button" class="btn btn-success">Create</button>
-        </div>
-    </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_connections.HOTSPOT_BAND.label(class='col-form-label') }}
+        <!-- ROW 3: Status Messages -->
+        <div class="tw:min-h-[60px]">
+            <div id="success-message" class="tw:alert tw:alert-success tw:py-3 tw:text-sm" style="display: none;"></div>
+            <div id="failure-message" class="tw:alert tw:alert-error tw:py-3 tw:text-sm" style="display: none;"></div>
         </div>
-        <div class="col-sm-5">
-            {{ form_connections.HOTSPOT_BAND(class='form-select bg-secondary') }}
-            <div id="HOTSPOT_BAND-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_connections.HOTSPOT_PSK.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_connections.HOTSPOT_PSK(class='form-control bg-secondary') }}
-            <div id="HOTSPOT_PSK-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-5">
-            <span class="form-switch">
-                {{ form_connections.HOTSPOT_NOSECURITY(class='form-check-input') }}
-            </span>
-            <span>
-                {{ form_connections.HOTSPOT_NOSECURITY.label(class='col-form-label') }}
-            </span>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="row">
-        <div class="col-sm-6">
-            <div>The Hotspot will be created with a static IP of <b>10.42.0.1</b> (/24 or 255.255.255.0) and IPv6 will be configured with a link-local address (fe80::).</div>
-            <br>
-            <div>It should not be necessary to configure your wifi connection with a static address, a DHCP server should be started with the hotspot connection and the IPv6 link-local connectivity should be sufficient to access by the mDNS name:</div>
-            <br>
-            <b><pre>https://{{ hostname }}.local</pre></b>
-            <br>
-            <div>The Hotspot connection is created with a lower priority (-90) than the standard wireless connections, so if the primary wireless connection fails, it should fallback to activating the Hotspot connection.</div>
-        </div>
-    </div>
-
-</div><!-- end hotspot tab -->
-
-    <hr> <hr> <hr>
-
-    <div class="form-group row" style="height:100px;">
-        <div class="col-sm-5">
-            <div id="success-message" class="alert alert-success" role="alert" style="display: none;"></div>
-            <div id="failure-message" class="alert alert-danger" role="alert" style="display: none;"></div>
-        </div>
-    </div>
 
     </form>
-
 </div>
 
 <script type="text/javascript">
 
+const successMessage = $('#success-message');
+const failureMessage = $('#failure-message');
+
+function resetMessages() {
+    successMessage.hide();
+    failureMessage.hide();
+    $('.tw:text-error').hide();
+}
+
+function showLoading(btnId, text) {
+    $(btnId).html('<span class="tw:loading tw:loading-spinner tw:loading-xs"></span> ' + text);
+}
+
+function hideLoading(btnId, text) {
+    $(btnId).html(text);
+}
+
 $('#activate-button').on('click', function() {
-    $('#success-message').css({'display' : 'none'});
-    $('#failure-message').css({'display' : 'none'});
-
-
-    if (! $("#CONN_CONFIRM1").prop('checked')) {
-        console.log('Confirm checkbox not checked');
-        return;
-    }
+    resetMessages();
+    if (!$("#CONN_CONFIRM1").prop('checked')) { return; }
     $("#CONN_CONFIRM1").prop('checked', false);
+    if ($('#CONNECTIONS_SELECT').val() == "") { return; }
 
-
-    if ( $('#CONNECTIONS_SELECT').val() == "" ){
-        return;
-    }
-
-    $("#activate-button").attr("class", "btn btn-success");
-    $("#activate-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Activate</span>'
-    );
-
-
-    var json_data = {
-        'COMMAND' : 'activate',
-        'CONNECTION' : $('#CONNECTIONS_SELECT').val(),
-    };
-
+    showLoading('#activate-button', 'Activate');
+    var json_data = { 'COMMAND' : 'activate', 'CONNECTION' : $('#CONNECTIONS_SELECT').val() };
 
     $.ajax({
         type: "POST",
@@ -280,60 +279,26 @@ $('#activate-button').on('click', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#activate-button").html(
-              'Activate'
-            );
-
-            $('#success-message').html(rdata['success-message']);
-            $('#success-message').css({'display' : 'block'});
-            setTimeout(function() {
-                $('#success-message').css({'display' : 'none'});
-            }, 15000);
-
+            hideLoading('#activate-button', 'Activate');
+            successMessage.html(rdata['success-message']).show();
+            setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
-            $("#activate-button").attr("class", "btn btn-danger");
-            $("#activate-button").html(
-              'Activate'
-            );
-
+            hideLoading('#activate-button', 'Activate');
             var errors = JSON.parse(rdata.responseText);
-
-            $('#failure-message').html(errors['failure-message']);
-            $('#failure-message').css({'display' : 'block'});
+            failureMessage.html(errors['failure-message']).show();
         },
     });
 });
-
 
 $('#deactivate-button').on('click', function() {
-    $('#success-message').css({'display' : 'none'});
-    $('#failure-message').css({'display' : 'none'});
-
-
-    if (! $("#CONN_CONFIRM1").prop('checked')) {
-        console.log('Confirm checkbox not checked');
-        return;
-    }
+    resetMessages();
+    if (!$("#CONN_CONFIRM1").prop('checked')) { return; }
     $("#CONN_CONFIRM1").prop('checked', false);
+    if ($('#CONNECTIONS_SELECT').val() == "") { return; }
 
-
-    if ( $('#CONNECTIONS_SELECT').val() == "" ){
-        return;
-    }
-
-
-    $("#deactivate-button").attr("class", "btn btn-warning");
-    $("#deactivate-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Dectivate</span>'
-    );
-
-
-    var json_data = {
-        'COMMAND' : 'deactivate',
-        'CONNECTION' : $('#CONNECTIONS_SELECT').val(),
-    };
-
+    showLoading('#deactivate-button', 'Deactivate');
+    var json_data = { 'COMMAND' : 'deactivate', 'CONNECTION' : $('#CONNECTIONS_SELECT').val() };
 
     $.ajax({
         type: "POST",
@@ -341,60 +306,26 @@ $('#deactivate-button').on('click', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#deactivate-button").html(
-              'Deactivate'
-            );
-
-            $('#success-message').html(rdata['success-message']);
-            $('#success-message').css({'display' : 'block'});
-            setTimeout(function() {
-                $('#success-message').css({'display' : 'none'});
-            }, 15000);
+            hideLoading('#deactivate-button', 'Deactivate');
+            successMessage.html(rdata['success-message']).show();
+            setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
-            $("#deactivate-button").attr("class", "btn btn-danger");
-            $("#deactivate-button").html(
-              'Deactivate'
-            );
-
+            hideLoading('#deactivate-button', 'Deactivate');
             var errors = JSON.parse(rdata.responseText);
-
-            $('#failure-message').html(errors['failure-message']);
-            $('#failure-message').css({'display' : 'block'});
+            failureMessage.html(errors['failure-message']).show();
         },
     });
-
 });
-
 
 $('#delete-button').on('click', function() {
-    $('#success-message').css({'display' : 'none'});
-    $('#failure-message').css({'display' : 'none'});
-
-
-    if (! $("#CONN_CONFIRM1").prop('checked')) {
-        console.log('Confirm checkbox not checked');
-        return;
-    }
+    resetMessages();
+    if (!$("#CONN_CONFIRM1").prop('checked')) { return; }
     $("#CONN_CONFIRM1").prop('checked', false);
+    if ($('#CONNECTIONS_SELECT').val() == "") { return; }
 
-
-    if ( $('#CONNECTIONS_SELECT').val() == "" ){
-        return;
-    }
-
-
-    $("#delete-button").attr("class", "btn btn-dark text-danger");
-    $("#delete-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Delete</span>'
-    );
-
-
-    var json_data = {
-        'COMMAND' : 'delete',
-        'CONNECTION' : $('#CONNECTIONS_SELECT').val(),
-    };
-
+    showLoading('#delete-button', 'Delete');
+    var json_data = { 'COMMAND' : 'delete', 'CONNECTION' : $('#CONNECTIONS_SELECT').val() };
 
     $.ajax({
         type: "POST",
@@ -402,59 +333,26 @@ $('#delete-button').on('click', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#delete-button").html(
-              'Delete'
-            );
-
-            $('#success-message').html(rdata['success-message']);
-            $('#success-message').css({'display' : 'block'});
-            setTimeout(function() {
-                $('#success-message').css({'display' : 'none'});
-            }, 15000);
+            hideLoading('#delete-button', 'Delete');
+            successMessage.html(rdata['success-message']).show();
+            setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
-            $("#delete-button").attr("class", "btn btn-danger text-light");
-            $("#delete-button").html(
-              'Delete'
-            );
-
+            hideLoading('#delete-button', 'Delete');
             var errors = JSON.parse(rdata.responseText);
-
-            $('#failure-message').html(errors['failure-message']);
-            $('#failure-message').css({'display' : 'block'});
+            failureMessage.html(errors['failure-message']).show();
         },
     });
 });
-
 
 $('#autostart-button').on('click', function() {
-    $('#success-message').css({'display' : 'none'});
-    $('#failure-message').css({'display' : 'none'});
-
-
-    if (! $("#CONN_CONFIRM1").prop('checked')) {
-        console.log('Confirm checkbox not checked');
-        return;
-    }
+    resetMessages();
+    if (!$("#CONN_CONFIRM1").prop('checked')) { return; }
     $("#CONN_CONFIRM1").prop('checked', false);
+    if ($('#CONNECTIONS_SELECT').val() == "") { return; }
 
-
-    if ( $('#CONNECTIONS_SELECT').val() == "" ){
-        return;
-    }
-
-
-    $("#autostart-button").attr("class", "btn btn-info");
-    $("#autostart-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Enable<br>Auto-start</span>'
-    );
-
-
-    var json_data = {
-        'COMMAND' : 'autostart',
-        'CONNECTION' : $('#CONNECTIONS_SELECT').val(),
-    };
-
+    showLoading('#autostart-button', 'Enable Auto-start');
+    var json_data = { 'COMMAND' : 'autostart', 'CONNECTION' : $('#CONNECTIONS_SELECT').val() };
 
     $.ajax({
         type: "POST",
@@ -462,59 +360,26 @@ $('#autostart-button').on('click', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#autostart-button").html(
-              'Enable<br>Auto-start'
-            );
-
-            $('#success-message').html(rdata['success-message']);
-            $('#success-message').css({'display' : 'block'});
-            setTimeout(function() {
-                $('#success-message').css({'display' : 'none'});
-            }, 15000);
+            hideLoading('#autostart-button', 'Enable Auto-start');
+            successMessage.html(rdata['success-message']).show();
+            setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
-            $("#autostart-button").attr("class", "btn btn-danger");
-            $("#autostart-button").html(
-              'Enable<br>Auto-start'
-            );
-
+            hideLoading('#autostart-button', 'Enable Auto-start');
             var errors = JSON.parse(rdata.responseText);
-
-            $('#failure-message').html(errors['failure-message']);
-            $('#failure-message').css({'display' : 'block'});
+            failureMessage.html(errors['failure-message']).show();
         },
     });
 });
-
 
 $('#no-autostart-button').on('click', function() {
-    $('#success-message').css({'display' : 'none'});
-    $('#failure-message').css({'display' : 'none'});
-
-
-    if (! $("#CONN_CONFIRM1").prop('checked')) {
-        console.log('Confirm checkbox not checked');
-        return;
-    }
+    resetMessages();
+    if (!$("#CONN_CONFIRM1").prop('checked')) { return; }
     $("#CONN_CONFIRM1").prop('checked', false);
+    if ($('#CONNECTIONS_SELECT').val() == "") { return; }
 
-
-    if ( $('#CONNECTIONS_SELECT').val() == "" ){
-        return;
-    }
-
-
-    $("#no-autostart-button").attr("class", "btn btn-secondary");
-    $("#no-autostart-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Disable<br>Auto-start</span>'
-    );
-
-
-    var json_data = {
-        'COMMAND' : 'noautostart',
-        'CONNECTION' : $('#CONNECTIONS_SELECT').val(),
-    };
-
+    showLoading('#no-autostart-button', 'Disable Auto-start');
+    var json_data = { 'COMMAND' : 'noautostart', 'CONNECTION' : $('#CONNECTIONS_SELECT').val() };
 
     $.ajax({
         type: "POST",
@@ -522,59 +387,26 @@ $('#no-autostart-button').on('click', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#no-autostart-button").html(
-              'Disable<br>Auto-start'
-            );
-
-            $('#success-message').html(rdata['success-message']);
-            $('#success-message').css({'display' : 'block'});
-            setTimeout(function() {
-                $('#success-message').css({'display' : 'none'});
-            }, 15000);
+            hideLoading('#no-autostart-button', 'Disable Auto-start');
+            successMessage.html(rdata['success-message']).show();
+            setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
-            $("#no-autostart-button").attr("class", "btn btn-danger");
-            $("#no-autostart-button").html(
-              'Disable<br>Auto-start'
-            );
-
+            hideLoading('#no-autostart-button', 'Disable Auto-start');
             var errors = JSON.parse(rdata.responseText);
-
-            $('#failure-message').html(errors['failure-message']);
-            $('#failure-message').css({'display' : 'block'});
+            failureMessage.html(errors['failure-message']).show();
         },
     });
 });
-
 
 $('#incpriority-button').on('click', function() {
-    $('#success-message').css({'display' : 'none'});
-    $('#failure-message').css({'display' : 'none'});
-
-
-    if (! $("#CONN_CONFIRM1").prop('checked')) {
-        console.log('Confirm checkbox not checked');
-        return;
-    }
+    resetMessages();
+    if (!$("#CONN_CONFIRM1").prop('checked')) { return; }
     $("#CONN_CONFIRM1").prop('checked', false);
+    if ($('#CONNECTIONS_SELECT').val() == "") { return; }
 
-
-    if ( $('#CONNECTIONS_SELECT').val() == "" ){
-        return;
-    }
-
-
-    $("#incpriority-button").attr("class", "btn btn-primary");
-    $("#incpriority-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">+10 priority</span>'
-    );
-
-
-    var json_data = {
-        'COMMAND' : 'incpriority',
-        'CONNECTION' : $('#CONNECTIONS_SELECT').val(),
-    };
-
+    showLoading('#incpriority-button', '+10 priority');
+    var json_data = { 'COMMAND' : 'incpriority', 'CONNECTION' : $('#CONNECTIONS_SELECT').val() };
 
     $.ajax({
         type: "POST",
@@ -582,59 +414,26 @@ $('#incpriority-button').on('click', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#incpriority-button").html(
-              '+10 priority'
-            );
-
-            $('#success-message').html(rdata['success-message']);
-            $('#success-message').css({'display' : 'block'});
-            setTimeout(function() {
-                $('#success-message').css({'display' : 'none'});
-            }, 15000);
+            hideLoading('#incpriority-button', '+10 priority');
+            successMessage.html(rdata['success-message']).show();
+            setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
-            $("#incpriority-button").attr("class", "btn btn-danger");
-            $("#incpriority-button").html(
-              'Enable<br>Auto-start'
-            );
-
+            hideLoading('#incpriority-button', '+10 priority');
             var errors = JSON.parse(rdata.responseText);
-
-            $('#failure-message').html(errors['failure-message']);
-            $('#failure-message').css({'display' : 'block'});
+            failureMessage.html(errors['failure-message']).show();
         },
     });
 });
-
 
 $('#decpriority-button').on('click', function() {
-    $('#success-message').css({'display' : 'none'});
-    $('#failure-message').css({'display' : 'none'});
-
-
-    if (! $("#CONN_CONFIRM1").prop('checked')) {
-        console.log('Confirm checkbox not checked');
-        return;
-    }
+    resetMessages();
+    if (!$("#CONN_CONFIRM1").prop('checked')) { return; }
     $("#CONN_CONFIRM1").prop('checked', false);
+    if ($('#CONNECTIONS_SELECT').val() == "") { return; }
 
-
-    if ( $('#CONNECTIONS_SELECT').val() == "" ){
-        return;
-    }
-
-
-    $("#decpriority-button").attr("class", "btn btn-secondary");
-    $("#decpriority-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">-10 priority</span>'
-    );
-
-
-    var json_data = {
-        'COMMAND' : 'decpriority',
-        'CONNECTION' : $('#CONNECTIONS_SELECT').val(),
-    };
-
+    showLoading('#decpriority-button', '-10 priority');
+    var json_data = { 'COMMAND' : 'decpriority', 'CONNECTION' : $('#CONNECTIONS_SELECT').val() };
 
     $.ajax({
         type: "POST",
@@ -642,59 +441,26 @@ $('#decpriority-button').on('click', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#decpriority-button").html(
-              '+10 priority'
-            );
-
-            $('#success-message').html(rdata['success-message']);
-            $('#success-message').css({'display' : 'block'});
-            setTimeout(function() {
-                $('#success-message').css({'display' : 'none'});
-            }, 15000);
+            hideLoading('#decpriority-button', '-10 priority');
+            successMessage.html(rdata['success-message']).show();
+            setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
-            $("#decpriority-button").attr("class", "btn btn-danger");
-            $("#decpriority-button").html(
-              '-10 priority'
-            );
-
+            hideLoading('#decpriority-button', '-10 priority');
             var errors = JSON.parse(rdata.responseText);
-
-            $('#failure-message').html(errors['failure-message']);
-            $('#failure-message').css({'display' : 'block'});
+            failureMessage.html(errors['failure-message']).show();
         },
     });
 });
-
 
 $('#powersavedisable-button').on('click', function() {
-    $('#success-message').css({'display' : 'none'});
-    $('#failure-message').css({'display' : 'none'});
-
-
-    if (! $("#CONN_CONFIRM1").prop('checked')) {
-        console.log('Confirm checkbox not checked');
-        return;
-    }
+    resetMessages();
+    if (!$("#CONN_CONFIRM1").prop('checked')) { return; }
     $("#CONN_CONFIRM1").prop('checked', false);
+    if ($('#CONNECTIONS_SELECT').val() == "") { return; }
 
-
-    if ( $('#CONNECTIONS_SELECT').val() == "" ){
-        return;
-    }
-
-
-    $("#powersavedisable-button").attr("class", "btn btn-success");
-    $("#powersavedisable-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Disable<br>Powersave</span>'
-    );
-
-
-    var json_data = {
-        'COMMAND' : 'powersavedisable',
-        'CONNECTION' : $('#CONNECTIONS_SELECT').val(),
-    };
-
+    showLoading('#powersavedisable-button', 'Disable Powersave');
+    var json_data = { 'COMMAND' : 'powersavedisable', 'CONNECTION' : $('#CONNECTIONS_SELECT').val() };
 
     $.ajax({
         type: "POST",
@@ -702,59 +468,26 @@ $('#powersavedisable-button').on('click', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#powersavedisable-button").html(
-              'Disable<br>Powersave'
-            );
-
-            $('#success-message').html(rdata['success-message']);
-            $('#success-message').css({'display' : 'block'});
-            setTimeout(function() {
-                $('#success-message').css({'display' : 'none'});
-            }, 15000);
+            hideLoading('#powersavedisable-button', 'Disable Powersave');
+            successMessage.html(rdata['success-message']).show();
+            setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
-            $("#powersavedisable-button").attr("class", "btn btn-danger");
-            $("#powersavedisable-button").html(
-              'Disable<br>Powersave'
-            );
-
+            hideLoading('#powersavedisable-button', 'Disable Powersave');
             var errors = JSON.parse(rdata.responseText);
-
-            $('#failure-message').html(errors['failure-message']);
-            $('#failure-message').css({'display' : 'block'});
+            failureMessage.html(errors['failure-message']).show();
         },
     });
 });
-
 
 $('#powersaveenable-button').on('click', function() {
-    $('#success-message').css({'display' : 'none'});
-    $('#failure-message').css({'display' : 'none'});
-
-
-    if (! $("#CONN_CONFIRM1").prop('checked')) {
-        console.log('Confirm checkbox not checked');
-        return;
-    }
+    resetMessages();
+    if (!$("#CONN_CONFIRM1").prop('checked')) { return; }
     $("#CONN_CONFIRM1").prop('checked', false);
+    if ($('#CONNECTIONS_SELECT').val() == "") { return; }
 
-
-    if ( $('#CONNECTIONS_SELECT').val() == "" ){
-        return;
-    }
-
-
-    $("#powersaveenable-button").attr("class", "btn btn-warning");
-    $("#powersaveenable-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Enable<br>Powersave</span>'
-    );
-
-
-    var json_data = {
-        'COMMAND' : 'powersaveenable',
-        'CONNECTION' : $('#CONNECTIONS_SELECT').val(),
-    };
-
+    showLoading('#powersaveenable-button', 'Enable Powersave');
+    var json_data = { 'COMMAND' : 'powersaveenable', 'CONNECTION' : $('#CONNECTIONS_SELECT').val() };
 
     $.ajax({
         type: "POST",
@@ -762,52 +495,24 @@ $('#powersaveenable-button').on('click', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#powersaveenable-button").html(
-              'Enable<br>Powersave'
-            );
-
-            $('#success-message').html(rdata['success-message']);
-            $('#success-message').css({'display' : 'block'});
-            setTimeout(function() {
-                $('#success-message').css({'display' : 'none'});
-            }, 15000);
+            hideLoading('#powersaveenable-button', 'Enable Powersave');
+            successMessage.html(rdata['success-message']).show();
+            setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
-            $("#powersaveenable-button").attr("class", "btn btn-danger");
-            $("#powersaveenable-button").html(
-              'Enable<br>Powersave'
-            );
-
+            hideLoading('#powersaveenable-button', 'Enable Powersave');
             var errors = JSON.parse(rdata.responseText);
-
-            $('#failure-message').html(errors['failure-message']);
-            $('#failure-message').css({'display' : 'block'});
+            failureMessage.html(errors['failure-message']).show();
         },
     });
 });
 
-
 $('#scan-button').on('click', function() {
-    $('#success-message').css({'display' : 'none'});
-    $('#failure-message').css({'display' : 'none'});
+    resetMessages();
+    if ($('#WIFI_DEVICES_SELECT').val() == "") { return false; }
 
-
-    if ( $('#WIFI_DEVICES_SELECT').val() == "" ){
-        return false;
-    }
-
-
-    $("#scan-button").attr("class", "btn btn-primary");
-    $("#scan-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Scan</span>'
-    );
-
-
-    var json_data = {
-        'COMMAND' : 'scanap',
-        'INTERFACE' : $('#WIFI_DEVICES_SELECT').val(),
-    };
-
+    showLoading('#scan-button', 'Scan Networks');
+    var json_data = { 'COMMAND' : 'scanap', 'INTERFACE' : $('#WIFI_DEVICES_SELECT').val() };
 
     $.ajax({
         type: "POST",
@@ -815,65 +520,27 @@ $('#scan-button').on('click', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#scan-button").attr("class", "btn btn-primary");
-            $("#scan-button").html(
-              'Scan'
-            );
-
-
-            $('#SSID_SELECT').removeAttr('readonly disabled');
-            $('#SSID_SELECT').removeClass('bg-dark text-secondary');
-
-            $('#SSID_PSK').removeAttr('readonly disabled');
-            $('#SSID_PSK').removeClass('bg-dark text-secondary');
-
-            $('#SSID_PRIORITY').removeAttr('readonly disabled');
-            $('#SSID_PRIORITY').removeClass('bg-dark text-secondary');
-
-            $('#SSID_RETRIES').removeAttr('readonly disabled');
-            $('#SSID_RETRIES').removeClass('bg-dark text-secondary');
-
-            $('#connect-button').removeAttr('disabled');
-            $("#connect-button").attr("class", "btn btn-success");
-
-
+            hideLoading('#scan-button', 'Scan Networks');
+            $('#SSID_SELECT, #SSID_PSK, #SSID_PRIORITY, #SSID_RETRIES').removeAttr('readonly disabled').removeClass('tw:opacity-50 tw:bg-base-300');
+            $('#connect-button').removeAttr('disabled').removeClass('tw:btn-disabled');
             $("#SSID_SELECT").empty();
-
             rdata['data'].forEach(item => {
                 $("#SSID_SELECT").append($('<option />', {'value' : item['path']}).text(item['desc']));
             });
         },
         error: function(rdata){
-            $("#scan-button").attr("class", "btn btn-danger");
-            $("#scan-button").html(
-              'Scan'
-            );
-
+            hideLoading('#scan-button', 'Scan Networks');
             var errors = JSON.parse(rdata.responseText);
-
-            $('#failure-message').html(errors['failure-message']);
-            $('#failure-message').css({'display' : 'block'});
+            failureMessage.html(errors['failure-message']).show();
         },
     });
 });
 
-
 $('#connect-button').on('click', function() {
-    $('#success-message').css({'display' : 'none'});
-    $('#failure-message').css({'display' : 'none'});
+    resetMessages();
+    if ($('#WIFI_DEVICES_SELECT').val() == "") { return false; }
 
-
-    if ( $('#WIFI_DEVICES_SELECT').val() == "" ){
-        return false;
-    }
-
-
-    $("#connect-button").attr("class", "btn btn-success");
-    $("#connect-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Connect</span>'
-    );
-
-
+    showLoading('#connect-button', 'Connect');
     var json_data = {
         'COMMAND' : 'connectap',
         'INTERFACE' : $('#WIFI_DEVICES_SELECT').val(),
@@ -883,55 +550,29 @@ $('#connect-button').on('click', function() {
         'RETRIES' : $('#SSID_RETRIES').val(),
     };
 
-
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_network_manager_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#connect-button").attr("class", "btn btn-success");
-            $("#connect-button").html(
-              'Connect'
-            );
-
-            $('#success-message').html(rdata['success-message']);
-            $('#success-message').css({'display' : 'block'});
-            setTimeout(function() {
-                $('#success-message').css({'display' : 'none'});
-            }, 15000);
+            hideLoading('#connect-button', 'Connect');
+            successMessage.html(rdata['success-message']).show();
+            setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
-            $("#connect-button").attr("class", "btn btn-danger");
-            $("#connect-button").html(
-              'Connect'
-            );
-
+            hideLoading('#connect-button', 'Connect');
             var errors = JSON.parse(rdata.responseText);
-
-            $('#failure-message').html(errors['failure-message']);
-            $('#failure-message').css({'display' : 'block'});
+            failureMessage.html(errors['failure-message']).show();
         },
     });
 });
 
-
 $('#create-hotspot-button').on('click', function() {
-    $('#success-message').css({'display' : 'none'});
-    $('#failure-message').css({'display' : 'none'});
+    resetMessages();
+    if ($('#HOTSPOT_DEVICES_SELECT').val() == "") { return false; }
 
-
-    if ( $('#HOTSPOT_DEVICES_SELECT').val() == "" ){
-        return false;
-    }
-
-
-    $("#create-hotspot-button").attr("class", "btn btn-success");
-    $("#create-hotspot-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Create</span>'
-    );
-
-
+    showLoading('#create-hotspot-button', 'Create Hotspot');
     var json_data = {
         'COMMAND' : 'createhotspot',
         'INTERFACE' : $('#HOTSPOT_DEVICES_SELECT').val(),
@@ -941,85 +582,81 @@ $('#create-hotspot-button').on('click', function() {
         'NOSECURITY' : $('#HOTSPOT_NOSECURITY').prop('checked'),
     };
 
-
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_network_manager_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#create-hotspot-button").attr("class", "btn btn-success");
-            $("#create-hotspot-button").html(
-              'Create'
-            );
-
-            $('#success-message').html(rdata['success-message']);
-            $('#success-message').css({'display' : 'block'});
-            setTimeout(function() {
-                $('#success-message').css({'display' : 'none'});
-            }, 15000);
+            hideLoading('#create-hotspot-button', 'Create Hotspot');
+            successMessage.html(rdata['success-message']).show();
+            setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
-            $("#create-hotspot-button").attr("class", "btn btn-danger");
-            $("#create-hotspot-button").html(
-              'Create'
-            );
-
+            hideLoading('#create-hotspot-button', 'Create Hotspot');
             var errors = JSON.parse(rdata.responseText);
-
-            $('#failure-message').html(errors['failure-message']);
-            $('#failure-message').css({'display' : 'block'});
+            failureMessage.html(errors['failure-message']).show();
         },
     });
 });
 
-
 $('#HOTSPOT_NOSECURITY').on('change', function() {
-    if ($('#HOTSPOT_NOSECURITY').prop('checked')) {
-        $('#HOTSPOT_PSK').val('');
-        $('#HOTSPOT_PSK').attr({'readonly': true, 'disabled': true});
-        $('#HOTSPOT_PSK').addClass('bg-dark text-secondary');
+    if ($(this).prop('checked')) {
+        $('#HOTSPOT_PSK').val('').attr({'readonly': true, 'disabled': true}).addClass('tw:opacity-50 tw:bg-base-300');
     } else {
-        $('#HOTSPOT_PSK').removeAttr('readonly disabled');
-        $('#HOTSPOT_PSK').removeClass('bg-dark text-secondary');
+        $('#HOTSPOT_PSK').removeAttr('readonly disabled').removeClass('tw:opacity-50 tw:bg-base-300');
     }
 });
 
-
 function init() {
-    $('#SSID_SELECT').attr({'readonly': true, 'disabled': true});
-    $('#SSID_SELECT').addClass('bg-dark text-secondary');
-
-    $('#SSID_PSK').attr({'readonly': true, 'disabled': true});
-    $('#SSID_PSK').addClass('bg-dark text-secondary');
-
-    $('#SSID_PRIORITY').attr({'readonly': true, 'disabled': true});
-    $('#SSID_PRIORITY').addClass('bg-dark text-secondary');
-
-    $('#SSID_RETRIES').attr({'readonly': true, 'disabled': true});
-    $('#SSID_RETRIES').addClass('bg-dark text-secondary');
-
-    $('#connect-button').attr({'disabled': true});
-    $('#connect-button').attr('class', 'btn btn-secondary');
+    $('#SSID_SELECT, #SSID_PSK, #SSID_PRIORITY, #SSID_RETRIES').attr({'readonly': true, 'disabled': true}).addClass('tw:opacity-50 tw:bg-base-300');
+    $('#connect-button').attr({'disabled': true}).addClass('tw:btn-disabled');
 
     if ($('#WIFI_DEVICES_SELECT').val() == '') {
-        $('#scan-button').attr({'disabled': true});
-        $('#scan-button').attr('class', 'btn btn-secondary');
+        $('#scan-button').attr({'disabled': true}).addClass('tw:btn-disabled');
     }
 
     if ($('#HOTSPOT_DEVICES_SELECT').val() == '') {
-        $('#create-hotspot-button').attr({'disabled': true});
-        $('#create-hotspot-button').attr('class', 'btn btn-secondary');
+        $('#create-hotspot-button').attr({'disabled': true}).addClass('tw:btn-disabled');
     }
 
     $("#CONN_CONFIRM1").prop('checked', false);
     $("#HOTSPOT_NOSECURITY").prop('checked', false);
     $('#HOTSPOT_PSK').val('');
+
+    // Handle hash-based tab activation for DaisyUI radio tabs
+    function activateTabFromHash() {
+        const hash = window.location.hash;
+        if (hash) {
+            const tabId = hash.replace('#', '');
+            const $tab = $(`#nav-${tabId}-tab`);
+            if ($tab.length) {
+                $tab.prop('checked', true);
+            }
+        }
+    }
+    activateTabFromHash();
+    window.addEventListener('hashchange', activateTabFromHash);
+
+    // Update hash when switching tabs
+    $('input[name="network_tabs"]').on('change', function() {
+        const tabId = $(this).attr('id').replace('nav-', '').replace('-tab', '');
+        history.replaceState(null, '', '#' + tabId);
+    });
 }
 
-$( document ).ready(function() {
+$(document).ready(function() {
+    $('.net-tab-btn').on('click', function() {
+        var target = $(this).data('target');
+        
+        $('.net-tab-btn').removeClass('tw:btn-primary').addClass('tw:btn-ghost');
+        $(this).removeClass('tw:btn-ghost').addClass('tw:btn-primary');
+
+        $('.net-tab-pane').hide();
+        $('#' + target).show();
+    });
+
     init();
 });
 </script>
-
 {% endblock %}

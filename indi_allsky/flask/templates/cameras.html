@@ -3,52 +3,85 @@
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
 {% block head %}
-<style>
-</style>
 <link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
 <script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
+
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
-
 {% endblock %}
 
 {% block content %}
-<div class="container">
-  <div class="row">
-    <div class="col-sm-12">
-    <table id="cameras-table" class="table table-striped compact" data-bs-theme="dark">
-      <thead>
-        <tr>
-          <td>ID</td>
-          <td>Camera</td>
-          <td>Connect Date</td>
-          <td>Size</td>
-          <td>Pixels</td>
-          <td>Bits</td>
-          <td>Gain</td>
-          <td>Binning</td>
-          <td>Exposure</td>
-        </tr>
-      </thead>
-      <tbody>
-        {% for camera in camera_list %}
-        <tr>
-          <td>{{ camera.id }}</td>
-          <td>{{ camera.name }}</td>
-          <td>{{ camera.connectDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-          <td>{{ camera.width | int }}x{{ camera.height | int}}</td>
-          <td>{{ "%0.2f"|format(camera.pixelSize | float)}}</td>
-          <td>{{ camera.bits | int }}</td>
-          <td>{{ "%0.2f"|format(camera.minGain | float) }} - {{ "%0.2f"|format(camera.maxGain | float) }}</td>
-          <td>{{ camera.minBinning }} - {{ camera.maxBinning }}</td>
-          <td>{{ "%0.6f"|format(camera.minExposure | float) }} - {{ "%0.1f"|format(camera.maxExposure | float) }}s</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+<div class="tw:w-full tw:flex tw:flex-col tw:gap-4">
+
+    <div class="tw:bg-base-200/50 tw:rounded-xl tw:border tw:border-base-content/5 tw:overflow-hidden">
+        <div class="tw:overflow-x-auto">
+            <table id="cameras-table" class="tw:table tw:table-sm tw:table-pin-rows tw:w-full">
+                <thead>
+                    <tr class="tw:border-b tw:border-base-content/10 tw:bg-base-300/60 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">
+                        <th class="tw:py-3.5 tw:px-4">ID</th>
+                        <th class="tw:py-3.5">Device Node</th>
+                        <th class="tw:py-3.5">Driver Initialization</th>
+                        <th class="tw:py-3.5">Sensor Bound (WxH)</th>
+                        <th class="tw:py-3.5">Pixel Size (µm)</th>
+                        <th class="tw:py-3.5">ADC Depth</th>
+                        <th class="tw:py-3.5">Gain Limits</th>
+                        <th class="tw:py-3.5">Binning Range</th>
+                        <th class="tw:py-3.5 tw:px-4">Exposure Latitude</th>
+                    </tr>
+                </thead>
+                <tbody class="tw:text-xs tw:divide-y tw:divide-base-content/5">
+                    {% for camera in camera_list %}
+                    <tr class="tw:hover:bg-base-300/30 tw:transition-colors tw:duration-150">
+                        <td class="tw:py-3 tw:px-4 tw:font-mono tw:font-bold tw:text-primary">{{ camera.id }}</td>
+                        
+                        <td class="tw:py-3 tw:font-semibold tw:text-base-content/80">{{ camera.name }}</td>
+                        
+                        <td class="tw:py-3 tw:font-mono tw:text-base-content/60">
+                            {{ camera.connectDate.strftime('%Y-%m-%d %H:%M:%S') }}
+                        </td>
+                        
+                        <td class="tw:py-3 tw:font-mono tw:text-base-content/70">
+                            {{ camera.width | int }}<span class="tw:text-base-content/30 tw:mx-0.5">×</span>{{ camera.height | int }}
+                        </td>
+                        
+                        <td class="tw:py-3 tw:font-mono tw:text-accent tw:font-medium">
+                            {{ "%0.2f"|format(camera.pixelSize | float) }}
+                        </td>
+                        
+                        <td class="tw:py-3">
+                            <span class="tw:badge tw:badge-neutral tw:bg-base-300 tw:border-none tw:text-[10px] tw:font-mono tw:font-bold">
+                                {{ camera.bits | int }}-bit
+                            </span>
+                        </td>
+                        
+                        <td class="tw:py-3 tw:font-mono tw:text-base-content/70">
+                            {{ "%0.2f"|format(camera.minGain | float) }} <span class="tw:text-base-content/30">&rarr;</span> {{ "%0.2f"|format(camera.maxGain | float) }}
+                        </td>
+                        
+                        <td class="tw:py-3 tw:font-mono tw:text-base-content/70">
+                            {{ camera.minBinning }}<span class="tw:text-base-content/30">x</span>{{ camera.minBinning }} &ndash; {{ camera.maxBinning }}<span class="tw:text-base-content/30">x</span>{{ camera.maxBinning }}
+                        </td>
+                        
+                        <td class="tw:py-3 tw:px-4 tw:font-mono tw:text-info tw:font-medium">
+                            {{ "%0.6f"|format(camera.minExposure | float) }}<span class="tw:text-base-content/30 tw:text-[10px] tw:ml-0.5">s</span> 
+                            <span class="tw:text-base-content/30 tw:mx-1">/</span> 
+                            {{ "%0.1f"|format(camera.maxExposure | float) }}<span class="tw:text-base-content/30 tw:text-[10px] tw:ml-0.5">s</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not camera_list %}
+                    <tr>
+                        <td colspan="9" class="tw:text-center tw:py-8 tw:text-base-content/30 tw:italic">
+                            No functional imaging hardware nodes or INDI drivers found connected to bus loops.
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
     </div>
-  </div>
+
 </div>
 
 <script>

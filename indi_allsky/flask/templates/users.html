@@ -3,63 +3,97 @@
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
 {% block head %}
-<style>
-</style>
 <link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
 <script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
+
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
-
 {% endblock %}
 
 {% block content %}
-<div class="container">
-<div class="row">
-  <table id="users-table" class="table table-striped compact" data-bs-theme="dark">
-    <thead>
-      <tr>
-        <th>Create</th>
-        <th>Login</th>
-        <th>Username</th>
-        <th>Name</th>
-        <th>Active</th>
-        <th>Staff</th>
-        <th>Admin</th>
-        <th>Type</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for user in user_list %}
-      <tr>
-        <td>{{ user.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+<style>
+    .allsky-workspace-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        width: 100%;
+    }
+    @media (min-width: 1024px) {
+        .allsky-workspace-grid {
+            grid-template-columns: 2fr 1fr !important;
+            align-items: start;
+        }
+    }
+</style>
 
-        {% if user.loginDate %}
-            <td>{{ user.loginDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-        {% else %}
-            <td>Never</td>
-        {% endif %}
+<div class="tw:container tw:h-full tw:mx-auto tw:flex tw:flex-col tw:gap-4">
 
-        <td>{{ user.username }}</td>
-        <td>{{ user.name }}</td>
-        <td>{{ user.active }}</td>
-        <td>{{ user.staff }}</td>
-        <td>{{ user.admin }}</td>
+    <div class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-xl tw:border tw:border-base-content/10">
+        <h3 class="tw:text-sm tw:font-bold tw:tracking-wide tw:text-base-content tw:m-0 tw:flex tw:items-center tw:gap-2">
+            <i class="tw:icon-[lucide--users] tw:w-4 tw:h-4 tw:text-primary"></i>
+            User Management Directory
+        </h3>
+    </div>
 
-        {% if not user.data['idp'] %}
-            <td>Local</td>
-        {% elif user.data['idp'] == 'local' %}
-            <td>Local</td>
-        {% elif user.data['idp'] == 'oidc' %}
-            <td>OIDC</td>
-        {% else %}
-            <td>Unknown</td>
-        {% endif %}
+    <div class="allsky-workspace-grid tw:w-full tw:grow">
+        
+        <div class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-xl tw:border tw:border-base-content/10 tw:overflow-x-auto">
+            <table id="users-table" class="tw:table tw:table-sm tw:table-pin-rows tw:w-full">
+                <thead>
+                    <tr class="tw:border-b tw:border-base-content/10 tw:bg-base-300/60 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">
+                        <th class="tw:py-3.5 tw:px-4">Create Date</th>
+                        <th class="tw:py-3.5">Username</th>
+                        <th class="tw:py-3.5">Name</th>
+                        <th class="tw:py-3.5">Active</th>
+                        <th class="tw:py-3.5">Staff</th>
+                        <th class="tw:py-3.5 tw:px-4">Admin</th>
+                    </tr>
+                </thead>
+                <tbody class="tw:text-xs tw:divide-y tw:divide-base-content/5">
+                    {% for user in user_list %}
+                    <tr class="tw:hover:bg-base-300/30 tw:transition-colors tw:duration-150">
+                        <td class="tw:py-3 tw:px-4 tw:whitespace-nowrap tw:font-mono tw:text-base-content/70">
+                            {{ user.createDate.strftime('%Y-%m-%d %H:%M:%S') }}
+                        </td>
+                        <td class="tw:py-3 tw:font-semibold tw:text-base-content">
+                            {{ user.username }}
+                        </td>
+                        <td class="tw:py-3 tw:text-base-content/90">
+                            {{ user.name }}
+                        </td>
+                        <td class="tw:py-3">
+                            {% if user.active %}
+                                <span class="tw:badge tw:badge-success tw:badge-outline tw:text-[10px] tw:font-bold tw:uppercase">True</span>
+                            {% else %}
+                                <span class="tw:badge tw:badge-neutral tw:text-[10px] tw:font-bold tw:uppercase tw:opacity-50">False</span>
+                            {% endif %}
+                        </td>
+                        <td class="tw:py-3">
+                            {% if user.staff %}
+                                <span class="tw:badge tw:badge-info tw:badge-outline tw:text-[10px] tw:font-bold tw:uppercase">True</span>
+                            {% else %}
+                                <span class="tw:badge tw:badge-neutral tw:text-[10px] tw:font-bold tw:uppercase tw:opacity-50">False</span>
+                            {% endif %}
+                        </td>
+                        <td class="tw:py-3 tw:px-4">
+                            {% if user.admin %}
+                                <span class="tw:badge tw:badge-primary tw:text-[10px] tw:font-bold tw:uppercase">True</span>
+                            {% else %}
+                                <span class="tw:badge tw:badge-neutral tw:text-[10px] tw:font-bold tw:uppercase tw:opacity-50">False</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+        <div class="tw:w-full">
+            </div>
+
+    </div>
+
 </div>
 
 <script>
@@ -84,6 +118,4 @@ $( document ).ready(function() {
     init();
 });
 </script>
-
-
 {% endblock %}

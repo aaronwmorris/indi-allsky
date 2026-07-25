@@ -3,1032 +3,636 @@
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
 {% block head %}
-<style>
-#nav-info-tab, #nav-time-tab, #nav-services-tab, #nav-powercontrol-tab, #nav-indiserver-tab {
-    width: 150px;
-    margin-top: 10px;
-    margin-right: 5px;
-    height: 50px;
-}
-
-.loader {
-  display: none;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-</style>
+<meta charset="UTF-8">
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
-
 {% endblock %}
 
 {% block content %}
-
-<nav>
-  <div class="nav nav-tabs" id="nav-tab" role="tablist">
-    <button class="nav-link link-info bg-dark active" id="nav-info-tab" data-bs-toggle="tab" data-bs-target="#nav-info" type="button" role="tab" aria-controls="nav-info" aria-selected="true">Information</button>
-    <button class="nav-link link-warning bg-dark" id="nav-time-tab" data-bs-toggle="tab" data-bs-target="#nav-time" type="button" role="tab" aria-controls="nav-time" aria-selected="false">Time</button>
-    <button class="nav-link link-secondary bg-dark" id="nav-indiserver-tab" data-bs-toggle="tab" data-bs-target="#nav-indiserver" type="button" role="tab" aria-controls="nav-indiserver" aria-selected="false">INDI Drivers</button>
-    <button class="nav-link link-success bg-dark" id="nav-services-tab" data-bs-toggle="tab" data-bs-target="#nav-services" type="button" role="tab" aria-controls="nav-services" aria-selected="false">Services</button>
-    <button class="nav-link link-danger bg-dark" id="nav-powercontrol-tab" data-bs-toggle="tab" data-bs-target="#nav-powercontrol" type="button" role="tab" aria-controls="nav-powercontrol" aria-selected="false">Utilities</button>
-  </div>
-</nav>
-
-
-<!-- should be above tab contents -->
-{% if docker %}
-<hr>
-<div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Containerized environment detected.  Service and time controls will not function.</div>
-{% endif %}
-
-
-<div class="tab-content" id="nav-tabContent">
-  <div class="tab-pane fade show active" id="nav-info" role="tabpanel" aria-labelledby="nav-info-tab">
-
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"><h4>Release</h4></div>
-    <div class="col-sm-6">{{release}}</div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"><h4>System</h4></div>
-    <div class="col-sm-3">{{system_type}}</div>
-    <div class="col-sm-3">Uptime: {{ uptime_str }}</div>
-    <div class="col-sm-3">Target: {{ systemd_target }}</div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"><h4>CPUs</h4></div>
-    <div class="col-sm-1">{{cpu_count}}</div>
-    <div class="col-sm-2">{{python_platform}} [{{cpu_bits}}-bit]</div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1">Usage</div>
-    <div class="col-sm-9">
-        <div class="progress">
-            <div class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="{{cpu_usage.user|int}}" aria-valuemin="0" aria-valuemax="100" style="width: {{cpu_usage.user|int}}%">{{"%.0f"|format(cpu_usage.user)}}%</div>
-            <div class="progress-bar bg-danger progress-bar-striped" role="progressbar" aria-valuenow="{{cpu_usage.system|int}}" aria-valuemin="0" aria-valuemax="100" style="width: {{cpu_usage.system|int}}%">{{"%.0f"|format(cpu_usage.system)}}%</div>
-            <div class="progress-bar bg-success progress-bar-striped" role="progressbar" aria-valuenow="{{cpu_usage.nice|int}}" aria-valuemin="0" aria-valuemax="100" style="width: {{cpu_usage.nice|int}}%">{{"%.0f"|format(cpu_usage.nice)}}%</div>
-            <div class="progress-bar bg-warning progress-bar-striped text-dark" role="progressbar" aria-valuenow="{{cpu_usage.iowait|int}}" aria-valuemin="0" aria-valuemax="100" style="width: {{cpu_usage.iowait|int}}%">{{"%.0f"|format(cpu_usage.iowait)}}%</div>
-        </div>
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6">
+    
+    <!-- Global Warnings -->
+    {% if docker %}
+    <div class="tw:alert tw:alert-warning tw:py-2 tw:text-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-5 tw:w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+        <span>Containerized environment detected. Service and time controls will not function.</span>
     </div>
-</div>
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1"></div>
-    <div class="col-sm-9">
-        <span class="badge bg-primary">User</span>
-        <span class="badge bg-danger">System</span>
-        <span class="badge bg-success">Nice</span>
-        <span class="badge bg-warning text-dark">I/O Wait</span>
-    </div>
-</div>
-<hr>
+    {% endif %}
 
-<div class="row">
-    <div class="col-sm-2"><h4>Load Average</h4></div>
-</div>
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1">5 min</div>
-    <div class="col-sm-1">{{"%.2f"|format(cpu_load5)}}</div>
-</div>
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1">10 min</div>
-    <div class="col-sm-1">{{"%.2f"|format(cpu_load10)}}</div>
-</div>
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1">15 min</div>
-    <div class="col-sm-1">{{"%.2f"|format(cpu_load15)}}</div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"><h4>Memory</h4></div>
-</div>
-<div class="row">
-    <div class="col-sm-2">System</div>
-    <div class="col-sm-1">{{mem_total}} MB</div>
-    <div class="col-sm-9">
-        <div class="progress">
-            <div class="progress-bar progress-bar-striped bg-success" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{mem_usage.user_percent|int}}%">{{"%.0f"|format(mem_usage.user_percent)}}%</div>
-            <div class="progress-bar progress-bar-striped bg-secondary" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{mem_usage.cached_percent|int}}%">{{"%.0f"|format(mem_usage.cached_percent)}}%</div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2">Swap</div>
-    <div class="col-sm-1">{{ swap_total }} MB</div>
-    <div class="col-sm-9">
-        <div class="progress">
-            <div class="progress-bar progress-bar-striped bg-danger" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{swap_usage|int}}%">{{"%.0f"|format(swap_usage)}}%</div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1"></div>
-    <div class="col-sm-9">
-        <span class="badge bg-success">Used</span>
-        <span class="badge bg-secondary">Cache</span>
-        <span class="badge bg-danger">Swap</span>
-    </div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"><h4>Filesystems</h4></div>
-</div>
-
-{% for fs in fs_data %}
-    <div class="row">
-        <div class="col-sm-2">{{fs.mountpoint}}</div>
-        <div class="col-sm-1">{{"%.0f"|format(fs.total_mb)}} MB</div>
-        <div class="col-sm-9">
-            <div class="progress">
-                <div class="progress-bar progress-bar-striped bg-warning text-dark" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{fs.percent|int}}%">{{"%.0f"|format(fs.percent)}}%</div>
-            </div>
-        </div>
-    </div>
-{% endfor %}
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-3"><h4>Network</h4></div>
-</div>
-
-{% for net in net_list %}
-    <div class="row">
-        <div class="col-sm-2"></div>
-        <div class="col-sm-1">{{net.name}}</div>
-        <div class="col-sm-3">
-            {{ net.inet4 | join('<br>') | safe }}
-        </div>
-        <div class="col-sm-6">
-            {{ net.inet6 | join('<br>') | safe }}
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-sm-2"></div>
-    <div class="col-sm-10"><hr></div>
-    </div>
-{% endfor %}
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"><h4>Environment</h4></div>
-</div>
-{% for t in temp_list %}
-    <div class="row">
-        <div class="col-sm-3 text-end">{{t['name']}}</div>
-        <div class="col-sm-1">{{"%.1f"|format(t['temp'])}}&deg;{{t['sys']}}</div>
-    </div>
-{% endfor %}
-
-{% if fan_list %}
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"><h4>System Fan</h4></div>
-</div>
-
-{% for f in fan_list %}
-    <div class="row">
-        <div class="col-sm-3 text-end">{{f['name']}}</div>
-        <div class="col-sm-2">{{"%.0f"|format(f['rpm'])}} RPM</div>
-    </div>
-{% endfor %}
-{% endif %}
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"><h4>System</h4></div>
-</div>
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1">Python</div>
-    <div class="col-sm-1">{{python_version}}</div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1">gunicorn</div>
-    <div class="col-sm-1">{{gunicorn_version}}</div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1">cryptography</div>
-    <div class="col-sm-1">{{cryptography_version}}</div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1">cv2</div>
-    <div class="col-sm-1">{{cv2_version}}</div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1">numpy</div>
-    <div class="col-sm-1">{{numpy_version}}</div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1">ephem</div>
-    <div class="col-sm-1">{{ephem_version}}</div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1">skyfield</div>
-    <div class="col-sm-1">{{skyfield_version}}</div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1">astropy</div>
-    <div class="col-sm-1">{{astropy_version}}</div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1">flask</div>
-    <div class="col-sm-1">{{flask_version}}</div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1">dbus</div>
-    <div class="col-sm-1">{{dbus_version}}</div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1">paho.mqtt</div>
-    <div class="col-sm-1">{{pahomqtt_version}}</div>
-</div>
-
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1">pycurl</div>
-    <div class="col-sm-1">{{pycurl_version}}</div>
-</div>
-
-
-</div><!-- end tab -->
-<div class="tab-pane fade" id="nav-time" role="tabpanel" aria-labelledby="nav-time-tab">
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2">NTP Available</div>
-    <div class="col-sm-4">{{ timedate1_dict.CanNTP }}</div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2">NTP Enabled</div>
-    <div class="col-sm-4">{{ timedate1_dict.NTP }}</div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2">NTP Synchronized</div>
-    <div class="col-sm-4">{{ timedate1_dict.NTPSynchronized }}</div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2">RTC Available</div>
-    <div class="col-sm-4">{{ timedate1_dict.LocalRTC }}</div>
-    <div class="col-sm-6"><span class="badge rounded-pill bg-info text-dark">Note</span> Note: RTC almost always reports False even when one is available</div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2">Timezone</div>
-    <div class="col-sm-4">{{ timedate1_dict.Timezone }}</div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div>
-        <span class="badge rounded-pill bg-danger">Danger</span>
-        <span class="col-sm-12 text-danger font-weight-bold"> Changing the system time during operation can cause unpredictable behavior.  It is recommended to restart both indiserver and indi-allsky.</span>
-    </div>
-</div>
-
-<div class="row">
-    <div>
-        <span class="badge rounded-pill bg-warning text-dark">Warning</span>
-        <span class="col-sm-12 text-warning"> Manually setting time will disable NTP time sync</span>
-    </div>
-</div>
-
-<div class="row">
-    <div>
-        <span class="badge rounded-pill bg-info text-dark">Note</span>
-        <span class="col-sm-12 text-info"> Time sync can be manually re-enabled on the CLI by issuing the following command</span>
-        <div class="col-sm-12"><pre>timedatectl set-ntp true</pre></div>
-    </div>
-</div>
-
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2">System time</div>
-    <div class="col-sm-4">&nbsp;&nbsp;&nbsp;{{ now.strftime('%m / %d / %Y, %I : %M : %S %P') }}</div>
-</div>
-
-<form id="form_settime" onSubmit="return false;">
-    {{ form_settime.csrf_token }}
-    <div class="text-danger my-2" id="csrf_token-error"></div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_settime.NEW_DATETIME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_settime.NEW_DATETIME(class='form-control bg-secondary') }}
-            <div id="NEW_DATETIME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">Field populated by browser</div>
+    <!-- Prominent Navigation Tabs -->
+    <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-2xl tw:border tw:border-base-content/10 tw:shadow-md">
+        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-info">Information</button>
+        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-time">Time</button>
+        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-indiserver">INDI Drivers</button>
+        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-services">Services</button>
+        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-powercontrol">Utilities</button>
     </div>
 
-    <div id="form_settime_success-message" class="text-success" style="display: none;"></div>
-    <div id="form_settime_failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+    <div class="tw:w-full tw:mt-4">
+        
+        <!-- TAB: INFORMATION -->
+        <div id="tab-info" class="sys-tab-pane">
+            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm">
+                <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-8">
+                    
+                    <!-- Release Section -->
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4 tw:items-center">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Release</span>
+                        <div class="md:tw:col-span-3 tw:text-lg tw:font-mono">{{release}}</div>
+                    </div>
 
-    <div class="row">
-        <div class="col-sm-2">
-            <button class="btn btn-primary">Set Time</button>
-        </div>
-        <div class="col-sm-1 loader" id="loader_settime"></div>
-    </div>
-</form>
+                    <div class="tw:divider tw:my-0"></div>
 
-<hr>
+                    <!-- System Info Section -->
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">System</span>
+                        <div class="md:tw:col-span-3 tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4">
+                            <div class="tw:flex tw:flex-col"><span class="tw:text-[9px] tw:opacity-50">TYPE</span>{{system_type}}</div>
+                            <div class="tw:flex tw:flex-col"><span class="tw:text-[9px] tw:opacity-50">UPTIME</span>{{ uptime_str }}</div>
+                            <div class="tw:flex tw:flex-col"><span class="tw:text-[9px] tw:opacity-50">TARGET</span>{{ systemd_target }}</div>
+                        </div>
+                    </div>
 
-<script>
-const form_settime_successMessage = $('#form_settime_success-message');
-const form_settime_failureMessage = $('#form_settime_failure-message');
-const form_settime_field_names = [
-    'csrf_token',
-    'NEW_DATETIME',
-];
-const form_settime_checkbox_field_names = [];
+                    <div class="tw:divider tw:my-0"></div>
 
-var form_settime_fields = {};
-// Populate fields object
-form_settime_field_names.forEach(item => {
-    form_settime_fields[item] = {
-        'input' : $('#' + item),
-        'error' : $('#' + item + '-error'),
-    };
-});
+                    <!-- CPUs Section -->
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Processors</span>
+                        <div class="md:tw:col-span-3 tw:flex tw:flex-col tw:gap-4">
+                            <div class="tw:flex tw:gap-4 tw:items-baseline">
+                                <span class="tw:text-2xl tw:font-bold">{{cpu_count}} Cores</span>
+                                <span class="tw:badge tw:badge-ghost tw:font-mono">{{python_platform}} [{{cpu_bits}}-bit]</span>
+                            </div>
+                            
+                            <div class="tw:flex tw:flex-col tw:gap-1">
+                                <span class="tw:text-[10px] tw:font-bold tw:opacity-60">CPU USAGE</span>
+                                <div class="tw:w-full tw:h-4 tw:bg-base-300 tw:rounded-full tw:overflow-hidden tw:flex">
+                                    <div class="tw:bg-primary tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold" style="width: {{cpu_usage.user|int}}%">{{cpu_usage.user|int}}%</div>
+                                    <div class="tw:bg-error tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold" style="width: {{cpu_usage.system|int}}%">{{cpu_usage.system|int}}%</div>
+                                    <div class="tw:bg-success tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold" style="width: {{cpu_usage.nice|int}}%">{{cpu_usage.nice|int}}%</div>
+                                    <div class="tw:bg-warning tw:text-warning-content tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold" style="width: {{cpu_usage.iowait|int}}%">{{cpu_usage.iowait|int}}%</div>
+                                </div>
+                                <div class="tw:flex tw:flex-wrap tw:gap-2 tw:mt-1">
+                                    <span class="tw:badge tw:badge-xs tw:badge-primary">User</span>
+                                    <span class="tw:badge tw:badge-xs tw:badge-error">System</span>
+                                    <span class="tw:badge tw:badge-xs tw:badge-success">Nice</span>
+                                    <span class="tw:badge tw:badge-xs tw:badge-warning tw:text-warning-content">I/O Wait</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-form_settime_fields['form_settime_global'] = {
-    'input' : form_settime_failureMessage,
-    'error' : form_settime_failureMessage,
-};
+                    <div class="tw:divider tw:my-0"></div>
 
-// Checkboxes
-form_settime_checkbox_field_names.forEach(item => {
-    form_settime_fields[item] = {
-        'input' : $('#' + item),
-        'error' : $('#' + item + '-error'),
-    };
-});
+                    <!-- Load Average Section -->
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Load Average</span>
+                        <div class="md:tw:col-span-3 tw:grid tw:grid-cols-3 tw:gap-4">
+                            <div class="tw:flex tw:flex-col"><span class="tw:text-[9px] tw:opacity-50">5 MIN</span><span class="tw:text-xl tw:font-mono">{{"%.2f"|format(cpu_load5)}}</span></div>
+                            <div class="tw:flex tw:flex-col"><span class="tw:text-[9px] tw:opacity-50">10 MIN</span><span class="tw:text-xl tw:font-mono">{{"%.2f"|format(cpu_load10)}}</span></div>
+                            <div class="tw:flex tw:flex-col"><span class="tw:text-[9px] tw:opacity-50">15 MIN</span><span class="tw:text-xl tw:font-mono">{{"%.2f"|format(cpu_load15)}}</span></div>
+                        </div>
+                    </div>
 
+                    <div class="tw:divider tw:my-0"></div>
 
-$('#form_settime').on('submit', function() {
+                    <!-- Memory Section -->
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Memory</span>
+                        <div class="md:tw:col-span-3 tw:flex tw:flex-col tw:gap-6">
+                            <div class="tw:flex tw:flex-col tw:gap-1">
+                                <div class="tw:flex tw:justify-between tw:items-baseline">
+                                    <span class="tw:text-[10px] tw:font-bold tw:opacity-60">SYSTEM RAM</span>
+                                    <span class="tw:text-xs tw:font-mono">{{mem_total}} MB</span>
+                                </div>
+                                <div class="tw:w-full tw:h-4 tw:bg-base-300 tw:rounded-full tw:overflow-hidden tw:flex">
+                                    <div class="tw:bg-success tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold" style="width: {{mem_usage.user_percent|int}}%">{{mem_usage.user_percent|int}}%</div>
+                                    <div class="tw:bg-secondary tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold" style="width: {{mem_usage.cached_percent|int}}%">{{mem_usage.cached_percent|int}}%</div>
+                                </div>
+                            </div>
+                            <div class="tw:flex tw:flex-col tw:gap-1">
+                                <div class="tw:flex tw:justify-between tw:items-baseline">
+                                    <span class="tw:text-[10px] tw:font-bold tw:opacity-60">SWAP SPACE</span>
+                                    <span class="tw:text-xs tw:font-mono">{{ swap_total }} MB</span>
+                                </div>
+                                <div class="tw:w-full tw:h-4 tw:bg-base-300 tw:rounded-full tw:overflow-hidden">
+                                    <div class="tw:bg-error tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold" style="width: {{swap_usage|int}}%">{{swap_usage|int}}%</div>
+                                </div>
+                            </div>
+                            <div class="tw:flex tw:flex-wrap tw:gap-2">
+                                <span class="tw:badge tw:badge-xs tw:badge-success">Used</span>
+                                <span class="tw:badge tw:badge-xs tw:badge-secondary">Cache</span>
+                                <span class="tw:badge tw:badge-xs tw:badge-error">Swap</span>
+                            </div>
+                        </div>
+                    </div>
 
-    // hide all errors
-    form_settime_successMessage.css({'display' : 'none'});
-    Object.keys(form_settime_fields).forEach((key) => {
-        form_settime_fields[key].error.css({'display' : 'none'});
-    });
+                    <div class="tw:divider tw:my-0"></div>
 
+                    <!-- Filesystems Section -->
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Filesystems</span>
+                        <div class="md:tw:col-span-3 tw:flex tw:flex-col tw:gap-4">
+                            {% for fs in fs_data %}
+                            <div class="tw:flex tw:flex-col tw:gap-1">
+                                <div class="tw:flex tw:justify-between tw:items-baseline">
+                                    <span class="tw:text-xs tw:font-bold">{{fs.mountpoint}}</span>
+                                    <span class="tw:text-[10px] tw:opacity-60">{{"%.0f"|format(fs.total_mb)}} MB</span>
+                                </div>
+                                <progress class="tw:progress tw:progress-warning tw:w-full tw:h-3" value="{{fs.percent|int}}" max="100"></progress>
+                                <span class="tw:text-right tw:text-[9px] tw:opacity-50">{{fs.percent|int}}% Used</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
 
-    // Populate fields object
-    var json_data = {};
-    form_settime_field_names.forEach(item => {
-        json_data[item] = form_settime_fields[item].input.val();
-    });
+                    <div class="tw:divider tw:my-0"></div>
 
-    // checkboxes
-    form_settime_checkbox_field_names.forEach(item => {
-        json_data[item] = form_settime_fields[item].input.prop('checked');
-    });
+                    <!-- Network Section -->
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Network Interfaces</span>
+                        <div class="md:tw:col-span-3 tw:flex tw:flex-col tw:gap-4">
+                            {% for net in net_list %}
+                            <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-lg">
+                                <span class="tw:font-mono tw:font-bold tw:text-info">{{net.name}}</span>
+                                <div class="tw:text-xs tw:font-mono">
+                                    <span class="tw:text-[9px] tw:opacity-50 tw:block">IPv4</span>
+                                    {{ net.inet4 | join('<br>') | safe }}
+                                </div>
+                                <div class="tw:text-xs tw:font-mono">
+                                    <span class="tw:text-[9px] tw:opacity-50 tw:block">IPv6</span>
+                                    {{ net.inet6 | join('<br>') | safe }}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
 
+                    <div class="tw:divider tw:my-0"></div>
 
-    $("#loader_settime").css({'display' : 'block'});
+                    <!-- Environment & Versions -->
+                    <div class="allsky-workspace-grid tw:gap-8">
+                        <div class="tw:flex tw:flex-col tw:gap-4">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Environment</span>
+                            <div class="tw:grid tw:grid-cols-2 tw:gap-2 tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                                {% for t in temp_list %}
+                                <span class="tw:text-xs tw:opacity-70">{{t['name']}}</span>
+                                <span class="tw:text-xs tw:font-mono tw:text-right">{{"%.1f"|format(t['temp'])}}&deg;{{t['sys']}}</span>
+                                {% endfor %}
+                                
+                                {% if fan_list %}
+                                <div class="tw:col-span-2 tw:divider tw:my-1"></div>
+                                {% for f in fan_list %}
+                                <span class="tw:text-xs tw:opacity-70">{{f['name']}}</span>
+                                <span class="tw:text-xs tw:font-mono tw:text-right">{{"%.0f"|format(f['rpm'])}} RPM</span>
+                                {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
 
-    $.ajax({
-        type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_settime_view') }}",
-        contentType: "application/json",
-        data: JSON.stringify(json_data),
-        success: function(data){
-            form_settime_successMessage.html(data['success-message']);
-            form_settime_successMessage.css({'display' : 'block'});
-            setTimeout(function() {
-                form_settime_successMessage.css({'display' : 'none'});
-            }, 60000);
-
-            $("#loader_settime").css({'display' : 'none'});
-        },
-        error: function(data){
-            var errors = JSON.parse(data.responseText);
-            Object.keys(errors).forEach((key) => {
-                form_settime_fields[key].input.addClass('is-invalid');
-                form_settime_fields[key].error.html(errors[key][0]);
-                form_settime_fields[key].error.css({'display' : 'block'});
-            });
-
-            $("#loader_settime").css({'display' : 'none'});
-        },
-    });
-
-});
-
-</script>
-
-<hr>
-
-<form id="form_timezone" onSubmit="return false;">
-    {{ form_timezone.csrf_token }}
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_timezone.NEW_TIMEZONE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_timezone.NEW_TIMEZONE(class='form-select bg-secondary') }}
-            <div id="NEW_TIMEZONE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div><span class="badge rounded-pill bg-info">Info</span><span> Older timezone specifications may not be supported even though they are reported here.  Use modern timezone labels such as <b>America/New_York</b></span></div>
-        </div>
-    </div>
-
-    <div id="form_timezone_success-message" class="text-success" style="display: none;"></div>
-    <div id="form_timezone_failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
-
-    <div class="row">
-        <div class="col-sm-2">
-            <button class="btn btn-primary">Update Timezone</button>
-        </div>
-        <div class="col-sm-1 loader" id="loader_timezone"></div>
-    </div>
-</form>
-
-<hr>
-
-<script>
-const form_timezone_successMessage = $('#form_timezone_success-message');
-const form_timezone_failureMessage = $('#form_timezone_failure-message');
-const form_timezone_field_names = [
-    'csrf_token',
-    'NEW_TIMEZONE',
-];
-const form_timezone_checkbox_field_names = [];
-
-var form_timezone_fields = {};
-// Populate fields object
-form_timezone_field_names.forEach(item => {
-    form_timezone_fields[item] = {
-        'input' : $('#' + item),
-        'error' : $('#' + item + '-error'),
-    };
-});
-
-form_timezone_fields['form_timezone_global'] = {
-    'input' : form_timezone_failureMessage,
-    'error' : form_timezone_failureMessage,
-};
-
-// Checkboxes
-form_timezone_checkbox_field_names.forEach(item => {
-    form_timezone_fields[item] = {
-        'input' : $('#' + item),
-        'error' : $('#' + item + '-error'),
-    };
-});
-
-
-$('#form_timezone').on('submit', function() {
-
-    // hide all errors
-    form_timezone_successMessage.css({'display' : 'none'});
-    Object.keys(form_timezone_fields).forEach((key) => {
-        form_timezone_fields[key].error.css({'display' : 'none'});
-    });
-
-
-    // Populate fields object
-    var json_data = {};
-    form_timezone_field_names.forEach(item => {
-        json_data[item] = form_timezone_fields[item].input.val();
-    });
-
-    // checkboxes
-    form_timezone_checkbox_field_names.forEach(item => {
-        json_data[item] = form_timezone_fields[item].input.prop('checked');
-    });
-
-
-    $("#loader_timezone").css({'display' : 'block'});
-
-    $.ajax({
-        type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_settimezone_view') }}",
-        contentType: "application/json",
-        data: JSON.stringify(json_data),
-        success: function(data){
-            form_timezone_successMessage.html(data['success-message']);
-            form_timezone_successMessage.css({'display' : 'block'});
-            setTimeout(function() {
-                form_timezone_successMessage.css({'display' : 'none'});
-            }, 60000);
-
-            $("#loader_timezone").css({'display' : 'none'});
-        },
-        error: function(data){
-            var errors = JSON.parse(data.responseText);
-            Object.keys(errors).forEach((key) => {
-                form_timezone_fields[key].input.addClass('is-invalid');
-                form_timezone_fields[key].error.html(errors[key][0]);
-                form_timezone_fields[key].error.css({'display' : 'block'});
-            });
-
-            $("#loader_timezone").css({'display' : 'none'});
-        },
-    });
-
-});
-
-</script>
-
-</div><!-- end tab -->
-<div class="tab-pane fade" id="nav-indiserver" role="tabpanel" aria-labelledby="nav-indiserver-tab">
-    <hr>
-
-    <div>This page may be used to update the camera driver server that is currently configured in the local indiserver.</div>
-
-    <hr>
-
-    <div><span class="badge rounded-pill bg-info text-dark">Note</span> This has no effect on libcamera-based configurations.  CCD Simulator is normally configured when libcamera is in use</div>
-
-    <div><span class="badge rounded-pill bg-info text-dark">Note</span> The default driver selection will not update until the main camera selection [left] has changed</div>
-
-    <hr>
-
-    <form id="form_indiserver_change" onSubmit="return false;">
-        <div class="form-group row">
-            <div class="col-sm-2">
-                {{ form_indiserver_change.CAMERA_SERVER_SELECT.label(class='col-form-label') }}
-            </div>
-            <div class="col-sm-6">
-                {{ form_indiserver_change.CAMERA_SERVER_SELECT(class='form-select bg-secondary') }}
-            </div>
-        </div>
-
-        <div class="form-group row">
-            <div class="col-sm-2">
-                {{ form_indiserver_change.GPS_SERVER_SELECT.label(class='col-form-label') }}
-            </div>
-            <div class="col-sm-6">
-                {{ form_indiserver_change.GPS_SERVER_SELECT(class='form-select bg-secondary') }}
-            </div>
-        </div>
-
-        <hr>
-
-        <div class="form-group row">
-            <div class="col-sm-2">
-                {{ form_indiserver_change.RESTART_INDISERVER.label }}
-            </div>
-            <div class="col-sm-2">
-                <div class="form-switch">
-                    {{ form_indiserver_change.RESTART_INDISERVER(class='form-check-input') }}
+                        <div class="tw:flex tw:flex-col tw:gap-4">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Software Versions</span>
+                            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem;" class="tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                                <span class="tw:text-[10px] tw:opacity-60">Python</span><span class="tw:text-[10px] tw:font-mono">{{python_version}}</span>
+                                <span class="tw:text-[10px] tw:opacity-60">gunicorn</span><span class="tw:text-[10px] tw:font-mono">{{gunicorn_version}}</span>
+                                <span class="tw:text-[10px] tw:opacity-60">flask</span><span class="tw:text-[10px] tw:font-mono">{{flask_version}}</span>
+                                <span class="tw:text-[10px] tw:opacity-60">cv2</span><span class="tw:text-[10px] tw:font-mono">{{cv2_version}}</span>
+                                <span class="tw:text-[10px] tw:opacity-60">numpy</span><span class="tw:text-[10px] tw:font-mono">{{numpy_version}}</span>
+                                <span class="tw:text-[10px] tw:opacity-60">astropy</span><span class="tw:text-[10px] tw:font-mono">{{astropy_version}}</span>
+                                <span class="tw:text-[10px] tw:opacity-60">skyfield</span><span class="tw:text-[10px] tw:font-mono">{{skyfield_version}}</span>
+                                <span class="tw:text-[10px] tw:opacity-60">dbus</span><span class="tw:text-[10px] tw:font-mono">{{dbus_version}}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-sm-8">
-                <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> This will interrupt image capture if indi-allsky is operational</div>
+        </div>
+
+        <!-- TAB: TIME -->
+        <div id="tab-time" class="sys-tab-pane" style="display: none;">
+            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm">
+                <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-8">
+                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-8">
+                        <!-- Time Status -->
+                        <div class="tw:flex tw:flex-col tw:gap-4">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Time Synchronization</span>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;" class="tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                                <span class="tw:text-xs">NTP Available</span><span class="tw:text-xs tw:font-bold">{{ timedate1_dict.CanNTP }}</span>
+                                <span class="tw:text-xs">NTP Enabled</span><span class="tw:text-xs tw:font-bold">{{ timedate1_dict.NTP }}</span>
+                                <span class="tw:text-xs">NTP Synchronized</span><span class="tw:text-xs tw:font-bold">{{ timedate1_dict.NTPSynchronized }}</span>
+                                <span class="tw:text-xs">RTC Available</span><span class="tw:text-xs tw:font-bold">{{ timedate1_dict.LocalRTC }}</span>
+                                <span class="tw:text-xs">Timezone</span><span class="tw:text-xs tw:font-bold">{{ timedate1_dict.Timezone }}</span>
+                            </div>
+                            <div class="tw:alert tw:alert-info tw:py-2 tw:text-[10px] tw:rounded-md">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-4 tw:w-4" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <span>Note: RTC almost always reports False even when one is available.</span>
+                            </div>
+                        </div>
+
+                        <!-- System Time Display -->
+                        <div class="tw:flex tw:flex-col tw:gap-4 tw:items-center tw:justify-center tw:bg-base-300/30 tw:p-8 tw:rounded-lg">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Current System Time</span>
+                            <div class="tw:text-3xl tw:font-mono tw:text-info tw:text-center">{{ now.strftime('%m / %d / %Y') }}<br>{{ now.strftime('%I : %M : %S %P') }}</div>
+                        </div>
+                    </div>
+
+                    <div class="tw:divider"></div>
+
+                    <!-- Warnings -->
+                    <div class="tw:flex tw:flex-col tw:gap-2">
+                        <div class="tw:alert tw:alert-error tw:py-3 tw:text-xs">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-5 tw:w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            <span><b>DANGER:</b> Changing the system time during operation can cause unpredictable behavior. It is recommended to restart both indiserver and indi-allsky.</span>
+                        </div>
+                        <div class="tw:alert tw:alert-warning tw:py-3 tw:text-xs">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-5 tw:w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            <span>Manually setting time will disable NTP time sync. Re-enable with <code>timedatectl set-ntp true</code>.</span>
+                        </div>
+                    </div>
+
+                    <!-- Set Time Form -->
+                    <form id="form_settime" onSubmit="return false;" class="tw:flex tw:flex-col tw:gap-6">
+                        {{ form_settime.csrf_token }}
+                        <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
+                            <div class="lg:tw:col-span-8 tw:form-control">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_settime.NEW_DATETIME.label.text }}</span>
+                                </label>
+                                {{ form_settime.NEW_DATETIME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full') }}
+                                <div id="NEW_DATETIME-error" class="tw:text-error tw:text-[10px]" style="display: none;"></div>
+                            </div>
+                            <div class="lg:tw:col-span-4 tw:flex tw:gap-2">
+                                <button type="submit" class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:flex-1">Set Time</button>
+                                <span class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary" id="loader_settime" style="display: none;"></span>
+                            </div>
+                        </div>
+                        <div id="form_settime_success-message" class="tw:alert tw:alert-success tw:py-2 tw:text-sm" style="display: none;"></div>
+                        <div id="form_settime_failure-message" class="tw:alert tw:alert-error tw:py-2 tw:text-sm" style="display: none;"></div>
+                    </form>
+
+                    <div class="tw:divider"></div>
+
+                    <!-- Timezone Form -->
+                    <form id="form_timezone" onSubmit="return false;" class="tw:flex tw:flex-col tw:gap-6">
+                        {{ form_timezone.csrf_token }}
+                        <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
+                            <div class="lg:tw:col-span-8 tw:form-control">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_timezone.NEW_TIMEZONE.label.text }}</span>
+                                </label>
+                                {{ form_timezone.NEW_TIMEZONE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full') }}
+                                <div id="NEW_TIMEZONE-error" class="tw:text-error tw:text-[10px]" style="display: none;"></div>
+                            </div>
+                            <div class="lg:tw:col-span-4 tw:flex tw:gap-2">
+                                <button type="submit" class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:flex-1">Update Timezone</button>
+                                <span class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary" id="loader_timezone" style="display: none;"></span>
+                            </div>
+                        </div>
+                        <div class="tw:alert tw:alert-info tw:py-2 tw:text-[10px] tw:rounded-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-4 tw:w-4" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <span>Use modern labels such as <b>America/New_York</b>. Older specifications may not be supported.</span>
+                        </div>
+                        <div id="form_timezone_success-message" class="tw:alert tw:alert-success tw:py-2 tw:text-sm" style="display: none;"></div>
+                        <div id="form_timezone_failure-message" class="tw:alert tw:alert-error tw:py-2 tw:text-sm" style="display: none;"></div>
+                    </form>
+                </div>
             </div>
         </div>
 
-        <hr>
-        <hr>
-        <hr>
+        <!-- TAB: INDI DRIVERS -->
+        <div id="tab-indiserver" class="sys-tab-pane" style="display: none;">
+            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm">
+                <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-6">
+                    <p class="tw:text-sm tw:opacity-80">This page may be used to update the camera and GPS driver servers configured in the local indiserver.</p>
+                    
+                    <div class="tw:flex tw:flex-col tw:gap-2">
+                        <div class="tw:badge tw:badge-info tw:gap-2 tw:text-[10px] tw:h-auto tw:py-2">Note: No effect on libcamera-based configurations.</div>
+                        <div class="tw:badge tw:badge-info tw:gap-2 tw:text-[10px] tw:h-auto tw:py-2">Note: Default driver selection updates after main camera change.</div>
+                    </div>
 
-        <div class="form-group row">
-            <div class="col-sm-1">
-                <input class="form-check-input" id="INDISERVER_CHANGE_CONFIRM1" name="INDISERVER_CHANGE_CONFIRM1" type="checkbox" value="y"> Confirm 1
+                    <div class="tw:divider"></div>
+
+                    <form id="form_indiserver_change" onSubmit="return false;" class="tw:flex tw:flex-col tw:gap-6">
+                        <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-6">
+                            <div class="tw:form-control">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_indiserver_change.CAMERA_SERVER_SELECT.label.text }}</span>
+                                </label>
+                                {{ form_indiserver_change.CAMERA_SERVER_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full') }}
+                            </div>
+                            <div class="tw:form-control">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_indiserver_change.GPS_SERVER_SELECT.label.text }}</span>
+                                </label>
+                                {{ form_indiserver_change.GPS_SERVER_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full') }}
+                            </div>
+                        </div>
+
+                        <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                            <div class="lg:tw:col-span-3 tw:form-control">
+                                <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                    {{ form_indiserver_change.RESTART_INDISERVER(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                                    <span class="tw:label-text tw:text-xs tw:font-bold">{{ form_indiserver_change.RESTART_INDISERVER.label.text }}</span>
+                                </label>
+                            </div>
+                            <div class="lg:tw:col-span-9">
+                                <div class="tw:alert tw:alert-warning tw:py-2 tw:text-[10px] tw:rounded-md">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-4 tw:w-4" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                    <span>Warning: This will interrupt image capture if indi-allsky is operational.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tw:flex tw:flex-col sm:tw:flex-row tw:items-center tw:gap-6 tw:mt-4 tw:justify-center">
+                            <label class="tw:label tw:cursor-pointer tw:gap-2">
+                                <input class="tw:checkbox tw:checkbox-sm" id="INDISERVER_CHANGE_CONFIRM1" name="INDISERVER_CHANGE_CONFIRM1" type="checkbox" value="y">
+                                <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase">Confirm 1</span>
+                            </label>
+                            <button id="button_indiserver_change" class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:px-8">UPDATE DRIVERS</button>
+                            <label class="tw:label tw:cursor-pointer tw:gap-2">
+                                <input class="tw:checkbox tw:checkbox-sm" id="INDISERVER_CHANGE_CONFIRM2" name="INDISERVER_CHANGE_CONFIRM2" type="checkbox" value="y">
+                                <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase">Confirm 2</span>
+                            </label>
+                        </div>
+
+                        <div id="form_indiserver_change_success-message" class="tw:alert tw:alert-success tw:py-2 tw:text-sm" style="display: none;"></div>
+                        <div id="form_indiserver_change_failure-message" class="tw:alert tw:alert-error tw:py-2 tw:text-sm" style="display: none;"></div>
+                    </form>
+                </div>
             </div>
+        </div>
 
-            <div class="col-sm-1">
-                <button id="button_indiserver_change" class="btn btn-primary">Update</button>
+        <!-- TAB: SERVICES -->
+        <div id="tab-services" class="sys-tab-pane" style="display: none;">
+            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm">
+                <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-2">
+                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60 tw:mb-4">Service Management</span>
+                    
+                    <!-- indiserver -->
+                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                        <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
+                            <span class="tw:text-sm tw:font-bold">indiserver</span>
+                            <span class="tw:text-[9px] tw:opacity-50">UNIT: indiserver.service</span>
+                        </div>
+                        <div class="lg:tw:col-span-3 tw:flex tw:gap-2 tw:items-center">
+                            <span class="tw:badge tw:badge-ghost tw:font-mono tw:text-[10px]">{{indiserver_service_activestate}}</span>
+                            {% if indiserver_next_trigger > 0 %}<span class="tw:text-[10px] tw:text-info">Next in {{indiserver_next_trigger}}s</span>{% endif %}
+                        </div>
+                        <div class="lg:tw:col-span-6 tw:flex tw:gap-2">
+                            <button class="tw:btn tw:btn-sm tw:bg-base-100 tw:flex-1" id="button_indiserver_service_stop">Stop</button>
+                            <button class="tw:btn tw:btn-sm tw:btn-primary tw:flex-1" id="button_indiserver_service_start">Start</button>
+                        </div>
+                        <div class="lg:tw:col-span-3 tw:divider lg:tw:hidden tw:my-1"></div>
+                        <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
+                            <span class="tw:text-xs">Timer Unit</span>
+                            <span class="tw:text-[9px] tw:opacity-50">STATE: {{indiserver_timer_unitstate}}</span>
+                        </div>
+                        <div class="lg:tw:col-span-9 tw:flex tw:gap-2">
+                            <button class="tw:btn tw:btn-sm tw:bg-base-100 tw:flex-1" id="button_indiserver_timer_disable">Disable Timer</button>
+                            <button class="tw:btn tw:btn-sm tw:btn-info tw:flex-1" id="button_indiserver_timer_enable">Enable Timer</button>
+                        </div>
+                    </div>
+
+                    <!-- indi-allsky -->
+                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                        <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
+                            <span class="tw:text-sm tw:font-bold">indi-allsky</span>
+                            <span class="tw:text-[9px] tw:opacity-50">UNIT: indi-allsky.service</span>
+                        </div>
+                        <div class="lg:tw:col-span-3 tw:flex tw:gap-2 tw:items-center">
+                            <span class="tw:badge tw:badge-ghost tw:font-mono tw:text-[10px]">{{indi_allsky_service_activestate}}</span>
+                            {% if indi_allsky_next_trigger > 0 %}<span class="tw:text-[10px] tw:text-info">Next in {{indi_allsky_next_trigger}}s</span>{% endif %}
+                        </div>
+                        <div class="lg:tw:col-span-6 tw:flex tw:gap-2">
+                            <button class="tw:btn tw:btn-sm tw:btn-outline tw:btn-info tw:flex-1" id="button_indi_allsky_service_hup">Reload</button>
+                            <button class="tw:btn tw:btn-sm tw:bg-base-100 tw:flex-1" id="button_indi_allsky_service_stop">Stop</button>
+                            <button class="tw:btn tw:btn-sm tw:btn-primary tw:flex-1" id="button_indi_allsky_service_start">Start</button>
+                        </div>
+                        <div class="lg:tw:col-span-3 tw:divider lg:tw:hidden tw:my-1"></div>
+                        <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
+                            <span class="tw:text-xs">Timer Unit</span>
+                            <span class="tw:text-[9px] tw:opacity-50">STATE: {{indi_allsky_timer_unitstate}}</span>
+                        </div>
+                        <div class="lg:tw:col-span-9 tw:flex tw:gap-2">
+                            <button class="tw:btn tw:btn-sm tw:bg-base-100 tw:flex-1" id="button_indi_allsky_timer_disable">Disable Timer</button>
+                            <button class="tw:btn tw:btn-sm tw:btn-info tw:flex-1" id="button_indi_allsky_timer_enable">Enable Timer</button>
+                        </div>
+                    </div>
+
+                    <!-- gunicorn -->
+                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                        <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
+                            <span class="tw:text-sm tw:font-bold">Web UI Server</span>
+                            <span class="tw:text-[9px] tw:opacity-50">UNIT: gunicorn-indi-allsky.service</span>
+                        </div>
+                        <div class="lg:tw:col-span-3">
+                            <span class="tw:badge tw:badge-ghost tw:font-mono tw:text-[10px]">{{gunicorn_indi_allsky_service_activestate}}</span>
+                        </div>
+                        <div class="lg:tw:col-span-6 tw:flex tw:gap-2">
+                            <button class="tw:btn tw:btn-sm tw:bg-base-100 tw:flex-1" id="button_gunicorn_indi_allsky_service_stop">Restart UI</button>
+                            <span class="tw:flex-1 tw:text-[10px] tw:opacity-50 tw:text-center tw:leading-tight">Socket managed, auto-restarts on access</span>
+                        </div>
+                        <div class="lg:tw:col-span-3 tw:divider lg:tw:hidden tw:my-1"></div>
+                        <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
+                            <span class="tw:text-xs">Web Socket</span>
+                            <span class="tw:text-[9px] tw:opacity-50">STATE: {{gunicorn_indi_allsky_socket_unitstate}}</span>
+                        </div>
+                    </div>
+
+                    <div class="tw:alert tw:alert-info tw:py-3 tw:mt-4 tw:text-xs">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-5 tw:w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <span>Services are activated at boot by their respective timers or sockets. Disabling a timer prevents the service from starting automatically.</span>
+                    </div>
+                </div>
             </div>
+        </div>
 
-            <div class="col-sm-1">
-                <input class="form-check-input" id="INDISERVER_CHANGE_CONFIRM2" name="INDISERVER_CHANGE_CONFIRM2" type="checkbox" value="y"> Confirm 2
+        <!-- TAB: UTILITIES -->
+        <div id="tab-powercontrol" class="sys-tab-pane" style="display: none;">
+        <div role="tabpanel" class="tw:tab-content tw:py-6">
+            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm">
+                <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-8">
+                    
+                    <!-- System Controls -->
+                    <div class="tw:flex tw:flex-col tw:gap-4">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">System Power</span>
+                        <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-4">
+                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                                <span class="tw:text-xs tw:font-bold tw:uppercase tw:opacity-60">Reboot System</span>
+                                <div class="tw:flex tw:flex-wrap tw:gap-4 tw:items-center">
+                                    <label class="tw:label tw:cursor-pointer tw:gap-2">
+                                        <input class="tw:checkbox tw:checkbox-xs" id="REBOOT_CONFIRM1" type="checkbox"> <span class="tw:label-text tw:text-[10px]">C1</span>
+                                    </label>
+                                    <button class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1" id="button_system_reboot">REBOOT</button>
+                                    <label class="tw:label tw:cursor-pointer tw:gap-2">
+                                        <input class="tw:checkbox tw:checkbox-xs" id="REBOOT_CONFIRM2" type="checkbox"> <span class="tw:label-text tw:text-[10px]">C2</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                                <span class="tw:text-xs tw:font-bold tw:uppercase tw:opacity-60">Shutdown System</span>
+                                <div class="tw:flex tw:flex-wrap tw:gap-4 tw:items-center">
+                                    <label class="tw:label tw:cursor-pointer tw:gap-2">
+                                        <input class="tw:checkbox tw:checkbox-xs" id="SHUTDOWN_CONFIRM1" type="checkbox"> <span class="tw:label-text tw:text-[10px]">C1</span>
+                                    </label>
+                                    <button class="tw:btn tw:btn-error tw:btn-sm tw:flex-1" id="button_system_shutdown">SHUTDOWN</button>
+                                    <label class="tw:label tw:cursor-pointer tw:gap-2">
+                                        <input class="tw:checkbox tw:checkbox-xs" id="SHUTDOWN_CONFIRM2" type="checkbox"> <span class="tw:label-text tw:text-[10px]">C2</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tw:divider"></div>
+
+                    <!-- Maintenance Utilities -->
+                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-8">
+                        <!-- Left Column Utilities -->
+                        <div class="tw:flex tw:flex-col tw:gap-6">
+                            <!-- Upgrade -->
+                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                                <div class="tw:flex tw:justify-between tw:items-baseline">
+                                    <span class="tw:text-xs tw:font-bold tw:uppercase tw:opacity-60">Upgrade indi-allsky</span>
+                                    <span class="tw:text-[9px] tw:font-mono tw:opacity-40">./misc/unattended_upgrade.sh</span>
+                                </div>
+                                <div class="tw:flex tw:gap-4 tw:items-center">
+                                    <label class="tw:label tw:cursor-pointer tw:gap-2">
+                                        <input class="tw:checkbox tw:checkbox-xs" id="UPGRADE_CONFIRM1" type="checkbox"> <span class="tw:label-text tw:text-[10px]">C1</span>
+                                    </label>
+                                    <button class="tw:btn tw:btn-success tw:btn-sm tw:flex-1" id="button_system_upgrade">RUN UPGRADE</button>
+                                    <label class="tw:label tw:cursor-pointer tw:gap-2">
+                                        <input class="tw:checkbox tw:checkbox-xs" id="UPGRADE_CONFIRM2" type="checkbox"> <span class="tw:label-text tw:text-[10px]">C2</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- Backup -->
+                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                                <div class="tw:flex tw:justify-between tw:items-baseline">
+                                    <span class="tw:text-xs tw:font-bold tw:uppercase tw:opacity-60">Database Backup</span>
+                                    <span class="tw:text-[9px] tw:font-mono tw:opacity-40">./misc/backup_database.py</span>
+                                </div>
+                                <div class="tw:flex tw:gap-4 tw:items-center">
+                                    <label class="tw:label tw:cursor-pointer tw:gap-2">
+                                        <input class="tw:checkbox tw:checkbox-xs" id="BACKUP_DB_CONFIRM1" type="checkbox"> <span class="tw:label-text tw:text-[10px]">CONFIRM</span>
+                                    </label>
+                                    <button class="tw:btn tw:btn-info tw:btn-sm tw:flex-1" id="button_backup_db">BACKUP DB</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column Utilities -->
+                        <div class="tw:flex tw:flex-col tw:gap-6">
+                            <!-- Validate -->
+                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                                <div class="tw:flex tw:justify-between tw:items-baseline">
+                                    <span class="tw:text-xs tw:font-bold tw:uppercase tw:opacity-60">Validate DB Entries</span>
+                                    <span class="tw:text-[9px] tw:font-mono tw:opacity-40">./misc/validate_db_entries.py</span>
+                                </div>
+                                <div class="tw:flex tw:gap-4 tw:items-center">
+                                    <label class="tw:label tw:cursor-pointer tw:gap-2">
+                                        <input class="tw:checkbox tw:checkbox-xs" id="VALIDATE_DB_CONFIRM1" type="checkbox"> <span class="tw:label-text tw:text-[10px]">CONFIRM</span>
+                                    </label>
+                                    <button class="tw:btn tw:btn-primary tw:btn-sm tw:flex-1" id="button_validate_db">VALIDATE DB</button>
+                                </div>
+                            </div>
+                            <!-- Expire -->
+                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-lg">
+                                <div class="tw:flex tw:justify-between tw:items-baseline">
+                                    <span class="tw:text-xs tw:font-bold tw:uppercase tw:opacity-60">Expire Data</span>
+                                    <span class="tw:text-[9px] tw:font-mono tw:opacity-40">./misc/expire_images.py</span>
+                                </div>
+                                <div class="tw:flex tw:gap-4 tw:items-center">
+                                    <label class="tw:label tw:cursor-pointer tw:gap-2">
+                                        <input class="tw:checkbox tw:checkbox-xs" id="EXPIRE_DATA_CONFIRM1" type="checkbox"> <span class="tw:label-text tw:text-[10px]">CONFIRM</span>
+                                    </label>
+                                    <button class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1" id="button_expire_data">RUN EXPIRY</button>
+                                </div>
+                                <span class="tw:text-[9px] tw:opacity-50">Task runs automatically 2x daily. indi-allsky must be running.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tw:divider"></div>
+
+                    <!-- Danger Zone -->
+                    <div class="tw:flex tw:flex-col tw:gap-4 tw:border tw:border-error/20 tw:p-6 tw:rounded-xl tw:bg-error/5">
+                        <div class="tw:flex tw:items-center tw:gap-3 tw:text-error">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:h-6 tw:w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            <span class="tw:text-lg tw:font-black tw:uppercase tw:tracking-widest">Danger Zone</span>
+                        </div>
+                        <p class="tw:text-xs tw:opacity-70">These actions are irreversible. Files will be permanently deleted from the system.</p>
+                        <span class="tw:loading tw:loading-spinner tw:loading-md tw:text-error" id="loader_shutdown" style="display: none;"></span>
+
+                        <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-4">
+                            <!-- Flush Images -->
+                            <div class="tw:card tw:bg-base-200 tw:p-4 tw:rounded-lg tw:flex tw:flex-col tw:gap-3">
+                                <span class="tw:text-xs tw:font-bold">Flush Images</span>
+                                <div class="tw:flex tw:gap-3 tw:items-center">
+                                    <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_IMAGES_CONFIRM1" type="checkbox">
+                                    <button class="tw:btn tw:btn-error tw:btn-sm tw:flex-1" id="button_flush_images">FLUSH ALL IMAGES</button>
+                                    <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_IMAGES_CONFIRM2" type="checkbox">
+                                </div>
+                            </div>
+                            <!-- Flush Timelapses -->
+                            <div class="tw:card tw:bg-base-200 tw:p-4 tw:rounded-lg tw:flex tw:flex-col tw:gap-3">
+                                <span class="tw:text-xs tw:font-bold">Flush Timelapses / Keograms / Startrails</span>
+                                <div class="tw:flex tw:gap-3 tw:items-center">
+                                    <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_TIMELAPSES_CONFIRM1" type="checkbox">
+                                    <button class="tw:btn tw:btn-error tw:btn-sm tw:flex-1" id="button_flush_timelapses">FLUSH EXPORTS</button>
+                                    <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_TIMELAPSES_CONFIRM2" type="checkbox">
+                                </div>
+                            </div>
+                            <!-- Flush Daytime -->
+                            <div class="tw:card tw:bg-base-200 tw:p-4 tw:rounded-lg tw:flex tw:flex-col tw:gap-3">
+                                <span class="tw:text-xs tw:font-bold">Flush Daytime Content</span>
+                                <div class="tw:flex tw:gap-3 tw:items-center">
+                                    <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_DAYTIME_CONFIRM1" type="checkbox">
+                                    <button class="tw:btn tw:btn-error tw:btn-sm tw:flex-1" id="button_flush_daytime">FLUSH DAYTIME</button>
+                                    <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_DAYTIME_CONFIRM2" type="checkbox">
+                                </div>
+                            </div>
+                            <!-- Flush 16min -->
+                            <div class="tw:card tw:bg-base-200 tw:p-4 tw:rounded-lg tw:flex tw:flex-col tw:gap-3">
+                                <span class="tw:text-xs tw:font-bold">Flush Recent (16min)</span>
+                                <div class="tw:flex tw:gap-3 tw:items-center">
+                                    <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_16MIN_IMAGES_CONFIRM1" type="checkbox">
+                                    <button class="tw:btn tw:btn-error tw:btn-sm tw:flex-1" id="button_flush_16min_images">FLUSH 16 MIN</button>
+                                    <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_16MIN_IMAGES_CONFIRM2" type="checkbox">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            <div id="form_indiserver_change_success-message" class="alert alert-success" role="alert" style="display: none;"></div>
-            <div id="form_indiserver_change_failure-message" class="alert alert-danger" role="alert" style="display: none;"></div>
-
         </div>
-    </form>
 
-</div><!-- end tab -->
-<div class="tab-pane fade" id="nav-services" role="tabpanel" aria-labelledby="nav-services-tab">
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"><h4>Services</h4></div>
-</div>
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">indiserver service</div>
-    <div class="col-sm-2">{{indiserver_service_activestate}}{% if indiserver_next_trigger > 0 %} [T-minus {{indiserver_next_trigger}}s]{% endif %}</div>
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_indiserver_service_stop">Stop indiserver</button>
     </div>
-    <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_indiserver_service_start">Start indiserver</button>
+
+    <!-- Global Feedback -->
+    <div class="tw:min-h-[60px]">
+        <div id="success-message" class="tw:alert tw:alert-success tw:py-3 tw:text-sm" style="display: none;"></div>
+        <div id="failure-message" class="tw:alert tw:alert-error tw:py-3 tw:text-sm" style="display: none;"></div>
+        <div id="SERVICE_HIDDEN-error" class="tw:alert tw:alert-error tw:py-3 tw:text-sm" style="display: none;"></div>
+        <div id="COMMAND_HIDDEN-error" class="tw:alert tw:alert-error tw:py-3 tw:text-sm" style="display: none;"></div>
     </div>
 </div>
 
-<hr>
+<script type="text/javascript">
 
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">indiserver timer</div>
-    <div class="col-sm-2">{{indiserver_timer_unitstate}}</div>
-
-    <div class="col-sm-2">
-    </div>
-    <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_indiserver_timer_disable">Disable indiserver</button>
-    </div>
-    <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_indiserver_timer_enable">Enable indiserver</button>
-    </div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">indi-allsky service</div>
-    <div class="col-sm-2">{{indi_allsky_service_activestate}}{% if indi_allsky_next_trigger > 0 %} [T-minus {{indi_allsky_next_trigger}}s]{% endif %}</div>
-
-    <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_indi_allsky_service_hup">Reload config</button>
-    </div>
-    <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_indi_allsky_service_stop">Stop indi-allsky</button>
-    </div>
-    <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_indi_allsky_service_start">Start indi-allsky</button>
-    </div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">indi-allsky timer</div>
-    <div class="col-sm-2">{{indi_allsky_timer_unitstate}}</div>
-
-    <div class="col-sm-2">
-    </div>
-    <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_indi_allsky_timer_disable">Disable indi-allsky</button>
-    </div>
-    <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_indi_allsky_timer_enable">Enable indi-allsky</button>
-    </div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">gunicorn-indi-allsky</div>
-    <div class="col-sm-2">{{gunicorn_indi_allsky_service_activestate}}</div>
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_gunicorn_indi_allsky_service_stop">Stop gunicorn</button>
-    </div>
-    <div class="col-sm-2">
-        Auto restarted
-    </div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">gunicorn socket</div>
-    <div class="col-sm-2">{{gunicorn_indi_allsky_socket_unitstate}}</div>
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">
-    </div>
-    <div class="col-sm-2">
-    </div>
-</div>
-
-<hr>
-
-<div class="row">
-  <div class="col-sm-12">
-    <div>
-        <span class="badge rounded-pill bg-info">Info</span>
-        <span> Services are activated at boot by their respective timer or sockets.  Disabling the timer prevents the service from starting at boot.</span>
-    </div>
-  </div>
-</div>
-
-
-</div><!-- end tab -->
-<div class="tab-pane fade" id="nav-powercontrol" role="tabpanel" aria-labelledby="nav-powercontrol-tab">
-
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"><h4>System</h4></div>
-</div>
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">Reboot</div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="REBOOT_CONFIRM1" name="REBOOT_CONFIRM1" type="checkbox" value="y"> Confirm 1
-    </div>
-    <div class="col-sm-2">
-        <button class="btn btn-warning" id="button_system_reboot">Reboot system</button>
-    </div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="REBOOT_CONFIRM2" name="REBOOT_CONFIRM2" type="checkbox" value="y"> Confirm 2
-    </div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">Shutdown</div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="SHUTDOWN_CONFIRM1" name="SHUTDOWN_CONFIRM1" type="checkbox" value="y"> Confirm 1
-    </div>
-    <div class="col-sm-2">
-        <button class="btn btn-danger" id="button_system_shutdown">Shutdown system</button>
-    </div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="SHUTDOWN_CONFIRM2" name="SHUTDOWN_CONFIRM2" type="checkbox" value="y"> Confirm 2
-    </div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"><h4>Upgrade</h4></div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">Unattended Upgrade<br><div style="font-size:10px">CLI: ./misc/unattended_upgrade.sh</div></div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="UPGRADE_CONFIRM1" name="UPGRADE_CONFIRM1" type="checkbox" value="y"> Confirm 1
-    </div>
-    <div class="col-sm-2">
-        <button class="btn btn-success" id="button_system_upgrade">Upgrade indi-allsky</button>
-    </div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="UPGRADE_CONFIRM2" name="UPGRADE_CONFIRM2" type="checkbox" value="y"> Confirm 2
-    </div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"><h4>Backup</h4></div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">Database Backup<br><div style="font-size:10px">CLI: ./misc/backup_database.py</div></div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="BACKUP_DB_CONFIRM1" name="BACKUP_DB_CONFIRM1" type="checkbox" value="y"> Confirm
-    </div>
-    <div class="col-sm-2">
-        <button class="btn btn-info" id="button_backup_db">Backup DB</button>
-        <div style="font-size:10px">
-            indi-allsky service must be running
-        </div>
-    </div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"><h4>Validation</h4></div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">Validate DB Entries<br><div style="font-size:10px">CLI: ./misc/validate_db_entries.py</div></div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="VALIDATE_DB_CONFIRM1" name="VALIDATE_DB_CONFIRM1" type="checkbox" value="y"> Confirm
-    </div>
-    <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_validate_db">Validate DB</button>
-    </div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"><h4>Expire</h4></div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">Expire Data<br><div style="font-size:10px">CLI: ./misc/expire_images.py</div></div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="EXPIRE_DATA_CONFIRM1" name="EXPIRE_DATA_CONFIRM1" type="checkbox" value="y"> Confirm
-    </div>
-    <div class="col-sm-2">
-        <button class="btn btn-warning" id="button_expire_data">Expire Data</button>
-        <div style="font-size:10px">
-            indi-allsky service must be running
-        </div>
-    </div>
-    <div class="col-sm-2">
-        <div>This task is automatically run twice a day, but you may submit a manual task here</div>
-    </div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"><h4>&#9888; DANGER &#9888;</h4></div>
-</div>
-
-<div class="row">
-    <div class="col-sm-6">There is no way to recover from these actions.  Files are permanently deleted.</div>
-    <div class="col-sm-1 loader" id="loader_shutdown"></div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">Flush Images<br><div style="font-size:10px">CLI: ./misc/flush_images.py</div></div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="FLUSH_IMAGES_CONFIRM1" name="FLUSH_IMAGES_CONFIRM1" type="checkbox" value="y"> Confirm 1
-    </div>
-    <div class="col-sm-2">
-        <button class="btn btn-danger" id="button_flush_images">Flush Images</button>
-    </div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="FLUSH_IMAGES_CONFIRM2" name="FLUSH_IMAGES_CONFIRM2" type="checkbox" value="y"> Confirm 2
-    </div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">Flush Timelapses, Keograms, Startrails<br><div style="font-size:10px">CLI: ./misc/flush_images.py</div></div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="FLUSH_TIMELAPSES_CONFIRM1" name="FLUSH_TIMELAPSES_CONFIRM1" type="checkbox" value="y"> Confirm 1
-    </div>
-    <div class="col-sm-2">
-        <button class="btn btn-danger" id="button_flush_timelapses">Flush Timelapses</button>
-    </div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="FLUSH_TIMELAPSES_CONFIRM2" name="FLUSH_TIMELAPSES_CONFIRM2" type="checkbox" value="y"> Confirm 2
-    </div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">Flush Daytime Images and Timelapses</div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="FLUSH_DAYTIME_CONFIRM1" name="FLUSH_DAYTIME_CONFIRM1" type="checkbox" value="y"> Confirm 1
-    </div>
-    <div class="col-sm-2">
-        <button class="btn btn-danger" id="button_flush_daytime">Flush Daytime</button>
-    </div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="FLUSH_DAYTIME_CONFIRM2" name="FLUSH_DAYTIME_CONFIRM2" type="checkbox" value="y"> Confirm 2
-    </div>
-</div>
-
-<hr>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">Flush 16 Minutes of Images<br><div style="font-size:10px">CLI: ./misc/flush_16min_images.py</div></div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="FLUSH_16MIN_IMAGES_CONFIRM1" name="FLUSH_16MIN_IMAGES_CONFIRM1" type="checkbox" value="y"> Confirm 1
-    </div>
-    <div class="col-sm-2">
-        <button class="btn btn-danger" id="button_flush_16min_images">Flush 16 Minutes</button>
-    </div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="FLUSH_16MIN_IMAGES_CONFIRM2" name="FLUSH_16MIN_IMAGES_CONFIRM2" type="checkbox" value="y"> Confirm 2
-    </div>
-</div>
-
-<hr>
-
-</div><!-- end tab -->
-</div>
-
-
-<div class="row">
-    <div class="col-sm-4">
-        <div id="success-message" class="alert alert-success" role="alert" style="display: none;"></div>
-        <div id="failure-message" class="alert alert-danger" role="alert" style="display: none;"></div>
-        <div id="SERVICE_HIDDEN-error" class="alert alert-danger" role="alert" style="display: none;"></div>
-        <div id="COMMAND_HIDDEN-error" class="alert alert-danger" role="alert" style="display: none;"></div>
-    </div>
-</div>
-
-
-
-<script>
 const successMessage = $('#success-message');
 const failureMessage = $('#failure-message');
 
-const field_names = [
-    'csrf_token',
-    'SERVICE_HIDDEN',
-    'COMMAND_HIDDEN',
-];
-
-const checkbox_field_names = [
-];
-
+const field_names = ['csrf_token', 'SERVICE_HIDDEN', 'COMMAND_HIDDEN'];
 var fields = {};
-// Populate fields object
-field_names.forEach(item => {
-    fields[item] = {
-        'error' : $('#' + item + '-error'),
-    };
-});
-
-fields['form_global'] = {
-    'input' : failureMessage,
-    'error' : failureMessage,
-};
-
-
+field_names.forEach(item => { fields[item] = { 'error' : $('#' + item + '-error') }; });
+fields['form_global'] = { 'input' : failureMessage, 'error' : failureMessage };
 
 function button_click(service, command) {
-    // hide all errors
-    failureMessage.css({'display' : 'none'});
-    successMessage.css({'display' : 'none'});
-    Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
-    });
-
+    failureMessage.hide();
+    successMessage.hide();
+    Object.keys(fields).forEach((key) => { fields[key].error.hide(); });
 
     var json_data = {
         'CAMERA_ID'      : camera_id,
@@ -1042,349 +646,206 @@ function button_click(service, command) {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            successMessage.html(rdata['success-message']);
-            successMessage.css({'display' : 'block'});
-            setTimeout(function() {
-                successMessage.css({'display' : 'none'});
-            }, 30000);
-
-            // Leave the button disabled
-            //$("#button_system_reboot").prop('disabled', false);
-            //$("#button_system_shutdown").prop('disabled', false);
-            //$("#button_system_upgrade").prop('disabled', false);
-            //$("#button_backup_db").prop('disabled', false);
-            //$("#button_expire_data").prop('disabled', false);
-
-            $("#button_validate_db").prop('disabled', false);
-            $("#button_flush_images").prop('disabled', false);
-            $("#button_flush_16min_images").prop('disabled', false);
-            $("#button_flush_timelapses").prop('disabled', false);
-            $("#button_flush_daytime").prop('disabled', false);
-
-            $("#loader_shutdown").css({'display' : 'none'});
+            successMessage.html(rdata['success-message']).show();
+            setTimeout(() => successMessage.fadeOut(), 30000);
+            $("#button_validate_db, #button_flush_images, #button_flush_16min_images, #button_flush_timelapses, #button_flush_daytime").prop('disabled', false);
+            $("#loader_shutdown").hide();
         },
         error: function(rdata){
             var errors = JSON.parse(rdata.responseText);
             Object.keys(errors).forEach((key) => {
-                fields[key].error.addClass('is-invalid');
-                fields[key].error.html(errors[key][0]);
-                fields[key].error.css({'display' : 'block'});
+                if(fields[key]) {
+                    fields[key].error.html(errors[key][0]).show();
+                }
             });
-
-            $("#loader_shutdown").css({'display' : 'none'});
+            $("#loader_shutdown").hide();
         },
     });
+}
 
-};
+// Service Button Handlers
+$("#button_indiserver_service_stop").on("click", () => button_click('indiserver.service', 'stop'));
+$("#button_indiserver_service_start").on("click", () => button_click('indiserver.service', 'start'));
+$("#button_indiserver_timer_disable").on("click", () => button_click('indiserver.timer', 'disable'));
+$("#button_indiserver_timer_enable").on("click", () => button_click('indiserver.timer', 'enable'));
+$("#button_indi_allsky_service_hup").on("click", () => button_click('indi-allsky.service', 'hup'));
+$("#button_indi_allsky_service_stop").on("click", () => button_click('indi-allsky.service', 'stop'));
+$("#button_indi_allsky_service_start").on("click", () => button_click('indi-allsky.service', 'start'));
+$("#button_indi_allsky_timer_disable").on("click", () => button_click('indi-allsky.timer', 'disable'));
+$("#button_indi_allsky_timer_enable").on("click", () => button_click('indi-allsky.timer', 'enable'));
+$("#button_gunicorn_indi_allsky_service_stop").on("click", () => button_click('gunicorn-indi-allsky.service', 'stop'));
 
-
-$("#button_indiserver_service_stop").on("click", function() {
-    button_click('indiserver.service', 'stop');
-});
-$("#button_indiserver_service_start").on("click", function() {
-    button_click('indiserver.service', 'start');
-});
-$("#button_indiserver_timer_disable").on("click", function() {
-    button_click('indiserver.timer', 'disable');
-});
-$("#button_indiserver_timer_enable").on("click", function() {
-    button_click('indiserver.timer', 'enable');
-});
-
-
-$("#button_indi_allsky_service_hup").on("click", function() {
-    button_click('indi-allsky.service', 'hup');
-});
-$("#button_indi_allsky_service_stop").on("click", function() {
-    button_click('indi-allsky.service', 'stop');
-});
-$("#button_indi_allsky_service_start").on("click", function() {
-    button_click('indi-allsky.service', 'start');
-});
-$("#button_indi_allsky_timer_disable").on("click", function() {
-    button_click('indi-allsky.timer', 'disable');
-});
-$("#button_indi_allsky_timer_enable").on("click", function() {
-    button_click('indi-allsky.timer', 'enable');
-});
-
-
-$("#button_gunicorn_indi_allsky_service_stop").on("click", function() {
-    button_click('gunicorn-indi-allsky.service', 'stop');
-});
-$("#button_gunicorn_indi_allsky_service_start").on("click", function() {
-    button_click('gunicorn-indi-allsky.service', 'start');
-});
-
-
-
+// Confirmation Utility Handlers
 $("#button_system_reboot").on("click", function() {
-    if (! $("#REBOOT_CONFIRM1").prop('checked')) {
-        console.log('Reboot checkbox not checked');
-        return;
-    }
-
-    if (! $("#REBOOT_CONFIRM2").prop('checked')) {
-        console.log('Reboot checkbox not checked');
-        return;
-    }
-
-    $("#loader_shutdown").css({'display' : 'block'});
-    $("#button_system_reboot").prop('disabled', true);
-    $("#button_system_shutdown").prop('disabled', true);
-
-    $("#REBOOT_CONFIRM1").prop('checked', false);
-    $("#REBOOT_CONFIRM2").prop('checked', false);
-
+    if (!$("#REBOOT_CONFIRM1").prop('checked') || !$("#REBOOT_CONFIRM2").prop('checked')) return;
+    $("#loader_shutdown").show();
+    $("#button_system_reboot, #button_system_shutdown").prop('disabled', true);
+    $("#REBOOT_CONFIRM1, #REBOOT_CONFIRM2").prop('checked', false);
     button_click('system', 'reboot');
 });
 
-
 $("#button_system_shutdown").on("click", function() {
-    if (! $("#SHUTDOWN_CONFIRM1").prop('checked')) {
-        console.log('Shutdown checkbox not checked');
-        return;
-    }
-    if (! $("#SHUTDOWN_CONFIRM2").prop('checked')) {
-        console.log('Shutdown checkbox not checked');
-        return;
-    }
-
-    $("#loader_shutdown").css({'display' : 'block'});
-    $("#button_system_reboot").prop('disabled', true);
-    $("#button_system_shutdown").prop('disabled', true);
-
-    $("#SHUTDOWN_CONFIRM1").prop('checked', false);
-    $("#SHUTDOWN_CONFIRM2").prop('checked', false);
-
+    if (!$("#SHUTDOWN_CONFIRM1").prop('checked') || !$("#SHUTDOWN_CONFIRM2").prop('checked')) return;
+    $("#loader_shutdown").show();
+    $("#button_system_reboot, #button_system_shutdown").prop('disabled', true);
+    $("#SHUTDOWN_CONFIRM1, #SHUTDOWN_CONFIRM2").prop('checked', false);
     button_click('system', 'poweroff');
 });
 
-
 $("#button_backup_db").on("click", function() {
-    if (! $("#BACKUP_DB_CONFIRM1").prop('checked')) {
-        console.log('Backup DB checkbox not checked');
-        return;
-    }
-
-    $("#loader_shutdown").css({'display' : 'block'});
+    if (!$("#BACKUP_DB_CONFIRM1").prop('checked')) return;
+    $("#loader_shutdown").show();
     $("#button_backup_db").prop('disabled', true);
-
     $("#BACKUP_DB_CONFIRM1").prop('checked', false);
-
     button_click('system', 'backup_db');
 });
 
-
 $("#button_system_upgrade").on("click", function() {
-    if (! $("#UPGRADE_CONFIRM1").prop('checked')) {
-        console.log('Upgrade checkbox not checked');
-        return;
-    }
-    if (! $("#UPGRADE_CONFIRM2").prop('checked')) {
-        console.log('Upgrade checkbox not checked');
-        return;
-    }
-
-    $("#loader_shutdown").css({'display' : 'block'});
+    if (!$("#UPGRADE_CONFIRM1").prop('checked') || !$("#UPGRADE_CONFIRM2").prop('checked')) return;
+    $("#loader_shutdown").show();
     $("#button_system_upgrade").prop('disabled', true);
-
-    $("#UPGRADE_CONFIRM1").prop('checked', false);
-    $("#UPGRADE_CONFIRM2").prop('checked', false);
-
+    $("#UPGRADE_CONFIRM1, #UPGRADE_CONFIRM2").prop('checked', false);
     button_click('upgrade-indi-allsky.service', 'start');
 });
 
-
 $("#button_validate_db").on("click", function() {
-    if (! $("#VALIDATE_DB_CONFIRM1").prop('checked')) {
-        console.log('Flush checkbox not checked');
-        return;
-    }
-
-    $("#loader_shutdown").css({'display' : 'block'});
+    if (!$("#VALIDATE_DB_CONFIRM1").prop('checked')) return;
+    $("#loader_shutdown").show();
     $("#button_validate_db").prop('disabled', true);
-
     $("#VALIDATE_DB_CONFIRM1").prop('checked', false);
-
     button_click('system', 'validate_db');
 });
 
-
 $("#button_expire_data").on("click", function() {
-    if (! $("#EXPIRE_DATA_CONFIRM1").prop('checked')) {
-        console.log('Expire checkbox not checked');
-        return;
-    }
-
-    $("#loader_shutdown").css({'display' : 'block'});
+    if (!$("#EXPIRE_DATA_CONFIRM1").prop('checked')) return;
+    $("#loader_shutdown").show();
     $("#button_expire_data").prop('disabled', true);
-
     $("#EXPIRE_DATA_CONFIRM1").prop('checked', false);
-
     button_click('system', 'expire_data');
 });
 
-
 $("#button_flush_images").on("click", function() {
-    if (! $("#FLUSH_IMAGES_CONFIRM1").prop('checked')) {
-        console.log('Flush checkbox not checked');
-        return;
-    }
-
-    if (! $("#FLUSH_IMAGES_CONFIRM2").prop('checked')) {
-        console.log('Flush checkbox not checked');
-        return;
-    }
-
-    $("#loader_shutdown").css({'display' : 'block'});
+    if (!$("#FLUSH_IMAGES_CONFIRM1").prop('checked') || !$("#FLUSH_IMAGES_CONFIRM2").prop('checked')) return;
+    $("#loader_shutdown").show();
     $("#button_flush_images").prop('disabled', true);
-
-    $("#FLUSH_IMAGES_CONFIRM1").prop('checked', false);
-    $("#FLUSH_IMAGES_CONFIRM2").prop('checked', false);
-
+    $("#FLUSH_IMAGES_CONFIRM1, #FLUSH_IMAGES_CONFIRM2").prop('checked', false);
     button_click('system', 'flush_images');
 });
 
-
 $("#button_flush_16min_images").on("click", function() {
-    if (! $("#FLUSH_16MIN_IMAGES_CONFIRM1").prop('checked')) {
-        console.log('Flush checkbox not checked');
-        return;
-    }
-
-    if (! $("#FLUSH_16MIN_IMAGES_CONFIRM2").prop('checked')) {
-        console.log('Flush checkbox not checked');
-        return;
-    }
-
-    $("#loader_shutdown").css({'display' : 'block'});
+    if (!$("#FLUSH_16MIN_IMAGES_CONFIRM1").prop('checked') || !$("#FLUSH_16MIN_IMAGES_CONFIRM2").prop('checked')) return;
+    $("#loader_shutdown").show();
     $("#button_flush_16min_images").prop('disabled', true);
-
-    $("#FLUSH_16MIN_IMAGES_CONFIRM1").prop('checked', false);
-    $("#FLUSH_16MIN_IMAGES_CONFIRM2").prop('checked', false);
-
+    $("#FLUSH_16MIN_IMAGES_CONFIRM1, #FLUSH_16MIN_IMAGES_CONFIRM2").prop('checked', false);
     button_click('system', 'flush_16min_images');
 });
 
-
 $("#button_flush_timelapses").on("click", function() {
-    if (! $("#FLUSH_TIMELAPSES_CONFIRM1").prop('checked')) {
-        console.log('Flush checkbox not checked');
-        return;
-    }
-
-    if (! $("#FLUSH_TIMELAPSES_CONFIRM2").prop('checked')) {
-        console.log('Flush checkbox not checked');
-        return;
-    }
-
-    $("#loader_shutdown").css({'display' : 'block'});
+    if (!$("#FLUSH_TIMELAPSES_CONFIRM1").prop('checked') || !$("#FLUSH_TIMELAPSES_CONFIRM2").prop('checked')) return;
+    $("#loader_shutdown").show();
     $("#button_flush_timelapses").prop('disabled', true);
-
-    $("#FLUSH_TIMELAPSES_CONFIRM1").prop('checked', false);
-    $("#FLUSH_TIMELAPSES_CONFIRM2").prop('checked', false);
-
+    $("#FLUSH_TIMELAPSES_CONFIRM1, #FLUSH_TIMELAPSES_CONFIRM2").prop('checked', false);
     button_click('system', 'flush_timelapses');
 });
 
 $("#button_flush_daytime").on("click", function() {
-    if (! $("#FLUSH_DAYTIME_CONFIRM1").prop('checked')) {
-        console.log('Flush checkbox not checked');
-        return;
-    }
-
-    if (! $("#FLUSH_DAYTIME_CONFIRM2").prop('checked')) {
-        console.log('Flush checkbox not checked');
-        return;
-    }
-
-    $("#loader_shutdown").css({'display' : 'block'});
+    if (!$("#FLUSH_DAYTIME_CONFIRM1").prop('checked') || !$("#FLUSH_DAYTIME_CONFIRM2").prop('checked')) return;
+    $("#loader_shutdown").show();
     $("#button_flush_daytime").prop('disabled', true);
-
-    $("#FLUSH_DAYTIME_CONFIRM1").prop('checked', false);
-    $("#FLUSH_DAYTIME_CONFIRM2").prop('checked', false);
-
+    $("#FLUSH_DAYTIME_CONFIRM1, #FLUSH_DAYTIME_CONFIRM2").prop('checked', false);
     button_click('system', 'flush_daytime');
 });
 
-
-const form_indiserver_change_successMessage = $('#form_indiserver_change_success-message');
-const form_indiserver_change_failureMessage = $('#form_indiserver_change_failure-message');
-const form_indiserver_change_field_names = [
-    'csrf_token',
-    'CAMERA_SERVER_SELECT',
-    'GPS_SERVER_SELECT',
-];
-const form_indiserver_change_checkbox_field_names = [
-    'RESTART_INDISERVER',
-];
-
-var form_indiserver_change_fields = {};
-// Populate fields object
-form_indiserver_change_field_names.forEach(item => {
-    form_indiserver_change_fields[item] = {
-        'input' : $('#' + item),
-        'error' : $('#' + item + '-error'),
-    };
-});
-
-form_indiserver_change_fields['form_indiserver_change_global'] = {
-    'input' : form_indiserver_change_failureMessage,
-    'error' : form_indiserver_change_failureMessage,
+// Time & Timezone Specific Handlers
+const form_settime_successMessage = $('#form_settime_success-message');
+const form_settime_failureMessage = $('#form_settime_failure-message');
+const form_settime_fields = {
+    'csrf_token': {'input': $('#form_settime [name="csrf_token"]'), 'error': $('#csrf_token-error')},
+    'NEW_DATETIME': {'input': $('#NEW_DATETIME'), 'error': $('#NEW_DATETIME-error')}
 };
 
-// Checkboxes
-form_indiserver_change_checkbox_field_names.forEach(item => {
-    form_indiserver_change_fields[item] = {
-        'input' : $('#' + item),
-        'error' : $('#' + item + '-error'),
+$('#form_settime').on('submit', function() {
+    form_settime_successMessage.hide();
+    $('#NEW_DATETIME-error').hide();
+    $("#loader_settime").show();
+
+    var json_data = {
+        'csrf_token': form_settime_fields['csrf_token']['input'].val(),
+        'NEW_DATETIME': form_settime_fields['NEW_DATETIME']['input'].val()
     };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_settime_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            form_settime_successMessage.html(data['success-message']).show();
+            setTimeout(() => form_settime_successMessage.fadeOut(), 60000);
+            $("#loader_settime").hide();
+        },
+        error: function(data){
+            var errors = JSON.parse(data.responseText);
+            Object.keys(errors).forEach((key) => {
+                $('#' + key + '-error').html(errors[key][0]).show();
+            });
+            $("#loader_settime").hide();
+        },
+    });
 });
 
+const form_timezone_successMessage = $('#form_timezone_success-message');
+const form_timezone_failureMessage = $('#form_timezone_failure-message');
+
+$('#form_timezone').on('submit', function() {
+    form_timezone_successMessage.hide();
+    $('#NEW_TIMEZONE-error').hide();
+    $("#loader_timezone").show();
+
+    var json_data = {
+        'csrf_token': $('#form_timezone [name="csrf_token"]').val(),
+        'NEW_TIMEZONE': $('#NEW_TIMEZONE').val()
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_settimezone_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            form_timezone_successMessage.html(data['success-message']).show();
+            setTimeout(() => form_timezone_successMessage.fadeOut(), 60000);
+            $("#loader_timezone").hide();
+        },
+        error: function(data){
+            var errors = JSON.parse(data.responseText);
+            Object.keys(errors).forEach((key) => {
+                $('#' + key + '-error').html(errors[key][0]).show();
+            });
+            $("#loader_timezone").hide();
+        },
+    });
+});
+
+// INDI Driver Change Handler
+const form_indiserver_change_successMessage = $('#form_indiserver_change_success-message');
+const form_indiserver_change_failureMessage = $('#form_indiserver_change_failure-message');
 
 $("#button_indiserver_change").on("click", function() {
-    if (! $("#INDISERVER_CHANGE_CONFIRM1").prop('checked')) {
-        console.log('Change indiserver checkbox not checked');
-        return;
-    }
+    if (!$("#INDISERVER_CHANGE_CONFIRM1").prop('checked') || !$("#INDISERVER_CHANGE_CONFIRM2").prop('checked')) return;
 
-    if (! $("#INDISERVER_CHANGE_CONFIRM2").prop('checked')) {
-        console.log('Change indiserver checkbox not checked');
-        return;
-    }
+    form_indiserver_change_successMessage.hide();
+    form_indiserver_change_failureMessage.hide();
 
+    var json_data = {
+        'csrf_token': $('#form_indiserver_change [name="csrf_token"]').val(),
+        'CAMERA_SERVER_SELECT': $('#CAMERA_SERVER_SELECT').val(),
+        'GPS_SERVER_SELECT': $('#GPS_SERVER_SELECT').val(),
+        'RESTART_INDISERVER': $('#RESTART_INDISERVER').prop('checked')
+    };
 
-    // hide all errors
-    form_settime_successMessage.css({'display' : 'none'});
-    Object.keys(form_indiserver_change_fields).forEach((key) => {
-        form_indiserver_change_fields[key].error.css({'display' : 'none'});
-    });
-
-
-    // Populate fields object
-    var json_data = {};
-    form_indiserver_change_field_names.forEach(item => {
-        json_data[item] = form_indiserver_change_fields[item].input.val();
-    });
-
-    // checkboxes
-    form_indiserver_change_checkbox_field_names.forEach(item => {
-        json_data[item] = form_indiserver_change_fields[item].input.prop('checked');
-    });
-
-
-    $("#INDISERVER_CHANGE_CONFIRM1").prop('checked', false);
-    $("#INDISERVER_CHANGE_CONFIRM2").prop('checked', false);
-
-    $("#button_indiserver_change").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Update</span>'
-    );
-
-
-    // turn off after fetching value
-    $("#RESTART_INDISERVER").prop('checked', false);
-
+    $("#INDISERVER_CHANGE_CONFIRM1, #INDISERVER_CHANGE_CONFIRM2, #RESTART_INDISERVER").prop('checked', false);
+    $(this).html('<span class="tw:loading tw:loading-spinner tw:loading-xs"></span> Update');
 
     $.ajax({
         type: "POST",
@@ -1392,64 +853,50 @@ $("#button_indiserver_change").on("click", function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#button_indiserver_change").attr("class", "btn btn-success");
-            $("#button_indiserver_change").html(
-                'Update'
-            );
-
-            form_indiserver_change_successMessage.html(rdata['success-message']);
-            form_indiserver_change_successMessage.css({'display' : 'block'});
-            setTimeout(function() {
-                form_indiserver_change_successMessage.css({'display' : 'none'});
-            }, 15000);
-
+            $("#button_indiserver_change").html('UPDATE DRIVERS');
+            form_indiserver_change_successMessage.html(rdata['success-message']).show();
+            setTimeout(() => form_indiserver_change_successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
-            $("#button_indiserver_change").attr("class", "btn btn-danger");
-            $("#button_indiserver_change").html(
-                'Update'
-            );
-
-            var errors = JSON.parse(rdata.responseText);
+            $("#button_indiserver_change").html('UPDATE DRIVERS');
+            form_indiserver_change_failureMessage.html("Failed to update drivers").show();
         },
     });
-
-
 });
 
+function reloadPage() { location.reload(); }
 
-function reloadPage() {
-    console.log('Reload page');
-    location.reload();
-}
-
-$( document ).ready(function() {
-    // Uncheck checkboxes
-    $("#REBOOT_CONFIRM1").prop('checked', false);
-    $("#REBOOT_CONFIRM2").prop('checked', false);
-    $("#SHUTDOWN_CONFIRM1").prop('checked', false);
-    $("#SHUTDOWN_CONFIRM2").prop('checked', false);
-    $("#UPGRADE_CONFIRM1").prop('checked', false);
-    $("#UPGRADE_CONFIRM2").prop('checked', false);
-    $("#VALIDATE_DB_CONFIRM1").prop('checked', false);
-    $("#BACKUP_DB_CONFIRM1").prop('checked', false);
-    $("#EXPIRE_DATA_CONFIRM1").prop('checked', false);
-    $("#FLUSH_IMAGES_CONFIRM1").prop('checked', false);
-    $("#FLUSH_IMAGES_CONFIRM2").prop('checked', false);
-    $("#FLUSH_16MIN_IMAGES_CONFIRM1").prop('checked', false);
-    $("#FLUSH_16MIN_IMAGES_CONFIRM2").prop('checked', false);
-    $("#FLUSH_TIMELAPSES_CONFIRM1").prop('checked', false);
-    $("#FLUSH_TIMELAPSES_CONFIRM2").prop('checked', false);
-    $("#FLUSH_DAYTIME_CONFIRM1").prop('checked', false);
-    $("#FLUSH_DAYTIME_CONFIRM2").prop('checked', false);
-    $("#INDISERVER_CHANGE_CONFIRM1").prop('checked', false);
-    $("#INDISERVER_CHANGE_CONFIRM2").prop('checked', false);
-    $("#RESTART_INDISERVER").prop('checked', false);
-
-
+$(document).ready(function() {
+    // Reset all checkboxes on load
+    $('input[type="checkbox"]').prop('checked', false);
+    
+    // Set default datetime for form
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    form_settime_fields['NEW_DATETIME']['input'].val(now.toISOString().slice(0, 19));
+    $('#NEW_DATETIME').val(now.toISOString().slice(0, 19));
+
+    // Handle hash-based tab activation for DaisyUI radio tabs
+    function activateTabFromHash() {
+        const hash = window.location.hash;
+        if (hash) {
+            const tabId = hash.replace('#', '');
+            const $tab = $(`#nav-${tabId}-tab`);
+            if ($tab.length) {
+                $tab.prop('checked', true);
+            }
+        }
+    }
+    activateTabFromHash();
+$(document).ready(function() {
+    $('.sys-tab-btn').on('click', function() {
+        var target = $(this).data('target');
+        
+        $('.sys-tab-btn').removeClass('tw:btn-primary').addClass('tw:btn-ghost');
+        $(this).removeClass('tw:btn-ghost').addClass('tw:btn-primary');
+
+        $('.sys-tab-pane').hide();
+        $('#' + target).show();
+    });
 
     setTimeout(reloadPage, 300000);
 });
