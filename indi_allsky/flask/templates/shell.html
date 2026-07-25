@@ -90,7 +90,7 @@ $(document).ready(function() {
     term.open(document.getElementById('terminal-container'));
     fitAddon.fit();
 
-    let wsUrl = "{{ url_for('indi_allsky.shell_ws', _external=True) }}";
+    let wsUrl = "{{ url_for('indi_allsky.ws_shell_view', _external=True) }}";
     if (wsUrl.startsWith('http://')) {
         wsUrl = 'ws://' + wsUrl.substring(7);
     } else if (wsUrl.startsWith('https://')) {

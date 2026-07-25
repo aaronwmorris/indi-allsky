@@ -11946,6 +11946,11 @@ class AjaxAstroPanelView(BaseView):
         return polaris_data
 
 
+class ShellView(TemplateView):
+    page_title = 'Terminal'
+    decorators = [login_required]
+
+
 def set_winsize(fd, row, col, xpix=0, ypix=0):
     import fcntl
     import termios
@@ -11954,115 +11959,107 @@ def set_winsize(fd, row, col, xpix=0, ypix=0):
     fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
 
 
-class ShellView(TemplateView):
-    page_title = 'Terminal'
+class WsShellView(BaseView):
     decorators = [login_required]
 
-    def get_context(self):
-        context = super(ShellView, self).get_context()
-        return context
+    def dispatch_request(self):
+        import pty
+        import subprocess
+        import threading
+        import select
+        import simple_websocket
 
+        if not current_user.is_authenticated:
+            return 'Unauthorized', 401
 
-@bp_allsky.route('/ws/shell', websocket=True)
-def shell_ws():
-    import pty
-    import subprocess
-    import threading
-    import select
-    import json
-    import simple_websocket
+        if not current_user.is_admin:
+            return 'Unauthorized', 401
 
-    if not current_user.is_authenticated:
-        return 'Unauthorized', 401
+        ws = simple_websocket.Server.accept(request.environ)
 
-    if not current_user.is_admin:
-        return 'Unauthorized', 401
+        # Create pseudo-terminal
+        master_fd, slave_fd = pty.openpty()
 
-    ws = simple_websocket.Server.accept(request.environ)
+        # Set TERM environment variable
+        env = os.environ.copy()
+        env['TERM'] = 'xterm-256color'
 
-    # Create pseudo-terminal
-    master_fd, slave_fd = pty.openpty()
+        # Spawn bash
+        proc = subprocess.Popen(
+            ['/bin/bash', '-i'],
+            stdin=slave_fd,
+            stdout=slave_fd,
+            stderr=slave_fd,
+            env=env,
+            preexec_fn=os.setsid
+        )
 
-    # Set TERM environment variable
-    env = os.environ.copy()
-    env['TERM'] = 'xterm-256color'
+        # Close slave fd in parent
+        os.close(slave_fd)
 
-    # Spawn bash
-    proc = subprocess.Popen(
-        ['/bin/bash', '-i'],
-        stdin=slave_fd,
-        stdout=slave_fd,
-        stderr=slave_fd,
-        env=env,
-        preexec_fn=os.setsid
-    )
+        # Thread to read from PTY master and write to WebSocket
+        def read_thread():
+            try:
+                while True:
+                    # Wait for data using select to avoid blocking indefinitely
+                    r, _, _ = select.select([master_fd], [], [], 1.0)
+                    if master_fd in r:
+                        data = os.read(master_fd, 4096)
+                        if not data:
+                            break
+                        ws.send(json.dumps({
+                            'type': 'output',
+                            'data': data.decode('utf-8', errors='replace')
+                        }))
+            except (simple_websocket.ConnectionClosed, OSError):
+                pass
+            finally:
+                try:
+                    ws.close()
+                except Exception:
+                    pass
 
-    # Close slave fd in parent
-    os.close(slave_fd)
+        t = threading.Thread(target=read_thread)
+        t.daemon = True
+        t.start()
 
-    # Thread to read from PTY master and write to WebSocket
-    def read_thread():
+        # Read from WebSocket and write to PTY master
         try:
             while True:
-                # Wait for data using select to avoid blocking indefinitely
-                r, _, _ = select.select([master_fd], [], [], 1.0)
-                if master_fd in r:
-                    data = os.read(master_fd, 4096)
-                    if not data:
-                        break
-                    ws.send(json.dumps({
-                        'type': 'output',
-                        'data': data.decode('utf-8', errors='replace')
-                    }))
-        except (simple_websocket.ConnectionClosed, OSError):
+                message = ws.receive()
+                if message is None:
+                    break
+                try:
+                    msg = json.loads(message)
+                    msg_type = msg.get('type')
+                    if msg_type == 'input':
+                        input_data = msg.get('data', '')
+                        os.write(master_fd, input_data.encode('utf-8'))
+                    elif msg_type == 'resize':
+                        cols = msg.get('cols')
+                        rows = msg.get('rows')
+                        if cols and rows:
+                            set_winsize(master_fd, rows, cols)
+                except Exception as e:
+                    app.logger.error("Error processing websocket message: %s", e)
+        except simple_websocket.ConnectionClosed:
             pass
         finally:
+            # Cleanup
             try:
-                ws.close()
-            except Exception:
+                os.close(master_fd)
+            except OSError:
                 pass
-
-    t = threading.Thread(target=read_thread)
-    t.daemon = True
-    t.start()
-
-    # Read from WebSocket and write to PTY master
-    try:
-        while True:
-            message = ws.receive()
-            if message is None:
-                break
             try:
-                msg = json.loads(message)
-                msg_type = msg.get('type')
-                if msg_type == 'input':
-                    input_data = msg.get('data', '')
-                    os.write(master_fd, input_data.encode('utf-8'))
-                elif msg_type == 'resize':
-                    cols = msg.get('cols')
-                    rows = msg.get('rows')
-                    if cols and rows:
-                        set_winsize(master_fd, rows, cols)
-            except Exception as e:
-                app.logger.error("Error processing websocket message: %s", e)
-    except simple_websocket.ConnectionClosed:
-        pass
-    finally:
-        # Cleanup
-        try:
-            os.close(master_fd)
-        except OSError:
-            pass
-        try:
-            proc.terminate()
-            proc.wait(timeout=2)
-        except Exception:
-            try:
-                proc.kill()
+                proc.terminate()
+                proc.wait(timeout=2)
             except Exception:
-                pass
+                try:
+                    proc.kill()
+                except Exception:
+                    pass
 
-    return ''
+        return ''
 
 
 # images are normally served directly by the web server, this is a backup method
@@ -12203,6 +12200,7 @@ bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_inde
 bp_allsky.add_url_rule('/network', view_func=NetworkManagerView.as_view('network_manager_view', template_name='network.html'))
 bp_allsky.add_url_rule('/ajax/network', view_func=AjaxNetworkManagerView.as_view('ajax_network_manager_view'))
 bp_allsky.add_url_rule('/shell', view_func=ShellView.as_view('shell_view', template_name='shell.html'))
+bp_allsky.add_url_rule('/ws/shell', view_func=WsShellView.as_view('ws_shell_view'), websocket=True)
 
 bp_allsky.add_url_rule('/drives', view_func=DriveManagerView.as_view('drive_manager_view', template_name='drive_manager.html'))
 bp_allsky.add_url_rule('/ajax/drives', view_func=AjaxDriveManagerView.as_view('ajax_drive_manager_view'))
