@@ -450,7 +450,6 @@ var camera_id = {{ camera_id }};
 
         <!-- TAB: UTILITIES -->
         <div id="tab-powercontrol" class="sys-tab-pane" style="display: none;">
-        <div role="tabpanel" class="tw:tab-content tw:py-6">
             <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm">
                 <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-8">
                     
@@ -875,19 +874,7 @@ $(document).ready(function() {
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     $('#NEW_DATETIME').val(now.toISOString().slice(0, 19));
 
-    // Handle hash-based tab activation for DaisyUI radio tabs
-    function activateTabFromHash() {
-        const hash = window.location.hash;
-        if (hash) {
-            const tabId = hash.replace('#', '');
-            const $tab = $(`#nav-${tabId}-tab`);
-            if ($tab.length) {
-                $tab.prop('checked', true);
-            }
-        }
-    }
-    activateTabFromHash();
-$(document).ready(function() {
+    // Tab switcher
     $('.sys-tab-btn').on('click', function() {
         var target = $(this).data('target');
         
@@ -900,6 +887,5 @@ $(document).ready(function() {
 
     setTimeout(reloadPage, 300000);
 });
-
 </script>
 {% endblock %}
