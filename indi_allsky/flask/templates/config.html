@@ -3,6 +3,10 @@
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
 {% block head %}
+<link href="{{ url_for('indi_allsky.static', filename='bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+<link href="{{ url_for('indi_allsky.static', filename='css/style.css') }}" rel="stylesheet">
+<script src="{{ url_for('indi_allsky.static', filename='bootstrap/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('indi_allsky.static', filename='js/indi-allsky-tabs.js') }}"></script>
 <style>
 #nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab, #nav-mqtt-tab, #nav-devices-tab, #nav-sensors-tab, #nav-adsb-tab, #nav-sat_track-tab, #nav-timelapse-tab, #nav-overlays-tab {
     width: 150px;
@@ -13,6 +17,61 @@
 
 .strikethrough{
     text-decoration: line-through;
+}
+
+/* Dark mode overrides for Bootstrap elements on config page */
+[data-theme="dark"] .container,
+[data-theme="dark"] #form_config {
+    color: #e2e8f0;
+}
+[data-theme="dark"] #form_config label,
+[data-theme="dark"] #form_config td,
+[data-theme="dark"] #form_config th,
+[data-theme="dark"] #form_config p,
+[data-theme="dark"] #form_config .form-label,
+[data-theme="dark"] #form_config .col-form-label {
+    color: #e2e8f0 !important;
+}
+[data-theme="dark"] #form_config .text-secondary,
+[data-theme="dark"] #form_config small {
+    color: #94a3b8 !important;
+}
+[data-theme="dark"] #form_config .form-control,
+[data-theme="dark"] #form_config .form-select {
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+    border-color: #334155 !important;
+}
+[data-theme="dark"] #form_config .form-control:focus,
+[data-theme="dark"] #form_config .form-select:focus {
+    background-color: #0f172a !important;
+    color: #ffffff !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
+}
+[data-theme="dark"] .nav-tabs {
+    border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .nav-tabs .nav-link {
+    border-color: #334155 !important;
+    color: #94a3b8 !important;
+    background-color: #1e293b !important;
+}
+[data-theme="dark"] .nav-tabs .nav-link.active {
+    color: #ffffff !important;
+    background-color: #0f172a !important;
+    border-color: #3b82f6 #334155 #0f172a #334155 !important;
+}
+[data-theme="dark"] #form_config .card,
+[data-theme="dark"] #form_config .accordion-item,
+[data-theme="dark"] #form_config .modal-content {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+}
+[data-theme="dark"] #form_config .accordion-button {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
 }
 
 </style>

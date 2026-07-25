@@ -1,0 +1,54 @@
+import { ColorAttributes } from "./attribs.js";
+import { SVG } from "../svg/index.js";
+import { AnalyseSVGStructureOptions, AnalyseSVGStructureResult, ElementsTreeItem, ExtendedTagElement } from "../svg/analyse/types.js";
+import { Color } from "@iconify/utils/lib/colors/types";
+/**
+ * Result
+ */
+interface FindColorsResult {
+  colors: (Color | string)[];
+  hasUnsetColor: boolean;
+  hasGlobalStyle: boolean;
+}
+/**
+ * Callback to call for each found color
+ *
+ * Callback should return:
+ * - new color value to change color
+ * - first parameter to keep old value
+ * - 'unset' to delete old value
+ * - 'remove' to remove shape or rule
+ */
+type ParseColorsCallbackResult = Color | string | 'remove' | 'unset';
+type ParseColorsCallback = (attr: ColorAttributes, colorString: string, parsedColor: Color | null, tagName?: string, item?: ExtendedTagElementWithColors) => ParseColorsCallbackResult;
+/**
+ * Callback for default color
+ */
+type ParseColorOptionsDefaultColorCallback = (prop: string, item: ExtendedTagElementWithColors, treeItem: ElementsTreeItem, iconData: AnalyseSVGStructureResult) => Color;
+/**
+ * Options
+ */
+interface ParseColorsOptions extends AnalyseSVGStructureOptions {
+  callback?: ParseColorsCallback;
+  defaultColor?: Color | string | ParseColorOptionsDefaultColorCallback;
+}
+/**
+ * Extend properties for element
+ */
+type ItemColors = Partial<Record<ColorAttributes, Color | string>>;
+interface ExtendedTagElementWithColors extends ExtendedTagElement {
+  _colors?: ItemColors;
+  _removed?: boolean;
+}
+/**
+ * Find colors in icon
+ *
+ * Clean up icon before running this function to convert style to attributes using
+ * cleanupInlineStyle() or cleanupSVG(), otherwise results might be inaccurate
+ */
+declare function parseColors(svg: SVG, options?: ParseColorsOptions): FindColorsResult;
+/**
+ * Check if color is empty, such as 'none' or 'transparent'
+ */
+declare function isEmptyColor(color: Color): boolean;
+export { ExtendedTagElementWithColors, FindColorsResult, ParseColorOptionsDefaultColorCallback, ParseColorsOptions, isEmptyColor, parseColors };

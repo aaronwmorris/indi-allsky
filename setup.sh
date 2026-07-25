@@ -764,7 +764,9 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         dnsmasq-base \
         polkitd \
         libsystemd-dev \
-        dbus-user-session
+        dbus-user-session \
+        nodejs \
+        npm
 
 
     if [ "$CPU_BITS" != "32" ]; then
@@ -2065,6 +2067,11 @@ if [ "${GPIO_PYTHON_MODULES}" == "true" ]; then
 fi
 
 pip3 install "${PIP_REQ_ARGS[@]}"
+
+
+echo "**** CSS compilation with Tailwind/daisyUI ****"
+npm install --no-fund --no-audit
+npm run build
 
 
 # some modules do not have their prerequisites set

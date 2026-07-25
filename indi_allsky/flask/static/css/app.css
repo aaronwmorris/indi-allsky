@@ -1,0 +1,5 @@
+@import "tailwindcss" prefix(tw);
+@plugin "daisyui" {
+  themes: all;
+}
+@plugin "@iconify/tailwind4";
