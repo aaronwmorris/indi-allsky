@@ -13,8 +13,8 @@
     <script>
         (function() {
             var preferredMode = localStorage.getItem('allsky-theme-mode') || 'dark';
-            var lightTheme = localStorage.getItem('allsky-light-theme') || 'emerald';
-            var darkTheme = localStorage.getItem('allsky-dark-theme') || 'dark';
+            var lightTheme = localStorage.getItem('allsky-light-theme') || 'fantasy';
+            var darkTheme = localStorage.getItem('allsky-dark-theme') || 'forest';
             var activeTheme = (preferredMode === 'light') ? lightTheme : darkTheme;
             document.documentElement.setAttribute('data-theme', activeTheme);
         })();
@@ -373,8 +373,8 @@
 
         window.applyAllskyTheme = function() {
             var mode = localStorage.getItem('allsky-theme-mode') || 'dark';
-            var lightT = localStorage.getItem('allsky-light-theme') || 'emerald';
-            var darkT = localStorage.getItem('allsky-dark-theme') || 'dark';
+            var lightT = localStorage.getItem('allsky-light-theme') || 'fantasy';
+            var darkT = localStorage.getItem('allsky-dark-theme') || 'forest';
 
             var activeTheme = (mode === 'light') ? lightT : darkT;
             $('html').attr('data-theme', activeTheme);

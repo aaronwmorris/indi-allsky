@@ -144,15 +144,15 @@
                     Light Theme Preset
                 </label>
                 <select id="select_light_theme" class="tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full">
-                    <option value="emerald">Emerald (Default Light)</option>
+                    <option value="fantasy">Fantasy (Default Light)</option>
                     <option value="light">Classic Light</option>
                     <option value="cupcake">Cupcake</option>
                     <option value="bumblebee">Bumblebee</option>
+                    <option value="emerald">Emerald</option>
                     <option value="corporate">Corporate</option>
                     <option value="garden">Garden</option>
                     <option value="lofi">Lofi</option>
                     <option value="pastel">Pastel</option>
-                    <option value="fantasy">Fantasy</option>
                     <option value="cmyk">CMYK</option>
                     <option value="autumn">Autumn</option>
                     <option value="acid">Acid</option>
@@ -169,10 +169,10 @@
                     Dark Theme Preset
                 </label>
                 <select id="select_dark_theme" class="tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full">
-                    <option value="dark">Classic Dark (Default Dark)</option>
+                    <option value="forest">Forest (Default Dark)</option>
+                    <option value="dark">Classic Dark</option>
                     <option value="synthwave">Synthwave</option>
                     <option value="halloween">Halloween</option>
-                    <option value="forest">Forest</option>
                     <option value="aqua">Aqua</option>
                     <option value="black">Deep Black</option>
                     <option value="luxury">Luxury</option>
@@ -229,8 +229,8 @@ fields['form_global'] = {
 
 // Theme Management Logic
 $(document).ready(function() {
-    var lightT = localStorage.getItem('allsky-light-theme') || 'emerald';
-    var darkT = localStorage.getItem('allsky-dark-theme') || 'dark';
+    var lightT = localStorage.getItem('allsky-light-theme') || 'fantasy';
+    var darkT = localStorage.getItem('allsky-dark-theme') || 'forest';
 
     $('#select_light_theme').val(lightT);
     $('#select_dark_theme').val(darkT);
