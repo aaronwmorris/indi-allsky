@@ -4,111 +4,164 @@
 
 {% block head %}
 <meta charset="UTF-8">
-<style>
-</style>
 <link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
 <script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
+
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
-
 {% endblock %}
 
 {% block content %}
+<div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-4 tw:p-4 tw:w-full">
 
-<hr>
+    <div class="tw:alert tw:alert-info tw:bg-info/5 tw:border-info/10 tw:text-info tw:text-xs tw:rounded-xl tw:py-3">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="tw:w-4 tw:h-4 tw:stroke-current">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span><span class="tw:font-bold">System Status:</span> indi-allsky must be in a <span class="tw:font-bold underline">Running</span> state to generate assets.</span>
+    </div>
 
-<div><span class="badge rounded-pill bg-info text-dark">Note</span> indi-allsky has to be in a Running state to generate assets</div>
+    <style>
+        /* Direct override block to bypass parent container layout restrictions */
+        .allsky-workspace-grid {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 1rem !important;
+            width: 100% !important;
+        }
+        @media (min-width: 1024px) {
+            .allsky-workspace-grid {
+                grid-template-columns: 2fr 1fr !important;
+                align-items: start !important;
+            }
+        }
+    </style>
 
-<hr>
+    <div class="allsky-workspace-grid">
+        
+        <div class="tw:bg-base-200 tw:p-5 tw:rounded-xl tw:border tw:border-base-content/5 tw:flex tw:flex-col tw:justify-between tw:w-full">
+            <form id="form_timelapsegen" onsubmit="return false;" class="tw:flex tw:flex-col tw:justify-between tw:h-full tw:gap-4">
+                <div>
+                    {{ form_timelapsegen.csrf_token }}
+                    <div class="tw:text-error tw:text-xs tw:font-semibold" id="csrf_token-error"></div>
 
+                    <div class="tw:hidden">
+                        {{ form_timelapsegen.CAMERA_ID(class='tw:input') }}
+                    </div>
+                    
+                    <div class="tw:flex tw:flex-col tw:gap-3">
+                        <div class="tw:form-control tw:w-full">
+                            <label class="tw:label tw:pb-1">
+                                <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase">Action Target</span>
+                            </label>
+                            {{ form_timelapsegen.ACTION_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm tw:text-base-content focus:tw:outline-none focus:tw:border-primary') }}
+                            <div id="ACTION_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        
+                        <div class="tw:form-control tw:w-full">
+                            <label class="tw:label tw:pb-1">
+                                <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase">Target Capture Day</span>
+                            </label>
+                            {{ form_timelapsegen.DAY_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm tw:text-base-content focus:tw:outline-none focus:tw:border-primary') }}
+                            <div id="DAY_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
 
-<form id="form_timelapsegen" onSubmit="return false;">
-    {{ form_timelapsegen.csrf_token }}
-    <div class="text-danger my-2" id="csrf_token-error"></div>
+                <div class="tw:flex tw:items-center tw:justify-between tw:bg-base-300/40 tw:p-3 tw:rounded-lg tw:border tw:border-base-content/5 tw:mt-4">
+                    <label class="tw:label tw:cursor-pointer tw:gap-2.5">
+                        <input class="tw:checkbox tw:checkbox-success tw:checkbox-sm" id="CONFIRM1" name="CONFIRM1" type="checkbox" value="y">
+                        <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/70">Confirm Asset Execution</span>
+                    </label>
+                    
+                    <button id="generate-button" class="tw:btn tw:btn-success tw:btn-sm tw:h-9 tw:px-5 tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider">
+                        Generate
+                    </button>
+                </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_timelapsegen.CAMERA_ID(class='form-control bg-secondary') }}
-            {{ form_timelapsegen.ACTION_SELECT.label(class='col-form-label') }}
+                <div class="tw:w-full tw:mt-2">
+                    <div id="form_timelapsegen_success-message" class="tw:alert tw:alert-success tw:text-sm tw:font-medium" style="display: none;"></div>
+                    <div id="form_timelapsegen_failure-message" class="tw:alert tw:alert-error tw:text-sm tw:font-medium" style="display: none;"></div>
+                </div>
+            </form>
         </div>
-        <div class="col-sm-3">
-            {{ form_timelapsegen.ACTION_SELECT(class='form-control bg-secondary') }}
-            <div id="ACTION_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-2">
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Timelapses" class="text-decoration-none link-info" target="_blank">Timelapse Wiki</a></div>
-        </div>
-        <div class="col-sm-1"></div>
-        <div class="col-sm-2">
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Mini-Timelapses" class="text-decoration-none link-info" target="_blank">Mini-Timelapse Wiki</a></div>
+
+        <div class="tw:flex tw:flex-col tw:gap-4 tw:w-full">
+            
+            <div class="tw:bg-base-200 tw:p-4 tw:rounded-xl tw:border tw:border-base-content/5 tw:flex tw:flex-col tw:w-full">
+                <h3 class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/40 tw:mb-3">Documentation Wiki Links</h3>
+                <div class="tw:flex tw:flex-col tw:gap-2 tw:grow tw:justify-center">
+                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Timelapses" class="tw:btn tw:btn-neutral tw:btn-sm tw:text-xs tw:justify-between tw:bg-base-100 hover:tw:bg-base-300 tw:w-full tw:no-underline tw:border-none" target="_blank">
+                        Timelapse Guide
+                        <i class="tw:icon-[lucide--external-link] tw:w-3.5 tw:h-3.5 tw:opacity-60"></i>
+                    </a>
+                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Mini-Timelapses" class="tw:btn tw:btn-neutral tw:btn-sm tw:text-xs tw:justify-between tw:bg-base-100 hover:tw:bg-base-300 tw:w-full tw:no-underline tw:border-none" target="_blank">
+                        Mini-Timelapse Guide
+                        <i class="tw:icon-[lucide--external-link] tw:w-3.5 tw:h-3.5 tw:opacity-60"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="tw:bg-base-200 tw:p-4 tw:rounded-xl tw:border tw:border-base-content/5 tw:w-full">
+                <h3 class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/40 tw:mb-3">Flag Index Legend</h3>
+                <ul style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem;" class="tw:text-xs tw:font-medium tw:text-base-content/70">
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-md">T</span> Timelapse</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-md">K</span> Keogram</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-md">P</span> Panorama</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-md">S</span> Star Trail</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-md">ST</span> Trail Video</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-error tw:text-white tw:font-mono tw:w-6 tw:rounded-md">!</span> Failed</li>
+                    <li class="tw:flex tw:items-center tw:gap-2" style="grid-column: span 2 / span 2;"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-md">#/#</span> Image Fractions</li>
+                </ul>
+            </div>
         </div>
     </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_timelapsegen.DAY_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_timelapsegen.DAY_SELECT(class='form-control bg-secondary') }}
-            <div id="DAY_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-5">
-            <div>T = Timelapse exists</div>
-            <div>K = Keogram exists</div>
-            <div>P = Panorama timelapse exists</div>
-            <div>S = Star trail exists</div>
-            <div>ST = Star trail timelapse exists</div>
-            <div>! = Failed to generate</div>
-            <div>#/# = Images/Panorama images</div>
+    <div class="tw:w-full tw:my-1">
+        <hr class="tw:border-base-content/10">
+    </div>
+
+    <div class="tw:flex tw:flex-col tw:gap-3 tw:w-full">
+        <h2 class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50 tw:pl-1">System Tasks Queue</h2>
+        
+        <div class="tw:overflow-x-auto tw:border tw:border-base-content/10 tw:rounded-xl tw:bg-base-200 tw:w-full">
+            <table id="tasks-table" class="tw:table tw:table-xs tw:w-full tw:m-0">
+                <thead>
+                    <tr class="tw:bg-base-300/50 tw:text-base-content/70 tw:text-[11px] tw:uppercase tw:tracking-wider tw:border-b tw:border-base-content/10">
+                        <th class="tw:pl-4 tw:py-3">ID</th>
+                        <th class="tw:py-3">Date</th>
+                        <th class="tw:py-3">Queue</th>
+                        <th class="tw:py-3">Action</th>
+                        <th class="tw:py-3">State</th>
+                        <th class="tw:pr-4 tw:py-3">Result</th>
+                    </tr>
+                </thead>
+                <tbody class="tw:divide-y tw:divide-base-content/5">
+                    {% for task in task_list %}
+                    <tr class="hover:tw:bg-base-content/5 tw:transition-colors tw:text-xs">
+                        <td class="tw:pl-4 tw:font-mono tw:font-bold tw:text-base-content/90">{{ task.id }}</td>
+                        <td class="tw:whitespace-nowrap tw:text-base-content/80">{{ task.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td><span class="tw:badge tw:badge-sm tw:badge-ghost tw:font-semibold tw:text-[9px] tw:uppercase">{{ task.queue }}</span></td>
+                        <td class="tw:font-medium tw:text-base-content/90">{{ task.action }}</td>
+                        <td>
+                            {% if task.state == 'failed' or task.state == 'error' %}
+                            <span class="tw:badge tw:badge-error tw:badge-sm tw:font-bold tw:text-white tw:uppercase tw:text-[9px]">{{ task.state }}</span>
+                            {% elif task.state == 'completed' or task.state == 'success' %}
+                            <span class="tw:badge tw:badge-success tw:badge-sm tw:font-bold tw:text-white tw:uppercase tw:text-[9px]">{{ task.state }}</span>
+                            {% else %}
+                            <span class="tw:badge tw:badge-info tw:badge-sm tw:font-bold tw:uppercase tw:text-[9px]">{{ task.state }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="tw:pr-4 tw:max-w-xs tw:truncate tw:font-mono tw:text-[11px] tw:text-base-content/60" title="{{ task.result }}">{{ task.result }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <div class="form-group row">
-      <div class="col-sm-1">
-        <button id="generate-button" class="btn btn-success">Generate</button>
-      </div>
-      <div class="col-sm-1">
-        <input class="form-check-input" id="CONFIRM1" name="CONFIRM1" type="checkbox" value="y">
-        <label>Confirm</label>
-      </div>
-      <div class="col-sm-1">
-      </div>
-    </div>
-
-    <div class="form-group row">
-      <div class="col-sm-3">
-        <div id="form_timelapsegen_success-message" class="alert alert-success" role="alert" style="display: none;"></div>
-        <div id="form_timelapsegen_failure-message" class="alert alert-danger" role="alert" style="display: none;"></div>
-      </div>
-    </div>
-</form>
-
-<hr>
-
-Tasks
-<table id="tasks-table" class="table table-striped compact" data-bs-theme="dark">
-  <thead>
-    <th>ID</th>
-    <th>Date</th>
-    <th>Queue</th>
-    <th>Action</th>
-    <th>State</th>
-    <th>Result</th>
-  </thead>
-  <tbody>
-    {% for task in task_list %}
-    <tr>
-      <td>{{ task.id }}</td>
-      <td>{{ task.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-      <td>{{ task.queue }}</td>
-      <td>{{ task.action }}</td>
-      <td>{{ task.state }}</td>
-      <td>{{ task.result }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+</div>
 
 <script>
 const form_timelapsegen_successMessage = $('#form_timelapsegen_success-message');
@@ -144,9 +197,6 @@ form_timelapsegen_fields['form_global'] = {
 };
 
 
-// ajax setup later
-
-
 $('#form_timelapsegen').on('submit', function() {
     if (! $("#CONFIRM1").prop('checked')) {
         console.log('Flush checkbox not checked');
@@ -163,9 +213,9 @@ $('#form_timelapsegen').on('submit', function() {
     };
 
 
-    $("#generate-button").attr("class", "btn btn-primary");
+    $("#generate-button").attr("class", "tw:btn tw:btn-neutral");
     $("#generate-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Generate</span>'
+      '<span class="tw:loading tw:loading-spinner tw:loading-xs"></span> Generation Processing...'
     );
 
 
@@ -173,6 +223,9 @@ $('#form_timelapsegen').on('submit', function() {
     form_timelapsegen_successMessage.css({'display' : 'none'});
     Object.keys(form_timelapsegen_fields).forEach((key) => {
         form_timelapsegen_fields[key].error.css({'display' : 'none'});
+        if(form_timelapsegen_fields[key].input) {
+            form_timelapsegen_fields[key].input.removeClass('tw:border-error');
+        }
     });
 
 
@@ -195,27 +248,23 @@ $('#form_timelapsegen').on('submit', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#generate-button").attr("class", "btn btn-success");
-            $("#generate-button").html(
-              'Generate'
-            );
+            $("#generate-button").attr("class", "tw:btn tw:btn-success tw:btn-sm");
+            $("#generate-button").html('Generate');
 
             $("#ACTION_SELECT").val('none');
             form_timelapsegen_successMessage.html(rdata['success-message']);
             form_timelapsegen_successMessage.css({'display' : 'block'});
             setTimeout(function() {
-                form_timelapsegen_successMessage.css({'display' : 'none'});
+                form_timelapsegen_successMessage.fadeOut();
             }, 15000);
         },
         error: function(rdata){
-            $("#generate-button").attr("class", "btn btn-danger");
-            $("#generate-button").html(
-              'Generate'
-            );
+            $("#generate-button").attr("class", "tw:btn tw:btn-error tw:btn-sm");
+            $("#generate-button").html('Generate');
 
             var errors = JSON.parse(rdata.responseText);
             Object.keys(errors).forEach((key) => {
-                form_timelapsegen_fields[key].input.addClass('is-invalid');
+                form_timelapsegen_fields[key].input.addClass('tw:border-error');
                 form_timelapsegen_fields[key].error.html(errors[key][0]);
                 form_timelapsegen_fields[key].error.css({'display' : 'block'});
             });
