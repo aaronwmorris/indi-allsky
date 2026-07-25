@@ -11971,7 +11971,7 @@ class ShellView(TemplateView):
         return context
 
 
-@bp_allsky.route('/shell/ws', websocket=True)
+@bp_allsky.route('/ws/shell', websocket=True)
 def shell_ws():
     import pty
     import subprocess
