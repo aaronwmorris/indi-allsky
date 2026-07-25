@@ -25,8 +25,8 @@
     appearance: auto !important;
     background-color: var(--color-base-100, #1d232a) !important;
     color: var(--color-base-content, #a6adbb) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-radius: 0.5rem !important;
+    border: 1px solid rgba(128, 128, 128, 0.2) !important;
+    border-radius: var(--radius-field, 0.25rem) !important;
     padding: 0.25rem 0.75rem !important;
     font-size: 0.75rem !important;
     margin: 0 0.5rem !important;
@@ -35,8 +35,8 @@
 .dt-container .dt-search input {
     background-color: var(--color-base-100, #1d232a) !important;
     color: var(--color-base-content, #a6adbb) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-radius: 0.5rem !important;
+    border: 1px solid rgba(128, 128, 128, 0.2) !important;
+    border-radius: var(--radius-field, 0.25rem) !important;
     padding: 0.35rem 0.75rem !important;
     font-size: 0.75rem !important;
     outline: none !important;
@@ -53,8 +53,8 @@
 .dt-container .dt-buttons button {
     background-color: var(--color-base-100, #1d232a) !important;
     color: var(--color-base-content, #a6adbb) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-radius: 0.5rem !important;
+    border: 1px solid rgba(128, 128, 128, 0.2) !important;
+    border-radius: var(--radius-selector, 0.5rem) !important;
     padding: 0.25rem 0.75rem !important;
     font-size: 0.75rem !important;
     font-weight: 600 !important;
@@ -78,8 +78,8 @@
     min-width: 2rem !important;
     height: 2rem !important;
     padding: 0 0.5rem !important;
-    border-radius: 0.5rem !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: var(--radius-selector, 0.5rem) !important;
+    border: 1px solid rgba(128, 128, 128, 0.15) !important;
     background-color: var(--color-base-100, #1d232a) !important;
     color: var(--color-base-content, #a6adbb) !important;
     font-size: 0.75rem !important;
