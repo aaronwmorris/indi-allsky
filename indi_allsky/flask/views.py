@@ -12091,19 +12091,29 @@ class ESP32ImageView(BaseView):
 
         self.cameraSetup(camera_id=camera_id)
 
-        image_entry = self._getLatestImage(camera_id)
-        if not image_entry:
-            return 'No image available', 404
+        image_data = None
 
-        image_p = image_entry.getFilesystemPath()
+        if self.indi_allsky_config.get('CIRCULAR_DISPLAY', {}).get('ENABLE', False):
+            image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+            circular_image_p = image_dir.joinpath('circular_display.{0:s}'.format(self.indi_allsky_config['IMAGE_FILE_TYPE']))
 
-        if not image_p.exists():
-            app.logger.error('ESP32: image file not found: %s', image_p)
-            return 'Image file not found', 404
+            if circular_image_p.exists():
+                image_data = self._readImage(circular_image_p)
 
-        image_data = self._readImage(image_p)
         if image_data is None:
-            return 'Unable to read image', 500
+            image_entry = self._getLatestImage(camera_id)
+            if not image_entry:
+                return 'No image available', 404
+
+            image_p = image_entry.getFilesystemPath()
+
+            if not image_p.exists():
+                app.logger.error('ESP32: image file not found: %s', image_p)
+                return 'Image file not found', 404
+
+            image_data = self._readImage(image_p)
+            if image_data is None:
+                return 'Unable to read image', 500
 
         image_resized = cv2.resize(image_data, (size, size), interpolation=cv2.INTER_AREA)
 
