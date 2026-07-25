@@ -1,0 +1,508 @@
+<div class="tab-pane fade" id="nav-admin" role="tabpanel" aria-labelledby="nav-admin-tab">
+
+    <div class="form-group row">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-2">
+            <div><a href="{{ url_for('indi_allsky.config_list_view') }}"><span class="badge bg-success">Config History</span></a></div>
+        </div>
+        <div class="col-sm-2">
+            <div><a href="{{ url_for('indi_allsky.config_download_view', id=config_id) }}"><span class="badge bg-primary">Backup Config</span></a></div>
+        </div>
+        <div class="col-sm-2">
+            <div><a href="{{ url_for('indi_allsky.config_download_view', id=config_id, redact=1) }}"><span class="badge bg-warning text-dark">Redacted Config</span></a></div>
+        </div>
+        <div class="col-sm-2">
+            <div><a href="{{ url_for('indi_allsky.config_restore_view') }}"><span class="badge bg-danger text-dark">Config Restore</span></a></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.BACKUP_DB_PERIOD_DAYS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.BACKUP_DB_PERIOD_DAYS(class='form-control bg-secondary') }}
+            <div id="BACKUP_DB_PERIOD_DAYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>The database will be automatically backed based on this setting (0 is disabled)</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Only valid for SQLite</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_EXPIRE_DAYS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_EXPIRE_DAYS(class='form-control bg-secondary') }}
+            <div id="IMAGE_EXPIRE_DAYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Maximum age of original image files before deletion.  Affects timelapse and panorama images</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_RAW_EXPIRE_DAYS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_RAW_EXPIRE_DAYS(class='form-control bg-secondary') }}
+            <div id="IMAGE_RAW_EXPIRE_DAYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FITS_EXPIRE_DAYS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FITS_EXPIRE_DAYS(class='form-control bg-secondary') }}
+            <div id="IMAGE_FITS_EXPIRE_DAYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE_EXPIRE_DAYS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE_EXPIRE_DAYS(class='form-control bg-secondary') }}
+            <div id="TIMELAPSE_EXPIRE_DAYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Maximum age of timelapse, keogram, and star trails before deletion</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE_OVERWRITE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.TIMELAPSE_OVERWRITE(class='form-check-input') }}
+                <div id="TIMELAPSE_OVERWRITE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>If a timelapse already exists for a given time, this setting will overwrite the existing entry instead of stopping</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.IMAGE_FOLDER(class='form-control bg-secondary') }}
+            <div id="IMAGE_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">
+            <div>Directory to store timelapse images</div>
+            <div>Default: /var/www/html/allsky/images</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> If you change this setting, please re-run setup.sh to update the web server config</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.VARLIB_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.VARLIB_FOLDER(class='form-control bg-secondary') }}
+            <div id="VARLIB_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">
+            <div>Directory to store persistent data</div>
+            <div>Default: /var/lib/indi-allsky</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> If you change this setting, please re-run setup.sh to update permissions</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.WEB_STATUS_TEMPLATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.WEB_STATUS_TEMPLATE(class='form-control bg-secondary', rows='12') }}
+            <div id="WEB_STATUS_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">
+            <div>HTML is permitted</div>
+            <div><a href="https://docs.python.org/3/library/string.html#formatspec" class="text-decoration-none link-info" target="_blank">Python format syntax</a></div>
+            <div><a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" class="text-decoration-none link-info" target="_blank">Python datetime format codes</a></div>
+            <div>Available variables: <pre>status, latitude, longitude, elevation, sidereal_time, mode,<br>sun_alt, sun_dir, moon_alt, moon_dir, moon_phase_str,<br>moon_glyph, moon_phase, moon_cycle_percent, smoke_rating,<br>smoke_rating_status, kpindex, kpindex_rating, kpindex_trend,<br>kpindex_status, ovation_max, ovation_max_status,<br>owner, location, lens_name, alt, az,<br>camera_name, camera_friendly_name</pre></div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Web-Status-Configuration" class="text-decoration-none link-info" target="_blank">Web Status Wiki</a></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.WEB_EXTRA_TEXT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.WEB_EXTRA_TEXT(class='form-control bg-secondary') }}
+            <div id="WEB_EXTRA_TEXT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">File containing extra text to be included in info box</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_1.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.CHARTS__CUSTOM_SLOT_1(class='form-select bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div>Slot to chart on charts view</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_1_MIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_1_MIN(class='form-control bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_1_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Chart minimum value</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_2.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.CHARTS__CUSTOM_SLOT_2(class='form-select bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Changing these settings will require a restart/reload</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_2_MIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_2_MIN(class='form-control bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_2_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Chart minimum value</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_3.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.CHARTS__CUSTOM_SLOT_3(class='form-select bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_3-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_3_MIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_3_MIN(class='form-control bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_3_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Chart minimum value</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_4.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.CHARTS__CUSTOM_SLOT_4(class='form-select bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_4-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_4_MIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_4_MIN(class='form-control bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_4_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Chart minimum value</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_5.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.CHARTS__CUSTOM_SLOT_5(class='form-select bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_5-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_5_MIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_5_MIN(class='form-control bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_5_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Chart minimum value</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_6.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.CHARTS__CUSTOM_SLOT_6(class='form-select bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_6-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_6_MIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_6_MIN(class='form-control bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_6_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Chart minimum value</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_7.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.CHARTS__CUSTOM_SLOT_7(class='form-select bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_7-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_7_MIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_7_MIN(class='form-control bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_7_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Chart minimum value</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_8.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.CHARTS__CUSTOM_SLOT_8(class='form-select bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_8-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_8_MIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_8_MIN(class='form-control bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_8_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Chart minimum value</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_9.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.CHARTS__CUSTOM_SLOT_9(class='form-select bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_9-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_9_MIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_9_MIN(class='form-control bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_9_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Chart minimum value</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.WEB_NONLOCAL_IMAGES.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.WEB_NONLOCAL_IMAGES(class='form-check-input') }}
+                <div id="WEB_NONLOCAL_IMAGES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Changing these settings will require a restart/reload</div>
+            <div class="col-sm-8">Enable serving images/videos exclusively from non-local sources (S3, etc)</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.WEB_LOCAL_IMAGES_ADMIN.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.WEB_LOCAL_IMAGES_ADMIN(class='form-check-input') }}
+                <div id="WEB_LOCAL_IMAGES_ADMIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Serve images/videos locally when coming from an admin network</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.HEALTHCHECK__DISK_USAGE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.HEALTHCHECK__DISK_USAGE(class='form-control bg-secondary') }}
+            <div id="HEALTHCHECK__DISK_USAGE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Percentage disk usage to issue a warning</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.HEALTHCHECK__SWAP_USAGE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.HEALTHCHECK__SWAP_USAGE(class='form-control bg-secondary') }}
+            <div id="HEALTHCHECK__SWAP_USAGE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Percentage swap usage to issue a warning</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.WEBSITE__TITLE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.WEBSITE__TITLE(class='form-control bg-secondary') }}
+            <div id="WEBSITE__TITLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Page title prefix</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ADMIN_NETWORKS_FLASK.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.ADMIN_NETWORKS_FLASK(class='form-control text-secondary bg-dark', rows='10') }}
+            <div id="ADMIN_NETWORKS_FLASK-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div>Networks which administrative requests have to originate</div>
+            <div>Local interface subnets are automatically added to this list</div>
+            <div>(Additions may be made in /etc/indi-allsky/flask.json)</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ENCRYPT_PASSWORDS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.ENCRYPT_PASSWORDS(class='form-check-input') }}
+                <div id="ENCRYPT_PASSWORDS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Encrypt passwords in the database</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Not recommended unless absolutely necessary</div>
+        </div>
+    </div>
+
+</div><!-- end admin tab -->

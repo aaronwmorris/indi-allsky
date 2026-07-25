@@ -1,0 +1,147 @@
+<div class="tab-pane fade" id="nav-mqtt" role="tabpanel" aria-labelledby="nav-mqtt-tab">
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.MQTTPUBLISH__ENABLE(class='form-check-input') }}
+                <div id="MQTTPUBLISH__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/MQTT-Broker-Publishing" class="text-decoration-none link-info" target="_blank">MQTT Broker Publishing Wiki</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__HOST.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.MQTTPUBLISH__HOST(class='form-control bg-secondary') }}
+            <div id="MQTTPUBLISH__HOST-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT hostname</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__TRANSPORT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.MQTTPUBLISH__TRANSPORT(class='form-select bg-secondary') }}
+            <div id="MQTTPUBLISH__TRANSPORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT Transport</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__PROTOCOL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.MQTTPUBLISH__PROTOCOL(class='form-select bg-secondary') }}
+            <div id="MQTTPUBLISH__PROTOCOL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT Protocol</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__PORT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.MQTTPUBLISH__PORT(class='form-control bg-secondary') }}
+            <div id="MQTTPUBLISH__PORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT port - 8883 = TLS, 1883 = standard</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__USERNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.MQTTPUBLISH__USERNAME(class='form-control bg-secondary') }}
+            <div id="MQTTPUBLISH__USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT Username</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__PASSWORD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.MQTTPUBLISH__PASSWORD(class='form-control bg-secondary') }}
+            <div id="MQTTPUBLISH__PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT Password</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__BASE_TOPIC.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.MQTTPUBLISH__BASE_TOPIC(class='form-control bg-secondary') }}
+            <div id="MQTTPUBLISH__BASE_TOPIC-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT Base Topic</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__QOS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.MQTTPUBLISH__QOS(class='form-control bg-secondary') }}
+            <div id="MQTTPUBLISH__QOS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT QoS - 0 (default), 1, or 2</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__TLS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.MQTTPUBLISH__TLS(class='form-check-input') }}
+                <div id="MQTTPUBLISH__TLS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Use TLS/SSL for MQTT connections</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__CERT_BYPASS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.MQTTPUBLISH__CERT_BYPASS(class='form-check-input') }}
+                <div id="MQTTPUBLISH__CERT_BYPASS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Bypass certificate validation</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__PUBLISH_IMAGE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.MQTTPUBLISH__PUBLISH_IMAGE(class='form-check-input') }}
+                <div id="MQTTPUBLISH__PUBLISH_IMAGE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+</div><!-- end filetransfer tab -->
