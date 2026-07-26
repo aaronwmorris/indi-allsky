@@ -104,3 +104,17 @@
     font-size: 0.75rem !important;
     opacity: 0.7 !important;
 }
+
+/* Interactive Accent Hover Utility for Buttons */
+.tw\:btn-accent-hover,
+.tw-btn-accent-hover,
+.btn-accent-hover {
+    transition: all 0.2s ease !important;
+}
+.tw\:btn-accent-hover:hover,
+.tw-btn-accent-hover:hover,
+.btn-accent-hover:hover {
+    background-color: var(--color-accent) !important;
+    color: var(--color-accent-content, #ffffff) !important;
+    border-color: var(--color-accent) !important;
+}

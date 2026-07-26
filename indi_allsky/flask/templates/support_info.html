@@ -11,47 +11,79 @@ var camera_id = {{ camera_id }};
 {% endblock %}
 
 {% block content %}
-<div class="tw:w-full tw:space-y-6 tw:p-2">
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6">
 
-    <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3 tw:pb-2">
-        
-        <button type="button" 
-                class="tw:btn tw:btn-primary tw:btn-sm  tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider copy-clipboard" 
-                data-clipboard-target="#support_info">
-            Copy Support Info<br>to Clipboard
-        </button>
+    <!-- Actions Container Card -->
+    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+        <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-6">
+            
+            <!-- Primary Action Bar -->
+            <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
+                <button type="button" 
+                        class="tw:btn tw:btn-primary tw:btn-sm tw:h-10 tw:font-bold tw:uppercase tw:tracking-wider tw:gap-2 copy-clipboard" 
+                        data-clipboard-target="#support_info">
+                    <i class="tw:icon-[lucide--copy] tw:w-4 tw:h-4"></i>
+                    Copy to Clipboard
+                </button>
 
-        <button type="button" id="dl_support" 
-                class="tw:btn tw:btn-info tw:btn-sm  tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-info-content">
-            Support Info<br>Download
-        </button>
+                <button type="button" id="dl_support" 
+                        class="tw:btn tw:btn-neutral tw:btn-accent-hover tw:bg-base-300 tw:btn-sm tw:h-10 tw:font-bold tw:uppercase tw:tracking-wider tw:gap-2">
+                    <i class="tw:icon-[lucide--download] tw:w-4 tw:h-4"></i>
+                    Download Support Info
+                </button>
 
-        <a href="https://github.com/aaronwmorris/indi-allsky/issues" target="_blank"
-           class="tw:btn tw:btn-error tw:btn-sm  tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider">
-            indi-allsky<br>GitHub Issues
-        </a>
+                <a href="https://github.com/aaronwmorris/indi-allsky/issues" target="_blank"
+                   class="tw:btn tw:btn-accent tw:btn-sm tw:h-10 tw:font-bold tw:uppercase tw:tracking-wider tw:gap-2">
+                    <i class="tw:icon-[lucide--external-link] tw:w-4 tw:h-4"></i>
+                    GitHub Issues
+                </a>
 
-        <div id="loader_support" class="tw:hidden tw:ml-4">
-            <span class="tw:loading tw:loading-spinner tw:loading-md tw:text-info"></span>
-        </div>
-    </div>
+                <div id="loader_support" class="tw:hidden tw:ml-2">
+                    <span class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary"></span>
+                </div>
+            </div>
 
-    <div class="tw:grid tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-3">
-        <a href="{{ url_for('indi_allsky.log_download_view') }}" class="tw:btn tw:btn-sm tw:btn-success tw:btn-outline  tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider">Capture Log</a>
-        <a href="{{ url_for('indi_allsky.log_webapp_download_view') }}" class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-outline  tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider">Webapp Log</a>
-        <a href="{{ url_for('indi_allsky.log_syslog_download_view') }}" class="tw:btn tw:btn-sm tw:btn-primary tw:btn-outline  tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider">OS System Log</a>
-        <a href="{{ url_for('indi_allsky.log_kern_download_view') }}" class="tw:btn tw:btn-sm tw:btn-warning tw:btn-outline  tw:h-12 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider">Kernel Log</a>
-    </div>
+            <div class="tw:divider tw:my-0"></div>
 
-    <div class="tw:text-[11px] tw:font-medium tw:text-base-content/50 tw:px-1">
-        Support info can be pasted directly into an issue.
-    </div>
+            <!-- Log Download Section -->
+            <div class="tw:flex tw:flex-col tw:gap-3">
+                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Individual System Logs</span>
+                <div class="tw:grid tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-3">
+                    <a href="{{ url_for('indi_allsky.log_download_view') }}" 
+                       class="tw:btn tw:btn-sm tw:btn-accent-hover tw:h-11 tw:bg-base-300/80 tw:border tw:border-base-300 tw:font-bold tw:uppercase tw:tracking-wider tw:justify-start tw:px-4 tw:gap-3">
+                        <i class="tw:icon-[lucide--camera] tw:w-4 tw:h-4 tw:text-success"></i>
+                        <span>Capture Log</span>
+                    </a>
+                    <a href="{{ url_for('indi_allsky.log_webapp_download_view') }}" 
+                       class="tw:btn tw:btn-sm tw:btn-accent-hover tw:h-11 tw:bg-base-300/80 tw:border tw:border-base-300 tw:font-bold tw:uppercase tw:tracking-wider tw:justify-start tw:px-4 tw:gap-3">
+                        <i class="tw:icon-[lucide--globe] tw:w-4 tw:h-4 tw:text-info"></i>
+                        <span>Webapp Log</span>
+                    </a>
+                    <a href="{{ url_for('indi_allsky.log_syslog_download_view') }}" 
+                       class="tw:btn tw:btn-sm tw:btn-accent-hover tw:h-11 tw:bg-base-300/80 tw:border tw:border-base-300 tw:font-bold tw:uppercase tw:tracking-wider tw:justify-start tw:px-4 tw:gap-3">
+                        <i class="tw:icon-[lucide--cpu] tw:w-4 tw:h-4 tw:text-warning"></i>
+                        <span>OS System Log</span>
+                    </a>
+                    <a href="{{ url_for('indi_allsky.log_kern_download_view') }}" 
+                       class="tw:btn tw:btn-sm tw:btn-accent-hover tw:h-11 tw:bg-base-300/80 tw:border tw:border-base-300 tw:font-bold tw:uppercase tw:tracking-wider tw:justify-start tw:px-4 tw:gap-3">
+                        <i class="tw:icon-[lucide--terminal] tw:w-4 tw:h-4 tw:text-error"></i>
+                        <span>Kernel Log</span>
+                    </a>
+                </div>
+            </div>
 
-    <div class="tw:card tw:bg-base-300 tw:border tw:border-base-300 tw:shadow-inner tw:rounded-[var(--radius-box)] tw:overflow-hidden">
-        <div class="tw:card-body tw:p-0">
-            <textarea id="support_info" 
-                      class="tw:w-full tw:h-[600px] tw:bg-neutral-800 tw:text-neutral-200 tw:font-mono tw:text-[11px] tw:p-4 tw:resize-none tw:border-none tw:focus:outline-none" 
-                      readonly>Loading...</textarea>
+            <div class="tw:alert tw:alert-info tw:py-3 tw:text-xs tw:rounded-[var(--radius-box)]">
+                <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
+                <span>Support info below can be copied directly into GitHub issue reports for rapid troubleshooting.</span>
+            </div>
+
+            <!-- Log Viewer Container -->
+            <div class="tw:bg-base-300/40 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-2">
+                <textarea id="support_info" 
+                          class="tw:w-full tw:h-[550px] tw:bg-base-300 tw:text-base-content tw:font-mono tw:text-xs tw:p-4 tw:rounded-[var(--radius-box)] tw:resize-none tw:border-none tw:focus:outline-none" 
+                          readonly>Loading...</textarea>
+            </div>
+
         </div>
     </div>
 

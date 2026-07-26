@@ -68,7 +68,7 @@ var youtube__enable = {{ youtube__enable }};
     </form>
 
     <div class="tw:w-full">
-        <hr class="tw:border-base-content/10">
+        <hr class="tw:border-base-300">
     </div>
 
     <div id="videos_div" class="tw:w-full tw:grow tw:flex tw:flex-col tw:gap-4">
@@ -130,7 +130,7 @@ function populate_videos(video_list) {
 
     video_list.forEach(item => {
         var row_div = $('<div />', {
-            'class' : "tw:grid tw:grid-cols-1 md:tw:grid-cols-12 tw:gap-4 tw:p-4 tw:bg-base-200 tw:border tw:border-base-content/5 tw:rounded-[var(--radius-box)] tw:items-start",
+            'class' : "tw:grid tw:grid-cols-1 md:tw:grid-cols-12 tw:gap-4 tw:p-4 tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:items-start",
         });
 
 
@@ -197,7 +197,7 @@ function populate_videos(video_list) {
 
         if (item['night']) {
             if (item['startrail'] != 'None') {
-                var st_content_div = $('<div />', { 'class' : "tw:relative tw:group tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:border tw:border-base-content/10 tw:bg-neutral-950" }).appendTo(startrail_div);
+                var st_content_div = $('<div />', { 'class' : "tw:relative tw:group tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:border tw:border-base-300 tw:bg-neutral-950" }).appendTo(startrail_div);
                 
                 var st_a = $('<a />', {
                     'target' : "_blank",
@@ -252,7 +252,7 @@ function populate_videos(video_list) {
         }).appendTo(row_div);
 
 
-        var k_content_div = $('<div />', { 'class' : "tw:relative tw:group tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:border tw:border-base-content/10 tw:bg-neutral-950 tw:aspect-[21/9]" }).appendTo(keogram_div);
+        var k_content_div = $('<div />', { 'class' : "tw:relative tw:group tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:border tw:border-base-300 tw:bg-neutral-950 tw:aspect-[21/9]" }).appendTo(keogram_div);
 
         var k_a = $('<a />', {
             'href'   : "{{ url_for('indi_allsky.timelapse_video_view')}}?id=" + item['id'],

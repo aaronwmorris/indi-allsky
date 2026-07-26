@@ -417,11 +417,7 @@ $( document ).ready(function() {
 <div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-6 astropanel-wrapper">
 
     <!-- Header Area -->
-    <div class="tw:w-full tw:bg-base-200 tw:p-5 tw:rounded-[var(--radius-box)] tw:flex tw:items-center tw:justify-between tw:border tw:border-base-300">
-        <div>
-            <h1 class="tw:text-lg tw:font-black tw:uppercase tw:tracking-[0.2em] tw:text-base-content tw:m-0">Astropanel</h1>
-            <p class="tw:text-[11px] tw:text-base-content/40 tw:mt-1 tw:font-bold tw:uppercase">Celestial Tracking Intelligence</p>
-        </div>
+    <div class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 shadow-sm tw:flex tw:items-center tw:justify-between">
         <div class="tw:flex tw:items-center tw:gap-3">
             <span class="tw:text-[10px] tw:font-mono tw:text-base-content/30 tw:uppercase">Live Telemetry</span>
             <span id="loader_data" class="loading loading-spinner loading-xs tw:text-primary" style="display: none;"></span>
@@ -429,7 +425,7 @@ $( document ).ready(function() {
     </div>
 
     <!-- Main Navigation Tabs -->
-    <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:shadow-sm">
+    <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm">
         <button type="button" class="astropanel-tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold" data-target="tab-polaris">Polar Finder</button>
         <button type="button" class="astropanel-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold" data-target="tab-moon">Moon</button>
         <button type="button" class="astropanel-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold" data-target="tab-sun">Sun</button>

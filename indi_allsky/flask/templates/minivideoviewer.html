@@ -51,7 +51,7 @@ var youtube__enable = {{ youtube__enable }};
     </form>
 
     <div class="tw:w-full">
-        <hr class="tw:border-base-content/10">
+        <hr class="tw:border-base-300">
     </div>
 
     <div id="videos_div" class="tw:w-full tw:grow tw:flex tw:flex-col tw:gap-4">
@@ -112,7 +112,7 @@ function populate_videos(video_list) {
 
     video_list.forEach(item => {
         var row_div = $('<div />', {
-            'class' : "tw:grid tw:grid-cols-1 md:tw:grid-cols-12 tw:gap-4 tw:p-4 tw:bg-base-200 tw:border tw:border-base-content/5 tw:rounded-[var(--radius-box)] tw:items-center",
+            'class' : "tw:grid tw:grid-cols-1 md:tw:grid-cols-12 tw:gap-4 tw:p-4 tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:items-center",
         });
 
 
@@ -149,7 +149,7 @@ function populate_videos(video_list) {
             'href'   : "{{ url_for('indi_allsky.mini_timelapse_video_view')}}?id=" + item['id'],
             'target' : "_blank",
             'rel'    : "noopener noreferrer",
-            'class'  : "tw:group tw:relative tw:block tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:border tw:border-base-content/10 tw:aspect-video tw:bg-neutral-950",
+            'class'  : "tw:group tw:relative tw:block tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:border tw:border-base-300 tw:aspect-video tw:bg-neutral-950",
         }).appendTo(minivideo_div);
 
         $('<img />', {

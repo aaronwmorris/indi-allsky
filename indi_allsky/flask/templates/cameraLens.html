@@ -11,14 +11,14 @@ var camera_id = {{ camera_id }};
 {% block content %}
 <div class="tw:w-full tw:p-4 tw:space-y-6">
 
-    <div class="tw:alert tw:alert-info tw:shadow-sm tw:rounded-[var(--radius-box)]">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="tw:stroke-current tw:shrink-0 tw:w-6 tw:h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-        <span class="tw:text-xs">The indi-allsky service requires a reload after parameter changes. Ensure the camera database entry is updated.</span>
+    <div class="tw:alert tw:alert-info tw:py-3 tw:text-xs tw:rounded-[var(--radius-box)] shadow-sm">
+        <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
+        <span>The indi-allsky service requires a reload after parameter changes. Ensure the camera database entry is updated.</span>
     </div>
 
     <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-6">
         
-        <div class="tw:card tw:bg-base-200 tw:shadow-sm">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-5">
                 <h2 class="tw:card-title tw:text-xs tw:uppercase tw:tracking-widest tw:mb-4">Camera Specs</h2>
                 <div class="tw:space-y-3">
@@ -32,7 +32,7 @@ var camera_id = {{ camera_id }};
             </div>
         </div>
 
-        <div class="tw:card tw:bg-base-200 tw:shadow-sm">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-5">
                 <h2 class="tw:card-title tw:text-xs tw:uppercase tw:tracking-widest tw:mb-4">Lens Configuration</h2>
                 <div class="tw:space-y-3">
@@ -46,7 +46,7 @@ var camera_id = {{ camera_id }};
             </div>
         </div>
 
-        <div class="tw:card tw:bg-base-200 tw:shadow-sm">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-5">
                 <h2 class="tw:card-title tw:text-xs tw:uppercase tw:tracking-widest tw:mb-4">Optical Math</h2>
                 <div class="tw:space-y-3">

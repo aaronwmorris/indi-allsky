@@ -36,7 +36,7 @@ var pin_states = {{ pin_states | tojson }};
                 <div class="tw:flex tw:items-center tw:justify-between tw:bg-base-300 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                     <span class="tw:font-mono tw:text-sm tw:font-bold">Pin {{ pin_names[i] }}</span>
                     <button id="pin-{{ i+1 }}-button" 
-                            class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-disabled  tw:w-20">
+                            class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-accent-hover tw:btn-disabled  tw:w-20">
                         N/A
                     </button>
                 </div>

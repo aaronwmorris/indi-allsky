@@ -76,7 +76,7 @@ function closeFullscreen() {
 <div class="tw:container tw:h-full tw:mx-auto tw:flex tw:flex-col tw:gap-4">
 
     <!-- Form Control Toolbar -->
-    <div class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:shadow-md">
+    <div class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-md">
         <form id="form_fits_viewer" onSubmit="return false;" class="tw:flex tw:flex-col tw:gap-4">
             {{ form_fits_viewer.csrf_token }}
             <div class="tw:text-error tw:text-sm tw:my-1 tw:font-semibold" id="csrf_token-error"></div>
@@ -141,7 +141,7 @@ function closeFullscreen() {
 
     <!-- Shortcut Hint Banner -->
     <div class="tw:w-full tw:flex tw:justify-center">
-        <div class="tw:badge tw:badge-outline tw:text-[11px] tw:font-medium tw:text-base-content/60 tw:py-3 tw:px-4 tw:gap-1.5 tw:border-base-content/10 tw:bg-base-200/50">
+        <div class="tw:badge tw:badge-outline tw:text-[11px] tw:font-medium tw:text-base-content/60 tw:py-3 tw:px-4 tw:gap-1.5 tw:border-base-300 tw:bg-base-200/50">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="tw:w-3.5 tw:h-3.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 10.5h18M3 14.25h18M3 6.75h18M3 18h18" />
             </svg>
@@ -150,7 +150,7 @@ function closeFullscreen() {
     </div>
 
     <!-- Image Viewer Card -->
-    <div class="tw:flex-1 tw:bg-base-300 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:shadow-inner tw:flex tw:items-center tw:justify-center tw:overflow-hidden tw:min-h-[55vh] tw:relative">
+    <div class="tw:flex-1 tw:bg-base-300 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-inner tw:flex tw:items-center tw:justify-center tw:overflow-hidden tw:min-h-[55vh] tw:relative">
         <img id="fits-image" 
              class="tw:mx-auto tw:max-h-[65vh] tw:max-w-full tw:object-contain tw:rounded-[var(--radius-box)] tw:shadow-2xl tw:cursor-zoom-in" 
              alt="FITS Capture View"

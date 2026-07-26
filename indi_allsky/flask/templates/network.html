@@ -11,30 +11,31 @@ var camera_id = {{ camera_id }};
 
 {% block content %}
 <div class="tw:p-4 tw:flex tw:flex-col tw:gap-6">
+
     <form id="form_connections" onSubmit="return false;" autocomplete="off" class="tw:flex tw:flex-col tw:gap-6">
         
         <!-- Global Warnings -->
         <div class="tw:flex tw:flex-col tw:gap-2">
             {% if docker %}
-            <div class="tw:alert tw:alert-warning tw:py-2 tw:text-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-5 tw:w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <div class="tw:alert tw:alert-warning tw:py-3 tw:text-xs tw:rounded-[var(--radius-box)]">
+                <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4"></i>
                 <span>Containerized environment detected. Network controls will not function.</span>
             </div>
             {% endif %}
 
             {% if not nm_installed %}
-            <div class="tw:alert tw:alert-warning tw:py-2 tw:text-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-5 tw:w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <div class="tw:alert tw:alert-warning tw:py-3 tw:text-xs tw:rounded-[var(--radius-box)]">
+                <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4"></i>
                 <span>Network Manager is not available.</span>
             </div>
             {% endif %}
         </div>
 
-        <!-- Prominent Navigation Tabs -->
-        <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:shadow-md">
+        <!-- Navigation Tab Bar -->
+        <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm">
             <button type="button" class="net-tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-connections">Connections</button>
-            <button type="button" class="net-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-wifi">Wi-Fi</button>
-            <button type="button" class="net-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-hotspot">Hotspot</button>
+            <button type="button" class="net-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" data-target="tab-wifi">Wi-Fi</button>
+            <button type="button" class="net-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" data-target="tab-hotspot">Hotspot</button>
         </div>
 
         <div class="tw:w-full tw:mt-4">
@@ -55,7 +56,7 @@ var camera_id = {{ camera_id }};
                                 </div>
 
                                 <div class="tw:alert tw:alert-warning tw:py-4 tw:text-xs">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-5 tw:w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                    <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
                                     <span><b>Warning:</b> Use care when deactivating connections. If you deactivate the primary connection which is used for management, you will lose access to the web interface. Power cycle to reactivate.</span>
                                 </div>
                             </div>
@@ -71,14 +72,14 @@ var camera_id = {{ camera_id }};
                                 
                                 <div class="tw:flex tw:flex-wrap tw:gap-2 tw:my-2">
                                     <button id="autostart-button" class="tw:btn tw:btn-info tw:btn-sm tw:flex-1 tw:h-auto tw:py-2">Enable<br>Auto-start</button>
-                                    <button id="no-autostart-button" class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:h-auto tw:py-2">Disable<br>Auto-start</button>
+                                    <button id="no-autostart-button" class="tw:btn tw:btn-neutral tw:btn-accent-hover tw:bg-base-300 tw:btn-sm tw:flex-1 tw:h-auto tw:py-2">Disable<br>Auto-start</button>
                                 </div>
 
                                 <div class="tw:divider tw:my-0"></div>
 
                                 <div class="tw:flex tw:flex-wrap tw:gap-2 tw:my-2">
                                     <button id="incpriority-button" class="tw:btn tw:btn-primary tw:btn-sm tw:flex-1">+10 priority</button>
-                                    <button id="decpriority-button" class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1">-10 priority</button>
+                                    <button id="decpriority-button" class="tw:btn tw:btn-neutral tw:btn-accent-hover tw:bg-base-300 tw:btn-sm tw:flex-1">-10 priority</button>
                                 </div>
 
                                 <div class="tw:divider tw:my-0"></div>
@@ -161,7 +162,7 @@ var camera_id = {{ camera_id }};
                             </div>
 
                             <div class="tw:alert tw:alert-info tw:py-3 tw:text-xs">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-5 tw:w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
                                 <span>Powersave is disabled by default on new WiFi connections.</span>
                             </div>
                         </div>

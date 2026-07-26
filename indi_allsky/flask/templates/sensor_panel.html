@@ -79,7 +79,7 @@ $(document).ready(function() {
 
 <div class="tw:container tw:h-full tw:mx-auto tw:flex tw:flex-col tw:gap-6">
 
-    <div class="tw:w-full tw:bg-base-200 tw:p-5 tw:rounded-[var(--radius-box)] tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4 tw:border tw:border-base-content/10">
+    <div class="tw:w-full tw:bg-base-200 tw:p-5 tw:rounded-[var(--radius-box)] tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4 tw:border tw:border-base-300">
         <div class="tw:flex tw:items-center tw:gap-3">
             <div class="tw:p-2 tw:bg-primary/10 tw:text-primary tw:rounded-[var(--radius-box)]">
                 <i class="tw:icon-[lucide--gauge] tw:w-5 tw:h-5"></i>
@@ -108,12 +108,12 @@ $(document).ready(function() {
 
         <div>
             {% if show_all %}
-                <a class="tw:btn tw:btn-outline tw:btn-info tw:btn-sm tw:h-10 tw:text-xs tw:font-bold tw:tracking-wide tw:uppercase tw:gap-2 tw:no-underline tw:px-4" href="{{ url_for('indi_allsky.sensor_panel_view') }}">
+                <a class="tw:btn tw:btn-neutral tw:btn-accent-hover tw:btn-sm tw:h-10 tw:text-xs tw:font-bold tw:tracking-wide tw:uppercase tw:gap-2 tw:no-underline tw:px-4" href="{{ url_for('indi_allsky.sensor_panel_view') }}">
                     <i class="tw:icon-[lucide--filter-x] tw:w-4 tw:h-4"></i>
                     Show used only
                 </a>
             {% else %}
-                <a class="tw:btn tw:btn-outline tw:btn-info tw:btn-sm tw:h-10 tw:text-xs tw:font-bold tw:tracking-wide tw:uppercase tw:gap-2 tw:no-underline tw:px-4" href="{{ url_for('indi_allsky.sensor_panel_view', all=1) }}">
+                <a class="tw:btn tw:btn-neutral tw:btn-accent-hover tw:btn-sm tw:h-10 tw:text-xs tw:font-bold tw:tracking-wide tw:uppercase tw:gap-2 tw:no-underline tw:px-4" href="{{ url_for('indi_allsky.sensor_panel_view', all=1) }}">
                     <i class="tw:icon-[lucide--filter] tw:w-4 tw:h-4"></i>
                     Show all slots
                 </a>
@@ -123,15 +123,15 @@ $(document).ready(function() {
 
     <div class="allsky-workspace-grid tw:w-full tw:grow">
         
-        <div class="tw:flex tw:flex-col tw:bg-base-200 tw:border tw:border-base-content/10 tw:rounded-[var(--radius-box)] tw:overflow-hidden">
-            <div class="tw:bg-base-300 tw:px-4 tw:py-3.5 tw:border-b tw:border-base-content/10 tw:flex tw:items-center tw:gap-2">
+        <div class="tw:flex tw:flex-col tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm tw:overflow-hidden">
+            <div class="tw:bg-base-300 tw:px-4 tw:py-3.5 tw:border-b tw:border-base-300 tw:flex tw:items-center tw:gap-2">
                 <i class="tw:icon-[lucide--sliders] tw:w-4 tw:h-4 tw:text-primary"></i>
                 <h4 class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/90 tw:m-0">User sensor slots</h4>
             </div>
             <div class="tw:overflow-x-auto">
                 <table class="tw:table tw:table-xs tw:w-full tw:m-0">
                     <thead>
-                        <tr class="tw:border-b tw:border-base-content/10 tw:bg-base-300/30 tw:text-[10px] tw:uppercase tw:tracking-wider tw:text-base-content/60">
+                        <tr class="tw:border-b tw:border-base-300 tw:bg-base-300/30 tw:text-[10px] tw:uppercase tw:tracking-wider tw:text-base-content/60">
                             <th style="width: 120px;" class="tw:pl-4 tw:py-3 tw:font-bold">Slot</th>
                             <th class="tw:py-3 tw:font-bold">Label</th>
                             <th style="width: 160px;" class="tw:text-end tw:pr-4 tw:py-3 tw:font-bold">Value</th>
@@ -139,7 +139,7 @@ $(document).ready(function() {
                     </thead>
                     <tbody class="tw:divide-y tw:divide-base-content/5">
                         {% for r in user_rows %}
-                        <tr class="tw:border-base-content/5 hover:tw:bg-base-300/40 tw:transition-colors">
+                        <tr class="tw:border-base-300 hover:tw:bg-base-300/40 tw:transition-colors">
                             <td class="tw:text-xs tw:font-mono tw:text-base-content/60 tw:pl-4 tw:py-2.5">{{ r.slot }}</td>
                             <td class="tw:text-xs tw:font-semibold tw:text-base-content/90 tw:py-2.5">{{ r.label }}</td>
                             <td class="tw:text-end tw:pr-4 tw:text-xs tw:font-mono tw:font-bold tw:text-warning tw:py-2.5">
@@ -154,15 +154,15 @@ $(document).ready(function() {
             </div>
         </div>
 
-        <div class="tw:flex tw:flex-col tw:bg-base-200 tw:border tw:border-base-content/10 tw:rounded-[var(--radius-box)] tw:overflow-hidden">
-            <div class="tw:bg-base-300 tw:px-4 tw:py-3.5 tw:border-b tw:border-base-content/10 tw:flex tw:items-center tw:gap-2">
+        <div class="tw:flex tw:flex-col tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:overflow-hidden">
+            <div class="tw:bg-base-300 tw:px-4 tw:py-3.5 tw:border-b tw:border-base-300 tw:flex tw:items-center tw:gap-2">
                 <i class="tw:icon-[lucide--thermometer] tw:w-4 tw:h-4 tw:text-error"></i>
                 <h4 class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/90 tw:m-0">Temp sensor slots</h4>
             </div>
             <div class="tw:overflow-x-auto">
                 <table class="tw:table tw:table-xs tw:w-full tw:m-0">
                     <thead>
-                        <tr class="tw:border-b tw:border-base-content/10 tw:bg-base-300/30 tw:text-[10px] tw:uppercase tw:tracking-wider tw:text-base-content/60">
+                        <tr class="tw:border-b tw:border-base-300 tw:bg-base-300/30 tw:text-[10px] tw:uppercase tw:tracking-wider tw:text-base-content/60">
                             <th style="width: 120px;" class="tw:pl-4 tw:py-3 tw:font-bold">Slot</th>
                             <th class="tw:py-3 tw:font-bold">Label</th>
                             <th style="width: 160px;" class="tw:text-end tw:pr-4 tw:py-3 tw:font-bold">Value</th>
@@ -170,7 +170,7 @@ $(document).ready(function() {
                     </thead>
                     <tbody class="tw:divide-y tw:divide-base-content/5">
                         {% for r in temp_rows %}
-                        <tr class="tw:border-base-content/5 hover:tw:bg-base-300/40 tw:transition-colors">
+                        <tr class="tw:border-base-300 hover:tw:bg-base-300/40 tw:transition-colors">
                             <td class="tw:text-xs tw:font-mono tw:text-base-content/60 tw:pl-4 tw:py-2.5">{{ r.slot }}</td>
                             <td class="tw:text-xs tw:font-semibold tw:text-base-content/90 tw:py-2.5">{{ r.label }}</td>
                             <td class="tw:text-end tw:pr-4 tw:text-xs tw:font-mono tw:font-bold tw:text-warning tw:py-2.5">

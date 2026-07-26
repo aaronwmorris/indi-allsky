@@ -221,7 +221,7 @@ $( document ).ready(function() {
 <div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-4">
 
     <!-- Top Status Bar -->
-    <div class="tw:w-full tw:bg-base-200 tw:p-3.5 tw:px-5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:flex tw:items-center tw:justify-between">
+    <div class="tw:w-full tw:bg-base-200 tw:p-3.5 tw:px-5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:flex tw:items-center tw:justify-between">
         <div class="tw:flex tw:items-center tw:gap-3">
             <span class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary"></span>
             <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/70" id="status-message">Loading SQM metrics...</span>
@@ -236,7 +236,7 @@ $( document ).ready(function() {
     <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-3 tw:gap-4">
         
         <!-- Left: Image Viewer Canvas Card -->
-        <div class="lg:tw:col-span-2 tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:flex tw:flex-col tw:items-center tw:justify-center tw:min-h-[50vh] tw:relative">
+        <div class="lg:tw:col-span-2 tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:flex tw:flex-col tw:items-center tw:justify-center tw:min-h-[50vh] tw:relative">
             <canvas id="canvas" class="tw:rounded-[var(--radius-box)] tw:shadow-2xl tw:cursor-zoom-in tw:max-w-full"></canvas>
             <div class="tw:text-[10px] tw:text-base-content/40 tw:mt-3 tw:font-medium">
                 Click image to toggle fullscreen
@@ -247,13 +247,13 @@ $( document ).ready(function() {
         <div class="tw:flex tw:flex-col tw:gap-4">
             
             <!-- jSQM Card -->
-            <div class="tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:shadow-md tw:flex tw:flex-col tw:gap-3">
+            <div class="tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-md tw:flex tw:flex-col tw:gap-3">
                 <div class="tw:flex tw:items-center tw:justify-between">
                     <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">jSQM Quality Score</span>
                     <span class="tw:badge tw:badge-primary tw:badge-outline tw:font-semibold tw:text-[10px]">Index</span>
                 </div>
                 <div class="tw:text-3xl tw:font-black tw:tracking-tight tw:text-primary" id="val-jsqm-current">--</div>
-                <div class="tw:grid tw:grid-cols-3 tw:gap-2 tw:pt-2 tw:border-t tw:border-base-content/10 tw:text-center">
+                <div class="tw:grid tw:grid-cols-3 tw:gap-2 tw:pt-2 tw:border-t tw:border-base-300 tw:text-center">
                     <div class="tw:bg-base-100 tw:p-2 tw:rounded-[var(--radius-box)]">
                         <div class="tw:text-[10px] tw:text-base-content/50 tw:font-medium">Max</div>
                         <div class="tw:text-xs tw:font-bold tw:font-mono tw:mt-0.5" id="val-jsqm-max">--</div>
@@ -270,13 +270,13 @@ $( document ).ready(function() {
             </div>
 
             <!-- Stars Metrics Card -->
-            <div class="tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:shadow-md tw:flex tw:flex-col tw:gap-3">
+            <div class="tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-md tw:flex tw:flex-col tw:gap-3">
                 <div class="tw:flex tw:items-center tw:justify-between">
                     <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">Detected Stars</span>
                     <span class="tw:badge tw:badge-warning tw:badge-outline tw:font-semibold tw:text-[10px]">Count</span>
                 </div>
                 <div class="tw:text-3xl tw:font-black tw:tracking-tight tw:text-warning" id="val-stars-current">--</div>
-                <div class="tw:grid tw:grid-cols-3 tw:gap-2 tw:pt-2 tw:border-t tw:border-base-content/10 tw:text-center">
+                <div class="tw:grid tw:grid-cols-3 tw:gap-2 tw:pt-2 tw:border-t tw:border-base-300 tw:text-center">
                     <div class="tw:bg-base-100 tw:p-2 tw:rounded-[var(--radius-box)]">
                         <div class="tw:text-[10px] tw:text-base-content/50 tw:font-medium">Max</div>
                         <div class="tw:text-xs tw:font-bold tw:font-mono tw:mt-0.5" id="val-stars-max">--</div>
@@ -293,7 +293,7 @@ $( document ).ready(function() {
             </div>
 
             <!-- Camera SQM Card -->
-            <div id="card-camera-sqm" class="tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:shadow-md tw:flex tw:flex-col tw:gap-3" style="display: none;">
+            <div id="card-camera-sqm" class="tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-md tw:flex tw:flex-col tw:gap-3" style="display: none;">
                 <div class="tw:flex tw:items-center tw:justify-between">
                     <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">Camera SQM</span>
                     <span class="tw:badge tw:badge-info tw:badge-outline tw:font-semibold tw:text-[10px]">Sensor</span>
@@ -311,7 +311,7 @@ $( document ).ready(function() {
             </div>
 
             <!-- Device SQM Card -->
-            <div id="card-device-sqm" class="tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:shadow-md tw:flex tw:flex-col tw:gap-3" style="display: none;">
+            <div id="card-device-sqm" class="tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-md tw:flex tw:flex-col tw:gap-3" style="display: none;">
                 <div class="tw:flex tw:items-center tw:justify-between">
                     <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">Device SQM</span>
                     <span class="tw:badge tw:badge-success tw:badge-outline tw:font-semibold tw:text-[10px]">Hardware</span>

@@ -15,13 +15,13 @@ var camera_id = {{ camera_id }};
     <!-- Global Warnings -->
     {% if docker %}
     <div class="tw:alert tw:alert-warning tw:py-2 tw:text-sm">
-        <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-5 tw:w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+        <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
         <span>Containerized environment detected. Service and time controls will not function.</span>
     </div>
     {% endif %}
 
     <!-- Prominent Navigation Tabs -->
-    <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:shadow-md">
+    <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-md">
         <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-info">Information</button>
         <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-time">Time</button>
         <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-indiserver">INDI Drivers</button>
@@ -225,7 +225,7 @@ var camera_id = {{ camera_id }};
                                 <span class="tw:text-xs">Timezone</span><span class="tw:text-xs tw:font-bold">{{ timedate1_dict.Timezone }}</span>
                             </div>
                             <div class="tw:alert tw:alert-info tw:py-2 tw:text-[10px] tw:rounded-[var(--radius-box)]">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-4 tw:w-4" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
                                 <span>Note: RTC almost always reports False even when one is available.</span>
                             </div>
                         </div>
@@ -242,11 +242,11 @@ var camera_id = {{ camera_id }};
                     <!-- Warnings -->
                     <div class="tw:flex tw:flex-col tw:gap-2">
                         <div class="tw:alert tw:alert-error tw:py-3 tw:text-xs">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-5 tw:w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
                             <span><b>DANGER:</b> Changing the system time during operation can cause unpredictable behavior. It is recommended to restart both indiserver and indi-allsky.</span>
                         </div>
                         <div class="tw:alert tw:alert-warning tw:py-3 tw:text-xs">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-5 tw:w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
                             <span>Manually setting time will disable NTP time sync. Re-enable with <code>timedatectl set-ntp true</code>.</span>
                         </div>
                     </div>
@@ -290,7 +290,7 @@ var camera_id = {{ camera_id }};
                             </div>
                         </div>
                         <div class="tw:alert tw:alert-info tw:py-2 tw:text-[10px] tw:rounded-[var(--radius-box)]">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-4 tw:w-4" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
                             <span>Use modern labels such as <b>America/New_York</b>. Older specifications may not be supported.</span>
                         </div>
                         <div id="form_timezone_success-message" class="tw:alert tw:alert-success tw:py-2 tw:text-sm" style="display: none;"></div>
@@ -338,7 +338,7 @@ var camera_id = {{ camera_id }};
                             </div>
                             <div class="lg:tw:col-span-9">
                                 <div class="tw:alert tw:alert-warning tw:py-2 tw:text-[10px] tw:rounded-[var(--radius-box)]">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-4 tw:w-4" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                    <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
                                     <span>Warning: This will interrupt image capture if indi-allsky is operational.</span>
                                 </div>
                             </div>
@@ -441,7 +441,7 @@ var camera_id = {{ camera_id }};
                     </div>
 
                     <div class="tw:alert tw:alert-info tw:py-3 tw:mt-4 tw:text-xs">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:shrink-0 tw:h-5 tw:w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
                         <span>Services are activated at boot by their respective timers or sockets. Disabling a timer prevents the service from starting automatically.</span>
                     </div>
                 </div>
@@ -558,7 +558,7 @@ var camera_id = {{ camera_id }};
                     <!-- Danger Zone -->
                     <div class="tw:flex tw:flex-col tw:gap-4 tw:border tw:border-error/20 tw:p-6 tw:rounded-[var(--radius-box)] tw:bg-error/5">
                         <div class="tw:flex tw:items-center tw:gap-3 tw:text-error">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="tw:stroke-current tw:h-6 tw:w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
                             <span class="tw:text-lg tw:font-black tw:uppercase tw:tracking-widest">Danger Zone</span>
                         </div>
                         <p class="tw:text-xs tw:opacity-70">These actions are irreversible. Files will be permanently deleted from the system.</p>
