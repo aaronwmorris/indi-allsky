@@ -19,59 +19,64 @@
     text-decoration: line-through;
 }
 
-/* Dark mode overrides for Bootstrap elements on config page */
-[data-theme="dark"] .container,
-[data-theme="dark"] #form_config {
-    color: #e2e8f0;
+/* Universal Theme Overrides for Bootstrap Elements in Config */
+.container,
+#form_config {
+    color: var(--color-base-content, #e2e8f0);
 }
-[data-theme="dark"] #form_config label,
-[data-theme="dark"] #form_config td,
-[data-theme="dark"] #form_config th,
-[data-theme="dark"] #form_config p,
-[data-theme="dark"] #form_config .form-label,
-[data-theme="dark"] #form_config .col-form-label {
-    color: #e2e8f0 !important;
+#form_config label,
+#form_config td,
+#form_config th,
+#form_config p,
+#form_config .form-label,
+#form_config .col-form-label {
+    color: var(--color-base-content, #e2e8f0) !important;
 }
-[data-theme="dark"] #form_config .text-secondary,
-[data-theme="dark"] #form_config small {
-    color: #94a3b8 !important;
+#form_config .text-secondary,
+#form_config small,
+#form_config .form-text {
+    color: var(--color-base-content, #94a3b8) !important;
+    opacity: 0.75 !important;
 }
-[data-theme="dark"] #form_config .form-control,
-[data-theme="dark"] #form_config .form-select {
-    background-color: #1e293b !important;
-    color: #f8fafc !important;
-    border-color: #334155 !important;
+#form_config .form-control,
+#form_config .form-select {
+    background-color: var(--color-base-300, #1e293b) !important;
+    color: var(--color-base-content, #f8fafc) !important;
+    border: 1px solid rgba(128, 128, 128, 0.3) !important;
+    border-radius: var(--radius-field, 0.25rem) !important;
 }
-[data-theme="dark"] #form_config .form-control:focus,
-[data-theme="dark"] #form_config .form-select:focus {
-    background-color: #0f172a !important;
-    color: #ffffff !important;
-    border-color: #3b82f6 !important;
+#form_config .form-control:focus,
+#form_config .form-select:focus {
+    background-color: var(--color-base-100, #0f172a) !important;
+    color: var(--color-base-content, #ffffff) !important;
+    border-color: var(--color-primary, #3b82f6) !important;
     box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
 }
-[data-theme="dark"] .nav-tabs {
-    border-bottom-color: #334155 !important;
+.nav-tabs {
+    border-bottom-color: rgba(128, 128, 128, 0.3) !important;
 }
-[data-theme="dark"] .nav-tabs .nav-link {
-    border-color: #334155 !important;
-    color: #94a3b8 !important;
-    background-color: #1e293b !important;
+.nav-tabs .nav-link {
+    border-color: rgba(128, 128, 128, 0.3) !important;
+    color: var(--color-base-content, #94a3b8) !important;
+    background-color: var(--color-base-200, #1e293b) !important;
+    border-radius: var(--radius-selector, 0.5rem) !important;
 }
-[data-theme="dark"] .nav-tabs .nav-link.active {
-    color: #ffffff !important;
-    background-color: #0f172a !important;
-    border-color: #3b82f6 #334155 #0f172a #334155 !important;
+.nav-tabs .nav-link.active {
+    color: var(--color-primary, #3b82f6) !important;
+    background-color: var(--color-base-300, #0f172a) !important;
+    border-color: var(--color-primary, #3b82f6) !important;
+    font-weight: 700 !important;
 }
-[data-theme="dark"] #form_config .card,
-[data-theme="dark"] #form_config .accordion-item,
-[data-theme="dark"] #form_config .modal-content {
-    background-color: #1e293b !important;
-    border-color: #334155 !important;
-    color: #f8fafc !important;
+#form_config .card,
+#form_config .accordion-item,
+#form_config .modal-content {
+    background-color: var(--color-base-200, #1e293b) !important;
+    border-color: rgba(128, 128, 128, 0.3) !important;
+    color: var(--color-base-content, #f8fafc) !important;
 }
-[data-theme="dark"] #form_config .accordion-button {
-    background-color: #0f172a !important;
-    color: #f8fafc !important;
+#form_config .accordion-button {
+    background-color: var(--color-base-300, #0f172a) !important;
+    color: var(--color-base-content, #f8fafc) !important;
 }
 
 </style>
