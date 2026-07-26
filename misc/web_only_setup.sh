@@ -394,7 +394,9 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         sqlite3 \
         polkitd \
         libsystemd-dev \
-        dbus-user-session
+        dbus-user-session \
+        nodejs \
+        npm
 
 
     if [ "$CPU_BITS" != "32" ]; then
@@ -491,7 +493,9 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         sqlite3 \
         polkitd \
         libsystemd-dev \
-        dbus-user-session
+        dbus-user-session \
+        nodejs \
+        npm
 
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
@@ -583,7 +587,9 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         sqlite3 \
         policykit-1 \
         libsystemd-dev \
-        dbus-user-session
+        dbus-user-session \
+        nodejs \
+        npm
 
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
@@ -675,7 +681,9 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         sqlite3 \
         polkitd \
         libsystemd-dev \
-        dbus-user-session
+        dbus-user-session \
+        nodejs \
+        npm
 
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
@@ -770,7 +778,9 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         sqlite3 \
         policykit-1 \
         libsystemd-dev \
-        dbus-user-session
+        dbus-user-session \
+        nodejs \
+        npm
 
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
@@ -865,7 +875,9 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         sqlite3 \
         policykit-1 \
         libsystemd-dev \
-        dbus-user-session
+        dbus-user-session \
+        nodejs \
+        npm
 
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
@@ -1084,6 +1096,11 @@ source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 
 pip3 install --upgrade pip setuptools wheel packaging
 pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
+
+
+echo "**** CSS compilation with Tailwind/daisyUI ****"
+npm install --no-fund --no-audit
+npm run build
 
 
 # create users systemd folder

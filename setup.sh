@@ -944,7 +944,9 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         dnsmasq-base \
         polkitd \
         libsystemd-dev \
-        dbus-user-session
+        dbus-user-session \
+        nodejs \
+        npm
 
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
@@ -1098,7 +1100,9 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         udisks2 \
         dnsmasq-base \
         policykit-1 \
-        dbus-user-session
+        dbus-user-session \
+        nodejs \
+        npm
 
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
@@ -1240,7 +1244,9 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
         i2c-tools \
         policykit-1 \
         libsystemd-dev \
-        dbus-user-session
+        dbus-user-session \
+        nodejs \
+        npm
 
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
@@ -1403,7 +1409,9 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         dnsmasq-base \
         polkitd \
         libsystemd-dev \
-        dbus-user-session
+        dbus-user-session \
+        nodejs \
+        npm
 
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
@@ -1578,7 +1586,9 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         dnsmasq-base \
         policykit-1 \
         libsystemd-dev \
-        dbus-user-session
+        dbus-user-session \
+        nodejs \
+        npm
 
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
@@ -1740,7 +1750,9 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         udisks2 \
         policykit-1 \
         libsystemd-dev \
-        dbus-user-session
+        dbus-user-session \
+        nodejs \
+        npm
 
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
