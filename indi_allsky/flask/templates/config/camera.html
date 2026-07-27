@@ -1,1173 +1,642 @@
-  <div class="tab-pane fade show active" id="nav-camera" role="tabpanel" aria-labelledby="nav-camera-tab">
+<div class="tab-pane fade show active" id="nav-camera" role="tabpanel" aria-labelledby="nav-camera-tab">
+    <div class="tw:flex tw:flex-col tw:gap-6">
+
+        <!-- Primary Camera Connection & Interface Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <div class="tw:flex tw:items-center tw:justify-between">
+                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Camera Interface & Server Details</span>
+                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Interfaces" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Camera Interfaces Wiki</a>
+                </div>
+
+                <!-- Camera Interface Selection -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAMERA_INTERFACE.label.text }}</span>
+                        <span class="tw:text-[10px] tw:text-base-content/40">Select primary capture interface</span>
+                    </div>
+                    <div class="md:tw:col-span-3 tw:flex tw:flex-col">
+                        {{ form_config.CAMERA_INTERFACE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="CAMERA_INTERFACE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- INDI Server, Port & Camera Name -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:py-3">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.INDI_SERVER.label.text }}</span>
+                        {{ form_config.INDI_SERVER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[10px] tw:text-base-content/40">Default: localhost</span>
+                        <div id="INDI_SERVER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.INDI_PORT.label.text }}</span>
+                        {{ form_config.INDI_PORT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[10px] tw:text-base-content/40">Default: 7624</span>
+                        <div id="INDI_PORT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.INDI_CAMERA_NAME.label.text }}</span>
+                        {{ form_config.INDI_CAMERA_NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[10px] tw:text-base-content/40">Blank for first detected camera</span>
+                        <div id="INDI_CAMERA_NAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_INTERFACE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.CAMERA_INTERFACE(class='form-select bg-secondary') }}
-            <div id="CAMERA_INTERFACE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <a href="{{ url_for('indi_allsky.camera_lens_view') }}" class="text-decoration-none link-info">
-                <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Interfaces" class="text-decoration-none link-info" target="_blank">Camera Interface Wiki</a></div>
-                <div><span class="badge rounded-pill bg-info text-dark">Note</span> The indi camera driver may be changed on the System page</div>
-            </a>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.INDI_SERVER.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.INDI_SERVER(class='form-control bg-secondary') }}
-            <div id="INDI_SERVER-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">INDI server hostname (default: localhost)</div>
-    </div>
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.INDI_PORT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.INDI_PORT(class='form-control bg-secondary') }}
-            <div id="INDI_PORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">INDI port (default: 7624)</div>
-    </div>
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.INDI_CAMERA_NAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_config.INDI_CAMERA_NAME(class='form-control bg-secondary') }}
-            <div id="INDI_CAMERA_NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7">
-            <div>Leave blank to select first detected camera</div>
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Do not use this field unless you know what you are doing</div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div><span class="badge rounded-pill bg-info text-dark">Info</span> A full service restart (not reload) is recommended when changing exposure controls</div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__EXPOSURE_CLASSNAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.CCD_CONFIG__EXPOSURE_CLASSNAME(class='form-select bg-secondary') }}
-            <div id="CCD_CONFIG__EXPOSURE_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Exposure-Mode" class="text-decoration-none link-info" target="_blank">Exposure Mode Wiki</a></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__AUTO_GAIN_LEVELS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__AUTO_GAIN_LEVELS(class='form-select bg-secondary') }}
-            <div id="CCD_CONFIG__AUTO_GAIN_LEVELS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> This value is only used with the Legacy Auto-Gain selection</div>
-            <div>Gain will be divided into even levels between min and max</div>
-        </div>
-    </div>
-
-    <hr>
-
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_EXPOSURE_MAX.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_EXPOSURE_MAX(class='form-control bg-secondary') }}
-            <div id="CCD_EXPOSURE_MAX-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Maximum Exposure permitted: <b>{{ "%0.1f" | format(camera_maxExposure | float) }}s</b></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_EXPOSURE_DEF.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_EXPOSURE_DEF(class='form-control bg-secondary') }}
-            <div id="CCD_EXPOSURE_DEF-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>0 = auto</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_EXPOSURE_MIN.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_EXPOSURE_MIN(class='form-control bg-secondary') }}
-            <div id="CCD_EXPOSURE_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Minimum Exposure permitted: <b>{{ "%0.6f" | format(camera_minExposure | float) }}s</b></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_EXPOSURE_MIN_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_EXPOSURE_MIN_DAY(class='form-control bg-secondary') }}
-            <div id="CCD_EXPOSURE_MIN_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">0 = auto</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.EXPOSURE_PERIOD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.EXPOSURE_PERIOD(class='form-control bg-secondary') }}
-            <div id="EXPOSURE_PERIOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Seconds between start of each frame (Night)</div>
-            <div>Setting this below the maximum exposure will cause each new frame to begin immediately after the last ends</div>
-            <div>It is not recommended to set this below 5.0</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.EXPOSURE_PERIOD_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.EXPOSURE_PERIOD_DAY(class='form-control bg-secondary') }}
-            <div id="EXPOSURE_PERIOD_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Seconds between start of each frame (Day)</div>
-            <div>It is not recommended to set this below 5.0</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_EXPOSURE_TIMEOUT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_EXPOSURE_TIMEOUT(class='form-control bg-secondary') }}
-            <div id="CCD_EXPOSURE_TIMEOUT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Maximum seconds to wait for an exposure to finish before aborting</div>
-        </div>
-    </div>
-
-
-    <hr>
-
-    <div><span class="badge rounded-pill bg-info text-dark">Note</span> A full service restart (not reload) is recommended when changing gain controls</div>
-    <div><span class="badge rounded-pill bg-info text-dark">Note </span> Many cameras will switch from analog to digital gain once the gain exceeds a certain value. For example, with ZWO cameras, you usually do not want to exceed gain 300</div>
-    <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Gain-Reference" class="text-decoration-none link-info" target="_blank">Camera Gain Reference</a></div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__NIGHT__GAIN.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__NIGHT__GAIN(class='form-control bg-secondary') }}
-            <div id="CCD_CONFIG__NIGHT__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Maximum Gain permitted: <b>{{ "%0.3f"|format(camera_maxGain | float) }}</b></div>
-        </div>
-    </div>
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__NIGHT__BINNING.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__NIGHT__BINNING(class='form-control bg-secondary') }}
-            <div id="CCD_CONFIG__NIGHT__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Min: <b>{{ camera_minBinning }}</b> - Max: <b>{{ camera_maxBinning }}</b></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__MOONMODE__GAIN.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__MOONMODE__GAIN(class='form-control bg-secondary') }}
-            <div id="CCD_CONFIG__MOONMODE__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__MOONMODE__BINNING.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__MOONMODE__BINNING(class='form-control bg-secondary') }}
-            <div id="CCD_CONFIG__MOONMODE__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__DAY__GAIN.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__DAY__GAIN(class='form-control bg-secondary') }}
-            <div id="CCD_CONFIG__DAY__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Minimum Gain permitted: <b>{{ "%0.3f"|format(camera_minGain | float) }}</b></div>
-        </div>
-    </div>
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__DAY__BINNING.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__DAY__BINNING(class='form-control bg-secondary') }}
-            <div id="CCD_CONFIG__DAY__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__EXPOSURE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__EXPOSURE(class='form-control bg-secondary') }}
-            <div id="CAMERA_SQM__EXPOSURE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Camera SQM settings are below</div>
-        </div>
-    </div>
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__GAIN.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__GAIN(class='form-control bg-secondary') }}
-            <div id="CAMERA_SQM__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Unity gain is recommended for SQM measurements</div>
-        </div>
-    </div>
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__BINNING.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__BINNING(class='form-control bg-secondary') }}
-            <div id="CAMERA_SQM__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__ENABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.CAMERA_SQM__ENABLE(class='form-check-input') }}
-                <div id="CAMERA_SQM__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>Take periodic images at a fixed exposure/gain for brightness/SQM measurements</div>
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/SQM-Sky-Brightness-Measurement" class="text-decoration-none link-info" target="_blank">SQM Wiki</a></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__ENABLE_DAY.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.CAMERA_SQM__ENABLE_DAY(class='form-check-input') }}
-                <div id="CAMERA_SQM__ENABLE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>DO NOT USE - Only for testing functionality</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__EXPOSURE_PERIOD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__EXPOSURE_PERIOD(class='form-control bg-secondary') }}
-            <div id="CAMERA_SQM__EXPOSURE_PERIOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>
-            </div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__MAGNITUDE_OFFSET.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__MAGNITUDE_OFFSET(class='form-control bg-secondary') }}
-            <div id="CAMERA_SQM__MAGNITUDE_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>
-                <div>Last Raw Magnitude measurement: <b>{{ camera_sqm_raw_mag_str }}</b></div>
-                <div>Expected SQM: <b>{{ camera_sqm_calc_sqm_str }}</b></div>
-            </div>
-        </div>
-    </div>
-
-    <hr>
-
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_QUEUE_MAX.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_QUEUE_MAX(class='form-control bg-secondary') }}
-            <div id="IMAGE_QUEUE_MAX-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Delay is added when maximum queue depth is hit</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_QUEUE_MIN.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_QUEUE_MIN(class='form-control bg-secondary') }}
-            <div id="IMAGE_QUEUE_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Delay is removed when minimum queue depth is hit</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_QUEUE_BACKOFF.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_QUEUE_BACKOFF(class='form-control bg-secondary') }}
-            <div id="IMAGE_QUEUE_BACKOFF-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Exposure delay added when maximum queue depth is hit</div>
-            <div>Algorithm: (QUEUE_SIZE / QUEUE_MAX) * EXPOSURE_PERIOD * BACKOFF</div>
-            <div><pre>Example: (4 (queue_size) / 3 (queue_max)) * 15 (period) * 0.5 (backoff) = 10.0s additional delay between exposures</pre></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_BIT_DEPTH.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_BIT_DEPTH(class='form-select bg-secondary') }}
-            <div id="CCD_BIT_DEPTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div class="col-sm-8">Bit depth of data returned by the camera</div>
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Switching your camera to JPEG/8-bit mode can affect this setting</div>
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> This should only be used if your camera does not pre-scale the image data to the full 16-bit space</div>
-        </div>
-    </div>
-
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.FOCUS_MODE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.FOCUS_MODE(class='form-check-input') }}
-                <div id="FOCUS_MODE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Focus mode removes any pause between exposures so they are taken as quickly as possible</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.FOCUS_DELAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.FOCUS_DELAY(class='form-control bg-secondary') }}
-            <div id="FOCUS_DELAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Seconds between each frame during focusing. This value should be slightly higher than the download time of images for your camera.</div>
-            <div>RasPi HQ camera is about 3.5 seconds, therefore 4.0 should be sufficient.</div>
-            <div>Astronomy cameras may be able to go as low as 1.0 or 2.0</div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_COOLING.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.CCD_COOLING(class='form-check-input') }}
-                <div id="CCD_COOLING-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Activate CCD Cooling at night (requires hardware support)</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_TEMP.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_TEMP(class='form-control bg-secondary') }}
-            <div id="CCD_TEMP-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Night Temperature target</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_COOLING_DAY.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.CCD_COOLING_DAY(class='form-check-input') }}
-                <div id="CCD_COOLING_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Activate CCD Cooling during the day (requires hardware support)</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_TEMP_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_TEMP_DAY(class='form-control bg-secondary') }}
-            <div id="CCD_TEMP_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Day Temperature target</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_DISPLAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_DISPLAY(class='form-select bg-secondary') }}
-            <div id="TEMP_DISPLAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Temperature units for display</div>
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Adjusts sensor units.</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.PRESSURE_DISPLAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.PRESSURE_DISPLAY(class='form-select bg-secondary') }}
-            <div id="PRESSURE_DISPLAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Pressure units for display</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.WINDSPEED_DISPLAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.WINDSPEED_DISPLAY(class='form-select bg-secondary') }}
-            <div id="WINDSPEED_DISPLAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Wind Speed units for display</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_TEMP_SCRIPT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_config.CCD_TEMP_SCRIPT(class='form-control bg-secondary') }}
-            <div id="CCD_TEMP_SCRIPT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-5">
-            <div>External script used for CCD temperature.  Used when a camera does not support temperature measurements.</div>
-        </div>
-    </div>
-
-    <hr>
-
-<div class="accordion accordion-flush" id="accordionCameraSettings">
-  <div class="accordion-item">
-    <h2 class="accordion-header">
-      <button class="accordion-button collapsed bg-secondary text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLibcamera" aria-expanded="false" aria-controls="collapseLibcamera">
-        libcamera Settings
-      </button>
-    </h2>
-    <div id="collapseLibcamera" class="accordion-collapse collapse" data-bs-parent="#accordionCameraSettings">
-      <div class="accordion-body bg-dark bg-opacity-50">
-
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__CAMERA_ID.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__CAMERA_ID(class='form-select bg-secondary') }}
-            <div id="LIBCAMERA__CAMERA_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Select the correct CSI port on your system</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE(class='form-select bg-secondary') }}
-            <div id="LIBCAMERA__IMAGE_FILE_TYPE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>File type for libcamera acquistion.  This has no effect when using indi.</div>
-            <div>Auto White Balance is disabled in DNG mode</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__AWB_ENABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.LIBCAMERA__AWB_ENABLE(class='form-check-input') }}
-                <div id="LIBCAMERA__AWB_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>Enable libcamera AWB</div>
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> This can cause long gaps between exposures at night</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__AWB.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__AWB(class='form-select bg-secondary') }}
-            <div id="LIBCAMERA__AWB-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__CCM_DISABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.LIBCAMERA__CCM_DISABLE(class='form-check-input') }}
-                <div id="LIBCAMERA__CCM_DISABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>CCM may only be disabled when AWB is disabled [Default: Enabled]</div>
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Disabling CCM requires rpicam-apps 1.9.0 (released Sept 2025)</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__IMMEDIATE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.LIBCAMERA__IMMEDIATE(class='form-check-input') }}
-                <div id="LIBCAMERA__IMMEDIATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>Enable --immediate flag [Default: Enabled]</div>
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> The --immediate flag may interfere with auto-focus functions</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__EXTRA_OPTIONS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_config.LIBCAMERA__EXTRA_OPTIONS(class='form-control bg-secondary') }}
-            <div id="LIBCAMERA__EXTRA_OPTIONS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-5">
-            <div>Extra options for libcamera-still.</div>
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/libcamera-enablement#customizations" class="text-decoration-none link-info" target="_blank">libcamera customizations Wiki</a></div>
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Options are not validated</div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE_DAY(class='form-select bg-secondary') }}
-            <div id="LIBCAMERA__IMAGE_FILE_TYPE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__AWB_ENABLE_DAY.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.LIBCAMERA__AWB_ENABLE_DAY(class='form-check-input') }}
-                <div id="LIBCAMERA__AWB_ENABLE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__AWB_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__AWB_DAY(class='form-select bg-secondary') }}
-            <div id="LIBCAMERA__AWB_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__CCM_DISABLE_DAY.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.LIBCAMERA__CCM_DISABLE_DAY(class='form-check-input') }}
-                <div id="LIBCAMERA__CCM_DISABLE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>CCM may only be disabled when AWB is disabled</div>
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Disabling CCM requires rpicam-apps 1.9.0 (released Sept 2025)</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__IMMEDIATE_DAY.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.LIBCAMERA__IMMEDIATE_DAY(class='form-check-input') }}
-                <div id="LIBCAMERA__IMMEDIATE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>Enable --immediate flag [Default: Enabled]</div>
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> The --immediate flag may interfere with auto-focus functions</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__EXTRA_OPTIONS_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_config.LIBCAMERA__EXTRA_OPTIONS_DAY(class='form-control bg-secondary') }}
-            <div id="LIBCAMERA__EXTRA_OPTIONS_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-5">
-        </div>
-    </div>
-
-    <div id="libcamera-mqtt-fields">
-        <hr>
-
-        <div class="form-group row">
-            <div class="col-sm-12">
-                <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Interfaces#mqtt---libcamera" class="text-decoration-none link-info" target="_blank">MQTT libcamera Wiki</a></div>
             </div>
         </div>
 
-        <div class="form-group row">
-            <div class="col-sm-2">
-                {{ form_config.LIBCAMERA__MQTT_HOST.label(class='col-form-label') }}
+        <!-- Exposure Controls Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <div class="tw:flex tw:items-center tw:justify-between">
+                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Exposure Control & Limits</span>
+                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Exposure-Mode" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Exposure Mode Wiki</a>
+                </div>
+
+                <!-- Exposure Class & Auto Gain Levels -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_CONFIG__EXPOSURE_CLASSNAME.label.text }}</span>
+                        {{ form_config.CCD_CONFIG__EXPOSURE_CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="CCD_CONFIG__EXPOSURE_CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_CONFIG__AUTO_GAIN_LEVELS.label.text }}</span>
+                        {{ form_config.CCD_CONFIG__AUTO_GAIN_LEVELS(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[10px] tw:text-base-content/40">Used with Legacy Auto-Gain</span>
+                        <div id="CCD_CONFIG__AUTO_GAIN_LEVELS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Exposure Min/Max/Def Grid -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_EXPOSURE_MAX.label.text }}</span>
+                        {{ form_config.CCD_EXPOSURE_MAX(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[10px] tw:text-base-content/40">Max: {{ "%0.1f" | format(camera_maxExposure | float) }}s</span>
+                        <div id="CCD_EXPOSURE_MAX-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_EXPOSURE_DEF.label.text }}</span>
+                        {{ form_config.CCD_EXPOSURE_DEF(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[10px] tw:text-base-content/40">0 = auto</span>
+                        <div id="CCD_EXPOSURE_DEF-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_EXPOSURE_MIN.label.text }}</span>
+                        {{ form_config.CCD_EXPOSURE_MIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[10px] tw:text-base-content/40">Min: {{ "%0.6f" | format(camera_minExposure | float) }}s</span>
+                        <div id="CCD_EXPOSURE_MIN-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_EXPOSURE_MIN_DAY.label.text }}</span>
+                        {{ form_config.CCD_EXPOSURE_MIN_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[10px] tw:text-base-content/40">0 = auto (daytime)</span>
+                        <div id="CCD_EXPOSURE_MIN_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Exposure Periods & Timeout -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:py-3">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.EXPOSURE_PERIOD.label.text }}</span>
+                        {{ form_config.EXPOSURE_PERIOD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[10px] tw:text-base-content/40">Night period (secs between frames)</span>
+                        <div id="EXPOSURE_PERIOD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.EXPOSURE_PERIOD_DAY.label.text }}</span>
+                        {{ form_config.EXPOSURE_PERIOD_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[10px] tw:text-base-content/40">Day period (secs between frames)</span>
+                        <div id="EXPOSURE_PERIOD_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_EXPOSURE_TIMEOUT.label.text }}</span>
+                        {{ form_config.CCD_EXPOSURE_TIMEOUT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[10px] tw:text-base-content/40">Max seconds to wait before abort</span>
+                        <div id="CCD_EXPOSURE_TIMEOUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
             </div>
-            <div class="col-sm-4">
-                {{ form_config.LIBCAMERA__MQTT_HOST(class='form-control bg-secondary') }}
-                <div id="LIBCAMERA__MQTT_HOST-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-            <div class="col-sm-6">MQTT hostname</div>
         </div>
 
-        <div class="form-group row">
-            <div class="col-sm-2">
-                {{ form_config.LIBCAMERA__MQTT_TRANSPORT.label(class='col-form-label') }}
+        <!-- Gain & Binning Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <div class="tw:flex tw:items-center tw:justify-between">
+                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Gain & Binning Modes</span>
+                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Gain-Reference" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Gain Reference Wiki</a>
+                </div>
+
+                <!-- Night, Moon & Day Gain/Binning Grid -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:py-3">
+                    <!-- Night -->
+                    <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/70">Night Profile</span>
+                        <span class="tw:text-[10px] tw:text-base-content/40">Max Gain: {{ "%0.3f"|format(camera_maxGain | float) }}</span>
+                        {{ form_config.CCD_CONFIG__NIGHT__GAIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                        <div id="CCD_CONFIG__NIGHT__GAIN-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Binning ({{ camera_minBinning }}-{{ camera_maxBinning }})</span>
+                        {{ form_config.CCD_CONFIG__NIGHT__BINNING(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                        <div id="CCD_CONFIG__NIGHT__BINNING-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
+                    </div>
+
+                    <!-- Moon Mode -->
+                    <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/70">Moon Mode Profile</span>
+                        <span class="tw:text-[10px] tw:text-base-content/40">Moon Mode Gain</span>
+                        {{ form_config.CCD_CONFIG__MOONMODE__GAIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                        <div id="CCD_CONFIG__MOONMODE__GAIN-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Moon Mode Binning</span>
+                        {{ form_config.CCD_CONFIG__MOONMODE__BINNING(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                        <div id="CCD_CONFIG__MOONMODE__BINNING-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
+                    </div>
+
+                    <!-- Day -->
+                    <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/70">Day Profile</span>
+                        <span class="tw:text-[10px] tw:text-base-content/40">Min Gain: {{ "%0.3f"|format(camera_minGain | float) }}</span>
+                        {{ form_config.CCD_CONFIG__DAY__GAIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                        <div id="CCD_CONFIG__DAY__GAIN-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Day Binning</span>
+                        {{ form_config.CCD_CONFIG__DAY__BINNING(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                        <div id="CCD_CONFIG__DAY__BINNING-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
+                    </div>
+                </div>
+
             </div>
-            <div class="col-sm-4">
-                {{ form_config.LIBCAMERA__MQTT_TRANSPORT(class='form-select bg-secondary') }}
-                <div id="LIBCAMERA__MQTT_TRANSPORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-            <div class="col-sm-6">MQTT Transport</div>
         </div>
 
-        <div class="form-group row">
-            <div class="col-sm-2">
-                {{ form_config.LIBCAMERA__MQTT_PROTOCOL.label(class='col-form-label') }}
+        <!-- Camera SQM (Sky Quality Meter) Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <div class="tw:flex tw:items-center tw:justify-between">
+                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Camera-Based Sky Quality Measurement (SQM)</span>
+                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/SQM-Sky-Brightness-Measurement" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">SQM Wiki</a>
+                </div>
+
+                <!-- SQM Enable Toggles -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAMERA_SQM__ENABLE.label.text }}</span>
+                            <span class="tw:text-[10px] tw:text-base-content/40">Periodic SQM captures</span>
+                        </div>
+                        {{ form_config.CAMERA_SQM__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="CAMERA_SQM__ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAMERA_SQM__ENABLE_DAY.label.text }}</span>
+                            <span class="tw:text-[10px] tw:text-base-content/40">Daytime SQM (Testing)</span>
+                        </div>
+                        {{ form_config.CAMERA_SQM__ENABLE_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="CAMERA_SQM__ENABLE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- SQM Exposure, Gain, Binning, Period & Offset Grid -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 md:tw:grid-cols-5 tw:gap-4 tw:py-3">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAMERA_SQM__EXPOSURE.label.text }}</span>
+                        {{ form_config.CAMERA_SQM__EXPOSURE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="CAMERA_SQM__EXPOSURE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAMERA_SQM__GAIN.label.text }}</span>
+                        {{ form_config.CAMERA_SQM__GAIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="CAMERA_SQM__GAIN-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAMERA_SQM__BINNING.label.text }}</span>
+                        {{ form_config.CAMERA_SQM__BINNING(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="CAMERA_SQM__BINNING-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAMERA_SQM__EXPOSURE_PERIOD.label.text }}</span>
+                        {{ form_config.CAMERA_SQM__EXPOSURE_PERIOD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="CAMERA_SQM__EXPOSURE_PERIOD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAMERA_SQM__MAGNITUDE_OFFSET.label.text }}</span>
+                        {{ form_config.CAMERA_SQM__MAGNITUDE_OFFSET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[10px] tw:text-base-content/40">Raw: {{ camera_sqm_raw_mag_str }} | Calc: {{ camera_sqm_calc_sqm_str }}</span>
+                        <div id="CAMERA_SQM__MAGNITUDE_OFFSET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
             </div>
-            <div class="col-sm-4">
-                {{ form_config.LIBCAMERA__MQTT_PROTOCOL(class='form-select bg-secondary') }}
-                <div id="LIBCAMERA__MQTT_PROTOCOL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-            <div class="col-sm-6">MQTT Protocol</div>
         </div>
 
-        <div class="form-group row">
-            <div class="col-sm-2">
-                {{ form_config.LIBCAMERA__MQTT_PORT.label(class='col-form-label') }}
+        <!-- Cooling & Sensor Display Settings Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">CCD Cooling & Display Units</span>
+
+                <!-- Night Cooling & Day Cooling -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-3 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <div class="tw:flex tw:items-center tw:justify-between">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_COOLING.label.text }}</span>
+                            {{ form_config.CCD_COOLING(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="CCD_COOLING-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/50">{{ form_config.CCD_TEMP.label.text }}</span>
+                            {{ form_config.CCD_TEMP(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                            <div id="CCD_TEMP-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
+                        </div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-3 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <div class="tw:flex tw:items-center tw:justify-between">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_COOLING_DAY.label.text }}</span>
+                            {{ form_config.CCD_COOLING_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="CCD_COOLING_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/50">{{ form_config.CCD_TEMP_DAY.label.text }}</span>
+                            {{ form_config.CCD_TEMP_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                            <div id="CCD_TEMP_DAY-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Display Units (Temp, Pressure, Windspeed, Temp Script) -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TEMP_DISPLAY.label.text }}</span>
+                        {{ form_config.TEMP_DISPLAY(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_DISPLAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.PRESSURE_DISPLAY.label.text }}</span>
+                        {{ form_config.PRESSURE_DISPLAY(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="PRESSURE_DISPLAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WINDSPEED_DISPLAY.label.text }}</span>
+                        {{ form_config.WINDSPEED_DISPLAY(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="WINDSPEED_DISPLAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_TEMP_SCRIPT.label.text }}</span>
+                        {{ form_config.CCD_TEMP_SCRIPT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="CCD_TEMP_SCRIPT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
             </div>
-            <div class="col-sm-4">
-                {{ form_config.LIBCAMERA__MQTT_PORT(class='form-control bg-secondary') }}
-                <div id="LIBCAMERA__MQTT_PORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-            <div class="col-sm-6">MQTT port - 8883 = TLS, 1883 = standard</div>
         </div>
 
-        <div class="form-group row">
-            <div class="col-sm-2">
-                {{ form_config.LIBCAMERA__MQTT_USERNAME.label(class='col-form-label') }}
+        <!-- Advanced Queue & Bit Depth Controls Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Queue Management & Focus Mode</span>
+
+                <!-- Image Queue Limits -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_QUEUE_MAX.label.text }}</span>
+                        {{ form_config.IMAGE_QUEUE_MAX(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="IMAGE_QUEUE_MAX-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_QUEUE_MIN.label.text }}</span>
+                        {{ form_config.IMAGE_QUEUE_MIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="IMAGE_QUEUE_MIN-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_QUEUE_BACKOFF.label.text }}</span>
+                        {{ form_config.IMAGE_QUEUE_BACKOFF(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="IMAGE_QUEUE_BACKOFF-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Bit Depth, Focus Mode & Focus Delay Grid -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:py-3">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_BIT_DEPTH.label.text }}</span>
+                        {{ form_config.CCD_BIT_DEPTH(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="CCD_BIT_DEPTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FOCUS_MODE.label.text }}</span>
+                            <span class="tw:text-[10px] tw:text-base-content/40">No pause between frames</span>
+                        </div>
+                        {{ form_config.FOCUS_MODE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="FOCUS_MODE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FOCUS_DELAY.label.text }}</span>
+                        {{ form_config.FOCUS_DELAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="FOCUS_DELAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
             </div>
-            <div class="col-sm-4">
-                {{ form_config.LIBCAMERA__MQTT_USERNAME(class='form-control bg-secondary') }}
-                <div id="LIBCAMERA__MQTT_USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-            <div class="col-sm-6">MQTT Username</div>
         </div>
 
-        <div class="form-group row">
-            <div class="col-sm-2">
-                {{ form_config.LIBCAMERA__MQTT_PASSWORD.label(class='col-form-label') }}
-            </div>
-            <div class="col-sm-4">
-                {{ form_config.LIBCAMERA__MQTT_PASSWORD(class='form-control bg-secondary') }}
-                <div id="LIBCAMERA__MQTT_PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-            <div class="col-sm-6">MQTT Password</div>
-        </div>
+        <!-- Specialized Driver Configuration Accordions -->
+        <div class="tw:flex tw:flex-col tw:gap-4">
 
-        <div class="form-group row">
-            <div class="col-sm-2">
-                {{ form_config.LIBCAMERA__MQTT_QOS.label(class='col-form-label') }}
-            </div>
-            <div class="col-sm-4">
-                {{ form_config.LIBCAMERA__MQTT_QOS(class='form-control bg-secondary') }}
-                <div id="LIBCAMERA__MQTT_QOS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-            <div class="col-sm-6">MQTT QoS - 0 (default), 1, or 2</div>
-        </div>
+            <!-- libcamera Accordion -->
+            <div class="tw:collapse tw:collapse-arrow tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]">
+                <input type="checkbox" />
+                <div class="tw:collapse-title tw:text-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">
+                    libcamera Driver Settings & MQTT Telemetry
+                </div>
+                <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-4 tw:pt-2">
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__CAMERA_ID.label.text }}</span>
+                            {{ form_config.LIBCAMERA__CAMERA_ID(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="LIBCAMERA__CAMERA_ID-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__IMAGE_FILE_TYPE.label.text }}</span>
+                            {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="LIBCAMERA__IMAGE_FILE_TYPE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__IMAGE_FILE_TYPE_DAY.label.text }}</span>
+                            {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="LIBCAMERA__IMAGE_FILE_TYPE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
 
-        <div class="form-group row">
-            <div class="col-sm-2">
-                {{ form_config.LIBCAMERA__MQTT_TLS.label }}
-            </div>
-            <div class="col-sm-2">
-                <div class="form-switch">
-                    {{ form_config.LIBCAMERA__MQTT_TLS(class='form-check-input') }}
-                    <div id="LIBCAMERA__MQTT_TLS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+                    <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4">
+                        <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__AWB_ENABLE.label.text }}</span>
+                            {{ form_config.LIBCAMERA__AWB_ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="LIBCAMERA__AWB_ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__CCM_DISABLE.label.text }}</span>
+                            {{ form_config.LIBCAMERA__CCM_DISABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="LIBCAMERA__CCM_DISABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__IMMEDIATE.label.text }}</span>
+                            {{ form_config.LIBCAMERA__IMMEDIATE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="LIBCAMERA__IMMEDIATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4">
+                        <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__AWB_ENABLE_DAY.label.text }}</span>
+                            {{ form_config.LIBCAMERA__AWB_ENABLE_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="LIBCAMERA__AWB_ENABLE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__CCM_DISABLE_DAY.label.text }}</span>
+                            {{ form_config.LIBCAMERA__CCM_DISABLE_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="LIBCAMERA__CCM_DISABLE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__IMMEDIATE_DAY.label.text }}</span>
+                            {{ form_config.LIBCAMERA__IMMEDIATE_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="LIBCAMERA__IMMEDIATE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4">
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__AWB.label.text }}</span>
+                            {{ form_config.LIBCAMERA__AWB(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="LIBCAMERA__AWB-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__AWB_DAY.label.text }}</span>
+                            {{ form_config.LIBCAMERA__AWB_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="LIBCAMERA__AWB_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4">
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__EXTRA_OPTIONS.label.text }}</span>
+                            {{ form_config.LIBCAMERA__EXTRA_OPTIONS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="LIBCAMERA__EXTRA_OPTIONS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__EXTRA_OPTIONS_DAY.label.text }}</span>
+                            {{ form_config.LIBCAMERA__EXTRA_OPTIONS_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="LIBCAMERA__EXTRA_OPTIONS_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <!-- libcamera MQTT Fields -->
+                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50 tw:mt-2">libcamera MQTT Broker Connection</span>
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_HOST.label.text }}</span>
+                            {{ form_config.LIBCAMERA__MQTT_HOST(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="LIBCAMERA__MQTT_HOST-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_PORT.label.text }}</span>
+                            {{ form_config.LIBCAMERA__MQTT_PORT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="LIBCAMERA__MQTT_PORT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_QOS.label.text }}</span>
+                            {{ form_config.LIBCAMERA__MQTT_QOS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="LIBCAMERA__MQTT_QOS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4">
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_TRANSPORT.label.text }}</span>
+                            {{ form_config.LIBCAMERA__MQTT_TRANSPORT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="LIBCAMERA__MQTT_TRANSPORT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_PROTOCOL.label.text }}</span>
+                            {{ form_config.LIBCAMERA__MQTT_PROTOCOL(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="LIBCAMERA__MQTT_PROTOCOL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4">
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_USERNAME.label.text }}</span>
+                            {{ form_config.LIBCAMERA__MQTT_USERNAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="LIBCAMERA__MQTT_USERNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_PASSWORD.label.text }}</span>
+                            {{ form_config.LIBCAMERA__MQTT_PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="LIBCAMERA__MQTT_PASSWORD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4">
+                        <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_TLS.label.text }}</span>
+                            {{ form_config.LIBCAMERA__MQTT_TLS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="LIBCAMERA__MQTT_TLS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_CERT_BYPASS.label.text }}</span>
+                            {{ form_config.LIBCAMERA__MQTT_CERT_BYPASS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="LIBCAMERA__MQTT_CERT_BYPASS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_EXPOSURE_TOPIC.label.text }}</span>
+                            {{ form_config.LIBCAMERA__MQTT_EXPOSURE_TOPIC(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="LIBCAMERA__MQTT_EXPOSURE_TOPIC-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_IMAGE_TOPIC.label.text }}</span>
+                            {{ form_config.LIBCAMERA__MQTT_IMAGE_TOPIC(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="LIBCAMERA__MQTT_IMAGE_TOPIC-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_METADATA_TOPIC.label.text }}</span>
+                            {{ form_config.LIBCAMERA__MQTT_METADATA_TOPIC(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="LIBCAMERA__MQTT_METADATA_TOPIC-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-sm-8">Use TLS/SSL for MQTT connections</div>
-        </div>
 
-        <div class="form-group row">
-            <div class="col-sm-2">
-                {{ form_config.LIBCAMERA__MQTT_CERT_BYPASS.label }}
-            </div>
-            <div class="col-sm-2">
-                <div class="form-switch">
-                    {{ form_config.LIBCAMERA__MQTT_CERT_BYPASS(class='form-check-input') }}
-                    <div id="LIBCAMERA__MQTT_CERT_BYPASS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            <!-- PyCurl Camera Accordion -->
+            <div class="tw:collapse tw:collapse-arrow tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]">
+                <input type="checkbox" />
+                <div class="tw:collapse-title tw:text-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">
+                    PyCurl Camera Driver Settings
+                </div>
+                <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-4 tw:pt-2">
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4">
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.PYCURL_CAMERA__URL.label.text }}</span>
+                            {{ form_config.PYCURL_CAMERA__URL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="PYCURL_CAMERA__URL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.PYCURL_CAMERA__IMAGE_FILE_TYPE.label.text }}</span>
+                            {{ form_config.PYCURL_CAMERA__IMAGE_FILE_TYPE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="PYCURL_CAMERA__IMAGE_FILE_TYPE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4">
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.PYCURL_CAMERA__USERNAME.label.text }}</span>
+                            {{ form_config.PYCURL_CAMERA__USERNAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="PYCURL_CAMERA__USERNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.PYCURL_CAMERA__PASSWORD.label.text }}</span>
+                            {{ form_config.PYCURL_CAMERA__PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="PYCURL_CAMERA__PASSWORD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-sm-8">Bypass certificate validation</div>
-        </div>
 
-        <div class="form-group row">
-            <div class="col-sm-2">
-                {{ form_config.LIBCAMERA__MQTT_EXPOSURE_TOPIC.label(class='col-form-label') }}
+            <!-- Test Camera Accordion -->
+            <div class="tw:collapse tw:collapse-arrow tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]">
+                <input type="checkbox" />
+                <div class="tw:collapse-title tw:text-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">
+                    Synthetic Test Camera Settings
+                </div>
+                <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-4 tw:pt-2">
+                    <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4">
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEST_CAMERA__WIDTH.label.text }}</span>
+                            {{ form_config.TEST_CAMERA__WIDTH(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEST_CAMERA__WIDTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEST_CAMERA__HEIGHT.label.text }}</span>
+                            {{ form_config.TEST_CAMERA__HEIGHT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEST_CAMERA__HEIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEST_CAMERA__IMAGE_CIRCLE_DIAMETER.label.text }}</span>
+                            {{ form_config.TEST_CAMERA__IMAGE_CIRCLE_DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEST_CAMERA__IMAGE_CIRCLE_DIAMETER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEST_CAMERA__BUBBLE_COUNT.label.text }}</span>
+                            {{ form_config.TEST_CAMERA__BUBBLE_COUNT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEST_CAMERA__BUBBLE_COUNT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+                    <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4">
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEST_CAMERA__IMAGE_CIRCLE_OFFSET_X.label.text }}</span>
+                            {{ form_config.TEST_CAMERA__IMAGE_CIRCLE_OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEST_CAMERA__IMAGE_CIRCLE_OFFSET_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEST_CAMERA__IMAGE_CIRCLE_OFFSET_Y.label.text }}</span>
+                            {{ form_config.TEST_CAMERA__IMAGE_CIRCLE_OFFSET_Y(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEST_CAMERA__IMAGE_CIRCLE_OFFSET_Y-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEST_CAMERA__ROTATING_STAR_COUNT.label.text }}</span>
+                            {{ form_config.TEST_CAMERA__ROTATING_STAR_COUNT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEST_CAMERA__ROTATING_STAR_COUNT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEST_CAMERA__ROTATING_STAR_FACTOR.label.text }}</span>
+                            {{ form_config.TEST_CAMERA__ROTATING_STAR_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEST_CAMERA__ROTATING_STAR_FACTOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-sm-4">
-                {{ form_config.LIBCAMERA__MQTT_EXPOSURE_TOPIC(class='form-control bg-secondary') }}
-                <div id="LIBCAMERA__MQTT_EXPOSURE_TOPIC-error" class="invalid-feedback text-danger" style="display: none;"></div>
+
+            <!-- INDI & Accumulator Camera Accordion -->
+            <div class="tw:collapse tw:collapse-arrow tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]">
+                <input type="checkbox" />
+                <div class="tw:collapse-title tw:text-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">
+                    INDI Defaults & Accumulator Camera Settings
+                </div>
+                <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-4 tw:pt-2">
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4">
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.INDI_CONFIG_DEFAULTS.label.text }}</span>
+                            {{ form_config.INDI_CONFIG_DEFAULTS(class='tw:textarea tw:textarea-bordered tw:bg-base-100 tw:text-base-content tw:w-full tw:font-mono tw:text-xs', rows='4') }}
+                        <div id="INDI_CONFIG_DEFAULTS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.INDI_CONFIG_DAY.label.text }}</span>
+                            {{ form_config.INDI_CONFIG_DAY(class='tw:textarea tw:textarea-bordered tw:bg-base-100 tw:text-base-content tw:w-full tw:font-mono tw:text-xs', rows='4') }}
+                        <div id="INDI_CONFIG_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:pt-2">
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ACCUM_CAMERA__SUB_EXPOSURE_MAX.label.text }}</span>
+                            {{ form_config.ACCUM_CAMERA__SUB_EXPOSURE_MAX(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="ACCUM_CAMERA__SUB_EXPOSURE_MAX-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ACCUM_CAMERA__EVEN_EXPOSURES.label.text }}</span>
+                            {{ form_config.ACCUM_CAMERA__EVEN_EXPOSURES(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="ACCUM_CAMERA__EVEN_EXPOSURES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ACCUM_CAMERA__CLAMP_16BIT.label.text }}</span>
+                            {{ form_config.ACCUM_CAMERA__CLAMP_16BIT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="ACCUM_CAMERA__CLAMP_16BIT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-sm-6"></div>
+
         </div>
 
-        <div class="form-group row">
-            <div class="col-sm-2">
-                {{ form_config.LIBCAMERA__MQTT_IMAGE_TOPIC.label(class='col-form-label') }}
-            </div>
-            <div class="col-sm-4">
-                {{ form_config.LIBCAMERA__MQTT_IMAGE_TOPIC(class='form-control bg-secondary') }}
-                <div id="LIBCAMERA__MQTT_IMAGE_TOPIC-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-            <div class="col-sm-6"></div>
-        </div>
-
-        <div class="form-group row">
-            <div class="col-sm-2">
-                {{ form_config.LIBCAMERA__MQTT_METADATA_TOPIC.label(class='col-form-label') }}
-            </div>
-            <div class="col-sm-4">
-                {{ form_config.LIBCAMERA__MQTT_METADATA_TOPIC(class='form-control bg-secondary') }}
-                <div id="LIBCAMERA__MQTT_METADATA_TOPIC-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-            <div class="col-sm-6"></div>
-        </div>
-    </div><!-- end libcamera-mqtt-fields -->
-
-      </div>
     </div>
-  </div>
-  <div class="accordion-item">
-    <h2 class="accordion-header">
-      <button class="accordion-button collapsed bg-secondary text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePycurl" aria-expanded="false" aria-controls="collapsePycurl">
-        PyCurl Camera Settings
-      </button>
-    </h2>
-    <div id="collapsePycurl" class="accordion-collapse collapse" data-bs-parent="#accordionCameraSettings">
-      <div class="accordion-body bg-dark bg-opacity-50">
-
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.PYCURL_CAMERA__URL.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-6">
-            {{ form_config.PYCURL_CAMERA__URL(class='form-control bg-secondary') }}
-            <div id="PYCURL_CAMERA__URL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-4">
-            <div>Image capture URL</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.PYCURL_CAMERA__IMAGE_FILE_TYPE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.PYCURL_CAMERA__IMAGE_FILE_TYPE(class='form-select bg-secondary') }}
-            <div id="PYCURL_CAMERA__IMAGE_FILE_TYPE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.PYCURL_CAMERA__USERNAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.PYCURL_CAMERA__USERNAME(class='form-control bg-secondary') }}
-            <div id="PYCURL_CAMERA__USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.PYCURL_CAMERA__PASSWORD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.PYCURL_CAMERA__PASSWORD(class='form-control bg-secondary') }}
-            <div id="PYCURL_CAMERA__PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-        </div>
-    </div>
-
-
-      </div>
-    </div>
-  </div>
-  <div class="accordion-item">
-    <h2 class="accordion-header">
-      <button class="accordion-button collapsed bg-secondary text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTestCamera" aria-expanded="false" aria-controls="collapseTestCamera">
-        Test Camera Settings
-      </button>
-    </h2>
-    <div id="collapseTestCamera" class="accordion-collapse collapse" data-bs-parent="#accordionCameraSettings">
-      <div class="accordion-body bg-dark bg-opacity-50">
-
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEST_CAMERA__WIDTH.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEST_CAMERA__WIDTH(class='form-control bg-secondary') }}
-            <div id="TEST_CAMERA__WIDTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEST_CAMERA__HEIGHT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEST_CAMERA__HEIGHT(class='form-control bg-secondary') }}
-            <div id="TEST_CAMERA__HEIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEST_CAMERA__IMAGE_CIRCLE_DIAMETER.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEST_CAMERA__IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
-            <div id="TEST_CAMERA__IMAGE_CIRCLE_DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEST_CAMERA__IMAGE_CIRCLE_OFFSET_X.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEST_CAMERA__IMAGE_CIRCLE_OFFSET_X(class='form-control bg-secondary') }}
-            <div id="TEST_CAMERA__IMAGE_CIRCLE_OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Simulate an offset image circle</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEST_CAMERA__IMAGE_CIRCLE_OFFSET_Y.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEST_CAMERA__IMAGE_CIRCLE_OFFSET_Y(class='form-control bg-secondary') }}
-            <div id="TEST_CAMERA__IMAGE_CIRCLE_OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEST_CAMERA__ROTATING_STAR_COUNT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEST_CAMERA__ROTATING_STAR_COUNT(class='form-control bg-secondary') }}
-            <div id="TEST_CAMERA__ROTATING_STAR_COUNT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            Rotating Star Test Camera
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEST_CAMERA__ROTATING_STAR_FACTOR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEST_CAMERA__ROTATING_STAR_FACTOR(class='form-control bg-secondary') }}
-            <div id="TEST_CAMERA__ROTATING_STAR_FACTOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            1.0 = 0.25 degrees/minute [sidereal rate]
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEST_CAMERA__BUBBLE_COUNT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEST_CAMERA__BUBBLE_COUNT(class='form-control bg-secondary') }}
-            <div id="TEST_CAMERA__BUBBLE_COUNT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            Bubble Test Camera
-        </div>
-    </div>
-
-
-      </div>
-    </div>
-  </div>
-  <div class="accordion-item">
-    <h2 class="accordion-header">
-      <button class="accordion-button collapsed bg-secondary text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIndi" aria-expanded="false" aria-controls="collapseIndi">
-        INDI Camera Settings
-      </button>
-    </h2>
-    <div id="collapseIndi" class="accordion-collapse collapse" data-bs-parent="#accordionCameraSettings">
-      <div class="accordion-body bg-dark bg-opacity-50">
-
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.INDI_CONFIG_DEFAULTS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-6">
-            {{ form_config.INDI_CONFIG_DEFAULTS(class='form-control bg-secondary', rows='10') }}
-            <div id="INDI_CONFIG_DEFAULTS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-4">
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/INDI-custom-config" class="text-decoration-none link-info" target="_blank">INDI Config Wiki</a></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.INDI_CONFIG_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-6">
-            {{ form_config.INDI_CONFIG_DAY(class='form-control bg-secondary', rows='4') }}
-            <div id="INDI_CONFIG_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-4">
-            <div>Day specific configuration.</div>
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> If no config is defined, the night config is used.</div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.ACCUM_CAMERA__SUB_EXPOSURE_MAX.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.ACCUM_CAMERA__SUB_EXPOSURE_MAX(class='form-control bg-secondary') }}
-            <div id="ACCUM_CAMERA__SUB_EXPOSURE_MAX-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Maximum sub-exposure for the accumulator camera.</div>
-            <div>The total exposure time will be divided by this value and the resulting sub-exposures will be summed into a unsigned 32-bit result</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.ACCUM_CAMERA__EVEN_EXPOSURES.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.ACCUM_CAMERA__EVEN_EXPOSURES(class='form-check-input') }}
-                <div id="ACCUM_CAMERA__EVEN_EXPOSURES-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Ensure each sub-exposure is the same interval</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.ACCUM_CAMERA__CLAMP_16BIT.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.ACCUM_CAMERA__CLAMP_16BIT(class='form-check-input') }}
-                <div id="ACCUM_CAMERA__CLAMP_16BIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Clamp FITS to 16-bits.  FITS and Dark images will be clamped to uint16 (50% smaller than uint32)</div>
-    </div>
-
-
-      </div>
-    </div>
-  </div>
-</div>
-
 </div><!-- end camera tab -->

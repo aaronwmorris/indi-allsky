@@ -1,1406 +1,694 @@
 <div class="tab-pane fade" id="nav-sensors" role="tabpanel" aria-labelledby="nav-sensors-tab">
+    <div class="tw:flex tw:flex-col tw:gap-6">
+
+        <div class="tw:alert tw:alert-info tw:py-2.5 tw:text-xs tw:rounded-[var(--radius-box)] shadow-sm">
+            <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
+            <span>Hardware Device support requires Python GPIO modules. Additional graphs may be configured on the Admin Tab. Units follow the <a href="#camera-TEMP_DISPLAY" class="tw:link tw:link-info tw:no-underline">Temperature Display</a> setting.</span>
+        </div>
+
+        <!-- Environmental Probes A to F Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <div class="tw:flex tw:items-center tw:justify-between">
+                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Environmental Sensor Probes (A through F)</span>
+                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Sensors" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Sensor Wiki</a>
+                </div>
+
+                <!-- Probes A through F Accordions -->
+                <div class="tw:flex tw:flex-col tw:gap-3">
+                    <!-- Sensor Probe A -->
+                    <div class="tw:collapse tw:collapse-arrow tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-xs">
+                        <input type="checkbox" checked />
+                        <div class="tw:collapse-title tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:flex tw:items-center tw:gap-2">
+                            <i class="tw:icon-[lucide--thermometer] tw:w-4 tw:h-4 tw:text-primary"></i>
+                            Sensor Probe A Configuration
+                        </div>
+                        <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-4 tw:pt-2">
+                            <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__A_CLASSNAME.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__A_CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__A_CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__A_LABEL.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__A_LABEL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__A_LABEL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__A_I2C_ADDRESS.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__A_I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__A_I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+                            <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4">
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__A_PIN_1.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__A_PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__A_PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__A_PIN_2.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__A_PIN_2(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__A_PIN_2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__A_USER_VAR_SLOT.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__A_USER_VAR_SLOT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__A_USER_VAR_SLOT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__A_TITLE_TEMPLATE.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__A_TITLE_TEMPLATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__A_TITLE_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sensor Probe B -->
+                    <div class="tw:collapse tw:collapse-arrow tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-xs">
+                        <input type="checkbox" />
+                        <div class="tw:collapse-title tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:flex tw:items-center tw:gap-2">
+                            <i class="tw:icon-[lucide--thermometer] tw:w-4 tw:h-4 tw:text-primary"></i>
+                            Sensor Probe B Configuration
+                        </div>
+                        <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-4 tw:pt-2">
+                            <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__B_CLASSNAME.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__B_CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__B_CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__B_LABEL.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__B_LABEL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__B_LABEL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__B_I2C_ADDRESS.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__B_I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__B_I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+                            <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4">
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__B_PIN_1.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__B_PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__B_PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__B_PIN_2.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__B_PIN_2(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__B_PIN_2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__B_USER_VAR_SLOT.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__B_USER_VAR_SLOT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__B_USER_VAR_SLOT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__B_TITLE_TEMPLATE.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__B_TITLE_TEMPLATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__B_TITLE_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sensor Probe C -->
+                    <div class="tw:collapse tw:collapse-arrow tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-xs">
+                        <input type="checkbox" />
+                        <div class="tw:collapse-title tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:flex tw:items-center tw:gap-2">
+                            <i class="tw:icon-[lucide--thermometer] tw:w-4 tw:h-4 tw:text-primary"></i>
+                            Sensor Probe C Configuration
+                        </div>
+                        <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-4 tw:pt-2">
+                            <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__C_CLASSNAME.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__C_CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__C_CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__C_LABEL.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__C_LABEL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__C_LABEL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__C_I2C_ADDRESS.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__C_I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__C_I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+                            <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4">
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__C_PIN_1.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__C_PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__C_PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__C_PIN_2.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__C_PIN_2(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__C_PIN_2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__C_USER_VAR_SLOT.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__C_USER_VAR_SLOT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__C_USER_VAR_SLOT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__C_TITLE_TEMPLATE.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__C_TITLE_TEMPLATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__C_TITLE_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sensor Probe D -->
+                    <div class="tw:collapse tw:collapse-arrow tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-xs">
+                        <input type="checkbox" />
+                        <div class="tw:collapse-title tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:flex tw:items-center tw:gap-2">
+                            <i class="tw:icon-[lucide--thermometer] tw:w-4 tw:h-4 tw:text-primary"></i>
+                            Sensor Probe D Configuration
+                        </div>
+                        <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-4 tw:pt-2">
+                            <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__D_CLASSNAME.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__D_CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__D_CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__D_LABEL.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__D_LABEL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__D_LABEL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__D_I2C_ADDRESS.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__D_I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__D_I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+                            <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4">
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__D_PIN_1.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__D_PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__D_PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__D_PIN_2.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__D_PIN_2(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__D_PIN_2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__D_USER_VAR_SLOT.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__D_USER_VAR_SLOT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__D_USER_VAR_SLOT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__D_TITLE_TEMPLATE.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__D_TITLE_TEMPLATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__D_TITLE_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sensor Probe E -->
+                    <div class="tw:collapse tw:collapse-arrow tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-xs">
+                        <input type="checkbox" />
+                        <div class="tw:collapse-title tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:flex tw:items-center tw:gap-2">
+                            <i class="tw:icon-[lucide--thermometer] tw:w-4 tw:h-4 tw:text-primary"></i>
+                            Sensor Probe E Configuration
+                        </div>
+                        <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-4 tw:pt-2">
+                            <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__E_CLASSNAME.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__E_CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__E_CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__E_LABEL.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__E_LABEL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__E_LABEL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__E_I2C_ADDRESS.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__E_I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__E_I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+                            <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4">
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__E_PIN_1.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__E_PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__E_PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__E_PIN_2.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__E_PIN_2(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__E_PIN_2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__E_USER_VAR_SLOT.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__E_USER_VAR_SLOT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__E_USER_VAR_SLOT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__E_TITLE_TEMPLATE.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__E_TITLE_TEMPLATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__E_TITLE_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sensor Probe F -->
+                    <div class="tw:collapse tw:collapse-arrow tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-xs">
+                        <input type="checkbox" />
+                        <div class="tw:collapse-title tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:flex tw:items-center tw:gap-2">
+                            <i class="tw:icon-[lucide--thermometer] tw:w-4 tw:h-4 tw:text-primary"></i>
+                            Sensor Probe F Configuration
+                        </div>
+                        <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-4 tw:pt-2">
+                            <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__F_CLASSNAME.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__F_CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__F_CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__F_LABEL.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__F_LABEL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__F_LABEL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__F_I2C_ADDRESS.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__F_I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__F_I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+                            <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4">
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__F_PIN_1.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__F_PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__F_PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__F_PIN_2.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__F_PIN_2(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__F_PIN_2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__F_USER_VAR_SLOT.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__F_USER_VAR_SLOT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__F_USER_VAR_SLOT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__F_TITLE_TEMPLATE.label.text }}</span>
+                                    {{ form_config.TEMP_SENSOR__F_TITLE_TEMPLATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <div id="TEMP_SENSOR__F_TITLE_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-    <div><span class="badge rounded-pill bg-info text-dark">Note</span> Hardware Device support requires the python GPIO modules</div>
-
-    <hr>
-
-    <div><span class="badge rounded-pill bg-info text-dark">Note</span> Additional graphs may be configured for sensor values on the Admin Tab</div>
-
-    <hr>
-
-    <div><span class="badge rounded-pill bg-info text-dark">Note</span> Sensor units may be adjusted using the <a href="#camera-TEMP_DISPLAY" class="text-decoration-none link-info">Temperature Display</a> option on the Camera Tab</div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__A_CLASSNAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__A_CLASSNAME(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__A_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Sensors" class="text-decoration-none link-info" target="_blank">Sensor Wiki</a></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__A_LABEL.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__A_LABEL(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__A_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__A_PIN_1.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__A_PIN_1(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__A_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Example: D5 (GPIO5 / Pin 29 Raspi)</div>
-            <div>Example: P0 - Pin for ADS1x15 ADC</div>
-            <div>Unused for most i2c devices - CS for SPI</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__A_PIN_2.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__A_PIN_2(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__A_PIN_2-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__A_I2C_ADDRESS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__A_I2C_ADDRESS(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__A_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Hexadecimal address - Example: 0x77</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__A_USER_VAR_SLOT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__A_USER_VAR_SLOT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__A_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>All sensor values will populate multiple slots starting at this slot</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__A_TITLE_TEMPLATE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__A_TITLE_TEMPLATE(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__A_TITLE_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div>Available variables:</div>
-            <div><pre>name, label, probe</pre></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__B_CLASSNAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__B_CLASSNAME(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__B_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__B_LABEL.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__B_LABEL(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__B_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__B_PIN_1.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__B_PIN_1(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__B_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Example: D6 (GPIO6 / Pin 31 Raspi)</div>
-            <div>Example: P0 - Pin for ADS1x15 ADC</div>
-            <div>Unused for most i2c devices - CS for SPI</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__B_PIN_2.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__B_PIN_2(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__B_PIN_2-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__B_I2C_ADDRESS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__B_I2C_ADDRESS(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__B_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Hexadecimal address - Example: 0x76</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__B_USER_VAR_SLOT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__B_USER_VAR_SLOT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__B_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>All sensor values will populate multiple slots starting at this slot</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__B_TITLE_TEMPLATE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__B_TITLE_TEMPLATE(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__B_TITLE_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div>Available variables:</div>
-            <div><pre>name, label, probe</pre></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__C_CLASSNAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__C_CLASSNAME(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__C_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__C_LABEL.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__C_LABEL(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__C_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__C_PIN_1.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__C_PIN_1(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__C_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Example: D16 (GPIO16 / Pin 36 Raspi)</div>
-            <div>Example: P0 - Pin for ADS1x15 ADC</div>
-            <div>Unused for most i2c devices - CS for SPI</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__C_PIN_2.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__C_PIN_2(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__C_PIN_2-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__C_I2C_ADDRESS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__C_I2C_ADDRESS(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__C_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Hexadecimal address - Example: 0x40</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__C_USER_VAR_SLOT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__C_USER_VAR_SLOT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__C_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>All sensor values will populate multiple slots starting at this slot</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__C_TITLE_TEMPLATE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__C_TITLE_TEMPLATE(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__C_TITLE_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div>Available variables:</div>
-            <div><pre>name, label, probe</pre></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__D_CLASSNAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__D_CLASSNAME(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__D_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__D_LABEL.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__D_LABEL(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__D_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__D_PIN_1.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__D_PIN_1(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__D_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Example: D26 (GPIO26 / Pin 37 Raspi)</div>
-            <div>Example: P0 - Pin for ADS1x15 ADC</div>
-            <div>Unused for most i2c devices - CS for SPI</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__D_PIN_2.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__D_PIN_2(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__D_PIN_2-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__D_I2C_ADDRESS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__D_I2C_ADDRESS(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__D_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Hexadecimal address - Example: 0x50</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__D_USER_VAR_SLOT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__D_USER_VAR_SLOT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__D_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>All sensor values will populate multiple slots starting at this slot</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__D_TITLE_TEMPLATE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__D_TITLE_TEMPLATE(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__D_TITLE_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div>Available variables:</div>
-            <div><pre>name, label, probe</pre></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__E_CLASSNAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__E_CLASSNAME(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__E_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__E_LABEL.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__E_LABEL(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__E_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__E_PIN_1.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__E_PIN_1(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__E_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Example: D25 (GPIO25 / Pin 22 Raspi)</div>
-            <div>Example: P0 - Pin for ADS1x15 ADC</div>
-            <div>Unused for most i2c devices - CS for SPI</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__E_PIN_2.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__E_PIN_2(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__E_PIN_2-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__E_I2C_ADDRESS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__E_I2C_ADDRESS(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__E_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Hexadecimal address - Example: 0x51</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__E_USER_VAR_SLOT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__E_USER_VAR_SLOT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__E_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>All sensor values will populate multiple slots starting at this slot</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__E_TITLE_TEMPLATE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__E_TITLE_TEMPLATE(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__E_TITLE_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div>Available variables:</div>
-            <div><pre>name, label, probe</pre></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__F_CLASSNAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__F_CLASSNAME(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__F_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__F_LABEL.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__F_LABEL(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__E_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__F_PIN_1.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__F_PIN_1(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__F_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Example: D27 (GPIO27 / Pin 13 Raspi)</div>
-            <div>Example: P0 - Pin for ADS1x15 ADC</div>
-            <div>Unused for most i2c devices - CS for SPI</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__F_PIN_2.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__F_PIN_2(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__F_PIN_2-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__F_I2C_ADDRESS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__F_I2C_ADDRESS(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__F_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Hexadecimal address - Example: 0x52</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__F_USER_VAR_SLOT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__F_USER_VAR_SLOT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__F_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>All sensor values will populate multiple slots starting at this slot</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__F_TITLE_TEMPLATE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__F_TITLE_TEMPLATE(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__F_TITLE_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div>Available variables:</div>
-            <div><pre>name, label, probe</pre></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__OPENWEATHERMAP_APIKEY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__OPENWEATHERMAP_APIKEY(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__OPENWEATHERMAP_APIKEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__WUNDERGROUND_APIKEY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__WUNDERGROUND_APIKEY(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__WUNDERGROUND_APIKEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__ASTROSPHERIC_APIKEY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__ASTROSPHERIC_APIKEY(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__ASTROSPHERIC_APIKEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__AMBIENTWEATHER_APIKEY.label(class='col-form-label') }}
-
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__AMBIENTWEATHER_APIKEY(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__AMBIENTWEATHER_APIKEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__AMBIENTWEATHER_APPLICATIONKEY.label(class='col-form-label') }}
-
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__AMBIENTWEATHER_APPLICATIONKEY(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__AMBIENTWEATHER_APPLICATIONKEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__AMBIENTWEATHER_MACADDRESS.label(class='col-form-label') }}
-
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__AMBIENTWEATHER_MACADDRESS(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__AMBIENTWEATHER_MACADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__ECOWITT_APIKEY.label(class='col-form-label') }}
-
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__ECOWITT_APIKEY(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__ECOWITT_APIKEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__ECOWITT_APPLICATIONKEY.label(class='col-form-label') }}
-
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__ECOWITT_APPLICATIONKEY(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__ECOWITT_APPLICATIONKEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__ECOWITT_MACADDRESS.label(class='col-form-label') }}
-
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__ECOWITT_MACADDRESS(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__ECOWITT_MACADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__FC37_ACTIVE_LOW.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TEMP_SENSOR__FC37_ACTIVE_LOW(id='TEMP_SENSOR__FC37_ACTIVE_LOW', class='form-check-input') }}
-                <div id="TEMP_SENSOR__FC37_ACTIVE_LOW-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
-        <div class="col-sm-8">
-            <div>Invert the FC-37 sensor Digital Output logic. Signal default is 0 = No rain, 1 = Rain </div>
-            <div>*Note* In Overlay Template use rain_status:s which gives string display</div>
-        </div>
-    </div>
 
-    <hr>
+        <!-- Online Weather APIs Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Online Weather Station API Keys & Station Identifiers</span>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__DHT_USE_PULSEIO.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TEMP_SENSOR__DHT_USE_PULSEIO(class='form-check-input') }}
-                <div id="TEMP_SENSOR__DHT_USE_PULSEIO-error" class="invalid-feedback text-danger" style="display: none;"></div>
+                <!-- OpenWeather, Wunderground, Astrospheric -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__OPENWEATHERMAP_APIKEY.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__OPENWEATHERMAP_APIKEY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__OPENWEATHERMAP_APIKEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__WUNDERGROUND_APIKEY.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__WUNDERGROUND_APIKEY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__WUNDERGROUND_APIKEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__ASTROSPHERIC_APIKEY.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__ASTROSPHERIC_APIKEY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__ASTROSPHERIC_APIKEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- AmbientWeather -->
+                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">AmbientWeather Credentials</span>
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__AMBIENTWEATHER_APIKEY.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__AMBIENTWEATHER_APIKEY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__AMBIENTWEATHER_APIKEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__AMBIENTWEATHER_APPLICATIONKEY.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__AMBIENTWEATHER_APPLICATIONKEY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__AMBIENTWEATHER_APPLICATIONKEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__AMBIENTWEATHER_MACADDRESS.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__AMBIENTWEATHER_MACADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__AMBIENTWEATHER_MACADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Ecowitt -->
+                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Ecowitt Credentials</span>
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:pt-2">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__ECOWITT_APIKEY.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__ECOWITT_APIKEY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__ECOWITT_APIKEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__ECOWITT_APPLICATIONKEY.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__ECOWITT_APPLICATIONKEY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__ECOWITT_APPLICATIONKEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__ECOWITT_MACADDRESS.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__ECOWITT_MACADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__ECOWITT_MACADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
             </div>
         </div>
-        <div class="col-sm-8"></div>
-    </div>
 
-    <hr>
+        <!-- Specific Sensor Hardware Tweaks Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Specific Sensor Hardware Adjustments (Heaters & Logic)</span>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__SHT3X_HEATER_NIGHT.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TEMP_SENSOR__SHT3X_HEATER_NIGHT(class='form-check-input') }}
-                <div id="TEMP_SENSOR__SHT3X_HEATER_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+                <!-- FC37 & DHT PulseIO -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__FC37_ACTIVE_LOW.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__FC37_ACTIVE_LOW(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="TEMP_SENSOR__FC37_ACTIVE_LOW-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__DHT_USE_PULSEIO.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__DHT_USE_PULSEIO(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="TEMP_SENSOR__DHT_USE_PULSEIO-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- SHT3x, HTU31D Heaters & SHT4x, Si7021, HDC302x -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__SHT3X_HEATER_NIGHT.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__SHT3X_HEATER_NIGHT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="TEMP_SENSOR__SHT3X_HEATER_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__SHT3X_HEATER_DAY.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__SHT3X_HEATER_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="TEMP_SENSOR__SHT3X_HEATER_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__HTU31D_HEATER_NIGHT.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__HTU31D_HEATER_NIGHT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="TEMP_SENSOR__HTU31D_HEATER_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__HTU31D_HEATER_DAY.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__HTU31D_HEATER_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="TEMP_SENSOR__HTU31D_HEATER_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:pt-2">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">SHT4x Heater Mode (Night / Day)</span>
+                        {{ form_config.TEMP_SENSOR__SHT4X_MODE_NIGHT(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Night') }}
+                        <div id="TEMP_SENSOR__SHT4X_MODE_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.TEMP_SENSOR__SHT4X_MODE_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1', placeholder='Day') }}
+                        <div id="TEMP_SENSOR__SHT4X_MODE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">Si7021 Heater Level (Night / Day)</span>
+                        {{ form_config.TEMP_SENSOR__SI7021_HEATER_LEVEL_NIGHT(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Night') }}
+                        <div id="TEMP_SENSOR__SI7021_HEATER_LEVEL_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.TEMP_SENSOR__SI7021_HEATER_LEVEL_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1', placeholder='Day') }}
+                        <div id="TEMP_SENSOR__SI7021_HEATER_LEVEL_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">HDC302x Heater Mode (Night / Day)</span>
+                        {{ form_config.TEMP_SENSOR__HDC302X_HEATER_NIGHT(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Night') }}
+                        <div id="TEMP_SENSOR__HDC302X_HEATER_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.TEMP_SENSOR__HDC302X_HEATER_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1', placeholder='Day') }}
+                        <div id="TEMP_SENSOR__HDC302X_HEATER_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
             </div>
         </div>
-        <div class="col-sm-8">Only enabled when RH >80%</div>
-    </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__SHT3X_HEATER_DAY.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TEMP_SENSOR__SHT3X_HEATER_DAY(class='form-check-input') }}
-                <div id="TEMP_SENSOR__SHT3X_HEATER_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        <!-- Light & Optical Sensors Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <div class="tw:flex tw:items-center tw:justify-between">
+                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Ambient Light & Optical Sensors (TSL, VEML, SI1145, LTR390)</span>
+                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/SQM-Sky-Brightness-Measurement" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">SQM Wiki</a>
+                </div>
+
+                <!-- TSL2561 & TSL2591 -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-5 tw:gap-3 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">TSL2561 Gain (Night / Day)</span>
+                        {{ form_config.TEMP_SENSOR__TSL2561_GAIN_NIGHT(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content') }}
+                        <div id="TEMP_SENSOR__TSL2561_GAIN_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.TEMP_SENSOR__TSL2561_GAIN_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1') }}
+                        <div id="TEMP_SENSOR__TSL2561_GAIN_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">TSL2561 Int (Night / Day)</span>
+                        {{ form_config.TEMP_SENSOR__TSL2561_INT_NIGHT(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content') }}
+                        <div id="TEMP_SENSOR__TSL2561_INT_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.TEMP_SENSOR__TSL2561_INT_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1') }}
+                        <div id="TEMP_SENSOR__TSL2561_INT_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">TSL2591 Gain (Night / Day)</span>
+                        {{ form_config.TEMP_SENSOR__TSL2591_GAIN_NIGHT(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content') }}
+                        <div id="TEMP_SENSOR__TSL2591_GAIN_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.TEMP_SENSOR__TSL2591_GAIN_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1') }}
+                        <div id="TEMP_SENSOR__TSL2591_GAIN_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">TSL2591 Int (Night / Day)</span>
+                        {{ form_config.TEMP_SENSOR__TSL2591_INT_NIGHT(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content') }}
+                        <div id="TEMP_SENSOR__TSL2591_INT_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.TEMP_SENSOR__TSL2591_INT_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1') }}
+                        <div id="TEMP_SENSOR__TSL2591_INT_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-2">
+                        <div class="tw:flex tw:items-center tw:justify-between tw:p-2 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                            <span class="tw:text-[9px] tw:font-bold tw:uppercase tw:text-base-content/80">Disable TSL2561 Day</span>
+                            {{ form_config.TEMP_SENSOR__TSL2561_DISABLE_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                            <div id="TEMP_SENSOR__TSL2561_DISABLE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:items-center tw:justify-between tw:p-2 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                            <span class="tw:text-[9px] tw:font-bold tw:uppercase tw:text-base-content/80">Disable TSL2591 Day</span>
+                            {{ form_config.TEMP_SENSOR__TSL2591_DISABLE_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                            <div id="TEMP_SENSOR__TSL2591_DISABLE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VEML7700 & LTR390 -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">VEML7700 Gain (Night / Day)</span>
+                        {{ form_config.TEMP_SENSOR__VEML7700_GAIN_NIGHT(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content') }}
+                        <div id="TEMP_SENSOR__VEML7700_GAIN_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.TEMP_SENSOR__VEML7700_GAIN_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1') }}
+                        <div id="TEMP_SENSOR__VEML7700_GAIN_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">VEML7700 Int (Night / Day)</span>
+                        {{ form_config.TEMP_SENSOR__VEML7700_INT_NIGHT(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content') }}
+                        <div id="TEMP_SENSOR__VEML7700_INT_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.TEMP_SENSOR__VEML7700_INT_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1') }}
+                        <div id="TEMP_SENSOR__VEML7700_INT_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">LTR390 Gain (Night / Day)</span>
+                        {{ form_config.TEMP_SENSOR__LTR390_GAIN_NIGHT(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content') }}
+                        <div id="TEMP_SENSOR__LTR390_GAIN_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.TEMP_SENSOR__LTR390_GAIN_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1') }}
+                        <div id="TEMP_SENSOR__LTR390_GAIN_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- SI1145 & LUX Offset -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-5 tw:gap-3 tw:pt-2">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">SI1145 VIS Gain</span>
+                        {{ form_config.TEMP_SENSOR__SI1145_VIS_GAIN_NIGHT(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Night') }}
+                        <div id="TEMP_SENSOR__SI1145_VIS_GAIN_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.TEMP_SENSOR__SI1145_VIS_GAIN_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1', placeholder='Day') }}
+                        <div id="TEMP_SENSOR__SI1145_VIS_GAIN_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-2">
+                        <div class="tw:flex tw:items-center tw:justify-between tw:p-2 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                            <span class="tw:text-[9px] tw:font-bold tw:uppercase tw:text-base-content/80">VIS High Night</span>
+                            {{ form_config.TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_NIGHT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                            <div id="TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:items-center tw:justify-between tw:p-2 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                            <span class="tw:text-[9px] tw:font-bold tw:uppercase tw:text-base-content/80">VIS High Day</span>
+                            {{ form_config.TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                            <div id="TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">SI1145 IR Gain</span>
+                        {{ form_config.TEMP_SENSOR__SI1145_IR_GAIN_NIGHT(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Night') }}
+                        <div id="TEMP_SENSOR__SI1145_IR_GAIN_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.TEMP_SENSOR__SI1145_IR_GAIN_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1', placeholder='Day') }}
+                        <div id="TEMP_SENSOR__SI1145_IR_GAIN_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-2">
+                        <div class="tw:flex tw:items-center tw:justify-between tw:p-2 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                            <span class="tw:text-[9px] tw:font-bold tw:uppercase tw:text-base-content/80">IR High Night</span>
+                            {{ form_config.TEMP_SENSOR__SI1145_IR_RANGE_HIGH_NIGHT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                            <div id="TEMP_SENSOR__SI1145_IR_RANGE_HIGH_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:items-center tw:justify-between tw:p-2 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                            <span class="tw:text-[9px] tw:font-bold tw:uppercase tw:text-base-content/80">IR High Day</span>
+                            {{ form_config.TEMP_SENSOR__SI1145_IR_RANGE_HIGH_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                            <div id="TEMP_SENSOR__SI1145_IR_RANGE_HIGH_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__LUX_MAGNITUDE_OFFSET.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__LUX_MAGNITUDE_OFFSET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__LUX_MAGNITUDE_OFFSET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
             </div>
         </div>
-        <div class="col-sm-8"></div>
-    </div>
 
-    <hr>
+        <!-- Power & Lightning Sensors Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">INA3221 Power Channels & AS3935 Lightning Detector</span>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__SHT4X_MODE_NIGHT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__SHT4X_MODE_NIGHT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__SHT4X_MODE_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__INA3221_CH1_ENABLE.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__INA3221_CH1_ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="TEMP_SENSOR__INA3221_CH1_ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__INA3221_CH2_ENABLE.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__INA3221_CH2_ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="TEMP_SENSOR__INA3221_CH2_ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__INA3221_CH3_ENABLE.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__INA3221_CH3_ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="TEMP_SENSOR__INA3221_CH3_ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__SHT4X_MODE_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__SHT4X_MODE_DAY(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__SHT4X_MODE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:pt-2">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__AS3935_OUTDOOR_MODE.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__AS3935_OUTDOOR_MODE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="TEMP_SENSOR__AS3935_OUTDOOR_MODE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__AS3935_MASK_DISTURBER.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__AS3935_MASK_DISTURBER(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="TEMP_SENSOR__AS3935_MASK_DISTURBER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__AS3935_NOISE_LEVEL.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__AS3935_NOISE_LEVEL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__AS3935_NOISE_LEVEL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__AS3935_SPIKE_REJECTION.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__AS3935_SPIKE_REJECTION(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__AS3935_SPIKE_REJECTION-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
 
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__SI7021_HEATER_LEVEL_NIGHT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__SI7021_HEATER_LEVEL_NIGHT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__SI7021_HEATER_LEVEL_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__SI7021_HEATER_LEVEL_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__SI7021_HEATER_LEVEL_DAY(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__SI7021_HEATER_LEVEL_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__HTU31D_HEATER_NIGHT.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TEMP_SENSOR__HTU31D_HEATER_NIGHT(class='form-check-input') }}
-                <div id="TEMP_SENSOR__HTU31D_HEATER_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
-        <div class="col-sm-8">Only enabled when RH >80%</div>
-    </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__HTU31D_HEATER_DAY.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TEMP_SENSOR__HTU31D_HEATER_DAY(class='form-check-input') }}
-                <div id="TEMP_SENSOR__HTU31D_HEATER_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        <!-- Sensor MQTT Telemetry Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Sensor Telemetry MQTT Connection</span>
+
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__MQTT_HOST.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__MQTT_HOST(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__MQTT_HOST-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__MQTT_PORT.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__MQTT_PORT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__MQTT_PORT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__MQTT_PROTOCOL.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__MQTT_PROTOCOL(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__MQTT_PROTOCOL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__MQTT_TRANSPORT.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__MQTT_TRANSPORT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__MQTT_TRANSPORT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__MQTT_USERNAME.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__MQTT_USERNAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__MQTT_USERNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__MQTT_PASSWORD.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__MQTT_PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__MQTT_PASSWORD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__MQTT_TLS.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__MQTT_TLS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="TEMP_SENSOR__MQTT_TLS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__MQTT_CERT_BYPASS.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__MQTT_CERT_BYPASS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="TEMP_SENSOR__MQTT_CERT_BYPASS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
             </div>
         </div>
-        <div class="col-sm-8"></div>
+
     </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__HDC302X_HEATER_NIGHT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__HDC302X_HEATER_NIGHT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__HDC302X_HEATER_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__HDC302X_HEATER_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__HDC302X_HEATER_DAY(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__HDC302X_HEATER_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__TSL2561_GAIN_NIGHT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__TSL2561_GAIN_NIGHT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__TSL2561_GAIN_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__TSL2561_GAIN_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__TSL2561_GAIN_DAY(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__TSL2561_GAIN_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__TSL2561_INT_NIGHT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__TSL2561_INT_NIGHT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__TSL2561_INT_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__TSL2561_INT_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__TSL2561_INT_DAY(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__TSL2561_INT_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__TSL2561_DISABLE_DAY.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TEMP_SENSOR__TSL2561_DISABLE_DAY(class='form-check-input') }}
-                <div id="TEMP_SENSOR__TSL2561_DISABLE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__TSL2591_GAIN_NIGHT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__TSL2591_GAIN_NIGHT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__TSL2591_GAIN_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__TSL2591_GAIN_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__TSL2591_GAIN_DAY(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__TSL2591_GAIN_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__TSL2591_INT_NIGHT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__TSL2591_INT_NIGHT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__TSL2591_INT_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__TSL2591_INT_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__TSL2591_INT_DAY(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__TSL2591_INT_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__TSL2591_DISABLE_DAY.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TEMP_SENSOR__TSL2591_DISABLE_DAY(class='form-check-input') }}
-                <div id="TEMP_SENSOR__TSL2591_DISABLE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__VEML7700_GAIN_NIGHT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__VEML7700_GAIN_NIGHT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__VEML7700_GAIN_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__VEML7700_GAIN_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__VEML7700_GAIN_DAY(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__VEML7700_GAIN_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__VEML7700_INT_NIGHT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__VEML7700_INT_NIGHT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__VEML7700_INT_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__VEML7700_INT_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__VEML7700_INT_DAY(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__VEML7700_INT_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__SI1145_VIS_GAIN_NIGHT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__SI1145_VIS_GAIN_NIGHT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__SI1145_VIS_GAIN_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_NIGHT.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_NIGHT(class='form-check-input') }}
-                <div id="TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Divides gain by 14.5</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__SI1145_VIS_GAIN_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__SI1145_VIS_GAIN_DAY(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__SI1145_VIS_GAIN_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_DAY.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_DAY(class='form-check-input') }}
-                <div id="TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Divides gain by 14.5</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__SI1145_IR_GAIN_NIGHT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__SI1145_IR_GAIN_NIGHT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__SI1145_IR_GAIN_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__SI1145_IR_RANGE_HIGH_NIGHT.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TEMP_SENSOR__SI1145_IR_RANGE_HIGH_NIGHT(class='form-check-input') }}
-                <div id="TEMP_SENSOR__SI1145_IR_RANGE_HIGH_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Divides gain by 14.5</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__SI1145_IR_GAIN_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__SI1145_IR_GAIN_DAY(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__SI1145_IR_GAIN_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__SI1145_IR_RANGE_HIGH_DAY.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TEMP_SENSOR__SI1145_IR_RANGE_HIGH_DAY(class='form-check-input') }}
-                <div id="TEMP_SENSOR__SI1145_IR_RANGE_HIGH_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Divides gain by 14.5</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__LTR390_GAIN_NIGHT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__LTR390_GAIN_NIGHT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__LTR390_GAIN_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__LTR390_GAIN_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__LTR390_GAIN_DAY(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__LTR390_GAIN_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__INA3221_CH1_ENABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TEMP_SENSOR__INA3221_CH1_ENABLE(class='form-check-input') }}
-                <div id="TEMP_SENSOR__INA3221_CH1_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__INA3221_CH2_ENABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TEMP_SENSOR__INA3221_CH2_ENABLE(class='form-check-input') }}
-                <div id="TEMP_SENSOR__INA3221_CH2_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__INA3221_CH3_ENABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TEMP_SENSOR__INA3221_CH3_ENABLE(class='form-check-input') }}
-                <div id="TEMP_SENSOR__INA3221_CH3_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__AS3935_OUTDOOR_MODE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TEMP_SENSOR__AS3935_OUTDOOR_MODE(class='form-check-input') }}
-                <div id="TEMP_SENSOR__AS3935_OUTDOOR_MODE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>Disable for Indoor mode (for more noisy environments)</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__AS3935_MASK_DISTURBER.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TEMP_SENSOR__AS3935_MASK_DISTURBER(class='form-check-input') }}
-                <div id="TEMP_SENSOR__AS3935_MASK_DISTURBER-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__AS3935_NOISE_LEVEL.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__AS3935_NOISE_LEVEL(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__AS3935_NOISE_LEVEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Default: 2</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__AS3935_SPIKE_REJECTION.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__AS3935_SPIKE_REJECTION(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__AS3935_SPIKE_REJECTION-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Default: 2</div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__LUX_MAGNITUDE_OFFSET.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__LUX_MAGNITUDE_OFFSET(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__LUX_MAGNITUDE_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/SQM-Sky-Brightness-Measurement" class="text-decoration-none link-info" target="_blank">SQM Wiki</a></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__MQTT_HOST.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__MQTT_HOST(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__MQTT_HOST-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">MQTT hostname</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__MQTT_TRANSPORT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__MQTT_TRANSPORT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__MQTT_TRANSPORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">MQTT Transport</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__MQTT_PROTOCOL.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__MQTT_PROTOCOL(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__MQTT_PROTOCOL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">MQTT Protocol</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__MQTT_PORT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__MQTT_PORT(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__MQTT_PORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">MQTT port - 8883 = TLS, 1883 = standard</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__MQTT_USERNAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__MQTT_USERNAME(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__MQTT_USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">MQTT Username</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__MQTT_PASSWORD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__MQTT_PASSWORD(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__MQTT_PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">MQTT Password</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__MQTT_TLS.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TEMP_SENSOR__MQTT_TLS(class='form-check-input') }}
-                <div id="TEMP_SENSOR__MQTT_TLS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Use TLS/SSL for MQTT connections</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__MQTT_CERT_BYPASS.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TEMP_SENSOR__MQTT_CERT_BYPASS(class='form-check-input') }}
-                <div id="TEMP_SENSOR__MQTT_CERT_BYPASS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Bypass certificate validation</div>
-    </div>
-
-
 </div><!-- end sensors tab -->
