@@ -35,7 +35,7 @@
 
         // Update active tab buttons
         document.querySelectorAll('[data-tab-target]').forEach(function(btn) {
-            const isMatch = btn.getAttribute('data-tab-target') === targetId || btn.getAttribute('data-bs-target') === '#' + targetId;
+            const isMatch = btn.getAttribute('data-tab-target') === targetId;
             btn.classList.toggle('tw:tab-active', isMatch);
             btn.classList.toggle('active', isMatch);
             if (isMatch) {
@@ -109,13 +109,13 @@
     }
 
     function init() {
-        const tabButtons = document.querySelectorAll('[data-tab-target], [data-bs-toggle="tab"]');
+        const tabButtons = document.querySelectorAll('[data-tab-target]');
         if (!tabButtons.length) return;
 
         tabButtons.forEach(function(btn) {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                let targetId = btn.getAttribute('data-tab-target') || btn.getAttribute('data-bs-target');
+                let targetId = btn.getAttribute('data-tab-target');
                 if (targetId) {
                     targetId = targetId.replace(/^#/, '');
                     const tabName = targetId.replace(/^nav-/, '');

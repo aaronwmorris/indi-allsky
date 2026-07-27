@@ -4,8 +4,6 @@
 
 {% block head %}
 <meta charset="UTF-8">
-<style>
-</style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/clipboard.min.js') }}"></script>
 <script type="text/javascript">
 var video_id = {{ video_id }};
@@ -16,22 +14,31 @@ var file_view = "{{ file_view }}";
 {% endblock %}
 
 {% block content %}
-<h3>{{ dayDate_full }} - {{ timeofday}}</h3>
+<div class="tw:container tw:mx-auto tw:px-4 tw:py-6">
+    <div class="tw:max-w-5xl tw:mx-auto tw:flex tw:flex-col tw:gap-6">
 
-<hr>
+        <!-- Top Header & Meta Controls -->
+        <div class="tw:flex tw:flex-col sm:tw:flex-row tw:items-center tw:justify-between tw:p-4 tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm tw:gap-4">
+            <div class="tw:flex tw:items-center tw:gap-3">
+                <i class="tw:icon-[lucide--video] tw:w-6 tw:h-6 tw:text-primary"></i>
+                <div>
+                    <h1 class="tw:text-lg tw:font-bold tw:text-base-content">{{ dayDate_full }}</h1>
+                    <p class="tw:text-xs tw:text-base-content/60 tw:capitalize">{{ timeofday }} Timelapse Video</p>
+                </div>
+            </div>
+            <div class="tw:flex tw:items-center tw:gap-2">
+                <span id="permalink"></span>
+                <span id="download"></span>
+            </div>
+        </div>
 
-<div class="row">
-    <div class="col-sm-12 text-center">
-        <video style="max-width: 100%; max-height: 80vh; width: auto; height: auto; object-fit: contain;" controls>
-            <source src="{{ video_url }}">
-        </video>
-    </div>
-</div>
+        <!-- Video Player Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-md tw:p-4 tw:flex tw:items-center tw:justify-center">
+            <video class="tw:max-w-full tw:rounded-[var(--radius-field)] tw:shadow-lg" style="max-height: 80vh; width: auto; height: auto; object-fit: contain;" controls autoplay>
+                <source src="{{ video_url }}">
+            </video>
+        </div>
 
-<div class="row">
-    <div class="text-center">
-        <span id="permalink"></span>
-        <span id="download"></span>
     </div>
 </div>
 
@@ -40,10 +47,9 @@ function init() {
     new ClipboardJS('.copy-clipboard');
 
     $('#permalink').html(
-        $('<span />', {
-            'text' : "Copy Link to Clipboard",
-            'class' : "badge pill bg-primary copy-clipboard",
-            'style' : "cursor: pointer;",
+        $('<button />', {
+            'html' : '<i class="tw:icon-[lucide--copy] tw:w-4 tw:h-4"></i> Copy Link to Clipboard',
+            'class' : "tw:btn tw:btn-sm tw:btn-primary tw:gap-2 copy-clipboard shadow-sm",
             'data-clipboard-text' : "{{ url_for(file_view, _external=True) }}?id=" + video_id,
         })
     );
@@ -52,19 +58,13 @@ function init() {
             'href' : "{{ video_url }}",
             'rel' : "noopener noreferrer",
             'download' : '',
-        }).html(
-            $('<span />', {
-                'text'  : 'Download',
-                'class' : "badge pill bg-danger",
-            })
-        )
+            'class' : "tw:btn tw:btn-sm tw:btn-error tw:gap-2 tw:no-underline shadow-sm",
+        }).html('<i class="tw:icon-[lucide--download] tw:w-4 tw:h-4"></i> Download Video')
     );
 }
 
-$( document ).ready(function() {
+$(document).ready(function() {
     init();
 });
 </script>
-
-
 {% endblock %}

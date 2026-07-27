@@ -3,43 +3,63 @@
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
 {% block head %}
-<style>
-</style>
 <link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
 <script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
-
 {% endblock %}
 
 {% block content %}
-<div class="container">
-<div class="row">
-  <table id="notifications-table" class="table table-striped compact" data-bs-theme="dark">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Category</th>
-        <th>Create</th>
-        <th>Expire</th>
-        <th>Acked</th>
-        <th>Notification</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for notice in notice_list %}
-      <tr>
-        <td>{{ notice.id }}</td>
-        <td>{{ notice.category }}</td>
-        <td>{{ notice.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-        <td>{{ notice.expireDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-        <td>{{ notice.ack }}</td>
-        <td>{{ notice.notification }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="tw:container tw:mx-auto tw:px-4 tw:py-6">
+    <div class="tw:flex tw:flex-col tw:gap-6">
+        <!-- Header -->
+        <div class="tw:flex tw:items-center tw:justify-between tw:p-4 tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:flex tw:items-center tw:gap-3">
+                <i class="tw:icon-[lucide--bell] tw:w-6 tw:h-6 tw:text-info"></i>
+                <div>
+                    <h1 class="tw:text-lg tw:font-bold tw:text-base-content">System Notifications Log</h1>
+                    <p class="tw:text-xs tw:text-base-content/60">Historical record of system notifications, alerts, and watchdog events</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-md tw:p-4">
+            <div class="tw:overflow-x-auto">
+                <table id="notifications-table" class="tw:table tw:table-zebra tw:w-full tw:text-xs">
+                    <thead>
+                        <tr class="tw:text-base-content/70">
+                            <th>ID</th>
+                            <th>Category</th>
+                            <th>Created</th>
+                            <th>Expires</th>
+                            <th>Acknowledged</th>
+                            <th>Notification Message</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for notice in notice_list %}
+                        <tr>
+                            <td class="tw:font-mono tw:font-bold">{{ notice.id }}</td>
+                            <td><span class="tw:badge tw:badge-sm tw:badge-info tw:badge-outline">{{ notice.category }}</span></td>
+                            <td>{{ notice.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>{{ notice.expireDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>
+                                {% if notice.ack %}
+                                <span class="tw:badge tw:badge-sm tw:badge-success">Yes</span>
+                                {% else %}
+                                <span class="tw:badge tw:badge-sm tw:badge-warning">No</span>
+                                {% endif %}
+                            </td>
+                            <td class="tw:text-base-content/90">{{ notice.notification }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -59,10 +79,8 @@ function init() {
     });
 }
 
-
-$( document ).ready(function() {
+$(document).ready(function() {
     init();
 });
 </script>
-
 {% endblock %}

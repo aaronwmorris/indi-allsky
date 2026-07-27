@@ -269,18 +269,18 @@ class JsonLatestImageView(JsonView):
                 if self.sun_set_date:
                     utcnow = datetime.now(tz=timezone.utc)
                     delta_sun_set = self.sun_set_date - utcnow.replace(tzinfo=None)
-                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="text-warning">Night starts in {0:0.1f} hours.</div>'.format(delta_sun_set.total_seconds() / 3600)
+                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="tw:text-warning">Night starts in {0:0.1f} hours.</div>'.format(delta_sun_set.total_seconds() / 3600)
                 else:
-                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="text-warning">Sun never sets.</div>'
+                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="tw:text-warning">Sun never sets.</div>'
 
                 return data
             elif not self.daytime_capture:
                 if self.sun_set_date:
                     utcnow = datetime.now(tz=timezone.utc)
                     delta_sun_set = self.sun_set_date - utcnow.replace(tzinfo=None)
-                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="text-warning">Night starts in {0:0.1f} hours.</div>'.format(delta_sun_set.total_seconds() / 3600)
+                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="tw:text-warning">Night starts in {0:0.1f} hours.</div>'.format(delta_sun_set.total_seconds() / 3600)
                 else:
-                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="text-warning">Sun never sets.</div>'
+                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="tw:text-warning">Sun never sets.</div>'
 
             elif self.daytime_capture and not self.daytime_capture_save:
                 if self.web_nonlocal_images:
@@ -2049,7 +2049,7 @@ class ConfigView(FormView):
 
         ### timezone validator
         if not self.validate_longitude_timezone():
-            context['longitude_validation_message'] = '<span class="badge rounded-pill bg-warning text-dark">Warning</span><span class="text-warning"> Longitude validation failed.  Incorrect time, timezone, or longitude could cause this condition</span>'
+            context['longitude_validation_message'] = '<div class="tw:alert tw:alert-warning tw:py-2.5 tw:text-xs tw:rounded-[var(--radius-box)] shadow-sm tw:my-2"><i class="tw:icon-[lucide--alert-triangle] tw:w-4 tw:h-4"></i><span>Warning: Longitude validation failed. Incorrect time, timezone, or longitude could cause this condition</span></div>'
         else:
             context['longitude_validation_message'] = ''
 
