@@ -3,133 +3,56 @@
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
 {% block head %}
-<link href="{{ url_for('indi_allsky.static', filename='bootstrap/bootstrap.min.css') }}" rel="stylesheet">
 <link href="{{ url_for('indi_allsky.static', filename='css/style.css') }}" rel="stylesheet">
-<script src="{{ url_for('indi_allsky.static', filename='bootstrap/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ url_for('indi_allsky.static', filename='js/indi-allsky-tabs.js') }}"></script>
-<style>
-#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab, #nav-mqtt-tab, #nav-devices-tab, #nav-sensors-tab, #nav-adsb-tab, #nav-sat_track-tab, #nav-timelapse-tab, #nav-overlays-tab {
-    width: 150px;
-    margin-top: 10px;
-    margin-right: 5px;
-    height: 50px;
-}
-
-.strikethrough{
-    text-decoration: line-through;
-}
-
-/* Universal Theme Overrides for Bootstrap Elements in Config */
-.container,
-#form_config {
-    color: var(--color-base-content, #e2e8f0);
-}
-#form_config label,
-#form_config td,
-#form_config th,
-#form_config p,
-#form_config .form-label,
-#form_config .col-form-label {
-    color: var(--color-base-content, #e2e8f0) !important;
-}
-#form_config .text-secondary,
-#form_config small,
-#form_config .form-text {
-    color: var(--color-base-content, #94a3b8) !important;
-    opacity: 0.75 !important;
-}
-#form_config .form-control,
-#form_config .form-select {
-    background-color: var(--color-base-300, #1e293b) !important;
-    color: var(--color-base-content, #f8fafc) !important;
-    border: 1px solid rgba(128, 128, 128, 0.3) !important;
-    border-radius: var(--radius-field, 0.25rem) !important;
-}
-#form_config .form-control:focus,
-#form_config .form-select:focus {
-    background-color: var(--color-base-100, #0f172a) !important;
-    color: var(--color-base-content, #ffffff) !important;
-    border-color: var(--color-primary, #3b82f6) !important;
-    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
-}
-.nav-tabs {
-    border-bottom-color: rgba(128, 128, 128, 0.3) !important;
-}
-.nav-tabs .nav-link {
-    border-color: rgba(128, 128, 128, 0.3) !important;
-    color: var(--color-base-content, #94a3b8) !important;
-    background-color: var(--color-base-200, #1e293b) !important;
-    border-radius: var(--radius-selector, 0.5rem) !important;
-}
-.nav-tabs .nav-link.active {
-    color: var(--color-primary, #3b82f6) !important;
-    background-color: var(--color-base-300, #0f172a) !important;
-    border-color: var(--color-primary, #3b82f6) !important;
-    font-weight: 700 !important;
-}
-#form_config .card,
-#form_config .accordion-item,
-#form_config .modal-content {
-    background-color: var(--color-base-200, #1e293b) !important;
-    border-color: rgba(128, 128, 128, 0.3) !important;
-    color: var(--color-base-content, #f8fafc) !important;
-}
-#form_config .accordion-button {
-    background-color: var(--color-base-300, #0f172a) !important;
-    color: var(--color-base-content, #f8fafc) !important;
-}
-
-</style>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
-
 {% endblock %}
 
 {% block content %}
-<div class="container h-100">
+<div class="tw:container tw:mx-auto tw:px-4 tw:py-6">
 
 <form id="form_config" onSubmit="return false;" autocomplete="off">
 
-<nav>
-  <div class="nav nav-tabs" id="nav-tab" role="tablist">
-    <button class="nav-link link-danger bg-dark active" id="nav-camera-tab" data-bs-toggle="tab" data-bs-target="#nav-camera" type="button" role="tab" aria-controls="nav-camera" aria-selected="true">Camera</button>
-    <button class="nav-link link-light bg-dark" id="nav-image-tab" data-bs-toggle="tab" data-bs-target="#nav-image" type="button" role="tab" aria-controls="nav-image" aria-selected="false">Image</button>
-    <button class="nav-link link-success bg-dark" id="nav-processing-tab" data-bs-toggle="tab" data-bs-target="#nav-processing" type="button" role="tab" aria-controls="nav-processing" aria-selected="false">Processing</button>
-    <button class="nav-link link-secondary bg-dark" id="nav-overlays-tab" data-bs-toggle="tab" data-bs-target="#nav-overlays" type="button" role="tab" aria-controls="nav-overlays" aria-selected="false">Overlays</button>
-    <button class="nav-link link-primary bg-dark" id="nav-timelapse-tab" data-bs-toggle="tab" data-bs-target="#nav-timelapse" type="button" role="tab" aria-controls="nav-timelapse" aria-selected="false">Timelapse</button>
-    <button class="nav-link link-info bg-dark" id="nav-location-tab" data-bs-toggle="tab" data-bs-target="#nav-location" type="button" role="tab" aria-controls="nav-location" aria-selected="false">Location</button>
-    <button class="nav-link link-warning bg-dark" id="nav-admin-tab" data-bs-toggle="tab" data-bs-target="#nav-admin" type="button" role="tab" aria-controls="nav-admin" aria-selected="false">Admin</button>
-    <button class="nav-link link-primary bg-dark" id="nav-filetransfer-tab" data-bs-toggle="tab" data-bs-target="#nav-filetransfer" type="button" role="tab" aria-controls="nav-filetransfer" aria-selected="false">File Transfer</button>
-    <button class="nav-link link-info bg-dark" id="nav-mqtt-tab" data-bs-toggle="tab" data-bs-target="#nav-mqtt" type="button" role="tab" aria-controls="nav-mqtt" aria-selected="false">MQTT</button>
-    <button class="nav-link link-danger bg-dark" id="nav-youtube-tab" data-bs-toggle="tab" data-bs-target="#nav-youtube" type="button" role="tab" aria-controls="nav-youtube" aria-selected="false">YouTube</button>
-    <button class="nav-link link-secondary bg-dark" id="nav-s3-tab" data-bs-toggle="tab" data-bs-target="#nav-s3" type="button" role="tab" aria-controls="nav-s3" aria-selected="false">Object Storage</button>
-    <button class="nav-link link-light bg-dark" id="nav-syncapi-tab" data-bs-toggle="tab" data-bs-target="#nav-syncapi" type="button" role="tab" aria-controls="nav-syncapi" aria-selected="false">SyncAPI</button>
-    <button class="nav-link link-primary bg-dark" id="nav-sensors-tab" data-bs-toggle="tab" data-bs-target="#nav-sensors" type="button" role="tab" aria-controls="nav-sensors" aria-selected="false">Sensors</button>
-    <button class="nav-link link-danger bg-dark" id="nav-devices-tab" data-bs-toggle="tab" data-bs-target="#nav-devices" type="button" role="tab" aria-controls="nav-devices" aria-selected="false">Devices</button>
-    <button class="nav-link link-secondary bg-dark" id="nav-adsb-tab" data-bs-toggle="tab" data-bs-target="#nav-adsb" type="button" role="tab" aria-controls="nav-adsb" aria-selected="false">ADS-B</button>
-    <button class="nav-link link-light bg-dark" id="nav-sat_track-tab" data-bs-toggle="tab" data-bs-target="#nav-sat_track" type="button" role="tab" aria-controls="nav-sat_track" aria-selected="false" style="font-size:14px">Satellite Tracking</button>
+<nav class="tw:mb-6">
+  <div class="tw:tabs tw:tabs-box tw:flex-wrap tw:gap-1.5 tw:p-2 tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm" id="nav-tab" role="tablist">
+    <button class="tw:tab tw:tab-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-xs tw:h-10 tw:px-4 tw:rounded-[var(--radius-field)] tw:tab-active" id="nav-camera-tab" data-tab-target="nav-camera" type="button" role="tab">Camera</button>
+    <button class="tw:tab tw:tab-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-xs tw:h-10 tw:px-4 tw:rounded-[var(--radius-field)]" id="nav-image-tab" data-tab-target="nav-image" type="button" role="tab">Image</button>
+    <button class="tw:tab tw:tab-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-xs tw:h-10 tw:px-4 tw:rounded-[var(--radius-field)]" id="nav-processing-tab" data-tab-target="nav-processing" type="button" role="tab">Processing</button>
+    <button class="tw:tab tw:tab-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-xs tw:h-10 tw:px-4 tw:rounded-[var(--radius-field)]" id="nav-overlays-tab" data-tab-target="nav-overlays" type="button" role="tab">Overlays</button>
+    <button class="tw:tab tw:tab-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-xs tw:h-10 tw:px-4 tw:rounded-[var(--radius-field)]" id="nav-timelapse-tab" data-tab-target="nav-timelapse" type="button" role="tab">Timelapse</button>
+    <button class="tw:tab tw:tab-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-xs tw:h-10 tw:px-4 tw:rounded-[var(--radius-field)]" id="nav-location-tab" data-tab-target="nav-location" type="button" role="tab">Location</button>
+    <button class="tw:tab tw:tab-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-xs tw:h-10 tw:px-4 tw:rounded-[var(--radius-field)]" id="nav-admin-tab" data-tab-target="nav-admin" type="button" role="tab">Admin</button>
+    <button class="tw:tab tw:tab-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-xs tw:h-10 tw:px-4 tw:rounded-[var(--radius-field)]" id="nav-filetransfer-tab" data-tab-target="nav-filetransfer" type="button" role="tab">File Transfer</button>
+    <button class="tw:tab tw:tab-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-xs tw:h-10 tw:px-4 tw:rounded-[var(--radius-field)]" id="nav-mqtt-tab" data-tab-target="nav-mqtt" type="button" role="tab">MQTT</button>
+    <button class="tw:tab tw:tab-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-xs tw:h-10 tw:px-4 tw:rounded-[var(--radius-field)]" id="nav-youtube-tab" data-tab-target="nav-youtube" type="button" role="tab">YouTube</button>
+    <button class="tw:tab tw:tab-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-xs tw:h-10 tw:px-4 tw:rounded-[var(--radius-field)]" id="nav-s3-tab" data-tab-target="nav-s3" type="button" role="tab">Object Storage</button>
+    <button class="tw:tab tw:tab-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-xs tw:h-10 tw:px-4 tw:rounded-[var(--radius-field)]" id="nav-syncapi-tab" data-tab-target="nav-syncapi" type="button" role="tab">SyncAPI</button>
+    <button class="tw:tab tw:tab-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-xs tw:h-10 tw:px-4 tw:rounded-[var(--radius-field)]" id="nav-sensors-tab" data-tab-target="nav-sensors" type="button" role="tab">Sensors</button>
+    <button class="tw:tab tw:tab-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-xs tw:h-10 tw:px-4 tw:rounded-[var(--radius-field)]" id="nav-devices-tab" data-tab-target="nav-devices" type="button" role="tab">Devices</button>
+    <button class="tw:tab tw:tab-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-xs tw:h-10 tw:px-4 tw:rounded-[var(--radius-field)]" id="nav-adsb-tab" data-tab-target="nav-adsb" type="button" role="tab">ADS-B</button>
+    <button class="tw:tab tw:tab-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-xs tw:h-10 tw:px-4 tw:rounded-[var(--radius-field)]" id="nav-sat_track-tab" data-tab-target="nav-sat_track" type="button" role="tab">Satellite Tracking</button>
   </div>
 </nav>
 
-
-<!-- should be above tab contents -->
 <div>{{ longitude_validation_message | safe }}</div>
 
 {% if fits_enabled %}
-<hr>
-<div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Saving FITS files is enabled [Image tab]</div>
+<div class="tw:alert tw:alert-warning tw:py-2.5 tw:text-xs tw:rounded-[var(--radius-box)] shadow-sm tw:my-2">
+    <i class="tw:icon-[lucide--alert-triangle] tw:w-4 tw:h-4"></i>
+    <span>Saving FITS files is enabled [Image tab]</span>
+</div>
 {% endif %}
 
 {% if mark_detections_enabled %}
-<hr>
-<div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Mark Detections on Image is enabled [Processing tab]</div>
+<div class="tw:alert tw:alert-warning tw:py-2.5 tw:text-xs tw:rounded-[var(--radius-box)] shadow-sm tw:my-2">
+    <i class="tw:icon-[lucide--alert-triangle] tw:w-4 tw:h-4"></i>
+    <span>Mark Detections on Image is enabled [Processing tab]</span>
+</div>
 {% endif %}
 
-<hr>
-
 <div class="tab-content" id="nav-tabContent">
-  <div class="tab-content" id="nav-tabContent">
     {% include 'config/camera.html' %}
     {% include 'config/image.html' %}
     {% include 'config/overlays.html' %}
@@ -146,29 +69,30 @@ var camera_id = {{ camera_id }};
     {% include 'config/devices.html' %}
     {% include 'config/adsb.html' %}
     {% include 'config/sat_track.html' %}
-  </div>
-    <hr>
+</div>
 
-    <div class="form-group row">
-        <div class="col-sm-1">
-            <button id="save-button" class="btn btn-primary">Save</button>
+<!-- Save & Note Footer Bar -->
+<div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-md tw:mt-8">
+    <div class="tw:card-body tw:p-6 tw:flex tw:flex-col sm:tw:flex-row tw:items-center tw:justify-between tw:gap-4">
+        <div class="tw:flex tw:items-center tw:gap-3 tw:w-full sm:tw:w-auto">
+            <button id="save-button" class="tw:btn tw:btn-primary tw:btn-md tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider shadow-sm">
+                <i class="tw:icon-[lucide--save] tw:w-4 tw:h-4"></i>
+                Save Configuration
+            </button>
         </div>
-        <div class="col-sm-1 text-end">
-            {{ form_config.CONFIG_NOTE.label }}
-        </div>
-        <div class="col-sm-6">
-            {{ form_config.CONFIG_NOTE(class='form-control bg-secondary') }}
-            <div id="CONFIG_NOTE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        <div class="tw:flex tw:items-center tw:gap-3 tw:w-full sm:tw:w-2/3">
+            <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/70 tw:whitespace-nowrap">{{ form_config.CONFIG_NOTE.label.text }}:</span>
+            {{ form_config.CONFIG_NOTE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full', placeholder='Optional note describing this configuration change...') }}
+            <div id="CONFIG_NOTE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
         </div>
     </div>
+</div>
 
-    <div class="form-group row" style="height:100px;">
-        <div class="col-sm-2">
-            <div id="success-message" class="alert alert-success" role="alert" style="display: none;"></div>
-            <div id="failure-message" class="alert alert-danger" role="alert" style="display: none;"></div>
-            <div id="failure-fields" class="invalid-feedback text-warning" style="display: none;"></div>
-        </div>
-    </div>
+<div class="tw:mt-4">
+    <div id="success-message" class="tw:alert tw:alert-success tw:shadow-sm" style="display: none;"></div>
+    <div id="failure-message" class="tw:alert tw:alert-error tw:shadow-sm" style="display: none;"></div>
+    <div id="failure-fields" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+</div>
 
 
 </form>
@@ -1851,19 +1775,19 @@ $( document ).ready(function() {
     // Also shows/hides the MQTT sub-section inside libcamera Settings, which is
     // only relevant when an mqtt_* interface is selected.
     function cameraInterfaceAccordion(interfaceValue) {
-        let panelId;
+        let toggleId;
         if (interfaceValue.startsWith('libcamera_') || interfaceValue.startsWith('mqtt_')) {
-            panelId = 'collapseLibcamera';
+            toggleId = 'collapseLibcamera-toggle';
         } else if (interfaceValue === 'pycurl_camera') {
-            panelId = 'collapsePycurl';
+            toggleId = 'collapsePycurl-toggle';
         } else if (interfaceValue.startsWith('test_')) {
-            panelId = 'collapseTestCamera';
+            toggleId = 'collapseTestCamera-toggle';
         } else {
-            panelId = 'collapseIndi';
+            toggleId = 'collapseIndi-toggle';
         }
-        const el = document.getElementById(panelId);
+        const el = document.getElementById(toggleId);
         if (el) {
-            bootstrap.Collapse.getOrCreateInstance(el).show();
+            el.checked = true;
         }
 
         const mqttFields = document.getElementById('libcamera-mqtt-fields');
