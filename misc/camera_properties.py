@@ -159,7 +159,7 @@ class IndiProperties(PyIndi.BaseClient):
 
 
             print('#########################################')
-            print('########## Start properties #############')
+            print('### Camera "{0:s}" Properties'.format(device_ccd.getDeviceName()))
             print('#########################################')
             print('```')  # github formatting
 
@@ -256,17 +256,17 @@ class IndiProperties(PyIndi.BaseClient):
             print(table_switch)
 
             print()
-            print('Control Type: Light')
-            print(table_light)
-
-            print()
             print('Control Type: Blob')
             print(table_blob)
+
+            print()
+            print('Control Type: Light')
+            print(table_light)
 
 
             print('```')  # github formatting
             print('#########################################')
-            print('########### End properties ##############')
+            print('### End "{0:s}" Properties'.format(device_ccd.getDeviceName()))
             print('#########################################')
 
 
