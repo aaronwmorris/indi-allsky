@@ -18,7 +18,7 @@ INDI_PORT = 7624
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.INFO)
+logger.setLevel(level=logging.WARNING)
 
 LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(funcName)s() [%(lineno)d]: %(message)s')
 LOG_HANDLER_STREAM = logging.StreamHandler()
@@ -59,7 +59,7 @@ class IndiProperties(PyIndi.BaseClient):
             str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
         ))
 
-        logger.warning("INDI version: %s", pyindi_version)
+        logger.info("INDI version: %s", pyindi_version)
 
 
     def newDevice(self, d):
@@ -115,7 +115,7 @@ class IndiProperties(PyIndi.BaseClient):
 
 
             while not device_ccd.isConnected():
-                logger.warning('Waiting on ccd connection')
+                logger.info('Waiting on ccd connection')
                 time.sleep(0.5)
 
             logger.info("ccd connected")
@@ -216,7 +216,7 @@ class IndiProperties(PyIndi.BaseClient):
             for k, v in self.__indi_interfaces.items():
                 if device_interfaces & k:
                     if k == PyIndi.BaseDevice.CCD_INTERFACE:
-                        logger.info(' Detected %s', device.getDeviceName())
+                        logger.warning(' Detected %s', device.getDeviceName())
                         ccd_list.append(device)
 
         return ccd_list
