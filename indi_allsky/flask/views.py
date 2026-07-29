@@ -4082,7 +4082,6 @@ class AjaxConfigView(BaseView):
             }
             return jsonify(error_data), 400
 
-
         if reload_on_save:
             self._miscDb.setState('STATUS', constants.STATUS_RELOADING)
 
@@ -4097,13 +4096,12 @@ class AjaxConfigView(BaseView):
             db.session.commit()
 
             message = {
-                'success-message' : 'Saved new config,  Reloading indi-allsky service.',
+                'success-message' : 'Saved new config, Reloading indi-allsky service.',
             }
         else:
             message = {
                 'success-message' : 'Saved new config',
             }
-
 
         return jsonify(message)
 
@@ -8830,7 +8828,70 @@ class UserInfoView(TemplateView):
 
         context['form_userinfo'] = IndiAllskyUserInfoForm(data=form_data)
 
+        custom_css_path = os.path.join(app.static_folder, 'css', 'custom.css')
+        user_custom_css = ''
+        if os.path.exists(custom_css_path):
+            try:
+                with open(custom_css_path, 'r', encoding='utf-8') as f:
+                    user_custom_css = f.read()
+            except Exception:
+                user_custom_css = ''
+
+        context['user_custom_css'] = user_custom_css
+
+        import re
+        user_custom_themes = []
+        if user_custom_css:
+            matches = re.findall(r'name\s*:\s*["\']?([a-zA-Z0-9_\-]+)["\']?', user_custom_css)
+            for m in matches:
+                if m not in user_custom_themes:
+                    user_custom_themes.append(m)
+
+        context['user_custom_themes'] = user_custom_themes
+
         return context
+
+
+class AjaxCustomCssView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def dispatch_request(self):
+        data = request.get_json(force=True, silent=True) or {}
+        custom_css_new = str(data.get('custom_css', ''))
+        custom_css_path = os.path.join(app.static_folder, 'css', 'custom.css')
+
+        try:
+            with open(custom_css_path, 'w', encoding='utf-8') as f:
+                f.write(custom_css_new)
+        except Exception as e:
+            return jsonify({'error': f'Failed to save custom.css: {str(e)}'}), 500
+
+        repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        try:
+            import subprocess
+            build_res = subprocess.run(
+                ["npm", "run", "build"],
+                cwd=repo_root,
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+            if build_res.returncode == 0:
+                return jsonify({
+                    'success': True,
+                    'message': 'Custom CSS saved and stylesheet recompiled successfully!'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': f'Custom CSS saved, but stylesheet build failed: {build_res.stderr.strip()}'
+                }), 400
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': f'Custom CSS saved, but build trigger failed: {str(e)}'
+            }), 500
 
 
 class AjaxUserInfoView(BaseView):
@@ -12176,6 +12237,7 @@ bp_allsky.add_url_rule('/js/support', view_func=JsonSupportInfoView.as_view('js_
 
 bp_allsky.add_url_rule('/user', view_func=UserInfoView.as_view('user_view', template_name='user.html'))
 bp_allsky.add_url_rule('/ajax/user', view_func=AjaxUserInfoView.as_view('ajax_user_view'))
+bp_allsky.add_url_rule('/ajax/custom_css', view_func=AjaxCustomCssView.as_view('ajax_custom_css_view'))
 
 bp_allsky.add_url_rule('/astropanel', view_func=AstroPanelView.as_view('astropanel_view', template_name='astropanel.html'))
 bp_allsky.add_url_rule('/ajax/astropanel', view_func=AjaxAstroPanelView.as_view('ajax_astropanel_view'))

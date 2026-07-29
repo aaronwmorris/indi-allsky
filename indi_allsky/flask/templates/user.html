@@ -159,6 +159,9 @@
                     <option value="lemonade">Lemonade</option>
                     <option value="winter">Winter</option>
                     <option value="nord">Nord</option>
+                    {% for ctheme in user_custom_themes %}
+                    <option value="{{ ctheme }}">{{ ctheme }} (Custom Theme)</option>
+                    {% endfor %}
                 </select>
                 <span class="tw:text-[10px] tw:text-base-content/40">Selecting a light preset switches the UI to Light mode.</span>
             </div>
@@ -182,8 +185,35 @@
                     <option value="coffee">Coffee</option>
                     <option value="dim">Dim</option>
                     <option value="sunset">Sunset</option>
+                    {% for ctheme in user_custom_themes %}
+                    <option value="{{ ctheme }}">{{ ctheme }} (Custom Theme)</option>
+                    {% endfor %}
                 </select>
                 <span class="tw:text-[10px] tw:text-base-content/40">Selecting a dark preset switches the UI to Dark mode.</span>
+            </div>
+        </div>
+
+        <!-- Custom CSS & DaisyUI Theme Injector Sub-Section -->
+        <div class="tw:border-t tw:border-base-300 tw:pt-6 tw:flex tw:flex-col tw:gap-4">
+            <div class="tw:flex tw:items-center tw:justify-between">
+                <div>
+                    <h5 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/70 tw:m-0">
+                        Custom Theme Injector
+                    </h5>
+                    <p class="tw:text-[11px] tw:text-base-content/40 tw:m-0 tw:mt-0.5">
+                        Design a custom color scheme using the <a href="https://daisyui.com/theme-generator/" target="_blank" class="tw:link tw:link-info tw:no-underline tw:font-semibold">DaisyUI Theme Generator <i class="tw:icon-[lucide--external-link] tw:w-3 tw:h-3 tw:inline"></i></a> and paste your exported theme below. After saving, compiling, and reloading the page, your custom theme will be available to select in the preset dropdowns above.
+                    </p>
+                </div>
+            </div>
+
+            <div class="tw:flex tw:flex-col tw:gap-2">
+                <textarea id="user_custom_css" class="tw:textarea tw:textarea-bordered tw:bg-base-100 tw:text-base-content tw:w-full tw:font-mono tw:text-xs" rows="8" placeholder="/* Paste custom DaisyUI theme exported from https://daisyui.com/theme-generator/ here */">{{ user_custom_css }}</textarea>
+                <div class="tw:flex tw:items-center tw:justify-between tw:gap-4">
+                    <button id="btn_save_custom_css" type="button" class="tw:btn tw:btn-sm tw:btn-primary tw:gap-2 shadow-sm">
+                        <i class="tw:icon-[lucide--palette] tw:w-4 tw:h-4"></i> Save & Compile Custom CSS
+                    </button>
+                    <div id="user_css_status" class="tw:text-xs tw:font-semibold" style="display: none;"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -227,6 +257,21 @@ fields['form_global'] = {
     'error' : failureMessage,
 };
 
+function updateCustomThemeDropdowns() {
+    var text = $('#user_custom_css').val();
+    var re = /name\s*:\s*["']?([a-zA-Z0-9_\-]+)["']?/g;
+    var match;
+    while ((match = re.exec(text)) !== null) {
+        var themeName = match[1];
+        ['#select_light_theme', '#select_dark_theme'].forEach(function(selId) {
+            var sel = $(selId);
+            if (sel.find('option[value="' + themeName + '"]').length === 0) {
+                sel.append('<option value="' + themeName + '">' + themeName + ' (Custom Theme)</option>');
+            }
+        });
+    }
+}
+
 // Theme Management Logic
 $(document).ready(function() {
     var lightT = localStorage.getItem('allsky-light-theme') || 'fantasy';
@@ -253,6 +298,35 @@ $(document).ready(function() {
         if (window.applyAllskyTheme) {
             window.applyAllskyTheme();
         }
+    });
+
+    $('#btn_save_custom_css').on('click', function() {
+        var btn = $(this);
+        var statusDiv = $('#user_css_status');
+        btn.prop('disabled', true).html('<span class="tw:loading tw:loading-spinner tw:loading-xs"></span> Compiling...');
+        statusDiv.hide();
+
+        $.ajax({
+            type: "POST",
+            url: "{{ url_for('indi_allsky.ajax_custom_css_view') }}",
+            contentType: "application/json",
+            data: JSON.stringify({ custom_css: $('#user_custom_css').val() }),
+            success: function(data) {
+                btn.prop('disabled', false).html('<i class="tw:icon-[lucide--check] tw:w-4 tw:h-4"></i> Saved & Compiled');
+                updateCustomThemeDropdowns();
+                statusDiv.attr('class', 'tw:text-xs tw:font-semibold tw:text-success').html(data.message).show();
+                setTimeout(function() {
+                    btn.html('<i class="tw:icon-[lucide--palette] tw:w-4 tw:h-4"></i> Save & Compile Custom CSS');
+                    statusDiv.fadeOut();
+                }, 4000);
+            },
+            error: function(xhr) {
+                btn.prop('disabled', false).html('<i class="tw:icon-[lucide--alert-triangle] tw:w-4 tw:h-4"></i> Compile Failed');
+                var errObj = JSON.parse(xhr.responseText || '{}');
+                var errText = errObj.error || errObj.message || 'Build failed';
+                statusDiv.attr('class', 'tw:text-xs tw:font-semibold tw:text-error').html(errText).show();
+            }
+        });
     });
 });
 
