@@ -78,7 +78,7 @@
     justify-content: center !important;
     min-width: 2rem !important;
     height: 2rem !important;
-    padding: 0 0.5rem !important;
+    padding: 0 !important;
     border-radius: var(--radius-selector, 0.5rem) !important;
     border: 1px solid rgba(128, 128, 128, 0.15) !important;
     background-color: var(--color-base-100, #1d232a) !important;
@@ -86,6 +86,21 @@
     font-size: 0.75rem !important;
     cursor: pointer !important;
     text-decoration: none !important;
+    overflow: hidden !important;
+}
+.dt-container .dt-paging .dt-paging-button .page-link {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 0.5rem !important;
+    background: transparent !important;
+    border: none !important;
+    color: inherit !important;
+    font: inherit !important;
+    cursor: inherit !important;
+    outline: none !important;
 }
 .dt-container .dt-paging .dt-paging-button.current,
 .dt-container .dt-paging .dt-paging-button.active {
