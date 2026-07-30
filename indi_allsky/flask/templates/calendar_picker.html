@@ -1,0 +1,19 @@
+<!-- Cally Date Picker Dropdown -->
+<details id="cally-dropdown-details" class="tw:relative">
+    <summary class="btn btn-sm btn-outline tw:gap-2 tw:bg-base-100 tw:border-base-content/20 shadow-sm hover:tw:bg-base-300 tw:list-none [&::-webkit-details-marker]:tw:hidden">
+        <i class="tw:icon-[lucide--calendar] tw:w-4 tw:h-4 tw:text-primary"></i>
+        <span id="date-picker-label" class="tw:font-semibold">Select Date</span>
+        <i class="tw:icon-[lucide--chevron-down] tw:w-3.5 tw:h-3.5 tw:opacity-60"></i>
+    </summary>
+    <div class="tw:absolute tw:top-full tw:left-0 tw:z-50 tw:mt-2 tw:p-3 tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-2xl">
+        <calendar-date id="cally-picker" class="cally">
+            <svg slot="previous" aria-label="Previous" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="tw:w-4 tw:h-4"><path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+            <div slot="heading" class="tw:flex tw:items-center tw:gap-1">
+                <calendar-select-month></calendar-select-month>
+                <calendar-select-year max-years="10"></calendar-select-year>
+            </div>
+            <svg slot="next" aria-label="Next" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="tw:w-4 tw:h-4"><path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+            <calendar-month></calendar-month>
+        </calendar-date>
+    </div>
+</details>

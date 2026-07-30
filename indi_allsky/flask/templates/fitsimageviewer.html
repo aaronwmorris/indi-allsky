@@ -101,25 +101,7 @@ function closeFullscreen() {
                     <div id="DAY_SELECT-error"></div>
                 </div>
 
-                <!-- Cally Date Picker Dropdown -->
-                <details id="fits-cally-dropdown-details" class="tw:relative">
-                    <summary class="btn btn-sm btn-outline tw:gap-2 tw:bg-base-100 tw:border-base-content/20 shadow-sm hover:tw:bg-base-300 tw:list-none [&::-webkit-details-marker]:tw:hidden">
-                        <i class="tw:icon-[lucide--calendar] tw:w-4 tw:h-4 tw:text-primary"></i>
-                        <span id="fits-date-picker-label" class="tw:font-semibold">Select Date</span>
-                        <i class="tw:icon-[lucide--chevron-down] tw:w-3.5 tw:h-3.5 tw:opacity-60"></i>
-                    </summary>
-                    <div class="tw:absolute tw:top-full tw:left-0 tw:z-50 tw:mt-2 tw:p-3 tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-2xl">
-                        <calendar-date id="fits-cally-picker" class="cally">
-                            <svg slot="previous" aria-label="Previous" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="tw:w-4 tw:h-4"><path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
-                            <div slot="heading" class="tw:flex tw:items-center tw:gap-1">
-                                <calendar-select-month></calendar-select-month>
-                                <calendar-select-year max-years="10"></calendar-select-year>
-                            </div>
-                            <svg slot="next" aria-label="Next" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="tw:w-4 tw:h-4"><path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
-                            <calendar-month></calendar-month>
-                        </calendar-date>
-                    </div>
-                </details>
+                {% include 'calendar_picker.html' %}
 
                 <div class="tw:flex tw:items-center tw:gap-2">
                     {{ form_fits_viewer.HOUR_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
@@ -323,11 +305,11 @@ function syncCalendarFromSelects() {
     var day = $("#DAY_SELECT").val();
     if (year && month && day) {
         var formattedDate = year + "-" + month.padStart(2, '0') + "-" + day.padStart(2, '0');
-        var picker = document.getElementById("fits-cally-picker");
+        var picker = document.getElementById("cally-picker");
         if (picker) {
             picker.value = formattedDate;
         }
-        $("#fits-date-picker-label").text(formattedDate);
+        $("#date-picker-label").text(formattedDate);
     }
 }
 
@@ -551,7 +533,7 @@ function init() {
     };
 
     // Attach listener for Cally calendar picker
-    var picker = document.getElementById("fits-cally-picker");
+    var picker = document.getElementById("cally-picker");
     if (picker) {
         picker.addEventListener("change", function(e) {
             var val = e.target.value;
@@ -575,8 +557,8 @@ function init() {
                 $("#MONTH_SELECT").val(mo);
                 $("#DAY_SELECT").val(dy);
 
-                $("#fits-date-picker-label").text(val);
-                $("#fits-cally-dropdown-details").removeAttr("open");
+                $("#date-picker-label").text(val);
+                $("#cally-dropdown-details").removeAttr("open");
 
                 var next_json = {
                     'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
