@@ -16,7 +16,7 @@
     <script src="{{ url_for('indi_allsky.static', filename='js/jquery-3.7.1.min.js') }}"></script>
 </head>
 
-<body class="tw:bg-base-300 tw:min-h-full tw:flex tw:items-center tw:justify-center tw:px-4 tw:m-0">
+<body class="tw:bg-neutral-950 tw:min-h-full tw:flex tw:items-center tw:justify-center tw:px-4 tw:m-0">
 
     <div
         class="tw:w-full tw:max-w-[400px] md:tw:max-w-[680px] tw:mx-auto tw:flex tw:flex-col md:tw:flex-row tw:items-center tw:justify-center tw:gap-8 md:tw:gap-10 tw:py-8">
@@ -34,45 +34,74 @@
         <div class="tw:hidden md:tw:block tw:h-36 tw:w-[1px] tw:bg-base-content/10 tw:shrink-0"></div>
 
         <div
-            class="tw:card tw:w-full tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-xl tw:p-6 md:tw:p-8 tw:rounded-[var(--radius-box)]">
+            class="tw:card tw:w-full tw:bg-base-200/90 tw:backdrop-blur-md tw:border tw:border-base-content/10 tw:shadow-2xl tw:p-6 md:tw:p-8 tw:rounded-[var(--radius-box)]">
+
+            <div class="tw:text-center tw:mb-6">
+                <h2 class="tw:text-xl tw:font-black tw:tracking-tight">Login</h2>
+                <p id="greeting-subtitle" class="tw:text-xs tw:opacity-40 tw:mt-1 tw:tracking-wide tw:capitalize"></p>
+            </div>
 
             <form id="form_login" onsubmit="return false;" class="tw:flex tw:flex-col tw:gap-4">
                 {{ form_login.csrf_token }}
                 <div class="tw:text-error tw:text-xs tw:font-semibold tw:text-center" id="csrf_token-error"></div>
 
-                <div class="tw:form-control tw:w-full">
-                    <label class="tw:label tw:py-1">
-                        <span
-                            class="tw:label-text tw:text-xs tw:font-bold tw:tracking-wider tw:text-base-content/60 tw:uppercase">Username</span>
-                    </label>
+                {% if local_auth_enable %}
+                    <div class="tw:form-control tw:w-full">
+                        <label class="tw:label tw:py-1">
+                            <span
+                                class="tw:label-text tw:text-xs tw:font-bold tw:tracking-wider tw:text-base-content/60 tw:uppercase">Username</span>
+                        </label>
 
-                    <div class="tw:hidden">
-                        {{ form_login.NEXT(class='tw:input') }}
+                        <div class="tw:hidden">
+                            {{ form_login.NEXT(class='tw:input') }}
+                        </div>
+
+                        <div class="tw:relative tw:flex tw:items-center">
+                            <i class="tw:icon-[lucide--user] tw:w-4 tw:h-4 tw:absolute tw:left-3.5 tw:opacity-50 tw:z-10"></i>
+                            {{ form_login.USERNAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:pl-10 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary tw:transition-all') }}
+                        </div>
+                        <div id="USERNAME-error" class="tw:text-error tw:text-xs tw:mt-1.5 tw:font-medium"
+                            style="display: none;"></div>
                     </div>
 
-                    {{ form_login.USERNAME(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:bg-base-100
-                    tw:w-full tw:text-base-content focus:tw:outline-none focus:tw:border-primary tw:transition-all') }}
-                    <div id="USERNAME-error" class="tw:text-error tw:text-xs tw:mt-1.5 tw:font-medium"
-                        style="display: none;"></div>
-                </div>
+                    <div class="tw:form-control tw:w-full">
+                        <label class="tw:label tw:py-1">
+                            <span
+                                class="tw:label-text tw:text-xs tw:font-bold tw:tracking-wider tw:text-base-content/60 tw:uppercase">Password</span>
+                        </label>
+                        <div class="tw:relative tw:flex tw:items-center">
+                            <i class="tw:icon-[lucide--lock] tw:w-4 tw:h-4 tw:absolute tw:left-3.5 tw:opacity-50 tw:z-10"></i>
+                            {{ form_login.PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:pl-10 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary tw:transition-all') }}
+                        </div>
+                        <div id="PASSWORD-error" class="tw:text-error tw:text-xs tw:mt-1.5 tw:font-medium"
+                            style="display: none;"></div>
+                    </div>
 
-                <div class="tw:form-control tw:w-full">
-                    <label class="tw:label tw:py-1">
-                        <span
-                            class="tw:label-text tw:text-xs tw:font-bold tw:tracking-wider tw:text-base-content/60 tw:uppercase">Password</span>
-                    </label>
-                    {{ form_login.PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:bg-base-100
-                    tw:w-full tw:text-base-content focus:tw:outline-none focus:tw:border-primary tw:transition-all') }}
-                    <div id="PASSWORD-error" class="tw:text-error tw:text-xs tw:mt-1.5 tw:font-medium"
-                        style="display: none;"></div>
-                </div>
+                    <div class="tw:form-control tw:mt-4">
+                        <button type="submit"
+                            class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:w-full tw:text-sm tw:font-bold tw:uppercase tw:tracking-wider tw:gap-2">
+                            <i class="tw:icon-[lucide--key] tw:w-4 tw:h-4"></i> Sign In
+                        </button>
+                    </div>
+                {% endif %}
 
-                <div class="tw:form-control tw:mt-2">
-                    <button type="submit"
-                        class="tw:btn tw:btn-primary tw:btn-sm tw:h-10 tw:w-full tw:text-sm tw:font-bold tw:uppercase tw:tracking-wider">
-                        Sign In
-                    </button>
-                </div>
+                {% if oidc_enabled %}
+                    {% if local_auth_enable %}
+                        <div class="tw:divider tw:my-2 tw:text-xs tw:opacity-50">OR</div>
+                    {% endif %}
+                    
+                    <div class="tw:form-control">
+                        <a href="{{ url_for('auth_indi_allsky.oidc_login_view', next=request.args.get('next', '')) }}"
+                            class="tw:btn tw:btn-outline tw:btn-sm tw:h-11 tw:w-full tw:text-sm tw:font-bold tw:uppercase tw:tracking-wider tw:gap-2">
+                            {% if oidc_logo_url %}
+                                <img src="{{ oidc_logo_url }}" class="tw:w-4 tw:h-4 tw:object-contain" alt="OIDC Logo">
+                            {% else %}
+                                <i class="tw:icon-[lucide--shield-check] tw:w-4 tw:h-4 tw:text-primary"></i>
+                            {% endif %}
+                            Sign In with {{ oidc_provider_name }}
+                        </a>
+                    </div>
+                {% endif %}
 
                 <div class="tw:w-full tw:text-center">
                     <div id="success-message" class="tw:text-success tw:text-xs tw:font-medium" style="display: none;">
@@ -103,6 +132,37 @@
             'input': failureMessage,
             'error': failureMessage,
         };
+
+        const greetings = [
+            "Hello", "Hej", "Hi", "Bonjour", "Hola", "Ciao", "Aloha", "Hallo",
+            "Konnichiwa", "Namaste", "Szia", "Hei", "Ahoj", "Nǐ hǎo", "Annyeong",
+            "Olá", "Shalom", "Sawubona", "Jambo", "Hala", "Merhaba", "Gdag",
+            "Dia dhuit", "Kumusta", "Xin chào", "Sawatdee", "Sveiki", "Yassas", "Moïn"
+        ];
+        
+        function generateGreetings() {
+            const shuffled = [...greetings].sort(() => 0.5 - Math.random());
+            const count = Math.floor(Math.random() * 3) + 3; // 3 to 5
+            const selected = shuffled.slice(0, count);
+            $("#greeting-subtitle").text(selected.join(" • "));
+        }
+
+        function generateNebulaBackground() {
+            const gradients = [
+                ['#030712', '#0d182e', '#1a103c'], // Cosmic Indigo
+                ['#04030f', '#1b082e', '#090514'], // Deep Nebula Violet
+                ['#01040f', '#033b2e', '#021c16'], // Auroral Green
+                ['#030712', '#1e1a4a', '#330f3f'], // Stellar Purple
+                ['#020617', '#172554', '#1e1b4b']  // Midnight Blue
+            ];
+            const randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
+            const angle = Math.floor(Math.random() * 360);
+            document.body.style.background = `linear-gradient(${angle}deg, ${randomGradient[0]} 0%, ${randomGradient[1]} 50%, ${randomGradient[2]} 100%)`;
+        }
+
+        // Initialize greetings and dynamic nebula background
+        generateGreetings();
+        generateNebulaBackground();
 
         $.ajaxSetup({
             beforeSend: function (xhr, settings) {
