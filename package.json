@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Frontend assets for indi-allsky",
   "scripts": {
-    "build": "cp node_modules/cally/dist/cally.js ./indi_allsky/flask/static/js/cally.js && tailwindcss -i ./indi_allsky/flask/static/css/app.css -o ./indi_allsky/flask/static/css/dist.css --minify"
+    "build": "cp node_modules/cally/dist/cally.js ./indi_allsky/flask/static/js/cally.js && chmod 644 ./indi_allsky/flask/static/js/cally.js && tailwindcss -i ./indi_allsky/flask/static/css/app.css -o ./indi_allsky/flask/static/css/dist.css --minify"
   },
   "devDependencies": {
     "@iconify-json/lucide": "^1.2.5",
@@ -11,5 +11,8 @@
     "@tailwindcss/cli": "^4.3.0",
     "daisyui": "^5.5.23",
     "tailwindcss": "^4.3.0"
+  },
+  "dependencies": {
+    "cally": "^0.9.2"
   }
 }

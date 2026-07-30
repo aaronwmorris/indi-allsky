@@ -1,5 +1,6 @@
 import os
 import json
+import mimetypes
 from pathlib import Path
 from logging.config import dictConfig
 
@@ -91,6 +92,7 @@ def _sqlite_pragma_on_connect(dbapi_con, con_record):
 
 def create_app():
     """Construct the core application."""
+    mimetypes.add_type('application/javascript', '.js')
     app = Flask(
         __name__,
         instance_relative_config=False,

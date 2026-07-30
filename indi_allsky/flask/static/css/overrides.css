@@ -1,0 +1,368 @@
+/* DataTables Styling Overrides for Tailwind / DaisyUI */
+.dt-container {
+    color: var(--color-base-content, #a6adbb);
+    font-size: 0.875rem;
+    font-family: inherit;
+}
+.dt-container .dt-layout-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 0.75rem 1rem !important;
+    gap: 1rem !important;
+    flex-wrap: wrap !important;
+}
+.dt-container .dt-layout-row.dt-layout-table {
+    padding: 0 !important;
+}
+.dt-container .dt-length select {
+    appearance: auto !important;
+    background-color: var(--color-base-100, #1d232a) !important;
+    color: var(--color-base-content, #a6adbb) !important;
+    border: 1px solid rgba(128, 128, 128, 0.2) !important;
+    border-radius: var(--radius-field, 0.25rem) !important;
+    padding: 0.25rem 0.75rem !important;
+    font-size: 0.75rem !important;
+    margin: 0 0.5rem !important;
+    cursor: pointer;
+}
+.dt-container .dt-search input {
+    background-color: var(--color-base-100, #1d232a) !important;
+    color: var(--color-base-content, #a6adbb) !important;
+    border: 1px solid rgba(128, 128, 128, 0.2) !important;
+    border-radius: var(--radius-field, 0.25rem) !important;
+    padding: 0.35rem 0.75rem !important;
+    font-size: 0.75rem !important;
+    outline: none !important;
+    margin-left: 0.5rem !important;
+}
+.dt-container .dt-search input:focus {
+    border-color: var(--color-primary, #3b82f6) !important;
+}
+.dt-container .dt-buttons {
+    display: flex !important;
+    gap: 0.5rem !important;
+}
+.dt-container .dt-buttons .dt-button,
+.dt-container .dt-buttons button {
+    background-color: var(--color-base-100, #1d232a) !important;
+    color: var(--color-base-content, #a6adbb) !important;
+    border: 1px solid rgba(128, 128, 128, 0.2) !important;
+    border-radius: var(--radius-selector, 0.5rem) !important;
+    padding: 0.25rem 0.75rem !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+.dt-container .dt-buttons button:hover {
+    background-color: var(--color-primary, #3b82f6) !important;
+    color: #ffffff !important;
+    border-color: var(--color-primary, #3b82f6) !important;
+}
+.dt-container .dt-paging {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+}
+.dt-container .dt-paging .dt-paging-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 2rem !important;
+    height: 2rem !important;
+    padding: 0 !important;
+    border-radius: var(--radius-selector, 0.5rem) !important;
+    border: 1px solid rgba(128, 128, 128, 0.15) !important;
+    background-color: var(--color-base-100, #1d232a) !important;
+    color: var(--color-base-content, #a6adbb) !important;
+    font-size: 0.75rem !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    overflow: hidden !important;
+}
+.dt-container .dt-paging .dt-paging-button .page-link {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 0.5rem !important;
+    background: transparent !important;
+    border: none !important;
+    color: inherit !important;
+    font: inherit !important;
+    cursor: inherit !important;
+    outline: none !important;
+}
+.dt-container .dt-paging .dt-paging-button.current,
+.dt-container .dt-paging .dt-paging-button.active {
+    background-color: var(--color-primary, #3b82f6) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+.dt-container .dt-paging .dt-paging-button:hover:not(.current):not(.disabled) {
+    background-color: var(--color-base-300, #2a323c) !important;
+    color: var(--color-base-content, #ffffff) !important;
+}
+.dt-container .dt-paging .dt-paging-button.disabled {
+    opacity: 0.4 !important;
+    cursor: not-allowed !important;
+}
+.dt-container .dt-info {
+    font-size: 0.75rem !important;
+    opacity: 0.7 !important;
+}
+
+/* Interactive Accent Hover Utility for Buttons */
+.tw\:btn-accent-hover,
+.tw-btn-accent-hover,
+.btn-accent-hover {
+    transition: all 0.2s ease !important;
+}
+.tw\:btn-accent-hover:hover,
+.tw-btn-accent-hover:hover,
+.btn-accent-hover:hover {
+    background-color: var(--color-accent) !important;
+    color: var(--color-accent-content, #ffffff) !important;
+    border-color: var(--color-accent) !important;
+}
+
+/* Calendar Custom Element Styling */
+calendar-date {
+  --color-accent: var(--color-primary, #3b82f6);
+  --color-text-on-accent: var(--color-primary-content, #ffffff);
+  font-family: inherit;
+}
+
+calendar-date::part(header) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+calendar-date::part(heading) {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-base-content);
+  opacity: 0.9;
+}
+
+calendar-date::part(button) {
+  background-color: var(--color-base-300, #2a323c);
+  color: var(--color-base-content);
+  border: 1px solid rgba(128, 128, 128, 0.15);
+  border-radius: var(--radius-selector, 0.5rem);
+  width: 1.85rem;
+  height: 1.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+calendar-date::part(button):hover {
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
+  border-color: var(--color-primary);
+}
+
+calendar-date::part(disabled) {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  background-color: transparent !important;
+  color: var(--color-base-content) !important;
+  border-color: rgba(128, 128, 128, 0.1) !important;
+}
+
+calendar-month {
+  --color-accent: var(--color-primary, #3b82f6);
+  --color-text-on-accent: var(--color-primary-content, #ffffff);
+}
+
+calendar-month::part(heading) {
+  font-size: 0.85rem;
+  font-weight: 600;
+  opacity: 0.8;
+  margin-bottom: 0.25rem;
+}
+
+calendar-month::part(button) {
+  font-size: 0.75rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-selector, 0.5rem);
+  transition: all 0.15s ease;
+  cursor: pointer;
+  color: var(--color-base-content);
+}
+
+calendar-month::part(button):hover {
+  background-color: var(--color-base-300, #2a323c);
+}
+
+calendar-month::part(today) {
+  color: var(--color-primary);
+  font-weight: 800;
+  border: 1px double var(--color-primary);
+}
+
+calendar-month::part(today selected) {
+  color: var(--color-primary-content);
+  border: none;
+}
+
+calendar-month::part(outside) {
+  opacity: 0.25;
+}
+
+calendar-select-month::part(label),
+calendar-select-year::part(label) {
+  position: absolute;
+  transform: scale(0);
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+calendar-select-month::part(select),
+calendar-select-year::part(select) {
+  appearance: auto;
+  background-color: var(--color-base-300, #2a323c);
+  color: var(--color-base-content);
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  border-radius: var(--radius-selector, 0.5rem);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  cursor: pointer;
+  outline: none;
+}
+
+calendar-select-month::part(select):hover,
+calendar-select-year::part(select):hover {
+  background-color: var(--color-base-100);
+  border-color: var(--color-primary);
+}
+
+
+/* Calendar Custom Element Styling */
+calendar-date {
+  --color-accent: var(--color-primary, #3b82f6);
+  --color-text-on-accent: var(--color-primary-content, #ffffff);
+  font-family: inherit;
+}
+
+calendar-date::part(header) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+calendar-date::part(heading) {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-base-content);
+  opacity: 0.9;
+}
+
+calendar-date::part(button) {
+  background-color: var(--color-base-300, #2a323c);
+  color: var(--color-base-content);
+  border: 1px solid rgba(128, 128, 128, 0.15);
+  border-radius: var(--radius-selector, 0.5rem);
+  width: 1.85rem;
+  height: 1.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+calendar-date::part(button):hover {
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
+  border-color: var(--color-primary);
+}
+
+calendar-date::part(disabled) {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  background-color: transparent !important;
+  color: var(--color-base-content) !important;
+  border-color: rgba(128, 128, 128, 0.1) !important;
+}
+
+calendar-month {
+  --color-accent: var(--color-primary, #3b82f6);
+  --color-text-on-accent: var(--color-primary-content, #ffffff);
+}
+
+calendar-month::part(heading) {
+  font-size: 0.85rem;
+  font-weight: 600;
+  opacity: 0.8;
+  margin-bottom: 0.25rem;
+}
+
+calendar-month::part(button) {
+  font-size: 0.75rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-selector, 0.5rem);
+  transition: all 0.15s ease;
+  cursor: pointer;
+  color: var(--color-base-content);
+}
+
+calendar-month::part(button):hover {
+  background-color: var(--color-base-300, #2a323c);
+}
+
+calendar-month::part(today) {
+  color: var(--color-primary);
+  font-weight: 800;
+  border: 1px double var(--color-primary);
+}
+
+calendar-month::part(today selected) {
+  color: var(--color-primary-content);
+  border: none;
+}
+
+calendar-month::part(outside) {
+  opacity: 0.25;
+}
+
+calendar-select-month::part(label),
+calendar-select-year::part(label) {
+  position: absolute;
+  transform: scale(0);
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+calendar-select-month::part(select),
+calendar-select-year::part(select) {
+  appearance: auto;
+  background-color: var(--color-base-300, #2a323c);
+  color: var(--color-base-content);
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  border-radius: var(--radius-selector, 0.5rem);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  cursor: pointer;
+  outline: none;
+}
+
+calendar-select-month::part(select):hover,
+calendar-select-year::part(select):hover {
+  background-color: var(--color-base-100);
+  border-color: var(--color-primary);
+}

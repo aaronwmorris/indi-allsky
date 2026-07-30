@@ -4,6 +4,7 @@
 
 {% block head %}
 <meta charset="UTF-8">
+<script type="module" src="{{ url_for('indi_allsky.static', filename='js/cally.js') }}"></script>
 <script type="text/javascript">
 var img;
 var fullscreen = false;  //initial state
@@ -78,36 +79,44 @@ function closeFullscreen() {
             {{ form_viewer.csrf_token }}
             <div class="tw:text-error tw:text-sm tw:my-1 tw:font-semibold" id="csrf_token-error"></div>
 
-            <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-6">
+            <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-center tw:gap-6">
                 
-                <div class="tw:flex tw:items-center tw:gap-2">
+                <div class="tw:hidden">
                     {{ form_viewer.YEAR_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
-                    <div class="tw:flex tw:flex-col">
-                        {{ form_viewer.YEAR_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content') }}
-                        <div id="YEAR_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                        
-                        <div class="tw:hidden">
-                            {{ form_viewer.CAMERA_ID(class='tw:input') }}
-                        </div>
-                        <div id="CAMERA_ID-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                    </div>
-                </div>
+                    {{ form_viewer.YEAR_SELECT(class='tw:select') }}
+                    <div id="YEAR_SELECT-error"></div>
+                    
+                    {{ form_viewer.CAMERA_ID(class='tw:input') }}
+                    <div id="CAMERA_ID-error"></div>
 
-                <div class="tw:flex tw:items-center tw:gap-2">
                     {{ form_viewer.MONTH_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
-                    <div class="tw:flex tw:flex-col">
-                        {{ form_viewer.MONTH_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content') }}
-                        <div id="MONTH_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                    </div>
+                    {{ form_viewer.MONTH_SELECT(class='tw:select') }}
+                    <div id="MONTH_SELECT-error"></div>
+
+                    {{ form_viewer.DAY_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
+                    {{ form_viewer.DAY_SELECT(class='tw:select') }}
+                    <div id="DAY_SELECT-error"></div>
                 </div>
 
-                <div class="tw:flex tw:items-center tw:gap-2">
-                    {{ form_viewer.DAY_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
-                    <div class="tw:flex tw:flex-col">
-                        {{ form_viewer.DAY_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content') }}
-                        <div id="DAY_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                <!-- Cally Date Picker Dropdown -->
+                <details id="cally-dropdown-details" class="tw:relative">
+                    <summary class="btn btn-sm btn-outline tw:gap-2 tw:bg-base-100 tw:border-base-content/20 shadow-sm hover:tw:bg-base-300 tw:list-none [&::-webkit-details-marker]:tw:hidden">
+                        <i class="tw:icon-[lucide--calendar] tw:w-4 tw:h-4 tw:text-primary"></i>
+                        <span id="date-picker-label" class="tw:font-semibold">Select Date</span>
+                        <i class="tw:icon-[lucide--chevron-down] tw:w-3.5 tw:h-3.5 tw:opacity-60"></i>
+                    </summary>
+                    <div class="tw:absolute tw:top-full tw:left-0 tw:z-50 tw:mt-2 tw:p-3 tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-2xl">
+                        <calendar-date id="cally-picker" class="cally">
+                            <svg slot="previous" aria-label="Previous" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="tw:w-4 tw:h-4"><path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                            <div slot="heading" class="tw:flex tw:items-center tw:gap-1">
+                                <calendar-select-month></calendar-select-month>
+                                <calendar-select-year max-years="10"></calendar-select-year>
+                            </div>
+                            <svg slot="next" aria-label="Next" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="tw:w-4 tw:h-4"><path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                            <calendar-month></calendar-month>
+                        </calendar-date>
                     </div>
-                </div>
+                </details>
 
                 <div class="tw:flex tw:items-center tw:gap-2">
                     {{ form_viewer.HOUR_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
@@ -322,7 +331,21 @@ $("#HOUR_SELECT").on("change", function() {
 });
 
 
-function day_change(json_data) {
+function syncCalendarFromSelects() {
+    var year = $("#YEAR_SELECT").val();
+    var month = $("#MONTH_SELECT").val();
+    var day = $("#DAY_SELECT").val();
+    if (year && month && day) {
+        var formattedDate = year + "-" + month.padStart(2, '0') + "-" + day.padStart(2, '0');
+        var picker = document.getElementById("cally-picker");
+        if (picker) {
+            picker.value = formattedDate;
+        }
+        $("#date-picker-label").text(formattedDate);
+    }
+}
+
+function day_change(json_data, targetSelect) {
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
@@ -341,18 +364,20 @@ function day_change(json_data) {
                 $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
 
-
-            if (! newest_entry_default) {
-                // oldest entry is last index
-                hour_options_count = $('#HOUR_SELECT option').length;
-                img_options_count = $('#IMG_SELECT option').length;
-                $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value);
-                $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[img_options_count - 1].value).change();
+            if (targetSelect && targetSelect.hour) {
+                $("#HOUR_SELECT").val(targetSelect.hour);
+            } else {
+                if (! newest_entry_default) {
+                    // oldest entry is last index
+                    hour_options_count = $('#HOUR_SELECT option').length;
+                    img_options_count = $('#IMG_SELECT option').length;
+                    $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value);
+                    $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[img_options_count - 1].value).change();
+                }
             }
 
-
             img.src = fields['IMG_SELECT'].input.val();
-
+            syncCalendarFromSelects();
             $("#loader_filter").hide();
         },
         error: function(rdata){
@@ -387,7 +412,7 @@ $("#DAY_SELECT").on("change", function() {
 });
 
 
-function month_change(json_data) {
+function month_change(json_data, targetSelect) {
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
@@ -411,21 +436,31 @@ function month_change(json_data) {
                 $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
 
-
-            if (! newest_entry_default) {
-                // oldest entry is last index
-                day_options_count = $('#DAY_SELECT option').length;
-                hour_options_count = $('#HOUR_SELECT option').length;
-                img_options_count = $('#IMG_SELECT option').length;
-                $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[day_options_count - 1].value);
-                $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value);
-                $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[img_options_count - 1].value).change();
+            if (targetSelect && targetSelect.day) {
+                $("#DAY_SELECT").val(targetSelect.day);
+                var next_json = {
+                    'CAMERA_ID'         : json_data.CAMERA_ID,
+                    'YEAR_SELECT'       : json_data.YEAR_SELECT,
+                    'MONTH_SELECT'      : json_data.MONTH_SELECT,
+                    'DAY_SELECT'        : targetSelect.day,
+                    'FILTER_DETECTIONS' : json_data.FILTER_DETECTIONS,
+                };
+                day_change(next_json, targetSelect);
+            } else {
+                if (! newest_entry_default) {
+                    // oldest entry is last index
+                    day_options_count = $('#DAY_SELECT option').length;
+                    hour_options_count = $('#HOUR_SELECT option').length;
+                    img_options_count = $('#IMG_SELECT option').length;
+                    $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[day_options_count - 1].value);
+                    $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value);
+                    $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[img_options_count - 1].value).change();
+                } else {
+                    img.src = fields['IMG_SELECT'].input.val();
+                    syncCalendarFromSelects();
+                    $("#loader_filter").hide();
+                }
             }
-
-
-            img.src = fields['IMG_SELECT'].input.val();
-
-            $("#loader_filter").hide();
         },
         error: function(rdata){
             var errors = JSON.parse(rdata.responseText);
@@ -458,7 +493,7 @@ $("#MONTH_SELECT").on("change", function() {
 });
 
 
-function year_change(json_data) {
+function year_change(json_data, targetSelect) {
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
@@ -487,23 +522,32 @@ function year_change(json_data) {
                 $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
 
-
-            if (! newest_entry_default) {
-                // oldest entry is last index
-                month_options_count = $('#MONTH_SELECT option').length;
-                day_options_count = $('#DAY_SELECT option').length;
-                hour_options_count = $('#HOUR_SELECT option').length;
-                img_options_count = $('#IMG_SELECT option').length;
-                $("#MONTH_SELECT").val($("#MONTH_SELECT")[0].options[month_options_count - 1].value);
-                $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[day_options_count - 1].value);
-                $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value);
-                $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[img_options_count - 1].value).change();
+            if (targetSelect && targetSelect.month) {
+                $("#MONTH_SELECT").val(targetSelect.month);
+                var next_json = {
+                    'CAMERA_ID'         : json_data.CAMERA_ID,
+                    'YEAR_SELECT'       : json_data.YEAR_SELECT,
+                    'MONTH_SELECT'      : targetSelect.month,
+                    'FILTER_DETECTIONS' : json_data.FILTER_DETECTIONS,
+                };
+                month_change(next_json, targetSelect);
+            } else {
+                if (! newest_entry_default) {
+                    // oldest entry is last index
+                    month_options_count = $('#MONTH_SELECT option').length;
+                    day_options_count = $('#DAY_SELECT option').length;
+                    hour_options_count = $('#HOUR_SELECT option').length;
+                    img_options_count = $('#IMG_SELECT option').length;
+                    $("#MONTH_SELECT").val($("#MONTH_SELECT")[0].options[month_options_count - 1].value);
+                    $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[day_options_count - 1].value);
+                    $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value);
+                    $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[img_options_count - 1].value).change();
+                } else {
+                    img.src = fields['IMG_SELECT'].input.val();
+                    syncCalendarFromSelects();
+                }
+                $("#loader_filter").hide();
             }
-
-
-            img.src = fields['IMG_SELECT'].input.val();
-
-            $("#loader_filter").hide();
         },
         error: function(rdata){
             var errors = JSON.parse(rdata.responseText);
@@ -583,7 +627,7 @@ $("#FILTER_DETECTIONS").on("change", function() {
             });
 
             img.src = fields['IMG_SELECT'].input.val();
-
+            syncCalendarFromSelects();
             $("#loader_filter").hide();
         },
         error: function(rdata){
@@ -603,6 +647,45 @@ function init() {
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
     };
+
+    // Attach listener for Cally calendar picker
+    var picker = document.getElementById("cally-picker");
+    if (picker) {
+        picker.addEventListener("change", function(e) {
+            var val = e.target.value;
+            if (val) {
+                var parts = val.split('-');
+                var yr = parts[0];
+                var mo = parseInt(parts[1], 10).toString();
+                var dy = parseInt(parts[2], 10).toString();
+
+                if ($("#YEAR_SELECT option[value='" + yr + "']").length === 0) {
+                    $("#YEAR_SELECT").append($('<option />', {value: yr}).text(yr));
+                }
+                if ($("#MONTH_SELECT option[value='" + mo + "']").length === 0) {
+                    $("#MONTH_SELECT").append($('<option />', {value: mo}).text(mo));
+                }
+                if ($("#DAY_SELECT option[value='" + dy + "']").length === 0) {
+                    $("#DAY_SELECT").append($('<option />', {value: dy}).text(dy));
+                }
+
+                $("#YEAR_SELECT").val(yr);
+                $("#MONTH_SELECT").val(mo);
+                $("#DAY_SELECT").val(dy);
+
+                $("#date-picker-label").text(val);
+                $("#cally-dropdown-details").removeAttr("open");
+
+                var next_json = {
+                    'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
+                    'YEAR_SELECT'       : yr,
+                    'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+                };
+                $("#loader_filter").show();
+                year_change(next_json, { year: yr, month: mo, day: dy });
+            }
+        });
+    }
 
     year_change(json_data);
 

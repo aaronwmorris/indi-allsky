@@ -392,6 +392,17 @@
                 window.applyAllskyTheme();
             });
 
+            // Dismiss details dropdown dialogs when clicking outside
+            $(document).on("click", function(e) {
+                var details = $("details[id$='details']");
+                details.each(function() {
+                    var el = $(this);
+                    if (el.prop("open") && !el.is(e.target) && el.has(e.target).length === 0) {
+                        el.removeAttr("open");
+                    }
+                });
+            });
+
             loadNotification();
             getStatusText();
             $("#CAMERA_SELECT").on("change", changeCamera);
