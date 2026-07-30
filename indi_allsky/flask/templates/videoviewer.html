@@ -192,7 +192,7 @@ function populate_videos(video_list) {
         }).appendTo(end_div);
         
         $('<span />', {
-            'text': 'Timelapse Video',
+            'text': 'Keogram',
             'class': 'tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/40'
         }).appendTo(keogram_container);
         
@@ -201,7 +201,7 @@ function populate_videos(video_list) {
         }).appendTo(keogram_container);
         
         var k_a = $('<a />', {
-            'href': "/indi-allsky/watch_timelapse?id=" + item['id'],
+            'href': "/indi-allsky/view_keogram?id=" + item['keogram_id'],
             'target': '_blank',
             'rel': 'noopener noreferrer'
         }).appendTo(k_content_div);
@@ -222,7 +222,7 @@ function populate_videos(video_list) {
         
         $('<div />', {
             'class': 'tw:absolute tw:inset-0 tw:flex tw:items-center tw:justify-center tw:bg-black/20 group-hover:tw:bg-black/0 tw:transition-colors'
-        }).html('<i class="tw:icon-[lucide--play-circle] tw:w-10 tw:h-10 tw:text-white/85"></i>').appendTo(k_a);
+        }).html('<i class="tw:icon-[lucide--zoom-in] tw:w-10 tw:h-10 tw:text-white/85"></i>').appendTo(k_a);
         
         // Actions for Keogram / main video
         var keogram_actions = $('<div />', {
@@ -230,11 +230,11 @@ function populate_videos(video_list) {
         }).appendTo(keogram_container);
         
         $('<a />', {
-            'href': "/indi-allsky/view_keogram?id=" + item['keogram_id'],
+            'href': "/indi-allsky/watch_timelapse?id=" + item['id'],
             'target': '_blank',
             'rel': 'noopener noreferrer',
-            'class': 'tw:btn tw:btn-xs tw:btn-warning tw:btn-outline tw:w-full tw:text-[9px] tw:font-black tw:uppercase',
-            'text': 'View Keogram'
+            'class': 'tw:btn tw:btn-xs tw:btn-primary tw:btn-outline tw:w-full tw:text-[9px] tw:font-black tw:uppercase',
+            'text': 'View Timelapse'
         }).appendTo(keogram_actions);
         
         if (item['panorama_timelapse'] !== 'None') {
@@ -270,7 +270,7 @@ function populate_videos(video_list) {
             }).appendTo(end_div);
             
             $('<span />', {
-                'text': 'Star Trail Timelapse',
+                'text': 'Star Trail',
                 'class': 'tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/40'
             }).appendTo(startrail_container);
 
@@ -280,13 +280,10 @@ function populate_videos(video_list) {
                 }).appendTo(startrail_container);
                 
                 var st_a = $('<a />', {
+                    'href': "/indi-allsky/view_startrail?id=" + item['startrail_id'],
                     'target': '_blank',
                     'rel': 'noopener noreferrer'
                 }).appendTo(st_content_div);
-
-                if (item['startrail_timelapse'] !== 'None') {
-                    st_a.attr('href', "/indi-allsky/watch_startrail?id=" + item['startrail_timelapse_id']);
-                }
 
                 var st_thumb = item['startrail_thumbnail'] !== 'None' ? item['startrail_thumbnail'] : item['startrail'];
                 $('<img />', {
@@ -295,23 +292,23 @@ function populate_videos(video_list) {
                     'alt': 'Startrail'
                 }).appendTo(st_a);
 
-                if (item['startrail_timelapse'] !== 'None') {
-                    $('<div />', {
-                        'class': 'tw:absolute tw:inset-0 tw:flex tw:items-center tw:justify-center tw:bg-black/20 group-hover:tw:bg-black/0 tw:transition-colors'
-                    }).html('<i class="tw:icon-[lucide--play-circle] tw:w-10 tw:h-10 tw:text-white/85"></i>').appendTo(st_a);
-                }
+                $('<div />', {
+                    'class': 'tw:absolute tw:inset-0 tw:flex tw:items-center tw:justify-center tw:bg-black/20 group-hover:tw:bg-black/0 tw:transition-colors'
+                }).html('<i class="tw:icon-[lucide--zoom-in] tw:w-10 tw:h-10 tw:text-white/85"></i>').appendTo(st_a);
                 
                 var startrail_actions = $('<div />', {
                     'class': 'tw:flex tw:flex-col tw:gap-1.5 tw:w-full tw:max-w-[384px]'
                 }).appendTo(startrail_container);
                 
-                $('<a />', {
-                    'href': "/indi-allsky/view_startrail?id=" + item['startrail_id'],
-                    'target': '_blank',
-                    'rel': 'noopener noreferrer',
-                    'class': 'tw:btn tw:btn-xs tw:btn-primary tw:btn-outline tw:w-full tw:text-[9px] tw:font-black tw:uppercase',
-                    'text': 'View Star Trail'
-                }).appendTo(startrail_actions);
+                if (item['startrail_timelapse'] !== 'None') {
+                    $('<a />', {
+                        'href': "/indi-allsky/watch_startrail?id=" + item['startrail_timelapse_id'],
+                        'target': '_blank',
+                        'rel': 'noopener noreferrer',
+                        'class': 'tw:btn tw:btn-xs tw:btn-primary tw:btn-outline tw:w-full tw:text-[9px] tw:font-black tw:uppercase',
+                        'text': 'View Timelapse'
+                    }).appendTo(startrail_actions);
+                }
                 
                 if (youtube__enable && item['startrail_timelapse'] !== 'None') {
                     var yt_st_container = $('<div />', { 'class': 'tw:w-full' }).appendTo(startrail_actions);
