@@ -190,19 +190,60 @@ function populate_videos(video_list) {
 
 const picker = document.getElementById("cally-picker");
 
+var is_initializing = true;
+var is_opening = false;
+
 function sync_calendar_value() {
     const year = fields["YEAR_SELECT"].input.val();
     const month = fields["MONTH_SELECT"].input.val();
     
     if (year && month) {
         const formattedMonth = String(month).padStart(2, '0');
-        const currentVal = picker.value;
-        let day = "01";
-        if (currentVal && currentVal.startsWith(`${year}-${formattedMonth}-`)) {
-            day = currentVal.split("-")[2];
+        const validDays = [];
+        $(".timeline-day-item").each(function() {
+            const idAttr = $(this).attr("id");
+            if (idAttr) {
+                const dayNum = parseInt(idAttr.replace("timeline-day-", ""));
+                if (!isNaN(dayNum)) validDays.push(dayNum);
+            }
+        });
+
+        if (picker) {
+            const yearInt = parseInt(year);
+            const monthInt = parseInt(month) - 1;
+
+            picker.isDateDisallowed = (date) => {
+                if (date.getFullYear() === yearInt && date.getMonth() === monthInt) {
+                    return !validDays.includes(date.getDate());
+                }
+                return false;
+            };
+
+            picker.focusedDate = `${year}-${formattedMonth}-01`;
+            picker.min = picker.min === "1970-01-01" ? "1970-01-02" : "1970-01-01";
         }
-        picker.value = `${year}-${formattedMonth}-${day}`;
-        $("#date-picker-label").text(`${year}-${formattedMonth}-${day}`);
+
+        if (validDays.length > 0) {
+            const currentVal = picker.value;
+            let dayNum = validDays[0];
+            if (currentVal && currentVal.startsWith(`${year}-${formattedMonth}-`)) {
+                const curDay = parseInt(currentVal.split("-")[2]);
+                if (validDays.includes(curDay)) dayNum = curDay;
+            }
+            const formattedDay = String(dayNum).padStart(2, '0');
+            picker.value = `${year}-${formattedMonth}-${formattedDay}`;
+            $("#date-picker-label").text(`${year}-${formattedMonth}-${formattedDay}`);
+        } else {
+            picker.value = "";
+            $("#date-picker-label").text(`${year}-${formattedMonth}`);
+        }
+    } else {
+        if (picker) {
+            picker.isDateDisallowed = () => true;
+            picker.min = picker.min === "1970-01-01" ? "1970-01-02" : "1970-01-01";
+        }
+        picker.value = "";
+        $("#date-picker-label").text("No Data");
     }
 }
 
@@ -279,6 +320,27 @@ picker.addEventListener("change", (e) => {
     }
 });
 
+picker.addEventListener("focusday", (e) => {
+    if (is_initializing || is_opening) return;
+    var newDate = e.detail;
+    if (!newDate) return;
+    var yr = newDate.getFullYear().toString();
+    var mo = (newDate.getMonth() + 1).toString();
+    var currentYear = fields["YEAR_SELECT"].input.val();
+    var currentMonth = fields["MONTH_SELECT"].input.val();
+
+    if (yr !== currentYear || mo !== currentMonth) {
+        fields["YEAR_SELECT"].input.val(yr);
+        fields["MONTH_SELECT"].input.val(mo);
+        $("#loader_filter").show();
+        var json_data = {
+            'CAMERA_ID'    : fields["CAMERA_ID"].input.val(),
+            'YEAR_SELECT'  : yr,
+            'MONTH_SELECT' : mo,
+        };
+        month_change(json_data);
+    }
+});
 
 function month_change(json_data) {
     $.ajax({
@@ -371,6 +433,33 @@ function init() {
 
 $( document ).ready(function() {
     init();
+
+    var callyDropdown = document.getElementById("cally-dropdown-details");
+    if (callyDropdown) {
+        callyDropdown.addEventListener("toggle", function() {
+            if (this.open) {
+                is_opening = true;
+                var doSync = function() {
+                    sync_calendar_value();
+                    if (picker.updated && typeof picker.updated.then === "function") {
+                        picker.updated.then(function() { is_opening = false; });
+                    } else {
+                        setTimeout(function() { is_opening = false; }, 100);
+                    }
+                };
+                if (picker.updated && typeof picker.updated.then === "function") {
+                    picker.updated.then(doSync);
+                } else {
+                    setTimeout(doSync, 100);
+                }
+            }
+        });
+    }
+
+    window.customElements.whenDefined('calendar-date').then(() => {
+        sync_calendar_value();
+        setTimeout(() => { is_initializing = false; }, 100);
+    });
 });
 </script>
 {% endblock %}

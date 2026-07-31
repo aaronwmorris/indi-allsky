@@ -117,7 +117,8 @@ fields['form_global'] = {
 
 function populate_videos(video_list) {
     $("#videos_div").empty();
-    
+
+
     if (!video_list || video_list.length === 0) {
         $('<div />', {
             'class': 'tw:text-center tw:py-12 tw:text-base-content/40 tw:font-semibold',
@@ -347,15 +348,57 @@ function sync_calendar_value() {
     const year = fields["YEAR_SELECT"].input.val();
     const month = fields["MONTH_SELECT"].input.val();
     
-    if (year && month) {
-        const formattedMonth = String(month).padStart(2, '0');
-        const currentVal = picker.value;
-        let day = "01";
-        if (currentVal && currentVal.startsWith(`${year}-${formattedMonth}-`)) {
-            day = currentVal.split("-")[2];
+    if (picker) {
+        if (year && month) {
+            const formattedMonth = String(month).padStart(2, '0');
+            
+            // Find if we have any valid day in this month
+            const validDays = [];
+            $(".timeline-day-item").each(function() {
+                const idAttr = $(this).attr("id");
+                if (idAttr) {
+                    const dayNum = parseInt(idAttr.replace("timeline-day-", ""));
+                    if (!isNaN(dayNum)) {
+                        validDays.push(dayNum);
+                    }
+                }
+            });
+
+            const yearInt = parseInt(year);
+            const monthInt = parseInt(month) - 1;
+            picker.isDateDisallowed = (date) => {
+                if (date.getFullYear() === yearInt && date.getMonth() === monthInt) {
+                    return !validDays.includes(date.getDate());
+                }
+                return false;
+            };
+
+            // Force reactive re-render of calendar cells
+            picker.min = picker.min === "1970-01-01" ? "1970-01-02" : "1970-01-01";
+
+            if (validDays.length > 0) {
+                const currentVal = picker.value;
+                let dayNum = validDays[0]; // Default to first available day
+                if (currentVal && currentVal.startsWith(`${year}-${formattedMonth}-`)) {
+                    const curDay = parseInt(currentVal.split("-")[2]);
+                    if (validDays.includes(curDay)) {
+                        dayNum = curDay;
+                    }
+                }
+                const formattedDay = String(dayNum).padStart(2, '0');
+                picker.value = `${year}-${formattedMonth}-${formattedDay}`;
+                $("#date-picker-label").text(`${year}-${formattedMonth}-${formattedDay}`);
+            } else {
+                picker.value = "";
+                picker.focusedDate = `${year}-${formattedMonth}-01`;
+                $("#date-picker-label").text(`${year}-${formattedMonth}`);
+            }
+        } else {
+            picker.isDateDisallowed = () => true;
+            picker.min = picker.min === "1970-01-01" ? "1970-01-02" : "1970-01-01";
+            picker.value = "";
+            $("#date-picker-label").text("No Data");
         }
-        picker.value = `${year}-${formattedMonth}-${day}`;
-        $("#date-picker-label").text(`${year}-${formattedMonth}-${day}`);
     }
 }
 
@@ -431,6 +474,33 @@ picker.addEventListener("change", (e) => {
         }
     } else {
         highlight_and_scroll_to_day(parseInt(day));
+    }
+});
+
+picker.addEventListener("focusday", (e) => {
+    var newDate = e.detail;
+    if (!newDate) return;
+    var yr = newDate.getFullYear().toString();
+    var mo = (newDate.getMonth() + 1).toString();
+    var currentYear = fields["YEAR_SELECT"].input.val();
+    var currentMonth = fields["MONTH_SELECT"].input.val();
+    if (yr !== currentYear || mo !== currentMonth) {
+        if ($("#YEAR_SELECT option[value='" + yr + "']").length === 0) {
+            $("#YEAR_SELECT").append($('<option />', {value: yr}).text(yr));
+        }
+        if ($("#MONTH_SELECT option[value='" + mo + "']").length === 0) {
+            $("#MONTH_SELECT").append($('<option />', {value: mo}).text(mo));
+        }
+        fields["YEAR_SELECT"].input.val(yr);
+        fields["MONTH_SELECT"].input.val(mo);
+        $("#loader_filter").show();
+        var json_data = {
+            'CAMERA_ID'        : fields["CAMERA_ID"].input.val(),
+            'YEAR_SELECT'      : yr,
+            'MONTH_SELECT'     : mo,
+            'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.val(),
+        };
+        month_change(json_data);
     }
 });
 
@@ -587,6 +657,20 @@ function init() {
 
 $( document ).ready(function() {
     init();
+
+    // jQuery's .on("toggle") doesn't fire on <details> elements (non-bubbling native event).
+    var callyDropdown = document.getElementById("cally-dropdown-details");
+    if (callyDropdown) {
+        callyDropdown.addEventListener("toggle", function() {
+            if (this.open) {
+                sync_calendar_value();
+            }
+        });
+    }
+
+    window.customElements.whenDefined('calendar-date').then(() => {
+        sync_calendar_value();
+    });
 });
 </script>
 {% endblock %}

@@ -317,13 +317,46 @@ function syncCalendarFromSelects() {
     var year = $("#YEAR_SELECT").val();
     var month = $("#MONTH_SELECT").val();
     var day = $("#DAY_SELECT").val();
-    if (year && month && day) {
-        var formattedDate = year + "-" + month.padStart(2, '0') + "-" + day.padStart(2, '0');
-        var picker = document.getElementById("cally-picker");
-        if (picker) {
-            picker.value = formattedDate;
+    
+    var picker = document.getElementById("cally-picker");
+    if (picker) {
+        if (year && month) {
+            const validDays = [];
+            $("#DAY_SELECT option").each(function() {
+                const val = parseInt($(this).val());
+                if (!isNaN(val)) {
+                    validDays.push(val);
+                }
+            });
+
+            const yearInt = parseInt(year);
+            const monthInt = parseInt(month) - 1;
+
+            picker.isDateDisallowed = (date) => {
+                if (date.getFullYear() === yearInt && date.getMonth() === monthInt) {
+                    return !validDays.includes(date.getDate());
+                }
+                return false;
+            };
+
+            // Force reactive re-render of calendar cells
+            picker.min = picker.min === "1970-01-01" ? "1970-01-02" : "1970-01-01";
+
+            if (day) {
+                var formattedDate = year + "-" + month.padStart(2, '0') + "-" + day.padStart(2, '0');
+                picker.value = formattedDate;
+                $("#date-picker-label").text(formattedDate);
+            } else {
+                picker.value = "";
+                picker.focusedDate = year + "-" + month.padStart(2, '0') + "-01";
+                $("#date-picker-label").text(year + "-" + month.padStart(2, '0'));
+            }
+        } else {
+            picker.isDateDisallowed = () => true;
+            picker.min = picker.min === "1970-01-01" ? "1970-01-02" : "1970-01-01";
+            picker.value = "";
+            $("#date-picker-label").text("No Data");
         }
-        $("#date-picker-label").text(formattedDate);
     }
 }
 
@@ -429,11 +462,10 @@ function month_change(json_data, targetSelect) {
                 };
                 day_change(next_json, targetSelect);
             } else {
-                if (! newest_entry_default) {
-                    // oldest entry is last index
-                    day_options_count = $('#DAY_SELECT option').length;
-                    hour_options_count = $('#HOUR_SELECT option').length;
-                    img_options_count = $('#IMG_SELECT option').length;
+                day_options_count = $('#DAY_SELECT option').length;
+                hour_options_count = $('#HOUR_SELECT option').length;
+                img_options_count = $('#IMG_SELECT option').length;
+                if (! newest_entry_default && day_options_count > 0 && hour_options_count > 0 && img_options_count > 0) {
                     $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[day_options_count - 1].value);
                     $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value);
                     $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[img_options_count - 1].value).change();
@@ -514,12 +546,11 @@ function year_change(json_data, targetSelect) {
                 };
                 month_change(next_json, targetSelect);
             } else {
-                if (! newest_entry_default) {
-                    // oldest entry is last index
-                    month_options_count = $('#MONTH_SELECT option').length;
-                    day_options_count = $('#DAY_SELECT option').length;
-                    hour_options_count = $('#HOUR_SELECT option').length;
-                    img_options_count = $('#IMG_SELECT option').length;
+                month_options_count = $('#MONTH_SELECT option').length;
+                day_options_count = $('#DAY_SELECT option').length;
+                hour_options_count = $('#HOUR_SELECT option').length;
+                img_options_count = $('#IMG_SELECT option').length;
+                if (! newest_entry_default && month_options_count > 0 && day_options_count > 0 && hour_options_count > 0 && img_options_count > 0) {
                     $("#MONTH_SELECT").val($("#MONTH_SELECT")[0].options[month_options_count - 1].value);
                     $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[day_options_count - 1].value);
                     $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value);
@@ -665,6 +696,33 @@ function init() {
                 };
                 $("#loader_filter").show();
                 year_change(next_json, { year: yr, month: mo, day: dy });
+            }
+        });
+
+        picker.addEventListener("focusday", function(e) {
+            var newDate = e.detail;
+            if (!newDate) return;
+            var yr = newDate.getFullYear().toString();
+            var mo = (newDate.getMonth() + 1).toString();
+            var currentYear = $("#YEAR_SELECT").val();
+            var currentMonth = $("#MONTH_SELECT").val();
+            if (yr !== currentYear || mo !== currentMonth) {
+                if ($("#YEAR_SELECT option[value='" + yr + "']").length === 0) {
+                    $("#YEAR_SELECT").append($('<option />', {value: yr}).text(yr));
+                }
+                if ($("#MONTH_SELECT option[value='" + mo + "']").length === 0) {
+                    $("#MONTH_SELECT").append($('<option />', {value: mo}).text(mo));
+                }
+                $("#YEAR_SELECT").val(yr);
+                $("#MONTH_SELECT").val(mo);
+                $("#loader_filter").show();
+                var json_data = {
+                    'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
+                    'YEAR_SELECT'       : yr,
+                    'MONTH_SELECT'      : mo,
+                    'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+                };
+                month_change(json_data);
             }
         });
     }
@@ -1154,6 +1212,20 @@ $( document ).ready(function() {
     {% endif %}
 
     init();
+
+    // jQuery's .on("toggle") doesn't fire on <details> elements (non-bubbling native event).
+    var callyDropdown = document.getElementById("cally-dropdown-details");
+    if (callyDropdown) {
+        callyDropdown.addEventListener("toggle", function() {
+            if (this.open) {
+                syncCalendarFromSelects();
+            }
+        });
+    }
+
+    window.customElements.whenDefined('calendar-date').then(() => {
+        syncCalendarFromSelects();
+    });
 
 
     $(document).keydown(function(e) {

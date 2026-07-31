@@ -4350,9 +4350,11 @@ class AjaxImageViewerView(BaseView):
             day = form_datetime.day
 
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
-            hour = json_data['HOUR_SELECT'][0][0]
-
-            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            if json_data['HOUR_SELECT']:
+                hour = json_data['HOUR_SELECT'][0][0]
+                json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            else:
+                json_data['IMAGE_DATA'] = []
 
         elif form_month:
             form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
@@ -4361,12 +4363,19 @@ class AjaxImageViewerView(BaseView):
             month = form_datetime.month
 
             json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
-            day = json_data['DAY_SELECT'][0][0]
-
-            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
-            hour = json_data['HOUR_SELECT'][0][0]
-
-            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            if json_data['DAY_SELECT']:
+                day = json_data['DAY_SELECT'][0][0]
+                json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+                if json_data['HOUR_SELECT']:
+                    hour = json_data['HOUR_SELECT'][0][0]
+                    json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+                else:
+                    json_data['HOUR_SELECT'] = []
+                    json_data['IMAGE_DATA'] = []
+            else:
+                json_data['DAY_SELECT'] = []
+                json_data['HOUR_SELECT'] = []
+                json_data['IMAGE_DATA'] = []
 
         elif form_year:
             form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
@@ -4374,15 +4383,27 @@ class AjaxImageViewerView(BaseView):
             year = form_datetime.year
 
             json_data['MONTH_SELECT'] = form_viewer.getMonths(year)
-            month = json_data['MONTH_SELECT'][0][0]
-
-            json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
-            day = json_data['DAY_SELECT'][0][0]
-
-            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
-            hour = json_data['HOUR_SELECT'][0][0]
-
-            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            if json_data['MONTH_SELECT']:
+                month = json_data['MONTH_SELECT'][0][0]
+                json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+                if json_data['DAY_SELECT']:
+                    day = json_data['DAY_SELECT'][0][0]
+                    json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+                    if json_data['HOUR_SELECT']:
+                        hour = json_data['HOUR_SELECT'][0][0]
+                        json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+                    else:
+                        json_data['HOUR_SELECT'] = []
+                        json_data['IMAGE_DATA'] = []
+                else:
+                    json_data['DAY_SELECT'] = []
+                    json_data['HOUR_SELECT'] = []
+                    json_data['IMAGE_DATA'] = []
+            else:
+                json_data['MONTH_SELECT'] = []
+                json_data['DAY_SELECT'] = []
+                json_data['HOUR_SELECT'] = []
+                json_data['IMAGE_DATA'] = []
 
         else:
             # this happens when filtering images on detections
@@ -4485,9 +4506,11 @@ class AjaxFitsImageViewerView(BaseView):
             day = form_datetime.day
 
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
-            hour = json_data['HOUR_SELECT'][0][0]
-
-            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            if json_data['HOUR_SELECT']:
+                hour = json_data['HOUR_SELECT'][0][0]
+                json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            else:
+                json_data['IMAGE_DATA'] = []
 
         elif form_month:
             form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
@@ -4496,12 +4519,19 @@ class AjaxFitsImageViewerView(BaseView):
             month = form_datetime.month
 
             json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
-            day = json_data['DAY_SELECT'][0][0]
-
-            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
-            hour = json_data['HOUR_SELECT'][0][0]
-
-            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            if json_data['DAY_SELECT']:
+                day = json_data['DAY_SELECT'][0][0]
+                json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+                if json_data['HOUR_SELECT']:
+                    hour = json_data['HOUR_SELECT'][0][0]
+                    json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+                else:
+                    json_data['HOUR_SELECT'] = []
+                    json_data['IMAGE_DATA'] = []
+            else:
+                json_data['DAY_SELECT'] = []
+                json_data['HOUR_SELECT'] = []
+                json_data['IMAGE_DATA'] = []
 
         elif form_year:
             form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
@@ -4509,15 +4539,27 @@ class AjaxFitsImageViewerView(BaseView):
             year = form_datetime.year
 
             json_data['MONTH_SELECT'] = form_viewer.getMonths(year)
-            month = json_data['MONTH_SELECT'][0][0]
-
-            json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
-            day = json_data['DAY_SELECT'][0][0]
-
-            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
-            hour = json_data['HOUR_SELECT'][0][0]
-
-            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            if json_data['MONTH_SELECT']:
+                month = json_data['MONTH_SELECT'][0][0]
+                json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+                if json_data['DAY_SELECT']:
+                    day = json_data['DAY_SELECT'][0][0]
+                    json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+                    if json_data['HOUR_SELECT']:
+                        hour = json_data['HOUR_SELECT'][0][0]
+                        json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+                    else:
+                        json_data['HOUR_SELECT'] = []
+                        json_data['IMAGE_DATA'] = []
+                else:
+                    json_data['DAY_SELECT'] = []
+                    json_data['HOUR_SELECT'] = []
+                    json_data['IMAGE_DATA'] = []
+            else:
+                json_data['MONTH_SELECT'] = []
+                json_data['DAY_SELECT'] = []
+                json_data['HOUR_SELECT'] = []
+                json_data['IMAGE_DATA'] = []
 
         else:
             # this happens when filtering images on detections
@@ -4779,9 +4821,11 @@ class AjaxGalleryViewerView(BaseView):
             day = form_datetime.day
 
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
-            hour = json_data['HOUR_SELECT'][0][0]
-
-            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            if json_data['HOUR_SELECT']:
+                hour = json_data['HOUR_SELECT'][0][0]
+                json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            else:
+                json_data['IMAGE_DATA'] = []
 
         elif form_month:
             form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
@@ -4790,12 +4834,19 @@ class AjaxGalleryViewerView(BaseView):
             month = form_datetime.month
 
             json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
-            day = json_data['DAY_SELECT'][0][0]
-
-            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
-            hour = json_data['HOUR_SELECT'][0][0]
-
-            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            if json_data['DAY_SELECT']:
+                day = json_data['DAY_SELECT'][0][0]
+                json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+                if json_data['HOUR_SELECT']:
+                    hour = json_data['HOUR_SELECT'][0][0]
+                    json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+                else:
+                    json_data['HOUR_SELECT'] = []
+                    json_data['IMAGE_DATA'] = []
+            else:
+                json_data['DAY_SELECT'] = []
+                json_data['HOUR_SELECT'] = []
+                json_data['IMAGE_DATA'] = []
 
         elif form_year:
             form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
@@ -4803,15 +4854,27 @@ class AjaxGalleryViewerView(BaseView):
             year = form_datetime.year
 
             json_data['MONTH_SELECT'] = form_viewer.getMonths(year)
-            month = json_data['MONTH_SELECT'][0][0]
-
-            json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
-            day = json_data['DAY_SELECT'][0][0]
-
-            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
-            hour = json_data['HOUR_SELECT'][0][0]
-
-            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            if json_data['MONTH_SELECT']:
+                month = json_data['MONTH_SELECT'][0][0]
+                json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+                if json_data['DAY_SELECT']:
+                    day = json_data['DAY_SELECT'][0][0]
+                    json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+                    if json_data['HOUR_SELECT']:
+                        hour = json_data['HOUR_SELECT'][0][0]
+                        json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+                    else:
+                        json_data['HOUR_SELECT'] = []
+                        json_data['IMAGE_DATA'] = []
+                else:
+                    json_data['DAY_SELECT'] = []
+                    json_data['HOUR_SELECT'] = []
+                    json_data['IMAGE_DATA'] = []
+            else:
+                json_data['MONTH_SELECT'] = []
+                json_data['DAY_SELECT'] = []
+                json_data['HOUR_SELECT'] = []
+                json_data['IMAGE_DATA'] = []
 
         else:
             # this happens when filtering images on detections
@@ -4985,8 +5048,8 @@ class AjaxMiniVideoViewerView(BaseView):
 
     def dispatch_request(self):
         camera_id      = int(request.json['CAMERA_ID'])
-        form_year      = int(request.json.get('YEAR_SELECT', 0))
-        form_month     = int(request.json.get('MONTH_SELECT', 0))
+        form_year      = int(request.json.get('YEAR_SELECT') or 0)
+        form_month     = int(request.json.get('MONTH_SELECT') or 0)
 
         self.cameraSetup(camera_id=camera_id)
 
@@ -5022,9 +5085,12 @@ class AjaxMiniVideoViewerView(BaseView):
             year = form_datetime.year
 
             json_data['MONTH_SELECT'] = form_mini_video_viewer.getMonths(year)
-            month = json_data['MONTH_SELECT'][0][0]
 
-            json_data['video_list'] = form_mini_video_viewer.getVideos(year, month)
+            if json_data['MONTH_SELECT']:
+                month = json_data['MONTH_SELECT'][0][0]
+                json_data['video_list'] = form_mini_video_viewer.getVideos(year, month)
+            else:
+                json_data['video_list'] = tuple()
         else:
             # No entries in DB
             json_data['MONTH_SELECT'] = (('', 'None'),)
