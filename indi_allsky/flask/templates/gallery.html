@@ -535,8 +535,8 @@ function syncCalendarFromSelects() {
             const monthInt = parseInt(month) - 1;
 
             picker.isDateDisallowed = (date) => {
-                if (date.getFullYear() === yearInt && date.getMonth() === monthInt) {
-                    return !validDays.includes(date.getDate());
+                if (date.getUTCFullYear() === yearInt && date.getUTCMonth() === monthInt) {
+                    return !validDays.includes(date.getUTCDate());
                 }
                 return false;
             };
@@ -906,8 +906,8 @@ function init() {
         picker.addEventListener("focusday", function(e) {
             var newDate = e.detail;
             if (!newDate) return;
-            var yr = newDate.getFullYear().toString();
-            var mo = (newDate.getMonth() + 1).toString();
+            var yr = newDate.getUTCFullYear().toString();
+            var mo = (newDate.getUTCMonth() + 1).toString();
             var currentYear = $("#YEAR_SELECT").val();
             var currentMonth = $("#MONTH_SELECT").val();
             if (yr !== currentYear || mo !== currentMonth) {
