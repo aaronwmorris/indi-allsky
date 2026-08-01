@@ -52,11 +52,30 @@ bad JPEG. When that saved image is added to the database, its existing
 shows the orange **Purple frame excluded** badge when gallery status display is
 enabled. Normal frames and frames from other camera models are unaffected.
 
-The default is `false`, so existing installations continue to repair detected
-frames. The runtime statuses stored with affected images are `repaired`,
+The default is `true` for new or missing configuration. In addition, the web
+settings page selects **Exclude Only** whenever the overall feature transitions
+from disabled to enabled. An already-enabled installation retains its explicit
+mode, and the operator may deliberately clear the checkbox before saving.
+The runtime statuses stored with affected images are `repaired`,
 `validation_failed`, and `excluded`; exclude-only mode does not run repair or
 post-repair validation and therefore adds only the detector's usual
 sub-millisecond overhead.
+
+The recommended evidence-collection sequence is:
+
+1. Enable ASI676MC handling and leave **Exclude Only** selected.
+2. For minimal disk use, enable **Save Bad and Following RAW FITS**. This works
+   in exclude-only mode and retains an untouched bad/normal pair.
+3. For stronger triplets, temporarily enable ordinary FITS saving at **Every
+   Image** while Exclude Only remains active. A non-zero periodic interval can
+   miss randomly occurring failures.
+4. Calibrate and review/apply the derived values, then clear **Exclude Only**
+   to activate pixel repair.
+
+Ordinary FITS are written after ASI676MC handling, including when “Save FITS
+Pre-Calibration” is selected (that option means pre-dark-calibration). When
+actual repair is active, repair-specific diagnostic capture is therefore
+needed to guarantee that the untouched faulty mosaic survives.
 
 ### Test system and evidence package
 

@@ -31,6 +31,31 @@
     will be reported and ignored.
 </div>
 
+<div class="card mb-4">
+    <div class="card-header">Current calibration-evidence settings</div>
+    <div class="card-body">
+        <p>
+            These settings describe future captures; the tool will ultimately
+            judge stored FITS by what actually exists, not by how it was saved.
+            The recommended low-disk starting point is Exclude Only together
+            with Bad and Following RAW FITS.
+        </p>
+        <div class="row mb-2">
+            {% for fact in capture_guidance.facts %}
+            <div class="col-md mb-2">
+                <div class="border rounded p-2 h-100">
+                    <div class="text-secondary small">{{ fact.label }}</div>
+                    <div>{{ fact.value }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% for message in capture_guidance.messages %}
+        <div class="alert alert-{{ message.level }} py-2 mb-2">{{ message.text }}</div>
+        {% endfor %}
+    </div>
+</div>
+
 <form id="form-asi676mc-calibration" onSubmit="return false;">
     {{ form_calibration.csrf_token }}
 

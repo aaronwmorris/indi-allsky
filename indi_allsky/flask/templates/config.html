@@ -2624,6 +2624,17 @@ var camera_id = {{ camera_id }};
 
     <h5>ASI676MC RAW16 Purple-frame Handling</h5>
 
+    <div class="alert alert-info">
+        <strong>Safe calibration workflow:</strong>
+        New configurations start in <em>Exclude Only</em> mode, which flags bad
+        frames and keeps them out of timelapses without changing their pixels.
+        For low disk use, also enable <em>Save Bad and Following RAW FITS</em>.
+        For stronger good/bad/good triplets, keep Exclude Only enabled and
+        temporarily set ordinary FITS saving to <em>Every Image</em>. After the
+        derived values have been reviewed and applied, disable Exclude Only to
+        activate repair.
+    </div>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.IMAGE_ASI676MC_REPAIR__ENABLE.label }}
@@ -2663,7 +2674,8 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             Detect purple frames without repairing them. The normal pipeline still saves the faulty JPEG,
-            then its database entry is automatically excluded from timelapses.
+            then its database entry is flagged as <em>excluded</em> and automatically omitted from timelapses.
+            This is selected automatically when the overall feature is first enabled.
         </div>
     </div>
 
@@ -2710,6 +2722,7 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             Keep the untouched faulty input FITS and the immediately following same-camera FITS.
+            This works in Exclude Only mode and is the recommended low-disk way to collect calibration pairs.
             Download links appear only on the standard Image Viewer.
             Normal FITS expiration settings apply.
         </div>
@@ -11434,6 +11447,19 @@ var group_checkbox_fields_asi676mc_repair = [
 ];
 
 group_on_change('IMAGE_ASI676MC_REPAIR__ENABLE', group_fields_asi676mc_repair, group_checkbox_fields_asi676mc_repair);
+
+// Enabling the camera-specific feature is intentionally a two-stage safety
+// choice. Existing enabled configurations retain their explicit mode, while a
+// transition from disabled to enabled starts in detection-only mode. The user
+// may still uncheck Exclude Only deliberately before saving.
+var asi676mc_repair_was_enabled = $('#IMAGE_ASI676MC_REPAIR__ENABLE').prop('checked');
+$('#IMAGE_ASI676MC_REPAIR__ENABLE').on('change', function() {
+    var repair_enabled = $(this).prop('checked');
+    if (repair_enabled && !asi676mc_repair_was_enabled) {
+        $('#IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY').prop('checked', true);
+    }
+    asi676mc_repair_was_enabled = repair_enabled;
+});
 
 
 var group_fields_fits = [

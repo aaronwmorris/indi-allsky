@@ -1010,7 +1010,10 @@ class ImageProcessor(object):
             )
             return self._set_asi676mc_repair_result(i_ref, 'skipped', reason=reason)
 
-        if repair_config.get('EXCLUDE_ONLY', False):
+        # Missing settings inherit the conservative new-installation default:
+        # detect, flag, and exclude failures without changing their pixels.
+        # An explicit False in an existing configuration remains authoritative.
+        if repair_config.get('EXCLUDE_ONLY', True):
             try:
                 result = asi676mc.detect_frame(
                     i_ref.hdulist[0].data,

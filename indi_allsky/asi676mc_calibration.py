@@ -66,6 +66,158 @@ DERIVED_VALUE_LABELS = {
 }
 
 
+def capture_configuration_guidance(config):
+    """Describe whether current capture settings retain calibration evidence.
+
+    The current configuration cannot prove how older files were captured, so
+    this is deliberately advisory.  Automatic discovery will still inspect
+    the FITS that actually exist.  These messages help explain why future bad
+    frames will produce low-disk pairs, full-sequence triplets, or no usable
+    untouched evidence at all.
+    """
+    config = config if isinstance(config, dict) else {}
+    repair = config.get('IMAGE_ASI676MC_REPAIR', {})
+    repair = repair if isinstance(repair, dict) else {}
+
+    repair_enabled = bool(repair.get('ENABLE', False))
+    exclude_only = bool(repair.get('EXCLUDE_ONLY', True))
+    diagnostic_fits = bool(repair.get('SAVE_DIAGNOSTIC_FITS', False))
+    periodic_fits = bool(config.get('IMAGE_SAVE_FITS', False))
+    compressed_fits = bool(config.get('IMAGE_SAVE_FITS_COMPRESSED', False))
+    try:
+        fits_period = int(config.get('IMAGE_SAVE_FITS_PERIOD', 7200))
+    except (TypeError, ValueError):
+        fits_period = None
+    try:
+        retention_days = int(config.get('IMAGE_FITS_EXPIRE_DAYS', 10))
+    except (TypeError, ValueError):
+        retention_days = None
+
+    if not periodic_fits:
+        periodic_text = 'Off'
+    elif fits_period == 0:
+        periodic_text = 'Every image'
+    elif fits_period is None:
+        periodic_text = 'On (invalid interval)'
+    else:
+        periodic_text = 'Every {0} seconds'.format(fits_period)
+
+    mode_text = (
+        'Off'
+        if not repair_enabled
+        else ('Exclude only' if exclude_only else 'Actual repair')
+    )
+    facts = [
+        {'label': 'Repair mode', 'value': mode_text},
+        {
+            'label': 'Bad + following RAW FITS',
+            'value': 'On' if diagnostic_fits else 'Off',
+        },
+        {'label': 'Ordinary FITS', 'value': periodic_text},
+        {
+            'label': 'Ordinary FITS compression',
+            'value': 'On' if compressed_fits else 'Off',
+        },
+        {
+            'label': 'FITS retention',
+            'value': (
+                '{0} days'.format(retention_days)
+                if retention_days is not None
+                else 'Invalid value'
+            ),
+        },
+    ]
+
+    messages = []
+    if repair_enabled and exclude_only:
+        messages.append({
+            'level': 'success',
+            'text': (
+                'Safe detection-only mode is active: bad frames are flagged '
+                'and excluded from timelapses without changing their pixels.'
+            ),
+        })
+    elif repair_enabled:
+        messages.append({
+            'level': 'info',
+            'text': (
+                'Actual repair is active. Ordinary FITS are written after '
+                'ASI676MC repair, so they may not retain the original bad mosaic.'
+            ),
+        })
+    else:
+        messages.append({
+            'level': 'warning',
+            'text': (
+                'ASI676MC handling is disabled. Frames are not flagged by the '
+                'live pipeline, although every-image ordinary FITS can still '
+                'be classified later from their contents.'
+            ),
+        })
+        if diagnostic_fits:
+            messages.append({
+                'level': 'warning',
+                'text': (
+                    'Bad and Following RAW FITS is selected but inactive until '
+                    'ASI676MC handling is enabled.'
+                ),
+            })
+
+    if repair_enabled and diagnostic_fits:
+        messages.append({
+            'level': 'success',
+            'text': (
+                'Low-disk evidence collection is active: each detected bad '
+                'frame and its immediately following untouched RAW FITS are kept.'
+            ),
+        })
+    elif repair_enabled and not exclude_only:
+        messages.append({
+            'level': 'warning',
+            'text': (
+                'Enable Bad and Following RAW FITS before collecting calibration '
+                'data; otherwise actual repair may remove the original failure '
+                'before ordinary FITS are saved.'
+            ),
+        })
+
+    if periodic_fits and fits_period == 0:
+        messages.append({
+            'level': 'info',
+            'text': (
+                'Every-image FITS saving can provide stronger good/bad/good '
+                'triplets, at substantially higher disk usage.'
+            ),
+        })
+    elif periodic_fits:
+        messages.append({
+            'level': 'warning',
+            'text': (
+                'Periodic FITS saving does not guarantee a FITS for a randomly '
+                'occurring bad frame. Use Every Image or enable Bad and '
+                'Following RAW FITS while collecting evidence.'
+            ),
+        })
+    elif repair_enabled and not diagnostic_fits:
+        messages.append({
+            'level': 'warning',
+            'text': (
+                'No FITS evidence collection is enabled. Future flagged bad '
+                'frames may have no FITS available to the calibration tool.'
+            ),
+        })
+
+    return {
+        'facts': facts,
+        'messages': messages,
+        'repair_enabled': repair_enabled,
+        'exclude_only': exclude_only,
+        'diagnostic_fits': diagnostic_fits,
+        'periodic_fits': periodic_fits,
+        'fits_period': fits_period,
+    }
+
+
 class CalibrationSessionError(RuntimeError):
     """Base class for a malformed, inaccessible, or invalid web session."""
 

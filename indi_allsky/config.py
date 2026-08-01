@@ -258,7 +258,10 @@ class IndiAllSkyConfigBase(object):
         },
         "IMAGE_ASI676MC_REPAIR" : {
             "ENABLE"                      : False,
-            "EXCLUDE_ONLY"                : False,
+            # Detection-only is the safe starting point. The settings page
+            # also selects this when the feature is enabled for the first
+            # time; an operator must deliberately opt into pixel repair.
+            "EXCLUDE_ONLY"                : True,
             "LOG_EVERY_FRAME"             : False,
             "GALLERY_ENABLE"              : True,
             "SAVE_DIAGNOSTIC_FITS"         : False,

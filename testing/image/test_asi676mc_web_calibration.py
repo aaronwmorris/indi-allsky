@@ -261,6 +261,57 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('for (let index = 0; index < files.length; index++)', template)
         self.assertIn('Download text report', template)
         self.assertIn('Apply values and reload', template)
+        self.assertIn('Current calibration-evidence settings', template)
+
+    def test_capture_guidance_recommends_safe_low_disk_collection(self):
+        guidance = asi676mc_calibration.capture_configuration_guidance({
+            'IMAGE_ASI676MC_REPAIR': {
+                'ENABLE': True,
+                'EXCLUDE_ONLY': True,
+                'SAVE_DIAGNOSTIC_FITS': True,
+            },
+            'IMAGE_SAVE_FITS': False,
+            'IMAGE_FITS_EXPIRE_DAYS': 10,
+        })
+        self.assertTrue(guidance['exclude_only'])
+        self.assertTrue(guidance['diagnostic_fits'])
+        messages = ' '.join(item['text'] for item in guidance['messages'])
+        self.assertIn('Safe detection-only mode is active', messages)
+        self.assertIn('Low-disk evidence collection is active', messages)
+
+    def test_capture_guidance_warns_about_unsafe_or_periodic_saving(self):
+        guidance = asi676mc_calibration.capture_configuration_guidance({
+            'IMAGE_ASI676MC_REPAIR': {
+                'ENABLE': True,
+                'EXCLUDE_ONLY': False,
+                'SAVE_DIAGNOSTIC_FITS': False,
+            },
+            'IMAGE_SAVE_FITS': True,
+            'IMAGE_SAVE_FITS_PERIOD': 600,
+        })
+        messages = ' '.join(item['text'] for item in guidance['messages'])
+        self.assertIn('may not retain the original bad mosaic', messages)
+        self.assertIn('does not guarantee a FITS', messages)
+
+    def test_safe_exclude_only_defaults_are_source_visible(self):
+        project_root = Path(__file__).resolve().parents[2]
+        config_source = project_root.joinpath(
+            'indi_allsky', 'config.py'
+        ).read_text(encoding='utf-8')
+        processing_source = project_root.joinpath(
+            'indi_allsky', 'processing.py'
+        ).read_text(encoding='utf-8')
+        views_source = project_root.joinpath(
+            'indi_allsky', 'flask', 'views.py'
+        ).read_text(encoding='utf-8')
+        settings_template = project_root.joinpath(
+            'indi_allsky', 'flask', 'templates', 'config.html'
+        ).read_text(encoding='utf-8')
+
+        self.assertIn('"EXCLUDE_ONLY"                : True', config_source)
+        self.assertIn("get('EXCLUDE_ONLY', True)", processing_source)
+        self.assertIn("get('EXCLUDE_ONLY', True)", views_source)
+        self.assertIn('asi676mc_repair_was_enabled', settings_template)
 
 
 if __name__ == '__main__':
