@@ -14,86 +14,152 @@ var camera_id = {{ camera_id }};
 
     <form id="form_connections" onSubmit="return false;" autocomplete="off" class="tw:flex tw:flex-col tw:gap-6">
         
+        {% if docker or not nm_installed %}
         <!-- Global Warnings -->
-        <div class="tw:flex tw:flex-col tw:gap-2">
+        <div class="tw:flex tw:flex-col tw:gap-3">
             {% if docker %}
-            <div class="tw:alert tw:alert-warning tw:py-3 tw:text-xs tw:rounded-[var(--radius-box)]">
+            <div class="tw:alert tw:alert-warning tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm">
                 <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4"></i>
                 <span>Containerized environment detected. Network controls will not function.</span>
             </div>
             {% endif %}
 
             {% if not nm_installed %}
-            <div class="tw:alert tw:alert-warning tw:py-3 tw:text-xs tw:rounded-[var(--radius-box)]">
+            <div class="tw:alert tw:alert-warning tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm">
                 <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4"></i>
-                <span>Network Manager is not available.</span>
+                <span>Network Manager is not available on this system.</span>
             </div>
             {% endif %}
         </div>
+        {% endif %}
 
         <!-- Navigation Tab Bar -->
-        <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm">
+        <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm tw:mb-4">
             <button type="button" class="net-tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-connections">Connections</button>
             <button type="button" class="net-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" data-target="tab-wifi">Wi-Fi</button>
             <button type="button" class="net-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" data-target="tab-hotspot">Hotspot</button>
         </div>
 
-        <div class="tw:w-full tw:mt-4">
+        <div class="tw:w-full">
             
             <!-- TAB: CONNECTIONS -->
             <div id="tab-connections" class="net-tab-pane">
-                <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm">
-                    <div class="tw:card-body tw:p-6">
-                        <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-8">
-                            <div class="lg:tw:col-span-8 tw:flex tw:flex-col tw:gap-6">
-                                <div class="tw:form-control tw:w-full">
-                                    <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.CONNECTIONS_SELECT.label.text }}</span>
-                                    </label>
-                                    {{ form_connections.CONNECTIONS_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full') }}
-                                    <div id="CONNECTIONS_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
-                                    <div class="tw:text-[10px] tw:opacity-60 tw:mt-1">* Indicates Auto-start</div>
-                                </div>
-
-                                <div class="tw:alert tw:alert-warning tw:py-4 tw:text-xs">
-                                    <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
-                                    <span><b>Warning:</b> Use care when deactivating connections. If you deactivate the primary connection which is used for management, you will lose access to the web interface. Power cycle to reactivate.</span>
+                <div class="tw:flex tw:flex-col tw:gap-6">
+                    
+                    <!-- Active Adapters Panel -->
+                    <div class="tw:flex tw:flex-col tw:gap-3">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Active Adapters</span>
+                        <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 lg:tw:grid-cols-3 tw:gap-4">
+                            {% for dev in net_list %}
+                            <div class="tw:card tw:bg-base-300/30 tw:border tw:border-base-content/10 tw:shadow-sm">
+                                <div class="tw:card-body tw:p-4 tw:flex tw:flex-row tw:items-center tw:justify-between tw:w-full tw:gap-4">
+                                    <div class="tw:flex tw:items-center tw:gap-3.5">
+                                        <div class="tw:flex tw:items-center tw:justify-center tw:w-10 tw:h-10 tw:rounded-full tw:bg-neutral tw:text-neutral-content tw:shrink-0">
+                                            {% if 'wl' in dev.name or 'wifi' in dev.name %}
+                                            <i class="tw:icon-[lucide--wifi] tw:w-5 tw:h-5 tw:block"></i>
+                                            {% else %}
+                                            <i class="tw:icon-[lucide--network] tw:w-5 tw:h-5 tw:block"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <h4 class="tw:font-bold tw:text-sm tw:text-base-content/90">{{ dev.name }}</h4>
+                                            <div class="tw:flex tw:flex-col tw:gap-0.5 tw:mt-1">
+                                                {% for ip in dev.inet4 %}
+                                                <span class="tw:text-[10px] tw:font-mono tw:opacity-70 tw:flex tw:items-center tw:gap-1">
+                                                    <i class="tw:icon-[lucide--globe] tw:w-3 tw:h-3 tw:text-info"></i> {{ ip }}
+                                                </span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        {% if dev.inet4 %}
+                                        <span class="tw:badge tw:badge-success tw:font-mono tw:text-[10px] tw:rounded-[var(--radius-box)]">online</span>
+                                        {% else %}
+                                        <span class="tw:badge tw:badge-neutral tw:font-mono tw:text-[10px] tw:rounded-[var(--radius-box)]">offline</span>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
+                            {% endfor %}
+                        </div>
+                    </div>
 
-                            <div class="lg:tw:col-span-4 tw:flex tw:flex-col tw:gap-3">
-                                <div class="tw:flex tw:flex-wrap tw:gap-2 tw:mb-4">
-                                    <button id="activate-button" class="tw:btn tw:btn-success tw:btn-sm tw:flex-1">Activate</button>
-                                    <button id="deactivate-button" class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1">Deactivate</button>
-                                    <button id="delete-button" class="tw:btn tw:btn-error tw:btn-outline tw:btn-sm tw:flex-1">Delete</button>
-                                </div>
+                    <!-- Connection Management -->
+                    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm">
+                        <div class="tw:card-body tw:p-6">
+                            <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-8">
                                 
-                                <div class="tw:divider tw:my-0"></div>
-                                
-                                <div class="tw:flex tw:flex-wrap tw:gap-2 tw:my-2">
-                                    <button id="autostart-button" class="tw:btn tw:btn-info tw:btn-sm tw:flex-1 tw:h-auto tw:py-2">Enable<br>Auto-start</button>
-                                    <button id="no-autostart-button" class="tw:btn tw:btn-neutral tw:btn-accent-hover tw:bg-base-300 tw:btn-sm tw:flex-1 tw:h-auto tw:py-2">Disable<br>Auto-start</button>
+                                <!-- Left Form Area -->
+                                <div class="lg:tw:col-span-8 tw:flex tw:flex-col tw:gap-6">
+                                    <div class="tw:form-control tw:w-full">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.CONNECTIONS_SELECT.label.text }}</span>
+                                        </label>
+                                        {{ form_connections.CONNECTIONS_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)]') }}
+                                        <div id="CONNECTIONS_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                                        <div class="tw:text-[10px] tw:opacity-60 tw:mt-1.5">* Indicates Auto-start connection</div>
+                                    </div>
+
+                                    <div class="tw:alert tw:alert-warning tw:py-4 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm">
+                                        <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4"></i>
+                                        <span><b>Caution:</b> Deactivating primary management connections will result in access loss. You will need to physical power cycle to restore connectivity.</span>
+                                    </div>
                                 </div>
 
-                                <div class="tw:divider tw:my-0"></div>
+                                <!-- Right Actions Area -->
+                                <div class="lg:tw:col-span-4 tw:flex tw:flex-col tw:gap-4">
+                                    
+                                    <!-- Primary controls -->
+                                    <div class="tw:flex tw:flex-col tw:gap-2">
+                                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Interface Controls</span>
+                                        <div class="tw:flex tw:flex-wrap tw:gap-2">
+                                            <button id="activate-button" class="tw:btn tw:btn-success tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]">Activate</button>
+                                            <button id="deactivate-button" class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]">Deactivate</button>
+                                            <button id="delete-button" class="tw:btn tw:btn-error tw:btn-outline tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]">Delete</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="tw:border-t tw:border-base-content/10 tw:my-1"></div>
+                                    
+                                    <!-- Auto-start controls -->
+                                    <div class="tw:flex tw:flex-col tw:gap-2">
+                                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Auto-Start</span>
+                                        <div class="tw:flex tw:flex-wrap tw:gap-2">
+                                            <button id="autostart-button" class="tw:btn tw:btn-info tw:btn-sm tw:flex-1 tw:h-auto tw:py-2 tw:rounded-[var(--radius-box)]">Enable</button>
+                                            <button id="no-autostart-button" class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:h-auto tw:py-2 tw:rounded-[var(--radius-box)]">Disable</button>
+                                        </div>
+                                    </div>
 
-                                <div class="tw:flex tw:flex-wrap tw:gap-2 tw:my-2">
-                                    <button id="incpriority-button" class="tw:btn tw:btn-primary tw:btn-sm tw:flex-1">+10 priority</button>
-                                    <button id="decpriority-button" class="tw:btn tw:btn-neutral tw:btn-accent-hover tw:bg-base-300 tw:btn-sm tw:flex-1">-10 priority</button>
-                                </div>
+                                    <div class="tw:border-t tw:border-base-content/10 tw:my-1"></div>
 
-                                <div class="tw:divider tw:my-0"></div>
+                                    <!-- Priority controls -->
+                                    <div class="tw:flex tw:flex-col tw:gap-2">
+                                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Priority Offset</span>
+                                        <div class="tw:flex tw:flex-wrap tw:gap-2">
+                                            <button id="incpriority-button" class="tw:btn tw:btn-primary tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]">+10 priority</button>
+                                            <button id="decpriority-button" class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]">-10 priority</button>
+                                        </div>
+                                    </div>
 
-                                <div class="tw:flex tw:flex-wrap tw:gap-2 tw:my-2">
-                                    <button id="powersavedisable-button" class="tw:btn tw:btn-success tw:btn-sm tw:flex-1 tw:h-auto tw:py-2">Disable<br>Powersave</button>
-                                    <button id="powersaveenable-button" class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1 tw:h-auto tw:py-2">Enable<br>Powersave</button>
-                                </div>
+                                    <div class="tw:border-t tw:border-base-content/10 tw:my-1"></div>
 
-                                <div class="tw:form-control tw:mt-4">
-                                    <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
-                                        <input class="tw:checkbox tw:checkbox-primary tw:checkbox-sm" id="CONN_CONFIRM1" name="CONN_CONFIRM1" type="checkbox" value="y">
-                                        <span class="tw:label-text tw:text-xs tw:font-bold">Confirm Action</span>
-                                    </label>
+                                    <!-- Powersave controls -->
+                                    <div class="tw:flex tw:flex-col tw:gap-2">
+                                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Powersave Status</span>
+                                        <div class="tw:flex tw:flex-wrap tw:gap-2">
+                                            <button id="powersavedisable-button" class="tw:btn tw:btn-success tw:btn-sm tw:flex-1 tw:h-auto tw:py-2 tw:rounded-[var(--radius-box)]">Disable</button>
+                                            <button id="powersaveenable-button" class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1 tw:h-auto tw:py-2 tw:rounded-[var(--radius-box)]">Enable</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="tw:form-control tw:mt-4 tw:bg-base-300/40 tw:p-3 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/5">
+                                        <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3 tw:p-0">
+                                            <input class="tw:checkbox tw:checkbox-primary tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="CONN_CONFIRM1" name="CONN_CONFIRM1" type="checkbox" value="y">
+                                            <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/80">Confirm connection action</span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -104,67 +170,80 @@ var camera_id = {{ camera_id }};
             <!-- TAB: WI-FI -->
             <div id="tab-wifi" class="net-tab-pane" style="display: none;">
                 <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm">
-                    <div class="tw:card-body tw:p-6">
-                        <div class="tw:flex tw:flex-col tw:gap-6">
-                            <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
-                                <div class="lg:tw:col-span-8 tw:form-control">
-                                    <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.WIFI_DEVICES_SELECT.label.text }}</span>
-                                    </label>
-                                    {{ form_connections.WIFI_DEVICES_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full') }}
-                                    <div id="WIFI_DEVICES_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
-                                </div>
-                                <div class="lg:tw:col-span-4">
-                                    <button id="scan-button" class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:w-full">Scan Networks</button>
-                                </div>
-                            </div>
-
-                            <div class="tw:divider"></div>
-
-                            <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
-                                <div class="lg:tw:col-span-8 tw:form-control">
-                                    <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.SSID_SELECT.label.text }}</span>
-                                    </label>
-                                    {{ form_connections.SSID_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full') }}
-                                    <div id="SSID_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
-                                </div>
-                                <div class="lg:tw:col-span-4">
-                                    <button id="connect-button" class="tw:btn tw:btn-success tw:btn-sm tw:h-11 tw:w-full">Connect</button>
-                                </div>
-                            </div>
-
-                            <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-6">
-                                <div class="tw:form-control">
-                                    <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.SSID_PSK.label.text }}</span>
-                                    </label>
-                                    {{ form_connections.SSID_PSK(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full', placeholder='Wi-Fi Password') }}
-                                    <div id="SSID_PSK-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
-                                </div>
-                                <div class="tw:form-control">
-                                    <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.SSID_PRIORITY.label.text }}</span>
-                                    </label>
-                                    {{ form_connections.SSID_PRIORITY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full') }}
-                                    <div id="SSID_PRIORITY-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
-                                    <div class="tw:text-[10px] tw:opacity-60 tw:mt-1">Higher numbers have higher priority.</div>
-                                </div>
-                            </div>
-
-                            <div class="tw:form-control tw:max-w-md">
+                    <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-6">
+                        
+                        <!-- Device Select and scan -->
+                        <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
+                            <div class="lg:tw:col-span-8 tw:form-control">
                                 <label class="tw:label tw:py-1">
-                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.SSID_RETRIES.label.text }}</span>
+                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.WIFI_DEVICES_SELECT.label.text }}</span>
                                 </label>
-                                {{ form_connections.SSID_RETRIES(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full') }}
-                                <div id="SSID_RETRIES-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
-                                <div class="tw:text-[10px] tw:opacity-60 tw:mt-1">0 will retry forever (but never failover to a lower priority).</div>
+                                {{ form_connections.WIFI_DEVICES_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)]') }}
+                                <div id="WIFI_DEVICES_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
                             </div>
+                            <div class="lg:tw:col-span-4">
+                                <button id="scan-button" class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)]">
+                                    <i class="tw:icon-[lucide--refresh-cw] tw:w-4 tw:h-4"></i> Scan Networks
+                                </button>
+                            </div>
+                        </div>
 
-                            <div class="tw:alert tw:alert-info tw:py-3 tw:text-xs">
-                                <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
-                                <span>Powersave is disabled by default on new WiFi connections.</span>
+                        <div class="tw:divider tw:opacity-50"></div>
+
+                        <!-- Network Select and Connect -->
+                        <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
+                            <div class="lg:tw:col-span-8 tw:form-control">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.SSID_SELECT.label.text }}</span>
+                                </label>
+                                {{ form_connections.SSID_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)]') }}
+                                <div id="SSID_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
                             </div>
+                            <div class="lg:tw:col-span-4">
+                                <button id="connect-button" class="tw:btn tw:btn-success tw:btn-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)]">
+                                    <i class="tw:icon-[lucide--link] tw:w-4 tw:h-4"></i> Connect
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Security / priority settings -->
+                        <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-6">
+                            <div class="tw:form-control">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.SSID_PSK.label.text }}</span>
+                                </label>
+                                <div class="tw:relative">
+                                    {{ form_connections.SSID_PSK(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)] tw:pl-10', placeholder='Wi-Fi Password') }}
+                                    <span class="tw:absolute tw:left-3.5 tw:top-1/2 -tw:translate-y-1/2 tw:opacity-50">
+                                        <i class="tw:icon-[lucide--lock] tw:w-4 tw:h-4"></i>
+                                    </span>
+                                </div>
+                                <div id="SSID_PSK-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                            </div>
+                            
+                            <div class="tw:form-control">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.SSID_PRIORITY.label.text }}</span>
+                                </label>
+                                {{ form_connections.SSID_PRIORITY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)]') }}
+                                <div id="SSID_PRIORITY-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                                <div class="tw:text-[10px] tw:opacity-60 tw:mt-1.5">Higher numbers represent higher connection priority.</div>
+                            </div>
+                        </div>
+
+                        <!-- Retries -->
+                        <div class="tw:form-control tw:max-w-md">
+                            <label class="tw:label tw:py-1">
+                                <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.SSID_RETRIES.label.text }}</span>
+                            </label>
+                            {{ form_connections.SSID_RETRIES(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)]') }}
+                            <div id="SSID_RETRIES-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                            <div class="tw:text-[10px] tw:opacity-60 tw:mt-1.5">Use 0 to retry indefinitely without fallback to lower priority connections.</div>
+                        </div>
+
+                        <div class="tw:alert tw:alert-info tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm">
+                            <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
+                            <span>Powersave settings are disabled by default for new Wi-Fi client connections.</span>
                         </div>
                     </div>
                 </div>
@@ -173,63 +252,78 @@ var camera_id = {{ camera_id }};
             <!-- TAB: HOTSPOT -->
             <div id="tab-hotspot" class="net-tab-pane" style="display: none;">
                 <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm">
-                    <div class="tw:card-body tw:p-6">
-                        <div class="tw:flex tw:flex-col tw:gap-6">
-                            <div class="tw:form-control tw:max-w-lg">
+                    <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-6">
+                        
+                        <!-- Device Selector -->
+                        <div class="tw:form-control tw:max-w-lg">
+                            <label class="tw:label tw:py-1">
+                                <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.HOTSPOT_DEVICES_SELECT.label.text }}</span>
+                            </label>
+                            {{ form_connections.HOTSPOT_DEVICES_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)]') }}
+                            <div id="HOTSPOT_DEVICES_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                        </div>
+
+                        <div class="tw:divider tw:opacity-50"></div>
+
+                        <!-- Hotspot SSID configuration -->
+                        <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
+                            <div class="lg:tw:col-span-8 tw:form-control">
                                 <label class="tw:label tw:py-1">
-                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.HOTSPOT_DEVICES_SELECT.label.text }}</span>
+                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.HOTSPOT_SSID.label.text }}</span>
                                 </label>
-                                {{ form_connections.HOTSPOT_DEVICES_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full') }}
-                                <div id="HOTSPOT_DEVICES_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                                {{ form_connections.HOTSPOT_SSID(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)]', placeholder='Hotspot Broadcast Name') }}
+                                <div id="HOTSPOT_SSID-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
                             </div>
-
-                            <div class="tw:divider"></div>
-
-                            <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
-                                <div class="lg:tw:col-span-8 tw:form-control">
-                                    <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.HOTSPOT_SSID.label.text }}</span>
-                                    </label>
-                                    {{ form_connections.HOTSPOT_SSID(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full', placeholder='Hotspot Name') }}
-                                    <div id="HOTSPOT_SSID-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
-                                </div>
-                                <div class="lg:tw:col-span-4">
-                                    <button id="create-hotspot-button" class="tw:btn tw:btn-success tw:btn-sm tw:h-11 tw:w-full">Create Hotspot</button>
-                                </div>
+                            <div class="lg:tw:col-span-4">
+                                <button id="create-hotspot-button" class="tw:btn tw:btn-success tw:btn-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)]">
+                                    <i class="tw:icon-[lucide--wifi] tw:w-4 tw:h-4"></i> Create Hotspot
+                                </button>
                             </div>
+                        </div>
 
-                            <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-6">
-                                <div class="tw:form-control">
-                                    <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.HOTSPOT_BAND.label.text }}</span>
-                                    </label>
-                                    {{ form_connections.HOTSPOT_BAND(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full') }}
-                                    <div id="HOTSPOT_BAND-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
-                                </div>
-                                <div class="tw:form-control">
-                                    <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_connections.HOTSPOT_PSK.label.text }}</span>
-                                    </label>
-                                    {{ form_connections.HOTSPOT_PSK(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full', placeholder='Password (min 8 chars)') }}
-                                    <div id="HOTSPOT_PSK-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
-                                </div>
-                            </div>
-
+                        <!-- Security / band configs -->
+                        <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-6">
                             <div class="tw:form-control">
-                                <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
-                                    {{ form_connections.HOTSPOT_NOSECURITY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
-                                    <span class="tw:label-text tw:text-xs tw:font-bold">{{ form_connections.HOTSPOT_NOSECURITY.label.text }}</span>
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.HOTSPOT_BAND.label.text }}</span>
                                 </label>
+                                {{ form_connections.HOTSPOT_BAND(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)]') }}
+                                <div id="HOTSPOT_BAND-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
                             </div>
-
-                            <div class="tw:divider"></div>
-
-                            <div class="tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)] tw:text-xs tw:flex tw:flex-col tw:gap-3">
-                                <p>The Hotspot will be created with a static IP of <b>10.42.0.1</b> (/24 or 255.255.255.0) and IPv6 will be configured with a link-local address (fe80::).</p>
-                                <p>It should not be necessary to configure your wifi connection with a static address, a DHCP server should be started with the hotspot connection and the IPv6 link-local connectivity should be sufficient to access by the mDNS name:</p>
-                                <div class="tw:bg-black/40 tw:p-2 tw:rounded tw:font-mono tw:text-info">https://{{ hostname }}.local</div>
-                                <p>The Hotspot connection is created with a lower priority (-90) than the standard wireless connections, so if the primary wireless connection fails, it should fallback to activating the Hotspot connection.</p>
+                            
+                            <div class="tw:form-control">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ form_connections.HOTSPOT_PSK.label.text }}</span>
+                                </label>
+                                <div class="tw:relative">
+                                    {{ form_connections.HOTSPOT_PSK(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full tw:rounded-[var(--radius-box)] tw:pl-10', placeholder='Security Password (min 8 chars)') }}
+                                    <span class="tw:absolute tw:left-3.5 tw:top-1/2 -tw:translate-y-1/2 tw:opacity-50">
+                                        <i class="tw:icon-[lucide--lock] tw:w-4 tw:h-4"></i>
+                                    </span>
+                                </div>
+                                <div id="HOTSPOT_PSK-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
                             </div>
+                        </div>
+
+                        <!-- Toggle security -->
+                        <div class="tw:form-control tw:max-w-md">
+                            <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                {{ form_connections.HOTSPOT_NOSECURITY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                                <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/85">{{ form_connections.HOTSPOT_NOSECURITY.label.text }}</span>
+                            </label>
+                        </div>
+
+                        <div class="tw:divider tw:opacity-50"></div>
+
+                        <!-- Info section -->
+                        <div class="tw:bg-base-300/40 tw:border tw:border-base-content/5 tw:p-5 tw:rounded-[var(--radius-box)] tw:text-xs tw:flex tw:flex-col tw:gap-3">
+                            <h5 class="tw:font-bold tw:text-sm tw:text-base-content/90 tw:mb-1">Hotspot Network Details</h5>
+                            <p>The Hotspot will be initialized with a static IP address of <b class="tw:font-mono">10.42.0.1</b> (netmask /24 or 255.255.255.0) and IPv6 link-local addresses (<b class="tw:font-mono">fe80::</b>).</p>
+                            <p>A local DHCP server will be configured and run automatically to assign IP leases to client stations. Clients should be able to instantly reach the management web UI using standard mDNS:</p>
+                            <div class="tw:bg-black/35 tw:p-3 tw:rounded-[var(--radius-box)] tw:font-mono tw:text-info tw:text-center tw:font-bold tw:tracking-wide">
+                                https://{{ hostname }}.local
+                            </div>
+                            <p>The hotspot connection is assigned a lower failover priority (-90). If normal configured wireless networks disconnect, the system will fall back to activating this hotspot profile.</p>
                         </div>
                     </div>
                 </div>
@@ -239,8 +333,8 @@ var camera_id = {{ camera_id }};
 
         <!-- ROW 3: Status Messages -->
         <div class="tw:min-h-[60px]">
-            <div id="success-message" class="tw:alert tw:alert-success tw:py-3 tw:text-sm" style="display: none;"></div>
-            <div id="failure-message" class="tw:alert tw:alert-error tw:py-3 tw:text-sm" style="display: none;"></div>
+            <div id="success-message" class="tw:alert tw:alert-success tw:py-3.5 tw:text-sm tw:rounded-[var(--radius-box)] tw:shadow-sm" style="display: none;"></div>
+            <div id="failure-message" class="tw:alert tw:alert-error tw:py-3.5 tw:text-sm tw:rounded-[var(--radius-box)] tw:shadow-sm" style="display: none;"></div>
         </div>
 
     </form>
@@ -254,7 +348,7 @@ const failureMessage = $('#failure-message');
 function resetMessages() {
     successMessage.hide();
     failureMessage.hide();
-    $('.tw:text-error').hide();
+    $('.tw\\:text-error').hide();
 }
 
 function showLoading(btnId, text) {
@@ -352,7 +446,7 @@ $('#autostart-button').on('click', function() {
     $("#CONN_CONFIRM1").prop('checked', false);
     if ($('#CONNECTIONS_SELECT').val() == "") { return; }
 
-    showLoading('#autostart-button', 'Enable Auto-start');
+    showLoading('#autostart-button', 'Enable');
     var json_data = { 'COMMAND' : 'autostart', 'CONNECTION' : $('#CONNECTIONS_SELECT').val() };
 
     $.ajax({
@@ -361,12 +455,12 @@ $('#autostart-button').on('click', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            hideLoading('#autostart-button', 'Enable Auto-start');
+            hideLoading('#autostart-button', 'Enable');
             successMessage.html(rdata['success-message']).show();
             setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
-            hideLoading('#autostart-button', 'Enable Auto-start');
+            hideLoading('#autostart-button', 'Enable');
             var errors = JSON.parse(rdata.responseText);
             failureMessage.html(errors['failure-message']).show();
         },
@@ -379,7 +473,7 @@ $('#no-autostart-button').on('click', function() {
     $("#CONN_CONFIRM1").prop('checked', false);
     if ($('#CONNECTIONS_SELECT').val() == "") { return; }
 
-    showLoading('#no-autostart-button', 'Disable Auto-start');
+    showLoading('#no-autostart-button', 'Disable');
     var json_data = { 'COMMAND' : 'noautostart', 'CONNECTION' : $('#CONNECTIONS_SELECT').val() };
 
     $.ajax({
@@ -388,12 +482,12 @@ $('#no-autostart-button').on('click', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            hideLoading('#no-autostart-button', 'Disable Auto-start');
+            hideLoading('#no-autostart-button', 'Disable');
             successMessage.html(rdata['success-message']).show();
             setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
-            hideLoading('#no-autostart-button', 'Disable Auto-start');
+            hideLoading('#no-autostart-button', 'Disable');
             var errors = JSON.parse(rdata.responseText);
             failureMessage.html(errors['failure-message']).show();
         },
@@ -460,7 +554,7 @@ $('#powersavedisable-button').on('click', function() {
     $("#CONN_CONFIRM1").prop('checked', false);
     if ($('#CONNECTIONS_SELECT').val() == "") { return; }
 
-    showLoading('#powersavedisable-button', 'Disable Powersave');
+    showLoading('#powersavedisable-button', 'Disable');
     var json_data = { 'COMMAND' : 'powersavedisable', 'CONNECTION' : $('#CONNECTIONS_SELECT').val() };
 
     $.ajax({
@@ -469,12 +563,12 @@ $('#powersavedisable-button').on('click', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            hideLoading('#powersavedisable-button', 'Disable Powersave');
+            hideLoading('#powersavedisable-button', 'Disable');
             successMessage.html(rdata['success-message']).show();
             setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
-            hideLoading('#powersavedisable-button', 'Disable Powersave');
+            hideLoading('#powersavedisable-button', 'Disable');
             var errors = JSON.parse(rdata.responseText);
             failureMessage.html(errors['failure-message']).show();
         },
@@ -487,7 +581,7 @@ $('#powersaveenable-button').on('click', function() {
     $("#CONN_CONFIRM1").prop('checked', false);
     if ($('#CONNECTIONS_SELECT').val() == "") { return; }
 
-    showLoading('#powersaveenable-button', 'Enable Powersave');
+    showLoading('#powersaveenable-button', 'Enable');
     var json_data = { 'COMMAND' : 'powersaveenable', 'CONNECTION' : $('#CONNECTIONS_SELECT').val() };
 
     $.ajax({
@@ -496,12 +590,12 @@ $('#powersaveenable-button').on('click', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            hideLoading('#powersaveenable-button', 'Enable Powersave');
+            hideLoading('#powersaveenable-button', 'Enable');
             successMessage.html(rdata['success-message']).show();
             setTimeout(() => successMessage.fadeOut(), 15000);
         },
         error: function(rdata){
-            hideLoading('#powersaveenable-button', 'Enable Powersave');
+            hideLoading('#powersaveenable-button', 'Enable');
             var errors = JSON.parse(rdata.responseText);
             failureMessage.html(errors['failure-message']).show();
         },
@@ -624,34 +718,14 @@ function init() {
     $("#CONN_CONFIRM1").prop('checked', false);
     $("#HOTSPOT_NOSECURITY").prop('checked', false);
     $('#HOTSPOT_PSK').val('');
-
-    // Handle hash-based tab activation for DaisyUI radio tabs
-    function activateTabFromHash() {
-        const hash = window.location.hash;
-        if (hash) {
-            const tabId = hash.replace('#', '');
-            const $tab = $(`#nav-${tabId}-tab`);
-            if ($tab.length) {
-                $tab.prop('checked', true);
-            }
-        }
-    }
-    activateTabFromHash();
-    window.addEventListener('hashchange', activateTabFromHash);
-
-    // Update hash when switching tabs
-    $('input[name="network_tabs"]').on('change', function() {
-        const tabId = $(this).attr('id').replace('nav-', '').replace('-tab', '');
-        history.replaceState(null, '', '#' + tabId);
-    });
 }
 
 $(document).ready(function() {
     $('.net-tab-btn').on('click', function() {
         var target = $(this).data('target');
         
-        $('.net-tab-btn').removeClass('tw:btn-primary').addClass('tw:btn-ghost');
-        $(this).removeClass('tw:btn-ghost').addClass('tw:btn-primary');
+        $('.net-tab-btn').removeClass('tw:btn-primary').addClass('tw:btn-ghost tw:text-base-content/60 hover:tw:text-base-content');
+        $(this).removeClass('tw:btn-ghost tw:text-base-content/60 hover:tw:text-base-content').addClass('tw:btn-primary');
 
         $('.net-tab-pane').hide();
         $('#' + target).show();

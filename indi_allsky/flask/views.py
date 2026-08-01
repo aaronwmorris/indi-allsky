@@ -10323,6 +10323,33 @@ class NetworkManagerView(TemplateView):
     decorators = [login_required]
     page_title = 'Network'
 
+    def getNetworkIps(self):
+        net_info = psutil.net_if_addrs()
+
+        net_list = list()
+        for dev, addr_info in net_info.items():
+            if dev == 'lo':
+                # skip loopback
+                continue
+
+            dev_info = {
+                'name'  : dev,
+                'inet4' : [],
+                'inet6' : [],
+            }
+
+            for addr in addr_info:
+                if addr.family == socket.AF_INET:
+                    cidr = ipaddress.IPv4Network('0.0.0.0/{0:s}'.format(addr.netmask)).prefixlen
+                    dev_info['inet4'].append('{0:s}/{1:d}'.format(addr.address, cidr))
+
+                elif addr.family == socket.AF_INET6:
+                    dev_info['inet6'].append('{0:s}'.format(addr.address))
+
+            net_list.append(dev_info)
+
+        return net_list
+
     def get_context(self):
         context = super(NetworkManagerView, self).get_context()
 
@@ -10345,8 +10372,8 @@ class NetworkManagerView(TemplateView):
 
 
         context['nm_installed'] = nm_installed
-
         context['form_connections'] = IndiAllskyNetworkManagerForm()
+        context['net_list'] = self.getNetworkIps()
 
         return context
 
