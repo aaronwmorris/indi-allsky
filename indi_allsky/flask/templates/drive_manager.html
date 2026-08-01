@@ -13,53 +13,75 @@ var camera_id = {{ camera_id }};
 {% endblock %}
 
 {% block content %}
-<div class="tw:w-full tw:space-y-6 tw:p-2">
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6">
 
-    <div class="tw:space-y-3">
+    <!-- Global Warnings -->
+    <div class="tw:flex tw:flex-col tw:gap-3">
         {% if docker %}
-        <div class="tw:alert tw:alert-warning tw:rounded-[var(--radius-box)] tw:shadow-sm">
-            <span class="tw:text-xs"><strong>Warning:</strong> Containerized environment detected. Drive controls will not function.</span>
+        <div class="tw:alert tw:alert-warning tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm">
+            <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4"></i>
+            <span><strong>Warning:</strong> Containerized environment detected. Drive controls will not function.</span>
         </div>
         {% endif %}
         
-        <div class="tw:alert tw:alert-info tw:rounded-[var(--radius-box)] tw:shadow-sm">
-            <span class="tw:text-xs"><strong>Note:</strong> Run <code class="tw:bg-black/20 tw:px-1.5 tw:py-0.5 tw:rounded">./misc/setup_usb_automount.sh</code> to enable USB drive automounting.</span>
+        <div class="tw:alert tw:alert-info tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm">
+            <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
+            <span><strong>Note:</strong> Run <code class="tw:bg-neutral-content/10 tw:font-mono tw:px-1.5 tw:py-0.5 tw:rounded">./misc/setup_usb_automount.sh</code> to enable USB drive automounting.</span>
         </div>
 
         {% if not udisks2_installed %}
-        <div class="tw:alert tw:alert-error tw:rounded-[var(--radius-box)] tw:shadow-sm">
-            <span class="tw:text-xs"><strong>Warning:</strong> UDisks2 is not available.</span>
+        <div class="tw:alert tw:alert-error tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm">
+            <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4"></i>
+            <span><strong>Warning:</strong> UDisks2 is not available on this system.</span>
         </div>
         {% endif %}
     </div>
 
     <!-- Prominent Navigation Tabs -->
-    <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-md">
+    <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm">
         <button type="button" class="drive-tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-drives">Drives</button>
-        <button type="button" class="drive-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-mounts">Mounts</button>
+        <button type="button" class="drive-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" data-target="tab-mounts">Mounts</button>
     </div>
 
-    <div class="tw:w-full tw:mt-2">
+    <div class="tw:w-full">
+        
+        <!-- Drives Tab Panel -->
         <div id="tab-drives" class="drive-tab-pane">
-            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-lg">
+            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
                 <div class="tw:card-body tw:p-6">
                     <form id="form_drives" onSubmit="return false;" autocomplete="off">
-                        <div class="tw:flex tw:flex-wrap tw:items-end tw:gap-4">
-                            <div class="tw:form-control tw:flex-1">
-                                <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest">{{ form_drives.DRIVES_SELECT.label.text }}</span></label>
-                                {{ form_drives.DRIVES_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:w-full tw:bg-base-300  tw:text-xs') }}
+                        
+                        <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4">
+                            <div class="tw:form-control tw:flex-1 tw:min-w-[200px]">
+                                <label class="tw:label tw:pb-1">
+                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_drives.DRIVES_SELECT.label.text }}</span>
+                                </label>
+                                {{ form_drives.DRIVES_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                             </div>
-                            <button id="poweroff-button" class="tw:btn tw:btn-sm tw:btn-error tw:btn-outline ">Power Off</button>
-                            <label class="tw:flex tw:items-center tw:gap-2 tw:cursor-pointer">
-                                <input type="checkbox" id="DRIVE_CONFIRM1" name="DRIVE_CONFIRM1" value="y" class="tw:checkbox tw:checkbox-sm tw:checkbox-primary">
-                                <span class="tw:text-[10px] tw:font-bold tw:uppercase">Confirm</span>
-                            </label>
-                            <div id="drive-loader" class="tw:loading tw:loading-spinner tw:loading-sm tw:hidden"></div>
+                            
+                            <div class="tw:flex tw:items-center tw:gap-4 tw:pt-5">
+                                <label class="tw:flex tw:items-center tw:gap-2.5 tw:cursor-pointer">
+                                    <input type="checkbox" id="DRIVE_CONFIRM1" name="DRIVE_CONFIRM1" value="y" class="tw:checkbox tw:checkbox-primary tw:checkbox-sm tw:rounded-[var(--radius-box)]">
+                                    <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/85">Confirm</span>
+                                </label>
+                                
+                                <button id="poweroff-button" class="tw:btn tw:btn-sm tw:btn-error tw:btn-outline tw:h-11 tw:rounded-[var(--radius-box)] tw:px-6">
+                                    <i class="tw:icon-[lucide--power] tw:w-4 tw:h-4 tw:block"></i> Power Off
+                                </button>
+                                
+                                <div id="drive-loader" class="tw:loading tw:loading-spinner tw:loading-sm tw:hidden tw:text-info"></div>
+                            </div>
                         </div>
 
-                        <div class="tw:mt-6 tw:overflow-x-auto">
-                            <table id="drive-info" class="tw:table tw:table-zebra tw:table-xs tw:w-full">
-                                <thead><tr class="tw:bg-base-300"><th>Row</th><th>Key</th><th>Value</th></tr></thead>
+                        <div class="tw:mt-6 tw:overflow-x-auto tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
+                            <table id="drive-info" class="tw:table tw:table-zebra tw:table-xs tw:w-full tw:m-0">
+                                <thead>
+                                    <tr class="tw:bg-base-300/60 tw:text-[10px] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
+                                        <th>Row</th>
+                                        <th class="tw:py-3">Key</th>
+                                        <th class="tw:py-3">Value</th>
+                                    </tr>
+                                </thead>
                             </table>
                         </div>
                     </form>
@@ -67,30 +89,44 @@ var camera_id = {{ camera_id }};
             </div>
         </div>
 
+        <!-- Mounts Tab Panel -->
         <div id="tab-mounts" class="drive-tab-pane" style="display: none;">
-            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-lg">
+            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
                 <div class="tw:card-body tw:p-6">
-                    <div class="tw:flex tw:flex-wrap tw:items-end tw:gap-4">
-                        <div class="tw:form-control tw:flex-1">
-                            <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest">{{ form_drives.DEVICES_SELECT.label.text }}</span></label>
-                            {{ form_drives.DEVICES_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:w-full tw:bg-base-300  tw:text-xs') }}
+                    <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4">
+                        <div class="tw:form-control tw:flex-1 tw:min-w-[200px]">
+                            <label class="tw:label tw:pb-1">
+                                <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_drives.DEVICES_SELECT.label.text }}</span>
+                            </label>
+                            {{ form_drives.DEVICES_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         </div>
-                        <div class="tw:flex tw:gap-2">
-                            <button id="mount-button" class="tw:btn tw:btn-sm tw:btn-success tw:btn-outline ">Mount</button>
-                            <button id="unmount-button" class="tw:btn tw:btn-sm tw:btn-warning tw:btn-outline ">Unmount</button>
+                        
+                        <div class="tw:flex tw:items-center tw:gap-4 tw:pt-5">
+                            <label class="tw:flex tw:items-center tw:gap-2.5 tw:cursor-pointer">
+                                <input type="checkbox" id="DEVICE_CONFIRM1" name="DEVICE_CONFIRM1" value="y" class="tw:checkbox tw:checkbox-primary tw:checkbox-sm tw:rounded-[var(--radius-box)]">
+                                <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/85">Confirm</span>
+                            </label>
+                            
+                            <div class="tw:flex tw:gap-2">
+                                <button id="mount-button" class="tw:btn tw:btn-sm tw:btn-success tw:h-11 tw:rounded-[var(--radius-box)] tw:px-6">
+                                    <i class="tw:icon-[lucide--folder-symlink] tw:w-4 tw:h-4 tw:block"></i> Mount
+                                </button>
+                                <button id="unmount-button" class="tw:btn tw:btn-sm tw:btn-warning tw:h-11 tw:rounded-[var(--radius-box)] tw:px-6">
+                                    <i class="tw:icon-[lucide--folder-closed] tw:w-4 tw:h-4 tw:block"></i> Unmount
+                                </button>
+                            </div>
                         </div>
-                        <label class="tw:flex tw:items-center tw:gap-2 tw:cursor-pointer">
-                            <input type="checkbox" id="DEVICE_CONFIRM1" name="DEVICE_CONFIRM1" value="y" class="tw:checkbox tw:checkbox-sm tw:checkbox-primary">
-                            <span class="tw:text-[10px] tw:font-bold tw:uppercase">Confirm</span>
-                        </label>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="success-message" class="tw:alert tw:alert-success tw:hidden tw:text-xs"></div>
-    <div id="failure-message" class="tw:alert tw:alert-error tw:hidden tw:text-xs"></div>
+    <!-- Alert Notifications -->
+    <div class="tw:min-h-[50px] tw:mt-2">
+        <div id="success-message" class="tw:alert tw:alert-success tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm" style="display: none;"></div>
+        <div id="failure-message" class="tw:alert tw:alert-error tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm" style="display: none;"></div>
+    </div>
 
 </div>
 
@@ -98,6 +134,11 @@ var camera_id = {{ camera_id }};
 
 function updateDriveInfo(rdata) {
     var table_data = [];
+
+    // Destroy existing table if it exists to allow re-initialization
+    if ($.fn.DataTable.isDataTable('#drive-info')) {
+        $('#drive-info').DataTable().destroy();
+    }
 
     $('#drive-info').DataTable({
         data: rdata.drive_data,
@@ -179,7 +220,7 @@ $('#poweroff-button').on('click', function() {
         return;
     }
 
-    $("#poweroff-button").attr("class", "tw:btn tw:btn-sm tw:btn-neutral tw:text-error");
+    $("#poweroff-button").attr("class", "tw:btn tw:btn-sm tw:btn-neutral tw:text-error tw:h-11 tw:rounded-[var(--radius-box)] tw:px-6");
     $("#poweroff-button").html(
       '<span class="tw:loading tw:loading-spinner tw:loading-xs"></span> Power Off'
     );
@@ -197,16 +238,16 @@ $('#poweroff-button').on('click', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#poweroff-button").attr("class", "tw:btn tw:btn-sm tw:btn-error tw:btn-outline ");
-            $("#poweroff-button").html('Power Off');
+            $("#poweroff-button").attr("class", "tw:btn tw:btn-sm tw:btn-error tw:btn-outline tw:h-11 tw:rounded-[var(--radius-box)] tw:px-6");
+            $("#poweroff-button").html('<i class="tw:icon-[lucide--power] tw:w-4 tw:h-4 tw:block"></i> Power Off');
 
             $('#success-message').html(rdata['success-message']).show();
             setTimeout(function() { $('#success-message').fadeOut(); }, 15000);
 
         },
         error: function(rdata){
-            $("#poweroff-button").attr("class", "tw:btn tw:btn-sm tw:btn-error ");
-            $("#poweroff-button").html('Power Off');
+            $("#poweroff-button").attr("class", "tw:btn tw:btn-sm tw:btn-error tw:h-11 tw:rounded-[var(--radius-box)] tw:px-6");
+            $("#poweroff-button").html('<i class="tw:icon-[lucide--power] tw:w-4 tw:h-4 tw:block"></i> Power Off');
 
             var errors = JSON.parse(rdata.responseText);
             $('#failure-message').html(errors['failure-message']).show();
@@ -231,7 +272,7 @@ $('#unmount-button').on('click', function() {
         return;
     }
 
-    $("#unmount-button").attr("class", "tw:btn tw:btn-sm tw:btn-warning");
+    $("#unmount-button").attr("class", "tw:btn tw:btn-sm tw:btn-neutral tw:text-warning tw:h-11 tw:rounded-[var(--radius-box)] tw:px-6");
     $("#unmount-button").html(
       '<span class="tw:loading tw:loading-spinner tw:loading-xs"></span> Unmount'
     );
@@ -249,16 +290,16 @@ $('#unmount-button').on('click', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#unmount-button").attr("class", "tw:btn tw:btn-sm tw:btn-warning tw:btn-outline ");
-            $("#unmount-button").html('Unmount');
+            $("#unmount-button").attr("class", "tw:btn tw:btn-sm tw:btn-warning tw:h-11 tw:rounded-[var(--radius-box)] tw:px-6");
+            $("#unmount-button").html('<i class="tw:icon-[lucide--folder-closed] tw:w-4 tw:h-4 tw:block"></i> Unmount');
 
             $('#success-message').html(rdata['success-message']).show();
             setTimeout(function() { $('#success-message').fadeOut(); }, 15000);
 
         },
         error: function(rdata){
-            $("#unmount-button").attr("class", "tw:btn tw:btn-sm tw:btn-error ");
-            $("#unmount-button").html('Unmount');
+            $("#unmount-button").attr("class", "tw:btn tw:btn-sm tw:btn-error tw:h-11 tw:rounded-[var(--radius-box)] tw:px-6");
+            $("#unmount-button").html('<i class="tw:icon-[lucide--folder-closed] tw:w-4 tw:h-4 tw:block"></i> Unmount');
 
             var errors = JSON.parse(rdata.responseText);
             $('#failure-message').html(errors['failure-message']).show();
@@ -283,7 +324,7 @@ $('#mount-button').on('click', function() {
         return;
     }
 
-    $("#mount-button").attr("class", "tw:btn tw:btn-sm tw:btn-success");
+    $("#mount-button").attr("class", "tw:btn tw:btn-sm tw:btn-neutral tw:text-success tw:h-11 tw:rounded-[var(--radius-box)] tw:px-6");
     $("#mount-button").html(
       '<span class="tw:loading tw:loading-spinner tw:loading-xs"></span> Mount'
     );
@@ -301,16 +342,16 @@ $('#mount-button').on('click', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#mount-button").attr("class", "tw:btn tw:btn-sm tw:btn-success tw:btn-outline ");
-            $("#mount-button").html('Mount');
+            $("#mount-button").attr("class", "tw:btn tw:btn-sm tw:btn-success tw:h-11 tw:rounded-[var(--radius-box)] tw:px-6");
+            $("#mount-button").html('<i class="tw:icon-[lucide--folder-symlink] tw:w-4 tw:h-4 tw:block"></i> Mount');
 
             $('#success-message').html(rdata['success-message']).show();
             setTimeout(function() { $('#success-message').fadeOut(); }, 15000);
 
         },
         error: function(rdata){
-            $("#mount-button").attr("class", "tw:btn tw:btn-sm tw:btn-error ");
-            $("#mount-button").html('Mount');
+            $("#mount-button").attr("class", "tw:btn tw:btn-sm tw:btn-error tw:h-11 tw:rounded-[var(--radius-box)] tw:px-6");
+            $("#mount-button").html('<i class="tw:icon-[lucide--folder-symlink] tw:w-4 tw:h-4 tw:block"></i> Mount');
 
             var errors = JSON.parse(rdata.responseText);
             $('#failure-message').html(errors['failure-message']).show();
@@ -326,12 +367,12 @@ function init() {
     showDrive();
 }
 
-$( document ).ready(function() {
+$(document).ready(function() {
     $('.drive-tab-btn').on('click', function() {
         var target = $(this).data('target');
         
-        $('.drive-tab-btn').removeClass('tw:btn-primary').addClass('tw:btn-ghost');
-        $(this).removeClass('tw:btn-ghost').addClass('tw:btn-primary');
+        $('.drive-tab-btn').removeClass('tw:btn-primary').addClass('tw:btn-ghost tw:text-base-content/60 hover:tw:text-base-content');
+        $(this).removeClass('tw:btn-ghost tw:text-base-content/60 hover:tw:text-base-content').addClass('tw:btn-primary');
 
         $('.drive-tab-pane').hide();
         $('#' + target).show();
@@ -340,5 +381,4 @@ $( document ).ready(function() {
     init();
 });
 </script>
-
 {% endblock %}
