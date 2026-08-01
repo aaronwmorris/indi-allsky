@@ -13,19 +13,20 @@ var camera_id = {{ camera_id }};
 {% endblock %}
 
 {% block content %}
-<div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-4 tw:p-4 tw:w-full">
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6 tw:w-full">
 
-    <div class="tw:alert tw:alert-info tw:bg-info/5 tw:border-info/10 tw:text-info tw:text-xs tw:rounded-[var(--radius-box)] tw:py-3">
+    <!-- Global Warning Callout -->
+    <div class="tw:alert tw:alert-info tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm">
         <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
-        <span><span class="tw:font-bold">System Status:</span> indi-allsky must be in a <span class="tw:font-bold underline">Running</span> state to generate assets.</span>
+        <span><strong>System Status:</strong> <code class="tw:bg-neutral-content/10 tw:font-mono tw:px-1.5 tw:py-0.5 tw:rounded">indi-allsky</code> must be in a <strong>Running</strong> state to generate assets.</span>
     </div>
 
     <style>
-        /* Direct override block to bypass parent container layout restrictions */
+        /* Responsive workspace split grid */
         .allsky-workspace-grid {
             display: grid !important;
             grid-template-columns: 1fr !important;
-            gap: 1rem !important;
+            gap: 1.5rem !important;
             width: 100% !important;
         }
         @media (min-width: 1024px) {
@@ -33,14 +34,40 @@ var camera_id = {{ camera_id }};
                 grid-template-columns: 2fr 1fr !important;
                 align-items: start !important;
             }
+        /* Force DataTable top widgets on a single horizontal line */
+        .dt-container > div:first-child {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            width: 100% !important;
+        }
+        .dt-container > div:first-child > div {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 0.75rem !important;
+            flex-wrap: nowrap !important;
+            width: auto !important;
         }
     </style>
 
     <div class="allsky-workspace-grid">
         
-        <div class="tw:bg-base-200 tw:p-5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:flex tw:flex-col tw:justify-between tw:w-full">
-            <form id="form_timelapsegen" onsubmit="return false;" class="tw:flex tw:flex-col tw:justify-between tw:h-full tw:gap-4">
-                <div>
+        <!-- Main Form Block -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+            <div class="tw:card-body tw:p-6">
+                <!-- Steps Progress Wizard -->
+                <div class="tw:w-full tw:flex tw:justify-center tw:pb-4 tw:mb-4 tw:border-b tw:border-base-content/10">
+                    <ul class="tw:steps tw:steps-horizontal tw:w-full tw:max-w-xl tw:text-[10px] tw:font-bold tw:uppercase">
+                        <li id="step-action" class="tw:step tw:step-primary">Select Action</li>
+                        <li id="step-day" class="tw:step">Select Day</li>
+                        <li id="step-confirm" class="tw:step">Confirm & Launch</li>
+                    </ul>
+                </div>
+
+                <form id="form_timelapsegen" onsubmit="return false;" class="tw:flex tw:flex-col tw:gap-6">
                     {{ form_timelapsegen.csrf_token }}
                     <div class="tw:text-error tw:text-xs tw:font-semibold" id="csrf_token-error"></div>
 
@@ -48,85 +75,89 @@ var camera_id = {{ camera_id }};
                         {{ form_timelapsegen.CAMERA_ID(class='tw:input') }}
                     </div>
                     
-                    <div class="tw:flex tw:flex-col tw:gap-3">
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-6">
                         <div class="tw:form-control tw:w-full">
                             <label class="tw:label tw:pb-1">
-                                <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase">Action Target</span>
+                                <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_timelapsegen.ACTION_SELECT.label.text }}</span>
                             </label>
-                            {{ form_timelapsegen.ACTION_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm tw:text-base-content focus:tw:outline-none focus:tw:border-primary') }}
-                            <div id="ACTION_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            {{ form_timelapsegen.ACTION_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary') }}
+                            <div id="ACTION_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
                         </div>
                         
                         <div class="tw:form-control tw:w-full">
                             <label class="tw:label tw:pb-1">
-                                <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase">Target Capture Day</span>
+                                <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_timelapsegen.DAY_SELECT.label.text }}</span>
                             </label>
-                            {{ form_timelapsegen.DAY_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm tw:text-base-content focus:tw:outline-none focus:tw:border-primary') }}
-                            <div id="DAY_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            {{ form_timelapsegen.DAY_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary') }}
+                            <div id="DAY_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
                         </div>
                     </div>
-                </div>
 
-                <div class="tw:flex tw:items-center tw:justify-between tw:bg-base-300/40 tw:p-3 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:mt-4">
-                    <label class="tw:label tw:cursor-pointer tw:gap-2.5">
-                        <input class="tw:checkbox tw:checkbox-success tw:checkbox-sm" id="CONFIRM1" name="CONFIRM1" type="checkbox" value="y">
-                        <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/70">Confirm Asset Execution</span>
-                    </label>
-                    
-                    <button id="generate-button" class="tw:btn tw:btn-success tw:btn-sm tw:h-9 tw:px-5 tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider">
-                        Generate
-                    </button>
-                </div>
+                    <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:bg-base-300/40 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:gap-4">
+                        <label class="tw:flex tw:items-center tw:gap-3 tw:cursor-pointer">
+                            <input class="tw:checkbox tw:checkbox-primary tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="CONFIRM1" name="CONFIRM1" type="checkbox" value="y">
+                            <span class="tw:label-text tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/85">Confirm Execution</span>
+                        </label>
+                        
+                        <button id="generate-button" class="tw:btn tw:btn-neutral tw:btn-disabled tw:btn-sm tw:h-11 tw:px-6 tw:font-bold tw:uppercase tw:tracking-wider tw:rounded-[var(--radius-box)]">
+                            <i class="tw:icon-[lucide--play] tw:w-4 tw:h-4 tw:block"></i> Generate
+                        </button>
+                    </div>
 
-                <div class="tw:w-full tw:mt-2">
-                    <div id="form_timelapsegen_success-message" class="tw:alert tw:alert-success tw:text-sm tw:font-medium" style="display: none;"></div>
-                    <div id="form_timelapsegen_failure-message" class="tw:alert tw:alert-error tw:text-sm tw:font-medium" style="display: none;"></div>
-                </div>
-            </form>
+                    <div class="tw:w-full">
+                        <div id="form_timelapsegen_success-message" class="tw:alert tw:alert-success tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm" style="display: none;"></div>
+                        <div id="form_timelapsegen_failure-message" class="tw:alert tw:alert-error tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm" style="display: none;"></div>
+                    </div>
+                </form>
+            </div>
         </div>
 
+        <!-- Sidebar Widgets Panel -->
         <div class="tw:flex tw:flex-col tw:gap-4 tw:w-full">
             
-            <div class="tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:flex tw:flex-col tw:w-full">
+            <!-- Wiki Links Container -->
+            <div class="tw:bg-base-300/40 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:flex tw:flex-col tw:w-full">
                 <h3 class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/40 tw:mb-3">Documentation Wiki Links</h3>
                 <div class="tw:flex tw:flex-col tw:gap-2 tw:grow tw:justify-center">
-                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Timelapses" class="tw:btn tw:btn-neutral tw:btn-accent-hover tw:btn-sm tw:text-xs tw:justify-between tw:bg-base-100 hover:tw:bg-base-300 tw:w-full tw:no-underline tw:border-none" target="_blank">
+                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Timelapses" class="tw:btn tw:btn-neutral tw:btn-accent-hover tw:btn-sm tw:text-xs tw:justify-between tw:bg-base-100 hover:tw:bg-base-300 tw:w-full tw:no-underline tw:border-none tw:h-10 tw:rounded-[var(--radius-box)]" target="_blank">
                         Timelapse Guide
                         <i class="tw:icon-[lucide--external-link] tw:w-3.5 tw:h-3.5 tw:opacity-60"></i>
                     </a>
-                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Mini-Timelapses" class="tw:btn tw:btn-neutral tw:btn-accent-hover tw:btn-sm tw:text-xs tw:justify-between tw:bg-base-100 hover:tw:bg-base-300 tw:w-full tw:no-underline tw:border-none" target="_blank">
+                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Mini-Timelapses" class="tw:btn tw:btn-neutral tw:btn-accent-hover tw:btn-sm tw:text-xs tw:justify-between tw:bg-base-100 hover:tw:bg-base-300 tw:w-full tw:no-underline tw:border-none tw:h-10 tw:rounded-[var(--radius-box)]" target="_blank">
                         Mini-Timelapse Guide
                         <i class="tw:icon-[lucide--external-link] tw:w-3.5 tw:h-3.5 tw:opacity-60"></i>
                     </a>
                 </div>
             </div>
 
-            <div class="tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:w-full">
+            <!-- Legend Container -->
+            <div class="tw:bg-base-300/40 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:w-full">
                 <h3 class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/40 tw:mb-3">Flag Index Legend</h3>
-                <ul style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem;" class="tw:text-xs tw:font-medium tw:text-base-content/70">
-                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)]">T</span> Timelapse</li>
-                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)]">K</span> Keogram</li>
-                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)]">P</span> Panorama</li>
-                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)]">S</span> Star Trail</li>
-                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)]">ST</span> Trail Video</li>
-                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-error tw:text-white tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)]">!</span> Failed</li>
-                    <li class="tw:flex tw:items-center tw:gap-2" style="grid-column: span 2 / span 2;"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)]">#/#</span> Image Fractions</li>
+                <ul style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem;" class="tw:text-xs tw:font-semibold tw:text-base-content/70">
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[9px]">T</span> Timelapse</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[9px]">K</span> Keogram</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[9px]">P</span> Panorama</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[9px]">S</span> Star Trail</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[9px]">ST</span> Trail Video</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-error tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[9px]">!</span> Failed</li>
+                    <li class="tw:flex tw:items-center tw:gap-2" style="grid-column: span 2 / span 2;"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[9px]">#/#</span> Image Fractions</li>
                 </ul>
             </div>
         </div>
     </div>
 
     <div class="tw:w-full tw:my-1">
-        <hr class="tw:border-base-300">
+        <hr class="tw:border-base-300/40">
     </div>
 
+    <!-- Bottom Queue Table -->
     <div class="tw:flex tw:flex-col tw:gap-3 tw:w-full">
-        <h2 class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50 tw:pl-1">System Tasks Queue</h2>
+        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50 tw:pl-1">System Tasks Queue</span>
         
-        <div class="tw:overflow-x-auto tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200 tw:w-full">
+        <div class="tw:overflow-x-auto tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50 tw:w-full">
             <table id="tasks-table" class="tw:table tw:table-xs tw:w-full tw:m-0">
                 <thead>
-                    <tr class="tw:bg-base-300/50 tw:text-base-content/70 tw:text-[11px] tw:uppercase tw:tracking-wider tw:border-b tw:border-base-300">
+                    <tr class="tw:bg-base-300/60 tw:text-[10px] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
                         <th class="tw:pl-4 tw:py-3">ID</th>
                         <th class="tw:py-3">Date</th>
                         <th class="tw:py-3">Queue</th>
@@ -143,12 +174,12 @@ var camera_id = {{ camera_id }};
                         <td><span class="tw:badge tw:badge-sm tw:badge-ghost tw:font-semibold tw:text-[9px] tw:uppercase">{{ task.queue }}</span></td>
                         <td class="tw:font-medium tw:text-base-content/90">{{ task.action }}</td>
                         <td>
-                            {% if task.state == 'failed' or task.state == 'error' %}
-                            <span class="tw:badge tw:badge-error tw:badge-sm tw:font-bold tw:text-white tw:uppercase tw:text-[9px]">{{ task.state }}</span>
-                            {% elif task.state == 'completed' or task.state == 'success' %}
-                            <span class="tw:badge tw:badge-success tw:badge-sm tw:font-bold tw:text-white tw:uppercase tw:text-[9px]">{{ task.state }}</span>
+                            {% if task.state in ['failed', 'error'] %}
+                            <span class="tw:badge tw:badge-error tw:badge-sm tw:font-bold tw:uppercase tw:text-[9px] tw:rounded-[var(--radius-box)]">failed</span>
+                            {% elif task.state in ['completed', 'success'] %}
+                            <span class="tw:badge tw:badge-success tw:badge-outline tw:badge-sm tw:font-bold tw:uppercase tw:text-[9px] tw:rounded-[var(--radius-box)]">success</span>
                             {% else %}
-                            <span class="tw:badge tw:badge-info tw:badge-sm tw:font-bold tw:uppercase tw:text-[9px]">{{ task.state }}</span>
+                            <span class="tw:badge tw:badge-info tw:badge-outline tw:badge-sm tw:font-bold tw:uppercase tw:text-[9px] tw:rounded-[var(--radius-box)]">{{ task.state }}</span>
                             {% endif %}
                         </td>
                         <td class="tw:pr-4 tw:max-w-xs tw:truncate tw:font-mono tw:text-[11px] tw:text-base-content/60" title="{{ task.result }}">{{ task.result }}</td>
@@ -161,7 +192,7 @@ var camera_id = {{ camera_id }};
 
 </div>
 
-<script>
+<script type="text/javascript">
 const form_timelapsegen_successMessage = $('#form_timelapsegen_success-message');
 const form_timelapsegen_failureMessage = $('#form_timelapsegen_failure-message');
 const form_timelapsegen_field_names = [
@@ -211,7 +242,7 @@ $('#form_timelapsegen').on('submit', function() {
     };
 
 
-    $("#generate-button").attr("class", "tw:btn tw:btn-neutral");
+    $("#generate-button").attr("class", "tw:btn tw:btn-neutral tw:btn-sm tw:h-11 tw:px-6 tw:font-bold tw:uppercase tw:tracking-wider tw:rounded-[var(--radius-box)]");
     $("#generate-button").html(
       '<span class="tw:loading tw:loading-spinner tw:loading-xs"></span> Generation Processing...'
     );
@@ -246,10 +277,14 @@ $('#form_timelapsegen').on('submit', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#generate-button").attr("class", "tw:btn tw:btn-success tw:btn-sm");
-            $("#generate-button").html('Generate');
+            $("#generate-button").attr("class", "tw:btn tw:btn-success tw:btn-sm tw:h-11 tw:px-6 tw:font-bold tw:uppercase tw:tracking-wider tw:rounded-[var(--radius-box)] shadow-sm");
+            $("#generate-button").html('<i class="tw:icon-[lucide--play] tw:w-4 tw:h-4 tw:block"></i> Generate');
 
             $("#ACTION_SELECT").val('none');
+            // Reset wizard states
+            $('#step-day').removeClass('tw:step-primary');
+            $('#step-confirm').removeClass('tw:step-primary');
+
             form_timelapsegen_successMessage.html(rdata['success-message']);
             form_timelapsegen_successMessage.css({'display' : 'block'});
             setTimeout(function() {
@@ -257,8 +292,8 @@ $('#form_timelapsegen').on('submit', function() {
             }, 15000);
         },
         error: function(rdata){
-            $("#generate-button").attr("class", "tw:btn tw:btn-error tw:btn-sm");
-            $("#generate-button").html('Generate');
+            $("#generate-button").attr("class", "tw:btn tw:btn-error tw:btn-sm tw:h-11 tw:px-6 tw:font-bold tw:uppercase tw:tracking-wider tw:rounded-[var(--radius-box)] shadow-sm");
+            $("#generate-button").html('<i class="tw:icon-[lucide--play] tw:w-4 tw:h-4 tw:block"></i> Generate');
 
             var errors = JSON.parse(rdata.responseText);
             Object.keys(errors).forEach((key) => {
@@ -272,19 +307,74 @@ $('#form_timelapsegen').on('submit', function() {
 });
 
 
+function updateGenerateButtonState() {
+    const action = $('#ACTION_SELECT').val();
+    const day = $('#DAY_SELECT').val();
+    const confirmed = $('#CONFIRM1').prop('checked');
+    const btn = $('#generate-button');
+
+    btn.removeClass('tw:btn-neutral tw:btn-success tw:btn-error tw:btn-outline tw:opacity-60 tw:btn-disabled tw:pointer-events-none');
+
+    if (action === 'none' || day === '') {
+        // State 1: Greyed out / disabled
+        btn.addClass('tw:btn-neutral tw:btn-disabled');
+        btn.prop('disabled', true);
+    } else if (!confirmed) {
+        // State 2: Light green / visually click-disabled
+        btn.addClass('tw:btn-success tw:btn-outline tw:opacity-60 tw:pointer-events-none');
+        btn.prop('disabled', false);
+    } else {
+        // State 3: Full green / enabled
+        btn.addClass('tw:btn-success');
+        btn.prop('disabled', false);
+    }
+}
+
 $( document ).ready(function() {
+    // Prepend 'Please select a day' placeholder option
+    if ($('#DAY_SELECT option[value=""]').length === 0) {
+        $('#DAY_SELECT').prepend('<option value="" selected>(Please select a day)</option>');
+    }
+    $('#DAY_SELECT').val('');
+
     // Uncheck checkboxes
     $("#CONFIRM1").prop('checked', false);
 
     // Reset select
     $("#ACTION_SELECT").val('none');
 
+    // Dynamic steps active classes & button states
+    $('#ACTION_SELECT').on('change', function() {
+        if ($(this).val() !== 'none') {
+            $('#step-day').addClass('tw:step-primary');
+        } else {
+            $('#step-day').removeClass('tw:step-primary');
+            $('#step-confirm').removeClass('tw:step-primary');
+            $('#CONFIRM1').prop('checked', false);
+        }
+        updateGenerateButtonState();
+    });
+
+    $('#DAY_SELECT').on('change', function() {
+        if ($(this).val() !== '') {
+            $('#step-confirm').addClass('tw:step-primary');
+        } else {
+            $('#step-confirm').removeClass('tw:step-primary');
+            $('#CONFIRM1').prop('checked', false);
+        }
+        updateGenerateButtonState();
+    });
+
+    $('#CONFIRM1').on('change', function() {
+        updateGenerateButtonState();
+    });
 
     new DataTable('#tasks-table', {
         searching: true,
         order: [[1, 'desc']],
         layout: {
-            topEnd: ['buttons', 'search'],
+            topStart: ['pageLength', 'buttons'],
+            topEnd: 'search',
         },
         buttons: [
             'copy',
@@ -292,8 +382,10 @@ $( document ).ready(function() {
             'excel',
         ]
     });
+
+    // Run initial button check
+    updateGenerateButtonState();
 });
 
 </script>
-
 {% endblock %}

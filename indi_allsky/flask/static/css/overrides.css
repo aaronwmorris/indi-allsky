@@ -12,8 +12,22 @@
     gap: 1rem !important;
     flex-wrap: wrap !important;
 }
+@media (min-width: 640px) {
+    .dt-container .dt-layout-row {
+        flex-wrap: nowrap !important;
+    }
+}
 .dt-container .dt-layout-row.dt-layout-table {
     padding: 0 !important;
+}
+.dt-container .dt-layout-cell,
+.dt-container .dt-layout-start,
+.dt-container .dt-layout-end {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    flex-wrap: nowrap !important;
 }
 .dt-container .dt-length select {
     appearance: auto !important;
