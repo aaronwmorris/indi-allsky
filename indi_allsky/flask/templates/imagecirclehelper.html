@@ -192,244 +192,111 @@ function closeFullscreen() {
 {% endblock %}
 
 {% block content %}
-<style type="text/css">
-    .allsky-core-layout-matrix {
-        display: grid !important;
-        grid-template-columns: 1fr !important;
-        gap: 1.5rem !important;
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        box-sizing: border-box !important;
-    }
-    
-    .allsky-core-layout-matrix *, 
-    .allsky-core-layout-matrix *::before, 
-    .allsky-core-layout-matrix *::after {
-        box-sizing: border-box !important;
-        float: none !important;
-        margin: 0;
-        padding: 0;
-    }
 
-    @media (min-width: 1024px) {
-        .allsky-core-layout-matrix {
-            grid-template-columns: 1.8fr 1.2fr !important;
-            align-items: start !important;
-        }
-    }
 
-    /* Hardened Form Parameter Grid with Forced Spacing Gaps */
-    .allsky-form-field-grid {
-        display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        row-gap: 1.25rem !important;     /* Generous explicit vertical space between form rows */
-        column-gap: 1rem !important;     /* Explicit horizontal space between adjacent fields */
-        width: 100% !important;
-        box-sizing: border-box !important;
-    }
+<div class="tw:p-4 tw:flex tw:flex-col lg:tw:flex-row tw:gap-6 tw:w-full tw:items-start">
 
-    /* Isolated Form Controls */
-    .allsky-form-control-wrapper {
-        display: flex !important;
-        flex-direction: column !important;
-        width: 100% !important;
-    }
-    
-    .allsky-toggle-panel-wrapper {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        background-color: #15191e !important;
-        @apply tw:border tw:border-base-300/80 tw:rounded-[var(--radius-box)] !important;
-        padding: 1rem !important;
-        margin-top: 1.25rem !important; /* Space above toggle card wrapper */
-        box-sizing: border-box !important;
-        width: 100% !important;
-        transition: border-color 0.2s ease !important;
-    }
-    .allsky-toggle-panel-wrapper:hover {
-        @apply tw:border-neutral-500/30 !important;
-    }
-
-    /* Text & Select Inputs UI Refinement */
-    .allsky-core-layout-matrix .tw-input,
-    .allsky-core-layout-matrix .tw-select {
-        display: block !important;
-        width: 100% !important;
-        height: 2.5rem !important;
-        min-height: 2.5rem !important;
-        padding: 0.5rem 0.85rem !important;
-        line-height: normal !important;
-        font-size: 0.85rem !important;
-        font-weight: 500 !important;
-        box-sizing: border-box !important;
-        background-color: #15191e !important; /* Form element container contrast background */
-        @apply tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:text-base-content !important;
-        flex: none !important;
-        transition: all 0.15s ease-in-out !important;
-    }
-    
-    .allsky-core-layout-matrix .tw-input:focus,
-    .allsky-core-layout-matrix .tw-select:focus {
-        @apply tw:border-primary tw:ring-1 tw:ring-primary/20 !important;
-        outline: none !important;
-    }
-
-    /* Fixed DaisyUI Toggle Component Properties */
-    .allsky-core-layout-matrix .tw-toggle {
-        @apply tw:toggle tw:toggle-primary !important;
-        width: 3rem !important;
-        height: 1.6rem !important;
-        min-height: 1.6rem !important;
-        display: inline-block !important;
-        box-sizing: border-box !important;
-        flex-shrink: 0 !important;
-    }
-
-    /* Error Validation Framework */
-    .allsky-hidden-validation-node {
-        display: none !important;
-    }
-    .allsky-hidden-validation-node.tw\:block,
-    .allsky-hidden-validation-node[style*="display: block"] {
-        @apply tw:text-error tw:text-xs tw:font-semibold !important;
-        display: block !important;
-        margin-top: 0.35rem !important;
-    }
-</style>
-
-<div class="indi-allsky-isolated-viewport">
-    <div class="allsky-core-layout-matrix">
+    <!-- Canvas Panel -->
+    <div class="tw:flex tw:flex-col tw:gap-4 tw:w-full lg:tw:flex-[1.8]">
         
-        <div class="tw:flex tw:flex-col tw:gap-4 tw:w-full">
-            
-            <div class="allsky-panel-card">
-                <div class="allsky-panel-body tw:p-4 tw:flex-row tw:justify-between tw:items-center tw:gap-4">
-                    <div class="tw:flex tw:items-center tw:gap-3 tw:text-center tw:sm:text-left">
-                        <div class="tw:w-2 tw:h-2 tw:rounded-full tw:bg-primary tw:animate-pulse tw:hidden tw:sm:block"></div>
-                        <div>
-                            <p class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/90">
-                                Image Circle Visualizer Calibration
-                            </p>
-                            <p class="tw:text-[11px] tw:text-base-content/50 tw:mt-0.5">
-                                Line up the overlay circle parameters to perfectly match the active optical footprint on your screen.
-                            </p>
-                        </div>
-                    </div>
-                    <div id="message" class="tw:badge tw:badge-neutral tw:border tw:border-base-300 tw:px-4 tw:py-3.5 tw:text-xs tw:font-semibold tw:tracking-wide tw:text-base-content/80 tw:rounded-[var(--radius-box)]">
-                        Loading...
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+            <div class="tw:card-body tw:p-4 tw:flex tw:flex-row tw:justify-between tw:items-center tw:gap-4">
+                <div class="tw:flex tw:items-center tw:gap-3">
+                    <div class="tw:w-2 tw:h-2 tw:rounded-full tw:bg-primary tw:animate-pulse tw:hidden sm:tw:block"></div>
+                    <div>
+                        <p class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/90">
+                            Image Circle Visualizer Calibration
+                        </p>
+                        <p class="tw:text-[11px] tw:text-base-content/50 tw:mt-0.5">
+                            Line up the overlay circle parameters to perfectly match the active optical footprint on your screen.
+                        </p>
                     </div>
                 </div>
-            </div>
-
-            <div class="allsky-panel-card-inner">
-                <div class="allsky-panel-body tw:p-3 tw:justify-center tw:items-center tw:overflow-auto">
-                    <div class="tw:relative tw:max-w-full tw:w-full tw:flex tw:justify-center">
-                        <canvas id="canvas" class="tw:max-w-full tw:h-auto tw:rounded-[var(--radius-box)] tw:bg-neutral-950 tw:shadow-2xl tw:border tw:border-base-300/30"></canvas>
-                    </div>
+                <div id="message" class="tw:badge tw:badge-ghost tw:border tw:border-base-300 tw:px-4 tw:py-3.5 tw:text-xs tw:font-semibold tw:tracking-wide tw:text-base-content/80 tw:rounded-[var(--radius-box)]">
+                    Loading...
                 </div>
             </div>
-
         </div>
 
-        <div class="allsky-panel-card">
-            <div class="allsky-panel-body">
-                <h2 class="allsky-panel-title">
-                    Circle Overlays & Layout Metrics
-                </h2>
-
-                <form id="form_imagecircle" onSubmit="return false;">
-                    
-                    <div class="allsky-form-field-grid">
-                        
-                        <div class="allsky-form-control-wrapper">
-                            <div class="tw:mb-1.5">
-                                <span class="tw:text-[10px] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">
-                                    {{ form_imagecircle.IMAGE_CIRCLE_DIAMETER.label.text }}
-                                </span>
-                            </div>
-                            {{ form_imagecircle.IMAGE_CIRCLE_DIAMETER(class='tw-input') }}
-                            <div id="IMAGE_CIRCLE_DIAMETER-error" class="allsky-hidden-validation-node"></div>
-                        </div>
-
-                        <div class="allsky-form-control-wrapper">
-                            <div class="tw:mb-1.5">
-                                <span class="tw:text-[10px] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">
-                                    {{ form_imagecircle.KEOGRAM_ANGLE.label.text }}
-                                </span>
-                            </div>
-                            {{ form_imagecircle.KEOGRAM_ANGLE(class='tw-input') }}
-                            <div id="KEOGRAM_ANGLE-error" class="allsky-hidden-validation-node"></div>
-                        </div>
-
-                        <div class="allsky-form-control-wrapper">
-                            <div class="tw:mb-1.5">
-                                <span class="tw:text-[10px] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">
-                                    {{ form_imagecircle.OFFSET_X.label.text }}
-                                </span>
-                            </div>
-                            {{ form_imagecircle.OFFSET_X(class='tw-input') }}
-                            <div id="OFFSET_X-error" class="allsky-hidden-validation-node"></div>
-                        </div>
-
-                        <div class="allsky-form-control-wrapper">
-                            <div class="tw:mb-1.5">
-                                <span class="tw:text-[10px] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">
-                                    {{ form_imagecircle.OFFSET_Y.label.text }}
-                                </span>
-                            </div>
-                            {{ form_imagecircle.OFFSET_Y(class='tw-input') }}
-                            <div id="OFFSET_Y-error" class="allsky-hidden-validation-node"></div>
-                        </div>
-
-                        <div class="allsky-form-control-wrapper">
-                            <div class="tw:mb-1.5">
-                                <span class="tw:text-[10px] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">
-                                    {{ form_imagecircle.AZIMUTH_ANGLE.label.text }}
-                                </span>
-                            </div>
-                            {{ form_imagecircle.AZIMUTH_ANGLE(class='tw-input') }}
-                            <div id="AZIMUTH_ANGLE-error" class="allsky-hidden-validation-node"></div>
-                        </div>
-
-                        <div class="allsky-form-control-wrapper">
-                            <div class="tw:mb-1.5">
-                                <span class="tw:text-[10px] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">
-                                    {{ form_imagecircle.LINE_WIDTH.label.text }}
-                                </span>
-                            </div>
-                            {{ form_imagecircle.LINE_WIDTH(class='tw-input') }}
-                            <div id="LINE_WIDTH-error" class="allsky-hidden-validation-node"></div>
-                        </div>
-
-                    </div>
-
-                    <div class="allsky-form-control-wrapper tw:mt-4">
-                        <div class="tw:mb-1.5">
-                            <span class="tw:text-[10px] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">
-                                {{ form_imagecircle.LINE_COLOR.label.text }}
-                            </span>
-                        </div>
-                        {{ form_imagecircle.LINE_COLOR(class='tw-select') }}
-                        <div id="LINE_COLOR-error" class="allsky-hidden-validation-node"></div>
-                    </div>
-
-                    <div class="allsky-toggle-panel-wrapper">
-                        <span class="tw:text-[10px] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">
-                            {{ form_imagecircle.KEOGRAM_LINE.label.text }}
-                        </span>
-                        <div class="tw:inline-flex tw:items-center">
-                            {{ form_imagecircle.KEOGRAM_LINE(class='tw-toggle') }}
-                        </div>
-                        <div id="KEOGRAM_LINE-error" class="allsky-hidden-validation-node"></div>
-                    </div>
-
-                </form>
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+            <div class="tw:card-body tw:p-3 tw:flex tw:justify-center tw:items-center tw:overflow-auto">
+                <div class="tw:relative tw:max-w-full tw:w-full tw:flex tw:justify-center">
+                    <canvas id="canvas" class="tw:max-w-full tw:h-auto tw:rounded-[var(--radius-box)] tw:bg-neutral-950 tw:shadow-2xl tw:border tw:border-base-300/30"></canvas>
+                </div>
             </div>
         </div>
 
     </div>
+
+    <!-- Controls Panel -->
+    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm tw:w-full lg:tw:flex-[1.2]">
+        <div class="tw:card-body tw:p-6">
+            <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:mb-5">
+                Circle Overlays &amp; Layout Metrics
+            </h4>
+
+            <form id="form_imagecircle" onSubmit="return false;">
+                
+                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                    
+                    <div class="tw:form-control">
+                        <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[10px] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_imagecircle.IMAGE_CIRCLE_DIAMETER.label.text }}</span></label>
+                        {{ form_imagecircle.IMAGE_CIRCLE_DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:w-full tw:rounded-[var(--radius-box)] tw:text-sm') }}
+                        <div id="IMAGE_CIRCLE_DIAMETER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display:none;"></div>
+                    </div>
+
+                    <div class="tw:form-control">
+                        <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[10px] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_imagecircle.KEOGRAM_ANGLE.label.text }}</span></label>
+                        {{ form_imagecircle.KEOGRAM_ANGLE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:w-full tw:rounded-[var(--radius-box)] tw:text-sm') }}
+                        <div id="KEOGRAM_ANGLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display:none;"></div>
+                    </div>
+
+                    <div class="tw:form-control">
+                        <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[10px] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_imagecircle.OFFSET_X.label.text }}</span></label>
+                        {{ form_imagecircle.OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:w-full tw:rounded-[var(--radius-box)] tw:text-sm') }}
+                        <div id="OFFSET_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display:none;"></div>
+                    </div>
+
+                    <div class="tw:form-control">
+                        <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[10px] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_imagecircle.OFFSET_Y.label.text }}</span></label>
+                        {{ form_imagecircle.OFFSET_Y(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:w-full tw:rounded-[var(--radius-box)] tw:text-sm') }}
+                        <div id="OFFSET_Y-error" class="tw:text-error tw:text-xs tw:mt-1" style="display:none;"></div>
+                    </div>
+
+                    <div class="tw:form-control">
+                        <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[10px] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_imagecircle.AZIMUTH_ANGLE.label.text }}</span></label>
+                        {{ form_imagecircle.AZIMUTH_ANGLE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:w-full tw:rounded-[var(--radius-box)] tw:text-sm') }}
+                        <div id="AZIMUTH_ANGLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display:none;"></div>
+                    </div>
+
+                    <div class="tw:form-control">
+                        <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[10px] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_imagecircle.LINE_WIDTH.label.text }}</span></label>
+                        {{ form_imagecircle.LINE_WIDTH(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:w-full tw:rounded-[var(--radius-box)] tw:text-sm') }}
+                        <div id="LINE_WIDTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display:none;"></div>
+                    </div>
+
+                </div>
+
+                <div class="tw:form-control tw:mt-4">
+                    <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[10px] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_imagecircle.LINE_COLOR.label.text }}</span></label>
+                    {{ form_imagecircle.LINE_COLOR(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:w-full tw:rounded-[var(--radius-box)] tw:text-sm') }}
+                    <div id="LINE_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display:none;"></div>
+                </div>
+
+                <div class="tw:flex tw:items-center tw:justify-between tw:p-4 tw:mt-4 tw:bg-base-300/30 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10">
+                    <span class="tw:text-[10px] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">
+                        {{ form_imagecircle.KEOGRAM_LINE.label.text }}
+                    </span>
+                    <div class="tw:inline-flex tw:items-center">
+                        {{ form_imagecircle.KEOGRAM_LINE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                    </div>
+                    <div id="KEOGRAM_LINE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display:none;"></div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
 </div>
 
 <script>

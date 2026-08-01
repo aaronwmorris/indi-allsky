@@ -172,62 +172,20 @@ function populateData() {
     $("#polaris_next_12").html(p12h + ':' + pnt[1] + ':' + pnt[2]);
     $("#polaris_next_9").html(p9h + ':' + pnt[1] + ':' + pnt[2]);
 
-    // Indicate planets above horizon
-    if ( json_data.mercury_alt > 25 ) {
-        $("#mercury").css("color", "#99cc00");
-    } else if ( json_data.mercury_alt > 0 ) {
-        $("#mercury").css("color", "#ff9900");
-    } else {
-        $("#mercury").css("color", "#fff");
-    }
-
-    if ( json_data.venus_alt > 25 ) {
-        $("#venus").css("color", "#99cc00");
-    } else if ( json_data.venus_alt > 0 ) {
-        $("#venus").css("color", "#ff9900");
-    } else {
-        $("#venus").css("color", "#fff");
-    }
-
-    if ( json_data.mars_alt > 25 ) {
-        $("#mars").css("color", "#99cc00");
-    } else if ( json_data.mars_alt > 0 ) {
-        $("#mars").css("color", "#ff9900");
-    } else {
-        $("#mars").css("color", "#fff");
-    }
-
-    if ( json_data.jupiter_alt > 25 ) {
-        $("#jupiter").css("color", "#99cc00");
-    } else if ( json_data.jupiter_alt > 0 ) {
-        $("#jupiter").css("color", "#ff9900");
-    } else {
-        $("#jupiter").css("color", "#fff");
-    }
-
-    if ( json_data.saturn_alt > 25 ) {
-        $("#saturn").css("color", "#99cc00");
-    } else if ( json_data.saturn_alt > 0 ) {
-        $("#saturn").css("color", "#ff9900");
-    } else {
-        $("#saturn").css("color", "#fff");
-    }
-
-    if ( json_data.uranus_alt > 25 ) {
-        $("#uranus").css("color", "#99cc00");
-    } else if ( json_data.uranus_alt > 0 ) {
-        $("#uranus").css("color", "#ff9900");
-    } else {
-        $("#uranus").css("color", "#fff");
-    }
-
-    if ( json_data.neptune_alt > 25 ) {
-        $("#neptune").css("color", "#99cc00");
-    } else if ( json_data.neptune_alt > 0 ) {
-        $("#neptune").css("color", "#ff9900");
-    } else {
-        $("#neptune").css("color", "#fff");
-    }
+    // Indicate planets above horizon using semantic CSS classes
+    var planets = ['mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
+    planets.forEach(function(p) {
+        var alt = json_data[p + '_alt'];
+        var $el = $('#' + p);
+        $el.removeClass('tw:text-success tw:text-warning tw:text-base-content/40');
+        if (alt > 25) {
+            $el.addClass('tw:text-success');
+        } else if (alt > 0) {
+            $el.addClass('tw:text-warning');
+        } else {
+            $el.addClass('tw:text-base-content/40');
+        }
+    });
 
     // Set Equinox and Solstice in order
     if (json_data.sun_solstice_season == 'summer') {
@@ -276,18 +234,14 @@ function populateData() {
     json_data['satellite_list'].forEach(sat => {
         var tr_sat = $('<tr />');
 
-        if ( sat.name == 'ISS (ZARYA)' ) {
-            tr_sat.css({'color' : "#00cccc"});
-        } else if ( sat.name == 'HST' ) {
-            tr_sat.css({'color' : "#00cccc"});
-        } else if ( sat.name == 'CSS (TIANHE)' ) {
-            tr_sat.css({'color' : "#00cccc"});
+        if ( sat.name == 'ISS (ZARYA)' || sat.name == 'HST' || sat.name == 'CSS (TIANHE)' ) {
+            tr_sat.addClass('tw:text-info');
         } else if ( sat.alt > 25 ) {
-            tr_sat.css({'color' : "#99cc00"});
+            tr_sat.addClass('tw:text-success');
         } else if ( sat.alt > 0 ) {
-            tr_sat.css({'color' : "#ff9900"});
+            tr_sat.addClass('tw:text-warning');
         } else {
-            tr_sat.css({'color' : "#888888"});
+            tr_sat.addClass('tw:text-base-content/40');
         }
 
 
@@ -416,12 +370,9 @@ $( document ).ready(function() {
 
 <div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-6 astropanel-wrapper">
 
-    <!-- Header Area -->
-    <div class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 shadow-sm tw:flex tw:items-center tw:justify-between">
-        <div class="tw:flex tw:items-center tw:gap-3">
-            <span class="tw:text-[10px] tw:font-mono tw:text-base-content/30 tw:uppercase">Live Telemetry</span>
-            <span id="loader_data" class="loading loading-spinner loading-xs tw:text-primary" style="display: none;"></span>
-        </div>
+    <div class="tw:w-full tw:bg-base-200 tw:p-3 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm tw:flex tw:items-center tw:gap-3">
+        <span class="tw:text-[10px] tw:font-mono tw:text-base-content/30 tw:uppercase">Live Telemetry</span>
+        <span id="loader_data" class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary" style="display: none;"></span>
     </div>
 
     <!-- Main Navigation Tabs -->
