@@ -316,7 +316,12 @@ picker.addEventListener("change", (e) => {
             });
         }
     } else {
-        highlight_and_scroll_to_day(parseInt(day));
+        const dayInt = parseInt(day);
+        if ($("#timeline-day-" + dayInt).length === 0) {
+            sync_calendar_value();
+            return;
+        }
+        highlight_and_scroll_to_day(dayInt);
     }
 });
 

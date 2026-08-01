@@ -575,6 +575,30 @@ function init() {
                 var mo = parseInt(parts[1], 10).toString();
                 var dy = parseInt(parts[2], 10).toString();
 
+                var currentYear = $("#YEAR_SELECT").val();
+                var currentMonth = $("#MONTH_SELECT").val();
+
+                if (yr === currentYear && mo === currentMonth) {
+                    if ($("#DAY_SELECT option[value='" + dy + "']").length === 0) {
+                        syncCalendarFromSelects();
+                        return;
+                    }
+
+                    $("#DAY_SELECT").val(dy);
+                    $("#date-picker-label").text(val);
+                    $("#cally-dropdown-details").removeAttr("open");
+
+                    $("#loader_filter").show();
+                    var next_json = {
+                        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
+                        'YEAR_SELECT'       : yr,
+                        'MONTH_SELECT'      : mo,
+                        'DAY_SELECT'        : dy,
+                    };
+                    day_change(next_json, { year: yr, month: mo, day: dy });
+                    return;
+                }
+
                 if ($("#YEAR_SELECT option[value='" + yr + "']").length === 0) {
                     $("#YEAR_SELECT").append($('<option />', {value: yr}).text(yr));
                 }
