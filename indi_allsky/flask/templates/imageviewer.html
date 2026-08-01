@@ -775,13 +775,8 @@ function init() {
                     'href'   : "{{ url_for('indi_allsky.timelapse_image_view')}}?id=" + image_data[image_index]['id'],
                     'target' : '_blank',
                     'rel'    : 'noopener noreferrer',
-                    'class'  : "tw:no-underline",
-                }).html(
-                    $('<span />', {
-                        'text'  : 'Image',
-                        'class' : "tw:badge tw:badge-info tw:text-info-content tw:font-bold",
-                    })
-                )
+                    'class'  : "tw:btn tw:btn-xs tw:btn-neutral tw:gap-1 tw:no-underline",
+                }).html('<i class="tw:icon-[lucide--external-link] tw:w-3 tw:h-3"></i> Image')
             );
 
 
@@ -801,13 +796,8 @@ function init() {
                     'href' : "{{ url_for('indi_allsky.virtualsky_view') }}?timestamp=" + image_data[image_index]['ts'],
                     'target' : '_blank',
                     'rel'    : 'noopener noreferrer',
-                    'class'  : "tw:no-underline",
-                }).html(
-                    $('<span />', {
-                        'text'  : 'VirtualSky',
-                        'class' : "tw:badge tw:badge-neutral tw:font-bold",
-                    })
-                )
+                    'class'  : "tw:btn tw:btn-xs tw:btn-ghost tw:gap-1 tw:no-underline",
+                }).html('<i class="tw:icon-[lucide--external-link] tw:w-3 tw:h-3"></i> VirtualSky')
             );
 
 
@@ -817,13 +807,8 @@ function init() {
                     'href' : "{{ url_for('indi_allsky.image_loop_view') }}?timestamp=" + image_data[image_index]['ts'],
                     'target' : '_blank',
                     'rel'    : 'noopener noreferrer',
-                    'class'  : "tw:no-underline",
-                }).html(
-                    $('<span />', {
-                        'text'  : 'Loop',
-                        'class' : "tw:badge tw:badge-primary tw:font-bold",
-                    })
-                )
+                    'class'  : "tw:btn tw:btn-xs tw:btn-ghost tw:gap-1 tw:no-underline",
+                }).html('<i class="tw:icon-[lucide--external-link] tw:w-3 tw:h-3"></i> Loop')
             );
 
 
@@ -833,13 +818,8 @@ function init() {
                     'href' : "{{ url_for('indi_allsky.mini_generate_view') }}?image_id=" + image_data[image_index]['id'],
                     'target' : '_blank',
                     'rel'    : 'noopener noreferrer',
-                    'class'  : "tw:no-underline",
-                }).html(
-                    $('<span />', {
-                        'text'  : 'Mini Timelapse',
-                        'class' : "tw:badge tw:badge-success tw:font-bold",
-                    })
-                )
+                    'class'  : "tw:btn tw:btn-xs tw:btn-ghost tw:gap-1 tw:no-underline",
+                }).html('<i class="tw:icon-[lucide--external-link] tw:w-3 tw:h-3"></i> Mini Timelapse')
             );
 
 
@@ -848,13 +828,8 @@ function init() {
                     'href' : "{{ url_for('indi_allsky.chart_view') }}?timestamp=" + image_data[image_index]['ts'],
                     'target' : '_blank',
                     'rel'    : 'noopener noreferrer',
-                    'class'  : "tw:no-underline",
-                }).html(
-                    $('<span />', {
-                        'text'  : 'Chart',
-                        'class' : "tw:badge tw:badge-secondary tw:font-bold",
-                    })
-                )
+                    'class'  : "tw:btn tw:btn-xs tw:btn-ghost tw:gap-1 tw:no-underline",
+                }).html('<i class="tw:icon-[lucide--external-link] tw:w-3 tw:h-3"></i> Chart')
             );
 
 
@@ -863,13 +838,8 @@ function init() {
                     'href' : "{{ url_for('indi_allsky.image_lag_view') }}?timestamp=" + image_data[image_index]['ts'],
                     'target' : '_blank',
                     'rel'    : 'noopener noreferrer',
-                    'class'  : "tw:no-underline",
-                }).html(
-                    $('<span />', {
-                        'text'  : 'Lag',
-                        'class' : "tw:badge tw:badge-warning tw:text-warning-content tw:font-bold",
-                    })
-                )
+                    'class'  : "tw:btn tw:btn-xs tw:btn-ghost tw:gap-1 tw:no-underline",
+                }).html('<i class="tw:icon-[lucide--info] tw:w-3 tw:h-3"></i> Lag')
             );
 
 
@@ -879,14 +849,9 @@ function init() {
                     $('<a />', {
                         'href'   : image_data[image_index]['fits'],
                         'rel'    : 'noopener noreferrer',
-                        'class'  : "tw:no-underline",
+                        'class'  : "tw:btn tw:btn-xs tw:btn-neutral tw:gap-1 tw:no-underline",
                         'download' : '',
-                    }).html(
-                        $('<span />', {
-                            'text'  : 'FITS',
-                            'class' : "tw:badge tw:badge-error tw:font-bold",
-                        })
-                    )
+                    }).html('<i class="tw:icon-[lucide--download] tw:w-3 tw:h-3"></i> FITS')
                 );
 
                 $('#fits_processing').html(
@@ -894,13 +859,8 @@ function init() {
                         'href'   : "{{ url_for('indi_allsky.image_processing_view') }}?type=light&id=" + image_data[image_index]['fits_id'],
                         'target' : '_blank',
                         'rel'    : 'noopener noreferrer',
-                        'class'  : "tw:no-underline",
-                    }).html(
-                        $('<span />', {
-                            'text'  : 'FITS Processing',
-                            'class' : "tw:badge tw:badge-success tw:badge-outline tw:font-bold hover:tw:bg-success hover:tw:text-success-content tw:transition-colors",
-                        })
-                    )
+                        'class'  : "tw:btn tw:btn-xs tw:btn-ghost tw:gap-1 tw:no-underline",
+                    }).html('<i class="tw:icon-[lucide--external-link] tw:w-3 tw:h-3"></i> FITS Processing')
                 );
             } else {
                 $('#fits_download').empty();
@@ -914,13 +874,8 @@ function init() {
                         'href'   : "{{ url_for('indi_allsky.raw_image_view')}}?id=" + image_data[image_index]['raw_id'],
                         'target' : '_blank',
                         'rel'    : 'noopener noreferrer',
-                        'class'  : "tw:no-underline",
-                    }).html(
-                        $('<span />', {
-                            'text'  : 'RAW',
-                            'class' : "tw:badge tw:badge-warning tw:text-warning-content tw:font-bold",
-                        })
-                    )
+                        'class'  : "tw:btn tw:btn-xs tw:btn-neutral tw:gap-1 tw:no-underline",
+                    }).html('<i class="tw:icon-[lucide--download] tw:w-3 tw:h-3"></i> RAW')
                 );
             } else {
                 $('#raw_download').empty();
@@ -933,13 +888,8 @@ function init() {
                         'href'   : "{{ url_for('indi_allsky.panorama_image_view')}}?id=" + image_data[image_index]['panorama_id'],
                         'target' : '_blank',
                         'rel'    : 'noopener noreferrer',
-                        'class'  : "tw:no-underline",
-                    }).html(
-                        $('<span />', {
-                            'text'  : 'Panorama',
-                            'class' : "tw:badge tw:badge-success tw:font-bold",
-                        })
-                    )
+                        'class'  : "tw:btn tw:btn-xs tw:btn-neutral tw:gap-1 tw:no-underline",
+                    }).html('<i class="tw:icon-[lucide--external-link] tw:w-3 tw:h-3"></i> Panorama')
                 );
             } else {
                 $('#panorama_download').empty();
@@ -952,13 +902,8 @@ function init() {
                         'href' : "{{ url_for('indi_allsky.panorama_loop_view') }}?timestamp=" + image_data[image_index]['ts'],
                         'target' : '_blank',
                         'rel'    : 'noopener noreferrer',
-                        'class'  : "tw:no-underline",
-                    }).html(
-                        $('<span />', {
-                            'text'  : 'Panorama Loop',
-                            'class' : "tw:badge tw:badge-primary tw:font-bold",
-                        })
-                    )
+                        'class'  : "tw:btn tw:btn-xs tw:btn-ghost tw:gap-1 tw:no-underline",
+                    }).html('<i class="tw:icon-[lucide--external-link] tw:w-3 tw:h-3"></i> Panorama Loop')
                 );
             };
 

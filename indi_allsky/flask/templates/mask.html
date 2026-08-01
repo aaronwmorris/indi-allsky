@@ -56,15 +56,11 @@ function init() {
 
     $('#mask_download').html(
         $('<a />', {
-            'href'   : $('#mask_img').attr('src'),
-            'rel'    : 'noopener noreferrer',
+            'href'     : $('#mask_img').attr('src'),
+            'rel'      : 'noopener noreferrer',
             'download' : 'mask_base.png',
-        }).html(
-            $('<span />', {
-                'text'  : 'Download Mask Base',
-                'class' : "tw:badge tw:badge-info tw:font-bold tw:text-info-content",
-            })
-        )
+            'class'    : 'tw:btn tw:btn-sm tw:btn-info tw:gap-2 tw:no-underline',
+        }).html('<i class="tw:icon-[lucide--download] tw:w-4 tw:h-4"></i> Download Mask Base')
     );
 }
 

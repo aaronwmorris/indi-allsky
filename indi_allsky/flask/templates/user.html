@@ -5,24 +5,11 @@
 {% block header_title %}User Profile & Security{% endblock %}
 
 {% block head %}
-<style>
-    .user-info-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
-        align-items: start;
-        width: 100%;
-    }
-    @media (max-width: 900px) {
-        .user-info-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
+
 {% endblock %}
 
 {% block content %}
-<div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-6">
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6">
 
     <!-- Top Action Bar -->
     <div class="tw:w-full tw:flex tw:items-center tw:justify-between tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm">
@@ -38,10 +25,10 @@
 
     <!-- 2-Card Form Layout -->
     <form id="form_userinfo" onSubmit="return false;" autocomplete="off" class="tw:w-full">
-        <div class="user-info-grid">
+        <div class="tw:flex tw:flex-col tw:lg:flex-row tw:gap-6 tw:items-stretch tw:w-full">
             
             <!-- CARD 1: IDENTITY CONFIGURATION -->
-            <div class="tw:bg-base-200 tw:p-6 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm tw:flex tw:flex-col tw:gap-5">
+            <div class="tw:flex-1 tw:min-w-0 tw:bg-base-200 tw:p-6 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm tw:flex tw:flex-col tw:gap-5">
                 <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-300 tw:pb-3 tw:m-0">
                     Identity Configuration
                 </h4>
@@ -83,7 +70,7 @@
             </div>
 
             <!-- CARD 2: AUTHENTICATION CREDENTIALS -->
-            <div class="tw:bg-base-200 tw:p-6 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm tw:flex tw:flex-col tw:gap-5">
+            <div class="tw:flex-1 tw:min-w-0 tw:bg-base-200 tw:p-6 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm tw:flex tw:flex-col tw:gap-5">
                 <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-300 tw:pb-3 tw:m-0">
                     Authentication Credentials
                 </h4>

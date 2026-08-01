@@ -20,6 +20,7 @@ function loop() {
     img = new Image();
     img.onload = function() {
         $('#message').empty();
+        $('#message').addClass('tw:hidden');
 
         $('#keogram-image').attr({
             'src': this.src,
@@ -32,15 +33,11 @@ function loop() {
 
     $('#download').html(
         $('<a />', {
-            'href' : "{{ keogram_uri }}",
-            'rel' : "noopener noreferrer",
+            'href'     : "{{ keogram_uri }}",
+            'rel'      : 'noopener noreferrer',
             'download' : '',
-        }).html(
-            $('<span />', {
-                'text'  : 'Download',
-                'class' : "tw:badge tw:badge-error tw:font-bold tw:text-error-content",
-            })
-        )
+            'class'    : 'tw:btn tw:btn-sm tw:btn-neutral tw:gap-2 tw:no-underline',
+        }).html('<i class="tw:icon-[lucide--download] tw:w-4 tw:h-4"></i> Download')
     );
 
 
@@ -110,7 +107,7 @@ function closeFullscreen() {
 
 $( document ).ready(function() {
     $('#keogram-image').on("click", function() {
-        goFullscreen(this);
+        window.open(url, '_blank');
     });
 
     init();
@@ -120,25 +117,25 @@ $( document ).ready(function() {
 {% endblock %}
 
 {% block content %}
-<div class="tw:container tw:h-full tw:mx-auto tw:flex tw:flex-col tw:gap-4">
-    
-    <div class="tw:flex tw:justify-center">
-        <div class="tw:text-base-content tw:text-center tw:font-medium" id="message">
-            Loading...
-        </div>
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-4 tw:w-full">
+
+    <!-- Loading Spinner -->
+    <div class="tw:flex tw:justify-center tw:py-4">
+        <span id="message" class="tw:loading tw:loading-spinner tw:loading-md tw:text-primary/60"></span>
     </div>
 
-    <div class="tw:h-3/4 tw:flex tw:items-center tw:justify-center">
-        <div class="tw:w-full tw:text-center">
-            <img id="keogram-image" 
-                 class="fit tw:mx-auto tw:max-h-full tw:max-w-full tw:object-contain" 
-                 style="display: none;"
-                 onerror="this.style.display='none';"
-                 onload="this.style.display='block';">
-        </div>
+    <!-- Image — constrained to viewport height, click opens full in new tab -->
+    <div class="tw:flex tw:items-center tw:justify-center tw:w-full">
+        <img id="keogram-image"
+             class="tw:w-full tw:object-contain tw:rounded-[var(--radius-box)] tw:cursor-pointer tw:shadow-md"
+             style="display: none; max-height: calc(100vh - 220px);"
+             title="Click to open full size in new tab"
+             onerror="this.style.display='none';"
+             onload="this.style.display='block';">
     </div>
 
-    <div class="tw:flex tw:justify-center tw:mt-2">
+    <!-- Download button — below image -->
+    <div class="tw:flex tw:justify-center tw:pt-2">
         <div id="download" class="tw:flex tw:gap-2"></div>
     </div>
 

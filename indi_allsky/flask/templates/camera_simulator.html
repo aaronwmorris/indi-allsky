@@ -348,7 +348,7 @@ var sd = {
 {% endblock %}
 
 {% block content %}
-<div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-6">
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6 tw:w-full">
 
     <form id="form_camera_simulator" onSubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
         <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4">
@@ -380,14 +380,9 @@ var sd = {
         </div>
     </form>
 
-    <div class="tw:w-full">
-        <div class="tw:alert tw:bg-base-200/50 tw:border-l-4 tw:border-info tw:py-2 tw:px-4 tw:rounded-[var(--radius-box)] tw:text-[11px]">
-            <div class="tw:flex tw:items-center tw:justify-center tw:w-full tw:gap-2 tw:text-center">
-                <span class="tw:text-base-content/70 tw:font-medium">
-                    Only simulates the image circle. Field of View is dependent on lens profile mechanics. Field of View coverage circles are approximate boundaries.
-                </span>
-            </div>
-        </div>
+    <div class="tw:alert tw:alert-info tw:py-2.5 tw:px-4 tw:text-[11px] tw:rounded-[var(--radius-box)]">
+        <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4 tw:shrink-0"></i>
+        <span>Only simulates the image circle. Field of View is dependent on lens profile mechanics. Field of View coverage circles are approximate boundaries.</span>
     </div>
 
     <div class="tw:w-full tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4 tw:flex tw:items-center tw:justify-center">
@@ -396,8 +391,8 @@ var sd = {
         </div>
     </div>
 
-    <div class="tw:w-full tw:text-center tw:mt-1">
-        <span id="permalink" class="tw:text-xs tw:font-mono tw:text-info"></span>
+    <div class="tw:flex tw:justify-center tw:mt-2">
+        <div id="permalink" class="tw:flex tw:gap-2"></div>
     </div>
 
 </div>
@@ -554,12 +549,11 @@ function show_simulation() {
 
     // Add Loop here link
     $('#permalink').html(
-        $('<span />', {
-            'text' : "Copy Permalink to Clipboard",
-            'class' : "tw:badge tw:badge-primary copy-clipboard",
-            'style' : "cursor: pointer;",
+        $('<a />', {
+            'href' : '#',
+            'class' : 'tw:btn tw:btn-xs tw:btn-ghost tw:gap-1 tw:no-underline tw:font-mono tw:text-primary copy-clipboard',
             'data-clipboard-text' : "{{ url_for('indi_allsky.camera_simulator_view', _external=True) }}?lens=" + $("#LENS_SELECT").val() + "&sensor=" + $("#SENSOR_SELECT").val() + "&offset_x=" + $("#OFFSET_X").val() + "&offset_y=" + $("#OFFSET_Y").val(),
-        })
+        }).html('<i class="tw:icon-[lucide--link] tw:w-3 tw:h-3"></i> Copy Permalink')
     );
 
 

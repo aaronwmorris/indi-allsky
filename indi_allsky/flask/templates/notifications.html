@@ -11,31 +11,22 @@ var camera_id = {{ camera_id }};
 {% endblock %}
 
 {% block content %}
-<div class="tw:container tw:mx-auto tw:px-4 tw:py-6">
-    <div class="tw:flex tw:flex-col tw:gap-6">
-        <!-- Header -->
-        <div class="tw:flex tw:items-center tw:justify-between tw:p-4 tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
-            <div class="tw:flex tw:items-center tw:gap-3">
-                <i class="tw:icon-[lucide--bell] tw:w-6 tw:h-6 tw:text-info"></i>
-                <div>
-                    <h1 class="tw:text-lg tw:font-bold tw:text-base-content">System Notifications Log</h1>
-                    <p class="tw:text-xs tw:text-base-content/60">Historical record of system notifications, alerts, and watchdog events</p>
-                </div>
-            </div>
-        </div>
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6 tw:w-full">
 
-        <!-- Table Container -->
-        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-md tw:p-4">
-            <div class="tw:overflow-x-auto">
-                <table id="notifications-table" class="tw:table tw:table-zebra tw:w-full tw:text-xs">
+    <!-- Table Container -->
+    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+        <div class="tw:card-body tw:p-6">
+            <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:mb-6">System Notifications</h4>
+            <div class="tw:overflow-x-auto tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
+                <table id="notifications-table" class="tw:table tw:table-zebra tw:table-xs tw:w-full tw:m-0">
                     <thead>
-                        <tr class="tw:text-base-content/70">
-                            <th>ID</th>
-                            <th>Category</th>
-                            <th>Created</th>
-                            <th>Expires</th>
-                            <th>Acknowledged</th>
-                            <th>Notification Message</th>
+                        <tr class="tw:bg-base-300/60 tw:text-[10px] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
+                            <th class="tw:pl-4 tw:py-3">ID</th>
+                            <th class="tw:py-3">Category</th>
+                            <th class="tw:py-3">Created</th>
+                            <th class="tw:py-3">Expires</th>
+                            <th class="tw:py-3">Acknowledged</th>
+                            <th class="tw:pr-4 tw:py-3">Notification Message</th>
                         </tr>
                     </thead>
                     <tbody>
