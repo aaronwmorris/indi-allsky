@@ -219,18 +219,17 @@ function sync_calendar_value() {
                 return false;
             };
 
-            // Restrict min/max to the valid months of the selected year
-            const months = $("#MONTH_SELECT option").map(function() { 
+            // Restrict min/max to the range of years available in YEAR_SELECT
+            const years = $("#YEAR_SELECT option").map(function() { 
                 const val = $(this).val();
                 return val ? parseInt(val) : null; 
             }).get().filter(v => v !== null && !isNaN(v));
 
-            if (months.length > 0) {
-                const minMonth = Math.min(...months);
-                const maxMonth = Math.max(...months);
-                const lastDay = new Date(parseInt(year), maxMonth, 0).getDate();
-                picker.min = `${year}-${String(minMonth).padStart(2, '0')}-01`;
-                picker.max = `${year}-${String(maxMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+            if (years.length > 0) {
+                const minYear = Math.min(...years);
+                const maxYear = Math.max(...years);
+                picker.min = `${minYear}-01-01`;
+                picker.max = `${maxYear}-12-31`;
             } else {
                 picker.min = "1970-01-01";
                 picker.max = "2099-12-31";
@@ -362,15 +361,22 @@ picker.addEventListener("focusday", (e) => {
             picker.focusedDate = `${currentYear}-${formattedMonth}-01`;
             return;
         }
-        fields["YEAR_SELECT"].input.val(yr);
-        fields["MONTH_SELECT"].input.val(mo);
-        $("#loader_filter").show();
+
         var json_data = {
             'CAMERA_ID'    : fields["CAMERA_ID"].input.val(),
             'YEAR_SELECT'  : yr,
             'MONTH_SELECT' : mo,
         };
-        month_change(json_data);
+
+        if (yr !== currentYear) {
+            fields["YEAR_SELECT"].input.val(yr);
+            $("#loader_filter").show();
+            year_change(json_data);
+        } else {
+            fields["MONTH_SELECT"].input.val(mo);
+            $("#loader_filter").show();
+            month_change(json_data);
+        }
     }
 });
 

@@ -936,16 +936,27 @@ function init() {
                     picker.focusedDate = `${currentYear}-${formattedMonth}-01`;
                     return;
                 }
-                $("#YEAR_SELECT").val(yr);
-                $("#MONTH_SELECT").val(mo);
-                $("#loader_filter").show();
-                var json_data = {
-                    'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
-                    'YEAR_SELECT'       : yr,
-                    'MONTH_SELECT'      : mo,
-                    'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
-                };
-                month_change(json_data);
+
+                if (yr !== currentYear) {
+                    $("#YEAR_SELECT").val(yr);
+                    var json_data = {
+                        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
+                        'YEAR_SELECT'       : yr,
+                        'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+                    };
+                    $("#loader_filter").show();
+                    year_change(json_data, { year: yr, month: mo });
+                } else {
+                    $("#MONTH_SELECT").val(mo);
+                    var json_data = {
+                        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
+                        'YEAR_SELECT'       : yr,
+                        'MONTH_SELECT'      : mo,
+                        'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+                    };
+                    $("#loader_filter").show();
+                    month_change(json_data);
+                }
             }
         });
     }

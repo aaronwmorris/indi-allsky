@@ -36,7 +36,7 @@ from wtforms.validators import DataRequired
 from wtforms.validators import ValidationError
 from markupsafe import Markup
 
-#from sqlalchemy import extract
+from sqlalchemy import extract
 #from sqlalchemy import asc
 from sqlalchemy import func
 #from sqlalchemy.types import DateTime
@@ -7566,9 +7566,12 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
     def getYears(self):
-        years_query = db.session.query(
+        year_col = func.coalesce(
             IndiAllSkyDbVideoTable.dayDate_year,
-        )\
+            extract('year', IndiAllSkyDbVideoTable.dayDate),
+        ).label('year_val')
+
+        years_query = db.session.query(year_col)\
             .filter(IndiAllSkyDbVideoTable.camera_id == self.camera_id)
 
 
@@ -7585,12 +7588,15 @@ class IndiAllskyVideoViewer(FlaskForm):
 
         years_query = years_query\
             .distinct()\
-            .order_by(IndiAllSkyDbVideoTable.dayDate_year.desc())
+            .order_by(year_col.desc())
 
 
         year_choices = []
         for y in years_query:
-            entry = (y.dayDate_year, str(y.dayDate_year))
+            if y.year_val is None:
+                continue
+            year_val = int(y.year_val)
+            entry = (year_val, str(year_val))
             year_choices.append(entry)
 
 
@@ -7598,14 +7604,20 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
     def getMonths(self, year):
-        months_query = db.session.query(
+        year_col = func.coalesce(
             IndiAllSkyDbVideoTable.dayDate_year,
+            extract('year', IndiAllSkyDbVideoTable.dayDate),
+        )
+        month_col = func.coalesce(
             IndiAllSkyDbVideoTable.dayDate_month,
-        )\
+            extract('month', IndiAllSkyDbVideoTable.dayDate),
+        ).label('month_val')
+
+        months_query = db.session.query(month_col)\
             .filter(
                 and_(
                     IndiAllSkyDbVideoTable.camera_id == self.camera_id,
-                    IndiAllSkyDbVideoTable.dayDate_year == year,
+                    year_col == year,
                 )
         )
 
@@ -7623,14 +7635,17 @@ class IndiAllskyVideoViewer(FlaskForm):
 
         months_query = months_query\
             .distinct()\
-            .order_by(IndiAllSkyDbVideoTable.dayDate_month.desc())
+            .order_by(month_col.desc())
 
 
         month_choices = []
         for m in months_query:
-            month_name = datetime.strptime('{0} {1}'.format(year, m.dayDate_month), '%Y %m')\
+            if m.month_val is None:
+                continue
+            month_val = int(m.month_val)
+            month_name = datetime.strptime('{0} {1}'.format(year, month_val), '%Y %m')\
                 .strftime('%B')
-            entry = (m.dayDate_month, month_name)
+            entry = (month_val, month_name)
             month_choices.append(entry)
 
 
@@ -7638,12 +7653,21 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
     def getVideos(self, year, month, timeofday):
+        year_col = func.coalesce(
+            IndiAllSkyDbVideoTable.dayDate_year,
+            extract('year', IndiAllSkyDbVideoTable.dayDate),
+        )
+        month_col = func.coalesce(
+            IndiAllSkyDbVideoTable.dayDate_month,
+            extract('month', IndiAllSkyDbVideoTable.dayDate),
+        )
+
         videos_query = IndiAllSkyDbVideoTable.query\
             .filter(
                 and_(
                     IndiAllSkyDbVideoTable.camera_id == self.camera_id,
-                    IndiAllSkyDbVideoTable.dayDate_year == year,
-                    IndiAllSkyDbVideoTable.dayDate_month == month,
+                    year_col == year,
+                    month_col == month,
                 )
             )
 
@@ -8003,9 +8027,12 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
 
 
     def getYears(self):
-        years_query = db.session.query(
+        year_col = func.coalesce(
             IndiAllSkyDbMiniVideoTable.dayDate_year,
-        )\
+            extract('year', IndiAllSkyDbMiniVideoTable.dayDate),
+        ).label('year_val')
+
+        years_query = db.session.query(year_col)\
             .filter(IndiAllSkyDbMiniVideoTable.camera_id == self.camera_id)
 
 
@@ -8022,12 +8049,15 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
 
         years_query = years_query\
             .distinct()\
-            .order_by(IndiAllSkyDbMiniVideoTable.dayDate_year.desc())
+            .order_by(year_col.desc())
 
 
         year_choices = []
         for y in years_query:
-            entry = (y.dayDate_year, str(y.dayDate_year))
+            if y.year_val is None:
+                continue
+            year_val = int(y.year_val)
+            entry = (year_val, str(year_val))
             year_choices.append(entry)
 
 
@@ -8035,14 +8065,20 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
 
 
     def getMonths(self, year):
-        months_query = db.session.query(
+        year_col = func.coalesce(
             IndiAllSkyDbMiniVideoTable.dayDate_year,
+            extract('year', IndiAllSkyDbMiniVideoTable.dayDate),
+        )
+        month_col = func.coalesce(
             IndiAllSkyDbMiniVideoTable.dayDate_month,
-        )\
+            extract('month', IndiAllSkyDbMiniVideoTable.dayDate),
+        ).label('month_val')
+
+        months_query = db.session.query(month_col)\
             .filter(
                 and_(
                     IndiAllSkyDbMiniVideoTable.camera_id == self.camera_id,
-                    IndiAllSkyDbMiniVideoTable.dayDate_year == year,
+                    year_col == year,
                 )
         )
 
@@ -8060,14 +8096,17 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
 
         months_query = months_query\
             .distinct()\
-            .order_by(IndiAllSkyDbMiniVideoTable.dayDate_month.desc())
+            .order_by(month_col.desc())
 
 
         month_choices = []
         for m in months_query:
-            month_name = datetime.strptime('{0} {1}'.format(year, m.dayDate_month), '%Y %m')\
+            if m.month_val is None:
+                continue
+            month_val = int(m.month_val)
+            month_name = datetime.strptime('{0} {1}'.format(year, month_val), '%Y %m')\
                 .strftime('%B')
-            entry = (m.dayDate_month, month_name)
+            entry = (month_val, month_name)
             month_choices.append(entry)
 
 
@@ -8076,14 +8115,23 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
 
 
     def getVideos(self, year, month):
+        year_col = func.coalesce(
+            IndiAllSkyDbMiniVideoTable.dayDate_year,
+            extract('year', IndiAllSkyDbMiniVideoTable.dayDate),
+        )
+        month_col = func.coalesce(
+            IndiAllSkyDbMiniVideoTable.dayDate_month,
+            extract('month', IndiAllSkyDbMiniVideoTable.dayDate),
+        )
+
         videos_query = db.session.query(
             IndiAllSkyDbMiniVideoTable,
         )\
             .filter(
                 and_(
                     IndiAllSkyDbMiniVideoTable.camera_id == self.camera_id,
-                    IndiAllSkyDbMiniVideoTable.dayDate_year == year,
-                    IndiAllSkyDbMiniVideoTable.dayDate_month == month,
+                    year_col == year,
+                    month_col == month,
                 )
         )
 

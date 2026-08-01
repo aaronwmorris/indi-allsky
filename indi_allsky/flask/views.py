@@ -4992,9 +4992,12 @@ class AjaxVideoViewerView(BaseView):
             year = form_datetime.year
 
             json_data['MONTH_SELECT'] = form_video_viewer.getMonths(year)
-            month = json_data['MONTH_SELECT'][0][0]
 
-            json_data['video_list'] = form_video_viewer.getVideos(year, month, form_timeofday)
+            if json_data['MONTH_SELECT']:
+                month = json_data['MONTH_SELECT'][0][0]
+                json_data['video_list'] = form_video_viewer.getVideos(year, month, form_timeofday)
+            else:
+                json_data['video_list'] = []
         else:
             # No entries in DB
             json_data['MONTH_SELECT'] = (('', 'None'),)
