@@ -14,6 +14,7 @@ import subprocess
 import signal
 import logging
 import traceback
+import uuid
 #from pprint import pformat
 
 from multiprocessing import Process
@@ -29,6 +30,7 @@ from PIL import Image
 from fractions import Fraction
 
 from . import constants
+from . import asi676mc
 
 from .processing import ImageProcessor
 from .miscUpload import miscUpload
@@ -115,6 +117,7 @@ class ImageWorker(Process):
 
         self.image_count = 0
         self.metadata_count = 0
+        self.asi676mc_diagnostic_pending = {}
 
         self.image_processor = ImageProcessor(
             self.config,
@@ -384,6 +387,15 @@ class ImageWorker(Process):
             filename_p.unlink()
             #task.setFailed('Bad Image: {0:s}'.format(str(filename_p)))
             return
+
+
+        self.image_processor.correct_asi676mc_frame(i_ref)
+        try:
+            self.capture_asi676mc_diagnostic_fits(filename_p, i_ref, camera)
+        except Exception:
+            logger.exception(
+                'Unexpected error while capturing ASI676MC diagnostic FITS'
+            )
 
 
         filename_p.unlink()  # original file is no longer needed
@@ -792,6 +804,34 @@ class ImageWorker(Process):
                 'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
                 'camera_sqm_raw_mag' : self.image_processor.camera_sqm_raw_mag,
             }
+
+            asi676mc_repair_result = i_ref.asi676mc_repair_result
+            if (
+                asi676mc_repair_result
+                and asi676mc_repair_result['status'] == 'excluded'
+            ):
+                # The processed JPEG has already been written.  Mark its new
+                # database row so existing timelapse queries skip it.
+                image_metadata['exclude'] = True
+
+            if (
+                asi676mc_repair_result
+                and asi676mc_repair_result.get('diagnostic_fits')
+            ):
+                image_add_data['asi676mc_diagnostic_fits'] = dict(
+                    asi676mc_repair_result['diagnostic_fits']
+                )
+
+            if (
+                asi676mc_repair_result
+                and asi676mc_repair_result['status'] in (
+                    'repaired',
+                    'validation_failed',
+                    'excluded',
+                )
+            ):
+                image_add_data['asi676mc_repair_status'] = asi676mc_repair_result['status']
+                image_add_data['asi676mc_repair'] = dict(asi676mc_repair_result)
 
 
             for i in range(60):
@@ -1238,6 +1278,179 @@ class ImageWorker(Process):
         }
 
         return stars_data
+
+
+    def capture_asi676mc_diagnostic_fits(self, source_filename_p, i_ref, camera):
+        repair_config = self.config.get('IMAGE_ASI676MC_REPAIR', {})
+        camera_id = i_ref.camera_id
+
+        if (
+            not repair_config.get('ENABLE', False)
+            or not repair_config.get('SAVE_DIAGNOSTIC_FITS', False)
+        ):
+            self.asi676mc_diagnostic_pending.pop(camera_id, None)
+            return
+
+        repair_result = i_ref.asi676mc_repair_result or {}
+        repair_status = repair_result.get('status')
+        pending_capture_id = self.asi676mc_diagnostic_pending.pop(camera_id, None)
+        new_capture_id = (
+            uuid.uuid4().hex
+            if repair_status in asi676mc.DIAGNOSTIC_BAD_STATUSES
+            else None
+        )
+        roles, next_capture_id = asi676mc.diagnostic_capture_plan(
+            pending_capture_id,
+            repair_status,
+            new_capture_id=new_capture_id,
+        )
+
+        if not roles:
+            return
+
+        try:
+            fits_entry = self._archive_asi676mc_diagnostic_fits(
+                Path(source_filename_p),
+                i_ref,
+                camera,
+                roles,
+            )
+        except Exception:
+            logger.exception(
+                'Unable to save ASI676MC diagnostic FITS for %s',
+                source_filename_p,
+            )
+            return
+
+        repair_result['diagnostic_fits'] = {
+            'fits_id': fits_entry.id,
+            'roles': [dict(role) for role in roles],
+        }
+        i_ref.asi676mc_repair_result = repair_result
+
+        if next_capture_id:
+            self.asi676mc_diagnostic_pending[camera_id] = next_capture_id
+
+        role_names = ', '.join(role['role'] for role in roles)
+        logger.warning(
+            'Saved ASI676MC diagnostic FITS (%s): %s',
+            role_names,
+            fits_entry.filename,
+        )
+
+
+    def _archive_asi676mc_diagnostic_fits(
+        self,
+        source_filename_p,
+        i_ref,
+        camera,
+        roles,
+    ):
+        source_name_lower = source_filename_p.name.lower()
+        fits_ext = None
+        for candidate_ext in ('fits.gz', 'fit.gz', 'fits', 'fit'):
+            if source_name_lower.endswith('.{0:s}'.format(candidate_ext)):
+                fits_ext = candidate_ext
+                break
+
+        if not fits_ext:
+            raise ValueError(
+                'ASI676MC diagnostic source is not a FITS file: {0:s}'.format(
+                    str(source_filename_p),
+                )
+            )
+
+        data = i_ref.hdulist[0].data
+        image_height, image_width = data.shape[:2]
+        date_str = i_ref.exp_date.strftime('%Y%m%d_%H%M%S')
+        role_name = '_'.join(role['role'] for role in roles)
+        capture_tag = roles[0]['capture_id'][:8]
+        base_filename = self.filename_t.format(
+            i_ref.camera_id,
+            date_str,
+            fits_ext,
+        )
+        filename = self._getImageFolder(
+            i_ref.exp_date,
+            i_ref.day_date,
+            camera,
+            'fits',
+        ).joinpath(
+            'asi676mc_{0:s}_{1:s}_{2:s}'.format(
+                role_name,
+                capture_tag,
+                base_filename,
+            )
+        )
+
+        if filename.exists():
+            raise FileExistsError(
+                'ASI676MC diagnostic FITS already exists: {0:s}'.format(
+                    str(filename),
+                )
+            )
+
+        try:
+            shutil.copy2(str(source_filename_p), str(filename))
+            filename.chmod(0o644)
+            fits_size_bytes = filename.stat().st_size
+        except Exception:
+            try:
+                filename.unlink()
+            except FileNotFoundError:
+                pass
+            raise
+
+        fits_metadata = {
+            'type'       : constants.FITS_IMAGE,
+            'createDate' : int(i_ref.exp_date.timestamp()),
+            'dayDate'    : i_ref.day_date.strftime('%Y%m%d'),
+            'utc_offset' : i_ref.exp_date.astimezone().utcoffset().total_seconds(),
+            'exposure'   : i_ref.exposure,
+            'gain'       : i_ref.gain,
+            'binmode'    : i_ref.binning,
+            'night'      : bool(self.night_av[constants.NIGHT_NIGHT]),
+            'fileSize'   : fits_size_bytes,
+            'height'     : image_height,
+            'width'      : image_width,
+            'camera_uuid': i_ref.camera_uuid,
+            'data'       : {
+                asi676mc.DIAGNOSTIC_METADATA_KEY: {
+                    'version': 1,
+                    'source': 'untouched_input',
+                    'roles': [dict(role) for role in roles],
+                },
+            },
+        }
+
+        try:
+            fits_entry = self._miscDb.addFitsImage(
+                filename.relative_to(self.image_dir),
+                i_ref.camera_id,
+                fits_metadata,
+            )
+        except Exception:
+            db.session.rollback()
+            try:
+                filename.unlink()
+            except OSError:
+                logger.exception(
+                    'Unable to remove unregistered ASI676MC diagnostic FITS: %s',
+                    filename,
+                )
+            raise
+
+        try:
+            self._miscUpload.s3_upload_fits(fits_entry, fits_metadata)
+            self._miscUpload.upload_fits_image(fits_entry)
+        except Exception:
+            db.session.rollback()
+            logger.exception(
+                'Unable to queue ASI676MC diagnostic FITS upload: %s',
+                filename,
+            )
+
+        return fits_entry
 
 
     def write_fit(self, i_ref, camera):
@@ -2512,6 +2725,9 @@ class ImageWorker(Process):
             filename_p.unlink()
             #task.setFailed('Bad Image: {0:s}'.format(str(filename_p)))
             return
+
+
+        self.image_processor.correct_asi676mc_frame(i_ref)
 
 
         filename_p.unlink()

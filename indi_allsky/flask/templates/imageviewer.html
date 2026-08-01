@@ -208,6 +208,8 @@ function closeFullscreen() {
             <span id="lag_here"></span>
             <span id="img_download"></span>
             <span id="fits_download"></span>
+            <span id="asi676mc_bad_fits_download"></span>
+            <span id="asi676mc_following_fits_download"></span>
             <span id="fits_processing"></span>
             <span id="raw_download"></span>
             <span id="panorama_download"></span>
@@ -774,6 +776,50 @@ function init() {
                 $('#fits_processing').empty();
             };
 
+            const asi676mc_bad_fits = (
+                image_data[image_index]['asi676mc_diagnostic_bad_fits']
+            );
+            if (asi676mc_bad_fits) {
+                $('#asi676mc_bad_fits_download').html(
+                    $('<a />', {
+                        'href'     : asi676mc_bad_fits['url'],
+                        'rel'      : 'noopener noreferrer',
+                        'class'    : "text-decoration-none link-warning",
+                        'download' : asi676mc_bad_fits['filename'],
+                        'title'    : 'Download untouched faulty RAW FITS',
+                    }).html(
+                        $('<span />', {
+                            'text'  : 'Bad FITS',
+                            'class' : "badge pill bg-danger",
+                        })
+                    )
+                );
+            } else {
+                $('#asi676mc_bad_fits_download').empty();
+            };
+
+            const asi676mc_following_fits = (
+                image_data[image_index]['asi676mc_diagnostic_following_fits']
+            );
+            if (asi676mc_following_fits) {
+                $('#asi676mc_following_fits_download').html(
+                    $('<a />', {
+                        'href'     : asi676mc_following_fits['url'],
+                        'rel'      : 'noopener noreferrer',
+                        'class'    : "text-decoration-none link-warning",
+                        'download' : asi676mc_following_fits['filename'],
+                        'title'    : 'Download immediately following RAW FITS',
+                    }).html(
+                        $('<span />', {
+                            'text'  : 'Next FITS',
+                            'class' : "badge pill bg-success",
+                        })
+                    )
+                );
+            } else {
+                $('#asi676mc_following_fits_download').empty();
+            };
+
             // Add RAW download link if it exists
             if (image_data[image_index]['raw']) {
                 $('#raw_download').html(
@@ -831,6 +877,8 @@ function init() {
         } else {
             // this should never happen, but just in case
             $('#fits_download').empty();
+            $('#asi676mc_bad_fits_download').empty();
+            $('#asi676mc_following_fits_download').empty();
             $('#fits_processing').empty();
             $('#raw_download').empty();
             $('#panorama_download').empty();

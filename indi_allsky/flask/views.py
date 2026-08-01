@@ -22,6 +22,7 @@ from passlib.hash import argon2
 
 from ..version import __version__
 from .. import constants
+from .. import asi676mc
 from ..processing import ImageProcessor
 
 from cryptography.fernet import InvalidToken
@@ -137,6 +138,18 @@ bp_allsky = Blueprint(
     url_prefix='/indi-allsky',  # gunicorn
     static_url_path='static',
 )
+
+
+def _visible_asi676mc_cameras():
+    visible_cameras = IndiAllSkyDbCameraTable.query\
+        .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
+        .all()
+
+    return [
+        camera
+        for camera in visible_cameras
+        if asi676mc.camera_record_matches(camera)
+    ]
 
 
 class AjaxStatusUpdateView(BaseView):
@@ -2020,6 +2033,14 @@ class ConfigView(FormView):
     def get_context(self):
         context = super(ConfigView, self).get_context()
 
+        asi676mc_cameras = _visible_asi676mc_cameras()
+        asi676mc_repair_supported = bool(asi676mc_cameras)
+        context['asi676mc_repair_supported'] = asi676mc_repair_supported
+        context['asi676mc_camera_names'] = [
+            camera.friendlyName or camera.name
+            for camera in asi676mc_cameras
+        ]
+
         context['camera_minGain'] = self.camera.minGain
         context['camera_maxGain'] = self.camera.maxGain
         context['camera_minBinning'] = self.camera.minBinning
@@ -2399,6 +2420,23 @@ class ConfigView(FormView):
             'STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER': self.indi_allsky_config.get('STARTRAILS', {}).get('IMAGE_CIRCLE_MASK_DIAMETER', 3000),
             'STARTRAILS__IMAGE_CIRCLE_MASK_BLUR'    : self.indi_allsky_config.get('STARTRAILS', {}).get('IMAGE_CIRCLE_MASK_BLUR', 35),
             'STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY' : self.indi_allsky_config.get('STARTRAILS', {}).get('IMAGE_CIRCLE_MASK_OPACITY', 100),
+            'IMAGE_ASI676MC_REPAIR__ENABLE'                      : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('ENABLE', False) and asi676mc_repair_supported,
+            'IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY'                : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('EXCLUDE_ONLY', False),
+            'IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME'             : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('LOG_EVERY_FRAME', False),
+            'IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE'              : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('GALLERY_ENABLE', True),
+            'IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS'         : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('SAVE_DIAGNOSTIC_FITS', False),
+            'IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD'      : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('PURPLE_RATIO_THRESHOLD', 1.5),
+            'IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD'    : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('RED_SIDE_RATIO_THRESHOLD', 1.25),
+            'IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD'   : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('BLUE_SIDE_RATIO_THRESHOLD', 1.5),
+            'IMAGE_ASI676MC_REPAIR__SAMPLE_STEP'                 : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('SAMPLE_STEP', 32),
+            'IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD' : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('SOURCE_SATURATION_THRESHOLD', 65000),
+            'IMAGE_ASI676MC_REPAIR__GAIN_R'                      : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('GAIN_R', 0.91004),
+            'IMAGE_ASI676MC_REPAIR__GAIN_G1'                     : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('GAIN_G1', 1.68652),
+            'IMAGE_ASI676MC_REPAIR__GAIN_G2'                     : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('GAIN_G2', 1.09238),
+            'IMAGE_ASI676MC_REPAIR__GAIN_B'                      : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('GAIN_B', 0.59537),
+            'IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO' : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('HIGHLIGHT_BLEND_START_RATIO', 0.55),
+            'IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO'   : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('HIGHLIGHT_BLEND_END_RATIO', 0.75),
+            'IMAGE_ASI676MC_REPAIR__CHUNK_ROWS'                  : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('CHUNK_ROWS', 128),
             'IMAGE_CALIBRATE_DARK'           : self.indi_allsky_config.get('IMAGE_CALIBRATE_DARK', True),
             'IMAGE_CALIBRATE_BPM'            : self.indi_allsky_config.get('IMAGE_CALIBRATE_BPM', False),
             'IMAGE_CALIBRATE_FIX_HOLES'      : self.indi_allsky_config.get('IMAGE_CALIBRATE_FIX_HOLES', False),
@@ -3186,6 +3224,17 @@ class AjaxConfigView(BaseView):
 
         # form passed validation
 
+        if request.json.get('IMAGE_ASI676MC_REPAIR__ENABLE') and not _visible_asi676mc_cameras():
+            form_errors = {
+                'IMAGE_ASI676MC_REPAIR__ENABLE' : [
+                    'No detected ASI676MC camera is available',
+                ],
+                'form_global' : [
+                    'ASI676MC frame repair can only be enabled when an ASI676MC camera is available',
+                ],
+            }
+            return jsonify(form_errors), 400
+
         if not self.indi_allsky_config:
             return jsonify({}), 400
 
@@ -3424,6 +3473,24 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['STARTRAILS']['IMAGE_CIRCLE_MASK_DIAMETER'] = int(request.json['STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER'])
         self.indi_allsky_config['STARTRAILS']['IMAGE_CIRCLE_MASK_BLUR']     = int(request.json['STARTRAILS__IMAGE_CIRCLE_MASK_BLUR'])
         self.indi_allsky_config['STARTRAILS']['IMAGE_CIRCLE_MASK_OPACITY']  = int(request.json['STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY'])
+        asi676mc_repair_config = self.indi_allsky_config.setdefault('IMAGE_ASI676MC_REPAIR', {})
+        asi676mc_repair_config['ENABLE']                      = bool(request.json['IMAGE_ASI676MC_REPAIR__ENABLE'])
+        asi676mc_repair_config['EXCLUDE_ONLY']                = bool(request.json['IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY'])
+        asi676mc_repair_config['LOG_EVERY_FRAME']             = bool(request.json['IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME'])
+        asi676mc_repair_config['GALLERY_ENABLE']              = bool(request.json['IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE'])
+        asi676mc_repair_config['SAVE_DIAGNOSTIC_FITS']         = bool(request.json['IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS'])
+        asi676mc_repair_config['PURPLE_RATIO_THRESHOLD']      = float(request.json['IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD'])
+        asi676mc_repair_config['RED_SIDE_RATIO_THRESHOLD']    = float(request.json['IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD'])
+        asi676mc_repair_config['BLUE_SIDE_RATIO_THRESHOLD']   = float(request.json['IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD'])
+        asi676mc_repair_config['SAMPLE_STEP']                 = int(request.json['IMAGE_ASI676MC_REPAIR__SAMPLE_STEP'])
+        asi676mc_repair_config['SOURCE_SATURATION_THRESHOLD'] = int(request.json['IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD'])
+        asi676mc_repair_config['GAIN_R']                      = float(request.json['IMAGE_ASI676MC_REPAIR__GAIN_R'])
+        asi676mc_repair_config['GAIN_G1']                     = float(request.json['IMAGE_ASI676MC_REPAIR__GAIN_G1'])
+        asi676mc_repair_config['GAIN_G2']                     = float(request.json['IMAGE_ASI676MC_REPAIR__GAIN_G2'])
+        asi676mc_repair_config['GAIN_B']                      = float(request.json['IMAGE_ASI676MC_REPAIR__GAIN_B'])
+        asi676mc_repair_config['HIGHLIGHT_BLEND_START_RATIO'] = float(request.json['IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO'])
+        asi676mc_repair_config['HIGHLIGHT_BLEND_END_RATIO']   = float(request.json['IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO'])
+        asi676mc_repair_config['CHUNK_ROWS']                  = int(request.json['IMAGE_ASI676MC_REPAIR__CHUNK_ROWS'])
         self.indi_allsky_config['IMAGE_CALIBRATE_DARK']                 = bool(request.json['IMAGE_CALIBRATE_DARK'])
         self.indi_allsky_config['IMAGE_CALIBRATE_BPM']                  = bool(request.json['IMAGE_CALIBRATE_BPM'])
         self.indi_allsky_config['IMAGE_CALIBRATE_FIX_HOLES']            = bool(request.json['IMAGE_CALIBRATE_FIX_HOLES'])
@@ -4311,6 +4378,11 @@ class AjaxImageViewerView(BaseView):
             else:
                 local = False
 
+        asi676mc_diagnostic_download_enabled = bool(
+            self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('ENABLE', False)
+            and asi676mc.camera_record_matches(self.camera)
+        )
+
 
         if form_filter_detections:
             # filter images that have a detection
@@ -4318,6 +4390,7 @@ class AjaxImageViewerView(BaseView):
                 data=request.json,
                 camera_id=camera_id,
                 detections_count=1,
+                asi676mc_diagnostic_download_enabled=asi676mc_diagnostic_download_enabled,
                 s3_prefix=self.s3_prefix,
                 local=local,
             )
@@ -4326,6 +4399,7 @@ class AjaxImageViewerView(BaseView):
                 data=request.json,
                 camera_id=camera_id,
                 detections_count=0,
+                asi676mc_diagnostic_download_enabled=asi676mc_diagnostic_download_enabled,
                 s3_prefix=self.s3_prefix,
                 local=local,
             )
@@ -4687,6 +4761,12 @@ class GalleryViewerView(FormView):
     def get_context(self):
         context = super(GalleryViewerView, self).get_context()
 
+        context['asi676mc_repair_gallery_enabled'] = int(
+            self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('ENABLE', False)
+            and self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('GALLERY_ENABLE', True)
+            and asi676mc.camera_record_matches(self.camera)
+        )
+
         form_data = {
             'CAMERA_ID'    : self.camera.id,
             'YEAR_SELECT'  : None,
@@ -4694,6 +4774,7 @@ class GalleryViewerView(FormView):
             'DAY_SELECT'   : None,
             'HOUR_SELECT'  : None,
             'FILTER_DETECTIONS' : None,
+            'FILTER_ASI676MC_REPAIRED' : None,
         }
 
 
@@ -4730,8 +4811,19 @@ class AjaxGalleryViewerView(BaseView):
         form_day   = int(request.json.get('DAY_SELECT', 0))
         form_hour  = int(request.json.get('HOUR_SELECT', -1))  # 0 is a real hour
         form_filter_detections = bool(request.json.get('FILTER_DETECTIONS'))
+        form_filter_asi676mc_repaired_requested = bool(request.json.get('FILTER_ASI676MC_REPAIRED'))
 
         self.cameraSetup(camera_id=camera_id)
+
+        asi676mc_repair_gallery_enabled = bool(
+            self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('ENABLE', False)
+            and self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('GALLERY_ENABLE', True)
+            and asi676mc.camera_record_matches(self.camera)
+        )
+        form_filter_asi676mc_repaired = bool(
+            form_filter_asi676mc_repaired_requested
+            and asi676mc_repair_gallery_enabled
+        )
 
         local = True  # default to local assets
         if self.web_nonlocal_images:
@@ -4747,6 +4839,7 @@ class AjaxGalleryViewerView(BaseView):
                 data=request.json,
                 camera_id=camera_id,
                 detections_count=1,
+                asi676mc_repaired_only=form_filter_asi676mc_repaired,
                 s3_prefix=self.s3_prefix,
                 local=local,
             )
@@ -4755,6 +4848,7 @@ class AjaxGalleryViewerView(BaseView):
                 data=request.json,
                 camera_id=camera_id,
                 detections_count=0,
+                asi676mc_repaired_only=form_filter_asi676mc_repaired,
                 s3_prefix=self.s3_prefix,
                 local=local,
             )
@@ -4816,7 +4910,7 @@ class AjaxGalleryViewerView(BaseView):
             json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
 
         else:
-            # this happens when filtering images on detections
+            # this happens when filtering images
             json_data['YEAR_SELECT'] = form_viewer.getYears()
 
             if not json_data['YEAR_SELECT']:
@@ -4826,6 +4920,7 @@ class AjaxGalleryViewerView(BaseView):
                 json_data['DAY_SELECT'] = (('', None),)
                 json_data['HOUR_SELECT'] = (('', None),)
                 json_data['IMG_SELECT'] = (('', None),)
+                json_data['IMAGE_DATA'] = []
 
                 return json_data
 

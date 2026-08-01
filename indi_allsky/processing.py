@@ -21,6 +21,7 @@ import logging
 import ephem
 
 from . import constants
+from . import asi676mc
 
 from . import stretch as stretch_classes
 from .overlay.orb import IndiAllskyOrbGenerator
@@ -945,6 +946,200 @@ class ImageProcessor(object):
 
     def getLatestImage(self):
         return self.image_list[0]
+
+
+    def _set_asi676mc_repair_result(
+        self,
+        i_ref,
+        status,
+        reason=None,
+        signature_before=None,
+        signature_after=None,
+        timing=None,
+    ):
+        i_ref.asi676mc_repair_result = asi676mc.audit_metadata(
+            status,
+            reason=reason,
+            signature_before=signature_before,
+            signature_after=signature_after,
+            timing=timing,
+        )
+
+        return status == 'repaired'
+
+
+    def correct_asi676mc_frame(self, i_ref):
+        repair_config = self.config.get('IMAGE_ASI676MC_REPAIR', {})
+        if not repair_config.get('ENABLE', False):
+            return False
+
+        if not asi676mc.camera_name_matches(i_ref.camera_name):
+            logger.debug(
+                'ASI676MC frame repair skipped for camera: %s',
+                i_ref.camera_name,
+            )
+            return False
+
+        if i_ref.binning != 1:
+            reason = 'binning {0:d} is not supported'.format(i_ref.binning)
+            logger.warning(
+                'ASI676MC frame repair skipped: %s',
+                reason,
+            )
+            return self._set_asi676mc_repair_result(i_ref, 'skipped', reason=reason)
+
+        bayer_pattern = str(i_ref.image_bayerpat or '').upper()
+        if bayer_pattern != 'RGGB':
+            reason = 'expected RGGB data, got {0:s}'.format(bayer_pattern or 'unset')
+            logger.warning(
+                'ASI676MC frame repair skipped: %s',
+                reason,
+            )
+            return self._set_asi676mc_repair_result(i_ref, 'skipped', reason=reason)
+
+        x_bayer_offset = int(i_ref.hdulist[0].header.get('XBAYROFF', 0))
+        y_bayer_offset = int(i_ref.hdulist[0].header.get('YBAYROFF', 0))
+        if x_bayer_offset or y_bayer_offset:
+            reason = 'unsupported Bayer offsets X {0:d}, Y {1:d}'.format(
+                x_bayer_offset,
+                y_bayer_offset,
+            )
+            logger.warning(
+                'ASI676MC frame repair skipped: %s',
+                reason,
+            )
+            return self._set_asi676mc_repair_result(i_ref, 'skipped', reason=reason)
+
+        if repair_config.get('EXCLUDE_ONLY', False):
+            try:
+                result = asi676mc.detect_frame(
+                    i_ref.hdulist[0].data,
+                    repair_config,
+                )
+            except (TypeError, ValueError) as e:
+                reason = str(e)
+                logger.error('ASI676MC purple-frame detection skipped: %s', reason)
+                return self._set_asi676mc_repair_result(i_ref, 'skipped', reason=reason)
+
+            signature_before = result['signature']
+            timing = result['timing']
+            if result['is_bad']:
+                logger.warning(
+                    'ASI676MC purple-frame failure detected; original frame retained '
+                    'and excluded from timelapses '
+                    '(purple ratio: %0.3f, red-side ratio: %0.3f, '
+                    'blue-side ratio: %0.3f, detection: %0.3f ms, total: %0.3f ms)',
+                    signature_before['purple_ratio'],
+                    signature_before['red_side_ratio'],
+                    signature_before['blue_side_ratio'],
+                    timing['detection_s'] * 1000,
+                    timing['total_s'] * 1000,
+                )
+                return self._set_asi676mc_repair_result(
+                    i_ref,
+                    'excluded',
+                    reason='exclude-only mode retained the detected purple frame',
+                    signature_before=signature_before,
+                    timing=timing,
+                )
+
+            log_method = (
+                logger.info
+                if repair_config.get('LOG_EVERY_FRAME', False)
+                else logger.debug
+            )
+            log_method(
+                'ASI676MC purple-frame check: normal '
+                '(purple ratio: %0.3f, red-side ratio: %0.3f, '
+                'blue-side ratio: %0.3f, detection: %0.3f ms, total: %0.3f ms)',
+                signature_before['purple_ratio'],
+                signature_before['red_side_ratio'],
+                signature_before['blue_side_ratio'],
+                timing['detection_s'] * 1000,
+                timing['total_s'] * 1000,
+            )
+            return self._set_asi676mc_repair_result(
+                i_ref,
+                'normal',
+                signature_before=signature_before,
+                timing=timing,
+            )
+
+        try:
+            result = asi676mc.repair_if_needed(
+                i_ref.hdulist[0].data,
+                repair_config,
+            )
+        except (TypeError, ValueError) as e:
+            reason = str(e)
+            logger.error('ASI676MC frame repair skipped: %s', reason)
+            return self._set_asi676mc_repair_result(i_ref, 'skipped', reason=reason)
+
+        signature_before = result['signature_before']
+        timing = result['timing']
+        if result['validation_failed']:
+            signature_after = result['signature_after']
+            logger.error(
+                'ASI676MC frame repair validation failed; original frame retained '
+                '(purple ratio: %0.3f -> %0.3f, detection: %0.3f ms, '
+                'repair/validation: %0.3f ms, total: %0.3f ms)',
+                signature_before['purple_ratio'],
+                signature_after['purple_ratio'],
+                timing['detection_s'] * 1000,
+                timing['repair_s'] * 1000,
+                timing['total_s'] * 1000,
+            )
+            return self._set_asi676mc_repair_result(
+                i_ref,
+                'validation_failed',
+                reason='post-repair signature still matches the purple-frame failure',
+                signature_before=signature_before,
+                signature_after=signature_after,
+                timing=timing,
+            )
+
+        if not result['repaired']:
+            log_method = (
+                logger.info
+                if repair_config.get('LOG_EVERY_FRAME', False)
+                else logger.debug
+            )
+            log_method(
+                'ASI676MC frame repair check: normal '
+                '(purple ratio: %0.3f, red-side ratio: %0.3f, blue-side ratio: %0.3f, '
+                'detection: %0.3f ms, total: %0.3f ms)',
+                signature_before['purple_ratio'],
+                signature_before['red_side_ratio'],
+                signature_before['blue_side_ratio'],
+                timing['detection_s'] * 1000,
+                timing['total_s'] * 1000,
+            )
+            return self._set_asi676mc_repair_result(
+                i_ref,
+                'normal',
+                signature_before=signature_before,
+                timing=timing,
+            )
+
+        signature_after = result['signature_after']
+        logger.warning(
+            'ASI676MC purple-frame failure repaired '
+            '(purple ratio: %0.3f -> %0.3f, detection: %0.3f ms, '
+            'repair/validation: %0.3f ms, total: %0.3f ms)',
+            signature_before['purple_ratio'],
+            signature_after['purple_ratio'],
+            timing['detection_s'] * 1000,
+            timing['repair_s'] * 1000,
+            timing['total_s'] * 1000,
+        )
+
+        return self._set_asi676mc_repair_result(
+            i_ref,
+            'repaired',
+            signature_before=signature_before,
+            signature_after=signature_after,
+            timing=timing,
+        )
 
 
     def calibrate(self, libcamera_black_level=None):
@@ -4276,6 +4471,7 @@ class ImageData(object):
         self._detected_bit_depth = 8  # updated below
         self._calibrated = False
         self._libcamera_black_level = None
+        self._asi676mc_repair_result = None
         self._opencv_data = None
 
         self._kpindex = 0.0
@@ -4383,6 +4579,14 @@ class ImageData(object):
     @calibrated.setter
     def calibrated(self, new_calibrated):
         self._calibrated = bool(new_calibrated)
+
+    @property
+    def asi676mc_repair_result(self):
+        return self._asi676mc_repair_result
+
+    @asi676mc_repair_result.setter
+    def asi676mc_repair_result(self, new_asi676mc_repair_result):
+        self._asi676mc_repair_result = new_asi676mc_repair_result
 
     @property
     def libcamera_black_level(self):

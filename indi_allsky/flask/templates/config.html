@@ -2620,6 +2620,233 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-2"></div>
     </div>
 
+    <hr>
+
+    <h5>ASI676MC RAW16 Purple-frame Handling</h5>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {% if asi676mc_repair_supported %}
+                {{ form_config.IMAGE_ASI676MC_REPAIR__ENABLE(class='form-check-input') }}
+                {% else %}
+                {{ form_config.IMAGE_ASI676MC_REPAIR__ENABLE(class='form-check-input', disabled=true) }}
+                {% endif %}
+                <div id="IMAGE_ASI676MC_REPAIR__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            {% if asi676mc_repair_supported %}
+            Detect the ASI676MC purple-frame RAW16 failure before calibration and debayering,
+            then either repair it or leave it unchanged and exclude it from timelapses.
+            Frames from other camera models are always left unchanged.
+            Detected ASI676MC camera{% if asi676mc_camera_names|length != 1 %}s{% endif %}: {{ asi676mc_camera_names|join(', ') }}.
+            {% else %}
+            <span class="badge rounded-pill bg-secondary">Unavailable</span>
+            No ASI676MC camera is currently available. This feature cannot be enabled.
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY(class='form-check-input') }}
+                <div id="IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            Detect purple frames without repairing them. The normal pipeline still saves the faulty JPEG,
+            then its database entry is automatically excluded from timelapses.
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME(class='form-check-input') }}
+                <div id="IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            Log the detection result for every ASI676MC frame. Successful repairs and validation failures are always logged.
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE(class='form-check-input') }}
+                <div id="IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            Show repair badges, colored outlines, and the repaired-only filter in the gallery.
+            Repair metadata continues to be recorded when this display option is disabled.
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS(class='form-check-input') }}
+                <div id="IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            Keep the untouched faulty input FITS and the immediately following same-camera FITS.
+            Download links appear only on the standard Image Viewer.
+            Normal FITS expiration settings apply.
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD(class='form-control bg-secondary') }}
+            <div id="IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Combined red/blue to green detection ratio [default: 1.50]</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD(class='form-control bg-secondary') }}
+            <div id="IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Apparent red to first-green detection ratio [default: 1.25]</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD(class='form-control bg-secondary') }}
+            <div id="IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Apparent blue to second-green detection ratio [default: 1.50]</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD(class='form-control bg-secondary') }}
+            <div id="IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">RAW16 level treated as source-camera clipping [default: 65000]</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__GAIN_R.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__GAIN_R(class='form-control bg-secondary') }}
+            <div id="IMAGE_ASI676MC_REPAIR__GAIN_R-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Measured bad-frame multiplier at the R Bayer position [default: 0.91004]</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__GAIN_G1.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__GAIN_G1(class='form-control bg-secondary') }}
+            <div id="IMAGE_ASI676MC_REPAIR__GAIN_G1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Measured bad-frame multiplier at the G1 Bayer position [default: 1.68652]</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__GAIN_G2.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__GAIN_G2(class='form-control bg-secondary') }}
+            <div id="IMAGE_ASI676MC_REPAIR__GAIN_G2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Measured bad-frame multiplier at the G2 Bayer position [default: 1.09238]</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__GAIN_B.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__GAIN_B(class='form-control bg-secondary') }}
+            <div id="IMAGE_ASI676MC_REPAIR__GAIN_B-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Measured bad-frame multiplier at the B Bayer position [default: 0.59537]</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__SAMPLE_STEP.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__SAMPLE_STEP(class='form-control bg-secondary') }}
+            <div id="IMAGE_ASI676MC_REPAIR__SAMPLE_STEP-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Even sparse-sampling interval used by the detector [default: 32]</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO(class='form-control bg-secondary') }}
+            <div id="IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Red/blue low-to-high ratio where clipped-highlight blending begins [default: 0.55]</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO(class='form-control bg-secondary') }}
+            <div id="IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Red/blue low-to-high ratio where clipped-highlight blending reaches the stronger channel [default: 0.75; must exceed start]</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__CHUNK_ROWS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__CHUNK_ROWS(class='form-control bg-secondary') }}
+            <div id="IMAGE_ASI676MC_REPAIR__CHUNK_ROWS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Even number of rows processed per memory-limited chunk [default: 128]</div>
+    </div>
+
 </div><!-- end image tab -->
 <div class="tab-pane fade" id="nav-overlays" role="tabpanel" aria-labelledby="nav-overlays-tab">
 
@@ -9889,6 +10116,18 @@ const field_names = [
     'CCD_EXPOSURE_MIN_DAY',
     'CCD_EXPOSURE_TIMEOUT',
     'CCD_BIT_DEPTH',
+    'IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD',
+    'IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD',
+    'IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD',
+    'IMAGE_ASI676MC_REPAIR__SAMPLE_STEP',
+    'IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD',
+    'IMAGE_ASI676MC_REPAIR__GAIN_R',
+    'IMAGE_ASI676MC_REPAIR__GAIN_G1',
+    'IMAGE_ASI676MC_REPAIR__GAIN_G2',
+    'IMAGE_ASI676MC_REPAIR__GAIN_B',
+    'IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO',
+    'IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO',
+    'IMAGE_ASI676MC_REPAIR__CHUNK_ROWS',
     'IMAGE_CALIBRATE_MANUAL_OFFSET',
     'IMAGE_CALIBRATE_HOLE_THOLD',
     'EXPOSURE_PERIOD',
@@ -10481,6 +10720,11 @@ const checkbox_field_names = [
     'IMAGE_STACK_SPLIT',
     'IMAGE_STACK_MOONMODE',
     'IMAGE_STACK_DAY',
+    'IMAGE_ASI676MC_REPAIR__ENABLE',
+    'IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY',
+    'IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME',
+    'IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE',
+    'IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS',
     'IMAGE_CALIBRATE_DARK',
     'IMAGE_CALIBRATE_BPM',
     'IMAGE_CALIBRATE_FIX_HOLES',
@@ -11167,6 +11411,31 @@ $('#FAN__THOLD_ENABLE').on('change', function() {
 });
 
 
+var group_fields_asi676mc_repair = [
+    'IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD',
+    'IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD',
+    'IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD',
+    'IMAGE_ASI676MC_REPAIR__SAMPLE_STEP',
+    'IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD',
+    'IMAGE_ASI676MC_REPAIR__GAIN_R',
+    'IMAGE_ASI676MC_REPAIR__GAIN_G1',
+    'IMAGE_ASI676MC_REPAIR__GAIN_G2',
+    'IMAGE_ASI676MC_REPAIR__GAIN_B',
+    'IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO',
+    'IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO',
+    'IMAGE_ASI676MC_REPAIR__CHUNK_ROWS',
+];
+
+var group_checkbox_fields_asi676mc_repair = [
+    'IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY',
+    'IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME',
+    'IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE',
+    'IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS',
+];
+
+group_on_change('IMAGE_ASI676MC_REPAIR__ENABLE', group_fields_asi676mc_repair, group_checkbox_fields_asi676mc_repair);
+
+
 var group_fields_fits = [
     'IMAGE_SAVE_FITS_PERIOD',
     'FITSHEADERS__0__KEY',
@@ -11497,6 +11766,7 @@ $( document ).ready(function() {
     }
 
 
+    group_on_ready('IMAGE_ASI676MC_REPAIR__ENABLE', group_fields_asi676mc_repair, group_checkbox_fields_asi676mc_repair);
     group_on_ready('IMAGE_SAVE_FITS', group_fields_fits, group_checkbox_fields_fits);
     group_on_ready('IMAGE_CIRCLE_MASK__ENABLE', group_fields_image_circle_mask, group_checkbox_fields_image_circle_mask);
     group_on_ready('CAMERA_SQM__ENABLE', group_fields_camera_sqm, group_checkbox_fields_camera_sqm);

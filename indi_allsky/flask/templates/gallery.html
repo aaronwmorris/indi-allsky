@@ -23,6 +23,34 @@ figure img {width: 100%;}
   animation: spin 2s linear infinite;
 }
 
+.asi676mc-repaired-thumbnail {
+  outline: 4px solid #fd7e14;
+  outline-offset: -4px;
+}
+
+.asi676mc-validation-failed-thumbnail {
+  outline: 4px solid #dc3545;
+  outline-offset: -4px;
+}
+
+.asi676mc-repair-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  padding: 2px 5px;
+  color: #fff;
+  background-color: #fd7e14;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  pointer-events: none;
+}
+
+.asi676mc-repair-badge.validation-failed {
+  background-color: #dc3545;
+}
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -35,6 +63,7 @@ figure img {width: 100%;}
 <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='photoswipe/dist/photoswipe.css') }}">
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
+var asi676mc_repair_gallery_enabled = Boolean({{ asi676mc_repair_gallery_enabled }});
 var lightbox = null;
 var newest_entry_default = true;
 </script>
@@ -84,7 +113,7 @@ var newest_entry_default = true;
     </div>
 
     <div class="form-group row">
-        <div class="col-sm-9"></div>
+        <div class="col-sm-6"></div>
 
         <div class="col-sm-1">
             {{ form_viewer.FILTER_DETECTIONS.label }}
@@ -96,6 +125,18 @@ var newest_entry_default = true;
                 <div id="FILTER_DETECTIONS-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
+
+        <div class="col-sm-2{% if not asi676mc_repair_gallery_enabled %} d-none{% endif %}">
+            {{ form_viewer.FILTER_ASI676MC_REPAIRED.label }}
+        </div>
+
+        <div class="col-sm-1{% if not asi676mc_repair_gallery_enabled %} d-none{% endif %}">
+            <div class="form-switch">
+                {{ form_viewer.FILTER_ASI676MC_REPAIRED(class='form-check-input') }}
+                <div id="FILTER_ASI676MC_REPAIRED-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+
         <div class="col-sm-1">
             <div class="loader" id="loader_filter"></div>
         </div>
@@ -139,6 +180,7 @@ const field_names = [
 
 const checkbox_field_names = [
     'FILTER_DETECTIONS',
+    'FILTER_ASI676MC_REPAIRED',
 ];
 
 var fields = {};
@@ -203,16 +245,44 @@ function populate_gallery(gallery_data) {
     $('#allsky-gallery').empty();
 
     gallery_data.forEach(item => {
+        const repair_status = (
+            asi676mc_repair_gallery_enabled
+            ? item['asi676mc_repair_status']
+            : null
+        );
+        const repair_applied = repair_status === 'repaired';
+        const repair_validation_failed = repair_status === 'validation_failed';
+        const repair_excluded = repair_status === 'excluded';
+        var repair_title = '';
+        if (repair_applied) {
+            repair_title = 'Purple frame repaired';
+            if (
+                item['asi676mc_purple_ratio_before'] !== null
+                && item['asi676mc_purple_ratio_after'] !== null
+            ) {
+                repair_title += ': purple ratio '
+                    + Number(item['asi676mc_purple_ratio_before']).toFixed(3)
+                    + ' \u2192 '
+                    + Number(item['asi676mc_purple_ratio_after']).toFixed(3);
+            }
+        } else if (repair_validation_failed) {
+            repair_title = 'ASI676MC repair validation failed; original frame retained';
+        } else if (repair_excluded) {
+            repair_title = 'Purple frame detected; original frame retained and excluded from timelapses';
+        }
+
         var a_tag = $('<a />', {
             'href'        : item['url'],
             'data-pswp-width'  : item['width'],
             'data-pswp-height' : item['height'],
             'target'      : "_blank",
             'rel'         : "noopener noreferrer",
-            'class'       : "text-decoration-none",
+            'class'       : "text-decoration-none position-relative d-inline-block",
             'data-exclude' : item['exclude'],
             'data-image_id' : item['id'],
             'data-ts'     : item['ts'],
+            'data-asi676mc-repair-status' : repair_status || '',
+            'title'       : repair_title,
         });
         a_tag.appendTo($('#allsky-gallery'));
 
@@ -220,8 +290,33 @@ function populate_gallery(gallery_data) {
             'src'       : item['thumbnail_url'],
             'loading'   : 'lazy',
             'alt'       : item['date'],
+            'class'     : (
+                (repair_applied || repair_excluded)
+                ? 'asi676mc-repaired-thumbnail'
+                : (
+                    repair_validation_failed
+                    ? 'asi676mc-validation-failed-thumbnail'
+                    : ''
+                )
+            ),
         });
         img_tag.appendTo(a_tag);
+
+        if (repair_applied || repair_validation_failed || repair_excluded) {
+            var badge_tag = $('<span />', {
+                'class' : (
+                    repair_validation_failed
+                    ? 'asi676mc-repair-badge validation-failed'
+                    : 'asi676mc-repair-badge'
+                ),
+                'text' : (
+                    repair_validation_failed
+                    ? 'repair failed'
+                    : (repair_excluded ? 'Purple frame excluded' : 'Purple frame repaired')
+                ),
+            });
+            badge_tag.appendTo(a_tag);
+        }
 
     });
 
@@ -523,6 +618,7 @@ $("#HOUR_SELECT").on("change", function() {
         'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
         'HOUR_SELECT'       : fields["HOUR_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+        'FILTER_ASI676MC_REPAIRED' : fields["FILTER_ASI676MC_REPAIRED"].input.prop("checked"),
     };
 
     hour_change(json_data);
@@ -589,6 +685,7 @@ $("#DAY_SELECT").on("change", function() {
         'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
         'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+        'FILTER_ASI676MC_REPAIRED' : fields["FILTER_ASI676MC_REPAIRED"].input.prop("checked"),
     };
 
     day_change(json_data);
@@ -661,6 +758,7 @@ $("#MONTH_SELECT").on("change", function() {
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+        'FILTER_ASI676MC_REPAIRED' : fields["FILTER_ASI676MC_REPAIRED"].input.prop("checked"),
     };
 
     month_change(json_data);
@@ -729,13 +827,14 @@ $("#YEAR_SELECT").on("change", function() {
         'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+        'FILTER_ASI676MC_REPAIRED' : fields["FILTER_ASI676MC_REPAIRED"].input.prop("checked"),
     };
 
     year_change(json_data);
 });
 
 
-$("#FILTER_DETECTIONS").on("change", function() {
+$("#FILTER_DETECTIONS, #FILTER_ASI676MC_REPAIRED").on("change", function() {
     // hide all errors
     successMessage.css({'display' : 'none'});
     Object.keys(fields).forEach((key) => {
@@ -747,6 +846,7 @@ $("#FILTER_DETECTIONS").on("change", function() {
     var json_data = {
         'CAMERA_ID'          : fields["CAMERA_ID"].input.val(),
         'FILTER_DETECTIONS'  : fields["FILTER_DETECTIONS"].input.prop("checked"),
+        'FILTER_ASI676MC_REPAIRED' : fields["FILTER_ASI676MC_REPAIRED"].input.prop("checked"),
     };
 
     $.ajax({
@@ -795,6 +895,7 @@ function init() {
         'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+        'FILTER_ASI676MC_REPAIRED' : fields["FILTER_ASI676MC_REPAIRED"].input.prop("checked"),
     };
 
     year_change(json_data);
@@ -954,6 +1055,8 @@ function previousHour() {
 $( document ).ready(function() {
     // Uncheck checkboxes
     $("#FILTER_DETECTIONS").prop('checked', false);
+    $("#FILTER_ASI676MC_REPAIRED").prop('checked', false);
+    $("#FILTER_ASI676MC_REPAIRED").prop('disabled', !asi676mc_repair_gallery_enabled);
 
     init();
 

@@ -6,6 +6,7 @@ import json
 import time
 from collections import OrderedDict
 from datetime import datetime
+from datetime import timedelta
 from datetime import timezone
 import tempfile
 from urllib.parse import urlparse
@@ -17,6 +18,7 @@ import dbus
 from passlib.hash import argon2
 
 from .. import constants
+from .. import asi676mc
 
 from flask_wtf import FlaskForm
 from wtforms import IntegerField
@@ -467,6 +469,76 @@ def IMAGE_CALIBRATE_HOLE_THOLD_validator(form, field):
 
     if field.data > 100:
         raise ValidationError('Threshold must be less than 100')
+
+
+def IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data <= 0:
+        raise ValidationError('Ratio must be greater than 0')
+
+    if field.data > 100:
+        raise ValidationError('Ratio must be 100 or less')
+
+
+def IMAGE_ASI676MC_REPAIR__SAMPLE_STEP_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 2 or field.data % 2:
+        raise ValidationError('Sample step must be an even number of at least 2')
+
+
+def IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 1 or field.data > 65535:
+        raise ValidationError('Threshold must be between 1 and 65535')
+
+
+def IMAGE_ASI676MC_REPAIR__GAIN_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data <= 0:
+        raise ValidationError('Gain must be greater than 0')
+
+    if field.data > 10:
+        raise ValidationError('Gain must be 10 or less')
+
+
+def IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_RATIO_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data <= 0 or field.data > 1:
+        raise ValidationError('Ratio must be greater than 0 and no more than 1')
+
+
+def IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO_validator(form, field):
+    IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_RATIO_validator(form, field)
+
+    start_ratio = form.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO.data
+    if isinstance(start_ratio, (int, float)) and field.data <= start_ratio:
+        raise ValidationError('End ratio must be greater than start ratio')
+    if isinstance(start_ratio, (int, float)):
+        try:
+            asi676mc.normalize_settings({
+                'HIGHLIGHT_BLEND_START_RATIO': start_ratio,
+                'HIGHLIGHT_BLEND_END_RATIO': field.data,
+            })
+        except ValueError as error:
+            raise ValidationError(str(error)) from error
+
+
+def IMAGE_ASI676MC_REPAIR__CHUNK_ROWS_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 2 or field.data % 2:
+        raise ValidationError('Chunk rows must be an even number of at least 2')
 
 
 def CCD_TEMP_SCRIPT_validator(form, field):
@@ -4521,6 +4593,23 @@ class IndiAllskyConfigForm(FlaskForm):
     STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER  = IntegerField('Mask Diameter', validators=[DataRequired(), IMAGE_CIRCLE_MASK__DIAMETER_validator])
     STARTRAILS__IMAGE_CIRCLE_MASK_BLUR      = IntegerField('Mask Blur', validators=[IMAGE_CIRCLE_MASK__BLUR_validator])
     STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY   = IntegerField('Mask Opacity %', validators=[IMAGE_CIRCLE_MASK__OPACITY_validator])
+    IMAGE_ASI676MC_REPAIR__ENABLE                      = BooleanField('Enable ASI676MC Purple-frame Handling')
+    IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY                = BooleanField('Exclude Only (Do Not Repair)')
+    IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME             = BooleanField('Log Every ASI676MC Frame')
+    IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE              = BooleanField('Show Purple-frame Status in Gallery')
+    IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS         = BooleanField('Save Bad and Following RAW FITS')
+    IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD      = FloatField('Purple Ratio Threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator], widget=NumberInput(step=0.01))
+    IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD    = FloatField('Red-side Ratio Threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator], widget=NumberInput(step=0.01))
+    IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD   = FloatField('Blue-side Ratio Threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator], widget=NumberInput(step=0.01))
+    IMAGE_ASI676MC_REPAIR__SAMPLE_STEP                 = IntegerField('Signature Sample Step', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__SAMPLE_STEP_validator])
+    IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD = IntegerField('Source Saturation Threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD_validator])
+    IMAGE_ASI676MC_REPAIR__GAIN_R                      = FloatField('Bad-frame Gain R', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
+    IMAGE_ASI676MC_REPAIR__GAIN_G1                     = FloatField('Bad-frame Gain G1', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
+    IMAGE_ASI676MC_REPAIR__GAIN_G2                     = FloatField('Bad-frame Gain G2', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
+    IMAGE_ASI676MC_REPAIR__GAIN_B                      = FloatField('Bad-frame Gain B', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
+    IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO = FloatField('Highlight Blend Start Ratio', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_RATIO_validator], widget=NumberInput(step=0.01))
+    IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO   = FloatField('Highlight Blend End Ratio', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO_validator], widget=NumberInput(step=0.01))
+    IMAGE_ASI676MC_REPAIR__CHUNK_ROWS                  = IntegerField('Repair Chunk Rows', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__CHUNK_ROWS_validator])
     IMAGE_CALIBRATE_DARK             = BooleanField('Apply Dark Calibration Frames')
     IMAGE_CALIBRATE_BPM              = BooleanField('Apply Bad Pixel Map Frames')
     IMAGE_CALIBRATE_FIX_HOLES        = BooleanField('Fix Calibration Pin Holes')
@@ -6702,6 +6791,104 @@ class IndiAllskyConfigRestoreForm(FlaskForm):
             self.RESET_KEYS.render_kw = {'disabled' : 'disabled'}
 
 
+def _asi676mc_diagnostic_assets(images, camera_id, s3_prefix, local):
+    selected_pairs = {}
+    capture_ids = set()
+
+    for img in images:
+        image_metadata = img.data or {}
+        diagnostic_metadata = image_metadata.get(
+            'asi676mc_diagnostic_fits',
+            {},
+        )
+        roles = diagnostic_metadata.get('roles', [])
+        if not roles:
+            continue
+
+        repair_status = image_metadata.get('asi676mc_repair_status')
+        preferred_role = (
+            'bad'
+            if repair_status in asi676mc.DIAGNOSTIC_BAD_STATUSES
+            else 'following'
+        )
+        selected_role = next(
+            (
+                role
+                for role in roles
+                if role.get('role') == preferred_role
+            ),
+            roles[0],
+        )
+        capture_id = selected_role.get('capture_id')
+        if not capture_id:
+            continue
+
+        selected_pairs[img.id] = capture_id
+        capture_ids.add(capture_id)
+
+    if not capture_ids:
+        return {}
+
+    image_dates = [img.createDate for img in images]
+    query_start = min(image_dates) - timedelta(minutes=15)
+    query_stop = max(image_dates) + timedelta(minutes=15)
+    fits_entries = IndiAllSkyDbFitsImageTable.query\
+        .filter(IndiAllSkyDbFitsImageTable.camera_id == camera_id)\
+        .filter(IndiAllSkyDbFitsImageTable.createDate >= query_start)\
+        .filter(IndiAllSkyDbFitsImageTable.createDate <= query_stop)\
+        .order_by(IndiAllSkyDbFitsImageTable.createDate.asc())\
+        .all()
+
+    pair_assets = {}
+    for fits_entry in fits_entries:
+        diagnostic_metadata = (fits_entry.data or {}).get(
+            asi676mc.DIAGNOSTIC_METADATA_KEY,
+            {},
+        )
+        for role in diagnostic_metadata.get('roles', []):
+            capture_id = role.get('capture_id')
+            role_name = role.get('role')
+            if (
+                capture_id not in capture_ids
+                or role_name not in ('bad', 'following')
+            ):
+                continue
+
+            if (
+                not local
+                and not fits_entry.remote_url
+                and not fits_entry.s3_key
+            ):
+                continue
+
+            try:
+                fits_url = fits_entry.getUrl(
+                    s3_prefix=s3_prefix,
+                    local=local,
+                )
+            except ValueError as e:
+                app.logger.error(
+                    'Error determining diagnostic FITS URL: %s',
+                    str(e),
+                )
+                continue
+
+            pair_assets.setdefault(capture_id, {})[role_name] = {
+                'url': str(fits_url),
+                'filename': Path(fits_entry.filename).name,
+            }
+
+    image_assets = {}
+    for image_id, capture_id in selected_pairs.items():
+        assets = pair_assets.get(capture_id, {})
+        image_assets[image_id] = {
+            'bad': assets.get('bad'),
+            'following': assets.get('following'),
+        }
+
+    return image_assets
+
+
 class IndiAllskyImageViewer(FlaskForm):
     CAMERA_ID            = HiddenField('Camera ID', validators=[DataRequired()])
     YEAR_SELECT          = SelectField('Year', choices=[], validators=[])
@@ -6719,6 +6906,10 @@ class IndiAllskyImageViewer(FlaskForm):
         self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
         self.local = kwargs.get('local')
+        self.asi676mc_diagnostic_download_enabled = kwargs.get(
+            'asi676mc_diagnostic_download_enabled',
+            False,
+        )
 
 
     def getYears(self):
@@ -6919,10 +7110,20 @@ class IndiAllskyImageViewer(FlaskForm):
             .order_by(IndiAllSkyDbImageTable.createDate.desc())
 
 
-        app.logger.info('Found %d images for image viewer', images_query.count())
+        image_rows = images_query.all()
+        app.logger.info('Found %d images for image viewer', len(image_rows))
+
+        diagnostic_assets = {}
+        if self.asi676mc_diagnostic_download_enabled:
+            diagnostic_assets = _asi676mc_diagnostic_assets(
+                image_rows,
+                self.camera_id,
+                self.s3_prefix,
+                self.local,
+            )
 
         images_data = list()
-        for img in images_query:
+        for img in image_rows:
             try:
                 url = img.getUrl(s3_prefix=self.s3_prefix, local=self.local)
             except ValueError as e:
@@ -6946,17 +7147,43 @@ class IndiAllskyImageViewer(FlaskForm):
 
             # look for fits
             try:
-                fits_image = db.session.query(
+                fits_images = db.session.query(
                     IndiAllSkyDbFitsImageTable,
                 )\
+                    .filter(IndiAllSkyDbFitsImageTable.camera_id == img.camera_id)\
                     .filter(IndiAllSkyDbFitsImageTable.createDate == img.createDate)\
-                    .one()
+                    .order_by(IndiAllSkyDbFitsImageTable.id.asc())\
+                    .all()
+
+                if not fits_images:
+                    raise NoResultFound
+
+                fits_image = next(
+                    (
+                        entry
+                        for entry in fits_images
+                        if not (entry.data or {}).get(
+                            asi676mc.DIAGNOSTIC_METADATA_KEY
+                        )
+                    ),
+                    None,
+                )
+                if fits_image is None:
+                    raise NoResultFound
 
                 image_dict['fits'] = str(fits_image.getUrl(s3_prefix=self.s3_prefix, local=self.local))
                 image_dict['fits_id'] = fits_image.id
             except NoResultFound:
                 image_dict['fits'] = None
                 image_dict['fits_id'] = None
+
+            image_diagnostic_assets = diagnostic_assets.get(img.id, {})
+            image_dict['asi676mc_diagnostic_bad_fits'] = (
+                image_diagnostic_assets.get('bad')
+            )
+            image_dict['asi676mc_diagnostic_following_fits'] = (
+                image_diagnostic_assets.get('following')
+            )
 
 
             # look for raw exports
@@ -7200,6 +7427,17 @@ class IndiAllskyFitsImageViewer(FlaskForm):
             url = url_for('indi_allsky.fits2jpeg_view', id=img.id)
 
             entry_str = img.createDate.strftime('%H:%M:%S')
+            diagnostic_metadata = (img.data or {}).get(
+                asi676mc.DIAGNOSTIC_METADATA_KEY,
+                {},
+            )
+            diagnostic_roles = diagnostic_metadata.get('roles', [])
+            if diagnostic_roles:
+                role_names = '/'.join(role['role'] for role in diagnostic_roles)
+                entry_str = '{0:s} [ASI676MC {1:s}]'.format(
+                    entry_str,
+                    role_names,
+                )
 
             fits_url = img.getUrl(local=True)
 
@@ -7263,6 +7501,7 @@ class IndiAllskyGalleryViewer(FlaskForm):
     DAY_SELECT           = SelectField('Day', choices=[], validators=[])
     HOUR_SELECT          = SelectField('Hour', choices=[], validators=[])
     FILTER_DETECTIONS    = BooleanField('Detections')
+    FILTER_ASI676MC_REPAIRED = BooleanField('Purple frame repaired')
 
 
     def __init__(self, *args, **kwargs):
@@ -7272,6 +7511,16 @@ class IndiAllskyGalleryViewer(FlaskForm):
         self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
         self.local = kwargs.get('local')
+        self.asi676mc_repaired_only = kwargs.get('asi676mc_repaired_only', False)
+
+
+    def _apply_asi676mc_repaired_filter(self, query):
+        if not self.asi676mc_repaired_only:
+            return query
+
+        return query.filter(
+            IndiAllSkyDbImageTable.data['asi676mc_repair_status'].as_string() == 'repaired'
+        )
 
 
     def getYears(self):
@@ -7285,6 +7534,8 @@ class IndiAllskyGalleryViewer(FlaskForm):
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                 )
         )
+
+        years_query = self._apply_asi676mc_repaired_filter(years_query)
 
 
         ### Disable this join to make things faster
@@ -7329,6 +7580,8 @@ class IndiAllskyGalleryViewer(FlaskForm):
                     IndiAllSkyDbImageTable.createDate_year == year,
                 )
         )
+
+        months_query = self._apply_asi676mc_repaired_filter(months_query)
 
         ### Disable this join to make things faster
         #    .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
@@ -7376,6 +7629,8 @@ class IndiAllskyGalleryViewer(FlaskForm):
                     IndiAllSkyDbImageTable.createDate_month == month,
                 )
         )
+
+        days_query = self._apply_asi676mc_repaired_filter(days_query)
 
 
         ### Disable this join to make things faster
@@ -7425,6 +7680,8 @@ class IndiAllskyGalleryViewer(FlaskForm):
                 )
         )
 
+        hours_query = self._apply_asi676mc_repaired_filter(hours_query)
+
 
         ### Disable this join to make things faster
         #    .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
@@ -7473,6 +7730,8 @@ class IndiAllskyGalleryViewer(FlaskForm):
                 )
         )
 
+        images_query = self._apply_asi676mc_repaired_filter(images_query)
+
 
         if not self.local:
             # Do not serve local assets
@@ -7489,10 +7748,11 @@ class IndiAllskyGalleryViewer(FlaskForm):
             .order_by(IndiAllSkyDbImageTable.createDate.desc())
 
 
-        app.logger.info('Found %d images for gallery', images_query.count())
+        image_rows = images_query.all()
+        app.logger.info('Found %d images for gallery', len(image_rows))
 
         images_data = list()
-        for img, thumb in images_query:
+        for img, thumb in image_rows:
             try:
                 image_url = img.getUrl(s3_prefix=self.s3_prefix, local=self.local)
                 thumbnail_url = thumb.getUrl(s3_prefix=self.s3_prefix, local=self.local)
@@ -7513,6 +7773,18 @@ class IndiAllskyGalleryViewer(FlaskForm):
             image_dict['thumbnail_width'] = thumb.width
             image_dict['thumbnail_height'] = thumb.height
 
+            image_metadata = img.data or {}
+            repair_metadata = image_metadata.get('asi676mc_repair', {})
+            repair_status = image_metadata.get(
+                'asi676mc_repair_status',
+                repair_metadata.get('status'),
+            )
+            image_dict['asi676mc_repair_status'] = repair_status
+
+            signature_before = repair_metadata.get('signature_before') or {}
+            signature_after = repair_metadata.get('signature_after') or {}
+            image_dict['asi676mc_purple_ratio_before'] = signature_before.get('purple_ratio')
+            image_dict['asi676mc_purple_ratio_after'] = signature_after.get('purple_ratio')
 
             images_data.append(image_dict)
 
