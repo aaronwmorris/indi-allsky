@@ -17,8 +17,8 @@ var camera_id = {{ camera_id }};
             <div class="tw:flex tw:items-center tw:gap-3">
                 <i class="tw:icon-[lucide--rotate-ccw] tw:w-6 tw:h-6 tw:text-warning"></i>
                 <div>
-                    <h1 class="tw:text-lg tw:font-bold tw:text-base-content">Restore Configuration</h1>
-                    <p class="tw:text-xs tw:text-base-content/60">Upload a saved configuration backup to restore system parameters</p>
+                    <h1 class="tw:text-base tw:font-bold tw:text-base-content tw:m-0">Restore Configuration</h1>
+                    <p class="tw:text-[11px] tw:text-base-content/50 tw:mt-0.5">Upload a saved configuration backup to restore system parameters</p>
                 </div>
             </div>
             <a href="{{ url_for('indi_allsky.config_list_view') }}" class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-accent-hover tw:gap-2 tw:no-underline">
@@ -51,7 +51,7 @@ var camera_id = {{ camera_id }};
                 <div class="tw:divider tw:my-0"></div>
 
                 <!-- Flush Configs Toggle -->
-                <div class="tw:flex tw:items-center tw:justify-between tw:p-4 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                <div class="tw:flex tw:items-center tw:justify-between tw:p-4 tw:bg-base-300/30 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10">
                     <div class="tw:flex tw:flex-col tw:gap-0.5">
                         <span class="tw:text-sm tw:font-bold tw:text-base-content">{{ form_config_restore.FLUSH_CONFIGS.label.text }}</span>
                         <span class="tw:text-xs tw:text-base-content/60">Permanently remove all previous configuration backups from the system database</span>
@@ -63,7 +63,7 @@ var camera_id = {{ camera_id }};
                 </div>
 
                 <!-- Reset Keys Toggle -->
-                <div class="tw:flex tw:items-center tw:justify-between tw:p-4 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                <div class="tw:flex tw:items-center tw:justify-between tw:p-4 tw:bg-base-300/30 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10">
                     <div class="tw:flex tw:flex-col tw:gap-0.5">
                         <span class="tw:text-sm tw:font-bold tw:text-base-content">{{ form_config_restore.RESET_KEYS.label.text }}</span>
                         <span class="tw:text-xs tw:text-error">Delete and recreate new security keys for Flask. (Invalidates active sessions & forces re-login)</span>
@@ -78,7 +78,7 @@ var camera_id = {{ camera_id }};
 
                 <!-- Action Bar -->
                 <div class="tw:flex tw:items-center tw:justify-between tw:gap-4">
-                    <button id="restore-button" type="submit" class="tw:btn tw:btn-error tw:px-6 tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider shadow-sm">
+                    <button id="restore-button" type="submit" class="tw:btn tw:btn-sm tw:btn-error tw:h-11 tw:px-6 tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider tw:shadow-sm">
                         <i class="tw:icon-[lucide--rotate-ccw] tw:w-4 tw:h-4"></i>
                         Restore Configuration
                     </button>
@@ -141,7 +141,7 @@ fields['form_global'] = {
     'error' : failureMessage,
 };
 
-const defaultRestoreBtnClass = "tw:btn tw:btn-error tw:px-6 tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider shadow-sm";
+const defaultRestoreBtnClass = "tw:btn tw:btn-sm tw:btn-error tw:h-11 tw:px-6 tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider tw:shadow-sm";
 const defaultRestoreBtnHtml = '<i class="tw:icon-[lucide--rotate-ccw] tw:w-4 tw:h-4"></i> Restore Configuration';
 
 $('#form_config_restore').on('submit', function() {
@@ -155,7 +155,7 @@ $('#form_config_restore').on('submit', function() {
 
     var formData = new FormData();
 
-    $("#restore-button").attr("class", "tw:btn tw:btn-neutral tw:px-6 tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider shadow-sm");
+    $("#restore-button").attr("class", "tw:btn tw:btn-sm tw:btn-neutral tw:h-11 tw:px-6 tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider tw:shadow-sm");
     $("#restore-button").html(
       '<span class="tw:loading tw:loading-spinner tw:loading-xs"></span> Restoring...'
     );
@@ -186,7 +186,7 @@ $('#form_config_restore').on('submit', function() {
         contentType: false,
         data: formData,
         success: function(rdata){
-            $("#restore-button").attr("class", "tw:btn tw:btn-success tw:px-6 tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider shadow-sm");
+            $("#restore-button").attr("class", "tw:btn tw:btn-sm tw:btn-success tw:h-11 tw:px-6 tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider tw:shadow-sm");
             $("#restore-button").html(
                 '<i class="tw:icon-[lucide--check] tw:w-4 tw:h-4"></i> Restored'
             );
@@ -207,7 +207,7 @@ $('#form_config_restore').on('submit', function() {
             $("#RESET_KEYS").prop('checked', false);
         },
         error: function(rdata){
-            $("#restore-button").attr("class", "tw:btn tw:btn-error tw:px-6 tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider shadow-sm");
+            $("#restore-button").attr("class", "tw:btn tw:btn-sm tw:btn-error tw:h-11 tw:px-6 tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider tw:shadow-sm");
             $("#restore-button").html(
                 '<i class="tw:icon-[lucide--x] tw:w-4 tw:h-4"></i> Restore Failed'
             );
