@@ -399,7 +399,7 @@ var camera_id = {{ camera_id }};
                             <span class="tw:text-[9px] tw:font-mono tw:opacity-50">UNIT: indiserver.service</span>
                         </div>
                         <div class="lg:tw:col-span-3 tw:flex tw:gap-2 tw:items-center">
-                            <span class="tw:badge {% if indiserver_service_activestate == 'active' %}tw:badge-success{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[10px] tw:rounded-[var(--radius-box)]">{{indiserver_service_activestate}}</span>
+                            <span class="tw:badge {% if indiserver_service_activestate == 'active' %}tw:badge-success{% elif indiserver_service_activestate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[10px] tw:rounded-[var(--radius-box)]">{{indiserver_service_activestate}}</span>
                             {% if indiserver_next_trigger > 0 %}<span class="tw:text-[10px] tw:font-bold tw:text-info">Next in {{indiserver_next_trigger}}s</span>{% endif %}
                         </div>
                         <div class="lg:tw:col-span-6 tw:flex tw:gap-2">
@@ -409,7 +409,10 @@ var camera_id = {{ camera_id }};
                         <div class="lg:tw:col-span-12 tw:border-t tw:border-base-content/5 tw:my-1"></div>
                         <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
                             <span class="tw:text-xs tw:font-bold tw:text-base-content/85">Timer Unit</span>
-                            <span class="tw:text-[9px] tw:font-mono tw:opacity-50">STATE: {{indiserver_timer_unitstate}}</span>
+                            <div class="tw:flex tw:items-center tw:gap-1.5 tw:mt-0.5">
+                                <span class="tw:text-[9px] tw:font-mono tw:opacity-50">STATE:</span>
+                                <span class="tw:badge {% if indiserver_timer_unitstate == 'enabled' %}tw:badge-success tw:badge-outline{% elif indiserver_timer_unitstate == 'disabled' %}tw:badge-neutral tw:badge-outline{% elif indiserver_timer_unitstate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[8px] tw:h-4 tw:px-1.5 tw:rounded-[var(--radius-box)]">{{indiserver_timer_unitstate}}</span>
+                            </div>
                         </div>
                         <div class="lg:tw:col-span-9 tw:flex tw:gap-2">
                             <button class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_timer_disable">Disable Timer</button>
@@ -424,7 +427,7 @@ var camera_id = {{ camera_id }};
                             <span class="tw:text-[9px] tw:font-mono tw:opacity-50">UNIT: indi-allsky.service</span>
                         </div>
                         <div class="lg:tw:col-span-3 tw:flex tw:gap-2 tw:items-center">
-                            <span class="tw:badge {% if indi_allsky_service_activestate == 'active' %}tw:badge-success{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[10px] tw:rounded-[var(--radius-box)]">{{indi_allsky_service_activestate}}</span>
+                            <span class="tw:badge {% if indi_allsky_service_activestate == 'active' %}tw:badge-success{% elif indi_allsky_service_activestate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[10px] tw:rounded-[var(--radius-box)]">{{indi_allsky_service_activestate}}</span>
                             {% if indi_allsky_next_trigger > 0 %}<span class="tw:text-[10px] tw:font-bold tw:text-info">Next in {{indi_allsky_next_trigger}}s</span>{% endif %}
                         </div>
                         <div class="lg:tw:col-span-6 tw:flex tw:gap-2">
@@ -435,7 +438,10 @@ var camera_id = {{ camera_id }};
                         <div class="lg:tw:col-span-12 tw:border-t tw:border-base-content/5 tw:my-1"></div>
                         <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
                             <span class="tw:text-xs tw:font-bold tw:text-base-content/85">Timer Unit</span>
-                            <span class="tw:text-[9px] tw:font-mono tw:opacity-50">STATE: {{indi_allsky_timer_unitstate}}</span>
+                            <div class="tw:flex tw:items-center tw:gap-1.5 tw:mt-0.5">
+                                <span class="tw:text-[9px] tw:font-mono tw:opacity-50">STATE:</span>
+                                <span class="tw:badge {% if indi_allsky_timer_unitstate == 'enabled' %}tw:badge-success tw:badge-outline{% elif indi_allsky_timer_unitstate == 'disabled' %}tw:badge-neutral tw:badge-outline{% elif indi_allsky_timer_unitstate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[8px] tw:h-4 tw:px-1.5 tw:rounded-[var(--radius-box)]">{{indi_allsky_timer_unitstate}}</span>
+                            </div>
                         </div>
                         <div class="lg:tw:col-span-9 tw:flex tw:gap-2">
                             <button class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indi_allsky_timer_disable">Disable Timer</button>
@@ -450,7 +456,7 @@ var camera_id = {{ camera_id }};
                             <span class="tw:text-[9px] tw:font-mono tw:opacity-50">UNIT: gunicorn-indi-allsky.service</span>
                         </div>
                         <div class="lg:tw:col-span-3">
-                            <span class="tw:badge {% if gunicorn_indi_allsky_service_activestate == 'active' %}tw:badge-success{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[10px] tw:rounded-[var(--radius-box)]">{{gunicorn_indi_allsky_service_activestate}}</span>
+                            <span class="tw:badge {% if gunicorn_indi_allsky_service_activestate == 'active' %}tw:badge-success{% elif gunicorn_indi_allsky_service_activestate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[10px] tw:rounded-[var(--radius-box)]">{{gunicorn_indi_allsky_service_activestate}}</span>
                         </div>
                         <div class="lg:tw:col-span-6 tw:flex tw:gap-2">
                             <button class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_gunicorn_indi_allsky_service_stop">Restart UI</button>
@@ -459,7 +465,10 @@ var camera_id = {{ camera_id }};
                         <div class="lg:tw:col-span-12 tw:border-t tw:border-base-content/5 tw:my-1"></div>
                         <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
                             <span class="tw:text-xs tw:font-bold tw:text-base-content/85">Web Socket</span>
-                            <span class="tw:text-[9px] tw:font-mono tw:opacity-50">STATE: {{gunicorn_indi_allsky_socket_unitstate}}</span>
+                            <div class="tw:flex tw:items-center tw:gap-1.5 tw:mt-0.5">
+                                <span class="tw:text-[9px] tw:font-mono tw:opacity-50">STATE:</span>
+                                <span class="tw:badge {% if gunicorn_indi_allsky_socket_unitstate == 'enabled' %}tw:badge-success tw:badge-outline{% elif gunicorn_indi_allsky_socket_unitstate == 'disabled' %}tw:badge-neutral tw:badge-outline{% elif gunicorn_indi_allsky_socket_unitstate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[8px] tw:h-4 tw:px-1.5 tw:rounded-[var(--radius-box)]">{{gunicorn_indi_allsky_socket_unitstate}}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
