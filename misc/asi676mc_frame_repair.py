@@ -1468,7 +1468,7 @@ class CalibrationError(RuntimeError):
     """Raised when a folder cannot support a defensible calibration."""
 
 
-def validate_evidence(records, pairs, unmatched):
+def validate_evidence(records, pairs, unmatched, allow_unmatched=False):
     """Refuse calibration when the dataset cannot support safe conclusions.
 
     Seven matched failures are the minimum statistical base.  Multiple
@@ -1482,7 +1482,7 @@ def validate_evidence(records, pairs, unmatched):
         raise CalibrationError(
             f'{len(pairs)} matched bad frames found; at least {minimum} required'
         )
-    if unmatched:
+    if unmatched and not allow_unmatched:
         raise CalibrationError(
             f'{len(unmatched)} detected bad frames have no compatible nearby normal'
         )
@@ -1532,6 +1532,7 @@ def validate_evidence(records, pairs, unmatched):
         'bad_count': len(bad_records),
         'normal_count': len(normal_records),
         'pair_count': len(pairs),
+        'unmatched_bad_count': len(unmatched),
         'unique_good_count': len(unique_good),
         'good_bad_ratio': ratio,
         'two_sided_count': sum(pair.two_sided for pair in pairs),
@@ -1637,12 +1638,16 @@ def calibration_payload(
     }
 
 
-def format_report(payload, rejected):
+def format_report(
+    payload,
+    rejected,
+    report_title='ASI676MC standalone calibration report',
+):
     """Render a user-facing result first and technical audit details second."""
     quality = payload['quality']
     settings = payload['IMAGE_ASI676MC_REPAIR']
     lines = [
-        'ASI676MC standalone calibration report',
+        report_title,
         '=' * 40,
         f"Source: {payload['source_folder']}",
         f"Generated: {payload['generated_utc']}",
@@ -1675,6 +1680,7 @@ def format_report(payload, rejected):
         'Evidence used',
         '-------------',
         f"Matched bad frames: {quality['pair_count']}",
+        f"Unmatched bad frames ignored: {quality['unmatched_bad_count']}",
         f"Matched distinct normal frames: {quality['unique_good_count']}",
         f"Normal/bad ratio: {quality['good_bad_ratio']:.2f}:1",
         (
@@ -1781,6 +1787,8 @@ def calibrate_folder(
     settings=None,
     recursive=True,
     max_pair_seconds=None,
+    allow_unmatched=False,
+    report_title='ASI676MC standalone calibration report',
 ):
     """Run the complete folder calibration and return audit data plus report.
 
@@ -1803,7 +1811,12 @@ def calibrate_folder(
     )
 
     pairs, unmatched = match_pairs(records, max_pair_seconds)
-    evidence = validate_evidence(records, pairs, unmatched)
+    evidence = validate_evidence(
+        records,
+        pairs,
+        unmatched,
+        allow_unmatched=allow_unmatched,
+    )
     ranges = signature_ranges(records)
     validate_signature_separation(ranges, config)
     print(
@@ -1846,7 +1859,11 @@ def calibrate_folder(
     )
     payload['quality']['validated_bad_repairs'] = repaired_count
     payload['quality']['validated_normal_frames'] = normal_validation_count
-    return payload, format_report(payload, rejected)
+    return payload, format_report(
+        payload,
+        rejected,
+        report_title=report_title,
+    )
 
 
 # ---------------------------------------------------------------------------

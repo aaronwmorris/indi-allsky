@@ -6,6 +6,7 @@ import io
 import tempfile
 import json
 from collections import OrderedDict
+from functools import wraps
 import time
 import math
 import base64
@@ -23,11 +24,13 @@ from passlib.hash import argon2
 from ..version import __version__
 from .. import constants
 from .. import asi676mc
+from .. import asi676mc_calibration
 from ..processing import ImageProcessor
 
 from cryptography.fernet import InvalidToken
 
 from flask import request
+from flask import abort
 from flask import session
 from flask import jsonify
 from flask import Blueprint
@@ -79,6 +82,7 @@ from sqlalchemy import or_
 #from sqlalchemy.types import DateTime
 from sqlalchemy.types import Integer
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql.expression import true as sa_true
 from sqlalchemy.sql.expression import false as sa_false
 from sqlalchemy.sql.expression import null as sa_null
@@ -114,6 +118,7 @@ from .forms import IndiAllskyImageCircleHelperForm
 from .forms import IndiAllskyVirtualSkyHelperForm
 from .forms import IndiAllskyConfigRestoreForm
 from .forms import IndiAllskyIndiServerChangeForm
+from .forms import IndiAllskyAsi676mcCalibrationForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -150,6 +155,25 @@ def _visible_asi676mc_cameras():
         for camera in visible_cameras
         if asi676mc.camera_record_matches(camera)
     ]
+
+
+def strict_login_required(func):
+    """Require a real user even when Flask-Login is globally disabled.
+
+    Most indi-allsky pages intentionally become public when ``LOGIN_DISABLED``
+    is configured.  Uploaded RAW FITS may contain sensitive location and camera
+    metadata, so the calibration tool has the stricter policy requested for
+    this feature.  Combining this decorator with Flask-Login preserves the
+    normal redirect-to-login behavior while still rejecting anonymous access
+    on installations where login bypass is enabled.
+    """
+    @wraps(func)
+    def decorated(*args, **kwargs):
+        if not current_user.is_authenticated:
+            abort(401)
+        return func(*args, **kwargs)
+
+    return decorated
 
 
 class AjaxStatusUpdateView(BaseView):
@@ -7588,6 +7612,277 @@ class AjaxManualGpioView(BaseView):
         return jsonify(message)
 
 
+class Asi676mcCalibrationView(TemplateView):
+    """Authenticated landing page for uploaded FITS calibration sessions."""
+
+    page_title = 'ASI676MC Calibration'
+    decorators = [strict_login_required, login_required]
+
+    def get_context(self):
+        context = super(Asi676mcCalibrationView, self).get_context()
+        context['form_calibration'] = IndiAllskyAsi676mcCalibrationForm(
+            data={'MAX_PAIR_SECONDS': 90.0},
+        )
+        return context
+
+
+class AjaxAsi676mcCalibrationSessionView(BaseView):
+    """Create one private upload session for the signed-in user."""
+
+    methods = ['POST']
+    decorators = [strict_login_required, login_required]
+
+    def dispatch_request(self):
+        try:
+            manifest = asi676mc_calibration.create_session(
+                current_user.username
+            )
+        except (OSError, asi676mc_calibration.CalibrationSessionError) as error:
+            app.logger.exception('Unable to create ASI676MC calibration session')
+            return jsonify({'error': str(error)}), 400
+        return jsonify({'session_id': manifest['session_id']})
+
+
+class AjaxAsi676mcCalibrationUploadView(BaseView):
+    """Accept one file from a browser multi-selection.
+
+    The page calls this endpoint sequentially for every selected file.  Users
+    still select the complete collection in one action, while each HTTP request
+    remains small enough to retry and report accurately.
+    """
+
+    methods = ['POST']
+    decorators = [strict_login_required, login_required]
+
+    def dispatch_request(self, session_id):
+        try:
+            entry, manifest = asi676mc_calibration.store_upload(
+                session_id,
+                current_user.username,
+                request.files.get('file'),
+            )
+        except asi676mc_calibration.CalibrationSessionError as error:
+            return jsonify({'error': str(error)}), 400
+        except OSError:
+            app.logger.exception('Unable to store uploaded calibration FITS')
+            return jsonify({'error': 'unable to store the uploaded FITS'}), 500
+
+        return jsonify({
+            'file': entry,
+            'file_count': len(manifest['files']),
+            'total_bytes': manifest['total_bytes'],
+        })
+
+
+class AjaxAsi676mcCalibrationStartView(BaseView):
+    """Freeze an upload session and enqueue its CPU-heavy calibration job."""
+
+    methods = ['POST']
+    decorators = [strict_login_required, login_required]
+
+    def dispatch_request(self, session_id):
+        request_data = request.get_json(silent=True) or {}
+        try:
+            max_pair_seconds = float(request_data.get('max_pair_seconds', 90.0))
+        except (TypeError, ValueError):
+            return jsonify({'error': 'maximum pair separation must be a number'}), 400
+
+        # Use a snapshot of the currently configured detector thresholds.  The
+        # calibration job derives gains/saturation/highlight values, but it must
+        # classify the uploaded evidence with explicit, auditable thresholds.
+        try:
+            settings = asi676mc.normalize_settings(
+                self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {})
+            )
+        except (KeyError, TypeError, ValueError) as error:
+            return jsonify({'error': f'invalid ASI676MC settings: {error}'}), 400
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=TaskQueueState.MANUAL,
+            priority=200,  # normal timelapse generation retains priority 100
+            data={
+                'action': 'generateAsi676mcCalibration',
+                'kwargs': {'session_id': session_id},
+            },
+        )
+        db.session.add(task)
+
+        try:
+            # Flush assigns the task ID without exposing the task to the worker
+            # before its upload-session manifest has also been updated.
+            db.session.flush()
+            manifest = asi676mc_calibration.mark_queued(
+                session_id,
+                current_user.username,
+                task.id,
+                max_pair_seconds,
+                settings,
+                config_id=self.indi_allsky_config_id,
+            )
+            db.session.commit()
+        except asi676mc_calibration.CalibrationSessionError as error:
+            db.session.rollback()
+            return jsonify({'error': str(error)}), 400
+        except (OSError, ValueError, SQLAlchemyError):
+            db.session.rollback()
+            app.logger.exception('Unable to queue ASI676MC calibration')
+            try:
+                asi676mc_calibration.mark_failed(
+                    session_id,
+                    current_user.username,
+                    'unable to queue the calibration job',
+                )
+            except (OSError, asi676mc_calibration.CalibrationSessionError):
+                app.logger.exception(
+                    'Unable to mark ASI676MC calibration session failed'
+                )
+            return jsonify({'error': 'unable to queue the calibration job'}), 500
+
+        return jsonify({
+            'session_id': session_id,
+            'task_id': task.id,
+            'status': manifest['status'],
+        })
+
+
+class AjaxAsi676mcCalibrationStatusView(BaseView):
+    """Return upload/job progress and the compact successful result."""
+
+    methods = ['GET']
+    decorators = [strict_login_required, login_required]
+
+    def dispatch_request(self, session_id):
+        try:
+            status = asi676mc_calibration.get_status(
+                session_id,
+                current_user.username,
+            )
+        except asi676mc_calibration.CalibrationSessionError as error:
+            return jsonify({'error': str(error)}), 404
+        return jsonify(status)
+
+
+class Asi676mcCalibrationReportView(BaseView):
+    """Download the completed text report after rechecking session ownership."""
+
+    methods = ['GET']
+    decorators = [strict_login_required, login_required]
+
+    def dispatch_request(self, session_id):
+        try:
+            report_path = asi676mc_calibration.get_report_path(
+                session_id,
+                current_user.username,
+            )
+        except asi676mc_calibration.CalibrationSessionError as error:
+            return str(error), 404
+
+        return send_file(
+            report_path,
+            mimetype='text/plain',
+            download_name='asi676mc_calibration_report.txt',
+            as_attachment=True,
+        )
+
+
+class AjaxAsi676mcCalibrationApplyView(BaseView):
+    """Apply only measured values to a version-checked configuration.
+
+    Running a calibration is available to every authenticated user. Persisting
+    configuration follows the existing Config page policy and is admin-only.
+    Operational switches are deliberately preserved and repair is never enabled
+    automatically.
+    """
+
+    methods = ['POST']
+    decorators = [strict_login_required, login_required]
+
+    def dispatch_request(self, session_id):
+        if not current_user.is_admin:
+            return jsonify({
+                'error': 'administrator permission is required to save configuration',
+            }), 403
+
+        try:
+            manifest, result, values = (
+                asi676mc_calibration.get_completed_result(
+                    session_id,
+                    current_user.username,
+                )
+            )
+        except asi676mc_calibration.CalibrationSessionError as error:
+            return jsonify({'error': str(error)}), 400
+
+        calibration_config_id = manifest.get('config_id')
+        if calibration_config_id != self.indi_allsky_config_id:
+            return jsonify({
+                'error': (
+                    'configuration changed after calibration started; review '
+                    'the new configuration and run calibration again'
+                ),
+            }), 409
+
+        config_key = 'IMAGE_ASI676MC_REPAIR'
+        original_repair_config = self.indi_allsky_config.get(config_key)
+        repair_config = dict(original_repair_config or {})
+        for key, value in values.items():
+            repair_config[key] = value
+
+        try:
+            # Validate the complete runtime block after merging the measured
+            # subset before changing the in-memory configuration.  This keeps
+            # operational switches (including ENABLED) exactly as the admin
+            # configured them and never turns repair on implicitly.
+            asi676mc.normalize_settings(repair_config)
+            self.indi_allsky_config[config_key] = repair_config
+            note = (
+                'ASI676MC web calibration {0}: {1} matched bad, {2} normal'
+            ).format(
+                session_id,
+                result['quality']['matched_bad_count'],
+                result['quality']['matched_normal_count'],
+            )
+            self._indi_allsky_config_obj.save(current_user.username, note)
+        except (ConfigSaveException, KeyError, TypeError, ValueError) as error:
+            # The configuration object is shared by this request. Restore it
+            # when validation or persistence fails so a failed request cannot
+            # leave an unsaved partial update behind.
+            if original_repair_config is None:
+                self.indi_allsky_config.pop(config_key, None)
+            else:
+                self.indi_allsky_config[config_key] = original_repair_config
+            return jsonify({'error': str(error)}), 400
+
+        self._miscDb.setState('STATUS', constants.STATUS_RELOADING)
+        task_reload = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.MAIN,
+            state=TaskQueueState.MANUAL,
+            priority=100,
+            data={'action': 'reload'},
+        )
+        db.session.add(task_reload)
+        try:
+            db.session.commit()
+            reload_queued = True
+        except SQLAlchemyError:
+            db.session.rollback()
+            app.logger.exception(
+                'Calibration values saved but configuration reload could not be queued'
+            )
+            reload_queued = False
+
+        return jsonify({
+            'success-message': (
+                'Calibration values saved; indi-allsky configuration reload queued.'
+                if reload_queued
+                else 'Calibration values saved, but reload could not be queued.'
+            ),
+            'reload_queued': reload_queued,
+            'values': values,
+        })
+
+
 class ImageProcessingView(TemplateView):
     page_title = 'Image Processing'
     decorators = [login_required]
@@ -12277,6 +12572,14 @@ bp_allsky.add_url_rule('/ajax/astropanel', view_func=AjaxAstroPanelView.as_view(
 
 bp_allsky.add_url_rule('/processing', view_func=ImageProcessingView.as_view('image_processing_view', template_name='imageprocessing.html'))
 bp_allsky.add_url_rule('/js/processing', view_func=JsonImageProcessingView.as_view('js_image_processing_view'))
+
+bp_allsky.add_url_rule('/asi676mc/calibration', view_func=Asi676mcCalibrationView.as_view('asi676mc_calibration_view', template_name='asi676mc_calibration.html'))
+bp_allsky.add_url_rule('/ajax/asi676mc/calibration/session', view_func=AjaxAsi676mcCalibrationSessionView.as_view('ajax_asi676mc_calibration_session_view'))
+bp_allsky.add_url_rule('/ajax/asi676mc/calibration/upload/<session_id>', view_func=AjaxAsi676mcCalibrationUploadView.as_view('ajax_asi676mc_calibration_upload_view'))
+bp_allsky.add_url_rule('/ajax/asi676mc/calibration/start/<session_id>', view_func=AjaxAsi676mcCalibrationStartView.as_view('ajax_asi676mc_calibration_start_view'))
+bp_allsky.add_url_rule('/ajax/asi676mc/calibration/status/<session_id>', view_func=AjaxAsi676mcCalibrationStatusView.as_view('ajax_asi676mc_calibration_status_view'))
+bp_allsky.add_url_rule('/asi676mc/calibration/report/<session_id>', view_func=Asi676mcCalibrationReportView.as_view('asi676mc_calibration_report_view'))
+bp_allsky.add_url_rule('/ajax/asi676mc/calibration/apply/<session_id>', view_func=AjaxAsi676mcCalibrationApplyView.as_view('ajax_asi676mc_calibration_apply_view'))
 
 bp_allsky.add_url_rule('/longtermkeogram', view_func=LongTermKeogramView.as_view('longterm_keogram_view', template_name='longterm_keogram.html'))
 bp_allsky.add_url_rule('/js/longtermkeogram', view_func=JsonLongTermKeogramView.as_view('js_longterm_keogram_view'))

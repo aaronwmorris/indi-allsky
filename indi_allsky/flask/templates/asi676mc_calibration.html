@@ -1,0 +1,391 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<style>
+#calibration-file-list {
+    max-height: 12rem;
+    overflow-y: auto;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h3>ASI676MC calibration</h3>
+
+<div class="alert alert-info">
+    Select the complete collection in one action. The page transfers the files
+    automatically, classifies good and purple frames, matches adjacent captures,
+    and derives the camera-specific repair values. Uploaded FITS are private and
+    are deleted after the background calibration finishes.
+</div>
+
+<div class="alert alert-warning">
+    Calibration needs at least seven matched bad frames and at least seven
+    distinct compatible normal frames. Include daylight highlights, at least two
+    exposure levels, and preferably a normal frame immediately before and after
+    each bad frame. Files without usable timestamps or compatible RAW16 RGGB data
+    will be reported and ignored.
+</div>
+
+<form id="form-asi676mc-calibration" onSubmit="return false;">
+    {{ form_calibration.csrf_token }}
+
+    <div class="form-group row mb-3">
+        <label for="calibration-files" class="col-sm-3 col-form-label">FITS files</label>
+        <div class="col-sm-5">
+            <input
+                id="calibration-files"
+                class="form-control bg-secondary"
+                type="file"
+                accept=".fit,.fits,.fts"
+                multiple
+            >
+            <div class="form-text">Choose all files together; there is no one-by-one manual selection.</div>
+        </div>
+        <div class="col-sm-4">
+            <span id="selected-summary">No files selected</span>
+        </div>
+    </div>
+
+    <div class="form-group row mb-3">
+        <div class="col-sm-3">
+            {{ form_calibration.MAX_PAIR_SECONDS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_calibration.MAX_PAIR_SECONDS(class='form-control bg-secondary') }}
+        </div>
+        <div class="col-sm-7">
+            Normal references farther from a bad frame than this are not paired.
+            The standalone default is 90 seconds.
+        </div>
+    </div>
+
+    <div id="calibration-file-list" class="small mb-3"></div>
+
+    <button id="start-calibration" type="submit" class="btn btn-primary">
+        Upload and calibrate
+    </button>
+</form>
+
+<div id="calibration-progress-panel" class="mt-4" style="display: none;">
+    <h5 id="calibration-stage">Preparing upload</h5>
+    <div class="progress" role="progressbar" aria-label="Calibration upload progress">
+        <div
+            id="calibration-progress"
+            class="progress-bar progress-bar-striped progress-bar-animated"
+            style="width: 0%"
+        >0%</div>
+    </div>
+    <div id="calibration-status" class="mt-2"></div>
+</div>
+
+<div id="calibration-error" class="alert alert-danger mt-4" style="display: none;"></div>
+
+<div id="calibration-results" class="mt-4" style="display: none;">
+    <div class="d-flex align-items-center justify-content-between">
+        <h4>Calibration passed</h4>
+        <div>
+            <a id="calibration-report-download" class="btn btn-info" href="#">
+                Download text report
+            </a>
+            {% if current_user.is_admin %}
+            <button id="calibration-apply-values" type="button" class="btn btn-warning ms-2">
+                Apply values and reload
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <p>
+        These are the camera-specific values derived from the uploaded evidence.
+        Detection thresholds and operational checkboxes were validated but were
+        not automatically changed.
+    </p>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr><th>Configuration field</th><th>Derived value</th></tr>
+            </thead>
+            <tbody id="calibration-values"></tbody>
+        </table>
+    </div>
+
+    <h5>Evidence used</h5>
+    <div id="calibration-quality" class="row"></div>
+    <div id="calibration-warnings"></div>
+    <div id="calibration-apply-result" class="alert mt-3" style="display: none;"></div>
+</div>
+
+<script>
+const calibrationCsrfToken = $('#csrf_token').val();
+const calibrationSessionUrl = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_session_view') }}";
+const calibrationUploadUrlTemplate = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_upload_view', session_id='SESSION_ID') }}";
+const calibrationStartUrlTemplate = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_start_view', session_id='SESSION_ID') }}";
+const calibrationStatusUrlTemplate = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_status_view', session_id='SESSION_ID') }}";
+const calibrationReportUrlTemplate = "{{ url_for('indi_allsky.asi676mc_calibration_report_view', session_id='SESSION_ID') }}";
+{% if current_user.is_admin %}
+const calibrationApplyUrlTemplate = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_apply_view', session_id='SESSION_ID') }}";
+{% endif %}
+const calibrationStorageKey = 'indi-allsky-asi676mc-calibration-session';
+let completedCalibrationSessionId = null;
+
+function calibrationUrl(template, sessionId) {
+    return template.replace('SESSION_ID', sessionId);
+}
+
+async function calibrationJson(response) {
+    let data;
+    try {
+        data = await response.json();
+    } catch (error) {
+        throw new Error('The server returned an unreadable response.');
+    }
+    if (!response.ok) {
+        throw new Error(data.error || 'The calibration request failed.');
+    }
+    return data;
+}
+
+function showCalibrationError(message) {
+    $('#calibration-error').text(message).show();
+    $('#start-calibration').prop('disabled', false);
+    $('#calibration-progress').removeClass('progress-bar-animated');
+}
+
+function setCalibrationProgress(percent, stage, status) {
+    const rounded = Math.max(0, Math.min(100, Math.round(percent)));
+    $('#calibration-progress-panel').show();
+    $('#calibration-stage').text(stage);
+    $('#calibration-status').text(status || '');
+    $('#calibration-progress').css('width', rounded + '%').text(rounded + '%');
+}
+
+function renderSelectedFiles() {
+    const files = Array.from($('#calibration-files')[0].files || []);
+    const totalBytes = files.reduce((total, file) => total + file.size, 0);
+    if (!files.length) {
+        $('#selected-summary').text('No files selected');
+        $('#calibration-file-list').empty();
+        return;
+    }
+
+    $('#selected-summary').text(
+        files.length + ' files, ' + (totalBytes / (1024 * 1024)).toFixed(1) + ' MiB'
+    );
+    const list = $('<ul />', {'class': 'mb-0'});
+    files.forEach(file => list.append($('<li />').text(file.name)));
+    $('#calibration-file-list').empty().append(list);
+}
+
+async function createCalibrationSession() {
+    const response = await fetch(calibrationSessionUrl, {
+        method: 'POST',
+        headers: {'X-CSRFToken': calibrationCsrfToken},
+    });
+    return calibrationJson(response);
+}
+
+async function uploadCalibrationFiles(sessionId, files) {
+    for (let index = 0; index < files.length; index++) {
+        const file = files[index];
+        setCalibrationProgress(
+            (index / files.length) * 75,
+            'Uploading FITS files',
+            'Uploading ' + (index + 1) + ' of ' + files.length + ': ' + file.name
+        );
+        const formData = new FormData();
+        formData.append('file', file, file.name);
+        const response = await fetch(calibrationUrl(calibrationUploadUrlTemplate, sessionId), {
+            method: 'POST',
+            headers: {'X-CSRFToken': calibrationCsrfToken},
+            body: formData,
+        });
+        await calibrationJson(response);
+    }
+}
+
+async function startCalibrationJob(sessionId) {
+    const response = await fetch(calibrationUrl(calibrationStartUrlTemplate, sessionId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': calibrationCsrfToken,
+        },
+        body: JSON.stringify({
+            max_pair_seconds: $('#MAX_PAIR_SECONDS').val(),
+        }),
+    });
+    return calibrationJson(response);
+}
+
+function qualityCard(label, value) {
+    return $('<div />', {'class': 'col-sm-4 col-lg-3 mb-2'}).append(
+        $('<div />', {'class': 'border rounded p-2 h-100'}).append(
+            $('<div />', {'class': 'text-secondary small'}).text(label),
+            $('<div />', {'class': 'fs-5'}).text(value)
+        )
+    );
+}
+
+function renderCalibrationResult(sessionId, result) {
+    completedCalibrationSessionId = sessionId;
+    $('#calibration-progress').removeClass('progress-bar-animated');
+    setCalibrationProgress(100, 'Calibration complete', 'All final validation checks passed.');
+
+    const valuesBody = $('#calibration-values').empty();
+    result.values.forEach(item => {
+        valuesBody.append(
+            $('<tr />').append(
+                $('<td />').text(item.label),
+                $('<td />').text(item.value)
+            )
+        );
+    });
+
+    const quality = result.quality;
+    $('#calibration-quality').empty().append(
+        qualityCard('Matched bad frames', quality.matched_bad_count),
+        qualityCard('Distinct normal frames', quality.matched_normal_count),
+        qualityCard('Before/after triplets', quality.two_sided_count),
+        qualityCard('Exposure levels', quality.exposure_level_count),
+        qualityCard('Validated repairs', quality.validated_bad_count),
+        qualityCard('Validated normal frames', quality.validated_normal_count),
+        qualityCard('Unmatched bad frames', quality.unmatched_bad_count),
+        qualityCard('Rejected files', quality.rejected_file_count)
+    );
+
+    const warnings = $('#calibration-warnings').empty();
+    result.warnings.forEach(message => {
+        warnings.append($('<div />', {'class': 'alert alert-warning mt-2'}).text(message));
+    });
+    $('#calibration-report-download').attr(
+        'href', calibrationUrl(calibrationReportUrlTemplate, sessionId)
+    );
+    $('#calibration-results').show();
+    $('#calibration-apply-result').hide();
+    $('#calibration-apply-values').prop('disabled', false);
+    $('#start-calibration').prop('disabled', false);
+    // Keep the completed session for seven days so a page reload can restore
+    // the values, report link, and (for admins) configuration action.
+}
+
+{% if current_user.is_admin %}
+async function applyCalibrationValues() {
+    if (!completedCalibrationSessionId) {
+        showCalibrationError('No completed calibration result is available.');
+        return;
+    }
+    if (!window.confirm(
+        'Save these seven measured values and reload the indi-allsky configuration? Repair will not be enabled automatically.'
+    )) {
+        return;
+    }
+
+    const applyButton = $('#calibration-apply-values').prop('disabled', true);
+    const message = $('#calibration-apply-result').hide();
+    try {
+        const response = await fetch(
+            calibrationUrl(calibrationApplyUrlTemplate, completedCalibrationSessionId),
+            {
+                method: 'POST',
+                headers: {'X-CSRFToken': calibrationCsrfToken},
+            }
+        );
+        const result = await calibrationJson(response);
+        message
+            .removeClass('alert-danger')
+            .addClass(result.reload_queued ? 'alert-success' : 'alert-warning')
+            .text(result['success-message'])
+            .show();
+    } catch (error) {
+        message
+            .removeClass('alert-success alert-warning')
+            .addClass('alert-danger')
+            .text(error.message)
+            .show();
+        applyButton.prop('disabled', false);
+    }
+}
+
+$('#calibration-apply-values').on('click', applyCalibrationValues);
+{% endif %}
+
+async function pollCalibration(sessionId) {
+    while (true) {
+        const response = await fetch(calibrationUrl(calibrationStatusUrlTemplate, sessionId), {
+            headers: {'X-CSRFToken': calibrationCsrfToken},
+        });
+        const status = await calibrationJson(response);
+        if (status.status === 'success') {
+            renderCalibrationResult(sessionId, status.result);
+            return;
+        }
+        if (status.status === 'failed') {
+            localStorage.removeItem(calibrationStorageKey);
+            throw new Error(status.error || 'Calibration failed.');
+        }
+        if (status.status === 'queued') {
+            setCalibrationProgress(80, 'Queued', 'Waiting for the background worker.');
+        } else if (status.status === 'running') {
+            setCalibrationProgress(
+                90,
+                'Analysing and validating',
+                'Large collections may take several minutes on a Raspberry Pi.'
+            );
+        } else {
+            throw new Error('The saved session did not finish uploading. Please start again.');
+        }
+        await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+}
+
+async function submitCalibration() {
+    const files = Array.from($('#calibration-files')[0].files || []);
+    if (files.length < 14) {
+        showCalibrationError(
+            'Select at least 14 FITS files: seven bad frames and at least seven distinct normal references.'
+        );
+        return;
+    }
+
+    $('#calibration-error').hide();
+    $('#calibration-results').hide();
+    $('#start-calibration').prop('disabled', true);
+    $('#calibration-progress').addClass('progress-bar-animated');
+
+    try {
+        const session = await createCalibrationSession();
+        localStorage.setItem(calibrationStorageKey, session.session_id);
+        await uploadCalibrationFiles(session.session_id, files);
+        setCalibrationProgress(75, 'Upload complete', 'Queuing calibration.');
+        await startCalibrationJob(session.session_id);
+        await pollCalibration(session.session_id);
+    } catch (error) {
+        showCalibrationError(error.message);
+    }
+}
+
+$('#calibration-files').on('change', renderSelectedFiles);
+$('#form-asi676mc-calibration').on('submit', submitCalibration);
+
+$(document).ready(async function() {
+    const savedSession = localStorage.getItem(calibrationStorageKey);
+    if (!savedSession) {
+        return;
+    }
+    $('#start-calibration').prop('disabled', true);
+    try {
+        await pollCalibration(savedSession);
+    } catch (error) {
+        localStorage.removeItem(calibrationStorageKey);
+        showCalibrationError(error.message);
+    }
+});
+</script>
+
+{% endblock %}

@@ -335,6 +335,69 @@ accepted `0.55/0.75` highlight boundaries after overfit protection, measured a
 source-green plateau of `65534`, and estimated gains within roughly one percent
 of the live defaults.
 
+### Authenticated web calibration tool
+
+The **Tools > ASI676MC Calibration** page exposes the folder-calibration
+workflow without requiring shell access. It has an intentionally stricter
+access rule than most indi-allsky pages: a real authenticated user is required
+even when the installation has globally disabled login checks. Uploaded RAW
+FITS may contain camera, time, and location metadata and are never published
+under the web image directory.
+
+The operator selects the complete collection in one browser file-picker action.
+JavaScript then transfers the selected files sequentially into a private,
+randomly named session. This is an implementation detail rather than a manual
+one-file-at-a-time workflow: it provides per-file progress and avoids sending a
+several-hundred-megabyte multipart request. Additional upload safeguards are:
+
+- only uncompressed `.fit`, `.fits`, and `.fts` names are accepted;
+- the mandatory first FITS `SIMPLE` card is checked before admission;
+- Astropy and the calibration engine perform full structural and RAW16 RGGB
+  validation in the background job;
+- sessions are owned by the authenticated username and use unguessable IDs;
+- file count, individual size, and total-session size are bounded; and
+- abandoned results expire after seven days.
+
+The default session directory is Flask's non-public `instance` directory and
+may be overridden with `ASI676MC_CALIBRATION_FOLDER`. Do not move sessions into
+`/tmp`: the capture service uses systemd `PrivateTmp`, so gunicorn and the video
+worker may see different temporary directories. Do not put sessions inside the
+public image tree either.
+
+After upload, a priority-200 job runs in the existing video worker so Astropy
+loading, sparse fitting, and full-resolution validation cannot hold a gunicorn
+request open. Normal manually generated videos use priority 100 and therefore
+remain ahead of calibration. The browser stores the current session ID locally
+and resumes status polling after a page reload.
+
+The web evidence policy differs from the standalone CLI in one documented way.
+The CLI retains its conservative default of failing when any detected bad frame
+is unmatched. The web page ignores and reports unmatched bad frames, then
+continues only if at least seven matched failures and every other existing
+evidence check pass. Unused normal frames and structurally rejected files are
+also reported rather than silently treated as evidence.
+
+On success, the page shows only the seven camera-specific values actually
+derived by calibration: four Bayer gains, source saturation threshold, and two
+highlight blend boundaries. Detection thresholds, sample step, chunk size, and
+operational switches are validated/current values rather than measurements and
+are not presented as derived. The complete human-readable report is available
+through an owner-checked download route. Source FITS are deleted immediately
+after either success or failure; the small manifest, report, result, and audit
+log remain until session expiry.
+
+Administrators can choose **Apply values and reload** after a successful run.
+The action verifies that the active configuration is still the same version
+used when calibration started, writes only the seven measured values through
+indi-allsky's normal versioned configuration save path, and queues a normal
+configuration reload. Operational choices such as enabling repair and saving
+diagnostic FITS are preserved and are never switched on automatically. A
+configuration change made while calibration was running blocks application and
+asks the administrator to review the change and calibrate again.
+
+Direct discovery of diagnostic FITS already stored by indi-allsky remains a
+future enhancement. It can be added without changing the upload/session format.
+
 ## Files involved in diagnostic capture
 
 - `indi_allsky/asi676mc.py`
@@ -359,6 +422,12 @@ of the live defaults.
   - camera-gated Image Viewer and gallery wiring
 - `indi_allsky/flask/templates/config.html`
   - switch, help text, submission list, and master-switch grouping
+- `indi_allsky/asi676mc_calibration.py`
+  - private upload-session lifecycle, bounds, results, and report ownership
+- `indi_allsky/video.py`
+  - low-priority background calibration action
+- `indi_allsky/flask/templates/asi676mc_calibration.html`
+  - multi-select upload, progress, results, warnings, and report download
 - `indi_allsky/flask/templates/imageviewer.html`
   - `Bad FITS` and `Next FITS` controls
 - `indi_allsky/flask/templates/gallery.html`

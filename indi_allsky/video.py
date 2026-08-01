@@ -18,6 +18,7 @@ import logging
 import ephem
 
 from . import constants
+from . import asi676mc_calibration
 
 from .timelapse import TimelapseGenerator
 from .keogram import KeogramGenerator
@@ -224,6 +225,35 @@ class VideoWorker(Process):
 
         # perform the action
         action_method(task, **kwargs)
+
+
+    def generateAsi676mcCalibration(self, task, **kwargs):
+        """Run an uploaded ASI676MC calibration outside the web request.
+
+        Calibration performs several full-resolution validation passes and may
+        take long enough to exceed a gunicorn request timeout on a Raspberry
+        Pi.  The existing video worker is already the project's general home
+        for manually queued, CPU-heavy work, so this low-priority action keeps
+        the capture process and web workers responsive.
+        """
+        session_id = str(kwargs['session_id'])
+        try:
+            result = asi676mc_calibration.run_calibration_session(session_id)
+        except Exception as error:
+            logger.exception(
+                'ASI676MC web calibration failed for session %s',
+                session_id,
+            )
+            task.setFailed(str(error)[:255])
+            return
+
+        quality = result['quality']
+        task.setSuccess(
+            'ASI676MC calibration passed: {0} bad / {1} normal'.format(
+                quality['matched_bad_count'],
+                quality['matched_normal_count'],
+            )[:255]
+        )
 
 
     def generateVideo(self, task, **kwargs):

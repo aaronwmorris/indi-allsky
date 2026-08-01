@@ -34,6 +34,7 @@ from wtforms import FileField
 from wtforms.widgets import PasswordInput
 from wtforms.widgets import NumberInput
 from wtforms.validators import DataRequired
+from wtforms.validators import NumberRange
 #from wtforms.validators import regexp as validator_regexp
 from wtforms.validators import ValidationError
 from markupsafe import Markup
@@ -6779,7 +6780,6 @@ class IndiAllskyConfigRestoreForm(FlaskForm):
     RESET_KEYS           = BooleanField('Reset Security Keys')
     FLUSH_CONFIGS        = BooleanField('Flush Configs')
 
-
     def __init__(self, *args, **kwargs):
         super(IndiAllskyConfigRestoreForm, self).__init__(*args, **kwargs)
 
@@ -6789,6 +6789,23 @@ class IndiAllskyConfigRestoreForm(FlaskForm):
         if self.indi_allsky_config.get('ENCRYPT_PASSWORDS'):
             # changing the password key would make encrypted password unrecoverable
             self.RESET_KEYS.render_kw = {'disabled' : 'disabled'}
+
+
+class IndiAllskyAsi676mcCalibrationForm(FlaskForm):
+    """Small control form for the multi-file ASI676MC calibration tool.
+
+    FITS files are intentionally represented by a normal HTML ``multiple``
+    input in the template.  JavaScript transfers the selected files one at a
+    time, which avoids a single huge multipart request while still requiring
+    only one selection action from the user.
+    """
+
+    MAX_PAIR_SECONDS = FloatField(
+        'Maximum separation from bad to normal FITS (seconds)',
+        default=90.0,
+        validators=[DataRequired(), NumberRange(min=1.0, max=3600.0)],
+        widget=NumberInput(step=1.0),
+    )
 
 
 def _asi676mc_diagnostic_assets(images, camera_id, s3_prefix, local):
