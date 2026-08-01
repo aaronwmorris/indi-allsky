@@ -277,51 +277,51 @@ function closeFullscreen() {
     }
 </style>
 
-<div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-6 focus-wrapper">
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6 focus-wrapper">
 
     <form id="form_focus" onSubmit="return false;" class="tw:w-full tw:flex tw:flex-col tw:gap-6 force-desktop-row">
         
         <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-5 tw:flex tw:flex-col tw:justify-center tw:gap-4 shadow-sm">
             <div class="tw:flex tw:items-center tw:gap-4">
-                <label class="tw:w-20 tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">
+                <label class="tw:w-20 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">
                     {{ form_focus.REFRESH_SELECT.label.text }}
                 </label>
                 <div class="tw:flex-1">
-                    {{ form_focus.REFRESH_SELECT(class='tw:select tw:select-bordered tw:bg-base-300 tw:w-full tw:select-sm tw:text-sm') }}
+                    {{ form_focus.REFRESH_SELECT(class='tw:select tw:select-bordered tw:bg-base-100 tw:w-full tw:select-sm tw:h-11') }}
                 </div>
             </div>
             <div class="tw:flex tw:items-center tw:gap-4">
-                <label class="tw:w-20 tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">
+                <label class="tw:w-20 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">
                     {{ form_focus.ZOOM_SELECT.label.text }}
                 </label>
                 <div class="tw:flex-1">
-                    {{ form_focus.ZOOM_SELECT(class='tw:select tw:select-bordered tw:bg-base-300 tw:w-full tw:select-sm tw:text-sm') }}
+                    {{ form_focus.ZOOM_SELECT(class='tw:select tw:select-bordered tw:bg-base-100 tw:w-full tw:select-sm tw:h-11') }}
                 </div>
             </div>
         </div>
 
         <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-5 tw:flex tw:flex-col tw:justify-center tw:gap-4 shadow-sm">
             <div class="tw:flex tw:items-center tw:gap-4">
-                <label class="tw:w-20 tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">
+                <label class="tw:w-20 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">
                     {{ form_focus.X_OFFSET.label.text }}
                 </label>
                 <div class="tw:flex-1">
-                    {{ form_focus.X_OFFSET(class='tw:input tw:input-bordered tw:bg-base-300 tw:font-mono tw:w-full tw:input-sm tw:text-sm') }}
+                    {{ form_focus.X_OFFSET(class='tw:input tw:input-bordered tw:bg-base-100 tw:font-mono tw:w-full tw:input-sm tw:h-11') }}
                 </div>
             </div>
             <div class="tw:flex tw:items-center tw:gap-4">
-                <label class="tw:w-20 tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">
+                <label class="tw:w-20 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">
                     {{ form_focus.Y_OFFSET.label.text }}
                 </label>
                 <div class="tw:flex-1">
-                    {{ form_focus.Y_OFFSET(class='tw:input tw:input-bordered tw:bg-base-300 tw:font-mono tw:w-full tw:input-sm tw:text-sm') }}
+                    {{ form_focus.Y_OFFSET(class='tw:input tw:input-bordered tw:bg-base-100 tw:font-mono tw:w-full tw:input-sm tw:h-11') }}
                 </div>
             </div>
         </div>
 
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4 tw:flex tw:items-center tw:justify-center shadow-sm lg:tw:h-[108px]">
-            <div class="tw:w-full tw:h-full tw:bg-base-300/30 tw:border tw:border-base-300/70 tw:rounded-[var(--radius-box)] tw:p-2 tw:flex tw:items-center tw:justify-center tw:overflow-hidden">
-                <canvas id="focus-chart" class="tw:w-full" style="display: block; max-height: 76px !important; height: 76px !important;"></canvas>
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4 tw:flex tw:items-center tw:justify-center shadow-sm lg:tw:h-[120px]">
+            <div class="tw:w-full tw:h-full tw:bg-base-300/30 tw:border tw:border-base-content/10 tw:rounded-[var(--radius-box)] tw:p-2 tw:flex tw:items-center tw:justify-center tw:overflow-hidden">
+                <canvas id="focus-chart" class="tw:w-full" style="display: block; max-height: 88px !important; height: 88px !important;"></canvas>
             </div>
         </div>
 
@@ -333,32 +333,39 @@ function closeFullscreen() {
         </div>
     </div>
 
-    <div class="tw:w-full tw:alert tw:alert-warning tw:bg-warning/10 tw:border-warning/20 tw:rounded-[var(--radius-box)] tw:flex tw:items-center tw:gap-3 tw:p-4">
-        <i class="tw:icon-[lucide--triangle-alert] tw:w-5 tw:h-5 tw:text-warning"></i>
-        <span class="tw:text-xs tw:font-semibold tw:text-base-content/80">
-            Do not forget to enable <b class="tw:text-warning">Focus Mode</b> in the configuration and reload the configuration!
-        </span>
+    <div class="tw:w-full tw:alert tw:alert-warning tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm">
+        <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4"></i>
+        <span>Do not forget to enable <strong class="tw:font-black">Focus Mode</strong> in the configuration and reload the configuration!</span>
     </div>
 
-    <div id="focus_controller_div" class="tw:w-full tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-6 tw:flex tw:flex-col sm:tw:flex-row tw:items-center tw:justify-center tw:gap-8 shadow-sm" style="display: none;">
+    <div id="focus_controller_div" class="tw:w-full tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-6 tw:flex tw:flex-col tw:items-center tw:justify-center tw:gap-4 shadow-sm" style="display: none;">
         
-        <button id="FOCUS_CCW" class="focuser-btn tw:bg-primary tw:text-primary-content hover:tw:bg-primary/90">
-            <span class="tw:text-[10px] tw:opacity-60 tw:font-sans">Focus</span>
-            <span class="tw:text-xl tw:mt-0.5">－</span>
-        </button>
+        <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:w-full tw:text-center tw:mb-2">
+            Focus Motor Controller
+        </h4>
 
-        <div class="tw:flex tw:flex-col tw:items-center tw:gap-2 tw:w-full tw:max-w-[200px]">
-            <label class="tw:text-[10px] tw:font-black tw:uppercase tw:tracking-[0.15em] tw:text-base-content/40">Step Interval</label>
-            {{ form_focuscontroller.STEP_DEGREES(class='tw:select tw:select-bordered tw:bg-base-300 tw:select-sm tw:w-full tw:text-center tw:font-mono') }}
-            <div id="offset_div" class="tw:text-[11px] tw:font-mono tw:font-bold tw:bg-base-300/60 tw:px-3 tw:py-1 tw:rounded-[var(--radius-box)] tw:text-base-content/60 tw:mt-1">
+        <div class="tw:flex tw:flex-col tw:items-center tw:gap-3 tw:w-full tw:max-w-md">
+            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Focuser Adjustment</span>
+            
+            <div class="tw:join tw:w-full">
+                <!-- Inward / CCW -->
+                <button id="FOCUS_CCW" class="tw:btn tw:btn-sm tw:btn-primary tw:join-item tw:flex-1 tw:h-11 tw:rounded-l-[var(--radius-box)]">
+                    <i class="tw:icon-[lucide--chevron-left] tw:w-4 tw:h-4 tw:block"></i> Inward
+                </button>
+                
+                <!-- Step selector dropdown -->
+                {{ form_focuscontroller.STEP_DEGREES(class='tw:select tw:select-bordered tw:bg-base-100 tw:select-sm tw:join-item tw:w-32 tw:h-11 tw:font-mono tw:text-center') }}
+                
+                <!-- Outward / CW -->
+                <button id="FOCUS_CW" class="tw:btn tw:btn-sm tw:btn-error tw:join-item tw:flex-1 tw:h-11 tw:rounded-r-[var(--radius-box)]">
+                    Outward <i class="tw:icon-[lucide--chevron-right] tw:w-4 tw:h-4 tw:block"></i>
+                </button>
+            </div>
+            
+            <div id="offset_div" class="tw:text-[10px] tw:font-mono tw:font-bold tw:bg-base-300/60 tw:border tw:border-base-content/10 tw:px-3 tw:py-1.5 tw:rounded-[var(--radius-box)] tw:text-base-content/70">
                 0 Steps Offset
             </div>
         </div>
-
-        <button id="FOCUS_CW" class="focuser-btn tw:bg-error tw:text-error-content hover:tw:bg-error/90">
-            <span class="tw:text-[10px] tw:opacity-60 tw:font-sans">Focus</span>
-            <span class="tw:text-xl tw:mt-0.5">＋</span>
-        </button>
 
     </div>
 

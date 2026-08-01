@@ -12,41 +12,46 @@ var pin_states = {{ pin_states | tojson }};
 {% endblock %}
 
 {% block content %}
-<div class="tw:w-full tw:space-y-6 tw:p-2">
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6">
 
-    <div class="tw:space-y-3">
-        <div class="tw:alert tw:alert-info tw:shadow-sm tw:rounded-[var(--radius-box)]">
-            <span class="tw:text-xs">
-                <strong>Note:</strong> Some pins read HIGH by default (e.g., Raspberry Pi GPIOs 1-8 have internal pull-ups enabled).
-            </span>
+    <div class="tw:flex tw:flex-col tw:gap-3">
+        <div class="tw:alert tw:alert-info tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm">
+            <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
+            <span><strong>Note:</strong> Some pins read HIGH by default (e.g., Raspberry Pi GPIOs 1-8 have internal pull-ups enabled).</span>
         </div>
-        <div class="tw:alert tw:alert-warning tw:shadow-sm tw:rounded-[var(--radius-box)]">
-            <span class="tw:text-xs">
-                <strong>Warning:</strong> Manual control of Dew Heater and Fan pins can lock GPIOs and interfere with automatic management.
-            </span>
+        <div class="tw:alert tw:alert-warning tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm">
+            <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4"></i>
+            <span><strong>Warning:</strong> Manual control of Dew Heater and Fan pins can lock GPIOs and interfere with automatic management.</span>
         </div>
     </div>
 
-    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]">
+    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
         <div class="tw:card-body tw:p-6">
-            <h2 class="tw:card-title tw:text-xs tw:uppercase tw:tracking-widest tw:mb-4">GPIO Pin State Control</h2>
+            <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:mb-6">
+                GPIO Pin State Control
+            </h4>
             
             <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
                 {% for i in range(3) %}
-                <div class="tw:flex tw:items-center tw:justify-between tw:bg-base-300 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                    <span class="tw:font-mono tw:text-sm tw:font-bold">Pin {{ pin_names[i] }}</span>
+                <div class="tw:flex tw:items-center tw:justify-between tw:bg-base-300/40 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10">
+                    <div class="tw:flex tw:items-center tw:gap-2.5">
+                        <div class="tw:flex tw:items-center tw:justify-center tw:w-8 tw:h-8 tw:rounded-full tw:bg-neutral tw:text-neutral-content tw:shrink-0">
+                            <i class="tw:icon-[lucide--cpu] tw:w-4 tw:h-4 tw:block"></i>
+                        </div>
+                        <span class="tw:font-mono tw:text-sm tw:font-bold tw:text-base-content/90">Pin {{ pin_names[i] }}</span>
+                    </div>
                     <button id="pin-{{ i+1 }}-button" 
-                            class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-accent-hover tw:btn-disabled  tw:w-20">
+                            class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-accent-hover tw:btn-disabled tw:w-20">
                         N/A
                     </button>
                 </div>
                 {% endfor %}
             </div>
 
-            <div class="tw:flex tw:items-center tw:gap-6 tw:mt-6 tw:pt-6 tw:border-t tw:border-base-300">
+            <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-6 tw:mt-6 tw:pt-6 tw:border-t tw:border-base-content/10">
                 <label class="tw:flex tw:items-center tw:gap-3 tw:cursor-pointer">
-                    <input type="checkbox" id="PIN_CONFIRM1" name="PIN_CONFIRM1" value="y" class="tw:checkbox tw:checkbox-primary">
-                    <span class="tw:text-xs tw:font-bold tw:uppercase">Confirm Manual Override</span>
+                    <input type="checkbox" id="PIN_CONFIRM1" name="PIN_CONFIRM1" value="y" class="tw:checkbox tw:checkbox-primary tw:checkbox-sm tw:rounded-[var(--radius-box)]">
+                    <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/85">Confirm Manual Override</span>
                 </label>
                 
                 <span id="pin-loader" class="tw:loading tw:loading-spinner tw:loading-sm tw:text-info" style="display: none;"></span>
@@ -54,9 +59,9 @@ var pin_states = {{ pin_states | tojson }};
         </div>
     </div>
 
-    <div class="tw:w-full">
-        <div id="success-message" class="tw:alert tw:alert-success tw:text-xs" style="display: none;"></div>
-        <div id="failure-message" class="tw:alert tw:alert-error tw:text-xs" style="display: none;"></div>
+    <div class="tw:min-h-[50px]">
+        <div id="success-message" class="tw:alert tw:alert-success tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm" style="display: none;"></div>
+        <div id="failure-message" class="tw:alert tw:alert-error tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm" style="display: none;"></div>
     </div>
 
 </div>
