@@ -11,8 +11,6 @@ images/**/*.tif
 images/**/*.mp4
 images/**/*.gif
 /*.json
-!/package.json
-!/package-lock.json
 *.py[oc]
 __pycache__/
 *.log
