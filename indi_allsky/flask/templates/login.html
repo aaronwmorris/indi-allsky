@@ -94,7 +94,7 @@
                         <a href="{{ url_for('auth_indi_allsky.oidc_login_view', next=request.args.get('next', '')) }}"
                             class="tw:btn tw:btn-outline tw:btn-sm tw:h-11 tw:w-full tw:text-sm tw:font-bold tw:uppercase tw:tracking-wider tw:gap-2">
                             {% if oidc_logo_url %}
-                                <img src="{{ oidc_logo_url }}" class="tw:h-full tw:w-auto tw:object-contain" alt="OIDC Logo">
+                                <img src="{{ oidc_logo_url }}" class="tw:h-6 tw:w-auto tw:object-contain" alt="OIDC Logo">
                             {% else %}
                                 <i class="tw:icon-[lucide--shield-check] tw:w-4 tw:h-4 tw:text-primary"></i>
                             {% endif %}
