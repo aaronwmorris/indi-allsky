@@ -394,10 +394,7 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         sqlite3 \
         polkitd \
         libsystemd-dev \
-        dbus-user-session \
-        nodejs \
-        npm
-
+        dbus-user-session
 
     if [ "$CPU_BITS" != "32" ]; then
         # not available on 32-bit platforms
@@ -493,10 +490,7 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         sqlite3 \
         polkitd \
         libsystemd-dev \
-        dbus-user-session \
-        nodejs \
-        npm
-
+        dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo apt-get -y install \
@@ -587,10 +581,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         sqlite3 \
         policykit-1 \
         libsystemd-dev \
-        dbus-user-session \
-        nodejs \
-        npm
-
+        dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo apt-get -y install \
@@ -681,10 +672,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         sqlite3 \
         polkitd \
         libsystemd-dev \
-        dbus-user-session \
-        nodejs \
-        npm
-
+        dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo apt-get -y install \
@@ -778,10 +766,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         sqlite3 \
         policykit-1 \
         libsystemd-dev \
-        dbus-user-session \
-        nodejs \
-        npm
-
+        dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo apt-get -y install \
@@ -875,10 +860,7 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         sqlite3 \
         policykit-1 \
         libsystemd-dev \
-        dbus-user-session \
-        nodejs \
-        npm
-
+        dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo apt-get -y install \
@@ -1096,11 +1078,6 @@ source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 
 pip3 install --upgrade pip setuptools wheel packaging
 pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
-
-
-echo "**** CSS compilation with Tailwind/daisyUI ****"
-npm install --no-fund --no-audit
-npm run build
 
 
 # create users systemd folder

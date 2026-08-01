@@ -764,10 +764,7 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         dnsmasq-base \
         polkitd \
         libsystemd-dev \
-        dbus-user-session \
-        nodejs \
-        npm
-
+        dbus-user-session
 
     if [ "$CPU_BITS" != "32" ]; then
         # not available on 32-bit platforms
@@ -944,10 +941,7 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         dnsmasq-base \
         polkitd \
         libsystemd-dev \
-        dbus-user-session \
-        nodejs \
-        npm
-
+        dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo apt-get -y install \
@@ -1100,10 +1094,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         udisks2 \
         dnsmasq-base \
         policykit-1 \
-        dbus-user-session \
-        nodejs \
-        npm
-
+        dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo apt-get -y install \
@@ -1244,10 +1235,7 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
         i2c-tools \
         policykit-1 \
         libsystemd-dev \
-        dbus-user-session \
-        nodejs \
-        npm
-
+        dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo apt-get -y install \
@@ -1409,10 +1397,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         dnsmasq-base \
         polkitd \
         libsystemd-dev \
-        dbus-user-session \
-        nodejs \
-        npm
-
+        dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo apt-get -y install \
@@ -1586,10 +1571,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         dnsmasq-base \
         policykit-1 \
         libsystemd-dev \
-        dbus-user-session \
-        nodejs \
-        npm
-
+        dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo apt-get -y install \
@@ -1750,10 +1732,7 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         udisks2 \
         policykit-1 \
         libsystemd-dev \
-        dbus-user-session \
-        nodejs \
-        npm
-
+        dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo apt-get -y install \
@@ -2079,11 +2058,6 @@ if [ "${GPIO_PYTHON_MODULES}" == "true" ]; then
 fi
 
 pip3 install "${PIP_REQ_ARGS[@]}"
-
-
-echo "**** CSS compilation with Tailwind/daisyUI ****"
-npm install --no-fund --no-audit
-npm run build
 
 
 # some modules do not have their prerequisites set
