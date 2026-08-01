@@ -23,187 +23,190 @@ var camera_id = {{ camera_id }};
     <!-- Prominent Navigation Tabs -->
     <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-md">
         <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-info">Information</button>
-        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-time">Time</button>
-        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-indiserver">INDI Drivers</button>
-        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-services">Services</button>
-        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-powercontrol">Utilities</button>
+        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" data-target="tab-time">Time</button>
+        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" data-target="tab-indiserver">INDI Drivers</button>
+        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" data-target="tab-services">Services</button>
+        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" data-target="tab-powercontrol">Utilities</button>
     </div>
 
     <div class="tw:w-full tw:mt-4">
         
         <!-- TAB: INFORMATION -->
         <div id="tab-info" class="sys-tab-pane">
-            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm">
-                <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-8">
+            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+                <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-6">
                     
-                    <!-- Release Section -->
-                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4 tw:items-center">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Release</span>
-                        <div class="md:tw:col-span-3 tw:text-lg tw:font-mono">{{release}}</div>
-                    </div>
+                    <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:m-0">
+                        System Information
+                    </h4>
 
-                    <div class="tw:divider tw:my-0"></div>
-
-                    <!-- System Info Section -->
-                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">System</span>
-                        <div class="md:tw:col-span-3 tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4">
-                            <div class="tw:flex tw:flex-col"><span class="tw:text-[9px] tw:opacity-50">TYPE</span>{{system_type}}</div>
-                            <div class="tw:flex tw:flex-col"><span class="tw:text-[9px] tw:opacity-50">UPTIME</span>{{ uptime_str }}</div>
-                            <div class="tw:flex tw:flex-col"><span class="tw:text-[9px] tw:opacity-50">TARGET</span>{{ systemd_target }}</div>
-                        </div>
-                    </div>
-
-                    <div class="tw:divider tw:my-0"></div>
-
-                    <!-- CPUs Section -->
-                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Processors</span>
-                        <div class="md:tw:col-span-3 tw:flex tw:flex-col tw:gap-4">
-                            <div class="tw:flex tw:gap-4 tw:items-baseline">
-                                <span class="tw:text-2xl tw:font-bold">{{cpu_count}} Cores</span>
-                                <span class="tw:badge tw:badge-ghost tw:font-mono">{{python_platform}} [{{cpu_bits}}-bit]</span>
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-6">
+                        
+                        <!-- Release & System Info (Full Width on Inset Grid) -->
+                        <div class="tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:rounded-[var(--radius-box)] tw:p-5 tw:grid tw:grid-cols-2 sm:tw:grid-cols-4 tw:gap-4 tw:col-span-1 md:tw:col-span-2">
+                            <div class="tw:flex tw:flex-col">
+                                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Release</span>
+                                <span class="tw:text-sm tw:font-mono tw:font-bold tw:mt-1 tw:text-base-content">{{release}}</span>
                             </div>
-                            
-                            <div class="tw:flex tw:flex-col tw:gap-1">
-                                <span class="tw:text-[10px] tw:font-bold tw:opacity-60">CPU USAGE</span>
-                                <div class="tw:w-full tw:h-4 tw:bg-base-300 tw:rounded-full tw:overflow-hidden tw:flex">
-                                    <div class="tw:bg-primary tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold" style="width: {{cpu_usage.user|int}}%">{{cpu_usage.user|int}}%</div>
-                                    <div class="tw:bg-error tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold" style="width: {{cpu_usage.system|int}}%">{{cpu_usage.system|int}}%</div>
-                                    <div class="tw:bg-success tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold" style="width: {{cpu_usage.nice|int}}%">{{cpu_usage.nice|int}}%</div>
-                                    <div class="tw:bg-warning tw:text-warning-content tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold" style="width: {{cpu_usage.iowait|int}}%">{{cpu_usage.iowait|int}}%</div>
+                            <div class="tw:flex tw:flex-col">
+                                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">System Type</span>
+                                <span class="tw:text-sm tw:font-bold tw:mt-1 tw:text-base-content">{{system_type}}</span>
+                            </div>
+                            <div class="tw:flex tw:flex-col">
+                                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Uptime</span>
+                                <span class="tw:text-sm tw:font-bold tw:mt-1 tw:text-base-content" id="stat-uptime">{{ uptime_str }}</span>
+                            </div>
+                            <div class="tw:flex tw:flex-col">
+                                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">System Target</span>
+                                <span class="tw:text-sm tw:font-bold tw:mt-1 tw:text-base-content">{{ systemd_target }}</span>
+                            </div>
+                        </div>
+
+                        <!-- CPUs Section -->
+                        <div class="tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:rounded-[var(--radius-box)] tw:p-5 tw:flex tw:flex-col tw:gap-4">
+                            <div class="tw:flex tw:justify-between tw:items-center">
+                                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Processors</span>
+                                <span class="tw:badge tw:badge-ghost tw:font-mono tw:text-[10px]">{{python_platform}} [{{cpu_bits}}-bit]</span>
+                            </div>
+                            <div class="tw:text-2xl tw:font-black tw:text-base-content">{{cpu_count}} Cores</div>
+                            <div class="tw:flex tw:flex-col tw:gap-2">
+                                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">CPU Usage</span>
+                                <div class="tw:w-full tw:h-4 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:flex">
+                                    <div id="cpu-bar-user" class="tw:bg-primary tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold tw:text-primary-content" style="width: {{cpu_usage.user|int}}%">{% if cpu_usage.user|int >= 10 %}{{cpu_usage.user|int}}%{% endif %}</div>
+                                    <div id="cpu-bar-system" class="tw:bg-error tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold tw:text-error-content" style="width: {{cpu_usage.system|int}}%">{% if cpu_usage.system|int >= 10 %}{{cpu_usage.system|int}}%{% endif %}</div>
+                                    <div id="cpu-bar-nice" class="tw:bg-success tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold tw:text-success-content" style="width: {{cpu_usage.nice|int}}%">{% if cpu_usage.nice|int >= 10 %}{{cpu_usage.nice|int}}%{% endif %}</div>
+                                    <div id="cpu-bar-iowait" class="tw:bg-warning tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold tw:text-warning-content" style="width: {{cpu_usage.iowait|int}}%">{% if cpu_usage.iowait|int >= 10 %}{{cpu_usage.iowait|int}}%{% endif %}</div>
                                 </div>
                                 <div class="tw:flex tw:flex-wrap tw:gap-2 tw:mt-1">
-                                    <span class="tw:badge tw:badge-xs tw:badge-primary">User</span>
-                                    <span class="tw:badge tw:badge-xs tw:badge-error">System</span>
-                                    <span class="tw:badge tw:badge-xs tw:badge-success">Nice</span>
-                                    <span class="tw:badge tw:badge-xs tw:badge-warning tw:text-warning-content">I/O Wait</span>
+                                    <span id="cpu-badge-user" class="tw:badge tw:badge-ghost tw:font-mono tw:text-[10px] tw:bg-primary/20 tw:border-0">User ({{cpu_usage.user|int}}%)</span>
+                                    <span id="cpu-badge-system" class="tw:badge tw:badge-ghost tw:font-mono tw:text-[10px] tw:bg-error/20 tw:border-0">System ({{cpu_usage.system|int}}%)</span>
+                                    <span id="cpu-badge-nice" class="tw:badge tw:badge-ghost tw:font-mono tw:text-[10px] tw:bg-success/20 tw:border-0">Nice ({{cpu_usage.nice|int}}%)</span>
+                                    <span id="cpu-badge-iowait" class="tw:badge tw:badge-ghost tw:font-mono tw:text-[10px] tw:bg-warning/20 tw:border-0">I/O Wait ({{cpu_usage.iowait|int}}%)</span>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="tw:divider tw:my-0"></div>
-
-                    <!-- Load Average Section -->
-                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Load Average</span>
-                        <div class="md:tw:col-span-3 tw:grid tw:grid-cols-3 tw:gap-4">
-                            <div class="tw:flex tw:flex-col"><span class="tw:text-[9px] tw:opacity-50">5 MIN</span><span class="tw:text-xl tw:font-mono">{{"%.2f"|format(cpu_load5)}}</span></div>
-                            <div class="tw:flex tw:flex-col"><span class="tw:text-[9px] tw:opacity-50">10 MIN</span><span class="tw:text-xl tw:font-mono">{{"%.2f"|format(cpu_load10)}}</span></div>
-                            <div class="tw:flex tw:flex-col"><span class="tw:text-[9px] tw:opacity-50">15 MIN</span><span class="tw:text-xl tw:font-mono">{{"%.2f"|format(cpu_load15)}}</span></div>
-                        </div>
-                    </div>
-
-                    <div class="tw:divider tw:my-0"></div>
-
-                    <!-- Memory Section -->
-                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Memory</span>
-                        <div class="md:tw:col-span-3 tw:flex tw:flex-col tw:gap-6">
-                            <div class="tw:flex tw:flex-col tw:gap-1">
-                                <div class="tw:flex tw:justify-between tw:items-baseline">
-                                    <span class="tw:text-[10px] tw:font-bold tw:opacity-60">SYSTEM RAM</span>
-                                    <span class="tw:text-xs tw:font-mono">{{mem_total}} MB</span>
+                        <!-- Load Average Section -->
+                        <div class="tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:rounded-[var(--radius-box)] tw:p-5 tw:flex tw:flex-col tw:gap-4">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Load Average</span>
+                            <div class="tw:grid tw:grid-cols-3 tw:gap-4">
+                                <div class="tw:flex tw:flex-col">
+                                    <span class="tw:text-[9px] tw:opacity-50 tw:font-bold">5 MIN</span>
+                                    <span id="cpu-load5" class="tw:text-lg tw:font-mono tw:font-bold tw:text-base-content">{{"%.2f"|format(cpu_load5)}}</span>
                                 </div>
-                                <div class="tw:w-full tw:h-4 tw:bg-base-300 tw:rounded-full tw:overflow-hidden tw:flex">
-                                    <div class="tw:bg-success tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold" style="width: {{mem_usage.user_percent|int}}%">{{mem_usage.user_percent|int}}%</div>
-                                    <div class="tw:bg-secondary tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold" style="width: {{mem_usage.cached_percent|int}}%">{{mem_usage.cached_percent|int}}%</div>
+                                <div class="tw:flex tw:flex-col">
+                                    <span class="tw:text-[9px] tw:opacity-50 tw:font-bold">10 MIN</span>
+                                    <span id="cpu-load10" class="tw:text-lg tw:font-mono tw:font-bold tw:text-base-content">{{"%.2f"|format(cpu_load10)}}</span>
                                 </div>
-                            </div>
-                            <div class="tw:flex tw:flex-col tw:gap-1">
-                                <div class="tw:flex tw:justify-between tw:items-baseline">
-                                    <span class="tw:text-[10px] tw:font-bold tw:opacity-60">SWAP SPACE</span>
-                                    <span class="tw:text-xs tw:font-mono">{{ swap_total }} MB</span>
+                                <div class="tw:flex tw:flex-col">
+                                    <span class="tw:text-[9px] tw:opacity-50 tw:font-bold">15 MIN</span>
+                                    <span id="cpu-load15" class="tw:text-lg tw:font-mono tw:font-bold tw:text-base-content">{{"%.2f"|format(cpu_load15)}}</span>
                                 </div>
-                                <div class="tw:w-full tw:h-4 tw:bg-base-300 tw:rounded-full tw:overflow-hidden">
-                                    <div class="tw:bg-error tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold" style="width: {{swap_usage|int}}%">{{swap_usage|int}}%</div>
-                                </div>
-                            </div>
-                            <div class="tw:flex tw:flex-wrap tw:gap-2">
-                                <span class="tw:badge tw:badge-xs tw:badge-success">Used</span>
-                                <span class="tw:badge tw:badge-xs tw:badge-secondary">Cache</span>
-                                <span class="tw:badge tw:badge-xs tw:badge-error">Swap</span>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="tw:divider tw:my-0"></div>
-
-                    <!-- Filesystems Section -->
-                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Filesystems</span>
-                        <div class="md:tw:col-span-3 tw:flex tw:flex-col tw:gap-4">
-                            {% for fs in fs_data %}
-                            <div class="tw:flex tw:flex-col tw:gap-1">
-                                <div class="tw:flex tw:justify-between tw:items-baseline">
-                                    <span class="tw:text-xs tw:font-bold">{{fs.mountpoint}}</span>
-                                    <span class="tw:text-[10px] tw:opacity-60">{{"%.0f"|format(fs.total_mb)}} MB</span>
+                        <!-- Memory Section -->
+                        <div class="tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:rounded-[var(--radius-box)] tw:p-5 tw:flex tw:flex-col tw:gap-4">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Memory</span>
+                            <div class="tw:flex tw:flex-col tw:gap-4">
+                                <div class="tw:flex tw:flex-col tw:gap-1.5">
+                                    <div class="tw:flex tw:justify-between tw:items-baseline">
+                                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/60">System RAM</span>
+                                        <span class="tw:text-xs tw:font-mono tw:font-bold tw:text-base-content">{{mem_total}} MB</span>
+                                    </div>
+                                    <div class="tw:w-full tw:h-4 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:flex">
+                                        <div id="ram-bar-user" class="tw:bg-success tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold tw:text-success-content" style="width: {{mem_usage.user_percent|int}}%">{% if mem_usage.user_percent|int >= 10 %}{{mem_usage.user_percent|int}}%{% endif %}</div>
+                                        <div id="ram-bar-cached" class="tw:bg-secondary tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold tw:text-secondary-content" style="width: {{mem_usage.cached_percent|int}}%">{% if mem_usage.cached_percent|int >= 10 %}{{mem_usage.cached_percent|int}}%{% endif %}</div>
+                                    </div>
                                 </div>
-                                <progress class="tw:progress tw:progress-warning tw:w-full tw:h-3" value="{{fs.percent|int}}" max="100"></progress>
-                                <span class="tw:text-right tw:text-[9px] tw:opacity-50">{{fs.percent|int}}% Used</span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <div class="tw:divider tw:my-0"></div>
-
-                    <!-- Network Section -->
-                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Network Interfaces</span>
-                        <div class="md:tw:col-span-3 tw:flex tw:flex-col tw:gap-4">
-                            {% for net in net_list %}
-                            <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
-                                <span class="tw:font-mono tw:font-bold tw:text-info">{{net.name}}</span>
-                                <div class="tw:text-xs tw:font-mono">
-                                    <span class="tw:text-[9px] tw:opacity-50 tw:block">IPv4</span>
-                                    {{ net.inet4 | join('<br>') | safe }}
+                                <div class="tw:flex tw:flex-col tw:gap-1.5">
+                                    <div class="tw:flex tw:justify-between tw:items-baseline">
+                                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/60">Swap Space</span>
+                                        <span class="tw:text-xs tw:font-mono tw:font-bold tw:text-base-content">{{ swap_total }} MB</span>
+                                    </div>
+                                    <div class="tw:w-full tw:h-4 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:overflow-hidden">
+                                        <div id="swap-bar" class="tw:bg-error tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[8px] tw:font-bold tw:text-error-content" style="width: {{swap_usage|int}}%">{% if swap_usage|int >= 10 %}{{swap_usage|int}}%{% endif %}</div>
+                                    </div>
                                 </div>
-                                <div class="tw:text-xs tw:font-mono">
-                                    <span class="tw:text-[9px] tw:opacity-50 tw:block">IPv6</span>
-                                    {{ net.inet6 | join('<br>') | safe }}
+                                <div class="tw:flex tw:flex-wrap tw:gap-2">
+                                    <span id="ram-badge-used" class="tw:badge tw:badge-ghost tw:font-mono tw:text-[10px] tw:bg-success/20 tw:border-0">Used ({{mem_usage.user_percent|int}}%)</span>
+                                    <span id="ram-badge-cached" class="tw:badge tw:badge-ghost tw:font-mono tw:text-[10px] tw:bg-secondary/20 tw:border-0">Cache ({{mem_usage.cached_percent|int}}%)</span>
+                                    <span id="swap-badge" class="tw:badge tw:badge-ghost tw:font-mono tw:text-[10px] tw:bg-error/20 tw:border-0">Swap ({{swap_usage|int}}%)</span>
                                 </div>
                             </div>
-                            {% endfor %}
                         </div>
-                    </div>
 
-                    <div class="tw:divider tw:my-0"></div>
+                        <!-- Filesystems Section -->
+                        <div class="tw:bg-base-300/40 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-5 tw:flex tw:flex-col tw:gap-4">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Filesystems</span>
+                            <div class="tw:flex tw:flex-col tw:gap-4">
+                                {% for fs in fs_data %}
+                                <div class="tw:flex tw:flex-col tw:gap-1.5">
+                                    <div class="tw:flex tw:justify-between tw:items-baseline">
+                                        <span class="tw:text-xs tw:font-bold tw:font-mono tw:text-base-content">{{fs.mountpoint}}</span>
+                                        <span class="tw:text-[10px] tw:font-mono tw:opacity-60">{{"%.0f"|format(fs.total_mb)}} MB</span>
+                                    </div>
+                                    <progress id="fs-progress-{{loop.index0}}" class="tw:progress tw:progress-warning tw:w-full tw:h-2 tw:rounded-[var(--radius-box)]" value="{{fs.percent|int}}" max="100"></progress>
+                                    <span id="fs-text-{{loop.index0}}" class="tw:text-right tw:text-[9px] tw:opacity-50 tw:font-bold">{{fs.percent|int}}% Used</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
 
-                    <!-- Environment & Versions -->
-                    <div class="allsky-workspace-grid tw:gap-8">
-                        <div class="tw:flex tw:flex-col tw:gap-4">
-                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Environment</span>
-                            <div class="tw:grid tw:grid-cols-2 tw:gap-2 tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
+                        <!-- Network Section -->
+                        <div class="tw:bg-base-300/40 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-5 tw:flex tw:flex-col tw:gap-4">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Network Interfaces</span>
+                            <div class="tw:flex tw:flex-col tw:gap-3">
+                                {% for net in net_list %}
+                                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-3 tw:bg-base-100/50 tw:p-3 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10">
+                                    <span class="tw:font-mono tw:font-bold tw:text-info tw:text-xs">{{net.name}}</span>
+                                    <div class="tw:text-[10px] tw:font-mono">
+                                        <span class="tw:text-[9px] tw:opacity-50 tw:block tw:font-bold">IPv4</span>
+                                        {{ net.inet4 | join('<br>') | safe }}
+                                    </div>
+                                    <div class="tw:text-[10px] tw:font-mono">
+                                        <span class="tw:text-[9px] tw:opacity-50 tw:block tw:font-bold">IPv6</span>
+                                        {{ net.inet6 | join('<br>') | safe }}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Environment Section -->
+                        <div class="tw:bg-base-300/40 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-5 tw:flex tw:flex-col tw:gap-4">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Environment</span>
+                            <div class="tw:grid tw:grid-cols-2 tw:gap-3 tw:bg-base-100/50 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10">
                                 {% for t in temp_list %}
-                                <span class="tw:text-xs tw:opacity-70">{{t['name']}}</span>
-                                <span class="tw:text-xs tw:font-mono tw:text-right">{{"%.1f"|format(t['temp'])}}&deg;{{t['sys']}}</span>
+                                <span class="tw:text-xs tw:opacity-70 tw:font-semibold">{{t['name']}}</span>
+                                <span id="temp-val-{{loop.index0}}" class="tw:text-xs tw:font-mono tw:text-right tw:font-bold tw:text-base-content">{{"%.1f"|format(t['temp'])}}&deg;{{t['sys']}}</span>
                                 {% endfor %}
                                 
                                 {% if fan_list %}
                                 <div class="tw:col-span-2 tw:divider tw:my-1"></div>
                                 {% for f in fan_list %}
-                                <span class="tw:text-xs tw:opacity-70">{{f['name']}}</span>
-                                <span class="tw:text-xs tw:font-mono tw:text-right">{{"%.0f"|format(f['rpm'])}} RPM</span>
+                                <span class="tw:text-xs tw:opacity-70 tw:font-semibold">{{f['name']}}</span>
+                                <span id="fan-val-{{loop.index0}}" class="tw:text-xs tw:font-mono tw:text-right tw:font-bold tw:text-base-content">{{"%.0f"|format(f['rpm'])}} RPM</span>
                                 {% endfor %}
                                 {% endif %}
                             </div>
                         </div>
 
-                        <div class="tw:flex tw:flex-col tw:gap-4">
-                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Software Versions</span>
-                            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem;" class="tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
-                                <span class="tw:text-[10px] tw:opacity-60">Python</span><span class="tw:text-[10px] tw:font-mono">{{python_version}}</span>
-                                <span class="tw:text-[10px] tw:opacity-60">gunicorn</span><span class="tw:text-[10px] tw:font-mono">{{gunicorn_version}}</span>
-                                <span class="tw:text-[10px] tw:opacity-60">flask</span><span class="tw:text-[10px] tw:font-mono">{{flask_version}}</span>
-                                <span class="tw:text-[10px] tw:opacity-60">cv2</span><span class="tw:text-[10px] tw:font-mono">{{cv2_version}}</span>
-                                <span class="tw:text-[10px] tw:opacity-60">numpy</span><span class="tw:text-[10px] tw:font-mono">{{numpy_version}}</span>
-                                <span class="tw:text-[10px] tw:opacity-60">astropy</span><span class="tw:text-[10px] tw:font-mono">{{astropy_version}}</span>
-                                <span class="tw:text-[10px] tw:opacity-60">skyfield</span><span class="tw:text-[10px] tw:font-mono">{{skyfield_version}}</span>
-                                <span class="tw:text-[10px] tw:opacity-60">dbus</span><span class="tw:text-[10px] tw:font-mono">{{dbus_version}}</span>
+                        <!-- Software Versions Section -->
+                        <div class="tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:rounded-[var(--radius-box)] tw:p-5 tw:flex tw:flex-col tw:gap-4">
+                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Software Versions</span>
+                            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem;" class="tw:bg-base-100/50 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10">
+                                <span class="tw:text-[11px] tw:opacity-60 tw:font-semibold">Python</span><span class="tw:text-[11px] tw:font-mono tw:font-bold tw:text-base-content">{{python_version}}</span>
+                                <span class="tw:text-[11px] tw:opacity-60 tw:font-semibold">gunicorn</span><span class="tw:text-[11px] tw:font-mono tw:font-bold tw:text-base-content">{{gunicorn_version}}</span>
+                                <span class="tw:text-[11px] tw:opacity-60 tw:font-semibold">flask</span><span class="tw:text-[11px] tw:font-mono tw:font-bold tw:text-base-content">{{flask_version}}</span>
+                                <span class="tw:text-[11px] tw:opacity-60 tw:font-semibold">cv2</span><span class="tw:text-[11px] tw:font-mono tw:font-bold tw:text-base-content">{{cv2_version}}</span>
+                                <span class="tw:text-[11px] tw:opacity-60 tw:font-semibold">numpy</span><span class="tw:text-[11px] tw:font-mono tw:font-bold tw:text-base-content">{{numpy_version}}</span>
+                                <span class="tw:text-[11px] tw:opacity-60 tw:font-semibold">astropy</span><span class="tw:text-[11px] tw:font-mono tw:font-bold tw:text-base-content">{{astropy_version}}</span>
+                                <span class="tw:text-[11px] tw:opacity-60 tw:font-semibold">skyfield</span><span class="tw:text-[11px] tw:font-mono tw:font-bold tw:text-base-content">{{skyfield_version}}</span>
+                                <span class="tw:text-[11px] tw:opacity-60 tw:font-semibold">dbus</span><span class="tw:text-[11px] tw:font-mono tw:font-bold tw:text-base-content">{{dbus_version}}</span>
                             </div>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -211,397 +214,463 @@ var camera_id = {{ camera_id }};
 
         <!-- TAB: TIME -->
         <div id="tab-time" class="sys-tab-pane" style="display: none;">
-            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm">
-                <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-8">
-                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-8">
-                        <!-- Time Status -->
-                        <div class="tw:flex tw:flex-col tw:gap-4">
-                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Time Synchronization</span>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;" class="tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
-                                <span class="tw:text-xs">NTP Available</span><span class="tw:text-xs tw:font-bold">{{ timedate1_dict.CanNTP }}</span>
-                                <span class="tw:text-xs">NTP Enabled</span><span class="tw:text-xs tw:font-bold">{{ timedate1_dict.NTP }}</span>
-                                <span class="tw:text-xs">NTP Synchronized</span><span class="tw:text-xs tw:font-bold">{{ timedate1_dict.NTPSynchronized }}</span>
-                                <span class="tw:text-xs">RTC Available</span><span class="tw:text-xs tw:font-bold">{{ timedate1_dict.LocalRTC }}</span>
-                                <span class="tw:text-xs">Timezone</span><span class="tw:text-xs tw:font-bold">{{ timedate1_dict.Timezone }}</span>
-                            </div>
-                            <div class="tw:alert tw:alert-info tw:py-2 tw:text-[10px] tw:rounded-[var(--radius-box)]">
-                                <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
-                                <span>Note: RTC almost always reports False even when one is available.</span>
-                            </div>
-                        </div>
+            <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm tw:p-6 tw:flex tw:flex-col tw:gap-6">
+                
+                <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:m-0">
+                    Time & Synchronization
+                </h4>
 
-                        <!-- System Time Display -->
-                        <div class="tw:flex tw:flex-col tw:gap-4 tw:items-center tw:justify-center tw:bg-base-300/30 tw:p-8 tw:rounded-[var(--radius-box)]">
-                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Current System Time</span>
-                            <div class="tw:text-3xl tw:font-mono tw:text-info tw:text-center">{{ now.strftime('%m / %d / %Y') }}<br>{{ now.strftime('%I : %M : %S %P') }}</div>
+                <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-6">
+                    <!-- Time Status -->
+                    <div class="tw:flex tw:flex-col tw:gap-4">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Synchronization Status</span>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;" class="tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
+                            <span class="tw:text-xs tw:font-semibold">NTP Available</span><span class="tw:text-xs tw:font-bold tw:text-base-content">{{ timedate1_dict.CanNTP }}</span>
+                            <span class="tw:text-xs tw:font-semibold">NTP Enabled</span><span class="tw:text-xs tw:font-bold tw:text-base-content">{{ timedate1_dict.NTP }}</span>
+                            <span class="tw:text-xs tw:font-semibold">NTP Synchronized</span><span class="tw:text-xs tw:font-bold tw:text-base-content">{{ timedate1_dict.NTPSynchronized }}</span>
+                            <span class="tw:text-xs tw:font-semibold">RTC Available</span><span class="tw:text-xs tw:font-bold tw:text-base-content">{{ timedate1_dict.LocalRTC }}</span>
+                            <span class="tw:text-xs tw:font-semibold">Timezone</span><span class="tw:text-xs tw:font-bold tw:text-base-content">{{ timedate1_dict.Timezone }}</span>
+                        </div>
+                        <div class="tw:alert tw:alert-info tw:py-3 tw:text-xs tw:rounded-[var(--radius-box)]">
+                            <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
+                            <span>Note: RTC almost always reports False even when one is available.</span>
                         </div>
                     </div>
 
-                    <div class="tw:divider"></div>
-
-                    <!-- Warnings -->
-                    <div class="tw:flex tw:flex-col tw:gap-2">
-                        <div class="tw:alert tw:alert-error tw:py-3 tw:text-xs">
-                            <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
-                            <span><b>DANGER:</b> Changing the system time during operation can cause unpredictable behavior. It is recommended to restart both indiserver and indi-allsky.</span>
-                        </div>
-                        <div class="tw:alert tw:alert-warning tw:py-3 tw:text-xs">
-                            <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
-                            <span>Manually setting time will disable NTP time sync. Re-enable with <code>timedatectl set-ntp true</code>.</span>
+                    <!-- System Time Display -->
+                    <div class="tw:flex tw:flex-col tw:gap-4 tw:items-center tw:justify-center tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-6 tw:rounded-[var(--radius-box)]">
+                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Current System Time</span>
+                        <div class="tw:text-3xl tw:font-mono tw:text-info tw:text-center tw:font-extrabold tw:leading-relaxed">
+                            <span id="time-display-date">{{ now.strftime('%m / %d / %Y') }}</span><br><span id="time-display-time">{{ now.strftime('%I : %M : %S %P') }}</span>
                         </div>
                     </div>
-
-                    <!-- Set Time Form -->
-                    <form id="form_settime" onSubmit="return false;" class="tw:flex tw:flex-col tw:gap-6">
-                        {{ form_settime.csrf_token }}
-                        <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
-                            <div class="lg:tw:col-span-8 tw:form-control">
-                                <label class="tw:label tw:py-1">
-                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_settime.NEW_DATETIME.label.text }}</span>
-                                </label>
-                                {{ form_settime.NEW_DATETIME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:w-full') }}
-                                <div id="NEW_DATETIME-error" class="tw:text-error tw:text-[10px]" style="display: none;"></div>
-                            </div>
-                            <div class="lg:tw:col-span-4 tw:flex tw:gap-2">
-                                <button type="submit" class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:flex-1">Set Time</button>
-                                <span class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary" id="loader_settime" style="display: none;"></span>
-                            </div>
-                        </div>
-                        <div id="form_settime_success-message" class="tw:alert tw:alert-success tw:py-2 tw:text-sm" style="display: none;"></div>
-                        <div id="form_settime_failure-message" class="tw:alert tw:alert-error tw:py-2 tw:text-sm" style="display: none;"></div>
-                    </form>
-
-                    <div class="tw:divider"></div>
-
-                    <!-- Timezone Form -->
-                    <form id="form_timezone" onSubmit="return false;" class="tw:flex tw:flex-col tw:gap-6">
-                        {{ form_timezone.csrf_token }}
-                        <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
-                            <div class="lg:tw:col-span-8 tw:form-control">
-                                <label class="tw:label tw:py-1">
-                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_timezone.NEW_TIMEZONE.label.text }}</span>
-                                </label>
-                                {{ form_timezone.NEW_TIMEZONE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full') }}
-                                <div id="NEW_TIMEZONE-error" class="tw:text-error tw:text-[10px]" style="display: none;"></div>
-                            </div>
-                            <div class="lg:tw:col-span-4 tw:flex tw:gap-2">
-                                <button type="submit" class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:flex-1">Update Timezone</button>
-                                <span class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary" id="loader_timezone" style="display: none;"></span>
-                            </div>
-                        </div>
-                        <div class="tw:alert tw:alert-info tw:py-2 tw:text-[10px] tw:rounded-[var(--radius-box)]">
-                            <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
-                            <span>Use modern labels such as <b>America/New_York</b>. Older specifications may not be supported.</span>
-                        </div>
-                        <div id="form_timezone_success-message" class="tw:alert tw:alert-success tw:py-2 tw:text-sm" style="display: none;"></div>
-                        <div id="form_timezone_failure-message" class="tw:alert tw:alert-error tw:py-2 tw:text-sm" style="display: none;"></div>
-                    </form>
                 </div>
+
+                <div class="tw:divider tw:my-2"></div>
+
+                <!-- Warnings -->
+                <div class="tw:flex tw:flex-col tw:gap-2">
+                    <div class="tw:alert tw:alert-error tw:p-3 tw:bg-error/10 tw:text-error tw:rounded-[var(--radius-box)] tw:text-xs tw:font-semibold">
+                        <i class="tw:icon-[lucide--alert-triangle] tw:w-4 tw:h-4"></i>
+                        <span><b>DANGER:</b> Changing the system time during operation can cause unpredictable behavior. It is recommended to restart both indiserver and indi-allsky.</span>
+                    </div>
+                    <div class="tw:alert tw:alert-warning tw:py-3 tw:text-xs tw:rounded-[var(--radius-box)]">
+                        <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
+                        <span>Manually setting time will disable NTP time sync. Re-enable with <code>timedatectl set-ntp true</code>.</span>
+                    </div>
+                </div>
+
+                <!-- Set Time Form -->
+                <form id="form_settime" onSubmit="return false;" class="tw:flex tw:flex-col tw:gap-4">
+                    {{ form_settime.csrf_token }}
+                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
+                        <div class="lg:tw:col-span-8 tw:form-control tw:gap-1.5">
+                            <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                                {{ form_settime.NEW_DATETIME.label.text }}
+                            </label>
+                            {{ form_settime.NEW_DATETIME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full tw:rounded-[var(--radius-box)]') }}
+                            <div id="NEW_DATETIME-error" class="tw:text-error tw:text-xs tw:font-semibold tw:p-3 tw:bg-error/10 tw:rounded-[var(--radius-box)]" style="display: none;"></div>
+                        </div>
+                        <div class="lg:tw:col-span-4 tw:flex tw:gap-2">
+                            <button type="submit" class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:flex-1">
+                                <i class="tw:icon-[lucide--clock] tw:w-4 tw:h-4"></i> Set Time
+                            </button>
+                            <span class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary tw:self-center" id="loader_settime" style="display: none;"></span>
+                        </div>
+                    </div>
+                    <div id="form_settime_success-message" class="tw:text-success tw:text-xs tw:font-semibold tw:p-3 tw:bg-success/10 tw:rounded-[var(--radius-box)]" style="display: none;"></div>
+                    <div id="form_settime_failure-message" class="tw:text-error tw:text-xs tw:font-semibold tw:p-3 tw:bg-error/10 tw:rounded-[var(--radius-box)]" style="display: none;"></div>
+                </form>
+
+                <div class="tw:divider tw:my-2"></div>
+
+                <!-- Timezone Form -->
+                <form id="form_timezone" onSubmit="return false;" class="tw:flex tw:flex-col tw:gap-4">
+                    {{ form_timezone.csrf_token }}
+                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-end">
+                        <div class="lg:tw:col-span-8 tw:form-control tw:gap-1.5">
+                            <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                                {{ form_timezone.NEW_TIMEZONE.label.text }}
+                            </label>
+                            {{ form_timezone.NEW_TIMEZONE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full tw:rounded-[var(--radius-box)]') }}
+                            <div id="NEW_TIMEZONE-error" class="tw:text-error tw:text-xs tw:font-semibold tw:p-3 tw:bg-error/10 tw:rounded-[var(--radius-box)]" style="display: none;"></div>
+                        </div>
+                        <div class="lg:tw:col-span-4 tw:flex tw:gap-2">
+                            <button type="submit" class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:flex-1">
+                                <i class="tw:icon-[lucide--globe] tw:w-4 tw:h-4"></i> Update Timezone
+                            </button>
+                            <span class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary tw:self-center" id="loader_timezone" style="display: none;"></span>
+                        </div>
+                    </div>
+                    <div class="tw:alert tw:alert-info tw:py-3 tw:text-xs tw:rounded-[var(--radius-box)]">
+                        <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
+                        <span>Use modern labels such as <b>America/New_York</b>. Older specifications may not be supported.</span>
+                    </div>
+                    <div id="form_timezone_success-message" class="tw:text-success tw:text-xs tw:font-semibold tw:p-3 tw:bg-success/10 tw:rounded-[var(--radius-box)]" style="display: none;"></div>
+                    <div id="form_timezone_failure-message" class="tw:text-error tw:text-xs tw:font-semibold tw:p-3 tw:bg-error/10 tw:rounded-[var(--radius-box)]" style="display: none;"></div>
+                </form>
             </div>
         </div>
 
         <!-- TAB: INDI DRIVERS -->
         <div id="tab-indiserver" class="sys-tab-pane" style="display: none;">
-            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm">
-                <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-6">
-                    <p class="tw:text-sm tw:opacity-80">This page may be used to update the camera and GPS driver servers configured in the local indiserver.</p>
+            <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm tw:p-6 tw:flex tw:flex-col tw:gap-6">
+                
+                <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:m-0">
+                    INDI Drivers Configuration
+                </h4>
+
+                <div class="tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-5 tw:rounded-[var(--radius-box)] tw:flex tw:flex-col tw:gap-4">
+                    <p class="tw:text-xs tw:opacity-80 tw:leading-relaxed">This page may be used to update the camera and GPS driver servers configured in the local indiserver.</p>
                     
-                    <div class="tw:flex tw:flex-col tw:gap-2">
-                        <div class="tw:badge tw:badge-info tw:gap-2 tw:text-[10px] tw:h-auto tw:py-2">Note: No effect on libcamera-based configurations.</div>
-                        <div class="tw:badge tw:badge-info tw:gap-2 tw:text-[10px] tw:h-auto tw:py-2">Note: Default driver selection updates after main camera change.</div>
+                    <div class="tw:flex tw:flex-wrap tw:gap-2">
+                        <span class="tw:badge tw:badge-ghost tw:font-mono tw:text-[10px] tw:bg-info/20 tw:border-0 tw:h-auto tw:py-1.5">Note: No effect on libcamera-based configurations.</span>
+                        <span class="tw:badge tw:badge-ghost tw:font-mono tw:text-[10px] tw:bg-info/20 tw:border-0 tw:h-auto tw:py-1.5">Note: Default driver selection updates after main camera change.</span>
+                    </div>
+                </div>
+
+                <form id="form_indiserver_change" onSubmit="return false;" class="tw:flex tw:flex-col tw:gap-6">
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-6">
+                        <div class="tw:form-control tw:gap-1.5">
+                            <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                                {{ form_indiserver_change.CAMERA_SERVER_SELECT.label.text }}
+                            </label>
+                            {{ form_indiserver_change.CAMERA_SERVER_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full tw:rounded-[var(--radius-box)]') }}
+                        </div>
+                        <div class="tw:form-control tw:gap-1.5">
+                            <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                                {{ form_indiserver_change.GPS_SERVER_SELECT.label.text }}
+                            </label>
+                            {{ form_indiserver_change.GPS_SERVER_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full tw:rounded-[var(--radius-box)]') }}
+                        </div>
                     </div>
 
-                    <div class="tw:divider"></div>
-
-                    <form id="form_indiserver_change" onSubmit="return false;" class="tw:flex tw:flex-col tw:gap-6">
-                        <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-6">
-                            <div class="tw:form-control">
-                                <label class="tw:label tw:py-1">
-                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_indiserver_change.CAMERA_SERVER_SELECT.label.text }}</span>
-                                </label>
-                                {{ form_indiserver_change.CAMERA_SERVER_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full') }}
-                            </div>
-                            <div class="tw:form-control">
-                                <label class="tw:label tw:py-1">
-                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_indiserver_change.GPS_SERVER_SELECT.label.text }}</span>
-                                </label>
-                                {{ form_indiserver_change.GPS_SERVER_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:w-full') }}
-                            </div>
-                        </div>
-
-                        <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
-                            <div class="lg:tw:col-span-3 tw:form-control">
-                                <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
-                                    {{ form_indiserver_change.RESTART_INDISERVER(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
-                                    <span class="tw:label-text tw:text-xs tw:font-bold">{{ form_indiserver_change.RESTART_INDISERVER.label.text }}</span>
-                                </label>
-                            </div>
-                            <div class="lg:tw:col-span-9">
-                                <div class="tw:alert tw:alert-warning tw:py-2 tw:text-[10px] tw:rounded-[var(--radius-box)]">
-                                    <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
-                                    <span>Warning: This will interrupt image capture if indi-allsky is operational.</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="tw:flex tw:flex-col sm:tw:flex-row tw:items-center tw:gap-6 tw:mt-4 tw:justify-center">
-                            <label class="tw:label tw:cursor-pointer tw:gap-2">
-                                <input class="tw:checkbox tw:checkbox-sm" id="INDISERVER_CHANGE_CONFIRM1" name="INDISERVER_CHANGE_CONFIRM1" type="checkbox" value="y">
-                                <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase">Confirm 1</span>
-                            </label>
-                            <button id="button_indiserver_change" class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:px-8">UPDATE DRIVERS</button>
-                            <label class="tw:label tw:cursor-pointer tw:gap-2">
-                                <input class="tw:checkbox tw:checkbox-sm" id="INDISERVER_CHANGE_CONFIRM2" name="INDISERVER_CHANGE_CONFIRM2" type="checkbox" value="y">
-                                <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase">Confirm 2</span>
+                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
+                        <div class="lg:tw:col-span-4 tw:form-control">
+                            <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3 tw:py-1">
+                                {{ form_indiserver_change.RESTART_INDISERVER(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                                <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content">{{ form_indiserver_change.RESTART_INDISERVER.label.text }}</span>
                             </label>
                         </div>
+                        <div class="lg:tw:col-span-8">
+                            <div class="tw:alert tw:alert-warning tw:py-2.5 tw:text-[10px] tw:rounded-[var(--radius-box)]">
+                                <i class="tw:icon-[lucide--alert-triangle] tw:w-4 tw:h-4"></i>
+                                <span>Warning: This will interrupt image capture if indi-allsky is operational.</span>
+                            </div>
+                        </div>
+                    </div>
 
-                        <div id="form_indiserver_change_success-message" class="tw:alert tw:alert-success tw:py-2 tw:text-sm" style="display: none;"></div>
-                        <div id="form_indiserver_change_failure-message" class="tw:alert tw:alert-error tw:py-2 tw:text-sm" style="display: none;"></div>
-                    </form>
-                </div>
+                    <!-- Confirmation and Action Buttons -->
+                    <div class="tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-5 tw:rounded-[var(--radius-box)] tw:flex tw:flex-col sm:tw:flex-row tw:items-center tw:gap-6 tw:justify-center">
+                        <label class="tw:label tw:cursor-pointer tw:gap-2.5 tw:py-1">
+                            <input class="tw:checkbox tw:checkbox-primary tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="INDISERVER_CHANGE_CONFIRM1" name="INDISERVER_CHANGE_CONFIRM1" type="checkbox" value="y">
+                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/75">Confirm 1</span>
+                        </label>
+                        
+                        <button id="button_indiserver_change" class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:px-8 tw:rounded-[var(--radius-box)]">
+                            <i class="tw:icon-[lucide--refresh-cw] tw:w-4 tw:h-4"></i> Update Drivers
+                        </button>
+                        
+                        <label class="tw:label tw:cursor-pointer tw:gap-2.5 tw:py-1">
+                            <input class="tw:checkbox tw:checkbox-primary tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="INDISERVER_CHANGE_CONFIRM2" name="INDISERVER_CHANGE_CONFIRM2" type="checkbox" value="y">
+                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/75">Confirm 2</span>
+                        </label>
+                    </div>
+
+                    <div id="form_indiserver_change_success-message" class="tw:text-success tw:text-xs tw:font-semibold tw:p-3 tw:bg-success/10 tw:rounded-[var(--radius-box)]" style="display: none;"></div>
+                    <div id="form_indiserver_change_failure-message" class="tw:text-error tw:text-xs tw:font-semibold tw:p-3 tw:bg-error/10 tw:rounded-[var(--radius-box)]" style="display: none;"></div>
+                </form>
             </div>
         </div>
 
         <!-- TAB: SERVICES -->
         <div id="tab-services" class="sys-tab-pane" style="display: none;">
-            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm">
-                <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-2">
-                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60 tw:mb-4">Service Management</span>
-                    
+            <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm tw:p-6 tw:flex tw:flex-col tw:gap-6">
+                
+                <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:m-0">
+                    Services Management
+                </h4>
+
+                <div class="tw:flex tw:flex-col tw:gap-4">
                     <!-- indiserver -->
-                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
+                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
                         <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
-                            <span class="tw:text-sm tw:font-bold">indiserver</span>
-                            <span class="tw:text-[9px] tw:opacity-50">UNIT: indiserver.service</span>
+                            <span class="tw:text-sm tw:font-bold tw:text-base-content">indiserver</span>
+                            <span class="tw:text-[9px] tw:font-mono tw:opacity-50">UNIT: indiserver.service</span>
                         </div>
                         <div class="lg:tw:col-span-3 tw:flex tw:gap-2 tw:items-center">
-                            <span class="tw:badge tw:badge-ghost tw:font-mono tw:text-[10px]">{{indiserver_service_activestate}}</span>
-                            {% if indiserver_next_trigger > 0 %}<span class="tw:text-[10px] tw:text-info">Next in {{indiserver_next_trigger}}s</span>{% endif %}
+                            <span class="tw:badge {% if indiserver_service_activestate == 'active' %}tw:badge-success{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[10px] tw:rounded-[var(--radius-box)]">{{indiserver_service_activestate}}</span>
+                            {% if indiserver_next_trigger > 0 %}<span class="tw:text-[10px] tw:font-bold tw:text-info">Next in {{indiserver_next_trigger}}s</span>{% endif %}
                         </div>
                         <div class="lg:tw:col-span-6 tw:flex tw:gap-2">
-                            <button class="tw:btn tw:btn-sm tw:bg-base-100 tw:flex-1" id="button_indiserver_service_stop">Stop</button>
-                            <button class="tw:btn tw:btn-sm tw:btn-primary tw:flex-1" id="button_indiserver_service_start">Start</button>
+                            <button class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_service_stop">Stop</button>
+                            <button class="tw:btn tw:btn-primary tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_service_start">Start</button>
                         </div>
-                        <div class="lg:tw:col-span-3 tw:divider lg:tw:hidden tw:my-1"></div>
+                        <div class="lg:tw:col-span-12 tw:border-t tw:border-base-content/5 tw:my-1"></div>
                         <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
-                            <span class="tw:text-xs">Timer Unit</span>
-                            <span class="tw:text-[9px] tw:opacity-50">STATE: {{indiserver_timer_unitstate}}</span>
+                            <span class="tw:text-xs tw:font-bold tw:text-base-content/85">Timer Unit</span>
+                            <span class="tw:text-[9px] tw:font-mono tw:opacity-50">STATE: {{indiserver_timer_unitstate}}</span>
                         </div>
                         <div class="lg:tw:col-span-9 tw:flex tw:gap-2">
-                            <button class="tw:btn tw:btn-sm tw:bg-base-100 tw:flex-1" id="button_indiserver_timer_disable">Disable Timer</button>
-                            <button class="tw:btn tw:btn-sm tw:btn-info tw:flex-1" id="button_indiserver_timer_enable">Enable Timer</button>
+                            <button class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_timer_disable">Disable Timer</button>
+                            <button class="tw:btn tw:btn-info tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_timer_enable">Enable Timer</button>
                         </div>
                     </div>
 
                     <!-- indi-allsky -->
-                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
+                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
                         <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
-                            <span class="tw:text-sm tw:font-bold">indi-allsky</span>
-                            <span class="tw:text-[9px] tw:opacity-50">UNIT: indi-allsky.service</span>
+                            <span class="tw:text-sm tw:font-bold tw:text-base-content">indi-allsky</span>
+                            <span class="tw:text-[9px] tw:font-mono tw:opacity-50">UNIT: indi-allsky.service</span>
                         </div>
                         <div class="lg:tw:col-span-3 tw:flex tw:gap-2 tw:items-center">
-                            <span class="tw:badge tw:badge-ghost tw:font-mono tw:text-[10px]">{{indi_allsky_service_activestate}}</span>
-                            {% if indi_allsky_next_trigger > 0 %}<span class="tw:text-[10px] tw:text-info">Next in {{indi_allsky_next_trigger}}s</span>{% endif %}
+                            <span class="tw:badge {% if indi_allsky_service_activestate == 'active' %}tw:badge-success{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[10px] tw:rounded-[var(--radius-box)]">{{indi_allsky_service_activestate}}</span>
+                            {% if indi_allsky_next_trigger > 0 %}<span class="tw:text-[10px] tw:font-bold tw:text-info">Next in {{indi_allsky_next_trigger}}s</span>{% endif %}
                         </div>
                         <div class="lg:tw:col-span-6 tw:flex tw:gap-2">
-                            <button class="tw:btn tw:btn-sm tw:btn-outline tw:btn-info tw:flex-1" id="button_indi_allsky_service_hup">Reload</button>
-                            <button class="tw:btn tw:btn-sm tw:bg-base-100 tw:flex-1" id="button_indi_allsky_service_stop">Stop</button>
-                            <button class="tw:btn tw:btn-sm tw:btn-primary tw:flex-1" id="button_indi_allsky_service_start">Start</button>
+                            <button class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indi_allsky_service_hup">Reload</button>
+                            <button class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indi_allsky_service_stop">Stop</button>
+                            <button class="tw:btn tw:btn-primary tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indi_allsky_service_start">Start</button>
                         </div>
-                        <div class="lg:tw:col-span-3 tw:divider lg:tw:hidden tw:my-1"></div>
+                        <div class="lg:tw:col-span-12 tw:border-t tw:border-base-content/5 tw:my-1"></div>
                         <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
-                            <span class="tw:text-xs">Timer Unit</span>
-                            <span class="tw:text-[9px] tw:opacity-50">STATE: {{indi_allsky_timer_unitstate}}</span>
+                            <span class="tw:text-xs tw:font-bold tw:text-base-content/85">Timer Unit</span>
+                            <span class="tw:text-[9px] tw:font-mono tw:opacity-50">STATE: {{indi_allsky_timer_unitstate}}</span>
                         </div>
                         <div class="lg:tw:col-span-9 tw:flex tw:gap-2">
-                            <button class="tw:btn tw:btn-sm tw:bg-base-100 tw:flex-1" id="button_indi_allsky_timer_disable">Disable Timer</button>
-                            <button class="tw:btn tw:btn-sm tw:btn-info tw:flex-1" id="button_indi_allsky_timer_enable">Enable Timer</button>
+                            <button class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indi_allsky_timer_disable">Disable Timer</button>
+                            <button class="tw:btn tw:btn-info tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indi_allsky_timer_enable">Enable Timer</button>
                         </div>
                     </div>
 
                     <!-- gunicorn -->
-                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
+                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
                         <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
-                            <span class="tw:text-sm tw:font-bold">Web UI Server</span>
-                            <span class="tw:text-[9px] tw:opacity-50">UNIT: gunicorn-indi-allsky.service</span>
+                            <span class="tw:text-sm tw:font-bold tw:text-base-content">Web UI Server</span>
+                            <span class="tw:text-[9px] tw:font-mono tw:opacity-50">UNIT: gunicorn-indi-allsky.service</span>
                         </div>
                         <div class="lg:tw:col-span-3">
-                            <span class="tw:badge tw:badge-ghost tw:font-mono tw:text-[10px]">{{gunicorn_indi_allsky_service_activestate}}</span>
+                            <span class="tw:badge {% if gunicorn_indi_allsky_service_activestate == 'active' %}tw:badge-success{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[10px] tw:rounded-[var(--radius-box)]">{{gunicorn_indi_allsky_service_activestate}}</span>
                         </div>
                         <div class="lg:tw:col-span-6 tw:flex tw:gap-2">
-                            <button class="tw:btn tw:btn-sm tw:bg-base-100 tw:flex-1" id="button_gunicorn_indi_allsky_service_stop">Restart UI</button>
-                            <span class="tw:flex-1 tw:text-[10px] tw:opacity-50 tw:text-center tw:leading-tight">Socket managed, auto-restarts on access</span>
+                            <button class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_gunicorn_indi_allsky_service_stop">Restart UI</button>
+                            <span class="tw:flex-1 tw:text-[10px] tw:opacity-50 tw:text-center tw:leading-tight tw:font-medium">Socket managed, auto-restarts on access</span>
                         </div>
-                        <div class="lg:tw:col-span-3 tw:divider lg:tw:hidden tw:my-1"></div>
+                        <div class="lg:tw:col-span-12 tw:border-t tw:border-base-content/5 tw:my-1"></div>
                         <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
-                            <span class="tw:text-xs">Web Socket</span>
-                            <span class="tw:text-[9px] tw:opacity-50">STATE: {{gunicorn_indi_allsky_socket_unitstate}}</span>
+                            <span class="tw:text-xs tw:font-bold tw:text-base-content/85">Web Socket</span>
+                            <span class="tw:text-[9px] tw:font-mono tw:opacity-50">STATE: {{gunicorn_indi_allsky_socket_unitstate}}</span>
                         </div>
                     </div>
+                </div>
 
-                    <div class="tw:alert tw:alert-info tw:py-3 tw:mt-4 tw:text-xs">
-                        <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
-                        <span>Services are activated at boot by their respective timers or sockets. Disabling a timer prevents the service from starting automatically.</span>
-                    </div>
+                <div class="tw:alert tw:alert-info tw:py-3 tw:text-xs tw:rounded-[var(--radius-box)]">
+                    <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
+                    <span>Services are activated at boot by their respective timers or sockets. Disabling a timer prevents the service from starting automatically.</span>
                 </div>
             </div>
         </div>
 
         <!-- TAB: UTILITIES -->
         <div id="tab-powercontrol" class="sys-tab-pane" style="display: none;">
-            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm">
-                <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-8">
-                    
-                    <!-- System Controls -->
-                    <div class="tw:flex tw:flex-col tw:gap-4">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">System Power</span>
-                        <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-4">
-                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
-                                <span class="tw:text-xs tw:font-bold tw:uppercase tw:opacity-60">Reboot System</span>
-                                <div class="tw:flex tw:flex-wrap tw:gap-4 tw:items-center">
-                                    <label class="tw:label tw:cursor-pointer tw:gap-2">
-                                        <input class="tw:checkbox tw:checkbox-xs" id="REBOOT_CONFIRM1" type="checkbox"> <span class="tw:label-text tw:text-[10px]">C1</span>
-                                    </label>
-                                    <button class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1" id="button_system_reboot">REBOOT</button>
-                                    <label class="tw:label tw:cursor-pointer tw:gap-2">
-                                        <input class="tw:checkbox tw:checkbox-xs" id="REBOOT_CONFIRM2" type="checkbox"> <span class="tw:label-text tw:text-[10px]">C2</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
-                                <span class="tw:text-xs tw:font-bold tw:uppercase tw:opacity-60">Shutdown System</span>
-                                <div class="tw:flex tw:flex-wrap tw:gap-4 tw:items-center">
-                                    <label class="tw:label tw:cursor-pointer tw:gap-2">
-                                        <input class="tw:checkbox tw:checkbox-xs" id="SHUTDOWN_CONFIRM1" type="checkbox"> <span class="tw:label-text tw:text-[10px]">C1</span>
-                                    </label>
-                                    <button class="tw:btn tw:btn-error tw:btn-sm tw:flex-1" id="button_system_shutdown">SHUTDOWN</button>
-                                    <label class="tw:label tw:cursor-pointer tw:gap-2">
-                                        <input class="tw:checkbox tw:checkbox-xs" id="SHUTDOWN_CONFIRM2" type="checkbox"> <span class="tw:label-text tw:text-[10px]">C2</span>
-                                    </label>
-                                </div>
+            <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm tw:p-6 tw:flex tw:flex-col tw:gap-6">
+                
+                <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:m-0">
+                    System & Maintenance Utilities
+                </h4>
+
+                <!-- Group 1: Power Operations -->
+                <div class="tw:flex tw:flex-col tw:gap-4">
+                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">System Power</span>
+                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-4">
+                        
+                        <!-- Reboot Box -->
+                        <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-5 tw:rounded-[var(--radius-box)]">
+                            <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/85">Reboot System</span>
+                            <div class="tw:flex tw:flex-wrap tw:gap-4 tw:items-center">
+                                <label class="tw:label tw:cursor-pointer tw:gap-2 tw:py-1">
+                                    <input class="tw:checkbox tw:checkbox-primary tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="REBOOT_CONFIRM1" type="checkbox"> 
+                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:text-base-content/60">CONFIRM 1</span>
+                                </label>
+                                <button class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_system_reboot">
+                                    <i class="tw:icon-[lucide--refresh-cw] tw:w-4 tw:h-4"></i> Reboot
+                                </button>
+                                <label class="tw:label tw:cursor-pointer tw:gap-2 tw:py-1">
+                                    <input class="tw:checkbox tw:checkbox-primary tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="REBOOT_CONFIRM2" type="checkbox"> 
+                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:text-base-content/60">CONFIRM 2</span>
+                                </label>
                             </div>
                         </div>
+
+                        <!-- Shutdown Box -->
+                        <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-5 tw:rounded-[var(--radius-box)]">
+                            <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/85">Shutdown System</span>
+                            <div class="tw:flex tw:flex-wrap tw:gap-4 tw:items-center">
+                                <label class="tw:label tw:cursor-pointer tw:gap-2 tw:py-1">
+                                    <input class="tw:checkbox tw:checkbox-primary tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="SHUTDOWN_CONFIRM1" type="checkbox"> 
+                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:text-base-content/60">CONFIRM 1</span>
+                                </label>
+                                <button class="tw:btn tw:btn-error tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_system_shutdown">
+                                    <i class="tw:icon-[lucide--power] tw:w-4 tw:h-4"></i> Shutdown
+                                </button>
+                                <label class="tw:label tw:cursor-pointer tw:gap-2 tw:py-1">
+                                    <input class="tw:checkbox tw:checkbox-primary tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="SHUTDOWN_CONFIRM2" type="checkbox"> 
+                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:text-base-content/60">CONFIRM 2</span>
+                                </label>
+                            </div>
+                        </div>
+
                     </div>
+                </div>
 
-                    <div class="tw:divider"></div>
+                <div class="tw:divider tw:my-2"></div>
 
-                    <!-- Maintenance Utilities -->
-                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-8">
-                        <!-- Left Column Utilities -->
-                        <div class="tw:flex tw:flex-col tw:gap-6">
+                <!-- Group 2: Maintenance Utilities -->
+                <div class="tw:flex tw:flex-col tw:gap-4">
+                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Maintenance Controls</span>
+                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-6">
+                        
+                        <!-- Left Column -->
+                        <div class="tw:flex tw:flex-col tw:gap-4">
                             <!-- Upgrade -->
-                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
+                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:flex tw:justify-between tw:items-baseline">
-                                    <span class="tw:text-xs tw:font-bold tw:uppercase tw:opacity-60">Upgrade indi-allsky</span>
+                                    <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/85">Upgrade indi-allsky</span>
                                     <span class="tw:text-[9px] tw:font-mono tw:opacity-40">./misc/unattended_upgrade.sh</span>
                                 </div>
                                 <div class="tw:flex tw:gap-4 tw:items-center">
-                                    <label class="tw:label tw:cursor-pointer tw:gap-2">
-                                        <input class="tw:checkbox tw:checkbox-xs" id="UPGRADE_CONFIRM1" type="checkbox"> <span class="tw:label-text tw:text-[10px]">C1</span>
+                                    <label class="tw:label tw:cursor-pointer tw:gap-2 tw:py-1">
+                                        <input class="tw:checkbox tw:checkbox-primary tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="UPGRADE_CONFIRM1" type="checkbox"> 
+                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:text-base-content/60">C1</span>
                                     </label>
-                                    <button class="tw:btn tw:btn-success tw:btn-sm tw:flex-1" id="button_system_upgrade">RUN UPGRADE</button>
-                                    <label class="tw:label tw:cursor-pointer tw:gap-2">
-                                        <input class="tw:checkbox tw:checkbox-xs" id="UPGRADE_CONFIRM2" type="checkbox"> <span class="tw:label-text tw:text-[10px]">C2</span>
+                                    <button class="tw:btn tw:btn-success tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_system_upgrade">
+                                        <i class="tw:icon-[lucide--download] tw:w-4 tw:h-4"></i> Run Upgrade
+                                    </button>
+                                    <label class="tw:label tw:cursor-pointer tw:gap-2 tw:py-1">
+                                        <input class="tw:checkbox tw:checkbox-primary tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="UPGRADE_CONFIRM2" type="checkbox"> 
+                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:text-base-content/60">C2</span>
                                     </label>
                                 </div>
                             </div>
                             <!-- Backup -->
-                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
+                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:flex tw:justify-between tw:items-baseline">
-                                    <span class="tw:text-xs tw:font-bold tw:uppercase tw:opacity-60">Database Backup</span>
+                                    <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/85">Database Backup</span>
                                     <span class="tw:text-[9px] tw:font-mono tw:opacity-40">./misc/backup_database.py</span>
                                 </div>
                                 <div class="tw:flex tw:gap-4 tw:items-center">
-                                    <label class="tw:label tw:cursor-pointer tw:gap-2">
-                                        <input class="tw:checkbox tw:checkbox-xs" id="BACKUP_DB_CONFIRM1" type="checkbox"> <span class="tw:label-text tw:text-[10px]">CONFIRM</span>
+                                    <label class="tw:label tw:cursor-pointer tw:gap-2 tw:py-1">
+                                        <input class="tw:checkbox tw:checkbox-primary tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="BACKUP_DB_CONFIRM1" type="checkbox"> 
+                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:text-base-content/60">CONFIRM</span>
                                     </label>
-                                    <button class="tw:btn tw:btn-info tw:btn-sm tw:flex-1" id="button_backup_db">BACKUP DB</button>
+                                    <button class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_backup_db">
+                                        <i class="tw:icon-[lucide--database] tw:w-4 tw:h-4"></i> Backup DB
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Right Column Utilities -->
-                        <div class="tw:flex tw:flex-col tw:gap-6">
+                        <!-- Right Column -->
+                        <div class="tw:flex tw:flex-col tw:gap-4">
                             <!-- Validate -->
-                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
+                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:flex tw:justify-between tw:items-baseline">
-                                    <span class="tw:text-xs tw:font-bold tw:uppercase tw:opacity-60">Validate DB Entries</span>
+                                    <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/85">Validate DB Entries</span>
                                     <span class="tw:text-[9px] tw:font-mono tw:opacity-40">./misc/validate_db_entries.py</span>
                                 </div>
                                 <div class="tw:flex tw:gap-4 tw:items-center">
-                                    <label class="tw:label tw:cursor-pointer tw:gap-2">
-                                        <input class="tw:checkbox tw:checkbox-xs" id="VALIDATE_DB_CONFIRM1" type="checkbox"> <span class="tw:label-text tw:text-[10px]">CONFIRM</span>
+                                    <label class="tw:label tw:cursor-pointer tw:gap-2 tw:py-1">
+                                        <input class="tw:checkbox tw:checkbox-primary tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="VALIDATE_DB_CONFIRM1" type="checkbox"> 
+                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:text-base-content/60">CONFIRM</span>
                                     </label>
-                                    <button class="tw:btn tw:btn-primary tw:btn-sm tw:flex-1" id="button_validate_db">VALIDATE DB</button>
+                                    <button class="tw:btn tw:btn-primary tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_validate_db">
+                                        <i class="tw:icon-[lucide--check-circle] tw:w-4 tw:h-4"></i> Validate DB
+                                    </button>
                                 </div>
                             </div>
                             <!-- Expire -->
-                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/30 tw:p-4 tw:rounded-[var(--radius-box)]">
+                            <div class="tw:flex tw:flex-col tw:gap-3 tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:flex tw:justify-between tw:items-baseline">
-                                    <span class="tw:text-xs tw:font-bold tw:uppercase tw:opacity-60">Expire Data</span>
+                                    <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/85">Expire Data</span>
                                     <span class="tw:text-[9px] tw:font-mono tw:opacity-40">./misc/expire_images.py</span>
                                 </div>
                                 <div class="tw:flex tw:gap-4 tw:items-center">
-                                    <label class="tw:label tw:cursor-pointer tw:gap-2">
-                                        <input class="tw:checkbox tw:checkbox-xs" id="EXPIRE_DATA_CONFIRM1" type="checkbox"> <span class="tw:label-text tw:text-[10px]">CONFIRM</span>
+                                    <label class="tw:label tw:cursor-pointer tw:gap-2 tw:py-1">
+                                        <input class="tw:checkbox tw:checkbox-primary tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="EXPIRE_DATA_CONFIRM1" type="checkbox"> 
+                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:text-base-content/60">CONFIRM</span>
                                     </label>
-                                    <button class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1" id="button_expire_data">RUN EXPIRY</button>
+                                    <button class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_expire_data">
+                                        <i class="tw:icon-[lucide--trash] tw:w-4 tw:h-4"></i> Run Expiry
+                                    </button>
                                 </div>
-                                <span class="tw:text-[9px] tw:opacity-50">Task runs automatically 2x daily. indi-allsky must be running.</span>
+                                <span class="tw:text-[9px] tw:opacity-50 tw:font-medium">Task runs automatically 2x daily. Allsky must be running.</span>
                             </div>
                         </div>
+
                     </div>
+                </div>
 
-                    <div class="tw:divider"></div>
+                <div class="tw:divider tw:my-2"></div>
 
-                    <!-- Danger Zone -->
-                    <div class="tw:flex tw:flex-col tw:gap-4 tw:border tw:border-error/20 tw:p-6 tw:rounded-[var(--radius-box)] tw:bg-error/5">
-                        <div class="tw:flex tw:items-center tw:gap-3 tw:text-error">
-                            <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
-                            <span class="tw:text-lg tw:font-black tw:uppercase tw:tracking-widest">Danger Zone</span>
-                        </div>
-                        <p class="tw:text-xs tw:opacity-70">These actions are irreversible. Files will be permanently deleted from the system.</p>
-                        <span class="tw:loading tw:loading-spinner tw:loading-md tw:text-error" id="loader_shutdown" style="display: none;"></span>
+                <!-- Danger Zone -->
+                <div class="tw:flex tw:flex-col tw:gap-4 tw:border tw:border-error/20 tw:p-6 tw:rounded-[var(--radius-box)] tw:bg-error/5">
+                    <div class="tw:flex tw:items-center tw:gap-3 tw:text-error">
+                        <i class="tw:icon-[lucide--alert-triangle] tw:w-5 tw:h-5"></i>
+                        <span class="tw:text-base tw:font-black tw:uppercase tw:tracking-widest">Danger Zone</span>
+                    </div>
+                    <p class="tw:text-xs tw:opacity-75 tw:font-medium">These actions are irreversible. Files will be permanently deleted from the system.</p>
+                    <span class="tw:loading tw:loading-spinner tw:loading-md tw:text-error" id="loader_shutdown" style="display: none;"></span>
 
-                        <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-4">
-                            <!-- Flush Images -->
-                            <div class="tw:card tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:flex tw:flex-col tw:gap-3">
-                                <span class="tw:text-xs tw:font-bold">Flush Images</span>
-                                <div class="tw:flex tw:gap-3 tw:items-center">
-                                    <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_IMAGES_CONFIRM1" type="checkbox">
-                                    <button class="tw:btn tw:btn-error tw:btn-sm tw:flex-1" id="button_flush_images">FLUSH ALL IMAGES</button>
-                                    <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_IMAGES_CONFIRM2" type="checkbox">
-                                </div>
-                            </div>
-                            <!-- Flush Timelapses -->
-                            <div class="tw:card tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:flex tw:flex-col tw:gap-3">
-                                <span class="tw:text-xs tw:font-bold">Flush Timelapses / Keograms / Startrails</span>
-                                <div class="tw:flex tw:gap-3 tw:items-center">
-                                    <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_TIMELAPSES_CONFIRM1" type="checkbox">
-                                    <button class="tw:btn tw:btn-error tw:btn-sm tw:flex-1" id="button_flush_timelapses">FLUSH EXPORTS</button>
-                                    <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_TIMELAPSES_CONFIRM2" type="checkbox">
-                                </div>
-                            </div>
-                            <!-- Flush Daytime -->
-                            <div class="tw:card tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:flex tw:flex-col tw:gap-3">
-                                <span class="tw:text-xs tw:font-bold">Flush Daytime Content</span>
-                                <div class="tw:flex tw:gap-3 tw:items-center">
-                                    <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_DAYTIME_CONFIRM1" type="checkbox">
-                                    <button class="tw:btn tw:btn-error tw:btn-sm tw:flex-1" id="button_flush_daytime">FLUSH DAYTIME</button>
-                                    <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_DAYTIME_CONFIRM2" type="checkbox">
-                                </div>
-                            </div>
-                            <!-- Flush 16min -->
-                            <div class="tw:card tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:flex tw:flex-col tw:gap-3">
-                                <span class="tw:text-xs tw:font-bold">Flush Recent (16min)</span>
-                                <div class="tw:flex tw:gap-3 tw:items-center">
-                                    <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_16MIN_IMAGES_CONFIRM1" type="checkbox">
-                                    <button class="tw:btn tw:btn-error tw:btn-sm tw:flex-1" id="button_flush_16min_images">FLUSH 16 MIN</button>
-                                    <input class="tw:checkbox tw:checkbox-xs" id="FLUSH_16MIN_IMAGES_CONFIRM2" type="checkbox">
-                                </div>
+                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-4">
+                        
+                        <!-- Flush Images -->
+                        <div class="tw:bg-base-100 tw:border tw:border-error/10 tw:p-4 tw:rounded-[var(--radius-box)] tw:flex tw:flex-col tw:gap-3">
+                            <span class="tw:text-xs tw:font-bold tw:text-base-content">Flush Images</span>
+                            <div class="tw:flex tw:gap-3 tw:items-center">
+                                <input class="tw:checkbox tw:checkbox-error tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="FLUSH_IMAGES_CONFIRM1" type="checkbox">
+                                <button class="tw:btn tw:btn-error tw:btn-outline tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_flush_images">
+                                    <i class="tw:icon-[lucide--trash-2] tw:w-4 tw:h-4"></i> Flush All Images
+                                </button>
+                                <input class="tw:checkbox tw:checkbox-error tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="FLUSH_IMAGES_CONFIRM2" type="checkbox">
                             </div>
                         </div>
+
+                        <!-- Flush Timelapses -->
+                        <div class="tw:bg-base-100 tw:border tw:border-error/10 tw:p-4 tw:rounded-[var(--radius-box)] tw:flex tw:flex-col tw:gap-3">
+                            <span class="tw:text-xs tw:font-bold tw:text-base-content">Flush Timelapses / Keograms / Startrails</span>
+                            <div class="tw:flex tw:gap-3 tw:items-center">
+                                <input class="tw:checkbox tw:checkbox-error tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="FLUSH_TIMELAPSES_CONFIRM1" type="checkbox">
+                                <button class="tw:btn tw:btn-error tw:btn-outline tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_flush_timelapses">
+                                    <i class="tw:icon-[lucide--film] tw:w-4 tw:h-4"></i> Flush Exports
+                                </button>
+                                <input class="tw:checkbox tw:checkbox-error tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="FLUSH_TIMELAPSES_CONFIRM2" type="checkbox">
+                            </div>
+                        </div>
+
+                        <!-- Flush Daytime -->
+                        <div class="tw:bg-base-100 tw:border tw:border-error/10 tw:p-4 tw:rounded-[var(--radius-box)] tw:flex tw:flex-col tw:gap-3">
+                            <span class="tw:text-xs tw:font-bold tw:text-base-content">Flush Daytime Content</span>
+                            <div class="tw:flex tw:gap-3 tw:items-center">
+                                <input class="tw:checkbox tw:checkbox-error tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="FLUSH_DAYTIME_CONFIRM1" type="checkbox">
+                                <button class="tw:btn tw:btn-error tw:btn-outline tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_flush_daytime">
+                                    <i class="tw:icon-[lucide--sun] tw:w-4 tw:h-4"></i> Flush Daytime
+                                </button>
+                                <input class="tw:checkbox tw:checkbox-error tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="FLUSH_DAYTIME_CONFIRM2" type="checkbox">
+                            </div>
+                        </div>
+
+                        <!-- Flush 16min -->
+                        <div class="tw:bg-base-100 tw:border tw:border-error/10 tw:p-4 tw:rounded-[var(--radius-box)] tw:flex tw:flex-col tw:gap-3">
+                            <span class="tw:text-xs tw:font-bold tw:text-base-content">Flush Recent (16min)</span>
+                            <div class="tw:flex tw:gap-3 tw:items-center">
+                                <input class="tw:checkbox tw:checkbox-error tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="FLUSH_16MIN_IMAGES_CONFIRM1" type="checkbox">
+                                <button class="tw:btn tw:btn-error tw:btn-outline tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_flush_16min_images">
+                                    <i class="tw:icon-[lucide--clock] tw:w-4 tw:h-4"></i> Flush 16 Min
+                                </button>
+                                <input class="tw:checkbox tw:checkbox-error tw:checkbox-sm tw:rounded-[var(--radius-box)]" id="FLUSH_16MIN_IMAGES_CONFIRM2" type="checkbox">
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -611,10 +680,10 @@ var camera_id = {{ camera_id }};
 
     <!-- Global Feedback -->
     <div class="tw:min-h-[60px]">
-        <div id="success-message" class="tw:alert tw:alert-success tw:py-3 tw:text-sm" style="display: none;"></div>
-        <div id="failure-message" class="tw:alert tw:alert-error tw:py-3 tw:text-sm" style="display: none;"></div>
-        <div id="SERVICE_HIDDEN-error" class="tw:alert tw:alert-error tw:py-3 tw:text-sm" style="display: none;"></div>
-        <div id="COMMAND_HIDDEN-error" class="tw:alert tw:alert-error tw:py-3 tw:text-sm" style="display: none;"></div>
+        <div id="success-message" class="tw:alert tw:alert-success tw:py-3 tw:text-xs tw:rounded-[var(--radius-box)]" style="display: none;"></div>
+        <div id="failure-message" class="tw:alert tw:alert-error tw:py-3 tw:text-xs tw:rounded-[var(--radius-box)]" style="display: none;"></div>
+        <div id="SERVICE_HIDDEN-error" class="tw:alert tw:alert-error tw:py-3 tw:text-xs tw:rounded-[var(--radius-box)]" style="display: none;"></div>
+        <div id="COMMAND_HIDDEN-error" class="tw:alert tw:alert-error tw:py-3 tw:text-xs tw:rounded-[var(--radius-box)]" style="display: none;"></div>
     </div>
 </div>
 
@@ -878,12 +947,106 @@ $(document).ready(function() {
     $('.sys-tab-btn').on('click', function() {
         var target = $(this).data('target');
         
-        $('.sys-tab-btn').removeClass('tw:btn-primary').addClass('tw:btn-ghost');
-        $(this).removeClass('tw:btn-ghost').addClass('tw:btn-primary');
-
+        $('.sys-tab-btn')
+            .removeClass('tw:btn-primary')
+            .addClass('tw:btn-ghost tw:text-base-content/60 hover:tw:text-base-content');
+            
+        $(this)
+            .removeClass('tw:btn-ghost tw:text-base-content/60 hover:tw:text-base-content')
+            .addClass('tw:btn-primary');
+            
         $('.sys-tab-pane').hide();
         $('#' + target).show();
     });
+
+    function updateSystemStats() {
+        $.ajax({
+            type: "GET",
+            url: "{{ url_for('indi_allsky.ajax_system_stats_view') }}",
+            dataType: "json",
+            success: function(data) {
+                if (data.uptime_str) {
+                    $('#stat-uptime').text(data.uptime_str);
+                }
+
+                if (data.cpu_usage) {
+                    const u = data.cpu_usage;
+                    updateBar('#cpu-bar-user', u.user);
+                    updateBar('#cpu-bar-system', u.system);
+                    updateBar('#cpu-bar-nice', u.nice);
+                    updateBar('#cpu-bar-iowait', u.iowait);
+
+                    $('#cpu-badge-user').text('User (' + Math.round(u.user) + '%)');
+                    $('#cpu-badge-system').text('System (' + Math.round(u.system) + '%)');
+                    $('#cpu-badge-nice').text('Nice (' + Math.round(u.nice) + '%)');
+                    $('#cpu-badge-iowait').text('I/O Wait (' + Math.round(u.iowait) + '%)');
+                }
+
+                if (data.cpu_load5 !== undefined) $('#cpu-load5').text(data.cpu_load5.toFixed(2));
+                if (data.cpu_load10 !== undefined) $('#cpu-load10').text(data.cpu_load10.toFixed(2));
+                if (data.cpu_load15 !== undefined) $('#cpu-load15').text(data.cpu_load15.toFixed(2));
+
+                if (data.mem_usage) {
+                    const m = data.mem_usage;
+                    updateBar('#ram-bar-user', m.user_percent);
+                    updateBar('#ram-bar-cached', m.cached_percent);
+
+                    $('#ram-badge-used').text('Used (' + Math.round(m.user_percent) + '%)');
+                    $('#ram-badge-cached').text('Cache (' + Math.round(m.cached_percent) + '%)');
+                }
+
+                if (data.swap_usage !== undefined) {
+                    updateBar('#swap-bar', data.swap_usage);
+                    $('#swap-badge').text('Swap (' + Math.round(data.swap_usage) + '%)');
+                }
+
+                if (data.fs_data) {
+                    data.fs_data.forEach((fs, idx) => {
+                        const progressEl = $('#fs-progress-' + idx);
+                        const textEl = $('#fs-text-' + idx);
+                        if (progressEl.length) progressEl.val(Math.round(fs.percent));
+                        if (textEl.length) textEl.text(Math.round(fs.percent) + '% Used');
+                    });
+                }
+
+                if (data.temp_list) {
+                    data.temp_list.forEach((t, idx) => {
+                        const tempEl = $('#temp-val-' + idx);
+                        if (tempEl.length) {
+                            tempEl.html(t.temp.toFixed(1) + '&deg;' + t.sys);
+                        }
+                    });
+                }
+
+                if (data.fan_list) {
+                    data.fan_list.forEach((f, idx) => {
+                        const fanEl = $('#fan-val-' + idx);
+                        if (fanEl.length) {
+                            fanEl.text(Math.round(f.rpm) + ' RPM');
+                        }
+                    });
+                }
+
+                if (data.now_date) $('#time-display-date').text(data.now_date);
+                if (data.now_time) $('#time-display-time').text(data.now_time);
+            }
+        });
+    }
+
+    function updateBar(selector, percent) {
+        const el = $(selector);
+        if (!el.length) return;
+        const p = Math.round(percent);
+        el.css('width', p + '%');
+        if (p >= 10) {
+            el.text(p + '%');
+        } else {
+            el.text('');
+        }
+    }
+
+    // Refresh system statistics every 2 seconds
+    setInterval(updateSystemStats, 2000);
 
     setTimeout(reloadPage, 300000);
 });
