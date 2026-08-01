@@ -273,18 +273,24 @@ function loadJS(url, data, onDone, onError) {
 {% endblock %}
 
 {% block content %}
-<div class="tw:w-full tw:space-y-6 tw:p-4">
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6 tw:w-full">
 
-    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-md tw:rounded-[var(--radius-box)]">
-        <div class="tw:card-body tw:p-6">
+    <!-- Settings Accordion Drawer -->
+    <div class="tw:collapse tw:collapse-arrow tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm tw:rounded-[var(--radius-box)]">
+        <input type="checkbox" id="settings-toggle" class="tw:peer">
+        <div class="tw:collapse-title tw:flex tw:items-center tw:gap-2.5 tw:p-4 tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/70">
+            <i class="tw:icon-[lucide--settings] tw:w-4 tw:h-4"></i>
+            <span>VirtualSky Overlay Controls</span>
+        </div>
+        <div class="tw:collapse-content tw:px-6 tw:pb-6">
             <form id="form_virtualsky" onSubmit="return false;">
-                <div class="tw:space-y-6">
+                <div class="tw:space-y-6 tw:pt-2">
                     
-                    <div class="tw:grid tw:grid-cols-2 md:tw:grid-cols-3 lg:tw:grid-cols-6 tw:gap-4">
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
                         {% for field in [form_virtualsky.AZIMUTH_ANGLE, form_virtualsky.LATITUDE_OFFSET, form_virtualsky.LONGITUDE_OFFSET] %}
                         <div class="tw:form-control">
                             <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ field.label.text }}</span></label>
-                            {{ field(class='tw:input tw:input-bordered tw:input-sm tw:w-full tw:bg-base-300 tw:rounded-[var(--radius-box)] tw:text-xs') }}
+                            {{ field(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:text-sm tw:w-full') }}
                         </div>
                         {% endfor %}
                     </div>
@@ -293,32 +299,38 @@ function loadJS(url, data, onDone, onError) {
                         {% for field in [form_virtualsky.IMAGE_CIRCLE_DIAMETER, form_virtualsky.OFFSET_X, form_virtualsky.OFFSET_Y, form_virtualsky.MAGNITUDE] %}
                         <div class="tw:form-control">
                             <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ field.label.text }}</span></label>
-                            {{ field(class='tw:input tw:input-bordered tw:input-sm tw:w-full tw:bg-base-300 tw:rounded-[var(--radius-box)] tw:text-xs') }}
+                            {{ field(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:text-sm tw:w-full') }}
                         </div>
                         {% endfor %}
                     </div>
 
                     <div class="tw:flex tw:flex-wrap tw:gap-6 tw:items-center tw:pt-2">
                         {% for field in [form_virtualsky.CONSTELLATIONS, form_virtualsky.SHOWSTARS, form_virtualsky.SHOWPLANETS, form_virtualsky.CONSTELLATIONLABELS, form_virtualsky.SHOWSTARLABELS, form_virtualsky.SHOWPLANETLABELS] %}
-                        <div class="tw:flex tw:items-center tw:gap-2">
+                        <div class="tw:flex tw:items-center tw:gap-2.5">
                             <input type="checkbox" class="tw:toggle tw:toggle-primary tw:toggle-sm" {{ 'checked' if field.data else '' }} id="{{ field.id }}" name="{{ field.name }}">
-                            <label for="{{ field.id }}" class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider">{{ field.label.text }}</label>
+                            <label for="{{ field.id }}" class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/85 tw:cursor-pointer">{{ field.label.text }}</label>
                         </div>
                         {% endfor %}
                         
                         <a href="https://github.com/aaronwmorris/indi-allsky/wiki/VirtualSky" target="_blank" 
-                           class="tw:link tw:link-info tw:text-[10px] tw:ml-auto tw:no-underline">VirtualSky Wiki</a>
+                           class="tw:btn tw:btn-xs tw:btn-neutral tw:btn-accent-hover tw:gap-1.5 tw:rounded-full tw:no-underline tw:ml-auto">
+                            <i class="tw:icon-[lucide--external-link] tw:w-3 tw:h-3 tw:block"></i> VirtualSky Wiki
+                        </a>
                     </div>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Planetarium Map Canvas and Download Row -->
     <div class="tw:text-center tw:space-y-4">
-        <div id="message" class="tw:text-xs tw:text-base-content/50 tw:animate-pulse">Loading...</div>
+        <div id="message" class="tw:flex tw:items-center tw:justify-center tw:gap-2.5 tw:text-xs tw:text-base-content/50">
+            <span class="tw:loading tw:loading-spinner tw:loading-xs tw:text-info"></span> Loading Sky Map...
+        </div>
         
-        <div class="tw:text-[10px] tw:text-base-content/40 tw:uppercase tw:tracking-widest">
-            Calibration settings must be configured under Config -> Location
+        <div class="tw:w-full tw:alert tw:alert-info tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm tw:max-w-xl tw:mx-auto">
+            <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
+            <span>Calibration settings must be configured under <code class="tw:bg-neutral-content/10 tw:font-mono tw:px-1.5 tw:py-0.5 tw:rounded">Config -> Location</code></span>
         </div>
 
         <div id="wrapper" class="tw:relative tw:bg-neutral-950 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300/40 tw:overflow-hidden tw:shadow-2xl">
@@ -328,8 +340,8 @@ function loadJS(url, data, onDone, onError) {
             </div>
         </div>
 
-        <button id="download" class="tw:btn tw:btn-info tw:btn-outline  tw:mt-4 tw:px-8">
-            Download Map Data
+        <button id="download" class="tw:btn tw:btn-sm tw:btn-info tw:btn-outline tw:h-11 tw:px-8 tw:mt-4 tw:rounded-[var(--radius-box)] shadow-sm tw:gap-2">
+            <i class="tw:icon-[lucide--download] tw:w-4 tw:h-4 tw:block"></i> Download Map Data
         </button>
     </div>
 </div>
