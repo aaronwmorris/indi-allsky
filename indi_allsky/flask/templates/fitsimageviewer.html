@@ -325,8 +325,22 @@ function syncCalendarFromSelects() {
                 return false;
             };
 
-            // Force reactive re-render of calendar cells
-            picker.min = picker.min === "1970-01-01" ? "1970-01-02" : "1970-01-01";
+            // Restrict min/max to the valid months of the selected year
+            const months = $("#MONTH_SELECT option").map(function() { 
+                const val = $(this).val();
+                return val ? parseInt(val) : null; 
+            }).get().filter(v => v !== null && !isNaN(v));
+
+            if (months.length > 0) {
+                const minMonth = Math.min(...months);
+                const maxMonth = Math.max(...months);
+                const lastDay = new Date(parseInt(year), maxMonth, 0).getDate();
+                picker.min = `${year}-${String(minMonth).padStart(2, '0')}-01`;
+                picker.max = `${year}-${String(maxMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+            } else {
+                picker.min = "1970-01-01";
+                picker.max = "2099-12-31";
+            }
 
             if (day) {
                 var formattedDate = year + "-" + month.padStart(2, '0') + "-" + day.padStart(2, '0');
@@ -339,7 +353,8 @@ function syncCalendarFromSelects() {
             }
         } else {
             picker.isDateDisallowed = () => true;
-            picker.min = picker.min === "1970-01-01" ? "1970-01-02" : "1970-01-01";
+            picker.min = "1970-01-01";
+            picker.max = "2099-12-31";
             picker.value = "";
             $("#date-picker-label").text("No Data");
         }
@@ -634,10 +649,14 @@ function init() {
             var currentMonth = $("#MONTH_SELECT").val();
             if (yr !== currentYear || mo !== currentMonth) {
                 if ($("#YEAR_SELECT option[value='" + yr + "']").length === 0) {
-                    $("#YEAR_SELECT").append($('<option />', {value: yr}).text(yr));
+                    const formattedMonth = String(currentMonth).padStart(2, '0');
+                    picker.focusedDate = `${currentYear}-${formattedMonth}-01`;
+                    return;
                 }
-                if ($("#MONTH_SELECT option[value='" + mo + "']").length === 0) {
-                    $("#MONTH_SELECT").append($('<option />', {value: mo}).text(mo));
+                if (yr === currentYear && $("#MONTH_SELECT option[value='" + mo + "']").length === 0) {
+                    const formattedMonth = String(currentMonth).padStart(2, '0');
+                    picker.focusedDate = `${currentYear}-${formattedMonth}-01`;
+                    return;
                 }
                 $("#YEAR_SELECT").val(yr);
                 $("#MONTH_SELECT").val(mo);

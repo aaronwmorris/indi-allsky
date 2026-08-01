@@ -7001,10 +7001,9 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
         last_image = db.session.query(
             IndiAllSkyDbImageTable,
         )\
-            .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.camera_id == self.camera_id,
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                 )
         )\
@@ -7217,8 +7216,7 @@ class IndiAllskyFitsImageViewerPreload(IndiAllskyFitsImageViewer):
         last_fits_image = db.session.query(
             self.model,
         )\
-            .join(self.model.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+            .filter(self.model.camera_id == self.camera_id)\
             .order_by(self.model.createDate.desc())\
             .first()
 

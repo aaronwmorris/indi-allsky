@@ -219,8 +219,24 @@ function sync_calendar_value() {
                 return false;
             };
 
+            // Restrict min/max to the valid months of the selected year
+            const months = $("#MONTH_SELECT option").map(function() { 
+                const val = $(this).val();
+                return val ? parseInt(val) : null; 
+            }).get().filter(v => v !== null && !isNaN(v));
+
+            if (months.length > 0) {
+                const minMonth = Math.min(...months);
+                const maxMonth = Math.max(...months);
+                const lastDay = new Date(parseInt(year), maxMonth, 0).getDate();
+                picker.min = `${year}-${String(minMonth).padStart(2, '0')}-01`;
+                picker.max = `${year}-${String(maxMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+            } else {
+                picker.min = "1970-01-01";
+                picker.max = "2099-12-31";
+            }
+
             picker.focusedDate = `${year}-${formattedMonth}-01`;
-            picker.min = picker.min === "1970-01-01" ? "1970-01-02" : "1970-01-01";
         }
 
         if (validDays.length > 0) {
@@ -240,7 +256,8 @@ function sync_calendar_value() {
     } else {
         if (picker) {
             picker.isDateDisallowed = () => true;
-            picker.min = picker.min === "1970-01-01" ? "1970-01-02" : "1970-01-01";
+            picker.min = "1970-01-01";
+            picker.max = "2099-12-31";
         }
         picker.value = "";
         $("#date-picker-label").text("No Data");
@@ -335,6 +352,16 @@ picker.addEventListener("focusday", (e) => {
     var currentMonth = fields["MONTH_SELECT"].input.val();
 
     if (yr !== currentYear || mo !== currentMonth) {
+        if ($("#YEAR_SELECT option[value='" + yr + "']").length === 0) {
+            const formattedMonth = String(currentMonth).padStart(2, '0');
+            picker.focusedDate = `${currentYear}-${formattedMonth}-01`;
+            return;
+        }
+        if (yr === currentYear && $("#MONTH_SELECT option[value='" + mo + "']").length === 0) {
+            const formattedMonth = String(currentMonth).padStart(2, '0');
+            picker.focusedDate = `${currentYear}-${formattedMonth}-01`;
+            return;
+        }
         fields["YEAR_SELECT"].input.val(yr);
         fields["MONTH_SELECT"].input.val(mo);
         $("#loader_filter").show();
@@ -347,8 +374,13 @@ picker.addEventListener("focusday", (e) => {
     }
 });
 
+var active_ajax_request = null;
+
 function month_change(json_data) {
-    $.ajax({
+    if (active_ajax_request) {
+        active_ajax_request.abort();
+    }
+    active_ajax_request = $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_mini_videoviewer_view') }}",
         contentType: "application/json",
@@ -359,18 +391,25 @@ function month_change(json_data) {
             sync_calendar_value();
         },
         error: function(rdata){
+            if (rdata.statusText === 'abort') return;
             var errors = JSON.parse(rdata.responseText);
             Object.keys(errors).forEach((key) => {
                 fields[key].input.addClass('tw:border-error');
                 fields[key].error.html(errors[key][0]).show();
             });
         },
+        complete: function() {
+            active_ajax_request = null;
+        }
     });
 }
 
 
 function year_change(json_data) {
-    $.ajax({
+    if (active_ajax_request) {
+        active_ajax_request.abort();
+    }
+    active_ajax_request = $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_mini_videoviewer_view') }}",
         contentType: "application/json",
@@ -386,12 +425,16 @@ function year_change(json_data) {
             sync_calendar_value();
         },
         error: function(rdata){
+            if (rdata.statusText === 'abort') return;
             var errors = JSON.parse(rdata.responseText);
             Object.keys(errors).forEach((key) => {
                 fields[key].input.addClass('tw:border-error');
                 fields[key].error.html(errors[key][0]).show();
             });
         },
+        complete: function() {
+            active_ajax_request = null;
+        }
     });
 }
 
