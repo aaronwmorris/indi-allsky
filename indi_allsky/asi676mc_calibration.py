@@ -128,7 +128,7 @@ def capture_configuration_guidance(config):
     mode_text = (
         'Off'
         if not repair_enabled
-        else ('Exclude only' if exclude_only else 'Actual repair')
+        else ('Exclude only' if exclude_only else 'Repair active')
     )
     facts = [
         {'label': 'Repair mode', 'value': mode_text},
@@ -164,7 +164,7 @@ def capture_configuration_guidance(config):
         messages.append({
             'level': 'info',
             'text': (
-                'Actual repair is active. Ordinary FITS are written after '
+                'Repair active. Ordinary FITS are written after '
                 'ASI676MC repair, so they may not retain the original bad mosaic.'
             ),
         })
@@ -1044,7 +1044,7 @@ def compare_result_to_configuration(result, repair_config):
         return {
             'status': 'equivalent',
             'message': (
-                'Effectively matches the current configuration; applying '
+                'Result effectively matches the current configuration; applying '
                 'these tiny differences is unlikely to have a noticeable effect.'
             ),
             'configured_values': configured_values,

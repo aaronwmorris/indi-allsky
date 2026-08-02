@@ -52,6 +52,16 @@
     border-left-color: #dc3545;
 }
 
+/* Configuration equivalence is part of the successful outcome. Give that
+ * optional second line more weight inside the existing success banner rather
+ * than presenting it as a competing standalone notice. */
+.calibration-config-match {
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: #ffffff;
+    border-top: 1px solid rgba(255, 255, 255, 0.35);
+}
+
 .calibration-help {
     color: rgba(248, 249, 250, 0.72);
 }
@@ -311,17 +321,17 @@
     </div>
 
     <div class="card-body">
-        <div id="calibration-cleanup-summary" class="calibration-callout calibration-callout-success">
-            Calibration completed successfully. Uploaded source FITS were
-            deleted before this result was published.
+        <div id="calibration-cleanup-summary" class="calibration-callout calibration-callout-success" role="status">
+            <div id="calibration-success-message">
+                Calibration completed successfully. Uploaded source FITS were
+                deleted before this result was published.
+            </div>
+            <!-- Exact and effectively equivalent configuration results appear
+                 here for both upload and database calibration sources. -->
+            <div id="calibration-config-match" class="calibration-config-match mt-2 pt-2" style="display: none;"></div>
         </div>
 
         <div id="calibration-source-summary" class="calibration-callout calibration-callout-info mt-3" style="display: none;"></div>
-        {% if current_user.is_admin %}
-        <!-- Long equivalence hints belong in the body, not in the action row,
-             so their contrast and wrapping remain predictable. -->
-        <div id="calibration-config-match" class="calibration-callout mt-3" role="status" style="display: none;"></div>
-        {% endif %}
 
         <p class="calibration-help mt-3">
             These are the camera-specific values derived from the selected evidence.
@@ -566,27 +576,17 @@ function qualityCard(label, value) {
     );
 }
 
-// Only exact/effectively-equivalent comparisons get a full-width, high-contrast
-// hint. A materially different result leaves the normal Apply action uncluttered.
+// Exact/effectively-equivalent comparisons add a prominent second line to the
+// common success banner. This is independent of the FITS evidence source.
 function renderConfigurationComparison(comparison) {
-    const hint = $('#calibration-config-match')
-        .removeClass('calibration-callout-success calibration-callout-info')
-        .hide()
-        .empty();
+    const hint = $('#calibration-config-match').hide().empty();
     if (
         !comparison
         || ['exact', 'equivalent'].indexOf(comparison.status) === -1
     ) {
         return;
     }
-    hint
-        .addClass(
-            comparison.status === 'exact'
-                ? 'calibration-callout-success'
-                : 'calibration-callout-info'
-        )
-        .text(comparison.message)
-        .show();
+    hint.text(comparison.message).show();
 }
 
 function renderCalibrationResult(sessionId, result, configurationComparison) {
@@ -605,7 +605,7 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
 
     const sourceSummary = $('#calibration-source-summary').hide().empty();
     if (result.source && result.source.kind === 'database') {
-        $('#calibration-cleanup-summary').text(
+        $('#calibration-success-message').text(
             'Calibration completed successfully. Private staging links were '
             + 'removed before this result was published; the original database '
             + 'FITS were not changed or deleted.'
@@ -619,7 +619,7 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
             + result.source.retention_cutoff + '.'
         ).show();
     } else {
-        $('#calibration-cleanup-summary').text(
+        $('#calibration-success-message').text(
             'Calibration completed successfully. Uploaded source FITS were '
             + 'deleted before this result was published.'
         );

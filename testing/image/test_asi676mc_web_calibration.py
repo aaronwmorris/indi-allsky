@@ -406,6 +406,11 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             current,
         )
         self.assertEqual(equivalent['status'], 'equivalent')
+        self.assertTrue(
+            equivalent['message'].startswith(
+                'Result effectively matches the current configuration'
+            )
+        )
 
         current['GAIN_B'] *= 1.02
         different = asi676mc_calibration.compare_result_to_configuration(
@@ -560,6 +565,11 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('id="calibration-browser-warning"', template)
         self.assertIn('window.asi676mcCalibrationBrowserSupported', template)
         self.assertIn('id="calibration-config-match"', template)
+        self.assertLess(
+            template.index('id="calibration-success-message"'),
+            template.index('id="calibration-config-match"'),
+        )
+        self.assertIn("$('#calibration-success-message').text(", template)
         self.assertIn('configuration_comparison', template)
         self.assertIn('Current configured value', template)
         self.assertIn('configurationComparison.configured_values', template)
@@ -628,7 +638,13 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'IMAGE_SAVE_FITS': True,
             'IMAGE_SAVE_FITS_PERIOD': 600,
         })
+        facts = {
+            item['label']: item['value']
+            for item in guidance['facts']
+        }
         messages = ' '.join(item['text'] for item in guidance['messages'])
+        self.assertEqual(facts['Repair mode'], 'Repair active')
+        self.assertIn('Repair active. Ordinary FITS', messages)
         self.assertIn('may not retain the original bad mosaic', messages)
         self.assertIn('does not guarantee a FITS', messages)
 
