@@ -2624,18 +2624,8 @@ var camera_id = {{ camera_id }};
 
     <h5>ASI676MC RAW16 Purple-frame Handling</h5>
 
-    <div class="alert alert-info">
-        <strong>Safe calibration workflow:</strong>
-        <strong>Only enable this feature if your ASI676MC produces purple frames.</strong>
-        New configurations start in <em>Exclude Only</em> mode, which flags bad
-        frames and keeps them out of timelapses without changing their pixels.
-        For low disk use, also enable <em>Save Bad and Following RAW FITS</em>.
-        For stronger good/bad/good triplets, keep Exclude Only enabled and
-        temporarily set ordinary FITS saving to <em>Every Image</em>. After the
-        derived values have been reviewed and applied, disable Exclude Only to
-        activate repair.
-    </div>
-
+    <!-- Applicability belongs beside the master switch: none of the workflow
+         guidance below is relevant to an unaffected ASI676MC. -->
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.IMAGE_ASI676MC_REPAIR__ENABLE.label }}
@@ -2652,10 +2642,17 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             {% if asi676mc_repair_supported %}
-            Detect the ASI676MC purple-frame RAW16 failure before calibration and debayering,
-            then either repair it or leave it unchanged and exclude it from timelapses.
-            Frames from other camera models are always left unchanged.
-            Detected ASI676MC camera{% if asi676mc_camera_names|length != 1 %}s{% endif %}: {{ asi676mc_camera_names|join(', ') }}.
+            <div class="mb-1">
+                <span class="badge rounded-pill bg-warning text-dark">Purple-frame cameras only</span>
+                <strong>Only enable this if your ASI676MC actually produces purple frames.</strong>
+                Cameras without this failure should leave the feature disabled.
+            </div>
+            <div>
+                Detect the ASI676MC purple-frame RAW16 failure before calibration and debayering,
+                then either repair it or leave it unchanged and exclude it from timelapses.
+                Frames from other camera models are always left unchanged.
+                Detected ASI676MC camera{% if asi676mc_camera_names|length != 1 %}s{% endif %}: {{ asi676mc_camera_names|join(', ') }}.
+            </div>
             {% else %}
             <span class="badge rounded-pill bg-secondary">Unavailable</span>
             No ASI676MC camera is currently available. This feature cannot be enabled.
@@ -2663,6 +2660,8 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <!-- Once the master feature is enabled, Exclude Only controls the safe
+         evidence-collection phase and the later transition to actual repair. -->
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY.label }}
@@ -2676,7 +2675,10 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-8">
             Detect purple frames without repairing them. The normal pipeline still saves the faulty JPEG,
             then its database entry is flagged as <em>excluded</em> and automatically omitted from timelapses.
-            This is selected automatically when the overall feature is first enabled.
+            This is selected automatically when the overall feature is first enabled and should remain selected
+            while collecting calibration evidence. For stronger good/bad/good triplets, temporarily set ordinary
+            FITS saving to <em>Every Image</em>. After the derived values have been reviewed and applied, disable
+            Exclude Only to activate repair.
         </div>
     </div>
 
@@ -2711,6 +2713,8 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <!-- Diagnostic pair saving is the low-disk evidence option; the ordinary
+         Every Image alternative is explained with Exclude Only above. -->
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS.label }}

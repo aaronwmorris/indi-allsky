@@ -61,7 +61,13 @@ The runtime statuses stored with affected images are `repaired`,
 post-repair validation and therefore adds only the detector's usual
 sub-millisecond overhead.
 
-The recommended evidence-collection sequence is:
+The feature's master switch is intended only for an ASI676MC that actually
+exhibits the purple-frame failure. An unaffected camera should leave the entire
+feature disabled. The Image Settings page places that warning directly beside
+the master switch; the workflow guidance below is attached to the subordinate
+options because it applies only after purple-frame handling has been enabled.
+
+The recommended evidence-collection sequence for an affected camera is:
 
 1. Enable ASI676MC handling and leave **Exclude Only** selected.
 2. For minimal disk use, enable **Save Bad and Following RAW FITS**. This works
@@ -382,6 +388,16 @@ for that run. Additional upload safeguards are:
 - file count, individual size, and total-session size are bounded; and
 - every session, including an interrupted partial upload, expires after seven
   days.
+
+The setup page follows indi-allsky's dark-card interface: reference matching is
+shown once because it applies to both evidence sources, while saved-FITS
+discovery and manual upload use matching source cards. The cards sit side by
+side on wide displays and stack on narrow ones. Result actions wrap in a stable
+order on small screens, and the values table scrolls horizontally instead of
+compressing long configuration labels. Informational, warning, and comparison
+messages use dark high-contrast callouts with semantic edge colors; comparison
+text is kept below the action header so it remains readable without crowding
+the buttons.
 
 The same page can instead select **Find saved FITS and calibrate**. The operator
 chooses a maximum of 7-100 bad-frame evidence groups; this is a bad-frame count,

@@ -551,6 +551,12 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             template.index('id="calibration-reset"'),
             template.index('id="calibration-report-download"'),
         )
+        self.assertIn('calibration-source-card bg-dark border-secondary', template)
+        self.assertIn('Upload a FITS collection', template)
+        self.assertIn('calibration-values-table table table-dark', template)
+        self.assertIn('calibration-callout calibration-callout-info', template)
+        self.assertIn("'calibration-callout-success'", template)
+        self.assertNotIn("? 'text-success' : 'text-info'", template)
         self.assertIn('id="calibration-browser-warning"', template)
         self.assertIn('window.asi676mcCalibrationBrowserSupported', template)
         self.assertIn('id="calibration-config-match"', template)
@@ -646,8 +652,34 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn("get('EXCLUDE_ONLY', True)", views_source)
         self.assertIn('asi676mc_repair_was_enabled', settings_template)
         self.assertIn(
-            'Only enable this feature if your ASI676MC produces purple frames.',
+            'Purple-frame cameras only',
             settings_template,
+        )
+        self.assertIn(
+            'Cameras without this failure should leave the feature disabled.',
+            settings_template,
+        )
+        self.assertNotIn('Safe calibration workflow:', settings_template)
+        enable_guidance_position = settings_template.index(
+            'Purple-frame cameras only'
+        )
+        self.assertGreater(
+            enable_guidance_position,
+            settings_template.index(
+                'form_config.IMAGE_ASI676MC_REPAIR__ENABLE.label'
+            ),
+        )
+        self.assertLess(
+            enable_guidance_position,
+            settings_template.index(
+                'form_config.IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY.label'
+            ),
+        )
+        self.assertGreater(
+            settings_template.index('For stronger good/bad/good triplets'),
+            settings_template.index(
+                'form_config.IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY.label'
+            ),
         )
 
 
