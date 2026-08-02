@@ -7626,7 +7626,7 @@ class Asi676mcCalibrationView(TemplateView):
             data={
                 'CAMERA_ID': self.camera.id,
                 'MAX_PAIR_SECONDS': 90.0,
-                'DATABASE_FITS_FILE_LIMIT': 50,
+                'DATABASE_GROUP_LIMIT': 25,
             },
         )
         context['capture_guidance'] = (
@@ -7643,8 +7643,8 @@ class Asi676mcCalibrationView(TemplateView):
             'session_bytes': asi676mc_calibration.MAX_SESSION_BYTES,
         }
         context['calibration_database_limits'] = {
-            'minimum': asi676mc_calibration.DATABASE_FITS_FILE_MIN,
-            'maximum': asi676mc_calibration.DATABASE_FITS_FILE_MAX,
+            'minimum': asi676mc_calibration.DATABASE_GROUP_MIN,
+            'maximum': asi676mc_calibration.DATABASE_GROUP_MAX,
         }
         return context
 
@@ -7736,14 +7736,13 @@ class AjaxAsi676mcCalibrationUploadView(BaseView):
 
 
 class AjaxAsi676mcCalibrationDatabaseView(BaseView):
-    """Discover local database FITS and queue a newest-first calibration.
+    """Discover local database FITS and queue newest-first analysis.
 
-    The selector stages the newest eligible files, regardless of whether the
-    current detector flagged them. This lets the numerical engine discover a
-    camera-specific threshold miss from the FITS ratios themselves. A standard
-    FITS written after successful repair is excluded because it no longer
-    contains the original mosaic; repair-specific diagnostic RAW FITS remain
-    eligible.
+    Seven complete marked groups use a compact path. Otherwise the selector
+    stages all eligible retained files so the worker can search past its
+    initial budget when current thresholds missed the failure. A standard FITS
+    written after successful repair is excluded because it no longer contains
+    the original mosaic; repair-specific diagnostic RAW FITS remain eligible.
     """
 
     methods = ['POST']
@@ -7753,25 +7752,28 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
         request_data = request.get_json(silent=True) or {}
         try:
             camera_id = int(request_data.get('camera_id'))
-            max_fits_files = int(request_data.get('max_fits_files', 50))
+            target_groups = int(request_data.get('target_groups', 25))
             max_pair_seconds = float(
                 request_data.get('max_pair_seconds', 90.0)
             )
         except (TypeError, ValueError):
             return jsonify({
                 'error': (
-                    'Enter a valid saved FITS limit and maximum separation.'
+                    'Enter a valid purple-frame group target and maximum '
+                    'separation.'
                 ),
             }), 400
 
         if (
-            max_fits_files < asi676mc_calibration.DATABASE_FITS_FILE_MIN
-            or max_fits_files > asi676mc_calibration.DATABASE_FITS_FILE_MAX
+            target_groups < asi676mc_calibration.DATABASE_GROUP_MIN
+            or target_groups > asi676mc_calibration.DATABASE_GROUP_MAX
         ):
             return jsonify({
-                'error': 'Choose a saved FITS limit between {0} and {1}.'.format(
-                    asi676mc_calibration.DATABASE_FITS_FILE_MIN,
-                    asi676mc_calibration.DATABASE_FITS_FILE_MAX,
+                'error': (
+                    'Choose a purple-frame group target between {0} and {1}.'
+                ).format(
+                    asi676mc_calibration.DATABASE_GROUP_MIN,
+                    asi676mc_calibration.DATABASE_GROUP_MAX,
                 ),
             }), 400
         if (
@@ -7842,6 +7844,9 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
                 {},
             )
             roles = diagnostic.get('roles', ())
+            signature = (fits_entry.data or {}).get(
+                asi676mc.SIGNATURE_METADATA_KEY,
+            )
             fits_records.append({
                 'id': fits_entry.id,
                 'path': source_path,
@@ -7851,6 +7856,16 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
                 'binmode': fits_entry.binmode,
                 'width': fits_entry.width,
                 'height': fits_entry.height,
+                # New captures persist only three detector ratios. They are
+                # independent of configured thresholds, so discovery can use
+                # them safely without opening every large FITS file. Older
+                # rows simply fall back to normal FITS inspection.
+                'signature': (
+                    dict(signature)
+                    if isinstance(signature, dict)
+                    else None
+                ),
+                'camera_name': camera.name,
                 'roles': [
                     dict(role)
                     for role in roles
@@ -7898,13 +7913,14 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
                 asi676mc_calibration.select_database_evidence(
                     fits_records,
                     bad_frames,
-                    max_fits_files,
+                    target_groups,
+                    max_pair_seconds,
                 )
             )
         except asi676mc_calibration.CalibrationSessionError as error:
             return jsonify({'error': str(error)}), 400
 
-        minimum = asi676mc_calibration.DATABASE_FITS_FILE_MIN
+        minimum = 14
         if discovery['selected_file_count'] < minimum:
             return jsonify({
                 'error': (
@@ -8295,12 +8311,13 @@ class AjaxAsi676mcCalibrationDiscardView(BaseView):
 
 
 class AjaxAsi676mcCalibrationApplyView(BaseView):
-    """Apply only measured values to a version-checked configuration.
+    """Apply only the result's safe subset to a version-checked configuration.
 
     Running a calibration is available to every authenticated user. Persisting
     configuration follows the existing Config page policy and is admin-only.
-    Operational switches are deliberately preserved and repair is never enabled
-    automatically.
+    Complete results may write seven repair constants; preliminary results may
+    write only detection thresholds explicitly recommended for change.
+    Operational switches are preserved and repair is never enabled implicitly.
     """
 
     methods = ['POST']
@@ -8336,12 +8353,13 @@ class AjaxAsi676mcCalibrationApplyView(BaseView):
                 'error_code': 'result_unavailable',
             }), 400
 
+        result_outcome = result.get('outcome', 'calibration')
         calibration_config_id = manifest.get('config_id')
         if calibration_config_id != self.indi_allsky_config_id:
             return jsonify({
                 'error': (
                     'Image Settings changed after this calibration began, so '
-                    'the derived values were not saved. Reset the tool, review '
+                    'the result values were not saved. Reset the tool, review '
                     'the current settings, and calibrate again.'
                 ),
                 'error_code': 'configuration_changed',
@@ -8360,14 +8378,20 @@ class AjaxAsi676mcCalibrationApplyView(BaseView):
             # configured them and never turns repair on implicitly.
             asi676mc.normalize_settings(repair_config)
             self.indi_allsky_config[config_key] = repair_config
-            note = (
-                'ASI676MC web calibration {0}: {1} matched purple frames, '
-                '{2} normal references'
-            ).format(
-                session_id,
-                result['quality']['matched_bad_count'],
-                result['quality']['matched_normal_count'],
-            )
+            if result_outcome == 'threshold_suggestion':
+                note = (
+                    'ASI676MC web threshold discovery {0}: saved {1}; '
+                    'calibration rerun required'
+                ).format(session_id, ', '.join(sorted(values)))
+            else:
+                note = (
+                    'ASI676MC web calibration {0}: {1} matched purple frames, '
+                    '{2} normal references'
+                ).format(
+                    session_id,
+                    result['quality']['matched_bad_count'],
+                    result['quality']['matched_normal_count'],
+                )
             self._indi_allsky_config_obj.save(current_user.username, note)
         except (ConfigSaveException, KeyError, TypeError, ValueError) as error:
             # The configuration object is shared by this request. Restore it
@@ -8383,13 +8407,13 @@ class AjaxAsi676mcCalibrationApplyView(BaseView):
                     error,
                 )
                 error_message = (
-                    'Image Settings could not save the derived values. Check '
+                    'Image Settings could not save the result values. Check '
                     'the indi-allsky log and try again.'
                 )
                 error_code = 'configuration_save_failed'
             else:
                 error_message = (
-                    'The derived values are incompatible with the current '
+                    'The result values are incompatible with the current '
                     'ASI676MC repair settings. Review Image Settings and '
                     'calibrate again.'
                 )
@@ -8419,16 +8443,33 @@ class AjaxAsi676mcCalibrationApplyView(BaseView):
 
         return jsonify({
             'success-message': (
-                'The seven derived values were saved; all other settings '
-                'remain unchanged. indi-allsky will reload its configuration '
-                'shortly.'
+                (
+                    'The recommended detection thresholds were saved; repair '
+                    'constants and all other settings remain unchanged. '
+                    'indi-allsky will reload its configuration shortly.'
+                    if result_outcome == 'threshold_suggestion'
+                    else (
+                        'The seven derived values were saved; all other '
+                        'settings remain unchanged. indi-allsky will reload '
+                        'its configuration shortly.'
+                    )
+                )
                 if reload_queued
                 else (
-                    'The seven derived values were saved and all other settings '
-                    'remain unchanged, but the configuration reload could not '
-                    'be started. In Image Settings, enable Reload on Save and '
-                    'save the configuration, or restart the service before '
-                    'relying on the new values.'
+                    (
+                        'The recommended detection thresholds were saved and '
+                        'all other settings remain unchanged, but the '
+                        'configuration reload could not be started.'
+                        if result_outcome == 'threshold_suggestion'
+                        else (
+                            'The seven derived values were saved and all other '
+                            'settings remain unchanged, but the configuration '
+                            'reload could not be started.'
+                        )
+                    )
+                    + ' In Image Settings, enable Reload on Save and save the '
+                    'configuration, or restart the service before relying on '
+                    'the new values.'
                 )
             ),
             'reload_queued': reload_queued,

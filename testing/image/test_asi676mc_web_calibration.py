@@ -270,7 +270,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'roles': list(roles),
         }
 
-    def test_database_selection_is_newest_first_and_accepts_fewer_than_limit(self):
+    def test_database_fallback_is_newest_first_and_uses_full_retention(self):
         records = [
             self._database_record(index, 1000 + index)
             for index in range(1, 21)
@@ -279,20 +279,24 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         selected, summary = asi676mc_calibration.select_database_evidence(
             records,
             bad_frames=[],
-            max_fits_files=16,
+            target_groups=7,
+            max_pair_seconds=90.0,
         )
         self.assertEqual([record['id'] for record in selected], list(
-            range(20, 4, -1)
+            range(20, 0, -1)
         ))
-        self.assertEqual(summary['requested_file_count'], 16)
-        self.assertEqual(summary['selected_file_count'], 16)
+        self.assertEqual(summary['requested_group_count'], 7)
+        self.assertEqual(summary['selection_mode'], 'progressive_search')
+        self.assertEqual(summary['selected_file_count'], 20)
+        self.assertEqual(summary['initial_scan_file_count'], 20)
 
         selected, summary = asi676mc_calibration.select_database_evidence(
             records,
             bad_frames=[],
-            max_fits_files=30,
+            target_groups=10,
+            max_pair_seconds=90.0,
         )
-        self.assertEqual(summary['requested_file_count'], 30)
+        self.assertEqual(summary['requested_group_count'], 10)
         self.assertEqual(summary['selected_file_count'], 20)
         self.assertEqual(len(selected), 20)
 
@@ -318,13 +322,46 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         selected, summary = asi676mc_calibration.select_database_evidence(
             records,
             bad_frames=[],
-            max_fits_files=14,
+            target_groups=7,
+            max_pair_seconds=90.0,
         )
 
         self.assertEqual({record['id'] for record in selected}, {1, 2, 3})
-        self.assertEqual(summary['diagnostic_bad_hint_count'], 1)
+        self.assertEqual(summary['marked_candidate_count'], 1)
+        self.assertEqual(summary['selected_marked_group_count'], 1)
+        self.assertEqual(summary['selection_mode'], 'progressive_search')
 
-    def test_database_selection_rejects_invalid_file_limits(self):
+    def test_database_selection_uses_compact_path_for_seven_marked_groups(self):
+        records = []
+        record_id = 1
+        for index in range(7):
+            base_time = 1000 + (index * 300)
+            capture_id = 'capture-{0}'.format(index)
+            for offset, role in ((0, 'preceding'), (10, 'bad'), (20, 'following')):
+                records.append(self._database_record(
+                    record_id,
+                    base_time + offset,
+                    roles=({
+                        'capture_id': capture_id,
+                        'role': role,
+                    },),
+                ))
+                record_id += 1
+
+        selected, summary = asi676mc_calibration.select_database_evidence(
+            records,
+            bad_frames=[],
+            target_groups=7,
+            max_pair_seconds=90.0,
+        )
+
+        self.assertEqual(summary['selection_mode'], 'marked_groups')
+        self.assertEqual(summary['selected_marked_group_count'], 7)
+        self.assertEqual(summary['selected_marked_normal_count'], 14)
+        self.assertEqual(len(selected), 21)
+        self.assertEqual(selected[0]['id'], 21)
+
+    def test_database_selection_rejects_invalid_group_targets(self):
         records = [
             self._database_record(
                 1,
@@ -337,15 +374,16 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 roles=({'capture_id': 'capture-1', 'role': 'following'},),
             ),
         ]
-        for file_limit in (0, 13, 301):
-            with self.subTest(file_limit=file_limit):
+        for group_target in (0, 6, 101):
+            with self.subTest(group_target=group_target):
                 with self.assertRaises(
                     asi676mc_calibration.CalibrationSessionError
                 ):
                     asi676mc_calibration.select_database_evidence(
                         records,
                         bad_frames=[],
-                        max_fits_files=file_limit,
+                        target_groups=group_target,
+                        max_pair_seconds=90.0,
                     )
 
     def test_database_selection_uses_flags_as_hints_and_excludes_repaired_standard(self):
@@ -371,13 +409,15 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         selected, summary = asi676mc_calibration.select_database_evidence(
             records,
             bad_frames=bad_frames,
-            max_fits_files=16,
+            target_groups=7,
+            max_pair_seconds=90.0,
         )
         selected_ids = {record['id'] for record in selected}
         self.assertNotIn(1, selected_ids)
         self.assertIn(2, selected_ids)
         self.assertEqual(summary['excluded_repaired_standard_count'], 1)
-        self.assertEqual(summary['flagged_hint_count'], 1)
+        self.assertEqual(summary['marked_candidate_count'], 1)
+        self.assertEqual(summary['selection_mode'], 'progressive_search')
         self.assertEqual(summary['selected_file_count'], 15)
 
     def test_database_staging_links_sources_without_deleting_them(self):
@@ -432,10 +472,15 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 'camera_name': 'ASI676MC',
                 'retention_cutoff': '2026-07-23',
                 'retention_days': 10,
-                'requested_file_count': 25,
+                'requested_group_count': 25,
+                'selection_mode': 'progressive_search',
+                'selected_marked_group_count': 3,
                 'selected_file_count': 19,
-                'flagged_hint_count': 9,
+                'initial_scan_file_count': 19,
+                'available_file_count': 19,
+                'metadata_signature_count': 9,
                 'excluded_repaired_standard_count': 2,
+                'excluded_duplicate_standard_count': 1,
                 'database_fits_count': 40,
                 'missing_local_count': 2,
                 'unsupported_count': 1,
@@ -451,10 +496,14 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('Meaningful change', report)
         self.assertIn('Tools > ASI676MC Calibration', report)
         self.assertIn('Method: Saved FITS search', report)
-        self.assertIn('Requested maximum: 25 FITS files', report)
-        self.assertIn('FITS inspected: 19', report)
-        self.assertIn('Previously flagged FITS among selection: 9', report)
+        self.assertIn('Target purple-frame groups: 25', report)
+        self.assertIn('Selection path: progressive ratio search', report)
+        self.assertIn('Usable marked groups found: 3', report)
+        self.assertIn('Initial fallback search target: 19 FITS files', report)
+        self.assertIn('FITS inspected: 19 of 19', report)
+        self.assertIn('Saved ratio metadata available: 9', report)
         self.assertIn('Post-repair standard FITS excluded: 2', report)
+        self.assertIn('Duplicate standard FITS excluded: 1', report)
         self.assertIn('FITS retention cutoff: 2026-07-23 (10 days)', report)
         self.assertIn('Entries whose files were missing: 2', report)
         self.assertIn('configured threshold 1.500', report)
@@ -481,7 +530,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             '2026-08-02 14:34:56 CEST (UTC+02:00)',
         )
 
-    def test_threshold_suggestion_is_preliminary_and_cannot_be_applied(self):
+    def test_threshold_suggestion_is_preliminary_and_applies_only_changes(self):
         payload = self._threshold_payload()
         report = asi676mc_calibration.format_integrated_report(payload, {
             'max_pair_seconds': 90.0,
@@ -489,9 +538,13 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'source': {
                 'kind': 'database',
                 'camera_name': 'ASI676MC',
-                'requested_file_count': 30,
+                'requested_group_count': 30,
+                'selection_mode': 'progressive_search',
+                'selected_marked_group_count': 0,
                 'selected_file_count': 21,
-                'flagged_hint_count': 0,
+                'initial_scan_file_count': 21,
+                'available_file_count': 21,
+                'metadata_signature_count': 0,
                 'excluded_repaired_standard_count': 2,
                 'retention_cutoff': '2026-07-23',
                 'retention_days': 10,
@@ -541,15 +594,15 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             self.assertEqual(result['outcome'], 'threshold_suggestion')
             self.assertNotIn('values', result)
             self.assertEqual(result['quality']['likely_purple_count'], 7)
-            with self.assertRaisesRegex(
-                asi676mc_calibration.CalibrationSessionError,
-                'must be reviewed',
-            ):
+            _manifest, completed, values = (
                 asi676mc_calibration.get_completed_result(
                     session_id,
                     'alice',
                     root,
                 )
+            )
+            self.assertEqual(completed['outcome'], 'threshold_suggestion')
+            self.assertEqual(values, {'BLUE_SIDE_RATIO_THRESHOLD': 1.32})
 
     def test_integrated_upload_report_explains_cleanup_and_one_day_grammar(self):
         payload = self._successful_payload()
@@ -613,9 +666,13 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                     'camera_name': 'ASI676MC',
                     'retention_cutoff': '2026-07-23',
                     'retention_days': 10,
-                    'requested_file_count': 20,
+                    'requested_group_count': 20,
+                    'selection_mode': 'progressive_search',
+                    'selected_marked_group_count': 4,
                     'selected_file_count': 14,
-                    'flagged_hint_count': 7,
+                    'initial_scan_file_count': 14,
+                    'available_file_count': 14,
+                    'metadata_signature_count': 7,
                     'excluded_repaired_standard_count': 1,
                     'database_fits_count': 16,
                     'missing_local_count': 1,
@@ -669,8 +726,8 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             self.assertEqual(status['result']['quality']['unmatched_bad_count'], 1)
             self.assertEqual(status['result']['source']['kind'], 'database')
             warnings = ' '.join(status['result']['warnings'])
-            self.assertIn('requested up to 20 files', warnings)
-            self.assertIn('oldest retained data after 14', warnings)
+            self.assertIn('Fewer than seven usable marked groups', warnings)
+            self.assertIn('checked all 14 eligible retained FITS', warnings)
             self.assertIn('whose file was no longer on disk', warnings)
             self.assertIn('with an unsupported filename', warnings)
             self.assertEqual(len(status['result']['warnings']), 2)
@@ -746,15 +803,16 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             },
             {
                 'kind': 'database',
-                'requested_file_count': 20,
-                'selected_file_count': 14,
+                'requested_group_count': 20,
+                'selection_mode': 'marked_groups',
+                'selected_marked_group_count': 14,
                 'missing_local_count': 1,
                 'unsupported_count': 1,
             },
         )
         self.assertEqual(len(warnings), 3)
-        self.assertIn('requested up to 20 files', warnings[0])
-        self.assertIn('minimum of fourteen FITS was met', warnings[0])
+        self.assertIn('14 usable marked purple-frame groups', warnings[0])
+        self.assertIn('requested 20', warnings[0])
         self.assertIn('3 of 7 purple frames had normal references', warnings[1])
         self.assertIn('the other 4 purple frames used one adjacent', warnings[1])
         self.assertIn('normal references were reused', warnings[1])
@@ -1006,10 +1064,14 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('Current configured value', template)
         self.assertIn('configurationComparison.configured_values', template)
         self.assertIn('Find saved FITS and calibrate', template)
-        self.assertIn('DATABASE_FITS_FILE_LIMIT', template)
+        self.assertIn('DATABASE_GROUP_LIMIT', template)
+        self.assertIn('target_groups: targetGroups', template)
+        self.assertIn('Searching for missed purple frames', template)
         self.assertIn('function renderThresholdSuggestion(', template)
         self.assertIn("result.outcome === 'threshold_suggestion'", template)
         self.assertIn('id="calibration-threshold-values"', template)
+        self.assertIn('Apply thresholds and reload', template)
+        self.assertIn('id="calibration-threshold-advisory"', template)
         self.assertIn('No repair values', template)
         self.assertIn('calibrationDatabaseUrl', template)
         self.assertIn(

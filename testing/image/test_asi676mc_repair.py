@@ -612,6 +612,21 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
         self.assertEqual(metadata['timing']['total_s'], 0.011)
         json.dumps(metadata)
 
+        saved_signature = asi676mc.saved_fits_signature_metadata({
+            'signature_before': signature_before,
+            # The classification is deliberately not persisted because a
+            # later calibration run may use different detector thresholds.
+            'status': 'repaired',
+        })
+        self.assertEqual(saved_signature, {
+            'version': 1,
+            'purple_ratio': 2.0,
+            'red_side_ratio': 1.5,
+            'blue_side_ratio': 1.75,
+        })
+        self.assertNotIn('is_bad', saved_signature)
+        json.dumps(saved_signature)
+
 
 if __name__ == '__main__':
     unittest.main()

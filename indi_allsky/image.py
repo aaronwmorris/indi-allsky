@@ -1508,6 +1508,11 @@ class ImageWorker(Process):
             'image_shape': tuple(data.shape[:2]),
             'bayer_pattern': str(i_ref.image_bayerpat or '').upper(),
             'image_id': None,
+            # Keep the already-computed ratios with cached preceding frames;
+            # recalculating them later would require decoding the cached FITS.
+            'asi676mc_signature': asi676mc.saved_fits_signature_metadata(
+                i_ref.asi676mc_repair_result
+            ),
         }
 
 
@@ -1685,6 +1690,10 @@ class ImageWorker(Process):
                 },
             },
         }
+        if frame_context.get('asi676mc_signature'):
+            fits_metadata['data'][asi676mc.SIGNATURE_METADATA_KEY] = dict(
+                frame_context['asi676mc_signature']
+            )
 
         try:
             fits_entry = self._miscDb.addFitsImage(
@@ -1803,6 +1812,13 @@ class ImageWorker(Process):
             'aurora_s_hemi_gw'      : i_ref.aurora_s_hemi_gw,
             'camera_sqm_raw_mag'    : self.image_processor.camera_sqm_raw_mag,
         }
+        signature_metadata = asi676mc.saved_fits_signature_metadata(
+            i_ref.asi676mc_repair_result
+        )
+        if signature_metadata:
+            fits_metadata['data'][asi676mc.SIGNATURE_METADATA_KEY] = (
+                signature_metadata
+            )
 
         fits_entry = self._miscDb.addFitsImage(
             filename.relative_to(self.image_dir),

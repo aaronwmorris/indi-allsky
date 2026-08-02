@@ -51,6 +51,7 @@ HIGHLIGHT_BLEND_WEIGHT_MAX = 255
 
 
 DIAGNOSTIC_METADATA_KEY = 'asi676mc_diagnostic'
+SIGNATURE_METADATA_KEY = 'asi676mc_signature'
 DIAGNOSTIC_BAD_STATUSES = ('repaired', 'validation_failed', 'excluded')
 # Architecture and operator guide: docs/asi676mc-frame-repair.md
 
@@ -272,6 +273,36 @@ def audit_metadata(
         }
 
     return metadata
+
+
+def saved_fits_signature_metadata(repair_result):
+    """Return the small, threshold-independent signature saved with a FITS.
+
+    Detection already measures these ratios for every eligible ASI676MC frame.
+    Retaining them on the FITS database row makes later threshold discovery a
+    metadata query instead of a full-image read. The boolean classification is
+    intentionally omitted because operators may change thresholds later.
+    """
+    if not isinstance(repair_result, dict):
+        return None
+    signature = repair_result.get('signature_before')
+    if not isinstance(signature, dict):
+        return None
+    try:
+        result = {
+            'version': 1,
+            'purple_ratio': float(signature['purple_ratio']),
+            'red_side_ratio': float(signature['red_side_ratio']),
+            'blue_side_ratio': float(signature['blue_side_ratio']),
+        }
+    except (KeyError, TypeError, ValueError):
+        return None
+    if not all(
+        numpy.isfinite(result[key]) and result[key] > 0.0
+        for key in ('purple_ratio', 'red_side_ratio', 'blue_side_ratio')
+    ):
+        return None
+    return result
 
 
 def validate_raw_mosaic(data):

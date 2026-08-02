@@ -157,6 +157,106 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
                 calibration_engine.DEFAULT_SETTINGS,
             )
 
+    def test_threshold_margin_assessment_flags_only_narrow_gaps(self):
+        ranges = {
+            'purple_ratio': {
+                'good_min': 0.85, 'good_max': 0.91,
+                'bad_min': 2.19, 'bad_max': 2.27,
+            },
+            'red_side_ratio': {
+                'good_min': 0.58, 'good_max': 0.71,
+                'bad_min': 1.52, 'bad_max': 1.84,
+            },
+            'blue_side_ratio': {
+                'good_min': 1.00, 'good_max': 1.45,
+                'bad_min': 2.00, 'bad_max': 2.60,
+            },
+        }
+
+        assessments = calibration_engine.assess_detection_threshold_margins(
+            ranges,
+            calibration_engine.DEFAULT_SETTINGS,
+        )
+        by_key = {item['key']: item for item in assessments}
+
+        self.assertFalse(by_key['PURPLE_RATIO_THRESHOLD']['marginal'])
+        self.assertFalse(by_key['RED_SIDE_RATIO_THRESHOLD']['marginal'])
+        self.assertTrue(by_key['BLUE_SIDE_RATIO_THRESHOLD']['marginal'])
+        self.assertEqual(
+            by_key['BLUE_SIDE_RATIO_THRESHOLD']['suggested'],
+            1.725,
+        )
+
+    def test_saved_signature_metadata_avoids_fits_decode(self):
+        metadata = {
+            'signature': {
+                'purple_ratio': 2.2,
+                'red_side_ratio': 1.7,
+                'blue_side_ratio': 2.8,
+            },
+            'timestamp': 1000.0,
+            'exposure': 0.001,
+            'gain': 100.0,
+            'binmode': 1,
+            'width': 3552,
+            'height': 3552,
+            'camera_name': 'ZWO CCD ASI676MC',
+        }
+
+        record = calibration_engine.inspect_fits_metadata(
+            Path('metadata_only.fit'),
+            metadata,
+            calibration_engine.DEFAULT_SETTINGS,
+        )
+
+        self.assertTrue(record.is_bad)
+        self.assertEqual(record.shape, (3552, 3552))
+        self.assertEqual(record.timestamp, 1000.0)
+
+    def test_progressive_scan_stops_after_actionable_outliers(self):
+        source_records = self._threshold_population_records()
+        progress = []
+        with tempfile.TemporaryDirectory() as temp_dir:
+            folder = Path(temp_dir)
+            metadata_by_name = {}
+            for index, source in enumerate(source_records):
+                name = '{0:03d}.fit'.format(index)
+                folder.joinpath(name).touch()
+                metadata_by_name[name] = {
+                    'signature': {
+                        metric: source.signature[metric]
+                        for metric in calibration_engine.DETECTION_THRESHOLD_DETAILS
+                    },
+                    'timestamp': source.timestamp,
+                    'exposure': source.exposure,
+                    'gain': source.gain,
+                    'binmode': 1,
+                    'width': 64,
+                    'height': 64,
+                    'camera_name': source.camera_name,
+                }
+
+            records, rejected = calibration_engine.scan_folder(
+                folder,
+                calibration_engine.DEFAULT_SETTINGS,
+                recursive=False,
+                metadata_by_name=metadata_by_name,
+                progress_callback=progress.append,
+                progressive_check=lambda current: (
+                    calibration_engine.dataset_has_actionable_result(
+                        current,
+                        calibration_engine.DEFAULT_SETTINGS,
+                        90.0,
+                    )
+                ),
+                initial_scan_count=14,
+            )
+
+        self.assertFalse(rejected)
+        self.assertEqual(len(records), 20)
+        self.assertEqual(progress[-1]['phase'], 'evidence_ready')
+        self.assertEqual(progress[-1]['detected_bad_count'], 0)
+
     def test_detector_miss_returns_threshold_suggestions_without_fitting(self):
         records = self._threshold_population_records()
         with mock.patch.object(
@@ -347,6 +447,11 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
         self.assertEqual(quality['two_sided_count'], 7)
         self.assertEqual(quality['good_bad_ratio'], 2.0)
         self.assertEqual(payload['rejected_files'], [])
+        self.assertEqual(len(payload['threshold_assessment']), 3)
+        self.assertFalse(any(
+            item['marginal']
+            for item in payload['threshold_assessment']
+        ))
         for key in ('GAIN_R', 'GAIN_G1', 'GAIN_G2', 'GAIN_B'):
             self.assertAlmostEqual(
                 settings[key],

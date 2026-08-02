@@ -73,24 +73,33 @@ be mistaken for the camera failure:
 All three conditions must be met.
 
 The calibration workflow starts with the configured thresholds; it never
-silently replaces them. If those settings identify too few purple or normal
-frames, the tool checks whether all three ratios form two strong, consistently
-ordered populations. It uses the same preliminary result when the three-way
-detector finds enough frames but one individual threshold lies outside that
-ratio's clean normal/purple gap. Threshold suggestions appear only when both
+silently replaces them. It first checks every supplied frame with the live
+detector. Seven detected purple frames with adjacent normal evidence take the
+normal calibration path. If the detector identifies fewer than seven, the tool
+checks whether all three ratios form two strong, consistently ordered
+populations. It uses the same preliminary result when the three-way detector
+finds enough frames but one individual threshold lies outside that ratio's
+clean normal/purple gap. Threshold suggestions appear only when both
 populations contain at least seven FITS, every ratio has a clean gap of at
 least ten percent, likely purple frames have compatible adjacent normal
 references, and at least two exposure settings are represented. Database flags
 and filenames do not decide inferred populations.
 
 Threshold discovery is a preliminary outcome, not calibration. It derives no
-repair constants, changes no settings, and cannot use **Apply values and
-reload**. The operator must confirm that the higher-ratio population represents
-the expected purple-frame failure, edit only the recommended thresholds in
-Image Settings, and rerun calibration. A configured threshold already inside
-an observed safe gap is retained rather than replaced by a cosmetically
-different midpoint. Overlapping or inconsistently ordered populations produce
-an explanation instead of an unsafe suggestion.
+repair constants and changes no settings during analysis. The operator must
+confirm that the higher-ratio population represents the expected purple-frame
+failure. An administrator can then use **Apply thresholds and reload**, or
+enter only the recommended thresholds in Image Settings, and rerun calibration.
+A configured threshold already inside an observed safe gap is retained rather
+than replaced by a cosmetically different midpoint. Overlapping or
+inconsistently ordered populations produce an explanation instead of an unsafe
+suggestion.
+
+When calibration succeeds but a configured threshold sits within fifteen
+percent of either edge of its observed normal/purple gap, the repair constants
+remain valid. The result page and report show the measured ranges and midpoint,
+but recommend collecting more varied evidence and rerunning before changing
+that threshold.
 
 The faulty stream is repaired in bounded row chunks to limit peak memory use.
 The repair:
@@ -234,20 +243,38 @@ reviving a cancelled session.
 ### Discover saved FITS
 
 Automatic discovery searches database-managed FITS for the selected ASI676MC.
-It stages the newest eligible files and works backwards within the configured
-FITS retention period. The requested limit is 14 to 300 FITS. Discovery stops
-at that limit or the oldest retained file, and proceeds with fewer than
-requested whenever at least 14 eligible FITS remain.
+The user chooses a target of 7 to 100 purple-frame groups rather than a raw file
+limit. Discovery starts with the newest evidence inside the configured FITS
+retention period:
 
-Existing diagnostic roles and purple-frame database flags are retained as
-report context, not used as admission requirements. This is important when a
-camera's failure ratios fall outside the configured detector thresholds. The
-only data deliberately excluded before inspection is a standard FITS associated
-with a successfully repaired frame, because it contains the corrected mosaic.
+- when at least seven database-marked purple frames have compatible adjacent
+  normal FITS, it stages the newest complete groups up to the target; or
+- with zero to six usable marked groups, three FITS per requested group form
+  the initial search target. The worker checks for an actionable result as it
+  progresses, so it may stop earlier; otherwise it continues newest-first
+  through all eligible retained FITS to the retention boundary.
+
+The second path intentionally ignores the target as a stopping limit. That is
+necessary when the current detector missed every purple frame and their random
+positions are unknown. The live progress display reports whether the worker is
+checking the current detector, searching for missed high-ratio frames, fitting,
+or validating.
+
+Existing diagnostic roles and purple-frame database flags select the compact
+path only when they supply at least seven complete groups. Otherwise they are
+context rather than admission requirements. This is important when a camera's
+failure ratios fall outside the configured detector thresholds. The only data
+deliberately excluded before inspection is a standard FITS associated with a
+successfully repaired frame, because it contains the corrected mosaic.
 Untouched diagnostic RAW FITS and standard FITS from Exclude Only remain
-eligible. After staging, the engine opens every selected FITS and performs the
-same classification, compatibility, and adjacency checks used for uploads, so
-pairs and triplets can be mixed in one run.
+eligible. Pairs and triplets can be mixed in one run.
+
+Newly saved FITS database rows retain the three measured detector ratios as
+small, threshold-independent metadata. A progressive search can reclassify
+those captures against current settings without decoding every full image.
+Older FITS without the metadata remain compatible and are opened normally.
+Only the purple and adjacent normal FITS selected for numerical fitting are
+necessarily decoded after discovery.
 
 Database files are staged with filesystem links where possible. This consumes
 no second copy of the FITS data. A hard link keeps the selected content stable
@@ -302,8 +329,14 @@ A successful results page shows:
 
 A preliminary threshold result instead shows current and suggested detection
 values, each observed safe interval, population and adjacency evidence, and a
-prominent instruction to review Image Settings and rerun. The repair-value
-table and **Apply values and reload** action are hidden for this outcome.
+prominent instruction to review and rerun. The repair-value table is hidden.
+For an administrator, **Apply thresholds and reload** saves only fields marked
+Change recommended; it never saves repair constants from a preliminary result.
+
+A normal calibration whose detector margin is narrow remains successful. Its
+status area and a dedicated table identify the affected threshold, current
+value, observed normal/purple gap, and midpoint so the warning is visible
+without being confused with a failed calibration.
 
 The downloadable text report is generated for the integrated workflow. It
 records the evidence source, quality assessment, values, comparison with the
@@ -315,7 +348,9 @@ the seven derived keys, using the same configuration-save mechanism as the
 settings page, then queues an application reload. It refuses the update if the
 configuration changed after calibration began; this prevents an older result
 from overwriting a newer settings edit. Operational switches such as Enable and
-Exclude Only are never changed by calibration.
+Exclude Only are never changed by calibration. The preliminary apply action
+uses the same version check but permits only the three detection-threshold keys
+that the result explicitly marked for change.
 
 Results are retained in the browser by an unguessable session ID so a user can
 visit another page and return. The browser stores no FITS data or calibration
@@ -358,8 +393,9 @@ indi-allsky FITS expiration behavior.
 4. Collect several purple events across at least two exposure levels.
 5. Open **Tools -> ASI676MC Calibration** while signed in.
 6. Discover saved FITS or select a multi-file upload.
-7. If preliminary threshold suggestions appear, verify the populations, edit
-   only the recommended detection fields, reset the tool, and rerun.
+7. If preliminary threshold suggestions appear, verify the populations, apply
+   or manually edit only the recommended detection fields, reset the tool, and
+   rerun.
 8. Review the evidence summary, warnings, derived values, and current values.
 9. Download the report if an audit copy is useful.
 10. As an administrator, apply the result only after it looks credible.
@@ -373,7 +409,7 @@ indi-allsky FITS expiration behavior.
 
 Enable ASI676MC purple-frame handling in Image settings and sign in.
 
-**Fewer than 14 saved FITS are found**
+**Fewer than 14 eligible saved FITS are found**
 
 The current settings describe future evidence only. Existing purple frames may
 have expired or may never have been saved as untouched FITS. Enable either
@@ -390,7 +426,8 @@ reported likely-normal and likely-purple populations. When all three ratios
 have strong gaps, the tool may show preliminary threshold suggestions instead
 of failing. Change a recommended threshold only after confirming that the
 higher-ratio files are the expected camera failure, then rerun calibration;
-the tool never changes detection thresholds automatically.
+the tool never changes detection thresholds during analysis. An administrator
+may save the recommended subset from the preliminary result after reviewing it.
 
 **The report time differs from UTC**
 

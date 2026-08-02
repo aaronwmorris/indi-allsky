@@ -46,6 +46,7 @@ CALIBRATION_OPTIONS = {
     # ordinary scene changes from being presented as a camera-failure mode.
     'MIN_THRESHOLD_CLUSTER_SIZE': 7,
     'MIN_THRESHOLD_GAP_FRACTION': 0.10,
+    'MIN_THRESHOLD_MARGIN_FRACTION': 0.15,
 
     # Sparse central-image sampling.  This is even to preserve Bayer parity.
     'SAMPLE_STEP': 8,
@@ -282,7 +283,55 @@ def inspect_fits(path, settings):
     )
 
 
-def scan_folder(folder, settings, recursive=True):
+def inspect_fits_metadata(path, metadata, settings):
+    """Build a record from ratios captured when a database FITS was saved.
+
+    The ratios are independent of detector thresholds, so the current settings
+    can reclassify an older capture without decoding its full image. Missing or
+    malformed legacy metadata falls back to normal FITS inspection in
+    :func:`scan_folder`.
+    """
+    signature_data = metadata.get('signature') or {}
+    signature = {
+        name: float(signature_data[name])
+        for name in DETECTION_THRESHOLD_DETAILS
+    }
+    if (
+        not all(numpy.isfinite(value) and value > 0.0 for value in signature.values())
+        or not metadata.get('width')
+        or not metadata.get('height')
+        or float(metadata.get('timestamp', 0.0)) <= 0.0
+    ):
+        raise ValueError('incomplete saved detector signature metadata')
+    signature['is_bad'] = (
+        signature['purple_ratio'] >= settings['PURPLE_RATIO_THRESHOLD']
+        and signature['red_side_ratio'] >= settings['RED_SIDE_RATIO_THRESHOLD']
+        and signature['blue_side_ratio'] >= settings['BLUE_SIDE_RATIO_THRESHOLD']
+    )
+    binmode = int(metadata.get('binmode', 1))
+    return FrameRecord(
+        path=path,
+        timestamp=float(metadata['timestamp']),
+        exposure=float(metadata.get('exposure', -1.0)),
+        gain=float(metadata.get('gain', -1.0)),
+        xbin=binmode,
+        ybin=binmode,
+        shape=(int(metadata['height']), int(metadata['width'])),
+        bayer='RGGB',
+        camera_name=str(metadata.get('camera_name') or 'ASI676MC'),
+        signature=signature,
+    )
+
+
+def scan_folder(
+    folder,
+    settings,
+    recursive=True,
+    metadata_by_name=None,
+    progress_callback=None,
+    progressive_check=None,
+    initial_scan_count=14,
+):
     """Inspect compatible FITS files and return records plus rejected files."""
     iterator = folder.rglob('*') if recursive else folder.glob('*')
     paths = sorted(
@@ -294,11 +343,68 @@ def scan_folder(folder, settings, recursive=True):
     )
     records = []
     rejected = []
-    for path in paths:
+    detected_bad_count = 0
+    metadata_by_name = metadata_by_name or {}
+    total = len(paths)
+    initial_target = min(total, max(14, int(initial_scan_count)))
+    threshold_search_started = False
+    for index, path in enumerate(paths, start=1):
         try:
-            records.append(inspect_fits(path, settings))
+            metadata = metadata_by_name.get(path.name)
+            if metadata:
+                try:
+                    record = inspect_fits_metadata(path, metadata, settings)
+                except (KeyError, TypeError, ValueError):
+                    record = inspect_fits(path, settings)
+            else:
+                record = inspect_fits(path, settings)
+            records.append(record)
+            if record.is_bad:
+                detected_bad_count += 1
         except (OSError, ValueError) as error:
             rejected.append((path, str(error)))
+        if (
+            index >= 14
+            and detected_bad_count < CALIBRATION_OPTIONS['MIN_BAD_PAIRS']
+        ):
+            # Uploads are always scanned in full, while database searches may
+            # stop early. Both surfaces should still tell the operator when
+            # the current detector has failed to find the minimum and the
+            # analysis has moved on to population discovery.
+            threshold_search_started = True
+        phase = (
+            'threshold_search'
+            if threshold_search_started
+            else 'detector_scan'
+        )
+        if progress_callback:
+            progress_callback({
+                'phase': phase,
+                'processed_files': index,
+                'total_files': total,
+                'initial_target_files': initial_target,
+                'detected_bad_count': detected_bad_count,
+            })
+        should_check = (
+            progressive_check
+            and len(records) >= 14
+            and (
+                index == 14
+                or index % 10 == 0
+                or index == total
+                or detected_bad_count >= CALIBRATION_OPTIONS['MIN_BAD_PAIRS']
+            )
+        )
+        if should_check and progressive_check(records):
+            if progress_callback:
+                progress_callback({
+                    'phase': 'evidence_ready',
+                    'processed_files': index,
+                    'total_files': total,
+                    'initial_target_files': initial_target,
+                    'detected_bad_count': detected_bad_count,
+                })
+            break
     return records, rejected
 
 
@@ -857,6 +963,37 @@ def build_detection_threshold_suggestions(ranges, settings):
     return suggestions
 
 
+def assess_detection_threshold_margins(ranges, settings):
+    """Describe how comfortably each configured threshold sits in its gap."""
+    minimum_margin = CALIBRATION_OPTIONS['MIN_THRESHOLD_MARGIN_FRACTION']
+    assessments = []
+    for metric, (threshold_name, threshold_label) in (
+        DETECTION_THRESHOLD_DETAILS.items()
+    ):
+        values = ranges[metric]
+        normal_max = values['good_max']
+        purple_min = values['bad_min']
+        threshold = float(settings[threshold_name])
+        gap = purple_min - normal_max
+        if gap <= 0.0:
+            continue
+        position = (threshold - normal_max) / gap
+        margin_fraction = min(position, 1.0 - position)
+        assessments.append({
+            'metric': metric,
+            'key': threshold_name,
+            'label': threshold_label,
+            'current': threshold,
+            'suggested': round((normal_max + purple_min) / 2.0, 3),
+            'normal_max': normal_max,
+            'purple_min': purple_min,
+            'gap_position': position,
+            'margin_fraction': margin_fraction,
+            'marginal': margin_fraction < minimum_margin,
+        })
+    return assessments
+
+
 def threshold_suggestion_payload(
     records,
     evidence,
@@ -1259,6 +1396,41 @@ def calibration_payload(
     }
 
 
+def dataset_has_actionable_result(records, settings, max_pair_seconds):
+    """Return whether progressive discovery can safely stop reading FITS.
+
+    This performs only lightweight evidence checks. Expensive pixel fitting is
+    still run once, after the scan stops. Failures are intentionally swallowed:
+    another older batch may add the missing outlier, exposure, or reference.
+    """
+    minimum = CALIBRATION_OPTIONS['MIN_BAD_PAIRS']
+    bad_count = sum(record.is_bad for record in records)
+    normal_count = len(records) - bad_count
+    if bad_count >= minimum and normal_count >= minimum:
+        try:
+            pairs, unmatched = match_pairs(records, max_pair_seconds)
+            validate_evidence(
+                records,
+                pairs,
+                unmatched,
+                allow_unmatched=True,
+            )
+            ranges = signature_ranges(records)
+            try:
+                validate_signature_separation(ranges, settings)
+            except CalibrationError:
+                build_detection_threshold_suggestions(ranges, settings)
+            return True
+        except CalibrationError:
+            return False
+
+    try:
+        suggest_detection_thresholds(records, settings, max_pair_seconds)
+        return True
+    except CalibrationError:
+        return False
+
+
 
 def calibrate_folder(
     folder,
@@ -1266,6 +1438,10 @@ def calibrate_folder(
     recursive=True,
     max_pair_seconds=None,
     allow_unmatched=False,
+    metadata_by_name=None,
+    progress_callback=None,
+    progressive=False,
+    initial_scan_count=14,
 ):
     """Run complete calibration for one staged evidence directory.
 
@@ -1278,7 +1454,37 @@ def calibrate_folder(
         max_pair_seconds = CALIBRATION_OPTIONS['MAX_PAIR_SECONDS']
 
     print(f'Scanning FITS files under: {folder}')
-    records, rejected = scan_folder(folder, config, recursive=recursive)
+    progressive_check = None
+    if progressive:
+        progressive_check = lambda records: dataset_has_actionable_result(
+            records,
+            config,
+            max_pair_seconds,
+        )
+    records, rejected = scan_folder(
+        folder,
+        config,
+        recursive=recursive,
+        metadata_by_name=metadata_by_name,
+        progress_callback=progress_callback,
+        progressive_check=progressive_check,
+        initial_scan_count=max(14, int(initial_scan_count)),
+    )
+    scanned_file_count = len(records) + len(rejected)
+    available_file_count = (
+        len(metadata_by_name)
+        if metadata_by_name
+        else scanned_file_count
+    )
+
+    def finish_scan_payload(payload):
+        payload['quality']['scanned_file_count'] = scanned_file_count
+        payload['quality']['available_file_count'] = available_file_count
+        payload['quality']['search_stopped_early'] = (
+            scanned_file_count < available_file_count
+        )
+        return payload
+
     if not records:
         raise CalibrationError('no compatible RAW16 RGGB FITS files found')
     bad_count = sum(record.is_bad for record in records)
@@ -1319,7 +1525,7 @@ def calibrate_folder(
                 payload['quality']['likely_normal_count'],
             )
         )
-        return payload
+        return finish_scan_payload(payload)
     print(
         f'Classified {len(records)} files: '
         f'{bad_count} purple, {normal_count} normal'
@@ -1368,7 +1574,8 @@ def calibrate_folder(
             'thresholds lie outside their safe gaps; returning threshold '
             'suggestions only.'
         )
-        return payload
+        return finish_scan_payload(payload)
+    threshold_assessment = assess_detection_threshold_margins(ranges, config)
     print(
         'Matched {0} purple frames to {1} distinct normal frames '
         '({2:.2f}:1)'.format(
@@ -1378,6 +1585,13 @@ def calibrate_folder(
         )
     )
 
+    if progress_callback:
+        progress_callback({
+            'phase': 'fitting',
+            'processed_files': scanned_file_count,
+            'total_files': available_file_count,
+            'detected_bad_count': bad_count,
+        })
     samples = collect_pair_samples(pairs)
     gains_detail = estimate_gains(samples)
     gain_values = {
@@ -1401,7 +1615,15 @@ def calibrate_folder(
         highlight,
         rejected,
     )
+    payload['threshold_assessment'] = threshold_assessment
     print('Validating calibrated settings against every matched frame...')
+    if progress_callback:
+        progress_callback({
+            'phase': 'validating',
+            'processed_files': scanned_file_count,
+            'total_files': available_file_count,
+            'detected_bad_count': bad_count,
+        })
     validation_settings = dict(config)
     validation_settings.update(payload['derived_settings'])
     repaired_count, normal_validation_count = validate_calibrated_frames(
@@ -1410,4 +1632,4 @@ def calibrate_folder(
     )
     payload['quality']['validated_bad_repairs'] = repaired_count
     payload['quality']['validated_normal_frames'] = normal_validation_count
-    return payload
+    return finish_scan_payload(payload)
