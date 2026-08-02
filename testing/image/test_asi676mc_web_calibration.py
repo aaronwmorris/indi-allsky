@@ -8,7 +8,7 @@ import unittest
 from unittest import mock
 
 from indi_allsky import asi676mc_calibration
-from misc import asi676mc_frame_repair as calibration_engine
+from indi_allsky import asi676mc_calibration_engine as calibration_engine
 
 
 class TestAsi676mcWebCalibration(unittest.TestCase):
@@ -30,8 +30,10 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         settings = dict(calibration_engine.DEFAULT_SETTINGS)
         return {
             'generated_utc': '2026-08-02T12:34:56+00:00',
-            'source_folder': '/private/calibration/session/uploads',
-            'IMAGE_ASI676MC_REPAIR': settings,
+            'derived_settings': {
+                key: settings[key]
+                for key in asi676mc_calibration.DERIVED_VALUE_KEYS
+            },
             'quality': {
                 'pair_count': 7,
                 'unmatched_bad_count': 1,
@@ -501,7 +503,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             with mock.patch.object(
                 calibration_engine,
                 'calibrate_folder',
-                return_value=(payload, 'folder-oriented engine report\n'),
+                return_value=payload,
             ) as calibrate_folder:
                 original_write_manifest = asi676mc_calibration._write_manifest
                 success_saw_deleted_sources = []
@@ -559,7 +561,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 'Method: Saved FITS search',
                 report,
             )
-            self.assertNotIn('folder-oriented engine report', report)
+            self.assertNotIn(str(root), report)
 
     def test_result_comparison_distinguishes_exact_negligible_and_different(self):
         payload = self._successful_payload()
@@ -657,7 +659,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
 
     def test_engine_failures_are_translated_to_actionable_browser_text(self):
         too_few = asi676mc_calibration._friendly_failure_message(
-            '4 matched bad frames found; need at least 7'
+            '4 matched purple frames found; need at least 7'
         )
         self.assertIn('Only 4 purple frames', too_few)
         self.assertIn('at least seven are required', too_few)
@@ -709,8 +711,8 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             self.assertEqual(removed, 1)
             self.assertFalse(session_dir.exists())
 
-    def test_command_line_strict_policy_remains_default(self):
-        """The web relaxation must not change the command-line policy."""
+    def test_unmatched_file_relaxation_is_explicit(self):
+        """The integrated engine remains strict unless the caller opts in."""
         normal_records = []
         pairs = []
         for index in range(7):

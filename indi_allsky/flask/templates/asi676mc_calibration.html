@@ -338,9 +338,8 @@
     <div class="card-body">
         <div id="calibration-result-status" class="calibration-callout calibration-callout-success" role="status">
             <div id="calibration-result-status-primary">
-                Calibration successful. Uploaded FITS were used and then
-                deleted. Only the seven calibration values shown below were
-                derived; all other settings remain unchanged.
+                Calibration successful. Only the seven calibration values
+                shown below were derived; all other settings remain unchanged.
             </div>
             <div id="calibration-result-status-detail" class="calibration-result-emphasis mt-2 pt-2" style="display: none;"></div>
         </div>
@@ -789,7 +788,7 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
     $('#calibration-quality').empty().append(
         qualityCard('Purple frames used', quality.matched_bad_count),
         qualityCard('Normal reference frames used', quality.matched_normal_count),
-        qualityCard('Good/bad/good groups', quality.two_sided_count),
+        qualityCard('Good/purple/good groups', quality.two_sided_count),
         qualityCard('Exposure levels', quality.exposure_level_count),
         qualityCard('Repair checks passed', quality.validated_bad_count),
         qualityCard('Normal-frame checks passed', quality.validated_normal_count),
@@ -818,7 +817,8 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
     $('#calibration-results').show();
     $('#calibration-apply-values').prop('disabled', false);
     // Keep the small completed result for seven days so returning to this page
-    // restores this results-only view. Source FITS have already been deleted.
+    // restores this results-only view. Private uploads or staging links have
+    // already been removed; database-owned source FITS remain untouched.
 }
 
 async function requestUploadCancellation(sessionId) {

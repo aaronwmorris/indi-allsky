@@ -5,7 +5,7 @@ as a Python module; it never starts a shell command or an external FITS program.
 
 This module owns the web-specific concerns around that engine:
 
-* private, per-user upload sessions;
+* private, per-user staging sessions;
 * conservative file-count and storage limits;
 * atomic manifest/result files shared by gunicorn and the video worker;
 * deletion of uploaded FITS or database staging links as soon as a job finishes;
@@ -79,10 +79,10 @@ DERIVED_VALUE_KEYS = (
 )
 
 DERIVED_VALUE_LABELS = {
-    'GAIN_R': 'Bad-frame Gain R',
-    'GAIN_G1': 'Bad-frame Gain G1',
-    'GAIN_G2': 'Bad-frame Gain G2',
-    'GAIN_B': 'Bad-frame Gain B',
+    'GAIN_R': 'Purple-frame Gain R',
+    'GAIN_G1': 'Purple-frame Gain G1',
+    'GAIN_G2': 'Purple-frame Gain G2',
+    'GAIN_B': 'Purple-frame Gain B',
     'SOURCE_SATURATION_THRESHOLD': 'Source Saturation Threshold',
     'HIGHLIGHT_BLEND_START_RATIO': 'Highlight Blend Start Ratio',
     'HIGHLIGHT_BLEND_END_RATIO': 'Highlight Blend End Ratio',
@@ -291,7 +291,7 @@ def capture_configuration_guidance(config):
                     'following RAW FITS saves each detected purple frame '
                     'unchanged and also saves the immediately following frame. '
                     'Ordinary FITS saving set to Every Image can add normal '
-                    'references on either side for stronger good/bad/good '
+                    'references on either side for stronger good/purple/good '
                     'groups. Incompatible following frames are ignored. This '
                     'combination uses the most disk space.'
                 )
@@ -329,7 +329,7 @@ def capture_configuration_guidance(config):
             guidance_sentences.append(
                 'Exclude Only leaves purple frames unchanged, and ordinary '
                 'FITS saving set to Every Image saves complete sequences for '
-                'automatic discovery. These good/bad/good groups provide '
+                'automatic discovery. These good/purple/good groups provide '
                 'strong evidence but use more disk space.'
             )
         elif periodic_fits and not fits_period_valid:
@@ -571,7 +571,7 @@ def _write_manifest(session_dir, manifest):
 
 
 def _remove_upload_dir(session_dir):
-    """Delete uploaded source FITS while retaining small session results."""
+    """Remove private uploads or database links, retaining small results."""
     upload_dir = session_dir.joinpath('uploads')
     if upload_dir.exists():
         shutil.rmtree(upload_dir)
@@ -612,7 +612,7 @@ def cleanup_expired_sessions(storage_root=None, now=None):
 
 
 def create_session(owner, storage_root=None):
-    """Create an upload session owned by one authenticated username."""
+    """Create a private staging session owned by one authenticated user."""
     owner = str(owner or '').strip()
     if not owner:
         raise CalibrationSessionError('an authenticated owner is required')
@@ -718,14 +718,14 @@ def select_database_evidence(
     max_bad_frames,
     max_pair_seconds,
 ):
-    """Select newest-first bad/reference groups from normalized DB records.
+    """Select newest-first purple/reference groups from normalized DB records.
 
-    Explicit diagnostic roles are preferred because their bad FITS is known to
-    be untouched input. Ordinary FITS are associated with an image row marked
-    bad when their capture times agree within one second. At most one normal
-    reference on each side is retained; the calibration engine subsequently
-    reopens every selected FITS and verifies its true signature and complete
-    compatibility before using it.
+    Explicit diagnostic roles are preferred because a FITS with the internal
+    ``bad`` role is known to be untouched purple input. Ordinary FITS are
+    associated with an image row marked purple when their capture times agree
+    within one second. At most one normal reference on each side is retained;
+    the calibration engine subsequently reopens every selected FITS and
+    verifies its true signature and complete compatibility before using it.
     """
     max_bad_frames = int(max_bad_frames)
     if (
@@ -776,7 +776,7 @@ def select_database_evidence(
         if _database_record_has_role(record, 'bad')
     }
     # Ordinary saving can create a second DB row at the same capture time as an
-    # explicit diagnostic bad FITS. Even if the corresponding JPEG/image row
+    # explicit diagnostic purple FITS. Even if the corresponding JPEG/image row
     # has already expired, that duplicate must not become another group's
     # supposedly normal reference.
     for diagnostic_bad in diagnostic_candidates:
@@ -791,9 +791,9 @@ def select_database_evidence(
             <= DATABASE_CAPTURE_TIME_TOLERANCE
         )
 
-    # Associate ordinary saved FITS with bad image rows. If an explicit
-    # diagnostic bad capture exists at that time, keep it and do not add the
-    # post-repair ordinary FITS as a second candidate.
+    # Associate ordinary saved FITS with purple image rows. If an explicit
+    # diagnostic purple capture exists at that time, keep it and do not add
+    # the post-repair ordinary FITS as a second candidate.
     diagnostic_times = [
         float(record['timestamp'])
         for record in diagnostic_candidates
@@ -817,8 +817,8 @@ def select_database_evidence(
         known_bad_ids.update(record['id'] for record in ordinary_matches)
         # Ordinary FITS written for an actually repaired frame contains the
         # corrected mosaic, not calibration evidence. The caller marks only
-        # historical Exclude Only captures as safe ordinary bad candidates;
-        # every known-bad timestamp is still excluded from normal references.
+        # historical Exclude Only captures as safe ordinary purple candidates;
+        # every known-purple timestamp is still excluded from normal references.
         if not bad_frame.get('allow_ordinary', True):
             continue
         if any(
@@ -1095,7 +1095,7 @@ def mark_queued(
     source_details=None,
     storage_root=None,
 ):
-    """Freeze the upload set and record the background job parameters."""
+    """Freeze the staged evidence set and record background-job parameters."""
     session_dir, manifest = get_session(session_id, owner, storage_root)
     if manifest.get('status') != 'uploading':
         raise CalibrationSessionError('this calibration session has already started')
@@ -1143,7 +1143,7 @@ def mark_failed(session_id, owner, message, storage_root=None):
 
 
 def _result_summary(payload):
-    settings = payload['IMAGE_ASI676MC_REPAIR']
+    settings = payload['derived_settings']
     quality = payload['quality']
     values = [
         {
@@ -1244,12 +1244,12 @@ def _result_warnings(quality, source_details=None, report_context=False):
         if coverage_parts:
             if one_sided_count and references_reused:
                 improvement = (
-                    'more complete, independent good/bad/good groups would '
+                    'more complete, independent good/purple/good groups would '
                     'improve confidence'
                 )
             elif one_sided_count:
                 improvement = (
-                    'more complete good/bad/good groups would improve confidence'
+                    'more complete good/purple/good groups would improve confidence'
                 )
             else:
                 improvement = (
@@ -1326,7 +1326,13 @@ def _friendly_failure_message(message):
     """Translate calibration-engine failures into safe, actionable UI copy."""
     message_text = str(message or '')
     lowered = message_text.lower()
-    matched_count = re.search(r'(\d+) matched bad frames found', lowered)
+    # Accept the current wording and older persisted task failures so an
+    # interrupted session still receives the same useful explanation after an
+    # upgrade.
+    matched_count = re.search(
+        r'(\d+) matched (?:purple|bad) frames found',
+        lowered,
+    )
     if 'no compatible raw16 rggb fits files found' in lowered:
         return (
             'No compatible unprocessed ASI676MC RAW16 RGGB FITS were found. '
@@ -1337,12 +1343,18 @@ def _friendly_failure_message(message):
             'Only {0} purple frames had a compatible nearby normal FITS; at '
             'least seven are required.'.format(matched_count.group(1))
         )
-    if 'both normal and bad frames are required' in lowered:
+    if (
+        'both normal and purple frames are required' in lowered
+        or 'both normal and bad frames are required' in lowered
+    ):
         return (
             'The collection did not contain both recognisable purple frames '
             'and normal frames. Check the selected FITS and try again.'
         )
-    if 'matched normal/bad ratio' in lowered:
+    if (
+        'matched normal/purple ratio' in lowered
+        or 'matched normal/bad ratio' in lowered
+    ):
         return (
             'There were not enough different normal reference frames. Provide '
             'at least one distinct compatible normal frame for each purple frame.'
@@ -1362,7 +1374,9 @@ def _friendly_failure_message(message):
         )
     if (
         'misclassifies at least one supplied normal frame' in lowered
+        or 'misses at least one supplied purple frame' in lowered
         or 'misses at least one supplied bad frame' in lowered
+        or 'overlapping normal and purple ranges' in lowered
         or 'overlapping normal and bad ranges' in lowered
     ):
         return (
@@ -1378,7 +1392,7 @@ def _friendly_failure_message(message):
     ):
         return (
             'The collection does not contain enough stable bright daylight '
-            'highlights. Add brighter daylight pairs or good/bad/good groups.'
+            'highlights. Add brighter daylight pairs or good/purple/good groups.'
         )
     if 'has usable samples in only' in lowered:
         return (
@@ -1552,15 +1566,12 @@ def compare_result_to_configuration(result, repair_config):
 def format_integrated_report(payload, manifest):
     """Build the report downloaded from the authenticated calibration page.
 
-    The numerical engine also supports folder-based callers, but their source
-    path and next steps are not meaningful in the web UI.  Building this report
-    from structured payload and session data keeps the integrated workflow
-    accurate: it can name the real evidence source, compare the saved result
-    with the configuration snapshot, explain cleanup, and avoid exposing the
-    private staging directory.
+    Building this report from structured engine output and private session data
+    lets it name the real evidence source, compare the result with the starting
+    configuration, explain cleanup, and avoid exposing the staging directory.
     """
     quality = payload['quality']
-    derived_settings = payload['IMAGE_ASI676MC_REPAIR']
+    derived_settings = payload['derived_settings']
     result_summary = _result_summary(payload)
     source_details = manifest.get('source') or {}
     configured_at_start = manifest.get('settings') or {}
@@ -1599,7 +1610,8 @@ def format_integrated_report(payload, manifest):
         lines,
         'Review these values under Tools > ASI676MC Calibration. An '
         'administrator can use Apply and reload, or the values can be entered '
-        'manually under Configuration > Image > ASI676MC RAW16 Frame Repair.',
+        'manually under Configuration > Image > ASI676MC RAW16 Purple-frame '
+        'Handling.',
     )
 
     configured_values = comparison.get('configured_values', {})
@@ -1923,10 +1935,12 @@ def run_calibration_session(session_id, storage_root=None):
     upload_dir = session_dir.joinpath('uploads')
     captured_output = io.StringIO()
     try:
-        from misc import asi676mc_frame_repair as calibration_engine
+        # Import the numerical layer only in the background worker. Web views
+        # can manage uploads and status without loading NumPy or FITS support.
+        from . import asi676mc_calibration_engine
 
         with redirect_stdout(captured_output):
-            payload, _engine_report = calibration_engine.calibrate_folder(
+            payload = asi676mc_calibration_engine.calibrate_folder(
                 upload_dir,
                 settings=manifest.get('settings'),
                 recursive=False,
@@ -1948,10 +1962,9 @@ def run_calibration_session(session_id, storage_root=None):
             result['quality'],
             source_details,
         )
-        # The engine's folder-oriented report contains implementation details
-        # such as its input path.  The web download is built independently from
-        # structured data so upload/search provenance, configuration comparison,
-        # cleanup, and UI actions are all described accurately.
+        # The downloadable report is built here so it can describe session
+        # provenance, configuration comparison, cleanup, and UI actions without
+        # exposing the private staging path used by the numerical engine.
         report_text = format_integrated_report(payload, manifest)
         _atomic_write_json(session_dir.joinpath('result.json'), result)
         session_dir.joinpath('asi676mc_calibration_report.txt').write_text(

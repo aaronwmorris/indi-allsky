@@ -1,0 +1,1083 @@
+"""Numerical engine for the integrated ASI676MC calibration workflow.
+
+This module owns only the evidence-processing pipeline: inspect staged FITS,
+match purple frames to compatible normal references, estimate the seven
+camera-specific values, and validate the rounded result against every matched
+frame. Session ownership, uploads, database discovery, cleanup, reporting, and
+configuration updates remain in :mod:`indi_allsky.asi676mc_calibration`.
+
+Live detection and repair are intentionally imported from
+:mod:`indi_allsky.asi676mc`. Keeping one implementation prevents calibration
+from approving values against an algorithm that differs from the image worker.
+"""
+
+from dataclasses import dataclass
+from datetime import datetime
+from datetime import timezone
+from pathlib import Path
+import re
+import statistics
+
+import numpy
+
+from . import asi676mc
+
+
+# The runtime defaults are also the starting point for fitting. This is an
+# alias, not a copy: tests and future changes see one authoritative definition.
+DEFAULT_SETTINGS = asi676mc.DEFAULT_SETTINGS
+
+# Calibration-only policy and sampling parameters. These values decide whether
+# evidence is sufficient; they never alter live repair unless calibration
+# succeeds and an administrator explicitly applies the derived settings.
+CALIBRATION_OPTIONS = {
+    # Evidence requirements.
+    'MIN_BAD_PAIRS': 7,
+    'MIN_GOOD_BAD_RATIO': 1.0,
+    'RECOMMENDED_GOOD_BAD_RATIO': 2.0,
+    'MAX_PAIR_SECONDS': 90.0,
+    'MIN_EXPOSURE_LEVELS': 2,
+
+    # Sparse central-image sampling.  This is even to preserve Bayer parity.
+    'SAMPLE_STEP': 8,
+    'MIN_REFERENCE_VALUE': 512,
+    'MAX_REFERENCE_VALUE': 62000,
+    'MAX_SOURCE_VALUE_FOR_GAIN': 64000,
+    'MAX_REFERENCE_CHANGE_FRACTION': 0.15,
+    'REFERENCE_CHANGE_FLOOR': 256,
+    'MIN_GAIN_SAMPLES_PER_PARITY': 500,
+
+    # A RAW16 plateau near 65534 is expected.  Values close to the existing
+    # 65000 threshold are deliberately snapped to that proven default.
+    'SATURATION_HEADROOM': 534,
+    'SATURATION_DEFAULT_SNAP': 64,
+
+    # Highlight-boundary search.  The repair uses an 800-step equivalent
+    # base/high fixed point, so finer search increments would not create
+    # meaningfully finer output.
+    'BLEND_START_VALUES': (
+        0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70,
+    ),
+    'BLEND_END_VALUES': (
+        0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95,
+    ),
+    'MIN_BLEND_WIDTH': 0.10,
+    'MIN_HIGHLIGHT_SAMPLES_TOTAL': 1000,
+    'MIN_HIGHLIGHT_SAMPLES_PER_PAIR': 50,
+    'HIGHLIGHT_REFERENCE_MIN': 4096,
+    # Do not replace a proven default with a neighboring grid point unless it
+    # improves the cross-pair score by more than two percent.  This guards
+    # against fitting cloud movement or a small number of transition pixels.
+    'PREFER_DEFAULT_SCORE_TOLERANCE': 0.02,
+
+}
+
+
+_FITS_SUFFIXES = ('.fit', '.fits', '.fts')
+_COMPRESSED_FITS_SUFFIXES = tuple(
+    '{0}.gz'.format(suffix)
+    for suffix in _FITS_SUFFIXES
+)
+_CAMERA_NAME_RE = re.compile(
+    r'(?<![A-Z0-9])ASI[\s_-]*676MC(?![A-Z0-9])',
+    re.IGNORECASE,
+)
+_OTHER_ASI_CAMERA_RE = re.compile(
+    r'(?<![A-Z0-9])ASI[\s_-]*(?!676MC)[0-9]+[A-Z]*',
+    re.IGNORECASE,
+)
+_FILENAME_TIME_RE = re.compile(r'(\d{8})[_-](\d{6})')
+
+
+# ---------------------------------------------------------------------------
+# FITS inspection and evidence indexing
+# ---------------------------------------------------------------------------
+
+def _fits_module():
+    """Import indi-allsky's FITS dependency only when a job starts."""
+    try:
+        from astropy.io import fits
+    except ModuleNotFoundError as error:
+        raise RuntimeError(
+            'indi-allsky FITS support is unavailable (Astropy could not be '
+            'imported)'
+        ) from error
+    return fits
+
+
+def _read_fits(path, copy=False):
+    """Return image data, a copied header, and the image-HDU index."""
+    fits = _fits_module()
+    with fits.open(path, memmap=False, uint=True) as hdulist:
+        for index, hdu in enumerate(hdulist):
+            if hdu.data is None:
+                continue
+            data = numpy.squeeze(numpy.asarray(hdu.data))
+            if copy:
+                data = data.copy()
+            asi676mc.validate_raw_mosaic(data)
+            header = hdu.header.copy()
+            bayer = str(header.get('BAYERPAT', '')).strip().upper()
+            if bayer and bayer != 'RGGB':
+                raise ValueError(f'expected RGGB Bayer data, got {bayer}')
+            return data, header, index
+    raise ValueError('FITS file contains no image data')
+
+
+
+def _parse_timestamp(header, path):
+    """Read capture time from FITS metadata or a legacy filename.
+
+    Pairing uses only elapsed seconds, so treating a timezone-less legacy
+    timestamp as UTC does not affect the before/after relationship.
+    """
+    value = header.get('DATE-OBS') or header.get('DATE')
+    if value:
+        text = str(value).strip().replace('Z', '+00:00')
+        try:
+            parsed = datetime.fromisoformat(text)
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            return parsed.timestamp()
+        except ValueError:
+            pass
+
+    match = _FILENAME_TIME_RE.search(path.name)
+    if match:
+        parsed = datetime.strptime(
+            ''.join(match.groups()),
+            '%Y%m%d%H%M%S',
+        ).replace(tzinfo=timezone.utc)
+        return parsed.timestamp()
+    raise ValueError('missing usable DATE-OBS/DATE and filename timestamp')
+
+
+def _header_float(header, *keys, default=None):
+    """Return the first numeric FITS value among common keyword aliases."""
+    for key in keys:
+        value = header.get(key)
+        if value is None:
+            continue
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            continue
+    return default
+
+
+def _camera_name(header):
+    """Return the first useful camera identity from several FITS conventions."""
+    for key in (
+        'CAMERA',
+        'CAMMODEL',
+        'CCDNAME',
+        'INSTRUME',
+        'TELESCOP',
+    ):
+        value = str(header.get(key, '')).strip()
+        if value:
+            return value
+    return ''
+
+
+def _specific_camera_name(name):
+    """Normalize ASI676MC names while discarding generic legacy labels."""
+    if _CAMERA_NAME_RE.search(name):
+        return 'asi676mc'
+    lowered = name.strip().lower()
+    if not lowered or lowered in ('indi-allsky', 'unknown', 'camera'):
+        return ''
+    return lowered
+
+
+@dataclass(frozen=True)
+class FrameRecord:
+    """Immutable index entry for one inspected FITS capture."""
+    path: Path
+    timestamp: float
+    exposure: float
+    gain: float
+    xbin: int
+    ybin: int
+    shape: tuple
+    bayer: str
+    camera_name: str
+    signature: dict
+
+    @property
+    def is_bad(self):
+        """Expose the detector result stored with this capture."""
+        return bool(self.signature['is_bad'])
+
+    @property
+    def compatibility_key(self):
+        """Capture attributes that must agree before frames can be paired."""
+        return (
+            self.shape,
+            self.bayer,
+            round(self.exposure, 12),
+            round(self.gain, 6),
+            self.xbin,
+            self.ybin,
+            _specific_camera_name(self.camera_name),
+        )
+
+
+@dataclass(frozen=True)
+class MatchedPair:
+    """A detected failure and its one or two nearby normal references."""
+    bad: FrameRecord
+    references: tuple
+
+    @property
+    def two_sided(self):
+        """Report whether references exist both before and after the failure."""
+        return (
+            any(ref.timestamp < self.bad.timestamp for ref in self.references)
+            and any(ref.timestamp > self.bad.timestamp for ref in self.references)
+        )
+
+
+def inspect_fits(path, settings):
+    """Build a lightweight calibration record for one FITS file."""
+    data, header, _index = _read_fits(path)
+    if bool(header.get('ASI676FX', False)):
+        raise ValueError('already repaired by ASI676MC frame handling')
+    signature = asi676mc.frame_signature(data, settings)
+    exposure = _header_float(header, 'EXPTIME', 'EXPOSURE', default=-1.0)
+    gain = _header_float(header, 'GAIN', 'CCD-GAIN', default=-1.0)
+    return FrameRecord(
+        path=path,
+        timestamp=_parse_timestamp(header, path),
+        exposure=exposure,
+        gain=gain,
+        xbin=int(_header_float(header, 'XBINNING', default=1)),
+        ybin=int(_header_float(header, 'YBINNING', default=1)),
+        shape=tuple(data.shape),
+        bayer=str(header.get('BAYERPAT', 'RGGB')).strip().upper() or 'RGGB',
+        camera_name=_camera_name(header),
+        signature=signature,
+    )
+
+
+def scan_folder(folder, settings, recursive=True):
+    """Inspect compatible FITS files and return records plus rejected files."""
+    iterator = folder.rglob('*') if recursive else folder.glob('*')
+    paths = sorted(
+        path for path in iterator
+        if path.is_file()
+        and path.name.lower().endswith(
+            _FITS_SUFFIXES + _COMPRESSED_FITS_SUFFIXES
+        )
+    )
+    records = []
+    rejected = []
+    for path in paths:
+        try:
+            records.append(inspect_fits(path, settings))
+        except (OSError, ValueError) as error:
+            rejected.append((path, str(error)))
+    return records, rejected
+
+
+def _compatible(left, right):
+    """Compare capture settings while tolerating generic camera headers."""
+    left_key = left.compatibility_key[:-1]
+    right_key = right.compatibility_key[:-1]
+    if left_key != right_key:
+        return False
+    left_camera = _specific_camera_name(left.camera_name)
+    right_camera = _specific_camera_name(right.camera_name)
+    return not left_camera or not right_camera or left_camera == right_camera
+
+
+def match_pairs(records, max_pair_seconds):
+    """Match each failure to its nearest compatible normal on either side."""
+    normal = [record for record in records if not record.is_bad]
+    pairs = []
+    unmatched = []
+    for bad in (record for record in records if record.is_bad):
+        candidates = [
+            record for record in normal
+            if _compatible(bad, record)
+            and abs(record.timestamp - bad.timestamp) <= max_pair_seconds
+        ]
+        before = [
+            record for record in candidates
+            if record.timestamp < bad.timestamp
+        ]
+        after = [
+            record for record in candidates
+            if record.timestamp > bad.timestamp
+        ]
+        # A two-sided pair lets us interpolate through slow changes in sky
+        # brightness.  With only one side available, the nearest compatible
+        # capture is still useful but is reported as weaker evidence.
+        references = []
+        if before:
+            references.append(max(before, key=lambda item: item.timestamp))
+        if after:
+            references.append(min(after, key=lambda item: item.timestamp))
+        if not references and candidates:
+            references.append(
+                min(
+                    candidates,
+                    key=lambda item: abs(item.timestamp - bad.timestamp),
+                )
+            )
+        if references:
+            pairs.append(MatchedPair(bad=bad, references=tuple(references)))
+        else:
+            unmatched.append(bad)
+    return pairs, unmatched
+
+
+# ---------------------------------------------------------------------------
+# Sparse pair sampling and camera-constant estimation
+# ---------------------------------------------------------------------------
+
+
+def _sample_planes(record, bad_source, step):
+    """Copy sparse central Bayer planes; shift bad source rows by one."""
+    data, _header, _index = _read_fits(record.path)
+    height, width = data.shape
+    y_start = (height // 4) & ~1
+    y_stop = (3 * height // 4) & ~1
+    x_start = (width // 4) & ~1
+    x_stop = (3 * width // 4) & ~1
+    row_offset = 1 if bad_source else 0
+    return tuple(
+        data[
+            y_start + row + row_offset:y_stop + row_offset:step,
+            x_start + column:x_stop:step,
+        ].copy()
+        for row in range(2)
+        for column in range(2)
+    )
+
+
+def _reference_planes(pair, step):
+    """Interpolate before/after samples to the purple-frame timestamp."""
+    sampled = [
+        (
+            reference,
+            _sample_planes(reference, bad_source=False, step=step),
+        )
+        for reference in pair.references
+    ]
+    if len(sampled) == 1:
+        planes = tuple(
+            plane.astype(numpy.float64)
+            for plane in sampled[0][1]
+        )
+        stable = tuple(
+            numpy.ones(plane.shape, dtype=numpy.bool_)
+            for plane in planes
+        )
+        return planes, stable
+
+    before = max(
+        (item for item in sampled if item[0].timestamp < pair.bad.timestamp),
+        key=lambda item: item[0].timestamp,
+        default=None,
+    )
+    after = min(
+        (item for item in sampled if item[0].timestamp > pair.bad.timestamp),
+        key=lambda item: item[0].timestamp,
+        default=None,
+    )
+    if before is None or after is None:
+        nearest = min(
+            sampled,
+            key=lambda item: abs(item[0].timestamp - pair.bad.timestamp),
+        )
+        planes = tuple(
+            plane.astype(numpy.float64)
+            for plane in nearest[1]
+        )
+        stable = tuple(
+            numpy.ones(plane.shape, dtype=numpy.bool_)
+            for plane in planes
+        )
+        return planes, stable
+
+    # Linear time interpolation estimates what the purple frame would have looked
+    # like between its normal neighbors.  A separate stability mask removes
+    # pixels where fast cloud movement makes that estimate unreliable.
+    span = after[0].timestamp - before[0].timestamp
+    after_weight = (pair.bad.timestamp - before[0].timestamp) / span
+    before_weight = 1.0 - after_weight
+    planes = []
+    stable = []
+    fraction = CALIBRATION_OPTIONS['MAX_REFERENCE_CHANGE_FRACTION']
+    floor = CALIBRATION_OPTIONS['REFERENCE_CHANGE_FLOOR']
+    for before_plane, after_plane in zip(before[1], after[1]):
+        before_float = before_plane.astype(numpy.float64)
+        after_float = after_plane.astype(numpy.float64)
+        reference = (
+            before_float * before_weight
+            + after_float * after_weight
+        )
+        allowed_change = numpy.maximum(floor, reference * fraction)
+        planes.append(reference)
+        stable.append(
+            numpy.abs(after_float - before_float) <= allowed_change
+        )
+    return tuple(planes), tuple(stable)
+
+
+@dataclass
+class PairSamples:
+    """Sparse Bayer samples retained from one bad/reference group."""
+    pair: MatchedPair
+    bad_planes: tuple
+    reference_planes: tuple
+    stable_masks: tuple
+
+
+def collect_pair_samples(pairs):
+    """Load only the central sparse samples needed by calibration.
+
+    Holding these small arrays instead of complete 3552x3552 frames keeps the
+    background job practical on Raspberry Pi systems with limited memory.
+    """
+    step = CALIBRATION_OPTIONS['SAMPLE_STEP']
+    samples = []
+    for index, pair in enumerate(pairs, start=1):
+        print(
+            f'  Sampling pair {index}/{len(pairs)}: {pair.bad.path.name}',
+            flush=True,
+        )
+        reference_planes, stable_masks = _reference_planes(pair, step)
+        samples.append(PairSamples(
+            pair=pair,
+            bad_planes=_sample_planes(
+                pair.bad,
+                bad_source=True,
+                step=step,
+            ),
+            reference_planes=reference_planes,
+            stable_masks=stable_masks,
+        ))
+    return samples
+
+
+def _median_absolute_deviation(values):
+    """Return a robust spread measurement that is insensitive to outliers."""
+    median = statistics.median(values)
+    return statistics.median(abs(value - median) for value in values)
+
+
+def estimate_gains(samples):
+    """Estimate each bad-stream RGGB multiplier with equal pair weighting."""
+    parity_names = ('GAIN_R', 'GAIN_G1', 'GAIN_G2', 'GAIN_B')
+    per_parity = {name: [] for name in parity_names}
+    sample_counts = {name: 0 for name in parity_names}
+    minimum = CALIBRATION_OPTIONS['MIN_REFERENCE_VALUE']
+    maximum = CALIBRATION_OPTIONS['MAX_REFERENCE_VALUE']
+    source_max = CALIBRATION_OPTIONS['MAX_SOURCE_VALUE_FOR_GAIN']
+    required = CALIBRATION_OPTIONS['MIN_GAIN_SAMPLES_PER_PARITY']
+
+    for pair_sample in samples:
+        for name, bad, reference, stable in zip(
+            parity_names,
+            pair_sample.bad_planes,
+            pair_sample.reference_planes,
+            pair_sample.stable_masks,
+        ):
+            mask = (
+                stable
+                & (reference >= minimum)
+                & (reference <= maximum)
+                & (bad >= minimum)
+                & (bad <= source_max)
+            )
+            count = int(numpy.count_nonzero(mask))
+            if count < required:
+                continue
+            ratios = bad[mask].astype(numpy.float64) / reference[mask]
+            # Reject moving-cloud and transient mismatches without assuming
+            # the expected camera gain.
+            lower, upper = numpy.quantile(ratios, (0.10, 0.90))
+            trimmed = ratios[(ratios >= lower) & (ratios <= upper)]
+            per_parity[name].append(float(numpy.median(trimmed)))
+            sample_counts[name] += int(trimmed.size)
+
+    # Every capture contributes one median per parity, regardless of how many
+    # valid pixels it happens to contain.  This prevents a single clear frame
+    # from dominating several cloudy but otherwise valid pairs.
+    estimates = {}
+    for name in parity_names:
+        values = per_parity[name]
+        if len(values) < CALIBRATION_OPTIONS['MIN_BAD_PAIRS']:
+            raise CalibrationError(
+                f'{name} has usable samples in only {len(values)} pairs'
+            )
+        estimates[name] = {
+            'value': float(statistics.median(values)),
+            'mad': float(_median_absolute_deviation(values)),
+            'pair_values': values,
+            'sample_count': sample_counts[name],
+        }
+    return estimates
+
+
+def estimate_saturation_threshold(samples):
+    """Measure the source green ceiling and recommend its lower guard."""
+    maxima = []
+    for sample in samples:
+        maxima.extend((
+            int(numpy.max(sample.bad_planes[1])),
+            int(numpy.max(sample.bad_planes[2])),
+        ))
+    clipped_maxima = [
+        value for value in maxima
+        if value >= DEFAULT_SETTINGS['SOURCE_SATURATION_THRESHOLD']
+    ]
+    if not clipped_maxima:
+        raise CalibrationError(
+            'no source green plateau was found; collect brighter daylight pairs'
+        )
+    # Use a high percentile rather than the absolute maximum so one hot pixel
+    # cannot masquerade as the camera's clipping plateau.
+    plateau = int(round(numpy.quantile(clipped_maxima, 0.90)))
+    threshold = max(
+        1,
+        plateau - CALIBRATION_OPTIONS['SATURATION_HEADROOM'],
+    )
+    default = DEFAULT_SETTINGS['SOURCE_SATURATION_THRESHOLD']
+    if abs(threshold - default) <= CALIBRATION_OPTIONS[
+        'SATURATION_DEFAULT_SNAP'
+    ]:
+        threshold = default
+    return threshold, plateau
+
+
+def _highlight_arrays(pair_sample, gains, saturation_threshold):
+    """Select stable, informative jointly-clipped highlight samples.
+
+    Red and blue survive the camera fault well enough to guide reconstruction;
+    the normal reference provides the target chromaticity for green.  Samples
+    that changed between the before/after references are excluded.
+    """
+    bad = pair_sample.bad_planes
+    reference = pair_sample.reference_planes
+    stable = numpy.logical_and.reduce(pair_sample.stable_masks)
+    jointly_clipped = (
+        (bad[1] >= saturation_threshold)
+        & (bad[2] >= saturation_threshold)
+    )
+
+    red = numpy.clip(
+        bad[0].astype(numpy.float64) / gains['GAIN_R'],
+        0.0,
+        65535.0,
+    )
+    green1 = bad[1].astype(numpy.float64) / gains['GAIN_G1']
+    green2 = bad[2].astype(numpy.float64) / gains['GAIN_G2']
+    blue = numpy.clip(
+        bad[3].astype(numpy.float64) / gains['GAIN_B'],
+        0.0,
+        65535.0,
+    )
+    high = numpy.maximum(red, blue)
+    low = numpy.minimum(red, blue)
+    reference_red = reference[0]
+    reference_green = (reference[1] + reference[2]) / 2.0
+    reference_blue = reference[3]
+    mask = (
+        stable
+        & jointly_clipped
+        & (high > 0)
+        & (
+            reference_green
+            >= CALIBRATION_OPTIONS['HIGHLIGHT_REFERENCE_MIN']
+        )
+        # Fully clipped normal references contain no target chroma.  Keeping
+        # them would reward pushing every reconstructed green value to white
+        # and would bias the fitted boundaries toward 1.0.
+        & (reference_red < saturation_threshold)
+        & (reference_green < saturation_threshold)
+        & (reference_blue < saturation_threshold)
+    )
+    return tuple(
+        array[mask]
+        for array in (
+            high,
+            low,
+            green1,
+            green2,
+            red,
+            blue,
+            reference_red,
+            reference_green,
+            reference_blue,
+        )
+    )
+
+
+def _highlight_prediction(arrays, start_ratio, end_ratio):
+    """Apply the floating-point equivalent of Method 5 to sparse samples."""
+    high, low, green1, green2 = arrays[:4]
+    difference = high - low
+    # The factor-two curve preserves strongly colored highlights better than
+    # simply forcing green to max(red, blue).  The bounded weight then moves
+    # smoothly toward that maximum only as red and blue become more balanced.
+    base = high - (difference * difference / (2.0 * high))
+    start_base, end_base = asi676mc.highlight_blend_base_boundaries(
+        start_ratio,
+        end_ratio,
+    )
+    base_ratio = base / high
+    weight = numpy.clip(
+        (
+            base_ratio * asi676mc.HIGHLIGHT_BLEND_BASE_SCALE
+            - start_base
+        ) / (end_base - start_base),
+        0.0,
+        1.0,
+    )
+    target = base + weight * (high - base)
+    return (
+        numpy.maximum(green1, target)
+        + numpy.maximum(green2, target)
+    ) / 2.0
+
+
+def _highlight_score(datasets, start_ratio, end_ratio):
+    """Score one boundary pair using equal weight per capture pair."""
+    pair_errors = []
+    for arrays in datasets:
+        red, blue = arrays[4:6]
+        reference_red, reference_green, reference_blue = arrays[6:9]
+        predicted_green = _highlight_prediction(
+            arrays,
+            start_ratio,
+            end_ratio,
+        )
+
+        # Compare chromaticity rather than absolute brightness.  Consecutive
+        # sky frames can differ slightly in exposure or cloud luminance, while
+        # the colour relationship that the repair must restore is stable.
+        predicted_sum = red + predicted_green + blue
+        reference_sum = reference_red + reference_green + reference_blue
+        predicted_red = red / predicted_sum
+        predicted_green = predicted_green / predicted_sum
+        predicted_blue = blue / predicted_sum
+        reference_red = reference_red / reference_sum
+        reference_green = reference_green / reference_sum
+        reference_blue = reference_blue / reference_sum
+        chroma_error = numpy.sqrt(
+            (predicted_red - reference_red) ** 2
+            + (predicted_green - reference_green) ** 2
+            + (predicted_blue - reference_blue) ** 2
+        )
+        pair_errors.append(float(numpy.median(chroma_error)))
+    return float(statistics.mean(pair_errors))
+
+
+def estimate_highlight_ratios(samples, gains, saturation_threshold):
+    """Grid-search bounded Method-5 highlight ratios against normal frames."""
+    datasets = []
+    counts = []
+    for pair_sample in samples:
+        arrays = _highlight_arrays(
+            pair_sample,
+            gains,
+            saturation_threshold,
+        )
+        count = int(arrays[0].size)
+        if count < CALIBRATION_OPTIONS['MIN_HIGHLIGHT_SAMPLES_PER_PAIR']:
+            continue
+        datasets.append(arrays)
+        counts.append(count)
+
+    total = sum(counts)
+    if total < CALIBRATION_OPTIONS['MIN_HIGHLIGHT_SAMPLES_TOTAL']:
+        raise CalibrationError(
+            'only {0} stable jointly-clipped highlight samples were found; '
+            'collect brighter daylight pairs'.format(total)
+        )
+
+    # The search space is intentionally small and explicit.  It is easier to
+    # audit than a black-box optimizer and matches the runtime's fixed-point
+    # precision closely enough that finer candidates would not be meaningful.
+    candidates = []
+    for start in CALIBRATION_OPTIONS['BLEND_START_VALUES']:
+        for end in CALIBRATION_OPTIONS['BLEND_END_VALUES']:
+            if end - start < CALIBRATION_OPTIONS['MIN_BLEND_WIDTH']:
+                continue
+            try:
+                score = _highlight_score(datasets, start, end)
+            except ValueError:
+                continue
+            candidates.append((score, start, end))
+    candidates.sort()
+    if not candidates:
+        raise CalibrationError('no valid highlight blend candidates')
+
+    raw_best = candidates[0]
+    default_score = _highlight_score(
+        datasets,
+        DEFAULT_SETTINGS['HIGHLIGHT_BLEND_START_RATIO'],
+        DEFAULT_SETTINGS['HIGHLIGHT_BLEND_END_RATIO'],
+    )
+    tolerance = CALIBRATION_OPTIONS['PREFER_DEFAULT_SCORE_TOLERANCE']
+    # Prefer the field-tested defaults when a neighboring point wins by only
+    # a tiny amount.  Such a difference is more likely cloud motion or scene
+    # noise than a real camera-to-camera change.
+    if default_score <= raw_best[0] * (1.0 + tolerance):
+        selected = (
+            default_score,
+            DEFAULT_SETTINGS['HIGHLIGHT_BLEND_START_RATIO'],
+            DEFAULT_SETTINGS['HIGHLIGHT_BLEND_END_RATIO'],
+        )
+        preferred_default = True
+    else:
+        selected = raw_best
+        preferred_default = False
+    runner_up = candidates[1] if len(candidates) > 1 else raw_best
+    return {
+        'start_ratio': selected[1],
+        'end_ratio': selected[2],
+        'score': selected[0],
+        'raw_best_start_ratio': raw_best[1],
+        'raw_best_end_ratio': raw_best[2],
+        'raw_best_score': raw_best[0],
+        'preferred_default': preferred_default,
+        'runner_up_score': runner_up[0],
+        'default_score': default_score,
+        'sample_count': total,
+        'pair_count': len(datasets),
+        'per_pair_counts': counts,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Evidence checks, final validation, and the human-readable report
+# ---------------------------------------------------------------------------
+
+
+def signature_ranges(records):
+    """Summarize normal and purple detector metrics for the audit report."""
+    metrics = (
+        'purple_ratio',
+        'red_side_ratio',
+        'blue_side_ratio',
+    )
+    result = {}
+    for metric in metrics:
+        good = [
+            record.signature[metric]
+            for record in records
+            if not record.is_bad
+        ]
+        bad = [
+            record.signature[metric]
+            for record in records
+            if record.is_bad
+        ]
+        if not good or not bad:
+            raise CalibrationError(
+                'both normal and purple frames are required for signature ranges'
+            )
+        result[metric] = {
+            'good_min': float(min(good)),
+            'good_max': float(max(good)),
+            'bad_min': float(min(bad)),
+            'bad_max': float(max(bad)),
+        }
+    return result
+
+
+def validate_signature_separation(ranges, settings):
+    """Require every supplied frame to fall on the correct threshold side."""
+    threshold_names = {
+        'purple_ratio': 'PURPLE_RATIO_THRESHOLD',
+        'red_side_ratio': 'RED_SIDE_RATIO_THRESHOLD',
+        'blue_side_ratio': 'BLUE_SIDE_RATIO_THRESHOLD',
+    }
+    for metric, threshold_name in threshold_names.items():
+        values = ranges[metric]
+        threshold = settings[threshold_name]
+        if values['good_max'] >= threshold:
+            raise CalibrationError(
+                f'{threshold_name} misclassifies at least one supplied normal frame'
+            )
+        if values['bad_min'] < threshold:
+            raise CalibrationError(
+                f'{threshold_name} misses at least one supplied purple frame'
+            )
+        if values['good_max'] >= values['bad_min']:
+            raise CalibrationError(
+                f'{metric} has overlapping normal and purple ranges'
+            )
+
+
+def _exposure_levels(pairs):
+    """Return distinct exposures represented by matched failures."""
+    return sorted({round(pair.bad.exposure, 12) for pair in pairs})
+
+
+class CalibrationError(RuntimeError):
+    """Raised when an evidence collection cannot support safe calibration."""
+
+
+def validate_evidence(records, pairs, unmatched, allow_unmatched=False):
+    """Refuse calibration when the dataset cannot support safe conclusions.
+
+    Seven matched failures are the minimum statistical base.  Multiple
+    exposures reduce the chance that constants describe only one brightness
+    regime, and explicit mixed-camera collections are rejected outright.
+    """
+    bad_records = [record for record in records if record.is_bad]
+    normal_records = [record for record in records if not record.is_bad]
+    minimum = CALIBRATION_OPTIONS['MIN_BAD_PAIRS']
+    if len(pairs) < minimum:
+        raise CalibrationError(
+            f'{len(pairs)} matched purple frames found; at least {minimum} required'
+        )
+    if unmatched and not allow_unmatched:
+        raise CalibrationError(
+            f'{len(unmatched)} detected purple frames have no compatible nearby normal'
+        )
+
+    unique_good = {
+        reference.path
+        for pair in pairs
+        for reference in pair.references
+    }
+    ratio = len(unique_good) / len(pairs)
+    if ratio < CALIBRATION_OPTIONS['MIN_GOOD_BAD_RATIO']:
+        raise CalibrationError(
+            'matched normal/purple ratio is {0:.2f}:1; at least '
+            '{1:.2f}:1 is required'.format(
+                ratio,
+                CALIBRATION_OPTIONS['MIN_GOOD_BAD_RATIO'],
+            )
+        )
+    exposures = _exposure_levels(pairs)
+    if len(exposures) < CALIBRATION_OPTIONS['MIN_EXPOSURE_LEVELS']:
+        raise CalibrationError(
+            'matched failures cover only one exposure; collect more varied data'
+        )
+
+    explicit_names = {
+        _specific_camera_name(record.camera_name)
+        for record in records
+        if _specific_camera_name(record.camera_name)
+    }
+    if len(explicit_names) > 1:
+        raise CalibrationError(
+            'evidence contains more than one explicit camera identity: '
+            + ', '.join(sorted(explicit_names))
+        )
+    other_asi = {
+        name for name in explicit_names
+        if _OTHER_ASI_CAMERA_RE.search(name)
+        and not _CAMERA_NAME_RE.search(name)
+    }
+    if other_asi:
+        raise CalibrationError(
+            'evidence contains a different explicit ASI camera: '
+            + ', '.join(sorted(other_asi))
+        )
+
+    return {
+        'bad_count': len(bad_records),
+        'normal_count': len(normal_records),
+        'pair_count': len(pairs),
+        'unmatched_bad_count': len(unmatched),
+        'unique_good_count': len(unique_good),
+        'good_bad_ratio': ratio,
+        'two_sided_count': sum(pair.two_sided for pair in pairs),
+        'exposure_levels': exposures,
+        'explicit_camera_names': sorted(explicit_names),
+    }
+
+
+def validate_calibrated_frames(pairs, settings):
+    """Apply final rounded settings to every pair without writing outputs."""
+    repaired_count = 0
+    normal_count = 0
+    unique_normal = {
+        reference.path: reference
+        for pair in pairs
+        for reference in pair.references
+    }
+    # This is deliberately a full-resolution final pass.  Sparse calibration
+    # can estimate constants, but only the real runtime algorithm can prove
+    # that every failure clears detection after repair.
+    for pair in pairs:
+        data, _header, _index = _read_fits(pair.bad.path, copy=True)
+        result = asi676mc.repair_if_needed(data, settings)
+        if not result['repaired'] or result['validation_failed']:
+            raise CalibrationError(
+                f'calibrated repair validation failed for {pair.bad.path}'
+            )
+        repaired_count += 1
+
+    # A normal frame must take the fast no-op path.  The array comparison also
+    # guards against future changes accidentally touching normal input.
+    for record in unique_normal.values():
+        data, _header, _index = _read_fits(record.path, copy=True)
+        original = data.copy()
+        result = asi676mc.repair_if_needed(data, settings)
+        if result['repaired'] or result['signature_before']['is_bad']:
+            raise CalibrationError(
+                f'calibrated detector rejects normal frame {record.path}'
+            )
+        if not numpy.array_equal(data, original):
+            raise CalibrationError(
+                f'normal-frame validation mutated {record.path}'
+            )
+        normal_count += 1
+    return repaired_count, normal_count
+
+
+def calibration_payload(
+    settings,
+    evidence,
+    ranges,
+    gains,
+    saturation_threshold,
+    saturation_plateau,
+    highlight,
+    rejected,
+):
+    """Collect the seven derived settings and their supporting audit data."""
+    # Round gains exactly as the web form stores them.  The final validation
+    # below uses these rounded values, not higher-precision hidden estimates.
+    calibrated = dict(settings)
+    for name, result in gains.items():
+        calibrated[name] = round(result['value'], 5)
+    calibrated['SOURCE_SATURATION_THRESHOLD'] = saturation_threshold
+    calibrated['HIGHLIGHT_BLEND_START_RATIO'] = highlight['start_ratio']
+    calibrated['HIGHLIGHT_BLEND_END_RATIO'] = highlight['end_ratio']
+
+    derived_settings = {
+        key: calibrated[key]
+        for key in (
+            'GAIN_R',
+            'GAIN_G1',
+            'GAIN_G2',
+            'GAIN_B',
+            'SOURCE_SATURATION_THRESHOLD',
+            'HIGHLIGHT_BLEND_START_RATIO',
+            'HIGHLIGHT_BLEND_END_RATIO',
+        )
+    }
+
+    return {
+        'generated_utc': datetime.now(timezone.utc).isoformat(),
+        'quality': {
+            **evidence,
+            'rejected_file_count': len(rejected),
+            'highlight_pair_count': highlight['pair_count'],
+            'highlight_sample_count': highlight['sample_count'],
+            'highlight_score': highlight['score'],
+            'highlight_default_score': highlight['default_score'],
+            'highlight_raw_best_score': highlight['raw_best_score'],
+            'highlight_raw_best_start_ratio': (
+                highlight['raw_best_start_ratio']
+            ),
+            'highlight_raw_best_end_ratio': highlight['raw_best_end_ratio'],
+            'highlight_preferred_default': highlight['preferred_default'],
+            'highlight_runner_up_score': highlight['runner_up_score'],
+            'source_saturation_plateau': saturation_plateau,
+        },
+        'signature_ranges': ranges,
+        'gain_estimates': gains,
+        # Store only the staged basename and reason.  The integrated workflow
+        # maps that basename back to the user-facing original filename from its
+        # private manifest; absolute session paths must never enter a download.
+        'rejected_files': [
+            {
+                'name': Path(path).name,
+                'reason': str(reason),
+            }
+            for path, reason in rejected
+        ],
+        'derived_settings': derived_settings,
+    }
+
+
+
+def calibrate_folder(
+    folder,
+    settings=None,
+    recursive=True,
+    max_pair_seconds=None,
+    allow_unmatched=False,
+):
+    """Run complete calibration for one staged evidence directory.
+
+    The sequence matters: cheap structural/evidence checks happen before
+    expensive sample fitting, and full-resolution validation happens last with
+    the rounded values that a user will actually type into indi-allsky.
+    """
+    config = asi676mc.normalize_settings(settings)
+    if max_pair_seconds is None:
+        max_pair_seconds = CALIBRATION_OPTIONS['MAX_PAIR_SECONDS']
+
+    print(f'Scanning FITS files under: {folder}')
+    records, rejected = scan_folder(folder, config, recursive=recursive)
+    if not records:
+        raise CalibrationError('no compatible RAW16 RGGB FITS files found')
+    bad_count = sum(record.is_bad for record in records)
+    print(
+        f'Classified {len(records)} files: '
+        f'{bad_count} purple, {len(records) - bad_count} normal'
+    )
+
+    pairs, unmatched = match_pairs(records, max_pair_seconds)
+    evidence = validate_evidence(
+        records,
+        pairs,
+        unmatched,
+        allow_unmatched=allow_unmatched,
+    )
+    ranges = signature_ranges(records)
+    validate_signature_separation(ranges, config)
+    print(
+        'Matched {0} purple frames to {1} distinct normal frames '
+        '({2:.2f}:1)'.format(
+            evidence['pair_count'],
+            evidence['unique_good_count'],
+            evidence['good_bad_ratio'],
+        )
+    )
+
+    samples = collect_pair_samples(pairs)
+    gains_detail = estimate_gains(samples)
+    gain_values = {
+        name: result['value']
+        for name, result in gains_detail.items()
+    }
+    saturation_threshold, plateau = estimate_saturation_threshold(samples)
+    print('Fitting clipped-highlight boundaries...')
+    highlight = estimate_highlight_ratios(
+        samples,
+        gain_values,
+        saturation_threshold,
+    )
+    payload = calibration_payload(
+        config,
+        evidence,
+        ranges,
+        gains_detail,
+        saturation_threshold,
+        plateau,
+        highlight,
+        rejected,
+    )
+    print('Validating calibrated settings against every matched frame...')
+    validation_settings = dict(config)
+    validation_settings.update(payload['derived_settings'])
+    repaired_count, normal_validation_count = validate_calibrated_frames(
+        pairs,
+        validation_settings,
+    )
+    payload['quality']['validated_bad_repairs'] = repaired_count
+    payload['quality']['validated_normal_frames'] = normal_validation_count
+    return payload

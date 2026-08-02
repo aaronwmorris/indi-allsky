@@ -228,13 +228,14 @@ class VideoWorker(Process):
 
 
     def generateAsi676mcCalibration(self, task, **kwargs):
-        """Run an uploaded ASI676MC calibration outside the web request.
+        """Run a staged ASI676MC calibration outside the web request.
 
         Calibration performs several full-resolution validation passes and may
         take long enough to exceed a gunicorn request timeout on a Raspberry
         Pi.  The existing video worker is already the project's general home
-        for manually queued, CPU-heavy work, so this low-priority action keeps
-        the capture process and web workers responsive.
+        for manually queued, CPU-heavy work. This low-priority action therefore
+        handles both browser-uploaded and database-discovered evidence without
+        blocking the capture process or a web worker.
         """
         session_id = str(kwargs['session_id'])
         try:
@@ -249,7 +250,7 @@ class VideoWorker(Process):
 
         quality = result['quality']
         task.setSuccess(
-            'ASI676MC calibration passed: {0} bad / {1} normal'.format(
+            'ASI676MC calibration passed: {0} purple / {1} normal'.format(
                 quality['matched_bad_count'],
                 quality['matched_normal_count'],
             )[:255]

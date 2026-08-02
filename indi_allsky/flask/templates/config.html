@@ -2673,7 +2673,7 @@ var camera_id = {{ camera_id }};
             </div>
         </div>
         <div class="col-sm-8">
-            Detect purple frames without repairing them. The normal pipeline still saves the faulty JPEG,
+            Detect purple frames without repairing them. The normal pipeline still saves the faulty rendered image,
             then its database entry is flagged as <em>excluded</em> and automatically omitted from timelapses.
             This is selected automatically when the overall feature is first enabled and should remain selected
             while collecting calibration evidence. For stronger good/purple/good triplets, enable
@@ -2728,7 +2728,7 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             Keep the untouched faulty input FITS and the immediately following same-camera FITS.
-            This works in Exclude Only mode and is the recommended low-memory, low-disk way to collect calibration pairs.
+            This works in both Exclude Only and active repair modes and is the recommended low-memory, low-disk way to collect calibration pairs.
             No previous frame is cached unless the option below is enabled.
             Download links appear only on the standard Image Viewer.
             Normal FITS expiration settings apply.
@@ -2805,7 +2805,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.IMAGE_ASI676MC_REPAIR__GAIN_R(class='form-control bg-secondary') }}
             <div id="IMAGE_ASI676MC_REPAIR__GAIN_R-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Measured bad-frame multiplier at the R Bayer position [default: 0.91004]</div>
+        <div class="col-sm-8">Measured purple-frame multiplier at the R Bayer position [default: 0.91004]</div>
     </div>
 
     <div class="form-group row">
@@ -2816,7 +2816,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.IMAGE_ASI676MC_REPAIR__GAIN_G1(class='form-control bg-secondary') }}
             <div id="IMAGE_ASI676MC_REPAIR__GAIN_G1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Measured bad-frame multiplier at the G1 Bayer position [default: 1.68652]</div>
+        <div class="col-sm-8">Measured purple-frame multiplier at the G1 Bayer position [default: 1.68652]</div>
     </div>
 
     <div class="form-group row">
@@ -2827,7 +2827,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.IMAGE_ASI676MC_REPAIR__GAIN_G2(class='form-control bg-secondary') }}
             <div id="IMAGE_ASI676MC_REPAIR__GAIN_G2-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Measured bad-frame multiplier at the G2 Bayer position [default: 1.09238]</div>
+        <div class="col-sm-8">Measured purple-frame multiplier at the G2 Bayer position [default: 1.09238]</div>
     </div>
 
     <div class="form-group row">
@@ -2838,7 +2838,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.IMAGE_ASI676MC_REPAIR__GAIN_B(class='form-control bg-secondary') }}
             <div id="IMAGE_ASI676MC_REPAIR__GAIN_B-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Measured bad-frame multiplier at the B Bayer position [default: 0.59537]</div>
+        <div class="col-sm-8">Measured purple-frame multiplier at the B Bayer position [default: 0.59537]</div>
     </div>
 
     <!-- Keep the two highlight boundaries together; detector sampling and

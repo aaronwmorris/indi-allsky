@@ -7615,7 +7615,7 @@ class AjaxManualGpioView(BaseView):
 
 
 class Asi676mcCalibrationView(TemplateView):
-    """Authenticated landing page for uploaded FITS calibration sessions."""
+    """Authenticated landing page for both calibration evidence sources."""
 
     page_title = 'ASI676MC Calibration'
     decorators = [strict_login_required, login_required]
@@ -7734,11 +7734,12 @@ class AjaxAsi676mcCalibrationUploadView(BaseView):
 class AjaxAsi676mcCalibrationDatabaseView(BaseView):
     """Discover local database FITS and queue a newest-first calibration.
 
-    Repair-specific diagnostic records provide explicit bad/following roles.
+    Repair-specific diagnostic records provide explicit purple/following roles.
     Ordinary FITS are associated with image rows that the live detector marked
-    bad. The pure selector in ``asi676mc_calibration`` then chooses at most one
-    adjacent normal file on each side and stops after the requested number of
-    usable purple-frame groups.
+    purple. The pure selector in ``asi676mc_calibration`` then chooses at most
+    one adjacent normal file on each side and stops after the requested number
+    of usable purple-frame groups. Stored metadata retains the internal role
+    name ``bad`` for compatibility with existing diagnostic FITS.
     """
 
     methods = ['POST']
@@ -8373,7 +8374,7 @@ class AjaxAsi676mcCalibrationApplyView(BaseView):
         try:
             # Validate the complete runtime block after merging the measured
             # subset before changing the in-memory configuration.  This keeps
-            # operational switches (including ENABLED) exactly as the admin
+            # operational switches (including ENABLE) exactly as the admin
             # configured them and never turns repair on implicitly.
             asi676mc.normalize_settings(repair_config)
             self.indi_allsky_config[config_key] = repair_config

@@ -115,7 +115,7 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
         self.assertIn('asi676mc_diagnostic_bad_fits', imageviewer_template)
         self.assertIn('asi676mc_diagnostic_following_fits', imageviewer_template)
         self.assertIn('Previous FITS', imageviewer_template)
-        self.assertIn('Bad FITS', imageviewer_template)
+        self.assertIn('Purple FITS', imageviewer_template)
         self.assertIn('Next FITS', imageviewer_template)
 
     def test_camera_name_gate(self):
@@ -363,7 +363,7 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
 
     def test_clipped_highlight_blend_uses_bounded_transition(self):
         self.assertEqual(
-            asi676mc._highlight_blend_base_boundaries(0.55, 0.75),
+            asi676mc.highlight_blend_base_boundaries(0.55, 0.75),
             (719, 775),
         )
 
@@ -555,7 +555,11 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
         expected_green1 = data[0::2, 1::2] >= 100
         expected_both = expected_green1 & (data[1::2, 0::2] >= 100)
 
-        packed = asi676mc._pack_clipped_green_mask(data, 100, 4)
+        packed, packed_both = asi676mc._pack_clipped_green_masks(
+            data,
+            100,
+            4,
+        )
         unpacked = numpy.unpackbits(
             packed,
             axis=1,
@@ -565,17 +569,11 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
         self.assertEqual(packed.shape, (6, 2))
         numpy.testing.assert_array_equal(unpacked, expected_green1)
 
-        packed_green1, packed_both = asi676mc._pack_clipped_green_masks(
-            data,
-            100,
-            4,
-        )
         unpacked_both = numpy.unpackbits(
             packed_both,
             axis=1,
             count=expected_both.shape[1],
         ).view(numpy.bool_)
-        numpy.testing.assert_array_equal(packed_green1, packed)
         numpy.testing.assert_array_equal(unpacked_both, expected_both)
 
     def test_repair_audit_metadata_is_json_safe(self):

@@ -7,32 +7,17 @@ import numpy
 from astropy.io import fits
 
 from indi_allsky import asi676mc
-from misc import asi676mc_frame_repair as calibration_engine
+from indi_allsky import asi676mc_calibration_engine as calibration_engine
 
 
-class TestAsi676mcCalibrationTool(unittest.TestCase):
+class TestAsi676mcCalibrationEngine(unittest.TestCase):
 
-    def test_runtime_defaults_and_repair_are_equivalent(self):
-        self.assertEqual(
+    def test_engine_uses_runtime_defaults(self):
+        """Calibration and live repair must share one settings definition."""
+        self.assertIs(
             calibration_engine.DEFAULT_SETTINGS,
             asi676mc.DEFAULT_SETTINGS,
         )
-
-        rng = numpy.random.default_rng(676)
-        source = rng.integers(
-            0,
-            65535,
-            size=(64, 80),
-            dtype=numpy.uint16,
-        )
-        source[10:30:2, 11:31:2] = 65534
-        source[11:31:2, 10:30:2] = 65534
-
-        runtime_data = source.copy()
-        tool_data = source.copy()
-        asi676mc.repair_in_place(runtime_data)
-        calibration_engine.repair_in_place(tool_data)
-        numpy.testing.assert_array_equal(runtime_data, tool_data)
 
     def test_pairing_prefers_before_and_after(self):
         def record(name, timestamp, is_bad):
@@ -138,8 +123,8 @@ class TestAsi676mcCalibrationTool(unittest.TestCase):
     def test_folder_calibration_accepts_seven_two_sided_pairs(self):
         normal = self._normal_frame()
         bad = self._bad_stream(normal)
-        self.assertFalse(calibration_engine.frame_signature(normal)['is_bad'])
-        self.assertTrue(calibration_engine.frame_signature(bad)['is_bad'])
+        self.assertFalse(asi676mc.frame_signature(normal)['is_bad'])
+        self.assertTrue(asi676mc.frame_signature(bad)['is_bad'])
 
         with tempfile.TemporaryDirectory() as temp_dir:
             folder = Path(temp_dir)
@@ -178,19 +163,13 @@ class TestAsi676mcCalibrationTool(unittest.TestCase):
                 calibration_engine.CALIBRATION_OPTIONS,
                 overrides,
             ):
-                payload, report = calibration_engine.calibrate_folder(folder)
+                payload = calibration_engine.calibrate_folder(folder)
 
         quality = payload['quality']
-        settings = payload['IMAGE_ASI676MC_REPAIR']
+        settings = payload['derived_settings']
         self.assertEqual(quality['pair_count'], 7)
         self.assertEqual(quality['two_sided_count'], 7)
         self.assertEqual(quality['good_bad_ratio'], 2.0)
-        self.assertIn('ASI676MC calibration report', report)
-        self.assertIn('REVIEW THESE CALIBRATION VALUES', report)
-        self.assertIn('Purple frames used: 7', report)
-        self.assertIn('Purple Ratio Threshold: 1.5', report)
-        self.assertIn('Bad-frame Gain R:', report)
-        self.assertNotIn('IMAGE_ASI676MC_REPAIR values', report)
         self.assertEqual(payload['rejected_files'], [])
         for key in ('GAIN_R', 'GAIN_G1', 'GAIN_G2', 'GAIN_B'):
             self.assertAlmostEqual(

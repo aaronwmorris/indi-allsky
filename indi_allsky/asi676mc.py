@@ -1,4 +1,17 @@
-"""In-memory repair for the ASI676MC RAW16 purple-frame failure."""
+"""Detect, repair, and describe the ASI676MC RAW16 purple-frame failure.
+
+The image worker calls this module before dark calibration, debayering, or
+stacking. Detection samples the four RGGB parities; repair restores the
+one-row phase shift, reverses the measured parity gains, and reconstructs green
+samples that clipped in the faulty stream. A repaired copy is committed to the
+live image only after its purple signature disappears, so a failed validation
+leaves the original mosaic intact.
+
+This module also contains the small planning helpers used by
+diagnostic FITS capture. Web sessions and numerical fitting live in the two
+``asi676mc_calibration`` modules and reuse the functions here rather than
+carrying another detector or repair implementation.
+"""
 
 from functools import lru_cache
 import re
@@ -29,13 +42,17 @@ DEFAULT_SETTINGS = {
 # balanced.  The configured low/high boundaries are converted to equivalent
 # base/high fixed-point values.  This lets the repair reuse values it has
 # already calculated instead of reading the red and blue planes again.
-_HIGHLIGHT_BLEND_BASE_SCALE = 800
-_HIGHLIGHT_BLEND_WEIGHT_MAX = 255
+# The calibration engine must use the same fixed-point scale as live repair.
+# Keep these public within the ASI676MC package instead of copying their values
+# into both modules; otherwise a repair change could silently invalidate newly
+# derived highlight boundaries.
+HIGHLIGHT_BLEND_BASE_SCALE = 800
+HIGHLIGHT_BLEND_WEIGHT_MAX = 255
 
 
 DIAGNOSTIC_METADATA_KEY = 'asi676mc_diagnostic'
 DIAGNOSTIC_BAD_STATUSES = ('repaired', 'validation_failed', 'excluded')
-# Maintenance and removal guide: docs/asi676mc-frame-repair.md
+# Architecture and operator guide: docs/asi676mc-frame-repair.md
 
 
 _CAMERA_NAME_RE = re.compile(r'(?<![A-Z0-9])ASI[\s_-]*676MC(?![A-Z0-9])', re.IGNORECASE)
@@ -55,7 +72,12 @@ def camera_record_matches(camera):
 
 
 def diagnostic_capture_plan(pending_capture_id, status, new_capture_id=None):
-    """Plan diagnostic roles for this frame and the next pending capture."""
+    """Assign bad/following roles while allowing consecutive failures.
+
+    A frame can be the pending ``following`` reference for one purple capture
+    and the new ``bad`` member of another. Returning both roles lets the image
+    worker store one physical FITS instead of duplicating it.
+    """
     roles = []
     if pending_capture_id:
         roles.append({
@@ -176,7 +198,7 @@ def normalize_settings(settings=None):
         raise ValueError(
             'HIGHLIGHT_BLEND_START_RATIO must be less than HIGHLIGHT_BLEND_END_RATIO'
         )
-    _highlight_blend_base_boundaries(
+    highlight_blend_base_boundaries(
         highlight_blend_start,
         highlight_blend_end,
     )
@@ -195,16 +217,16 @@ def normalize_settings(settings=None):
 
 
 @lru_cache(maxsize=32)
-def _highlight_blend_base_boundaries(start_ratio, end_ratio):
+def highlight_blend_base_boundaries(start_ratio, end_ratio):
     """Map configured low/high ratios to factor-two base/high fixed points."""
     def base_ratio(channel_ratio):
         return 1.0 - (((1.0 - channel_ratio) ** 2) / 2.0)
 
     base_start = round(
-        base_ratio(start_ratio) * _HIGHLIGHT_BLEND_BASE_SCALE
+        base_ratio(start_ratio) * HIGHLIGHT_BLEND_BASE_SCALE
     )
     base_end = round(
-        base_ratio(end_ratio) * _HIGHLIGHT_BLEND_BASE_SCALE
+        base_ratio(end_ratio) * HIGHLIGHT_BLEND_BASE_SCALE
     )
     if base_start >= base_end:
         raise ValueError(
@@ -343,23 +365,12 @@ def _frame_signature(data, config):
 
 @lru_cache(maxsize=1)
 def _build_lookup_tables(gains):
+    """Build one uint16 inverse-gain table per RGGB parity."""
     values = numpy.arange(65536, dtype=numpy.float64)
     return tuple(
         numpy.rint(numpy.clip(values / gain, 0, 65535)).astype(numpy.uint16)
         for gain in gains
     )
-
-
-def _pack_clipped_green_mask(data, saturation_threshold, chunk_rows):
-    """Record clipped G1 samples compactly before applying the gain tables."""
-    green1_clipped_packed, _both_green_clipped_packed = (
-        _pack_clipped_green_masks(
-            data,
-            saturation_threshold,
-            chunk_rows,
-        )
-    )
-    return green1_clipped_packed
 
 
 def _pack_clipped_green_masks(data, saturation_threshold, chunk_rows):
@@ -418,7 +429,7 @@ def _reconstruct_clipped_green(
     plane_height, plane_width = green1.shape
     plane_chunk_rows = max(1, chunk_rows // 2)
     highlight_blend_base_start, highlight_blend_base_end = (
-        _highlight_blend_base_boundaries(
+        highlight_blend_base_boundaries(
             highlight_blend_start_ratio,
             highlight_blend_end_ratio,
         )
@@ -513,13 +524,13 @@ def _reconstruct_clipped_green(
         # for the earlier G1 interpolation and becomes the positive-weight
         # mask.
         lower += upper
-        upper *= _HIGHLIGHT_BLEND_BASE_SCALE
+        upper *= HIGHLIGHT_BLEND_BASE_SCALE
         lower *= highlight_blend_base_start
         numpy.greater(upper, lower, out=mask)
         numpy.subtract(upper, lower, out=upper, where=mask)
         numpy.multiply(upper, mask, out=upper)
 
-        upper *= _HIGHLIGHT_BLEND_WEIGHT_MAX
+        upper *= HIGHLIGHT_BLEND_WEIGHT_MAX
         lower //= highlight_blend_base_start
         lower *= (
             highlight_blend_base_end
@@ -536,7 +547,7 @@ def _reconstruct_clipped_green(
         )
         numpy.minimum(
             upper,
-            _HIGHLIGHT_BLEND_WEIGHT_MAX,
+            HIGHLIGHT_BLEND_WEIGHT_MAX,
             out=upper,
         )
 
@@ -547,8 +558,8 @@ def _reconstruct_clipped_green(
         )
         lower -= estimate
         lower *= upper
-        lower += _HIGHLIGHT_BLEND_WEIGHT_MAX // 2
-        lower //= _HIGHLIGHT_BLEND_WEIGHT_MAX
+        lower += HIGHLIGHT_BLEND_WEIGHT_MAX // 2
+        lower //= HIGHLIGHT_BLEND_WEIGHT_MAX
         lower += estimate
         estimate[:] = lower
 
@@ -622,7 +633,7 @@ def _repair_in_place(data, config):
 
 
 def repair_if_needed(data, settings=None):
-    """Repair a bad frame and report before/after diagnostic signatures."""
+    """Repair a purple frame and report before/after diagnostic signatures."""
     total_start = time.perf_counter()
     config = normalize_settings(settings)
     validate_raw_mosaic(data)
@@ -645,12 +656,14 @@ def repair_if_needed(data, settings=None):
             },
         }
 
-    # The offline tool can leave its source FITS untouched when validation
-    # fails.  The live pipeline needs the same safety property in memory, so a
-    # detected bad frame is repaired on a temporary array and committed only
-    # after its signature no longer matches the failure.
+    # Repair on a temporary array and commit only after the purple signature
+    # disappears. Validation failure therefore leaves the live image intact.
     repair_start = time.perf_counter()
     repaired_data = data.copy()
+    # Use the public repair entry point here as well as for direct callers.
+    # Besides keeping one observable repair path, this makes validation tests
+    # able to replace the mutating step and prove that failed validation never
+    # commits its temporary array to the live image.
     repair_in_place(repaired_data, config)
     signature_after = _frame_signature(repaired_data, config)
     repair_elapsed_s = time.perf_counter() - repair_start
