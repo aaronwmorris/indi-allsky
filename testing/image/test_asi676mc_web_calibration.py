@@ -681,6 +681,21 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 'form_config.IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY.label'
             ),
         )
+        highlight_start_position = settings_template.index(
+            'form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO.label'
+        )
+        highlight_end_position = settings_template.index(
+            'form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO.label'
+        )
+        sample_step_position = settings_template.index(
+            'form_config.IMAGE_ASI676MC_REPAIR__SAMPLE_STEP.label'
+        )
+        chunk_rows_position = settings_template.index(
+            'form_config.IMAGE_ASI676MC_REPAIR__CHUNK_ROWS.label'
+        )
+        self.assertLess(highlight_start_position, highlight_end_position)
+        self.assertLess(highlight_end_position, sample_step_position)
+        self.assertLess(sample_step_position, chunk_rows_position)
 
 
 if __name__ == '__main__':
