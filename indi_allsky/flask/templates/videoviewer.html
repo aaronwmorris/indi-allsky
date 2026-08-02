@@ -10,12 +10,50 @@ var camera_id = {{ camera_id }};
 var youtube__enable = {{ youtube__enable }};
 </script>
 <style>
-/* Make the vertical timeline divider sit 1/3 of the way across */
-.tw\:timeline-vertical > li {
-    grid-template-columns: 1fr auto 2.5fr !important;
+/* Make the vertical timeline divider sit 1/3 of the way across on medium screens and up */
+@media (min-width: 768px) {
+    .tw\:timeline-vertical > li {
+        grid-template-columns: 1fr auto 2.5fr !important;
+    }
+    .tw\:timeline-vertical > li > .tw\:timeline-end {
+        justify-self: stretch !important;
+    }
+    .timeline-day-item .tw\:timeline-box {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        gap: 2rem !important;
+        align-items: flex-start !important;
+        width: auto !important;
+    }
+    .thumbnail-container {
+        width: auto !important;
+    }
+    .thumbnail-card {
+        width: 24rem !important;
+    }
+    .thumbnail-actions {
+        max-width: 24rem !important;
+    }
 }
-.tw\:timeline-vertical > li > .tw\:timeline-end {
-    justify-self: stretch !important;
+@media (max-width: 767px) {
+    .timeline-day-item .tw\:timeline-box {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 1.5rem !important;
+        align-items: stretch !important;
+        width: 100% !important;
+    }
+    .thumbnail-container {
+        width: 100% !important;
+    }
+    .thumbnail-card {
+        width: 100% !important;
+    }
+    .thumbnail-actions {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
 }
 </style>
 {% endblock %}
@@ -128,21 +166,21 @@ function populate_videos(video_list) {
     }
 
     var timeline_ul = $('<ul />', {
-        'class': 'tw:timeline tw:timeline-vertical tw:w-full'
+        'class': 'tw:timeline tw:timeline-vertical max-md:tw:flex max-md:tw:flex-col max-md:tw:gap-6 tw:w-full'
     });
 
     video_list.forEach(item => {
         var dayNum = parseInt(item['dayDate'].substring(6, 8));
         var li = $('<li />', {
             'id': 'timeline-day-' + dayNum,
-            'class': 'timeline-day-item'
+            'class': 'timeline-day-item max-md:tw:flex max-md:tw:flex-col max-md:tw:w-full'
         });
         
-        $('<hr />', { 'class': 'tw:bg-base-content/10' }).appendTo(li);
+        $('<hr />', { 'class': 'tw:bg-base-content/10 max-md:tw:hidden' }).appendTo(li);
         
         // 1. Timeline Start (Metadata & Stats)
         var start_div = $('<div />', {
-            'class': 'tw:timeline-start tw:flex tw:flex-col tw:gap-2 tw:pr-6 tw:py-2 tw:w-48 tw:text-right tw:items-end'
+            'class': 'tw:timeline-start tw:flex tw:flex-col tw:gap-2 max-md:tw:w-full max-md:tw:text-left max-md:tw:items-start max-md:tw:pr-0 tw:pr-6 tw:py-2 tw:w-48 tw:text-right tw:items-end'
         }).appendTo(li);
         
         $('<span />', {
@@ -158,7 +196,7 @@ function populate_videos(video_list) {
         $('<div />', { 'class': 'tw:divider tw:my-1 tw:opacity-20 tw:w-full' }).appendTo(start_div);
         
         var stats_grid = $('<div />', {
-            'class': 'tw:grid tw:grid-cols-1 tw:gap-0.5 tw:text-[10px] tw:font-mono tw:text-base-content/50 tw:text-right'
+            'class': 'tw:grid tw:grid-cols-1 tw:gap-0.5 tw:text-[10px] tw:font-mono tw:text-base-content/50 max-md:tw:text-left tw:text-right'
         }).appendTo(start_div);
         
         if (item['night']) {
@@ -171,7 +209,7 @@ function populate_videos(video_list) {
         
         // 2. Timeline Middle (Moon / Sun Icon)
         var middle_div = $('<div />', {
-            'class': 'tw:timeline-middle'
+            'class': 'tw:timeline-middle max-md:tw:hidden'
         }).appendTo(li);
         
         var icon_span = $('<span />', {
@@ -184,12 +222,12 @@ function populate_videos(video_list) {
         
         // 3. Timeline End (Cards: Keogram & Star Trail thumbnails + Actions)
         var end_div = $('<div />', {
-            'class': 'tw:timeline-end tw:timeline-box tw:w-full md:tw:w-auto tw:max-w-none tw:bg-base-200/50 tw:border tw:border-base-content/5 tw:p-6 tw:rounded-[var(--radius-box)] tw:shadow-md tw:flex tw:flex-row tw:flex-wrap tw:gap-8 tw:items-start tw:grow tw:mb-4'
+            'class': 'tw:timeline-end tw:timeline-box tw:max-w-none tw:bg-base-200/50 tw:border tw:border-base-content/5 tw:p-4 sm:tw:p-6 tw:rounded-[var(--radius-box)] tw:shadow-md tw:flex tw:grow tw:mb-4'
         }).appendTo(li);
         
         // A. Left Column - Keogram (Main Timelapse Video link)
         var keogram_container = $('<div />', {
-            'class': 'tw:flex tw:flex-col tw:gap-2'
+            'class': 'tw:flex tw:flex-col tw:gap-2 thumbnail-container'
         }).appendTo(end_div);
         
         $('<span />', {
@@ -198,7 +236,7 @@ function populate_videos(video_list) {
         }).appendTo(keogram_container);
         
         var k_content_div = $('<div />', {
-            'class': 'tw:relative tw:group tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:border tw:border-base-300 tw:bg-neutral-950 tw:w-96 tw:aspect-video tw:shadow-sm'
+            'class': 'tw:relative tw:group tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:border tw:border-base-300 tw:bg-neutral-950 tw:aspect-video tw:shadow-sm thumbnail-card'
         }).appendTo(keogram_container);
         
         var k_a = $('<a />', {
@@ -227,7 +265,7 @@ function populate_videos(video_list) {
         
         // Actions for Keogram / main video
         var keogram_actions = $('<div />', {
-            'class': 'tw:flex tw:flex-col tw:gap-1.5 tw:w-full tw:max-w-[384px]'
+            'class': 'tw:flex tw:flex-col tw:gap-1.5 tw:w-full thumbnail-actions'
         }).appendTo(keogram_container);
         
         $('<a />', {
@@ -267,7 +305,7 @@ function populate_videos(video_list) {
         // B. Right Column - Star Trail Timelapse (if Night)
         if (item['night']) {
             var startrail_container = $('<div />', {
-                'class': 'tw:flex tw:flex-col tw:gap-2'
+                'class': 'tw:flex tw:flex-col tw:gap-2 thumbnail-container'
             }).appendTo(end_div);
             
             $('<span />', {
@@ -277,7 +315,7 @@ function populate_videos(video_list) {
 
             if (item['startrail'] !== 'None') {
                 var st_content_div = $('<div />', {
-                    'class': 'tw:relative tw:group tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:border tw:border-base-300 tw:bg-neutral-950 tw:w-96 tw:aspect-video tw:shadow-sm'
+                    'class': 'tw:relative tw:group tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:border tw:border-base-300 tw:bg-neutral-950 tw:aspect-video tw:shadow-sm thumbnail-card'
                 }).appendTo(startrail_container);
                 
                 var st_a = $('<a />', {
@@ -298,7 +336,7 @@ function populate_videos(video_list) {
                 }).html('<i class="tw:icon-[lucide--zoom-in] tw:w-10 tw:h-10 tw:text-white/85"></i>').appendTo(st_a);
                 
                 var startrail_actions = $('<div />', {
-                    'class': 'tw:flex tw:flex-col tw:gap-1.5 tw:w-full tw:max-w-[384px]'
+                    'class': 'tw:flex tw:flex-col tw:gap-1.5 tw:w-full thumbnail-actions'
                 }).appendTo(startrail_container);
                 
                 if (item['startrail_timelapse'] !== 'None') {
@@ -328,13 +366,13 @@ function populate_videos(video_list) {
                 }
             } else {
                 $('<div />', {
-                    'class': 'tw:w-96 tw:aspect-video tw:rounded-[var(--radius-box)] tw:border tw:border-dashed tw:border-base-content/20 tw:flex tw:items-center tw:justify-center tw:text-[10px] tw:font-black tw:uppercase tw:text-base-content/20',
+                    'class': 'tw:aspect-video tw:rounded-[var(--radius-box)] tw:border tw:border-dashed tw:border-base-content/20 tw:flex tw:items-center tw:justify-center tw:text-[10px] tw:font-black tw:uppercase tw:text-base-content/20 thumbnail-card',
                     'text': 'No Startrail Generated'
                 }).appendTo(startrail_container);
             }
         }
 
-        $('<hr />', { 'class': 'tw:bg-base-content/10' }).appendTo(li);
+        $('<hr />', { 'class': 'tw:bg-base-content/10 max-md:tw:hidden' }).appendTo(li);
         li.appendTo(timeline_ul);
     });
 
