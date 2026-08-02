@@ -894,7 +894,7 @@ def inspect_fits(path, settings):
     """Build a lightweight calibration record for one FITS file."""
     data, header, _index = _read_fits(path)
     if bool(header.get('ASI676FX', False)):
-        raise ValueError('already repaired by the ASI676MC tool')
+        raise ValueError('already repaired by ASI676MC frame handling')
     signature = frame_signature(data, settings)
     exposure = _header_float(header, 'EXPTIME', 'EXPOSURE', default=-1.0)
     gain = _header_float(header, 'GAIN', 'CCD-GAIN', default=-1.0)
@@ -1598,11 +1598,12 @@ def calibration_payload(
     highlight,
     rejected,
 ):
-    """Collect calibrated settings and audit measurements for the report.
+    """Collect calibrated settings and presentation-neutral audit data.
 
-    This dictionary is internal working data, not a configuration export.
-    Users receive only the text report and enter its recommended values through
-    the normal indi-allsky settings form.
+    The numerical payload is shared by every caller.  It deliberately carries
+    enough structured detail for the integrated web workflow to build its own
+    report instead of parsing or relabelling the folder-oriented text output.
+    This dictionary remains internal working data, not a configuration export.
     """
     # Round gains exactly as the web form stores them.  The final validation
     # below uses these rounded values, not higher-precision hidden estimates.
@@ -1635,6 +1636,16 @@ def calibration_payload(
         },
         'signature_ranges': ranges,
         'gain_estimates': gains,
+        # Store only the staged basename and reason.  The integrated workflow
+        # maps that basename back to the user-facing original filename from its
+        # private manifest; absolute session paths must never enter a download.
+        'rejected_files': [
+            {
+                'name': Path(path).name,
+                'reason': str(reason),
+            }
+            for path, reason in rejected
+        ],
         'IMAGE_ASI676MC_REPAIR': {
             'ENABLE': False,
             'LOG_EVERY_FRAME': False,

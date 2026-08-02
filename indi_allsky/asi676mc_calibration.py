@@ -10,6 +10,7 @@ This module owns the web-specific concerns around that engine:
 * atomic manifest/result files shared by gunicorn and the video worker;
 * deletion of uploaded FITS or database staging links as soon as a job finishes;
 * a compact result shape suitable for polling from the browser.
+* a web-native text report that never exposes private staging paths.
 
 Session data lives below Flask's non-public instance directory by default.
 This is important because the capture service uses systemd ``PrivateTmp`` and
@@ -28,6 +29,7 @@ from pathlib import Path
 import re
 import shutil
 import tempfile
+import textwrap
 import time
 import unicodedata
 import uuid
@@ -1149,8 +1151,13 @@ def _readable_join(parts):
     return '{0}, and {1}'.format(', '.join(parts[:-1]), parts[-1])
 
 
-def _result_warnings(quality, source_details=None):
-    """Build a small set of non-overlapping, first-time-user result notes."""
+def _result_warnings(quality, source_details=None, report_context=False):
+    """Build non-overlapping result notes for the page or downloaded report.
+
+    Both surfaces interpret the evidence identically.  Only the final pointer
+    for rejected-file details differs: the page points to the download, while
+    the download points to its own detail section.
+    """
     warnings = []
     source_details = source_details or {}
 
@@ -1269,7 +1276,14 @@ def _result_warnings(quality, source_details=None):
             'calibration requirements.'.format(_readable_join(skipped_parts))
         )
         if rejected_count:
-            warning += ' Download the text report for rejected-file details.'
+            if report_context:
+                warning += (
+                    ' Rejected-file details are listed later in this report.'
+                )
+            else:
+                warning += (
+                    ' Download the text report for rejected-file details.'
+                )
         warnings.append(warning)
 
     return warnings
@@ -1369,41 +1383,55 @@ def _friendly_failure_message(message):
     )
 
 
-def format_database_source_report(source_details):
-    """Format the auditable DB selection section appended to text reports."""
-    if not source_details or source_details.get('kind') != 'database':
-        return ''
-    return '\n'.join((
-        'DATABASE FITS SELECTION',
-        'Camera: {0}'.format(source_details.get('camera_name', 'Unknown')),
-        'Retention cutoff: {0} ({1})'.format(
-            source_details.get('retention_cutoff', 'Unknown'),
-            _counted_item(
-                source_details.get('retention_days', 0),
-                'day',
-            )
-            if isinstance(source_details.get('retention_days'), int)
-            else 'Unknown retention',
-        ),
-        'Requested purple-frame groups: {0}'.format(
-            source_details.get('requested_bad_count', 0)
-        ),
-        'Selected purple-frame groups: {0}'.format(
-            source_details.get('selected_bad_count', 0)
-        ),
-        'Selected distinct normal references: {0}'.format(
-            source_details.get('selected_normal_count', 0)
-        ),
-        'Selected distinct FITS files: {0}'.format(
-            source_details.get('selected_file_count', 0)
-        ),
-        'Database FITS rows in retention: {0}'.format(
-            source_details.get('database_fits_count', 0)
-        ),
-        'Missing local FITS rows ignored: {0}'.format(
-            source_details.get('missing_local_count', 0)
-        ),
+REPORT_LINE_WIDTH = 88
+
+
+def _append_report_section(lines, title):
+    """Start a readable plain-text section with consistent spacing."""
+    if lines and lines[-1] != '':
+        lines.append('')
+    lines.extend((title, '-' * len(title)))
+
+
+def _append_report_paragraph(lines, text, prefix=''):
+    """Wrap prose while keeping list markers readable in a text download."""
+    subsequent = ' ' * len(prefix)
+    lines.extend(textwrap.wrap(
+        str(text),
+        width=REPORT_LINE_WIDTH,
+        initial_indent=prefix,
+        subsequent_indent=subsequent,
     ))
+
+
+def _format_report_value(value):
+    """Format configuration values without adding misleading precision."""
+    if isinstance(value, bool):
+        return 'Yes' if value else 'No'
+    if isinstance(value, float):
+        return '{0:.10g}'.format(value)
+    return str(value)
+
+
+def _format_report_timestamp(value):
+    """Turn an ISO timestamp into an explicitly UTC, human-readable value."""
+    try:
+        parsed = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone(timezone.utc).strftime(
+            '%Y-%m-%d %H:%M:%S UTC'
+        )
+    except (TypeError, ValueError):
+        return str(value or 'Unknown')
+
+
+def _original_report_filename(staged_name, manifest_files):
+    """Map a private staged basename back to its user-facing source name."""
+    for file_entry in manifest_files or ():
+        if file_entry.get('name') == staged_name:
+            return str(file_entry.get('original_name') or staged_name)
+    return str(staged_name or 'Unknown FITS file')
 
 
 def compare_result_to_configuration(result, repair_config):
@@ -1488,6 +1516,367 @@ def compare_result_to_configuration(result, repair_config):
     }
 
 
+def format_integrated_report(payload, manifest):
+    """Build the report downloaded from the authenticated calibration page.
+
+    The numerical engine also supports folder-based callers, but their source
+    path and next steps are not meaningful in the web UI.  Building this report
+    from structured payload and session data keeps the integrated workflow
+    accurate: it can name the real evidence source, compare the saved result
+    with the configuration snapshot, explain cleanup, and avoid exposing the
+    private staging directory.
+    """
+    quality = payload['quality']
+    derived_settings = payload['IMAGE_ASI676MC_REPAIR']
+    result_summary = _result_summary(payload)
+    source_details = manifest.get('source') or {}
+    configured_at_start = manifest.get('settings') or {}
+    comparison = compare_result_to_configuration(
+        result_summary,
+        configured_at_start,
+    )
+
+    lines = [
+        'indi-allsky ASI676MC purple-frame calibration report',
+        '=' * 54,
+        'Status: Successful',
+        'Generated: {0}'.format(_format_report_timestamp(
+            payload.get('generated_utc') or manifest.get('completed_utc')
+        )),
+    ]
+
+    _append_report_section(lines, 'Calibration result')
+    _append_report_paragraph(
+        lines,
+        'The derived values passed the final safety checks. They repaired all '
+        '{0} purple frames used for validation, while all {1} distinct normal '
+        'reference frames remained unchanged.'.format(
+            quality.get('validated_bad_repairs', 0),
+            quality.get('validated_normal_frames', 0),
+        ),
+    )
+    _append_report_paragraph(
+        lines,
+        'Running the calibration did not change the indi-allsky configuration. '
+        'Only an administrator can apply the result from the calibration page.',
+    )
+
+    _append_report_section(lines, 'Recommended calibration values')
+    _append_report_paragraph(
+        lines,
+        'Review these values under Tools > ASI676MC Calibration. An '
+        'administrator can use Apply and reload, or the values can be entered '
+        'manually under Configuration > Image > ASI676MC RAW16 Frame Repair.',
+    )
+
+    configured_values = comparison.get('configured_values', {})
+    differing_keys = set(comparison.get('differing_keys', ()))
+    table_rows = []
+    for key in DERIVED_VALUE_KEYS:
+        derived_value = derived_settings[key]
+        if key not in configured_values:
+            configured_text = 'Unavailable'
+            assessment = 'Review manually'
+        else:
+            configured_value = configured_values[key]
+            configured_text = _format_report_value(configured_value)
+            if float(derived_value) == float(configured_value):
+                assessment = 'Same'
+            elif key in differing_keys:
+                assessment = 'Meaningful change'
+            else:
+                assessment = 'Negligible difference'
+        table_rows.append((
+            DERIVED_VALUE_LABELS[key],
+            _format_report_value(derived_value),
+            configured_text,
+            assessment,
+        ))
+
+    label_width = max(len('Setting'), *(len(row[0]) for row in table_rows))
+    derived_width = max(len('Derived'), *(len(row[1]) for row in table_rows))
+    configured_width = max(
+        len('Configured when started'),
+        *(len(row[2]) for row in table_rows)
+    )
+    table_format = '{{0:<{0}}}  {{1:>{1}}}  {{2:>{2}}}  {{3}}'.format(
+        label_width,
+        derived_width,
+        configured_width,
+    )
+    lines.extend((
+        '',
+        table_format.format(
+            'Setting',
+            'Derived',
+            'Configured when started',
+            'Assessment',
+        ),
+        table_format.format(
+            '-' * label_width,
+            '-' * derived_width,
+            '-' * configured_width,
+            '-' * len('Assessment'),
+        ),
+    ))
+    lines.extend(table_format.format(*row) for row in table_rows)
+
+    comparison_text = {
+        'exact': (
+            'All seven values matched the configuration when calibration '
+            'started. No update was needed at that time.'
+        ),
+        'equivalent': (
+            'The result effectively matched the configuration when '
+            'calibration started. Applying it was unlikely to produce a '
+            'visible change.'
+        ),
+        'different': (
+            'One or more values differed enough to make a meaningful change '
+            'to repaired images.'
+        ),
+        'unavailable': (
+            'The configuration snapshot could not be compared. Review the '
+            'current values in Image Settings before applying this result.'
+        ),
+    }[comparison.get('status', 'unavailable')]
+    lines.append('')
+    _append_report_paragraph(lines, comparison_text)
+    _append_report_paragraph(
+        lines,
+        'The result page compares against the live configuration, which may '
+        'have changed since this calibration started.',
+    )
+
+    _append_report_section(lines, 'Evidence source')
+    source_kind = source_details.get('kind')
+    selected_file_count = source_details.get(
+        'selected_file_count',
+        len(manifest.get('files', ())),
+    )
+    if source_kind == 'database':
+        lines.extend((
+            'Method: Saved FITS search on the ASI676MC Calibration page',
+            'Camera: {0}'.format(source_details.get('camera_name', 'Unknown')),
+            'Search order: Newest retained FITS first',
+            'Requested maximum: {0}'.format(_counted_item(
+                source_details.get('requested_bad_count', 0),
+                'purple-frame group',
+            )),
+            'Usable groups selected: {0}'.format(
+                source_details.get('selected_bad_count', 0)
+            ),
+            'Distinct normal references selected: {0}'.format(
+                source_details.get('selected_normal_count', 0)
+            ),
+            'Distinct FITS selected: {0}'.format(selected_file_count),
+            'Saved FITS entries in retention window: {0}'.format(
+                source_details.get('database_fits_count', 0)
+            ),
+            'FITS retention cutoff: {0} ({1})'.format(
+                source_details.get('retention_cutoff', 'Unknown'),
+                _counted_item(source_details.get('retention_days', 0), 'day')
+                if isinstance(source_details.get('retention_days'), int)
+                else 'Unknown retention',
+            ),
+            'Entries whose files were missing: {0}'.format(
+                source_details.get('missing_local_count', 0)
+            ),
+            'Files with unsupported names: {0}'.format(
+                source_details.get('unsupported_count', 0)
+            ),
+        ))
+        _append_report_paragraph(
+            lines,
+            'Only the session\'s temporary staging links were removed after '
+            'calibration. The original saved FITS were left unchanged and '
+            'remain subject to the normal FITS retention setting.',
+        )
+    elif source_kind == 'upload':
+        lines.extend((
+            'Method: Manual FITS upload on the ASI676MC Calibration page',
+            'FITS selected: {0}'.format(selected_file_count),
+        ))
+        _append_report_paragraph(
+            lines,
+            'The private uploaded copies were removed after calibration. The '
+            'original files on the user\'s computer were never modified.',
+        )
+    else:
+        lines.extend((
+            'Method: ASI676MC Calibration page',
+            'FITS selected: {0}'.format(selected_file_count),
+        ))
+        _append_report_paragraph(
+            lines,
+            'The private session inputs were removed after calibration.',
+        )
+
+    _append_report_section(lines, 'Evidence used')
+    evidence_lines = (
+        ('Purple frames with a normal reference', quality['pair_count']),
+        ('Purple frames skipped without a reference',
+         quality.get('unmatched_bad_count', 0)),
+        ('Distinct normal references', quality['unique_good_count']),
+        ('Normal-to-purple ratio',
+         '{0:.2f}:1'.format(quality['good_bad_ratio'])),
+        ('Good/purple/good groups', '{0} of {1}'.format(
+            quality['two_sided_count'], quality['pair_count']
+        )),
+        ('Exposure settings represented', len(quality['exposure_levels'])),
+        ('Purple-frame repair checks passed',
+         quality.get('validated_bad_repairs', 0)),
+        ('Normal-frame unchanged checks passed',
+         quality.get('validated_normal_frames', 0)),
+        ('FITS files unreadable or unusable',
+         quality.get('rejected_file_count', 0)),
+    )
+    evidence_width = max(len(label) for label, _value in evidence_lines)
+    lines.extend(
+        '{0:<{1}}  {2}'.format(label + ':', evidence_width + 1, value)
+        for label, value in evidence_lines
+    )
+    camera_names = quality.get('explicit_camera_names', ())
+    lines.append('Camera identity in FITS headers: {0}'.format(
+        ', '.join(camera_names)
+        if camera_names
+        else 'No explicit name (compatible legacy headers)'
+    ))
+    lines.append('Maximum matching separation: {0:g} seconds'.format(
+        float(manifest.get('max_pair_seconds', 0))
+    ))
+
+    _append_report_section(lines, 'Result notes')
+    report_notes = _result_warnings(
+        result_summary['quality'],
+        source_details,
+        report_context=True,
+    )
+    if report_notes:
+        for note in report_notes:
+            _append_report_paragraph(lines, note, prefix='- ')
+    else:
+        lines.append('No additional warnings.')
+
+    rejected_files = payload.get('rejected_files') or ()
+    if rejected_files:
+        _append_report_section(lines, 'Rejected FITS details')
+        _append_report_paragraph(
+            lines,
+            'These files were not used. Their rejection did not prevent the '
+            'remaining evidence from passing calibration.',
+        )
+        for rejected in rejected_files:
+            original_name = _original_report_filename(
+                rejected.get('name'),
+                manifest.get('files'),
+            )
+            _append_report_paragraph(
+                lines,
+                '{0}: {1}'.format(
+                    original_name,
+                    rejected.get('reason') or 'Unreadable or unusable FITS',
+                ),
+                prefix='- ',
+            )
+
+    gain_estimates = payload.get('gain_estimates') or {}
+    if gain_estimates:
+        _append_report_section(lines, 'Gain fit details')
+        _append_report_paragraph(
+            lines,
+            'MAD is the median absolute deviation between matched-frame '
+            'estimates; smaller values indicate more consistent evidence.',
+        )
+        for key in ('GAIN_R', 'GAIN_G1', 'GAIN_G2', 'GAIN_B'):
+            estimate = gain_estimates.get(key)
+            if not estimate:
+                continue
+            lines.append(
+                '{0}: {1:.5f}; pair MAD {2:.5f}; {3} samples'.format(
+                    DERIVED_VALUE_LABELS[key],
+                    estimate['value'],
+                    estimate['mad'],
+                    estimate['sample_count'],
+                )
+            )
+
+    if 'highlight_score' in quality:
+        _append_report_section(lines, 'Highlight blend fit details')
+        lines.extend((
+            'Selected start/end ratios: {0}/{1}'.format(
+                _format_report_value(
+                    derived_settings['HIGHLIGHT_BLEND_START_RATIO']
+                ),
+                _format_report_value(
+                    derived_settings['HIGHLIGHT_BLEND_END_RATIO']
+                ),
+            ),
+            'Stable clipped-highlight samples: {0} across {1} groups'.format(
+                quality.get('highlight_sample_count', 0),
+                quality.get('highlight_pair_count', 0),
+            ),
+            'Selected median chromaticity error: {0:.6f}'.format(
+                quality['highlight_score']
+            ),
+            'Proven 0.55/0.75 error: {0:.6f}'.format(
+                quality['highlight_default_score']
+            ),
+            'Unregularized grid best: {0:.2f}/{1:.2f} at {2:.6f}'.format(
+                quality['highlight_raw_best_start_ratio'],
+                quality['highlight_raw_best_end_ratio'],
+                quality['highlight_raw_best_score'],
+            ),
+            'Proven defaults retained within tolerance: {0}'.format(
+                'Yes' if quality['highlight_preferred_default'] else 'No'
+            ),
+            'Runner-up chromaticity error: {0:.6f}'.format(
+                quality['highlight_runner_up_score']
+            ),
+            'Measured source-green plateau: {0}'.format(
+                quality['source_saturation_plateau']
+            ),
+        ))
+
+    signature_ranges = payload.get('signature_ranges') or {}
+    if signature_ranges:
+        _append_report_section(lines, 'Purple-frame signature separation')
+        _append_report_paragraph(
+            lines,
+            'The normal and purple ranges below did not overlap and remained '
+            'on the correct side of the configured detection thresholds.',
+        )
+        signature_labels = {
+            'purple_ratio': 'Combined purple/green ratio',
+            'red_side_ratio': 'Red-side ratio',
+            'blue_side_ratio': 'Blue-side ratio',
+        }
+        for metric, values in signature_ranges.items():
+            lines.append(
+                '{0}: normal {1:.3f}-{2:.3f}; purple {3:.3f}-{4:.3f}'.format(
+                    signature_labels.get(metric, metric),
+                    values['good_min'],
+                    values['good_max'],
+                    values['bad_min'],
+                    values['bad_max'],
+                )
+            )
+
+    _append_report_section(lines, 'About this report')
+    _append_report_paragraph(
+        lines,
+        'This is a human-readable record from Tools > ASI676MC Calibration, '
+        'not a configuration file. It cannot be imported into indi-allsky.',
+    )
+    _append_report_paragraph(
+        lines,
+        'Only the seven calibration values above were derived. Repair mode, '
+        'FITS saving, logging, gallery, and other feature switches remain '
+        'operator choices and are never changed by calibration itself.',
+    )
+    return '\n'.join(lines).rstrip() + '\n'
+
+
 def run_calibration_session(session_id, storage_root=None):
     """Run the calibration engine for one queued web session."""
     session_dir, manifest = get_session(session_id, storage_root=storage_root)
@@ -1504,7 +1893,7 @@ def run_calibration_session(session_id, storage_root=None):
         from misc import asi676mc_frame_repair as calibration_engine
 
         with redirect_stdout(captured_output):
-            payload, report_text = calibration_engine.calibrate_folder(
+            payload, _engine_report = calibration_engine.calibrate_folder(
                 upload_dir,
                 settings=manifest.get('settings'),
                 recursive=False,
@@ -1526,12 +1915,11 @@ def run_calibration_session(session_id, storage_root=None):
             result['quality'],
             source_details,
         )
-        database_report = format_database_source_report(source_details)
-        if database_report:
-            report_text = '{0}\n\n{1}\n'.format(
-                report_text.rstrip(),
-                database_report,
-            )
+        # The engine's folder-oriented report contains implementation details
+        # such as its input path.  The web download is built independently from
+        # structured data so upload/search provenance, configuration comparison,
+        # cleanup, and UI actions are all described accurately.
+        report_text = format_integrated_report(payload, manifest)
         _atomic_write_json(session_dir.joinpath('result.json'), result)
         session_dir.joinpath('asi676mc_calibration_report.txt').write_text(
             report_text,

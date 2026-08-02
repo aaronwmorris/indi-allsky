@@ -191,6 +191,7 @@ class TestAsi676mcCalibrationTool(unittest.TestCase):
         self.assertIn('Purple Ratio Threshold: 1.5', report)
         self.assertIn('Bad-frame Gain R:', report)
         self.assertNotIn('IMAGE_ASI676MC_REPAIR values', report)
+        self.assertEqual(payload['rejected_files'], [])
         for key in ('GAIN_R', 'GAIN_G1', 'GAIN_G2', 'GAIN_B'):
             self.assertAlmostEqual(
                 settings[key],

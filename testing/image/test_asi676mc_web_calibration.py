@@ -28,6 +28,8 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
     def _successful_payload():
         settings = dict(calibration_engine.DEFAULT_SETTINGS)
         return {
+            'generated_utc': '2026-08-02T12:34:56+00:00',
+            'source_folder': '/private/calibration/session/uploads',
             'IMAGE_ASI676MC_REPAIR': settings,
             'quality': {
                 'pair_count': 7,
@@ -40,7 +42,49 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 'validated_normal_frames': 14,
                 'rejected_file_count': 1,
                 'highlight_sample_count': 1200,
+                'highlight_pair_count': 7,
+                'highlight_score': 0.012345,
+                'highlight_default_score': 0.012500,
+                'highlight_raw_best_score': 0.012300,
+                'highlight_raw_best_start_ratio': 0.54,
+                'highlight_raw_best_end_ratio': 0.76,
+                'highlight_preferred_default': True,
+                'highlight_runner_up_score': 0.012400,
+                'source_saturation_plateau': 65534,
+                'explicit_camera_names': ['ZWO CCD ASI676MC'],
             },
+            'gain_estimates': {
+                key: {
+                    'value': settings[key],
+                    'mad': 0.001,
+                    'sample_count': 500,
+                }
+                for key in ('GAIN_R', 'GAIN_G1', 'GAIN_G2', 'GAIN_B')
+            },
+            'signature_ranges': {
+                'purple_ratio': {
+                    'good_min': 0.8,
+                    'good_max': 1.0,
+                    'bad_min': 1.8,
+                    'bad_max': 2.1,
+                },
+                'red_side_ratio': {
+                    'good_min': 0.9,
+                    'good_max': 1.1,
+                    'bad_min': 1.7,
+                    'bad_max': 2.0,
+                },
+                'blue_side_ratio': {
+                    'good_min': 0.9,
+                    'good_max': 1.1,
+                    'bad_min': 1.7,
+                    'bad_max': 2.0,
+                },
+            },
+            'rejected_files': [{
+                'name': 'rejected.fit',
+                'reason': 'already repaired by ASI676MC frame handling',
+            }],
         }
 
     def test_upload_session_is_owned_and_accepts_batch_members(self):
@@ -302,32 +346,89 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             )
             self.assertTrue(all(record['path'].is_file() for record in records))
 
-    def test_database_source_selection_is_text_report_auditable(self):
-        report = asi676mc_calibration.format_database_source_report({
-            'kind': 'database',
-            'camera_name': 'ASI676MC',
-            'retention_cutoff': '2026-07-23',
-            'retention_days': 10,
-            'requested_bad_count': 25,
-            'selected_bad_count': 9,
-            'selected_normal_count': 10,
-            'selected_file_count': 19,
-            'database_fits_count': 40,
-            'missing_local_count': 2,
+    def test_integrated_database_report_is_actionable_and_auditable(self):
+        payload = self._successful_payload()
+        settings = dict(calibration_engine.DEFAULT_SETTINGS)
+        settings['GAIN_R'] = settings['GAIN_R'] + 0.1
+        report = asi676mc_calibration.format_integrated_report(payload, {
+            'settings': settings,
+            'max_pair_seconds': 90.0,
+            'files': [{
+                'name': 'rejected.fit',
+                'original_name': 'already_fixed.fit',
+            }],
+            'source': {
+                'kind': 'database',
+                'camera_name': 'ASI676MC',
+                'retention_cutoff': '2026-07-23',
+                'retention_days': 10,
+                'requested_bad_count': 25,
+                'selected_bad_count': 9,
+                'selected_normal_count': 10,
+                'selected_file_count': 19,
+                'database_fits_count': 40,
+                'missing_local_count': 2,
+                'unsupported_count': 1,
+            },
         })
-        self.assertIn('DATABASE FITS SELECTION', report)
-        self.assertIn('Requested purple-frame groups: 25', report)
-        self.assertIn('Selected purple-frame groups: 9', report)
-        self.assertIn('Retention cutoff: 2026-07-23 (10 days)', report)
-        self.assertIn('Missing local FITS rows ignored: 2', report)
 
-        one_day_report = asi676mc_calibration.format_database_source_report({
-            'kind': 'database',
-            'retention_cutoff': '2026-08-01',
-            'retention_days': 1,
+        self.assertTrue(report.startswith(
+            'indi-allsky ASI676MC purple-frame calibration report\n'
+        ))
+        self.assertIn('Status: Successful', report)
+        self.assertIn('Recommended calibration values', report)
+        self.assertIn('Configured when started', report)
+        self.assertIn('Meaningful change', report)
+        self.assertIn('Tools > ASI676MC Calibration', report)
+        self.assertIn('Method: Saved FITS search', report)
+        self.assertIn('Requested maximum: 25 purple-frame groups', report)
+        self.assertIn('Usable groups selected: 9', report)
+        self.assertIn('FITS retention cutoff: 2026-07-23 (10 days)', report)
+        self.assertIn('Entries whose files were missing: 2', report)
+        self.assertIn('already_fixed.fit:', report)
+        self.assertIn('Rejected-file details are listed later', report)
+        self.assertNotIn('DATABASE FITS SELECTION', report)
+        self.assertNotIn('REVIEW THESE CALIBRATION VALUES', report)
+        self.assertNotIn('Source:', report)
+        self.assertNotIn('/private/calibration/session/uploads', report)
+
+    def test_integrated_upload_report_explains_cleanup_and_one_day_grammar(self):
+        payload = self._successful_payload()
+        payload['quality']['rejected_file_count'] = 0
+        payload['quality']['unmatched_bad_count'] = 0
+        payload['rejected_files'] = []
+        report = asi676mc_calibration.format_integrated_report(payload, {
+            'settings': calibration_engine.DEFAULT_SETTINGS,
+            'max_pair_seconds': 120.0,
+            'files': [],
+            'source': {
+                'kind': 'upload',
+                'selected_file_count': 21,
+            },
         })
-        self.assertIn('Retention cutoff: 2026-08-01 (1 day)', one_day_report)
-        self.assertNotIn('1 days', one_day_report)
+        self.assertIn('Method: Manual FITS upload', report)
+        self.assertIn('FITS selected: 21', report)
+        self.assertIn('private uploaded copies were removed', report)
+        self.assertIn('No additional warnings.', report)
+
+        database_report = asi676mc_calibration.format_integrated_report(
+            payload,
+            {
+                'settings': calibration_engine.DEFAULT_SETTINGS,
+                'max_pair_seconds': 120.0,
+                'files': [],
+                'source': {
+                    'kind': 'database',
+                    'retention_cutoff': '2026-08-01',
+                    'retention_days': 1,
+                },
+            },
+        )
+        self.assertIn(
+            'FITS retention cutoff: 2026-08-01 (1 day)',
+            database_report,
+        )
+        self.assertNotIn('1 days', database_report)
 
     def test_background_run_allows_unmatched_and_removes_uploaded_fits(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -368,7 +469,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             with mock.patch.object(
                 calibration_engine,
                 'calibrate_folder',
-                return_value=(payload, 'human-readable report\n'),
+                return_value=(payload, 'folder-oriented engine report\n'),
             ) as calibrate_folder:
                 original_write_manifest = asi676mc_calibration._write_manifest
                 success_saw_deleted_sources = []
@@ -419,11 +520,14 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 'alice',
                 root,
             ).read_text(encoding='utf-8')
-            self.assertTrue(report.startswith('human-readable report\n'))
+            self.assertTrue(report.startswith(
+                'indi-allsky ASI676MC purple-frame calibration report\n'
+            ))
             self.assertIn(
-                'DATABASE FITS SELECTION',
+                'Method: Saved FITS search',
                 report,
             )
+            self.assertNotIn('folder-oriented engine report', report)
 
     def test_result_comparison_distinguishes_exact_negligible_and_different(self):
         payload = self._successful_payload()

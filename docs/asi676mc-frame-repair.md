@@ -344,18 +344,26 @@ bad FITS and every distinct matched normal FITS. Calibration fails if a bad
 repair retains the signature, a normal frame is classified as bad, or any
 normal-frame data changes.
 
-The numerical calibration engine produces
-`asi676mc_calibration_report.txt`. Its first section is headed
-`REVIEW THESE CALIBRATION VALUES` and uses the exact field labels shown under
-**Configuration > Image > ASI676MC RAW16 Frame Repair**. The web integration
-also stores those seven values in its compact result so they can be reviewed
-beside the current configuration and, by an administrator, applied through
-indi-allsky's normal settings workflow.
+The authenticated web workflow produces
+`asi676mc_calibration_report.txt` from the engine's structured numerical
+result. It does not reuse the engine's folder-oriented presentation: private
+session paths and instructions that do not match the web UI therefore never
+enter the download. The report uses the exact field labels shown under
+**Configuration > Image > ASI676MC RAW16 Frame Repair** and explains the same
+**Apply and reload** workflow as the result page.
 
-The report continues with human-readable evidence, stability, signature, and
-highlight-fit details for auditing. The numerical engine itself never edits the
-live indi-allsky configuration and never overwrites source FITS; authenticated
-web views own the optional configuration save and source cleanup workflows.
+The report starts with the successful safety-check outcome, the seven derived
+values, and the configuration snapshot from when calibration started. Each row
+is labelled as the same value, a negligible difference, or a meaningful
+change. The report makes clear that the live comparison on the result page may
+be newer than this snapshot. It then identifies manual upload or saved-FITS
+search as the evidence source, explains the corresponding cleanup behavior,
+and presents evidence, warnings, rejected-file details, gain stability,
+highlight fitting, and signature separation in progressively more technical
+sections. It is explicitly a human-readable record, not an importable
+configuration file. Generating it never edits the live configuration or source
+FITS; authenticated web views own the optional configuration save and private
+source-cleanup workflows.
 
 Against the complete saved development collection, the tool found 14 matched
 bad frames and 21 distinct normal references across 14 exposure levels. Seven
@@ -469,8 +477,10 @@ existing collection. The result-status banner states success, source cleanup,
 that only the seven derived values are in scope, and whether applying the result
 would materially change the current values.
 The structured **Evidence used** section carries the counts. The downloadable
-text report appends the full database-selection audit, including the requested
-limit, retention cutoff, and missing-local-file count.
+text report integrates the full saved-FITS selection audit into its **Evidence
+source** section, including search order, requested limit, retention cutoff,
+selected groups and references, missing files, unsupported names, and the fact
+that only temporary links were removed.
 
 The default session directory is Flask's non-public `instance` directory and
 may be overridden with `ASI676MC_CALIBRATION_FOLDER`. Do not move sessions into
@@ -524,7 +534,11 @@ when result status is requested rather than stored with the result, keeping a
 retained result accurate after settings change elsewhere. Detection thresholds,
 sample step, chunk size, and operational switches are validated/current values
 rather than measurements and are not presented as derived. The complete
-human-readable report is available through an owner-checked download route.
+human-readable report is available through an owner-checked download route. It
+uses a configuration snapshot captured when calibration was queued, while the
+browser continues to show the current live configuration. For rejected FITS,
+the download maps private staged names back to the original upload or database
+filename and never exposes the private calibration directory.
 Returning to the page restores that result without restoring the browser's file
 selection. **Reset / recalibrate** deletes the retained result/report session
 and returns the page to its original file-selection state. In the result action
