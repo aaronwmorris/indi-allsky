@@ -10,7 +10,7 @@ This module owns the web-specific concerns around that engine:
 * private, per-user upload sessions;
 * conservative file-count and storage limits;
 * atomic manifest/result files shared by gunicorn and the video worker;
-* deletion of large uploaded FITS files as soon as a job finishes; and
+* deletion of uploaded FITS or database staging links as soon as a job finishes;
 * a compact result shape suitable for polling from the browser.
 
 Session data lives below Flask's non-public instance directory by default.
@@ -42,9 +42,13 @@ FITS_SUFFIXES = ('.fit', '.fits', '.fts')
 # These limits comfortably allow sizeable calibration collections while
 # preventing one authenticated browser session from consuming the whole disk.
 MAX_FILE_COUNT = 200
+MAX_DATABASE_FILE_COUNT = 300
 MAX_FILE_BYTES = 256 * 1024 * 1024
 MAX_SESSION_BYTES = 2 * 1024 * 1024 * 1024
 SESSION_RETENTION_SECONDS = 7 * 24 * 60 * 60
+DATABASE_BAD_FRAME_MIN = 7
+DATABASE_BAD_FRAME_MAX = 100
+DATABASE_CAPTURE_TIME_TOLERANCE = 1.0
 
 # Comparison tolerances are deliberately much smaller than the calibration
 # engine's useful fitting resolution.  They are only used to tell an operator
@@ -445,6 +449,282 @@ def _unique_upload_name(upload_dir, original_name):
     return candidate
 
 
+def is_database_fits_path(path):
+    """Return whether a database asset is a FITS format Astropy can open."""
+    name = Path(path).name.lower()
+    return name.endswith((
+        '.fit',
+        '.fits',
+        '.fts',
+        '.fit.gz',
+        '.fits.gz',
+        '.fts.gz',
+    ))
+
+
+def _database_record_has_role(record, role_name):
+    """Inspect normalized diagnostic roles without trusting missing metadata."""
+    return any(
+        role.get('role') == role_name
+        for role in record.get('roles', ())
+        if isinstance(role, dict)
+    )
+
+
+def _database_compatibility_key(record):
+    """Mirror the engine's inexpensive database-visible pairing fields."""
+    return (
+        record.get('width'),
+        record.get('height'),
+        round(float(record.get('exposure', -1.0)), 12),
+        round(float(record.get('gain', -1.0)), 6),
+        int(record.get('binmode', 1)),
+    )
+
+
+def select_database_evidence(
+    fits_records,
+    bad_frames,
+    max_bad_frames,
+    max_pair_seconds,
+):
+    """Select newest-first bad/reference groups from normalized DB records.
+
+    Explicit diagnostic roles are preferred because their bad FITS is known to
+    be untouched input. Ordinary FITS are associated with an image row marked
+    bad when their capture times agree within one second. At most one normal
+    reference on each side is retained; the calibration engine subsequently
+    reopens every selected FITS and verifies its true signature and complete
+    compatibility before using it.
+    """
+    max_bad_frames = int(max_bad_frames)
+    if (
+        max_bad_frames < DATABASE_BAD_FRAME_MIN
+        or max_bad_frames > DATABASE_BAD_FRAME_MAX
+    ):
+        raise CalibrationSessionError(
+            'database bad-frame limit must be between {0} and {1}'.format(
+                DATABASE_BAD_FRAME_MIN,
+                DATABASE_BAD_FRAME_MAX,
+            )
+        )
+    max_pair_seconds = float(max_pair_seconds)
+    if max_pair_seconds <= 0 or max_pair_seconds > 3600:
+        raise CalibrationSessionError(
+            'maximum pair separation must be between 0 and 3600 seconds'
+        )
+
+    records = sorted(
+        (dict(record) for record in fits_records),
+        key=lambda record: float(record['timestamp']),
+    )
+    records_by_id = {record['id']: record for record in records}
+
+    # Diagnostic FITS can carry more than one role when consecutive failures
+    # occur. A record with any ``bad`` role is never eligible as a reference.
+    diagnostic_candidates = []
+    diagnostic_capture_ids = set()
+    for record in records:
+        for role in record.get('roles', ()):
+            if not isinstance(role, dict) or role.get('role') != 'bad':
+                continue
+            capture_id = str(role.get('capture_id') or '')
+            if not capture_id or capture_id in diagnostic_capture_ids:
+                continue
+            diagnostic_capture_ids.add(capture_id)
+            diagnostic_candidates.append(record)
+
+    candidates = list(diagnostic_candidates)
+    known_bad_ids = {
+        record['id']
+        for record in records
+        if _database_record_has_role(record, 'bad')
+    }
+    # Ordinary saving can create a second DB row at the same capture time as an
+    # explicit diagnostic bad FITS. Even if the corresponding JPEG/image row
+    # has already expired, that duplicate must not become another group's
+    # supposedly normal reference.
+    for diagnostic_bad in diagnostic_candidates:
+        diagnostic_time = float(diagnostic_bad['timestamp'])
+        diagnostic_key = _database_compatibility_key(diagnostic_bad)
+        known_bad_ids.update(
+            record['id']
+            for record in records
+            if not record.get('roles')
+            and _database_compatibility_key(record) == diagnostic_key
+            and abs(float(record['timestamp']) - diagnostic_time)
+            <= DATABASE_CAPTURE_TIME_TOLERANCE
+        )
+
+    # Associate ordinary saved FITS with bad image rows. If an explicit
+    # diagnostic bad capture exists at that time, keep it and do not add the
+    # post-repair ordinary FITS as a second candidate.
+    diagnostic_times = [
+        float(record['timestamp'])
+        for record in diagnostic_candidates
+    ]
+    for bad_frame in sorted(
+        (dict(frame) for frame in bad_frames),
+        key=lambda frame: float(frame['timestamp']),
+        reverse=True,
+    ):
+        bad_time = float(bad_frame['timestamp'])
+        ordinary_matches = [
+            record for record in records
+            if not record.get('roles')
+            and abs(float(record['timestamp']) - bad_time)
+            <= DATABASE_CAPTURE_TIME_TOLERANCE
+            and round(float(record.get('exposure', -1.0)), 12)
+            == round(float(bad_frame.get('exposure', -1.0)), 12)
+            and round(float(record.get('gain', -1.0)), 6)
+            == round(float(bad_frame.get('gain', -1.0)), 6)
+        ]
+        known_bad_ids.update(record['id'] for record in ordinary_matches)
+        # Ordinary FITS written for an actually repaired frame contains the
+        # corrected mosaic, not calibration evidence. The caller marks only
+        # historical Exclude Only captures as safe ordinary bad candidates;
+        # every known-bad timestamp is still excluded from normal references.
+        if not bad_frame.get('allow_ordinary', True):
+            continue
+        if any(
+            abs(diagnostic_time - bad_time)
+            <= DATABASE_CAPTURE_TIME_TOLERANCE
+            for diagnostic_time in diagnostic_times
+        ):
+            continue
+        if ordinary_matches:
+            candidates.append(min(
+                ordinary_matches,
+                key=lambda record: abs(float(record['timestamp']) - bad_time),
+            ))
+
+    groups = []
+    selected_ids = set()
+    reference_ids = set()
+    seen_bad_ids = set()
+    for bad_record in sorted(
+        candidates,
+        key=lambda record: float(record['timestamp']),
+        reverse=True,
+    ):
+        if bad_record['id'] in seen_bad_ids:
+            continue
+        seen_bad_ids.add(bad_record['id'])
+        bad_time = float(bad_record['timestamp'])
+        compatibility_key = _database_compatibility_key(bad_record)
+        normal_candidates = [
+            record for record in records
+            if record['id'] not in known_bad_ids
+            and not _database_record_has_role(record, 'bad')
+            and _database_compatibility_key(record) == compatibility_key
+            and 0 < abs(float(record['timestamp']) - bad_time)
+            <= max_pair_seconds
+        ]
+        before = [
+            record for record in normal_candidates
+            if float(record['timestamp']) < bad_time
+        ]
+        after = [
+            record for record in normal_candidates
+            if float(record['timestamp']) > bad_time
+        ]
+        references = []
+        if before:
+            references.append(max(
+                before,
+                key=lambda record: float(record['timestamp']),
+            ))
+        if after:
+            references.append(min(
+                after,
+                key=lambda record: float(record['timestamp']),
+            ))
+        if not references:
+            continue
+
+        groups.append({
+            'bad': bad_record,
+            'references': references,
+        })
+        selected_ids.add(bad_record['id'])
+        selected_ids.update(record['id'] for record in references)
+        reference_ids.update(record['id'] for record in references)
+        if len(groups) >= max_bad_frames:
+            break
+
+    selected_records = [
+        records_by_id[record_id]
+        for record_id in selected_ids
+    ]
+    selected_records.sort(key=lambda record: float(record['timestamp']))
+    return selected_records, {
+        'requested_bad_count': max_bad_frames,
+        'candidate_bad_count': len(seen_bad_ids),
+        'selected_bad_count': len(groups),
+        'selected_normal_count': len(reference_ids),
+        'selected_file_count': len(selected_records),
+        'two_sided_count': sum(
+            1 for group in groups if len(group['references']) == 2
+        ),
+    }
+
+
+def stage_database_files(session_id, owner, records, storage_root=None):
+    """Link selected local DB assets into a private calibration session.
+
+    Hard links keep a selected FITS alive if its database row expires while the
+    job is queued without duplicating large files. On a separate filesystem a
+    symbolic link provides the same zero-copy workspace; only the private link
+    is removed when calibration finishes, never the database-owned source.
+    """
+    session_dir, manifest = get_session(session_id, owner, storage_root)
+    if manifest.get('status') != 'uploading':
+        raise CalibrationSessionError('this calibration session is not staging')
+    records = list(records)
+    if len(records) > MAX_DATABASE_FILE_COUNT:
+        raise CalibrationSessionError(
+            'database calibration may stage at most {0} FITS files'.format(
+                MAX_DATABASE_FILE_COUNT
+            )
+        )
+
+    upload_dir = session_dir.joinpath('uploads')
+    for record in records:
+        source = Path(record['path']).resolve()
+        if not source.is_file():
+            raise CalibrationSessionError(
+                'a selected database FITS is no longer available: {0}'.format(
+                    source.name
+                )
+            )
+        if not is_database_fits_path(source):
+            raise CalibrationSessionError(
+                'unsupported database FITS format: {0}'.format(source.name)
+            )
+        destination = upload_dir.joinpath(
+            '{0}_{1}'.format(record['id'], source.name)
+        )
+        try:
+            os.link(str(source), str(destination))
+            link_type = 'hardlink'
+        except OSError:
+            destination.symlink_to(source)
+            link_type = 'symlink'
+
+        file_size = source.stat().st_size
+        manifest['files'].append({
+            'name': destination.name,
+            'original_name': source.name,
+            'size': file_size,
+            'database_id': int(record['id']),
+            'link_type': link_type,
+        })
+        manifest['total_bytes'] += file_size
+
+    _write_manifest(session_dir, manifest)
+    return manifest
+
+
 def store_upload(session_id, owner, file_storage, storage_root=None):
     """Stream one browser-selected FITS into its private session.
 
@@ -573,6 +853,7 @@ def mark_queued(
     max_pair_seconds,
     settings,
     config_id=None,
+    source_details=None,
     storage_root=None,
 ):
     """Freeze the upload set and record the background job parameters."""
@@ -596,6 +877,10 @@ def mark_queued(
     manifest['max_pair_seconds'] = max_pair_seconds
     manifest['settings'] = dict(settings)
     manifest['config_id'] = int(config_id) if config_id is not None else None
+    manifest['source'] = dict(source_details or {
+        'kind': 'upload',
+        'selected_file_count': len(manifest.get('files', [])),
+    })
     manifest['error'] = None
     _write_manifest(session_dir, manifest)
     return manifest
@@ -660,6 +945,38 @@ def _result_summary(payload):
     }
 
 
+def format_database_source_report(source_details):
+    """Format the auditable DB selection section appended to text reports."""
+    if not source_details or source_details.get('kind') != 'database':
+        return ''
+    return '\n'.join((
+        'DATABASE FITS SELECTION',
+        'Camera: {0}'.format(source_details.get('camera_name', 'Unknown')),
+        'Retention cutoff: {0} ({1} days)'.format(
+            source_details.get('retention_cutoff', 'Unknown'),
+            source_details.get('retention_days', 'Unknown'),
+        ),
+        'Requested bad-frame groups: {0}'.format(
+            source_details.get('requested_bad_count', 0)
+        ),
+        'Selected bad-frame groups: {0}'.format(
+            source_details.get('selected_bad_count', 0)
+        ),
+        'Selected distinct normal references: {0}'.format(
+            source_details.get('selected_normal_count', 0)
+        ),
+        'Selected distinct FITS files: {0}'.format(
+            source_details.get('selected_file_count', 0)
+        ),
+        'Database FITS rows in retention: {0}'.format(
+            source_details.get('database_fits_count', 0)
+        ),
+        'Missing local FITS rows ignored: {0}'.format(
+            source_details.get('missing_local_count', 0)
+        ),
+    ))
+
+
 def compare_result_to_configuration(result, repair_config):
     """Classify whether a result would materially change current settings.
 
@@ -704,8 +1021,14 @@ def compare_result_to_configuration(result, repair_config):
             'message': 'Current configuration could not be compared: {0}'.format(
                 error
             ),
+            'configured_values': {},
             'differing_keys': [],
         }
+
+    configured_values = {
+        key: configured[key]
+        for key in DERIVED_VALUE_KEYS
+    }
 
     if exact:
         return {
@@ -714,6 +1037,7 @@ def compare_result_to_configuration(result, repair_config):
                 'Already matches the current configuration exactly; applying '
                 'again is unnecessary.'
             ),
+            'configured_values': configured_values,
             'differing_keys': [],
         }
     if equivalent:
@@ -723,11 +1047,13 @@ def compare_result_to_configuration(result, repair_config):
                 'Effectively matches the current configuration; applying '
                 'these tiny differences is unlikely to have a noticeable effect.'
             ),
+            'configured_values': configured_values,
             'differing_keys': [],
         }
     return {
         'status': 'different',
         'message': '',
+        'configured_values': configured_values,
         'differing_keys': differing_keys,
     }
 
@@ -763,6 +1089,48 @@ def run_calibration_session(session_id, storage_root=None):
             'completed_utc': _utc_now_text(),
             **summary,
         }
+        source_details = manifest.get('source')
+        if source_details:
+            result['source'] = source_details
+            if (
+                source_details.get('kind') == 'database'
+                and source_details.get('selected_bad_count', 0)
+                < source_details.get('requested_bad_count', 0)
+            ):
+                result['warnings'].append(
+                    'The database contained {0} usable bad-frame group(s), '
+                    'fewer than the requested {1}; calibration used all that '
+                    'were available within FITS retention.'.format(
+                        source_details['selected_bad_count'],
+                        source_details['requested_bad_count'],
+                    )
+                )
+            if (
+                source_details.get('kind') == 'database'
+                and source_details.get('missing_local_count', 0)
+            ):
+                result['warnings'].append(
+                    '{0} FITS database row(s) no longer had a local file and '
+                    'were ignored.'.format(
+                        source_details['missing_local_count']
+                    )
+                )
+            if (
+                source_details.get('kind') == 'database'
+                and source_details.get('unsupported_count', 0)
+            ):
+                result['warnings'].append(
+                    '{0} local FITS database asset(s) used an unsupported '
+                    'filename format and were ignored.'.format(
+                        source_details['unsupported_count']
+                    )
+                )
+        database_report = format_database_source_report(source_details)
+        if database_report:
+            report_text = '{0}\n\n{1}\n'.format(
+                report_text.rstrip(),
+                database_report,
+            )
         _atomic_write_json(session_dir.joinpath('result.json'), result)
         session_dir.joinpath('asi676mc_calibration_report.txt').write_text(
             report_text,
@@ -773,9 +1141,10 @@ def run_calibration_session(session_id, storage_root=None):
             encoding='utf-8',
         )
 
-        # Remove the large inputs before publishing ``success``. Therefore a
-        # browser that can see the result is guaranteed not to have uploaded
-        # source FITS still retained by the calibration session.
+        # Remove private inputs before publishing ``success``. For browser
+        # uploads this deletes the large sources; for database discovery it
+        # unlinks only the session's hard/symbolic links and leaves the
+        # database-owned FITS untouched.
         _remove_upload_dir(session_dir)
         manifest['status'] = 'success'
         manifest['completed_utc'] = result['completed_utc']
@@ -800,7 +1169,7 @@ def run_calibration_session(session_id, storage_root=None):
             manifest['error'] = str(error)
         else:
             manifest['error'] = (
-                '{0}; uploaded FITS cleanup also failed: {1}'
+                '{0}; private calibration input cleanup also failed: {1}'
             ).format(error, cleanup_error)
         _write_manifest(session_dir, manifest)
         raise

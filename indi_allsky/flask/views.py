@@ -7621,7 +7621,11 @@ class Asi676mcCalibrationView(TemplateView):
     def get_context(self):
         context = super(Asi676mcCalibrationView, self).get_context()
         context['form_calibration'] = IndiAllskyAsi676mcCalibrationForm(
-            data={'MAX_PAIR_SECONDS': 90.0},
+            data={
+                'CAMERA_ID': self.camera.id,
+                'MAX_PAIR_SECONDS': 90.0,
+                'DATABASE_BAD_FRAME_LIMIT': 25,
+            },
         )
         context['capture_guidance'] = (
             asi676mc_calibration.capture_configuration_guidance(
@@ -7676,6 +7680,275 @@ class AjaxAsi676mcCalibrationUploadView(BaseView):
             'file': entry,
             'file_count': len(manifest['files']),
             'total_bytes': manifest['total_bytes'],
+        })
+
+
+class AjaxAsi676mcCalibrationDatabaseView(BaseView):
+    """Discover local database FITS and queue a newest-first calibration.
+
+    Repair-specific diagnostic records provide explicit bad/following roles.
+    Ordinary FITS are associated with image rows that the live detector marked
+    bad. The pure selector in ``asi676mc_calibration`` then chooses at most one
+    adjacent normal file on each side and stops after the requested number of
+    usable bad-frame groups.
+    """
+
+    methods = ['POST']
+    decorators = [strict_login_required, login_required]
+
+    def dispatch_request(self):
+        request_data = request.get_json(silent=True) or {}
+        try:
+            camera_id = int(request_data.get('camera_id'))
+            max_bad_frames = int(request_data.get('max_bad_frames', 25))
+            max_pair_seconds = float(
+                request_data.get('max_pair_seconds', 90.0)
+            )
+        except (TypeError, ValueError):
+            return jsonify({
+                'error': 'camera, bad-frame limit, and separation must be numbers',
+            }), 400
+
+        if (
+            max_bad_frames < asi676mc_calibration.DATABASE_BAD_FRAME_MIN
+            or max_bad_frames > asi676mc_calibration.DATABASE_BAD_FRAME_MAX
+        ):
+            return jsonify({
+                'error': 'choose between {0} and {1} bad-frame groups'.format(
+                    asi676mc_calibration.DATABASE_BAD_FRAME_MIN,
+                    asi676mc_calibration.DATABASE_BAD_FRAME_MAX,
+                ),
+            }), 400
+        if max_pair_seconds <= 0 or max_pair_seconds > 3600:
+            return jsonify({
+                'error': 'maximum pair separation must be between 0 and 3600 seconds',
+            }), 400
+
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
+            .first()
+        if camera is None:
+            return jsonify({'error': 'the selected camera is unavailable'}), 404
+
+        try:
+            retention_days = int(
+                self.indi_allsky_config.get('IMAGE_FITS_EXPIRE_DAYS', 10)
+            )
+        except (TypeError, ValueError):
+            return jsonify({'error': 'FITS expiration setting is invalid'}), 400
+        if retention_days < 0:
+            return jsonify({
+                'error': 'FITS expiration setting cannot be negative',
+            }), 400
+
+        # Match the existing expireData policy, which expires by dayDate rather
+        # than by an exact timestamp. This includes the complete oldest day
+        # that indi-allsky itself still considers inside retention.
+        retention_cutoff = (
+            datetime.now() - timedelta(days=retention_days)
+        ).date()
+        fits_entries = IndiAllSkyDbFitsImageTable.query\
+            .filter(IndiAllSkyDbFitsImageTable.camera_id == camera.id)\
+            .filter(IndiAllSkyDbFitsImageTable.dayDate >= retention_cutoff)\
+            .order_by(IndiAllSkyDbFitsImageTable.createDate.desc())\
+            .all()
+
+        fits_records = []
+        missing_local_count = 0
+        unsupported_count = 0
+        for fits_entry in fits_entries:
+            source_path = fits_entry.getFilesystemPath()
+            if not source_path.is_file():
+                missing_local_count += 1
+                continue
+            if not asi676mc_calibration.is_database_fits_path(source_path):
+                unsupported_count += 1
+                continue
+            diagnostic = (fits_entry.data or {}).get(
+                asi676mc.DIAGNOSTIC_METADATA_KEY,
+                {},
+            )
+            roles = diagnostic.get('roles', ())
+            fits_records.append({
+                'id': fits_entry.id,
+                'path': source_path,
+                'timestamp': fits_entry.createDate.timestamp(),
+                'exposure': fits_entry.exposure,
+                'gain': fits_entry.gain,
+                'binmode': fits_entry.binmode,
+                'width': fits_entry.width,
+                'height': fits_entry.height,
+                'roles': [
+                    dict(role)
+                    for role in roles
+                    if isinstance(role, dict)
+                ],
+            })
+
+        if not fits_records:
+            return jsonify({
+                'error': (
+                    'No local FITS files are available for this camera within '
+                    'the {0}-day FITS retention window (since {1}).'
+                ).format(retention_days, retention_cutoff.isoformat()),
+            }), 400
+
+        repair_status = (
+            IndiAllSkyDbImageTable.data['asi676mc_repair_status'].as_string()
+        )
+        bad_images = IndiAllSkyDbImageTable.query\
+            .filter(IndiAllSkyDbImageTable.camera_id == camera.id)\
+            .filter(IndiAllSkyDbImageTable.dayDate >= retention_cutoff)\
+            .filter(repair_status.in_(asi676mc.DIAGNOSTIC_BAD_STATUSES))\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .all()
+        bad_frames = [
+            {
+                'timestamp': image.createDate.timestamp(),
+                'exposure': image.exposure,
+                'gain': image.gain,
+                'allow_ordinary': (
+                    (image.data or {}).get('asi676mc_repair_status')
+                    == 'excluded'
+                ),
+            }
+            for image in bad_images
+        ]
+
+        try:
+            selected_records, discovery = (
+                asi676mc_calibration.select_database_evidence(
+                    fits_records,
+                    bad_frames,
+                    max_bad_frames,
+                    max_pair_seconds,
+                )
+            )
+        except asi676mc_calibration.CalibrationSessionError as error:
+            return jsonify({'error': str(error)}), 400
+
+        minimum = asi676mc_calibration.DATABASE_BAD_FRAME_MIN
+        if (
+            discovery['selected_bad_count'] < minimum
+            or discovery['selected_normal_count'] < minimum
+        ):
+            return jsonify({
+                'error': (
+                    'Only {0} usable bad-frame group(s) with {1} distinct '
+                    'normal reference FITS were found within retention. At '
+                    'least {2} of each are required. Missing, unmatched, and '
+                    'known-bad reference files were ignored.'
+                ).format(
+                    discovery['selected_bad_count'],
+                    discovery['selected_normal_count'],
+                    minimum,
+                ),
+                'discovery': discovery,
+            }), 400
+
+        source_details = dict(discovery)
+        source_details.update({
+            'kind': 'database',
+            'camera_id': camera.id,
+            'camera_name': camera.friendlyName or camera.name,
+            'retention_days': retention_days,
+            'retention_cutoff': retention_cutoff.isoformat(),
+            'database_fits_count': len(fits_entries),
+            'local_fits_count': len(fits_records),
+            'missing_local_count': missing_local_count,
+            'unsupported_count': unsupported_count,
+        })
+
+        try:
+            settings = asi676mc.normalize_settings(
+                self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {})
+            )
+            manifest = asi676mc_calibration.create_session(
+                current_user.username
+            )
+            session_id = manifest['session_id']
+            asi676mc_calibration.stage_database_files(
+                session_id,
+                current_user.username,
+                selected_records,
+            )
+        except (
+            OSError,
+            KeyError,
+            TypeError,
+            ValueError,
+            asi676mc_calibration.CalibrationSessionError,
+        ) as error:
+            app.logger.exception('Unable to stage database FITS for calibration')
+            if 'session_id' in locals():
+                try:
+                    asi676mc_calibration.cancel_upload_session(
+                        session_id,
+                        current_user.username,
+                    )
+                except (OSError, asi676mc_calibration.CalibrationSessionError):
+                    app.logger.exception(
+                        'Unable to clean failed database calibration session'
+                    )
+            return jsonify({'error': str(error)}), 400
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=TaskQueueState.MANUAL,
+            priority=200,
+            data={
+                'action': 'generateAsi676mcCalibration',
+                'kwargs': {'session_id': session_id},
+            },
+        )
+        db.session.add(task)
+        try:
+            db.session.flush()
+            manifest = asi676mc_calibration.mark_queued(
+                session_id,
+                current_user.username,
+                task.id,
+                max_pair_seconds,
+                settings,
+                config_id=self.indi_allsky_config_id,
+                source_details=source_details,
+            )
+            db.session.commit()
+        except asi676mc_calibration.CalibrationSessionError as error:
+            db.session.rollback()
+            try:
+                asi676mc_calibration.cancel_upload_session(
+                    session_id,
+                    current_user.username,
+                )
+            except (OSError, asi676mc_calibration.CalibrationSessionError):
+                app.logger.exception(
+                    'Unable to clean rejected database calibration session'
+                )
+            return jsonify({'error': str(error)}), 400
+        except (OSError, ValueError, SQLAlchemyError):
+            db.session.rollback()
+            app.logger.exception('Unable to queue database FITS calibration')
+            try:
+                asi676mc_calibration.mark_failed(
+                    session_id,
+                    current_user.username,
+                    'unable to queue the database calibration job',
+                )
+            except (OSError, asi676mc_calibration.CalibrationSessionError):
+                app.logger.exception(
+                    'Unable to mark database calibration session failed'
+                )
+            return jsonify({
+                'error': 'unable to queue the database calibration job',
+            }), 500
+
+        return jsonify({
+            'session_id': session_id,
+            'task_id': task.id,
+            'status': manifest['status'],
+            'discovery': source_details,
         })
 
 
@@ -12641,6 +12914,7 @@ bp_allsky.add_url_rule('/js/processing', view_func=JsonImageProcessingView.as_vi
 bp_allsky.add_url_rule('/asi676mc/calibration', view_func=Asi676mcCalibrationView.as_view('asi676mc_calibration_view', template_name='asi676mc_calibration.html'))
 bp_allsky.add_url_rule('/ajax/asi676mc/calibration/session', view_func=AjaxAsi676mcCalibrationSessionView.as_view('ajax_asi676mc_calibration_session_view'))
 bp_allsky.add_url_rule('/ajax/asi676mc/calibration/upload/<session_id>', view_func=AjaxAsi676mcCalibrationUploadView.as_view('ajax_asi676mc_calibration_upload_view'))
+bp_allsky.add_url_rule('/ajax/asi676mc/calibration/database', view_func=AjaxAsi676mcCalibrationDatabaseView.as_view('ajax_asi676mc_calibration_database_view'))
 bp_allsky.add_url_rule('/ajax/asi676mc/calibration/cancel/<session_id>', view_func=AjaxAsi676mcCalibrationCancelView.as_view('ajax_asi676mc_calibration_cancel_view'))
 bp_allsky.add_url_rule('/ajax/asi676mc/calibration/start/<session_id>', view_func=AjaxAsi676mcCalibrationStartView.as_view('ajax_asi676mc_calibration_start_view'))
 bp_allsky.add_url_rule('/ajax/asi676mc/calibration/status/<session_id>', view_func=AjaxAsi676mcCalibrationStatusView.as_view('ajax_asi676mc_calibration_status_view'))

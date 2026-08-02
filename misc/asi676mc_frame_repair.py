@@ -210,6 +210,10 @@ CONFIG_ENTRY_LABELS = (
 )
 
 _FITS_SUFFIXES = ('.fit', '.fits', '.fts')
+_COMPRESSED_FITS_SUFFIXES = tuple(
+    '{0}.gz'.format(suffix)
+    for suffix in _FITS_SUFFIXES
+)
 _CAMERA_NAME_RE = re.compile(
     r'(?<![A-Z0-9])ASI[\s_-]*676MC(?![A-Z0-9])',
     re.IGNORECASE,
@@ -913,7 +917,10 @@ def scan_folder(folder, settings, recursive=True):
     iterator = folder.rglob('*') if recursive else folder.glob('*')
     paths = sorted(
         path for path in iterator
-        if path.is_file() and path.suffix.lower() in _FITS_SUFFIXES
+        if path.is_file()
+        and path.name.lower().endswith(
+            _FITS_SUFFIXES + _COMPRESSED_FITS_SUFFIXES
+        )
     )
     records = []
     rejected = []

@@ -135,6 +135,160 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             asi676mc_calibration.discard_session(session_id, 'alice', root)
             self.assertFalse(root.joinpath(session_id).exists())
 
+    @staticmethod
+    def _database_record(record_id, timestamp, roles=()):
+        return {
+            'id': record_id,
+            'path': Path('unused_{0}.fit'.format(record_id)),
+            'timestamp': float(timestamp),
+            'exposure': 0.001,
+            'gain': 100.0,
+            'binmode': 1,
+            'width': 3552,
+            'height': 3552,
+            'roles': list(roles),
+        }
+
+    def test_database_selection_is_newest_first_and_accepts_fewer_than_limit(self):
+        records = []
+        for index in range(10):
+            capture_id = 'capture-{0}'.format(index)
+            bad_time = 1000 + (index * 100)
+            records.append(self._database_record(
+                100 + index,
+                bad_time,
+                roles=({'capture_id': capture_id, 'role': 'bad'},),
+            ))
+            records.append(self._database_record(
+                200 + index,
+                bad_time + 10,
+                roles=({'capture_id': capture_id, 'role': 'following'},),
+            ))
+
+        selected, summary = asi676mc_calibration.select_database_evidence(
+            records,
+            bad_frames=[],
+            max_bad_frames=8,
+            max_pair_seconds=30,
+        )
+        selected_ids = {record['id'] for record in selected}
+        self.assertEqual(summary['selected_bad_count'], 8)
+        self.assertEqual(summary['selected_normal_count'], 8)
+        self.assertNotIn(100, selected_ids)
+        self.assertNotIn(101, selected_ids)
+        self.assertIn(109, selected_ids)
+
+        selected, summary = asi676mc_calibration.select_database_evidence(
+            records,
+            bad_frames=[],
+            max_bad_frames=12,
+            max_pair_seconds=30,
+        )
+        self.assertEqual(summary['requested_bad_count'], 12)
+        self.assertEqual(summary['selected_bad_count'], 10)
+        self.assertEqual(len(selected), 20)
+
+    def test_database_selection_uses_flagged_ordinary_fits_and_ignores_unmatched(self):
+        records = []
+        bad_frames = []
+        for index in range(8):
+            bad_time = 1000 + (index * 100)
+            records.extend((
+                self._database_record(100 + index, bad_time),
+                self._database_record(200 + index, bad_time + 10),
+            ))
+            bad_frames.append({
+                'timestamp': bad_time,
+                'exposure': 0.001,
+                'gain': 100.0,
+            })
+        # A newest flagged bad frame with no adjacent normal FITS is skipped;
+        # it must not consume the requested usable-group limit.
+        records.append(self._database_record(999, 10000))
+        bad_frames.append({
+            'timestamp': 10000,
+            'exposure': 0.001,
+            'gain': 100.0,
+        })
+
+        _selected, summary = asi676mc_calibration.select_database_evidence(
+            records,
+            bad_frames=bad_frames,
+            max_bad_frames=8,
+            max_pair_seconds=30,
+        )
+        self.assertEqual(summary['selected_bad_count'], 8)
+        self.assertEqual(summary['selected_normal_count'], 8)
+
+        _selected, repaired_summary = (
+            asi676mc_calibration.select_database_evidence(
+                records[:2],
+                bad_frames=[{
+                    'timestamp': 1000,
+                    'exposure': 0.001,
+                    'gain': 100.0,
+                    'allow_ordinary': False,
+                }],
+                max_bad_frames=7,
+                max_pair_seconds=30,
+            )
+        )
+        self.assertEqual(repaired_summary['selected_bad_count'], 0)
+
+    def test_database_staging_links_sources_without_deleting_them(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            source_dir = root.joinpath('sources')
+            session_root = root.joinpath('sessions')
+            source_dir.mkdir()
+            records = []
+            for index in range(14):
+                suffix = '.fit.gz' if index == 0 else '.fit'
+                source = source_dir.joinpath('source_{0}{1}'.format(index, suffix))
+                source.write_bytes(b'database fits placeholder')
+                records.append({
+                    'id': index + 1,
+                    'path': source,
+                })
+
+            session_id = asi676mc_calibration.create_session(
+                'alice', session_root
+            )['session_id']
+            manifest = asi676mc_calibration.stage_database_files(
+                session_id,
+                'alice',
+                records,
+                session_root,
+            )
+            self.assertEqual(len(manifest['files']), 14)
+            self.assertTrue(
+                session_root.joinpath(session_id, 'uploads').is_dir()
+            )
+            asi676mc_calibration.cancel_upload_session(
+                session_id,
+                'alice',
+                session_root,
+            )
+            self.assertTrue(all(record['path'].is_file() for record in records))
+
+    def test_database_source_selection_is_text_report_auditable(self):
+        report = asi676mc_calibration.format_database_source_report({
+            'kind': 'database',
+            'camera_name': 'ASI676MC',
+            'retention_cutoff': '2026-07-23',
+            'retention_days': 10,
+            'requested_bad_count': 25,
+            'selected_bad_count': 9,
+            'selected_normal_count': 10,
+            'selected_file_count': 19,
+            'database_fits_count': 40,
+            'missing_local_count': 2,
+        })
+        self.assertIn('DATABASE FITS SELECTION', report)
+        self.assertIn('Requested bad-frame groups: 25', report)
+        self.assertIn('Selected bad-frame groups: 9', report)
+        self.assertIn('Missing local FITS rows ignored: 2', report)
+
     def test_background_run_allows_unmatched_and_removes_uploaded_fits(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -154,6 +308,19 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 task_id=42,
                 max_pair_seconds=90.0,
                 settings=calibration_engine.DEFAULT_SETTINGS,
+                source_details={
+                    'kind': 'database',
+                    'camera_name': 'ASI676MC',
+                    'retention_cutoff': '2026-07-23',
+                    'retention_days': 10,
+                    'requested_bad_count': 8,
+                    'selected_bad_count': 7,
+                    'selected_normal_count': 14,
+                    'selected_file_count': 14,
+                    'database_fits_count': 16,
+                    'missing_local_count': 1,
+                    'unsupported_count': 1,
+                },
                 storage_root=root,
             )
 
@@ -200,13 +367,20 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             self.assertEqual(status['status'], 'success')
             self.assertTrue(status['report_available'])
             self.assertEqual(status['result']['quality']['unmatched_bad_count'], 1)
-            self.assertEqual(
-                asi676mc_calibration.get_report_path(
-                    session_id,
-                    'alice',
-                    root,
-                ).read_text(encoding='utf-8'),
-                'human-readable report\n',
+            self.assertEqual(status['result']['source']['kind'], 'database')
+            warnings = ' '.join(status['result']['warnings'])
+            self.assertIn('fewer than the requested 8', warnings)
+            self.assertIn('no longer had a local file', warnings)
+            self.assertIn('unsupported filename format', warnings)
+            report = asi676mc_calibration.get_report_path(
+                session_id,
+                'alice',
+                root,
+            ).read_text(encoding='utf-8')
+            self.assertTrue(report.startswith('human-readable report\n'))
+            self.assertIn(
+                'DATABASE FITS SELECTION',
+                report,
             )
 
     def test_result_comparison_distinguishes_exact_negligible_and_different(self):
@@ -219,6 +393,10 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             current,
         )
         self.assertEqual(exact['status'], 'exact')
+        self.assertEqual(
+            exact['configured_values']['GAIN_R'],
+            current['GAIN_R'],
+        )
 
         current['GAIN_R'] *= 1.004
         current['SOURCE_SATURATION_THRESHOLD'] += 64
@@ -318,6 +496,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'Asi676mcCalibrationView',
             'AjaxAsi676mcCalibrationSessionView',
             'AjaxAsi676mcCalibrationUploadView',
+            'AjaxAsi676mcCalibrationDatabaseView',
             'AjaxAsi676mcCalibrationCancelView',
             'AjaxAsi676mcCalibrationStartView',
             'AjaxAsi676mcCalibrationStatusView',
@@ -372,6 +551,11 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('window.asi676mcCalibrationBrowserSupported', template)
         self.assertIn('id="calibration-config-match"', template)
         self.assertIn('configuration_comparison', template)
+        self.assertIn('Current configured value', template)
+        self.assertIn('configurationComparison.configured_values', template)
+        self.assertIn('Find saved FITS and calibrate', template)
+        self.assertIn('DATABASE_BAD_FRAME_LIMIT', template)
+        self.assertIn('calibrationDatabaseUrl', template)
         self.assertIn(
             '#calibration-setup-panel, #calibration-progress-panel',
             template,
@@ -383,6 +567,29 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn(
             'asi676mc_calibration.cleanup_expired_sessions()',
             video_source,
+        )
+
+        base_view_source = project_root.joinpath(
+            'indi_allsky', 'flask', 'base_views.py'
+        ).read_text(encoding='utf-8')
+        base_template = project_root.joinpath(
+            'indi_allsky', 'flask', 'templates', 'base.html'
+        ).read_text(encoding='utf-8')
+        views_source = project_root.joinpath(
+            'indi_allsky', 'flask', 'views.py'
+        ).read_text(encoding='utf-8')
+        self.assertIn("context['asi676mc_repair_enabled']", base_view_source)
+        self.assertIn(
+            'current_user.is_authenticated and asi676mc_repair_enabled',
+            base_template,
+        )
+        self.assertIn(
+            'class AjaxAsi676mcCalibrationDatabaseView',
+            views_source,
+        )
+        self.assertIn(
+            'IndiAllSkyDbFitsImageTable.dayDate >= retention_cutoff',
+            views_source,
         )
 
     def test_capture_guidance_recommends_safe_low_disk_collection(self):

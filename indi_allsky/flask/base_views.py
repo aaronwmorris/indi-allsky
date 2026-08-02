@@ -1189,6 +1189,16 @@ class TemplateView(BaseView):
             'docker'             : self.docker,
         }
 
+        # The calibration route remains directly addressable for authenticated
+        # operators, but its specialist Tools-menu entry should not clutter
+        # installations that have not enabled ASI676MC frame handling.
+        context['asi676mc_repair_enabled'] = bool(
+            self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get(
+                'ENABLE',
+                False,
+            )
+        )
+
         # night set in get_astrometric_info()
         context['night'] = int(self.night)  # javascript does not play well with bools
 

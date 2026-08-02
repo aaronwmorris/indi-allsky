@@ -70,6 +70,30 @@ class TestAsi676mcCalibrationTool(unittest.TestCase):
             ['before.fit', 'after.fit'],
         )
 
+    def test_folder_scan_accepts_indi_allsky_compressed_fits(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            folder = Path(temp_dir)
+            header = fits.Header()
+            header['DATE-OBS'] = '2026-07-01T00:00:00'
+            header['EXPTIME'] = 0.001
+            header['GAIN'] = 0.0
+            header['BAYERPAT'] = 'RGGB'
+            header['INSTRUME'] = 'ZWO CCD ASI676MC'
+            fits.PrimaryHDU(
+                data=self._normal_frame(64, 64),
+                header=header,
+            ).writeto(folder / 'saved_by_indi_allsky.fit.gz')
+
+            records, rejected = calibration_engine.scan_folder(
+                folder,
+                calibration_engine.DEFAULT_SETTINGS,
+                recursive=False,
+            )
+
+        self.assertFalse(rejected)
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].path.name, 'saved_by_indi_allsky.fit.gz')
+
     @staticmethod
     def _normal_frame(height=128, width=128):
         y, x = numpy.indices((height, width))

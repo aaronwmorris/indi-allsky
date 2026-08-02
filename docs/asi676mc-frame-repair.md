@@ -356,12 +356,14 @@ of the live defaults.
 
 ### Authenticated web calibration tool
 
-The **Tools > ASI676MC Calibration** page exposes the folder-calibration
-workflow without requiring shell access. It has an intentionally stricter
-access rule than most indi-allsky pages: a real authenticated user is required
-even when the installation has globally disabled login checks. Uploaded RAW
-FITS may contain camera, time, and location metadata and are never published
-under the web image directory.
+When ASI676MC frame handling is enabled, the **Tools > ASI676MC Calibration**
+entry is shown to logged-in users. It is hidden when the repair master switch is
+off so installations that do not use this camera-specific feature have no extra
+Tools-menu clutter. The page itself exposes the folder-calibration workflow
+without requiring shell access and retains its intentionally stricter access
+rule: a real authenticated user is required even when the installation has
+globally disabled login checks. Uploaded RAW FITS may contain camera, time, and
+location metadata and are never published under the web image directory.
 
 The operator selects the complete collection in one browser file-picker action.
 JavaScript then transfers the selected files sequentially into a private,
@@ -381,6 +383,40 @@ for that run. Additional upload safeguards are:
 - every session, including an interrupted partial upload, expires after seven
   days.
 
+The same page can instead select **Find saved FITS and calibrate**. The operator
+chooses a maximum of 7-100 bad-frame evidence groups; this is a bad-frame count,
+not a raw file count, because the selector automatically includes up to two
+adjacent normal reference FITS for each bad frame. The default is 25 groups.
+Discovery is camera-specific and works newest first. It stops when the requested
+number of usable groups has been selected or when no older eligible record
+remains inside `IMAGE_FITS_EXPIRE_DAYS`. The cutoff follows indi-allsky's own
+`dayDate` expiration rule, including the whole oldest retained day.
+
+Two database evidence sources are combined:
+
+- repair-specific diagnostic FITS carry explicit `bad` and `following` capture
+  roles and are preferred as guaranteed untouched bad sources;
+- ordinary FITS are aligned by exposure time, exposure, and gain to image rows
+  marked `excluded`, then the nearest compatible ordinary FITS before and/or
+  after are selected as normal references.
+
+An ordinary FITS corresponding to a frame marked `repaired` or
+`validation_failed` is excluded as both a bad source and a normal reference,
+because the stored mosaic may already have been changed. Known bad captures,
+missing local files, unsupported assets, and candidates without an adjacent
+normal FITS are ignored. Database rows that point only to remote/S3 assets are
+reported as unavailable; discovery never downloads them. Both uncompressed
+FITS and the `.fit.gz`/`.fits.gz` forms written by indi-allsky are accepted,
+using Astropy directly without another FITS program.
+
+If fewer groups exist than requested, calibration still runs with every usable
+group found as long as at least seven bad frames and seven distinct normal
+references remain. Otherwise the page reports the counts found, the retention
+window searched, and guidance instead of queueing a job. The result page states
+how many bad groups, normal references, and distinct FITS were selected. The
+downloadable text report appends the same database-selection audit, including
+the requested limit, retention cutoff, and missing-local-file count.
+
 The default session directory is Flask's non-public `instance` directory and
 may be overridden with `ASI676MC_CALIBRATION_FOLDER`. Do not move sessions into
 `/tmp`: the capture service uses systemd `PrivateTmp`, so gunicorn and the video
@@ -392,6 +428,13 @@ loading, sparse fitting, and full-resolution validation cannot hold a gunicorn
 request open. Normal manually generated videos use priority 100 and therefore
 remain ahead of calibration. The browser stores the current session ID locally
 and resumes status polling after a page reload.
+
+Saved database FITS are staged into the same private session with hard links,
+which preserve the selected inode without copying gigabytes or modifying the
+database-owned path. A cross-filesystem installation falls back to symbolic
+links. Session cleanup removes only those private links; it never deletes the
+original database FITS. The existing background engine and validation policy
+are therefore identical for uploaded and discovered evidence.
 
 The web evidence policy differs from the command-line utility in one documented way.
 The CLI retains its conservative default of failing when any detected bad frame
@@ -414,16 +457,21 @@ runs at day/night transitions, an abandoned partial upload is removed on the
 first regular expiration pass after it becomes seven days old. Starting a new
 calibration session also performs the same cleanup immediately.
 
-On success, the page switches to a results-only view showing the seven camera-specific values actually
-derived by calibration: four Bayer gains, source saturation threshold, and two
-highlight blend boundaries. Detection thresholds, sample step, chunk size, and
-operational switches are validated/current values rather than measurements and
-are not presented as derived. The complete human-readable report is available
-through an owner-checked download route. Returning to the page restores that
-result without restoring the browser's file selection. **Reset / recalibrate**
-deletes the retained result/report session and returns the page to its original
-file-selection state. An incomplete upload cannot be resumed after navigation,
-so it is cancelled and removed when the page is revisited.
+On success, the page switches to a results-only view showing the seven
+camera-specific values actually derived by calibration: four Bayer gains,
+source saturation threshold, and two highlight blend boundaries. Each row also
+shows the normalized value from the currently loaded configuration, so the
+operator can review the change before applying it. The current values are read
+when result status is requested rather than stored with the result, keeping a
+retained result accurate after settings change elsewhere. Detection thresholds,
+sample step, chunk size, and operational switches are validated/current values
+rather than measurements and are not presented as derived. The complete
+human-readable report is available through an owner-checked download route.
+Returning to the page restores that result without restoring the browser's file
+selection. **Reset / recalibrate** deletes the retained result/report session
+and returns the page to its original file-selection state. An incomplete upload
+cannot be resumed after navigation, so it is cancelled and removed when the
+page is revisited.
 
 Administrators can choose **Apply values and reload** after a successful run.
 The result is compared with the currently loaded seven measured settings. An
@@ -444,9 +492,6 @@ allowing a run. A specific warning replaces silent failure when any required
 browser feature is missing or blocked; a separate message covers JavaScript
 being disabled entirely.
 
-Direct discovery of diagnostic FITS already stored by indi-allsky remains a
-future enhancement. It can be added without changing the upload/session format.
-
 ## Files involved in diagnostic capture
 
 - `indi_allsky/asi676mc.py`
@@ -463,6 +508,7 @@ future enhancement. It can be added without changing the upload/session format.
   - default for `SAVE_DIAGNOSTIC_FITS`
 - `indi_allsky/flask/forms.py`
   - settings field
+  - saved-FITS bad-group limit
   - diagnostic FITS lookup/pairing
   - Image Viewer JSON fields
   - labels in the standard FITS viewer
@@ -470,17 +516,22 @@ future enhancement. It can be added without changing the upload/session format.
   - settings load/save wiring
   - camera-gated Image Viewer and gallery wiring
   - authenticated calibration session, status, report, discard, and apply routes
+  - retention-bounded local FITS discovery and background-job queueing
 - `indi_allsky/flask/templates/config.html`
   - switch, help text, submission list, and master-switch grouping
 - `indi_allsky/asi676mc_calibration.py`
   - private upload-session lifecycle, bounds, result/config comparison,
     retention, and report ownership
+  - newest-first diagnostic/ordinary FITS selection and zero-copy staging
 - `indi_allsky/video.py`
   - low-priority background calibration action
   - regular catch-all expiration for abandoned calibration sessions
 - `indi_allsky/flask/templates/asi676mc_calibration.html`
   - browser capability checks, multi-select upload, cancellation, progress,
-    retained results, configuration-match hints, and report download
+    saved-FITS controls, retained results, configuration-match hints, and report
+    download
+- `indi_allsky/flask/base_views.py` and `indi_allsky/flask/templates/base.html`
+  - repair-enabled Tools-menu visibility flag and conditional menu entry
 - `indi_allsky/flask/templates/imageviewer.html`
   - `Bad FITS` and `Next FITS` controls
 - `indi_allsky/flask/templates/gallery.html`

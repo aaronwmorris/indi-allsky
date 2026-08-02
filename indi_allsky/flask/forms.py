@@ -19,6 +19,7 @@ from passlib.hash import argon2
 
 from .. import constants
 from .. import asi676mc
+from .. import asi676mc_calibration
 
 from flask_wtf import FlaskForm
 from wtforms import IntegerField
@@ -6800,11 +6801,21 @@ class IndiAllskyAsi676mcCalibrationForm(FlaskForm):
     only one selection action from the user.
     """
 
+    CAMERA_ID = HiddenField('Camera ID', validators=[DataRequired()])
     MAX_PAIR_SECONDS = FloatField(
         'Maximum separation from bad to normal FITS (seconds)',
         default=90.0,
         validators=[DataRequired(), NumberRange(min=1.0, max=3600.0)],
         widget=NumberInput(step=1.0),
+    )
+    DATABASE_BAD_FRAME_LIMIT = IntegerField(
+        'Maximum bad-frame groups from saved FITS',
+        default=25,
+        validators=[NumberRange(
+            min=asi676mc_calibration.DATABASE_BAD_FRAME_MIN,
+            max=asi676mc_calibration.DATABASE_BAD_FRAME_MAX,
+        )],
+        widget=NumberInput(step=1),
     )
 
 

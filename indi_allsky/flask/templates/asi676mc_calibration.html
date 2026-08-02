@@ -67,6 +67,37 @@
 
 <form id="form-asi676mc-calibration" onSubmit="return false;">
     {{ form_calibration.csrf_token }}
+    {{ form_calibration.CAMERA_ID }}
+
+    <div class="card mb-4">
+        <div class="card-header">Use FITS already saved by indi-allsky</div>
+        <div class="card-body">
+            <p>
+                Search this camera's local FITS records from newest to oldest,
+                stopping at the requested number of usable bad-frame groups or
+                at the configured FITS-retention boundary. Each group adds its
+                bad FITS and whichever adjacent normal FITS are actually available.
+            </p>
+            <div class="form-group row mb-3">
+                <div class="col-sm-3">
+                    {{ form_calibration.DATABASE_BAD_FRAME_LIMIT.label(class='col-form-label') }}
+                </div>
+                <div class="col-sm-2">
+                    {{ form_calibration.DATABASE_BAD_FRAME_LIMIT(class='form-control bg-secondary') }}
+                </div>
+                <div class="col-sm-7">
+                    Choose 7-100 bad frames. If fewer than requested remain but
+                    at least seven usable bad/reference groups exist, calibration
+                    runs with all available evidence.
+                </div>
+            </div>
+            <button id="start-database-calibration" type="button" class="btn btn-primary">
+                Find saved FITS and calibrate
+            </button>
+        </div>
+    </div>
+
+    <h5>Or upload a FITS collection</h5>
 
     <div class="form-group row mb-3">
         <label for="calibration-files" class="col-sm-3 col-form-label">FITS files</label>
@@ -147,10 +178,12 @@
     </div>
 
     <div class="card-body">
-        <div class="alert alert-success">
+        <div id="calibration-cleanup-summary" class="alert alert-success">
             Calibration completed successfully. Uploaded source FITS were
             deleted before this result was published.
         </div>
+
+        <div id="calibration-source-summary" class="alert alert-info" style="display: none;"></div>
 
         <p>
             These are the camera-specific values derived from the uploaded evidence.
@@ -161,7 +194,11 @@
         <div class="table-responsive">
             <table class="table table-striped">
                 <thead>
-                    <tr><th>Configuration field</th><th>Derived value</th></tr>
+                    <tr>
+                        <th>Configuration field</th>
+                        <th>Current configured value</th>
+                        <th>Derived value</th>
+                    </tr>
                 </thead>
                 <tbody id="calibration-values"></tbody>
             </table>
@@ -190,7 +227,9 @@
     if (!window.File || !window.FileList || !window.Blob) {
         missing.push('local file selection');
     }
-    if (!Array.from || !Number.isNaN) { missing.push('modern JavaScript'); }
+    if (!Array.from || !Number.isNaN || !Number.isInteger) {
+        missing.push('modern JavaScript');
+    }
     if (!fileInput || !('multiple' in fileInput)) {
         missing.push('multi-file selection');
     }
@@ -228,6 +267,7 @@ if (window.asi676mcCalibrationBrowserSupported !== false) {
 // into endpoint templates only after the authenticated server creates it.
 const calibrationCsrfToken = $('#csrf_token').val();
 const calibrationSessionUrl = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_session_view') }}";
+const calibrationDatabaseUrl = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_database_view') }}";
 const calibrationUploadUrlTemplate = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_upload_view', session_id='SESSION_ID') }}";
 const calibrationCancelUrlTemplate = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_cancel_view', session_id='SESSION_ID') }}";
 const calibrationStartUrlTemplate = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_start_view', session_id='SESSION_ID') }}";
@@ -266,6 +306,7 @@ function showCalibrationError(message) {
     $('#calibration-notice').hide();
     $('#calibration-error').text(message).show();
     $('#start-calibration').prop('disabled', false);
+    $('#start-database-calibration').prop('disabled', false);
     $('#cancel-calibration-upload').hide().prop('disabled', false).text('Cancel upload');
     $('#calibration-progress').removeClass('progress-bar-animated');
 }
@@ -289,10 +330,12 @@ function resetCalibrationInterface() {
     $('#calibration-error').hide();
     $('#calibration-setup-panel').show();
     $('#start-calibration').prop('disabled', false);
+    $('#start-database-calibration').prop('disabled', false);
     $('#cancel-calibration-upload').hide().prop('disabled', false).text('Cancel upload');
     $('#calibration-files').val('');
     $('#calibration-values, #calibration-quality, #calibration-warnings').empty();
     $('#calibration-apply-result').hide().empty();
+    $('#calibration-source-summary').hide().empty();
     $('#calibration-config-match').hide().empty();
     $('#calibration-progress')
         .css('width', '0%')
@@ -413,11 +456,45 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
             : 'Completed successfully'
     );
 
+    const sourceSummary = $('#calibration-source-summary').hide().empty();
+    if (result.source && result.source.kind === 'database') {
+        $('#calibration-cleanup-summary').text(
+            'Calibration completed successfully. Private staging links were '
+            + 'removed before this result was published; the original database '
+            + 'FITS were not changed or deleted.'
+        );
+        sourceSummary.text(
+            'Saved-FITS search used '
+            + result.source.selected_bad_count + ' bad-frame group(s), '
+            + result.source.selected_normal_count + ' distinct normal reference(s), and '
+            + result.source.selected_file_count + ' FITS file(s) from '
+            + result.source.camera_name + '. Retention cutoff: '
+            + result.source.retention_cutoff + '.'
+        ).show();
+    } else {
+        $('#calibration-cleanup-summary').text(
+            'Calibration completed successfully. Uploaded source FITS were '
+            + 'deleted before this result was published.'
+        );
+    }
+
     const valuesBody = $('#calibration-values').empty();
+    const configuredValues = (
+        configurationComparison
+        && configurationComparison.configured_values
+    ) || {};
     result.values.forEach(item => {
+        const configuredValue = Object.prototype.hasOwnProperty.call(
+            configuredValues,
+            item.key
+        ) ? configuredValues[item.key] : 'Unavailable';
         valuesBody.append(
             $('<tr />').append(
                 $('<td />').text(item.label),
+                $('<td />', {
+                    'class': 'calibration-current-value',
+                    'data-config-key': item.key,
+                }).text(configuredValue),
                 $('<td />').text(item.value)
             )
         );
@@ -545,6 +622,13 @@ async function applyCalibrationValues() {
             .addClass(result.reload_queued ? 'alert-success' : 'alert-warning')
             .text(result['success-message'])
             .show();
+        // The server returns exactly the values it persisted. Reflect them in
+        // the comparison table immediately instead of waiting for navigation.
+        Object.keys(result.values || {}).forEach(key => {
+            $('.calibration-current-value').filter(function() {
+                return $(this).attr('data-config-key') === key;
+            }).text(result.values[key]);
+        });
         renderConfigurationComparison({
             status: 'exact',
             message: 'These values now match the current configuration exactly.',
@@ -625,6 +709,7 @@ async function submitCalibration() {
     $('#calibration-notice').hide();
     $('#calibration-results').hide();
     $('#start-calibration').prop('disabled', true);
+    $('#start-database-calibration').prop('disabled', true);
     $('#calibration-progress').addClass('progress-bar-animated');
 
     try {
@@ -667,8 +752,61 @@ async function submitCalibration() {
     }
 }
 
+// Database discovery and staging happen in one authenticated request. The
+// server uses zero-copy links to the selected local FITS, queues the same
+// background calibration worker, and returns a normal pollable session ID.
+async function submitDatabaseCalibration() {
+    const maxBadFrames = Number.parseInt(
+        $('#DATABASE_BAD_FRAME_LIMIT').val(),
+        10
+    );
+    if (!Number.isInteger(maxBadFrames) || maxBadFrames < 7 || maxBadFrames > 100) {
+        showCalibrationError('Choose between 7 and 100 bad-frame groups.');
+        return;
+    }
+
+    $('#calibration-error, #calibration-notice, #calibration-results').hide();
+    $('#start-calibration, #start-database-calibration').prop('disabled', true);
+    $('#calibration-progress').addClass('progress-bar-animated');
+    setCalibrationProgress(
+        10,
+        'Searching saved FITS',
+        'Checking newest database records within the configured FITS retention window.'
+    );
+
+    try {
+        const response = await fetch(calibrationDatabaseUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': calibrationCsrfToken,
+            },
+            body: JSON.stringify({
+                camera_id: $('#CAMERA_ID').val(),
+                max_bad_frames: maxBadFrames,
+                max_pair_seconds: $('#MAX_PAIR_SECONDS').val(),
+            }),
+        });
+        const queued = await calibrationJson(response);
+        completedCalibrationSessionId = null;
+        localStorage.setItem(calibrationStorageKey, queued.session_id);
+        setCalibrationProgress(
+            80,
+            'Saved FITS selected and queued',
+            'Found ' + queued.discovery.selected_bad_count
+            + ' usable bad-frame group(s) in '
+            + queued.discovery.selected_file_count + ' FITS file(s).'
+        );
+        await pollCalibration(queued.session_id);
+    } catch (error) {
+        localStorage.removeItem(calibrationStorageKey);
+        showCalibrationError(error.message);
+    }
+}
+
 $('#calibration-files').on('change', renderSelectedFiles);
 $('#form-asi676mc-calibration').on('submit', submitCalibration);
+$('#start-database-calibration').on('click', submitDatabaseCalibration);
 $('#cancel-calibration-upload').on('click', cancelCalibrationUpload);
 $('#calibration-reset').on('click', discardCalibrationResult);
 
