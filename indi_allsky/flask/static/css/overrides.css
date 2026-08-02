@@ -303,7 +303,9 @@ calendar-date::part(button):hover {
   border-color: var(--color-primary);
 }
 
-calendar-date::part(disabled) {
+calendar-date::part(disabled),
+calendar-month::part(disabled),
+calendar-month::part(disallowed) {
   opacity: 0.35 !important;
   cursor: not-allowed !important;
   background-color: transparent !important;
@@ -379,4 +381,10 @@ calendar-select-month::part(select):hover,
 calendar-select-year::part(select):hover {
   background-color: var(--color-base-100);
   border-color: var(--color-primary);
+}
+
+/* Make disabled options inside Cally's shadow select dropdown much darker */
+calendar-select-month::part(option):disabled,
+calendar-select-year::part(option):disabled {
+  color: color-mix(in srgb, var(--color-base-content) 25%, transparent) !important;
 }

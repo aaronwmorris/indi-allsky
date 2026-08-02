@@ -402,29 +402,70 @@ function sync_calendar_value() {
                 }
             });
 
+            // Find all valid months for the selected year
+            const validMonths = [];
+            $("#MONTH_SELECT option").each(function() {
+                const val = $(this).val();
+                if (val) {
+                    validMonths.push(parseInt(val));
+                }
+            });
+
             const yearInt = parseInt(year);
-            const monthInt = parseInt(month) - 1;
+            const monthInt = parseInt(month) - 1; // 0-indexed for JS Date
+            
             picker.isDateDisallowed = (date) => {
-                if (date.getUTCFullYear() === yearInt && date.getUTCMonth() === monthInt) {
-                    return !validDays.includes(date.getUTCDate());
+                const dYear = date.getUTCFullYear();
+                const dMonth = date.getUTCMonth() + 1; // 1-indexed month
+                
+                // Disallow the date if the year doesn't exist in our choices
+                const years = $("#YEAR_SELECT option").map(function() { 
+                    const val = $(this).val();
+                    return val ? parseInt(val) : null; 
+                }).get().filter(v => v !== null && !isNaN(v));
+                if (years.length > 0 && !years.includes(dYear)) {
+                    return true;
+                }
+
+                // If the year is the currently selected year, check month and day
+                if (dYear === yearInt) {
+                    if (!validMonths.includes(dMonth)) {
+                        return true; // Disallow entire month if it has no data
+                    }
+                    if (dMonth === (monthInt + 1)) {
+                        return !validDays.includes(date.getUTCDate()); // Check day
+                    }
                 }
                 return false;
             };
 
-            // Restrict min/max to the range of years available in YEAR_SELECT
-            const years = $("#YEAR_SELECT option").map(function() { 
+            // Restrict min/max to the valid months of the selected year
+            const months = $("#MONTH_SELECT option").map(function() { 
                 const val = $(this).val();
                 return val ? parseInt(val) : null; 
             }).get().filter(v => v !== null && !isNaN(v));
 
-            if (years.length > 0) {
-                const minYear = Math.min(...years);
-                const maxYear = Math.max(...years);
-                picker.min = `${minYear}-01-01`;
-                picker.max = `${maxYear}-12-31`;
+            if (months.length > 0) {
+                const minMonth = Math.min(...months);
+                const maxMonth = Math.max(...months);
+                const lastDay = new Date(parseInt(year), maxMonth, 0).getDate();
+                picker.min = `${year}-${String(minMonth).padStart(2, '0')}-01`;
+                picker.max = `${year}-${String(maxMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
             } else {
-                picker.min = "1970-01-01";
-                picker.max = "2099-12-31";
+                const years = $("#YEAR_SELECT option").map(function() { 
+                    const val = $(this).val();
+                    return val ? parseInt(val) : null; 
+                }).get().filter(v => v !== null && !isNaN(v));
+
+                if (years.length > 0) {
+                    const minYear = Math.min(...years);
+                    const maxYear = Math.max(...years);
+                    picker.min = `${minYear}-01-01`;
+                    picker.max = `${maxYear}-12-31`;
+                } else {
+                    picker.min = "1970-01-01";
+                    picker.max = "2099-12-31";
+                }
             }
 
             if (validDays.length > 0) {
@@ -477,6 +518,7 @@ picker.addEventListener("change", (e) => {
     if (currentYear !== year || currentMonth !== parseInt(month).toString()) {
         if (currentYear !== year) {
             fields["YEAR_SELECT"].input.val(year);
+            fields["MONTH_SELECT"].input.val(parseInt(month).toString());
             $("#loader_filter").show();
             var json_data = {
                 'CAMERA_ID'        : fields["CAMERA_ID"].input.val(),
@@ -484,22 +526,8 @@ picker.addEventListener("change", (e) => {
                 'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.val(),
             };
             
-            $.ajax({
-                type: "POST",
-                url: "/indi-allsky/ajax/videoviewer",
-                contentType: "application/json",
-                data: JSON.stringify(json_data),
-                success: function(rdata){
-                    $("#MONTH_SELECT").empty();
-                    rdata['MONTH_SELECT'].forEach(item => {
-                        $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
-                    });
-                    fields["MONTH_SELECT"].input.val(parseInt(month).toString());
-                    populate_videos(rdata['video_list']);
-                    $("#loader_filter").hide();
-                    sync_calendar_value();
-                    highlight_and_scroll_to_day(parseInt(day));
-                }
+            year_change(json_data, () => {
+                highlight_and_scroll_to_day(parseInt(day));
             });
         } else {
             fields["MONTH_SELECT"].input.val(parseInt(month).toString());
@@ -510,17 +538,8 @@ picker.addEventListener("change", (e) => {
                 'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.val(),
             };
             $("#loader_filter").show();
-            $.ajax({
-                type: "POST",
-                url: "/indi-allsky/ajax/videoviewer",
-                contentType: "application/json",
-                data: JSON.stringify(json_data),
-                success: function(rdata){
-                    populate_videos(rdata['video_list']);
-                    $("#loader_filter").hide();
-                    sync_calendar_value();
-                    highlight_and_scroll_to_day(parseInt(day));
-                }
+            month_change(json_data, () => {
+                highlight_and_scroll_to_day(parseInt(day));
             });
         }
     } else {
@@ -579,7 +598,7 @@ picker.addEventListener("focusday", (e) => {
 
 var active_ajax_request = null;
 
-function month_change(json_data) {
+function month_change(json_data, callback) {
     if (active_ajax_request) {
         active_ajax_request.abort();
     }
@@ -592,6 +611,7 @@ function month_change(json_data) {
             populate_videos(rdata['video_list']);
             $("#loader_filter").hide();
             sync_calendar_value();
+            if (callback) callback();
         },
         error: function(rdata){
             if (rdata.statusText === 'abort') return;
@@ -648,24 +668,44 @@ $("#TIMEOFDAY_SELECT").on("change", function() {
 });
 
 
-function year_change(json_data) {
+function year_change(json_data, callback) {
     if (active_ajax_request) {
         active_ajax_request.abort();
     }
+    const currentMonthVal = fields["MONTH_SELECT"].input.val();
     active_ajax_request = $.ajax({
         type: "POST",
         url: "/indi-allsky/ajax/videoviewer",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#MONTH_SELECT").empty()
+            $("#MONTH_SELECT").empty();
+            let hasCurrentMonth = false;
             rdata['MONTH_SELECT'].forEach(item => {
                 $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+                if (item[0].toString() === currentMonthVal) {
+                    hasCurrentMonth = true;
+                }
             });
 
-            populate_videos(rdata['video_list']);
-            $("#loader_filter").hide();
-            sync_calendar_value();
+            if (hasCurrentMonth && currentMonthVal) {
+                fields["MONTH_SELECT"].input.val(currentMonthVal);
+                var next_json_data = {
+                    'CAMERA_ID'        : fields["CAMERA_ID"].input.val(),
+                    'YEAR_SELECT'      : fields["YEAR_SELECT"].input.val(),
+                    'MONTH_SELECT'     : currentMonthVal,
+                    'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.val(),
+                };
+                month_change(next_json_data, callback);
+            } else {
+                if (rdata['MONTH_SELECT'].length > 0) {
+                    fields["MONTH_SELECT"].input.val(rdata['MONTH_SELECT'][0][0]);
+                }
+                populate_videos(rdata['video_list']);
+                $("#loader_filter").hide();
+                sync_calendar_value();
+                if (callback) callback();
+            }
         },
         error: function(rdata){
             if (rdata.statusText === 'abort') return;

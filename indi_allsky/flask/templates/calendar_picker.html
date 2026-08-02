@@ -17,3 +17,66 @@
         </calendar-date>
     </div>
 </details>
+
+<script>
+(function() {
+    function setupCalendarObserver() {
+        const monthSelectEl = document.getElementById("MONTH_SELECT");
+        const pickerEl = document.getElementById("cally-picker");
+        const detailsEl = document.getElementById("cally-dropdown-details");
+
+        if (monthSelectEl && pickerEl) {
+            function syncShadowMonths() {
+                const validMonths = [];
+                $(monthSelectEl).find("option").each(function() {
+                    const val = $(this).val();
+                    if (val) {
+                        validMonths.push(parseInt(val, 10));
+                    }
+                });
+
+                const monthSelect = pickerEl.querySelector('calendar-select-month');
+                if (monthSelect) {
+                    const selectEl = monthSelect.shadowRoot ? monthSelect.shadowRoot.querySelector('select') : null;
+                    if (selectEl) {
+                        $(selectEl).find('option').each(function() {
+                            const val = parseInt($(this).val(), 10);
+                            if (validMonths.includes(val)) {
+                                $(this).prop('disabled', false);
+                            } else {
+                                $(this).prop('disabled', true);
+                            }
+                        });
+                    }
+                }
+            }
+
+            // Sync once when Cally component is defined
+            window.customElements.whenDefined('calendar-date').then(() => {
+                setTimeout(syncShadowMonths, 100);
+            });
+
+            // Observe the month dropdown for dynamically populated options via AJAX
+            const observer = new MutationObserver(() => {
+                syncShadowMonths();
+            });
+            observer.observe(monthSelectEl, { childList: true });
+
+            // Sync when the details dropdown opens
+            if (detailsEl) {
+                detailsEl.addEventListener("toggle", function() {
+                    if (this.open) {
+                        syncShadowMonths();
+                    }
+                });
+            }
+        }
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", setupCalendarObserver);
+    } else {
+        setupCalendarObserver();
+    }
+})();
+</script>
