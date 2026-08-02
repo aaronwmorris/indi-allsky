@@ -94,9 +94,10 @@ def capture_configuration_guidance(config):
 
     The current configuration cannot prove how older files were captured, so
     this is deliberately advisory.  Automatic discovery will still inspect
-    the FITS that actually exist.  These messages help explain why future bad
-    frames will produce low-disk pairs, full-sequence triplets, or no usable
-    untouched evidence at all.
+    the FITS that actually exist. This guidance explains why future bad frames
+    will produce low-disk pairs, full-sequence triplets, or no usable
+    untouched evidence at all. The returned guidance intentionally combines
+    the active conditions into one concise, severity-ranked explanation.
     """
     config = config if isinstance(config, dict) else {}
     repair = config.get('IMAGE_ASI676MC_REPAIR', {})
@@ -115,12 +116,14 @@ def capture_configuration_guidance(config):
         retention_days = int(config.get('IMAGE_FITS_EXPIRE_DAYS', 10))
     except (TypeError, ValueError):
         retention_days = None
+    fits_period_valid = fits_period is not None and fits_period >= 0
+    retention_valid = retention_days is not None and retention_days >= 0
 
     if not periodic_fits:
         periodic_text = 'Off'
     elif fits_period == 0:
         periodic_text = 'Every image'
-    elif fits_period is None:
+    elif not fits_period_valid:
         periodic_text = 'On (invalid interval)'
     else:
         periodic_text = 'Every {0} seconds'.format(fits_period)
@@ -145,94 +148,165 @@ def capture_configuration_guidance(config):
             'label': 'FITS retention',
             'value': (
                 '{0} days'.format(retention_days)
-                if retention_days is not None
+                if retention_valid
                 else 'Invalid value'
             ),
         },
     ]
 
-    messages = []
-    if repair_enabled and exclude_only:
-        messages.append({
-            'level': 'success',
-            'text': (
-                'Safe detection-only mode is active: bad frames are flagged '
-                'and excluded from timelapses without changing their pixels.'
-            ),
-        })
-    elif repair_enabled:
-        messages.append({
-            'level': 'info',
-            'text': (
-                'Repair active. Ordinary FITS are written after '
-                'ASI676MC repair, so they may not retain the original bad mosaic.'
-            ),
-        })
-    else:
-        messages.append({
-            'level': 'warning',
-            'text': (
-                'ASI676MC handling is disabled. Frames are not flagged by the '
-                'live pipeline, although every-image ordinary FITS can still '
-                'be classified later from their contents.'
-            ),
-        })
+    # Build one source-aware explanation instead of stacking independent
+    # notices whose advice often overlaps. The selected severity represents
+    # the complete capture state, not whichever sentence happened to be last.
+    guidance_level = 'info'
+    guidance_sentences = []
+    if not repair_enabled:
+        guidance_level = 'warning'
         if diagnostic_fits:
-            messages.append({
-                'level': 'warning',
-                'text': (
-                    'Bad and Following RAW FITS is selected but inactive until '
-                    'ASI676MC handling is enabled.'
-                ),
-            })
+            guidance_sentences.append(
+                'ASI676MC handling is disabled, so new bad frames are not '
+                'flagged and Bad and Following RAW FITS remains inactive.'
+            )
+        else:
+            guidance_sentences.append(
+                'ASI676MC handling is disabled, so new bad frames are not '
+                'flagged by the live pipeline.'
+            )
+        if periodic_fits and fits_period == 0:
+            guidance_sentences.append(
+                'Every-image ordinary FITS can still be classified later from '
+                'their contents, but repair-specific evidence is not collected.'
+            )
+        elif periodic_fits and not fits_period_valid:
+            guidance_sentences.append(
+                'Ordinary FITS saving has an invalid interval; correct it '
+                'before relying on future calibration evidence.'
+            )
+        elif periodic_fits:
+            guidance_sentences.append(
+                'Periodic ordinary FITS may miss randomly occurring bad frames.'
+            )
+        else:
+            guidance_sentences.append(
+                'No FITS evidence collection is currently active.'
+            )
+    elif exclude_only:
+        guidance_sentences.append(
+            'Exclude Only is active, so detected bad frames are flagged and '
+            'kept out of timelapses without changing their pixels.'
+        )
+        if diagnostic_fits:
+            guidance_level = 'success'
+            guidance_sentences.append(
+                'Bad and Following RAW FITS provides low-disk untouched '
+                'bad/following pairs.'
+            )
+            if periodic_fits and fits_period == 0:
+                guidance_sentences.append(
+                    'Every-image ordinary FITS can add stronger '
+                    'good/bad/good triplets at substantially higher disk usage.'
+                )
+            elif periodic_fits and not fits_period_valid:
+                guidance_level = 'warning'
+                guidance_sentences.append(
+                    'Ordinary FITS saving has an invalid interval, although '
+                    'the repair-specific pairs remain available.'
+                )
+            elif periodic_fits:
+                guidance_sentences.append(
+                    'Periodic ordinary FITS may add context but cannot '
+                    'guarantee an additional adjacent frame.'
+                )
+        elif periodic_fits and fits_period == 0:
+            guidance_level = 'success'
+            guidance_sentences.append(
+                'Every-image ordinary FITS preserves complete '
+                'good/bad/good sequences at higher disk usage.'
+            )
+        elif periodic_fits and not fits_period_valid:
+            guidance_level = 'warning'
+            guidance_sentences.append(
+                'Ordinary FITS saving has an invalid interval; enable Bad and '
+                'Following RAW FITS or correct the interval before collecting.'
+            )
+        elif periodic_fits:
+            guidance_level = 'warning'
+            guidance_sentences.append(
+                'The periodic FITS interval may miss a bad frame; enable Bad '
+                'and Following RAW FITS or use Every Image while collecting.'
+            )
+        else:
+            guidance_level = 'warning'
+            guidance_sentences.append(
+                'No FITS evidence collection is active; enable Bad and '
+                'Following RAW FITS or use Every Image while collecting.'
+            )
+    else:
+        guidance_sentences.append(
+            'Repair active. Ordinary FITS are written after ASI676MC repair '
+            'and may not retain the original bad mosaic.'
+        )
+        if diagnostic_fits:
+            guidance_level = 'success'
+            guidance_sentences.append(
+                'Bad and Following RAW FITS preserves an untouched bad frame '
+                'and following normal reference for calibration.'
+            )
+            if periodic_fits and fits_period == 0:
+                guidance_sentences.append(
+                    'Every-image ordinary FITS can add adjacent normal '
+                    'references at substantially higher disk usage.'
+                )
+            elif periodic_fits and not fits_period_valid:
+                guidance_level = 'warning'
+                guidance_sentences.append(
+                    'Ordinary FITS saving has an invalid interval, although '
+                    'the repair-specific pair remains available.'
+                )
+            elif periodic_fits:
+                guidance_sentences.append(
+                    'Periodic ordinary FITS may add normal references but is '
+                    'not required for the preserved repair-specific pair.'
+                )
+        else:
+            guidance_level = 'warning'
+            if periodic_fits and fits_period == 0:
+                guidance_sentences.append(
+                    'Enable Bad and Following RAW FITS before collecting; '
+                    'Every-image ordinary FITS can supply normal references '
+                    'but not a reliably untouched bad frame.'
+                )
+            elif periodic_fits and not fits_period_valid:
+                guidance_sentences.append(
+                    'No untouched bad-frame evidence is retained, and ordinary '
+                    'FITS saving has an invalid interval; enable Bad and '
+                    'Following RAW FITS before collecting.'
+                )
+            elif periodic_fits:
+                guidance_sentences.append(
+                    'Enable Bad and Following RAW FITS before collecting; the '
+                    'periodic ordinary FITS may also miss adjacent references.'
+                )
+            else:
+                guidance_sentences.append(
+                    'No untouched FITS evidence is retained; enable Bad and '
+                    'Following RAW FITS before collecting calibration data.'
+                )
 
-    if repair_enabled and diagnostic_fits:
-        messages.append({
-            'level': 'success',
-            'text': (
-                'Low-disk evidence collection is active: each detected bad '
-                'frame and its immediately following untouched RAW FITS are kept.'
-            ),
-        })
-    elif repair_enabled and not exclude_only:
-        messages.append({
-            'level': 'warning',
-            'text': (
-                'Enable Bad and Following RAW FITS before collecting calibration '
-                'data; otherwise actual repair may remove the original failure '
-                'before ordinary FITS are saved.'
-            ),
-        })
+    if not retention_valid:
+        guidance_level = 'warning'
+        guidance_sentences.append(
+            'Correct the invalid FITS retention value before relying on '
+            'automatic saved-FITS discovery.'
+        )
 
-    if periodic_fits and fits_period == 0:
-        messages.append({
-            'level': 'info',
-            'text': (
-                'Every-image FITS saving can provide stronger good/bad/good '
-                'triplets, at substantially higher disk usage.'
-            ),
-        })
-    elif periodic_fits:
-        messages.append({
-            'level': 'warning',
-            'text': (
-                'Periodic FITS saving does not guarantee a FITS for a randomly '
-                'occurring bad frame. Use Every Image or enable Bad and '
-                'Following RAW FITS while collecting evidence.'
-            ),
-        })
-    elif repair_enabled and not diagnostic_fits:
-        messages.append({
-            'level': 'warning',
-            'text': (
-                'No FITS evidence collection is enabled. Future flagged bad '
-                'frames may have no FITS available to the calibration tool.'
-            ),
-        })
+    guidance = {
+        'level': guidance_level,
+        'text': ' '.join(guidance_sentences),
+    }
 
     return {
         'facts': facts,
-        'messages': messages,
+        'guidance': guidance,
         'repair_enabled': repair_enabled,
         'exclude_only': exclude_only,
         'diagnostic_fits': diagnostic_fits,
@@ -918,7 +992,7 @@ def _result_summary(payload):
         )
     if quality.get('rejected_file_count'):
         warnings.append(
-            '{0} uploaded file(s) were rejected; see the text report for '
+            '{0} input FITS file(s) were rejected; see the text report for '
             'details.'.format(quality['rejected_file_count'])
         )
     if quality.get('good_bad_ratio', 0) < 2.0:

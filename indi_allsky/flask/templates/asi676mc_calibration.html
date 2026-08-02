@@ -62,6 +62,14 @@
     border-top: 1px solid rgba(255, 255, 255, 0.35);
 }
 
+.calibration-result-detail {
+    border-top: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+#calibration-warning-list {
+    padding-left: 1.25rem;
+}
+
 .calibration-help {
     color: rgba(248, 249, 250, 0.72);
 }
@@ -158,10 +166,8 @@
     <div class="card-header fw-semibold">Current calibration-evidence settings</div>
     <div class="card-body">
         <p class="calibration-help">
-            These settings describe future captures; the tool will ultimately
-            judge stored FITS by what actually exists, not by how it was saved.
-            The recommended low-disk starting point is Exclude Only together
-            with Bad and Following RAW FITS.
+            These settings describe future captures. The tool judges stored
+            FITS by what actually exists, not by how it was originally saved.
         </p>
         <div class="row mb-2">
             {% for fact in capture_guidance.facts %}
@@ -173,9 +179,12 @@
             </div>
             {% endfor %}
         </div>
-        {% for message in capture_guidance.messages %}
-        <div class="calibration-callout calibration-callout-{{ message.level }} py-2 mb-2">{{ message.text }}</div>
-        {% endfor %}
+        <!-- The helper resolves all switch combinations into one concise
+             outlook so overlapping repair/FITS advice is never stacked. -->
+        <div class="calibration-callout calibration-callout-{{ capture_guidance.guidance.level }} py-2">
+            <div class="fw-semibold mb-1">Capture outlook</div>
+            {{ capture_guidance.guidance.text }}
+        </div>
     </div>
 </div>
 
@@ -329,9 +338,10 @@
             <!-- Exact and effectively equivalent configuration results appear
                  here for both upload and database calibration sources. -->
             <div id="calibration-config-match" class="calibration-config-match mt-2 pt-2" style="display: none;"></div>
+            <!-- Applying values is another outcome update, so keep its
+                 feedback in this single result-status banner as well. -->
+            <div id="calibration-apply-result" class="calibration-result-detail mt-2 pt-2" style="display: none;"></div>
         </div>
-
-        <div id="calibration-source-summary" class="calibration-callout calibration-callout-info mt-3" style="display: none;"></div>
 
         <p class="calibration-help mt-3">
             These are the camera-specific values derived from the selected evidence.
@@ -354,8 +364,12 @@
 
         <h5 class="mt-4">Evidence used</h5>
         <div id="calibration-quality" class="row g-2"></div>
-        <div id="calibration-warnings"></div>
-        <div id="calibration-apply-result" class="calibration-callout mt-3" style="display: none;"></div>
+        <!-- All non-fatal evidence observations share one dynamically populated
+             box instead of appearing as a stack of near-identical alerts. -->
+        <div id="calibration-warnings" class="calibration-callout calibration-callout-warning mt-3" style="display: none;">
+            <div class="fw-semibold mb-1">Review notes</div>
+            <ul id="calibration-warning-list" class="mb-0"></ul>
+        </div>
     </div>
 </div>
 </div>
@@ -484,9 +498,9 @@ function resetCalibrationInterface() {
     $('#start-database-calibration').prop('disabled', false);
     $('#cancel-calibration-upload').hide().prop('disabled', false).text('Cancel upload');
     $('#calibration-files').val('');
-    $('#calibration-values, #calibration-quality, #calibration-warnings').empty();
+    $('#calibration-values, #calibration-quality, #calibration-warning-list').empty();
+    $('#calibration-warnings').hide();
     $('#calibration-apply-result').hide().empty();
-    $('#calibration-source-summary').hide().empty();
     $('#calibration-config-match').hide().empty();
     $('#calibration-progress')
         .css('width', '0%')
@@ -576,6 +590,17 @@ function qualityCard(label, value) {
     );
 }
 
+// Counts in a completed result are expected to be non-negative integers, but
+// this fallback keeps a retained result readable if an older payload omitted
+// one of the newer source-audit fields.
+function countedResultItem(value, singular, plural) {
+    const count = Number(value);
+    if (!Number.isInteger(count) || count < 0) {
+        return plural;
+    }
+    return count + ' ' + (count === 1 ? singular : plural);
+}
+
 // Exact/effectively-equivalent comparisons add a prominent second line to the
 // common success banner. This is independent of the FITS evidence source.
 function renderConfigurationComparison(comparison) {
@@ -603,27 +628,44 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
             : 'Completed successfully'
     );
 
-    const sourceSummary = $('#calibration-source-summary').hide().empty();
+    const resultSummary = [];
     if (result.source && result.source.kind === 'database') {
-        $('#calibration-success-message').text(
-            'Calibration completed successfully. Private staging links were '
-            + 'removed before this result was published; the original database '
-            + 'FITS were not changed or deleted.'
+        resultSummary.push(
+            'Calibration completed successfully using '
+            + countedResultItem(
+                result.source.selected_bad_count,
+                'bad-frame group',
+                'bad-frame groups'
+            ) + ', '
+            + countedResultItem(
+                result.source.selected_normal_count,
+                'distinct normal reference',
+                'distinct normal references'
+            ) + ', and '
+            + countedResultItem(
+                result.source.selected_file_count,
+                'saved FITS file',
+                'saved FITS files'
+            ) + ' from '
+            + (result.source.camera_name || 'the selected camera') + '.'
         );
-        sourceSummary.text(
-            'Saved-FITS search used '
-            + result.source.selected_bad_count + ' bad-frame group(s), '
-            + result.source.selected_normal_count + ' distinct normal reference(s), and '
-            + result.source.selected_file_count + ' FITS file(s) from '
-            + result.source.camera_name + '. Retention cutoff: '
-            + result.source.retention_cutoff + '.'
-        ).show();
+        resultSummary.push(
+            'Private staging links were removed; the original database FITS '
+            + 'were not changed or deleted. Search cutoff: '
+            + (result.source.retention_cutoff || 'configured retention boundary')
+            + '.'
+        );
     } else {
-        $('#calibration-success-message').text(
-            'Calibration completed successfully. Uploaded source FITS were '
-            + 'deleted before this result was published.'
+        const uploadCount = result.source
+            ? result.source.selected_file_count
+            : null;
+        resultSummary.push(
+            'Calibration completed successfully using '
+            + countedResultItem(uploadCount, 'uploaded FITS file', 'uploaded FITS files')
+            + '. Uploaded source FITS were deleted before this result was published.'
         );
     }
+    $('#calibration-success-message').text(resultSummary.join(' '));
 
     const valuesBody = $('#calibration-values').empty();
     const configuredValues = (
@@ -659,12 +701,17 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
         qualityCard('Rejected files', quality.rejected_file_count)
     );
 
-    const warnings = $('#calibration-warnings').empty();
-    result.warnings.forEach(message => {
-        warnings.append($('<div />', {
-            'class': 'calibration-callout calibration-callout-warning mt-2',
-        }).text(message));
+    const warnings = $('#calibration-warnings').hide();
+    const warningList = $('#calibration-warning-list').empty();
+    // The engine and database selector report different observations. Remove
+    // any exact duplicate while preserving their useful chronological order.
+    const uniqueWarnings = Array.from(new Set(result.warnings || []));
+    uniqueWarnings.forEach(message => {
+        warningList.append($('<li />').text(message));
     });
+    if (uniqueWarnings.length) {
+        warnings.show();
+    }
     $('#calibration-report-download').attr(
         'href', calibrationUrl(calibrationReportUrlTemplate, sessionId)
     );
@@ -732,10 +779,8 @@ async function discardCalibrationResult() {
         showCalibrationNotice('Previous calibration result removed. Select a new FITS collection when ready.');
     } catch (error) {
         $('#calibration-apply-result')
-            .removeClass(
-                'calibration-callout-success calibration-callout-warning'
-            )
-            .addClass('calibration-callout-danger')
+            .removeClass('text-light text-warning')
+            .addClass('text-danger')
             .text(error.message)
             .show();
     } finally {
@@ -769,14 +814,11 @@ async function applyCalibrationValues() {
         );
         const result = await calibrationJson(response);
         message
-            .removeClass(
-                'calibration-callout-danger calibration-callout-success '
-                + 'calibration-callout-warning'
-            )
+            .removeClass('text-danger text-warning text-light')
             .addClass(
                 result.reload_queued
-                    ? 'calibration-callout-success'
-                    : 'calibration-callout-warning'
+                    ? 'text-light'
+                    : 'text-warning'
             )
             .text(result['success-message'])
             .show();
@@ -793,10 +835,8 @@ async function applyCalibrationValues() {
         });
     } catch (error) {
         message
-            .removeClass(
-                'calibration-callout-success calibration-callout-warning'
-            )
-            .addClass('calibration-callout-danger')
+            .removeClass('text-light text-warning')
+            .addClass('text-danger')
             .text(error.message)
             .show();
         applyButton.prop('disabled', false);

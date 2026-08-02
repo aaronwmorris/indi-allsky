@@ -394,10 +394,10 @@ shown once because it applies to both evidence sources, while saved-FITS
 discovery and manual upload use matching source cards. The cards sit side by
 side on wide displays and stack on narrow ones. Result actions wrap in a stable
 order on small screens, and the values table scrolls horizontally instead of
-compressing long configuration labels. Informational, warning, and comparison
-messages use dark high-contrast callouts with semantic edge colors; comparison
-text is kept below the action header so it remains readable without crowding
-the buttons.
+compressing long configuration labels. The current repair and FITS switches
+are resolved into one state-specific capture outlook instead of stacking
+overlapping notices. Informational and warning text uses dark high-contrast
+callouts with semantic edge colors.
 
 The same page can instead select **Find saved FITS and calibrate**. The operator
 chooses a maximum of 7-100 bad-frame evidence groups; this is a bad-frame count,
@@ -428,10 +428,11 @@ using Astropy directly without another FITS program.
 If fewer groups exist than requested, calibration still runs with every usable
 group found as long as at least seven bad frames and seven distinct normal
 references remain. Otherwise the page reports the counts found, the retention
-window searched, and guidance instead of queueing a job. The result page states
-how many bad groups, normal references, and distinct FITS were selected. The
-downloadable text report appends the same database-selection audit, including
-the requested limit, retention cutoff, and missing-local-file count.
+window searched, and guidance instead of queueing a job. The result-status
+banner states how many bad groups, normal references, and distinct FITS were
+selected together with the source-cleanup outcome. The downloadable text
+report appends the same database-selection audit, including the requested
+limit, retention cutoff, and missing-local-file count.
 
 The default session directory is Flask's non-public `instance` directory and
 may be overridden with `ASI676MC_CALIBRATION_FOLDER`. Do not move sessions into
@@ -493,9 +494,12 @@ removed when the page is revisited.
 
 Administrators can choose **Apply values and reload** after a successful run.
 The result is compared with the currently loaded seven measured settings. An
-exact match is identified next to the button; differences below deliberately
-narrow per-field tolerances are described as effectively equivalent, because
-applying them is unlikely to change repaired pixels noticeably.
+exact match or a difference below deliberately narrow per-field tolerances is
+shown as an emphasized line in the shared result-status banner, because
+applying an effectively equivalent result is unlikely to change repaired
+pixels noticeably. Apply/reload feedback uses that same banner. Non-fatal
+evidence observations are deduplicated and grouped in one **Review notes**
+callout below the evidence counts.
 The action verifies that the active configuration is still the same version
 used when calibration started, writes only the seven measured values through
 indi-allsky's normal versioned configuration save path, and queues a normal

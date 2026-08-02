@@ -560,16 +560,25 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('Upload a FITS collection', template)
         self.assertIn('calibration-values-table table table-dark', template)
         self.assertIn('calibration-callout calibration-callout-info', template)
-        self.assertIn("'calibration-callout-success'", template)
+        self.assertIn('.calibration-callout-success', template)
         self.assertNotIn("? 'text-success' : 'text-info'", template)
         self.assertIn('id="calibration-browser-warning"', template)
         self.assertIn('window.asi676mcCalibrationBrowserSupported', template)
+        self.assertIn('capture_guidance.guidance.level', template)
+        self.assertNotIn('{% for message in capture_guidance.messages %}', template)
         self.assertIn('id="calibration-config-match"', template)
         self.assertLess(
             template.index('id="calibration-success-message"'),
             template.index('id="calibration-config-match"'),
         )
         self.assertIn("$('#calibration-success-message').text(", template)
+        self.assertNotIn('id="calibration-source-summary"', template)
+        self.assertIn('id="calibration-warning-list"', template)
+        self.assertIn('new Set(result.warnings || [])', template)
+        self.assertLess(
+            template.index('id="calibration-apply-result"'),
+            template.index('<h5 class="mt-4">Evidence used</h5>'),
+        )
         self.assertIn('configuration_comparison', template)
         self.assertIn('Current configured value', template)
         self.assertIn('configurationComparison.configured_values', template)
@@ -624,9 +633,10 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         })
         self.assertTrue(guidance['exclude_only'])
         self.assertTrue(guidance['diagnostic_fits'])
-        messages = ' '.join(item['text'] for item in guidance['messages'])
-        self.assertIn('Safe detection-only mode is active', messages)
-        self.assertIn('Low-disk evidence collection is active', messages)
+        self.assertEqual(guidance['guidance']['level'], 'success')
+        message = guidance['guidance']['text']
+        self.assertIn('Exclude Only is active', message)
+        self.assertIn('provides low-disk untouched', message)
 
     def test_capture_guidance_warns_about_unsafe_or_periodic_saving(self):
         guidance = asi676mc_calibration.capture_configuration_guidance({
@@ -642,11 +652,69 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             item['label']: item['value']
             for item in guidance['facts']
         }
-        messages = ' '.join(item['text'] for item in guidance['messages'])
+        message = guidance['guidance']['text']
         self.assertEqual(facts['Repair mode'], 'Repair active')
-        self.assertIn('Repair active. Ordinary FITS', messages)
-        self.assertIn('may not retain the original bad mosaic', messages)
-        self.assertIn('does not guarantee a FITS', messages)
+        self.assertEqual(guidance['guidance']['level'], 'warning')
+        self.assertEqual(message.count('Repair active.'), 1)
+        self.assertIn('may not retain the original bad mosaic', message)
+        self.assertIn('periodic ordinary FITS may also miss', message)
+
+    def test_capture_guidance_consolidates_every_switch_combination(self):
+        periodic_modes = (
+            (False, 7200),
+            (True, 0),
+            (True, 600),
+            (True, 'invalid'),
+            (True, -1),
+        )
+        for repair_enabled in (False, True):
+            for exclude_only in (False, True):
+                for diagnostic_fits in (False, True):
+                    for periodic_fits, fits_period in periodic_modes:
+                        with self.subTest(
+                            repair_enabled=repair_enabled,
+                            exclude_only=exclude_only,
+                            diagnostic_fits=diagnostic_fits,
+                            periodic_fits=periodic_fits,
+                            fits_period=fits_period,
+                        ):
+                            result = (
+                                asi676mc_calibration
+                                .capture_configuration_guidance({
+                                    'IMAGE_ASI676MC_REPAIR': {
+                                        'ENABLE': repair_enabled,
+                                        'EXCLUDE_ONLY': exclude_only,
+                                        'SAVE_DIAGNOSTIC_FITS': diagnostic_fits,
+                                    },
+                                    'IMAGE_SAVE_FITS': periodic_fits,
+                                    'IMAGE_SAVE_FITS_PERIOD': fits_period,
+                                    'IMAGE_FITS_EXPIRE_DAYS': 10,
+                                })
+                            )
+                            self.assertIn(
+                                result['guidance']['level'],
+                                {'success', 'info', 'warning'},
+                            )
+                            self.assertTrue(result['guidance']['text'])
+                            self.assertNotIn('messages', result)
+
+    def test_capture_guidance_marks_invalid_retention_once(self):
+        result = asi676mc_calibration.capture_configuration_guidance({
+            'IMAGE_ASI676MC_REPAIR': {
+                'ENABLE': True,
+                'EXCLUDE_ONLY': True,
+                'SAVE_DIAGNOSTIC_FITS': True,
+            },
+            'IMAGE_SAVE_FITS': False,
+            'IMAGE_FITS_EXPIRE_DAYS': -1,
+        })
+        facts = {item['label']: item['value'] for item in result['facts']}
+        self.assertEqual(facts['FITS retention'], 'Invalid value')
+        self.assertEqual(result['guidance']['level'], 'warning')
+        self.assertEqual(
+            result['guidance']['text'].count('invalid FITS retention'),
+            1,
+        )
 
     def test_safe_exclude_only_defaults_are_source_visible(self):
         project_root = Path(__file__).resolve().parents[2]
