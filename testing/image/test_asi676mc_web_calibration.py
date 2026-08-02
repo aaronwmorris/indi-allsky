@@ -547,6 +547,10 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('Cancel upload', template)
         self.assertIn('new AbortController()', template)
         self.assertIn('Reset / recalibrate', template)
+        self.assertLess(
+            template.index('id="calibration-reset"'),
+            template.index('id="calibration-report-download"'),
+        )
         self.assertIn('id="calibration-browser-warning"', template)
         self.assertIn('window.asi676mcCalibrationBrowserSupported', template)
         self.assertIn('id="calibration-config-match"', template)

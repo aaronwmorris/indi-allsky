@@ -162,7 +162,12 @@
             <span id="calibration-completed" class="small text-secondary"></span>
         </div>
         <div>
-            <a id="calibration-report-download" class="btn btn-info" href="#">
+            <!-- Keep reset before report download so the action row reads and
+                 wraps cleanly on narrow displays. -->
+            <button id="calibration-reset" type="button" class="btn btn-secondary">
+                Reset / recalibrate
+            </button>
+            <a id="calibration-report-download" class="btn btn-info ms-2" href="#">
                 Download text report
             </a>
             {% if current_user.is_admin %}
@@ -171,9 +176,6 @@
             </button>
             <span id="calibration-config-match" class="small ms-2" style="display: none;"></span>
             {% endif %}
-            <button id="calibration-reset" type="button" class="btn btn-secondary ms-2">
-                Reset / recalibrate
-            </button>
         </div>
     </div>
 

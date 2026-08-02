@@ -469,9 +469,11 @@ rather than measurements and are not presented as derived. The complete
 human-readable report is available through an owner-checked download route.
 Returning to the page restores that result without restoring the browser's file
 selection. **Reset / recalibrate** deletes the retained result/report session
-and returns the page to its original file-selection state. An incomplete upload
-cannot be resumed after navigation, so it is cancelled and removed when the
-page is revisited.
+and returns the page to its original file-selection state. In the result action
+row, this reset button is immediately left of **Download text report** so the
+controls remain orderly when the header wraps on a narrow display. An
+incomplete upload cannot be resumed after navigation, so it is cancelled and
+removed when the page is revisited.
 
 Administrators can choose **Apply values and reload** after a successful run.
 The result is compared with the currently loaded seven measured settings. An
