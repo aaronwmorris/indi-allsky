@@ -45,6 +45,7 @@ from .flask.miscDb import miscDb
 from .flask.models import TaskQueueState
 from .flask.models import TaskQueueQueue
 from .flask.models import IndiAllSkyDbCameraTable
+from .flask.models import IndiAllSkyDbFitsImageTable
 from .flask.models import IndiAllSkyDbImageTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
@@ -118,6 +119,10 @@ class ImageWorker(Process):
         self.image_count = 0
         self.metadata_count = 0
         self.asi676mc_diagnostic_pending = {}
+        # Populated only by the optional preceding-frame setting.  Each camera
+        # can retain one untouched, normal input FITS as bytes until the next
+        # frame is classified; the default bad/following path uses no cache.
+        self.asi676mc_diagnostic_previous = {}
 
         self.image_processor = ImageProcessor(
             self.config,
@@ -870,6 +875,12 @@ class ImageWorker(Process):
                 image_metadata,
             )
 
+            # The raw previous-frame cache is filled before the source FITS is
+            # deleted, but its rendered image row does not exist until here.
+            # Remember the row so a later purple frame can expose the saved
+            # preceding FITS from this image's own download strip as well.
+            self._set_asi676mc_cached_image_id(i_ref, image_entry.id)
+
 
             image_thumbnail_metadata = {
                 'type'       : constants.THUMBNAIL,
@@ -1281,6 +1292,14 @@ class ImageWorker(Process):
 
 
     def capture_asi676mc_diagnostic_fits(self, source_filename_p, i_ref, camera):
+        """Save bad/following evidence and optionally a cached preceding FITS.
+
+        The default path is deliberately unchanged: it copies only a detected
+        purple frame and the next ingested frame, with no persistent RAW cache.
+        ``SAVE_PRECEDING_FITS`` opts into one in-memory FITS per camera. A
+        cached normal frame is written only when the immediately following
+        compatible frame is purple, then the cache advances or is discarded.
+        """
         repair_config = self.config.get('IMAGE_ASI676MC_REPAIR', {})
         camera_id = i_ref.camera_id
 
@@ -1289,7 +1308,22 @@ class ImageWorker(Process):
             or not repair_config.get('SAVE_DIAGNOSTIC_FITS', False)
         ):
             self.asi676mc_diagnostic_pending.pop(camera_id, None)
+            self.asi676mc_diagnostic_previous.pop(camera_id, None)
             return
+
+        save_preceding = bool(
+            repair_config.get('SAVE_PRECEDING_FITS', False)
+        )
+        if save_preceding:
+            previous_context = self.asi676mc_diagnostic_previous.pop(
+                camera_id,
+                None,
+            )
+        else:
+            # Changing the child option at runtime must release its large byte
+            # buffer promptly, while leaving the parent bad/following state.
+            self.asi676mc_diagnostic_previous.pop(camera_id, None)
+            previous_context = None
 
         repair_result = i_ref.asi676mc_repair_result or {}
         repair_status = repair_result.get('status')
@@ -1305,38 +1339,248 @@ class ImageWorker(Process):
             new_capture_id=new_capture_id,
         )
 
-        if not roles:
-            return
+        # A preceding normal frame belongs to the new purple-frame group, not
+        # to a pending older group.  Save it independently so a failure here
+        # never prevents the current bad FITS from being captured.
+        if previous_context and new_capture_id:
+            current_context = self._asi676mc_diagnostic_frame_context(i_ref)
+            if asi676mc.diagnostic_reference_compatible(
+                previous_context,
+                current_context,
+            ):
+                preceding_role = {
+                    'capture_id': new_capture_id,
+                    'role': 'preceding',
+                }
+                try:
+                    previous_fits_id = previous_context.get(
+                        'diagnostic_fits_id'
+                    )
+                    if previous_fits_id:
+                        preceding_entry = (
+                            self._add_asi676mc_diagnostic_role(
+                                previous_fits_id,
+                                preceding_role,
+                            )
+                        )
+                    else:
+                        preceding_entry = (
+                            self._archive_asi676mc_diagnostic_fits(
+                                None,
+                                None,
+                                camera,
+                                [preceding_role],
+                                cached_context=previous_context,
+                            )
+                        )
 
-        try:
-            fits_entry = self._archive_asi676mc_diagnostic_fits(
-                Path(source_filename_p),
-                i_ref,
-                camera,
-                roles,
+                    # When the previous rendered image exists, associate it
+                    # with this capture too. The bad image can find the triplet
+                    # from its own role even if this optional update is absent.
+                    try:
+                        self._attach_asi676mc_diagnostic_to_image(
+                            previous_context,
+                            preceding_entry,
+                            preceding_role,
+                        )
+                    except Exception:
+                        logger.exception(
+                            'Unable to add preceding ASI676MC FITS to the '
+                            'previous image row'
+                        )
+
+                    logger.warning(
+                        'Saved ASI676MC diagnostic FITS (preceding): %s',
+                        preceding_entry.filename,
+                    )
+                except Exception:
+                    logger.exception(
+                        'Unable to save cached preceding ASI676MC diagnostic '
+                        'FITS for %s',
+                        previous_context.get('source_name', 'previous frame'),
+                    )
+            else:
+                logger.debug(
+                    'Discarding incompatible cached ASI676MC preceding frame '
+                    'before purple capture %s',
+                    new_capture_id,
+                )
+
+        # Drop the old byte buffer before reading a new normal frame below;
+        # steady-state caching therefore retains one full FITS, not two.
+        previous_context = None
+
+        fits_entry = None
+        if roles:
+            try:
+                fits_entry = self._archive_asi676mc_diagnostic_fits(
+                    Path(source_filename_p),
+                    i_ref,
+                    camera,
+                    roles,
+                )
+            except Exception:
+                logger.exception(
+                    'Unable to save ASI676MC diagnostic FITS for %s',
+                    source_filename_p,
+                )
+
+        if fits_entry is not None:
+            repair_result['diagnostic_fits'] = {
+                'fits_id': fits_entry.id,
+                'roles': [dict(role) for role in roles],
+            }
+            i_ref.asi676mc_repair_result = repair_result
+
+            if next_capture_id:
+                self.asi676mc_diagnostic_pending[camera_id] = next_capture_id
+
+            role_names = ', '.join(role['role'] for role in roles)
+            logger.warning(
+                'Saved ASI676MC diagnostic FITS (%s): %s',
+                role_names,
+                fits_entry.filename,
             )
-        except Exception:
-            logger.exception(
-                'Unable to save ASI676MC diagnostic FITS for %s',
-                source_filename_p,
+
+        # Only a positively classified normal frame can become the immediate
+        # reference for the next purple frame. A bad, skipped, or unsupported
+        # frame breaks adjacency and therefore leaves no cache behind.
+        if save_preceding and repair_status == 'normal':
+            try:
+                cached_context = self._cache_asi676mc_diagnostic_frame(
+                    Path(source_filename_p),
+                    i_ref,
+                    fits_entry=fits_entry,
+                )
+                self.asi676mc_diagnostic_previous[camera_id] = cached_context
+                logger.debug(
+                    'Cached %0.2f MiB ASI676MC preceding-frame candidate: %s',
+                    len(cached_context['fits_bytes']) / (1024 * 1024),
+                    cached_context['source_name'],
+                )
+            except (MemoryError, OSError, ValueError):
+                logger.exception(
+                    'Unable to cache ASI676MC preceding-frame candidate: %s',
+                    source_filename_p,
+                )
+
+
+    @staticmethod
+    def _asi676mc_diagnostic_extension(source_filename_p):
+        """Return the complete FITS extension used by diagnostic filenames."""
+        source_name_lower = Path(source_filename_p).name.lower()
+        for candidate_ext in ('fits.gz', 'fit.gz', 'fits', 'fit'):
+            if source_name_lower.endswith('.{0:s}'.format(candidate_ext)):
+                return candidate_ext
+        raise ValueError(
+            'ASI676MC diagnostic source is not a FITS file: {0:s}'.format(
+                str(source_filename_p),
             )
-            return
-
-        repair_result['diagnostic_fits'] = {
-            'fits_id': fits_entry.id,
-            'roles': [dict(role) for role in roles],
-        }
-        i_ref.asi676mc_repair_result = repair_result
-
-        if next_capture_id:
-            self.asi676mc_diagnostic_pending[camera_id] = next_capture_id
-
-        role_names = ', '.join(role['role'] for role in roles)
-        logger.warning(
-            'Saved ASI676MC diagnostic FITS (%s): %s',
-            role_names,
-            fits_entry.filename,
         )
+
+
+    def _asi676mc_diagnostic_frame_context(self, i_ref):
+        """Snapshot metadata needed after the live image reference is gone."""
+        data = i_ref.hdulist[0].data
+        return {
+            'camera_id': i_ref.camera_id,
+            'camera_uuid': i_ref.camera_uuid,
+            'exp_date': i_ref.exp_date,
+            'day_date': i_ref.day_date,
+            'exposure': i_ref.exposure,
+            'gain': i_ref.gain,
+            'binning': i_ref.binning,
+            'night': bool(self.night_av[constants.NIGHT_NIGHT]),
+            'image_shape': tuple(data.shape[:2]),
+            'bayer_pattern': str(i_ref.image_bayerpat or '').upper(),
+            'image_id': None,
+        }
+
+
+    def _cache_asi676mc_diagnostic_frame(
+        self,
+        source_filename_p,
+        i_ref,
+        fits_entry=None,
+    ):
+        """Read one untouched normal FITS into the opt-in per-camera cache."""
+        context = self._asi676mc_diagnostic_frame_context(i_ref)
+        context.update({
+            'source_name': Path(source_filename_p).name,
+            'fits_ext': self._asi676mc_diagnostic_extension(
+                source_filename_p
+            ),
+            'fits_bytes': Path(source_filename_p).read_bytes(),
+            'diagnostic_fits_id': (
+                fits_entry.id if fits_entry is not None else None
+            ),
+        })
+        return context
+
+
+    def _set_asi676mc_cached_image_id(self, i_ref, image_id):
+        """Complete a current-frame cache entry after its JPEG row is saved."""
+        context = self.asi676mc_diagnostic_previous.get(i_ref.camera_id)
+        if not context or context.get('exp_date') != i_ref.exp_date:
+            return
+        context['image_id'] = int(image_id)
+
+
+    def _add_asi676mc_diagnostic_role(self, fits_id, role):
+        """Reuse a saved following FITS as a later preceding reference."""
+        fits_entry = IndiAllSkyDbFitsImageTable.query\
+            .filter(IndiAllSkyDbFitsImageTable.id == int(fits_id))\
+            .one()
+        fits_data = dict(fits_entry.data or {})
+        diagnostic = dict(
+            fits_data.get(asi676mc.DIAGNOSTIC_METADATA_KEY) or {}
+        )
+        diagnostic['version'] = max(int(diagnostic.get('version', 1)), 1)
+        diagnostic['source'] = diagnostic.get('source', 'untouched_input')
+        diagnostic['roles'] = asi676mc.append_diagnostic_role(
+            diagnostic.get('roles'),
+            role,
+        )
+        fits_data[asi676mc.DIAGNOSTIC_METADATA_KEY] = diagnostic
+        fits_entry.data = fits_data
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+        return fits_entry
+
+
+    def _attach_asi676mc_diagnostic_to_image(
+        self,
+        cached_context,
+        fits_entry,
+        role,
+    ):
+        """Expose a preceding FITS from its already-saved rendered image."""
+        image_id = cached_context.get('image_id')
+        if not image_id:
+            return
+        image_entry = IndiAllSkyDbImageTable.query\
+            .filter(IndiAllSkyDbImageTable.id == int(image_id))\
+            .first()
+        if image_entry is None:
+            return
+
+        image_data = dict(image_entry.data or {})
+        diagnostic = dict(image_data.get('asi676mc_diagnostic_fits') or {})
+        diagnostic['fits_id'] = fits_entry.id
+        diagnostic['roles'] = asi676mc.append_diagnostic_role(
+            diagnostic.get('roles'),
+            role,
+        )
+        image_data['asi676mc_diagnostic_fits'] = diagnostic
+        image_entry.data = image_data
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
 
 
     def _archive_asi676mc_diagnostic_fits(
@@ -1345,34 +1589,28 @@ class ImageWorker(Process):
         i_ref,
         camera,
         roles,
+        cached_context=None,
     ):
-        source_name_lower = source_filename_p.name.lower()
-        fits_ext = None
-        for candidate_ext in ('fits.gz', 'fit.gz', 'fits', 'fit'):
-            if source_name_lower.endswith('.{0:s}'.format(candidate_ext)):
-                fits_ext = candidate_ext
-                break
+        """Archive a live source path or a previously cached FITS byte string."""
+        if cached_context is None:
+            frame_context = self._asi676mc_diagnostic_frame_context(i_ref)
+            fits_ext = self._asi676mc_diagnostic_extension(source_filename_p)
+        else:
+            frame_context = cached_context
+            fits_ext = cached_context['fits_ext']
 
-        if not fits_ext:
-            raise ValueError(
-                'ASI676MC diagnostic source is not a FITS file: {0:s}'.format(
-                    str(source_filename_p),
-                )
-            )
-
-        data = i_ref.hdulist[0].data
-        image_height, image_width = data.shape[:2]
-        date_str = i_ref.exp_date.strftime('%Y%m%d_%H%M%S')
+        image_height, image_width = frame_context['image_shape']
+        date_str = frame_context['exp_date'].strftime('%Y%m%d_%H%M%S')
         role_name = '_'.join(role['role'] for role in roles)
         capture_tag = roles[0]['capture_id'][:8]
         base_filename = self.filename_t.format(
-            i_ref.camera_id,
+            frame_context['camera_id'],
             date_str,
             fits_ext,
         )
         filename = self._getImageFolder(
-            i_ref.exp_date,
-            i_ref.day_date,
+            frame_context['exp_date'],
+            frame_context['day_date'],
             camera,
             'fits',
         ).joinpath(
@@ -1391,7 +1629,11 @@ class ImageWorker(Process):
             )
 
         try:
-            shutil.copy2(str(source_filename_p), str(filename))
+            if cached_context is None:
+                shutil.copy2(str(source_filename_p), str(filename))
+            else:
+                with filename.open('xb') as fits_file:
+                    fits_file.write(cached_context['fits_bytes'])
             filename.chmod(0o644)
             fits_size_bytes = filename.stat().st_size
         except Exception:
@@ -1403,17 +1645,17 @@ class ImageWorker(Process):
 
         fits_metadata = {
             'type'       : constants.FITS_IMAGE,
-            'createDate' : int(i_ref.exp_date.timestamp()),
-            'dayDate'    : i_ref.day_date.strftime('%Y%m%d'),
-            'utc_offset' : i_ref.exp_date.astimezone().utcoffset().total_seconds(),
-            'exposure'   : i_ref.exposure,
-            'gain'       : i_ref.gain,
-            'binmode'    : i_ref.binning,
-            'night'      : bool(self.night_av[constants.NIGHT_NIGHT]),
+            'createDate' : int(frame_context['exp_date'].timestamp()),
+            'dayDate'    : frame_context['day_date'].strftime('%Y%m%d'),
+            'utc_offset' : frame_context['exp_date'].astimezone().utcoffset().total_seconds(),
+            'exposure'   : frame_context['exposure'],
+            'gain'       : frame_context['gain'],
+            'binmode'    : frame_context['binning'],
+            'night'      : frame_context['night'],
             'fileSize'   : fits_size_bytes,
             'height'     : image_height,
             'width'      : image_width,
-            'camera_uuid': i_ref.camera_uuid,
+            'camera_uuid': frame_context['camera_uuid'],
             'data'       : {
                 asi676mc.DIAGNOSTIC_METADATA_KEY: {
                     'version': 1,
@@ -1426,7 +1668,7 @@ class ImageWorker(Process):
         try:
             fits_entry = self._miscDb.addFitsImage(
                 filename.relative_to(self.image_dir),
-                i_ref.camera_id,
+                frame_context['camera_id'],
                 fits_metadata,
             )
         except Exception:

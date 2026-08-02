@@ -76,8 +76,10 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
         }
 
         diagnostic_markers = (
+            'asi676mc_diagnostic_preceding_fits',
             'asi676mc_diagnostic_bad_fits',
             'asi676mc_diagnostic_following_fits',
+            'data-asi676mc-preceding-fits-url',
             'data-asi676mc-bad-fits-url',
             'data-asi676mc-following-fits-url',
             'register_asi676mc_fits_button',
@@ -86,6 +88,10 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
             self.assertNotIn(marker, gallery_template)
 
         self.assertNotIn(
+            'asi676mc_diagnostic_preceding_fits',
+            form_classes['IndiAllskyGalleryViewer'],
+        )
+        self.assertNotIn(
             'asi676mc_diagnostic_bad_fits',
             form_classes['IndiAllskyGalleryViewer'],
         )
@@ -94,6 +100,10 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
             form_classes['IndiAllskyGalleryViewer'],
         )
         self.assertIn(
+            'asi676mc_diagnostic_preceding_fits',
+            form_classes['IndiAllskyImageViewer'],
+        )
+        self.assertIn(
             'asi676mc_diagnostic_bad_fits',
             form_classes['IndiAllskyImageViewer'],
         )
@@ -101,8 +111,10 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
             'asi676mc_diagnostic_following_fits',
             form_classes['IndiAllskyImageViewer'],
         )
+        self.assertIn('asi676mc_diagnostic_preceding_fits', imageviewer_template)
         self.assertIn('asi676mc_diagnostic_bad_fits', imageviewer_template)
         self.assertIn('asi676mc_diagnostic_following_fits', imageviewer_template)
+        self.assertIn('Previous FITS', imageviewer_template)
         self.assertIn('Bad FITS', imageviewer_template)
         self.assertIn('Next FITS', imageviewer_template)
 
@@ -182,6 +194,88 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
     def test_diagnostic_capture_plan_requires_a_pair_id(self):
         with self.assertRaises(ValueError):
             asi676mc.diagnostic_capture_plan(None, 'repaired')
+
+    def test_diagnostic_preceding_reference_requires_matching_capture_context(self):
+        previous = {
+            'camera_id': 1,
+            'image_shape': (3552, 3552),
+            'exposure': 0.001,
+            'gain': 100.0,
+            'binning': 1,
+            'bayer_pattern': 'RGGB',
+        }
+        current = dict(previous)
+        current['exposure'] = 0.0010000000001
+        current['gain'] = 100.0000001
+        current['bayer_pattern'] = 'rggb'
+        self.assertTrue(
+            asi676mc.diagnostic_reference_compatible(previous, current)
+        )
+
+        incompatible_fields = {
+            'camera_id': 2,
+            'image_shape': (3000, 3000),
+            'exposure': 0.01,
+            'gain': 200.0,
+            'binning': 2,
+            'bayer_pattern': 'BGGR',
+        }
+        for field, value in incompatible_fields.items():
+            with self.subTest(field=field):
+                incompatible = dict(current)
+                incompatible[field] = value
+                self.assertFalse(
+                    asi676mc.diagnostic_reference_compatible(
+                        previous,
+                        incompatible,
+                    )
+                )
+
+        self.assertFalse(
+            asi676mc.diagnostic_reference_compatible({}, current)
+        )
+
+    def test_diagnostic_role_append_is_idempotent_and_non_mutating(self):
+        """One FITS may be the following and preceding frame of two groups."""
+        original = [{'capture_id': 'older', 'role': 'following'}]
+        preceding = {'capture_id': 'newer', 'role': 'preceding'}
+
+        updated = asi676mc.append_diagnostic_role(original, preceding)
+        updated_again = asi676mc.append_diagnostic_role(updated, preceding)
+
+        self.assertEqual(
+            original,
+            [{'capture_id': 'older', 'role': 'following'}],
+        )
+        self.assertEqual(
+            updated,
+            [
+                {'capture_id': 'older', 'role': 'following'},
+                {'capture_id': 'newer', 'role': 'preceding'},
+            ],
+        )
+        self.assertEqual(updated_again, updated)
+        self.assertIsNot(updated[0], original[0])
+
+    def test_preceding_cache_is_opt_in_and_reuses_saved_following_fits(self):
+        project_root = Path(__file__).resolve().parents[2]
+        config_source = project_root.joinpath(
+            'indi_allsky', 'config.py'
+        ).read_text(encoding='utf-8')
+        image_source = project_root.joinpath(
+            'indi_allsky', 'image.py'
+        ).read_text(encoding='utf-8')
+
+        self.assertIn('"SAVE_PRECEDING_FITS"          : False', config_source)
+        self.assertIn("get('SAVE_PRECEDING_FITS', False)", image_source)
+        self.assertIn(
+            "if save_preceding and repair_status == 'normal':",
+            image_source,
+        )
+        self.assertIn("'fits_bytes': Path(source_filename_p).read_bytes()", image_source)
+        self.assertIn("'role': 'preceding'", image_source)
+        self.assertIn('_add_asi676mc_diagnostic_role', image_source)
+        self.assertIn('previous_context = None', image_source)
 
     def test_normal_frame_is_not_modified(self):
         data = numpy.full((64, 64), 1000, dtype=numpy.uint16)

@@ -75,10 +75,14 @@ The recommended evidence-collection sequence for an affected camera is:
    in exclude-only mode and retains the untouched purple frame plus its
    immediately following frame. That frame is used only if it passes the
    normal-frame checks.
-3. For stronger good/bad/good groups, temporarily enable ordinary FITS saving
-   at **Every Image** while Exclude Only remains active. A non-zero periodic
+3. For stronger evidence without saving every image, optionally enable **Also
+   Save Preceding RAW FITS**. It holds one full untouched FITS in memory and
+   saves it only when the next compatible frame is purple. With the following
+   frame, this normally produces a good/purple/good triplet.
+4. For complete sequences instead, temporarily enable ordinary FITS saving at
+   **Every Image** while Exclude Only remains active. A non-zero periodic
    interval can miss randomly occurring failures.
-4. Calibrate and review/apply the derived values, then clear **Exclude Only**
+5. Calibrate and review/apply the derived values, then clear **Exclude Only**
    to activate pixel repair.
 
 Ordinary FITS are written after ASI676MC handling, including when “Save FITS
@@ -235,7 +239,7 @@ continuing if Git reports a conflict. Do not combine these with `git reset` or
 force-push the shared test branch. A dirty Pi worktree must first be committed
 or stashed before a revert or rebase can proceed.
 
-### Diagnostic FITS pair capture
+### Diagnostic FITS pair and triplet capture
 
 Commit `4e553308` added the independently selectable
 `IMAGE_ASI676MC_REPAIR.SAVE_DIAGNOSTIC_FITS` option. When enabled:
@@ -250,9 +254,35 @@ Commit `4e553308` added the independently selectable
 4. Copying and database/upload failures are logged and isolated so diagnostic
    capture cannot stop the normal image pipeline.
 
+The child option `IMAGE_ASI676MC_REPAIR.SAVE_PRECEDING_FITS` is disabled by
+default. Enabling it leaves the bad/following behavior above intact and adds a
+one-frame, per-camera memory cache:
+
+1. After a frame is positively classified as normal, its complete untouched
+   source FITS is retained as bytes before the capture file is removed.
+2. If the immediately following frame is purple and has the same camera,
+   dimensions, exposure, gain, binning, and Bayer pattern, the cached FITS is
+   written with the `preceding` role for that purple-frame group.
+3. A skipped, unsupported, incompatible, or purple frame breaks adjacency and
+   clears the candidate. At steady state, the old byte buffer is released
+   before the next normal FITS is cached, so only one complete FITS per active
+   camera is retained by this feature.
+4. When a normal frame was already saved as `following` for an earlier purple
+   frame, the same FITS row and physical file are reused as `preceding` for the
+   next group. Only its role metadata is extended.
+
+This sub-option improves calibration evidence without saving every capture,
+but it costs approximately one full source FITS of RAM per active camera and
+one additional FITS on disk for each purple frame whose preceding normal frame
+was not already saved. Leaving it disabled has no extra memory cost and retains
+the original minimum-disk pair workflow.
+
 Pair state is held in `ImageWorker.asi676mc_diagnostic_pending`, keyed by camera
-ID. A service restart between the bad frame and its successor can therefore
-leave a pair with only its bad member.
+ID. The optional prior-frame bytes are held separately in
+`ImageWorker.asi676mc_diagnostic_previous`. A service restart discards both
+in-memory states: a bad frame captured immediately before the restart can lack
+its following FITS, and the first bad frame after restart can lack a preceding
+FITS. Existing saved evidence is unaffected.
 
 The copies are standard `IndiAllSkyDbFitsImageTable` assets. Existing FITS
 expiration, local URL, file-transfer, and S3 behavior applies. No database
@@ -268,7 +298,7 @@ The FITS row JSON uses this shape:
     "roles": [
       {
         "capture_id": "<pair UUID>",
-        "role": "bad"
+        "role": "preceding"
       }
     ]
   }
@@ -277,13 +307,17 @@ The FITS row JSON uses this shape:
 
 The associated rendered image row stores a small
 `asi676mc_diagnostic_fits` JSON object containing the FITS row ID and the same
-role list. Pair UUIDs, rather than timestamps, associate the bad and following
-files.
+role list. Pair UUIDs, rather than timestamps, associate the preceding, bad,
+and following files. One FITS row may carry roles for more than one group when
+it is reused.
 
-Downloads appear as `Bad FITS` and `Next FITS` in the standard Image Viewer
-download strip. The gallery deliberately exposes no diagnostic FITS controls
-or URLs, including in its enlarged PhotoSwipe view, so its toolbar cannot cover
-the timestamp or other image annotations.
+Downloads appear as `Previous FITS`, `Bad FITS`, and `Next FITS` in the standard
+Image Viewer download strip when the corresponding files exist. The preceding
+image row is updated after its cached FITS is committed, so the triplet can be
+reached from that frame as well as the purple frame. The gallery deliberately
+exposes no diagnostic FITS controls or URLs, including in its enlarged
+PhotoSwipe view, so its toolbar cannot cover the timestamp or other image
+annotations.
 
 ### Repair and calibration utility
 
@@ -432,6 +466,14 @@ The capture message covers the settings matrix as follows:
 | Repair active | On | Off or periodic | Low-disk pre-repair diagnostic collection is ready; periodic ordinary FITS is optional. |
 | Repair active | On | Invalid interval | Diagnostic FITS remain the pre-repair calibration source. Correct the malformed ordinary FITS interval or turn ordinary saving off. |
 | Repair active | Off | Any | Ordinary FITS are post-repair and cannot be relied on as the original bad mosaic. Enable diagnostic FITS, or switch to Exclude Only and use Every Image. |
+
+**Preceding RAW FITS** is an overlay on every row where purple-frame handling
+and **Bad + following RAW FITS** are both active. When enabled, the facts show
+`On (one-frame memory cache)` and the same single capture-outlook message adds
+that compatible good/purple/good triplets can be collected without saving
+every image, together with the RAM and disk tradeoff. If either parent is off,
+the child fact is shown as inactive and it does not change the outcome. Leaving
+the child disabled preserves every message and behavior in the table above.
 
 An invalid or sub-one-day retention value adds one warning that automatic
 saved FITS search is unavailable while manual upload remains usable. FITS
@@ -595,14 +637,17 @@ being disabled entirely.
   - `DIAGNOSTIC_METADATA_KEY`
   - `DIAGNOSTIC_BAD_STATUSES`
   - `diagnostic_capture_plan()`
+  - `diagnostic_reference_compatible()`
+  - `append_diagnostic_role()`
 - `indi_allsky/image.py`
   - per-camera pending-pair state
+  - opt-in one-frame byte cache and following/preceding FITS reuse
   - call immediately after `correct_asi676mc_frame()`
   - `capture_asi676mc_diagnostic_fits()`
   - `_archive_asi676mc_diagnostic_fits()`
   - image-row diagnostic metadata
 - `indi_allsky/config.py`
-  - default for `SAVE_DIAGNOSTIC_FITS`
+  - defaults for `SAVE_DIAGNOSTIC_FITS` and `SAVE_PRECEDING_FITS`
 - `indi_allsky/flask/forms.py`
   - settings field
   - saved FITS purple-group limit
@@ -615,7 +660,7 @@ being disabled entirely.
   - authenticated calibration session, status, report, discard, and apply routes
   - retention-bounded local FITS discovery and background-job queueing
 - `indi_allsky/flask/templates/config.html`
-  - switch, help text, submission list, and master-switch grouping
+  - parent/child switches, memory guidance, submission list, and grouping
 - `indi_allsky/asi676mc_calibration.py`
   - private upload-session lifecycle, bounds, result/config comparison,
     retention, and report ownership
@@ -630,23 +675,27 @@ being disabled entirely.
 - `indi_allsky/flask/base_views.py` and `indi_allsky/flask/templates/base.html`
   - repair-enabled Tools-menu visibility flag and conditional menu entry
 - `indi_allsky/flask/templates/imageviewer.html`
-  - `Bad FITS` and `Next FITS` controls
+  - `Previous FITS`, `Bad FITS`, and `Next FITS` controls
 - `indi_allsky/flask/templates/gallery.html`
   - repair outlines, badges, tooltips, and repaired-only filtering
 - `testing/image/test_asi676mc_repair.py`
-  - bad/following and consecutive-bad pairing tests
+  - bad/following pairing, preceding compatibility, cache wiring, and viewer
+    isolation tests
 
 ## Removing only diagnostic FITS capture
 
 This is the preferred removal scope if frame correction itself is still useful.
 
-1. Remove `SAVE_DIAGNOSTIC_FITS` from the default configuration, settings form,
-   settings template, and settings load/save code.
-2. Remove the diagnostic constants and `diagnostic_capture_plan()` from
+1. Remove `SAVE_DIAGNOSTIC_FITS` and `SAVE_PRECEDING_FITS` from the default
+   configuration, settings form, settings template, and settings load/save
+   code.
+2. Remove the diagnostic constants plus `diagnostic_capture_plan()`,
+   `diagnostic_reference_compatible()`, and `append_diagnostic_role()` from
    `indi_allsky/asi676mc.py`.
 3. From `ImageWorker`, remove the pending-pair dictionary, the guarded
-   `capture_asi676mc_diagnostic_fits()` call, both diagnostic capture methods,
-   and persistence of `asi676mc_diagnostic_fits` into image metadata.
+   `capture_asi676mc_diagnostic_fits()` call, the preceding-frame cache and its
+   helpers, diagnostic archive methods, and persistence of
+   `asi676mc_diagnostic_fits` into image metadata.
 4. Remove `_asi676mc_diagnostic_assets()` and its Image Viewer response fields
    from `indi_allsky/flask/forms.py`. Remove the diagnostic labels from the FITS
    viewer. The camera-specific filter added to the ordinary same-timestamp FITS

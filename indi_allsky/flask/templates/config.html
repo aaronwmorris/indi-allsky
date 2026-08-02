@@ -2676,9 +2676,10 @@ var camera_id = {{ camera_id }};
             Detect purple frames without repairing them. The normal pipeline still saves the faulty JPEG,
             then its database entry is flagged as <em>excluded</em> and automatically omitted from timelapses.
             This is selected automatically when the overall feature is first enabled and should remain selected
-            while collecting calibration evidence. For stronger good/bad/good triplets, temporarily set ordinary
-            FITS saving to <em>Every Image</em>. After the derived values have been reviewed and applied, disable
-            Exclude Only to activate repair.
+            while collecting calibration evidence. For stronger good/purple/good triplets, enable
+            <em>Also Save Preceding RAW FITS</em>, or temporarily set ordinary FITS saving to
+            <em>Every Image</em> for complete sequences. After the derived values have been reviewed and applied,
+            disable Exclude Only to activate repair.
         </div>
     </div>
 
@@ -2713,8 +2714,8 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
-    <!-- Diagnostic pair saving is the low-disk evidence option; the ordinary
-         Every Image alternative is explained with Exclude Only above. -->
+    <!-- Diagnostic pair saving is the default low-memory evidence option. The
+         following child setting deliberately opts into a one-frame RAM cache. -->
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS.label }}
@@ -2727,9 +2728,28 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             Keep the untouched faulty input FITS and the immediately following same-camera FITS.
-            This works in Exclude Only mode and is the recommended low-disk way to collect calibration pairs.
+            This works in Exclude Only mode and is the recommended low-memory, low-disk way to collect calibration pairs.
+            No previous frame is cached unless the option below is enabled.
             Download links appear only on the standard Image Viewer.
             Normal FITS expiration settings apply.
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS(class='form-check-input') }}
+                <div id="IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            When Bad and Following RAW FITS is enabled, also retain one untouched normal FITS in memory.
+            If the next compatible frame is purple, that cached frame is saved as the preceding reference,
+            producing a stronger good/purple/good triplet when the following frame is also available.
+            This uses approximately one full FITS frame of additional memory per active camera and more disk space.
         </div>
     </div>
 
@@ -10745,6 +10765,7 @@ const checkbox_field_names = [
     'IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME',
     'IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE',
     'IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS',
+    'IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS',
     'IMAGE_CALIBRATE_DARK',
     'IMAGE_CALIBRATE_BPM',
     'IMAGE_CALIBRATE_FIX_HOLES',
@@ -11451,9 +11472,30 @@ var group_checkbox_fields_asi676mc_repair = [
     'IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME',
     'IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE',
     'IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS',
+    'IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS',
 ];
 
 group_on_change('IMAGE_ASI676MC_REPAIR__ENABLE', group_fields_asi676mc_repair, group_checkbox_fields_asi676mc_repair);
+
+// The preceding-frame cache is a true child of diagnostic FITS saving. Keep
+// its saved value when inactive, but prevent the UI from implying that it can
+// operate without both the camera feature and its parent capture option.
+function update_asi676mc_preceding_fits_state() {
+    var enable_preceding = (
+        $('#IMAGE_ASI676MC_REPAIR__ENABLE').prop('checked')
+        && $('#IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS').prop('checked')
+    );
+    if (enable_preceding) {
+        $('#IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS').removeAttr('readonly disabled');
+    } else {
+        $('#IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS').attr({'readonly': true, 'disabled': true});
+    }
+}
+
+$('#IMAGE_ASI676MC_REPAIR__ENABLE, #IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS').on(
+    'change',
+    update_asi676mc_preceding_fits_state
+);
 
 // Enabling the camera-specific feature is intentionally a two-stage safety
 // choice. Existing enabled configurations retain their explicit mode, while a
@@ -11800,6 +11842,7 @@ $( document ).ready(function() {
 
 
     group_on_ready('IMAGE_ASI676MC_REPAIR__ENABLE', group_fields_asi676mc_repair, group_checkbox_fields_asi676mc_repair);
+    update_asi676mc_preceding_fits_state();
     group_on_ready('IMAGE_SAVE_FITS', group_fields_fits, group_checkbox_fields_fits);
     group_on_ready('IMAGE_CIRCLE_MASK__ENABLE', group_fields_image_circle_mask, group_checkbox_fields_image_circle_mask);
     group_on_ready('CAMERA_SQM__ENABLE', group_fields_camera_sqm, group_checkbox_fields_camera_sqm);

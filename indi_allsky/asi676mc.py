@@ -77,6 +77,54 @@ def diagnostic_capture_plan(pending_capture_id, status, new_capture_id=None):
     return roles, next_capture_id
 
 
+def diagnostic_reference_compatible(previous_context, current_context):
+    """Return whether a cached frame can reference the current purple frame.
+
+    The cache is an optimization for calibration evidence, so it should not
+    write a preceding FITS that the calibration matcher will immediately
+    reject.  These fields mirror the engine's compatibility checks while
+    tolerating harmless floating-point serialization differences in database
+    metadata.
+    """
+    try:
+        previous_key = (
+            int(previous_context['camera_id']),
+            tuple(previous_context['image_shape']),
+            round(float(previous_context['exposure']), 12),
+            round(float(previous_context['gain']), 6),
+            int(previous_context['binning']),
+            str(previous_context['bayer_pattern'] or '').upper(),
+        )
+        current_key = (
+            int(current_context['camera_id']),
+            tuple(current_context['image_shape']),
+            round(float(current_context['exposure']), 12),
+            round(float(current_context['gain']), 6),
+            int(current_context['binning']),
+            str(current_context['bayer_pattern'] or '').upper(),
+        )
+    except (KeyError, TypeError, ValueError):
+        return False
+
+    return previous_key == current_key
+
+
+def append_diagnostic_role(roles, role):
+    """Copy a diagnostic role list and add one capture/role pair once."""
+    copied_roles = [
+        dict(existing_role)
+        for existing_role in roles or ()
+        if isinstance(existing_role, dict)
+    ]
+    if not any(
+        existing_role.get('capture_id') == role.get('capture_id')
+        and existing_role.get('role') == role.get('role')
+        for existing_role in copied_roles
+    ):
+        copied_roles.append(dict(role))
+    return copied_roles
+
+
 def normalize_settings(settings=None):
     """Merge and validate configured repair settings."""
     config = dict(DEFAULT_SETTINGS)

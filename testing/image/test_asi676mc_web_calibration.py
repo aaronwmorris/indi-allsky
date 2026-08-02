@@ -1,5 +1,6 @@
 import io
 import ast
+from itertools import product
 import os
 from pathlib import Path
 import tempfile
@@ -237,6 +238,37 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertEqual(summary['requested_bad_count'], 12)
         self.assertEqual(summary['selected_bad_count'], 10)
         self.assertEqual(len(selected), 20)
+
+    def test_database_selection_uses_saved_preceding_and_following_triplet(self):
+        records = [
+            self._database_record(
+                1,
+                990,
+                roles=({'capture_id': 'capture-1', 'role': 'preceding'},),
+            ),
+            self._database_record(
+                2,
+                1000,
+                roles=({'capture_id': 'capture-1', 'role': 'bad'},),
+            ),
+            self._database_record(
+                3,
+                1010,
+                roles=({'capture_id': 'capture-1', 'role': 'following'},),
+            ),
+        ]
+
+        selected, summary = asi676mc_calibration.select_database_evidence(
+            records,
+            bad_frames=[],
+            max_bad_frames=7,
+            max_pair_seconds=30,
+        )
+
+        self.assertEqual({record['id'] for record in selected}, {1, 2, 3})
+        self.assertEqual(summary['selected_bad_count'], 1)
+        self.assertEqual(summary['selected_normal_count'], 2)
+        self.assertEqual(summary['two_sided_count'], 1)
 
     def test_database_selection_rejects_invalid_or_nonfinite_separation(self):
         records = [
@@ -892,6 +924,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         })
         self.assertTrue(guidance['exclude_only'])
         self.assertTrue(guidance['diagnostic_fits'])
+        self.assertFalse(guidance['preceding_fits'])
         self.assertEqual(guidance['guidance']['level'], 'success')
         self.assertEqual(
             guidance['guidance']['title'],
@@ -901,6 +934,29 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('Exclude Only leaves purple frames unchanged', message)
         self.assertIn('immediately following frame', message)
         self.assertIn('ordinary FITS can remain off', message)
+
+    def test_capture_guidance_explains_opt_in_preceding_cache(self):
+        guidance = asi676mc_calibration.capture_configuration_guidance({
+            'IMAGE_ASI676MC_REPAIR': {
+                'ENABLE': True,
+                'EXCLUDE_ONLY': True,
+                'SAVE_DIAGNOSTIC_FITS': True,
+                'SAVE_PRECEDING_FITS': True,
+            },
+            'IMAGE_SAVE_FITS': False,
+            'IMAGE_FITS_EXPIRE_DAYS': 10,
+        })
+        facts = {item['label']: item['value'] for item in guidance['facts']}
+        self.assertTrue(guidance['preceding_fits'])
+        self.assertEqual(
+            facts['Preceding RAW FITS'],
+            'On (one-frame memory cache)',
+        )
+        message = guidance['guidance']['text']
+        self.assertIn('one untouched normal frame is kept in memory', message)
+        self.assertIn('good/purple/good triplet', message)
+        self.assertIn('one full FITS frame of memory', message)
+        self.assertIn('additional disk space', message)
 
     def test_capture_guidance_warns_about_unsafe_or_periodic_saving(self):
         guidance = asi676mc_calibration.capture_configuration_guidance({
@@ -939,7 +995,11 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         for repair_enabled in (False, True):
             for exclude_only in (False, True):
                 for diagnostic_fits in (False, True):
-                    for periodic_fits, fits_period in periodic_modes:
+                    for preceding_fits, periodic_mode in product(
+                        (False, True),
+                        periodic_modes,
+                    ):
+                        periodic_fits, fits_period = periodic_mode
                         if not periodic_fits:
                             ordinary_mode = 'off'
                         elif fits_period == 0:
@@ -952,6 +1012,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                             repair_enabled=repair_enabled,
                             exclude_only=exclude_only,
                             diagnostic_fits=diagnostic_fits,
+                            preceding_fits=preceding_fits,
                             periodic_fits=periodic_fits,
                             fits_period=fits_period,
                         ):
@@ -962,6 +1023,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                                         'ENABLE': repair_enabled,
                                         'EXCLUDE_ONLY': exclude_only,
                                         'SAVE_DIAGNOSTIC_FITS': diagnostic_fits,
+                                        'SAVE_PRECEDING_FITS': preceding_fits,
                                     },
                                     'IMAGE_SAVE_FITS': periodic_fits,
                                     'IMAGE_SAVE_FITS_PERIOD': fits_period,
@@ -1037,6 +1099,38 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                                 'next normal reference',
                                 result['guidance']['text'],
                             )
+                            facts = {
+                                item['label']: item['value']
+                                for item in result['facts']
+                            }
+                            if preceding_fits and repair_enabled and diagnostic_fits:
+                                self.assertTrue(result['preceding_fits'])
+                                self.assertEqual(
+                                    facts['Preceding RAW FITS'],
+                                    'On (one-frame memory cache)',
+                                )
+                                self.assertIn(
+                                    'one untouched normal frame is kept in memory',
+                                    result['guidance']['text'],
+                                )
+                            elif preceding_fits and not repair_enabled:
+                                self.assertFalse(result['preceding_fits'])
+                                self.assertEqual(
+                                    facts['Preceding RAW FITS'],
+                                    'Inactive (handling off)',
+                                )
+                            elif preceding_fits:
+                                self.assertFalse(result['preceding_fits'])
+                                self.assertEqual(
+                                    facts['Preceding RAW FITS'],
+                                    'Inactive (Bad + following off)',
+                                )
+                            else:
+                                self.assertFalse(result['preceding_fits'])
+                                self.assertEqual(
+                                    facts['Preceding RAW FITS'],
+                                    'Off',
+                                )
 
     def test_capture_guidance_marks_invalid_retention_once(self):
         result = asi676mc_calibration.capture_configuration_guidance({
@@ -1160,6 +1254,21 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             handling_off['guidance']['text'],
         )
 
+        parent_off = asi676mc_calibration.capture_configuration_guidance({
+            'IMAGE_ASI676MC_REPAIR': {
+                'ENABLE': True,
+                'SAVE_DIAGNOSTIC_FITS': False,
+                'SAVE_PRECEDING_FITS': True,
+            },
+            'IMAGE_SAVE_FITS': False,
+            'IMAGE_FITS_EXPIRE_DAYS': 7,
+        })
+        facts = {item['label']: item['value'] for item in parent_off['facts']}
+        self.assertEqual(
+            facts['Preceding RAW FITS'],
+            'Inactive (Bad + following off)',
+        )
+
         ordinary_off = asi676mc_calibration.capture_configuration_guidance({
             'IMAGE_ASI676MC_REPAIR': {'ENABLE': True},
             'IMAGE_SAVE_FITS': False,
@@ -1209,9 +1318,26 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         ).read_text(encoding='utf-8')
 
         self.assertIn('"EXCLUDE_ONLY"                : True', config_source)
+        self.assertIn('"SAVE_PRECEDING_FITS"          : False', config_source)
         self.assertIn("get('EXCLUDE_ONLY', True)", processing_source)
         self.assertIn("get('EXCLUDE_ONLY', True)", views_source)
         self.assertIn('asi676mc_repair_was_enabled', settings_template)
+        self.assertIn(
+            'form_config.IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS.label',
+            settings_template,
+        )
+        self.assertIn(
+            'update_asi676mc_preceding_fits_state',
+            settings_template,
+        )
+        self.assertLess(
+            settings_template.index(
+                'form_config.IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS.label'
+            ),
+            settings_template.index(
+                'form_config.IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS.label'
+            ),
+        )
         self.assertIn(
             'Purple-frame cameras only',
             settings_template,
@@ -1237,7 +1363,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             ),
         )
         self.assertGreater(
-            settings_template.index('For stronger good/bad/good triplets'),
+            settings_template.index('For stronger good/purple/good triplets'),
             settings_template.index(
                 'form_config.IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY.label'
             ),

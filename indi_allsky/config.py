@@ -265,6 +265,10 @@ class IndiAllSkyConfigBase(object):
             "LOG_EVERY_FRAME"             : False,
             "GALLERY_ENABLE"              : True,
             "SAVE_DIAGNOSTIC_FITS"         : False,
+            # Opt-in because retaining the untouched previous FITS in RAM adds
+            # roughly one full camera frame per active camera.  The parent
+            # option remains the default low-memory bad/following workflow.
+            "SAVE_PRECEDING_FITS"          : False,
             "PURPLE_RATIO_THRESHOLD"      : 1.5,
             "RED_SIDE_RATIO_THRESHOLD"    : 1.25,
             "BLUE_SIDE_RATIO_THRESHOLD"   : 1.5,

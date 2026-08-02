@@ -208,6 +208,7 @@ function closeFullscreen() {
             <span id="lag_here"></span>
             <span id="img_download"></span>
             <span id="fits_download"></span>
+            <span id="asi676mc_preceding_fits_download"></span>
             <span id="asi676mc_bad_fits_download"></span>
             <span id="asi676mc_following_fits_download"></span>
             <span id="fits_processing"></span>
@@ -776,6 +777,28 @@ function init() {
                 $('#fits_processing').empty();
             };
 
+            const asi676mc_preceding_fits = (
+                image_data[image_index]['asi676mc_diagnostic_preceding_fits']
+            );
+            if (asi676mc_preceding_fits) {
+                $('#asi676mc_preceding_fits_download').html(
+                    $('<a />', {
+                        'href'     : asi676mc_preceding_fits['url'],
+                        'rel'      : 'noopener noreferrer',
+                        'class'    : "text-decoration-none link-warning",
+                        'download' : asi676mc_preceding_fits['filename'],
+                        'title'    : 'Download immediately preceding RAW FITS',
+                    }).html(
+                        $('<span />', {
+                            'text'  : 'Previous FITS',
+                            'class' : "badge pill bg-success",
+                        })
+                    )
+                );
+            } else {
+                $('#asi676mc_preceding_fits_download').empty();
+            };
+
             const asi676mc_bad_fits = (
                 image_data[image_index]['asi676mc_diagnostic_bad_fits']
             );
@@ -877,6 +900,7 @@ function init() {
         } else {
             // this should never happen, but just in case
             $('#fits_download').empty();
+            $('#asi676mc_preceding_fits_download').empty();
             $('#asi676mc_bad_fits_download').empty();
             $('#asi676mc_following_fits_download').empty();
             $('#fits_processing').empty();

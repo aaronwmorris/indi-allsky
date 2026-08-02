@@ -1651,6 +1651,7 @@ def calibration_payload(
             'LOG_EVERY_FRAME': False,
             'GALLERY_ENABLE': True,
             'SAVE_DIAGNOSTIC_FITS': False,
+            'SAVE_PRECEDING_FITS': False,
             **calibrated,
         },
     }

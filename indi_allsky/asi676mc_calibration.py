@@ -102,9 +102,10 @@ def capture_configuration_guidance(config):
     The current configuration cannot prove how older files were captured, so
     this is deliberately advisory.  Automatic discovery will still inspect
     the FITS that actually exist. This guidance explains why future purple
-    frames will produce low-disk pairs, full-sequence groups, or no usable
-    untouched evidence at all. The returned guidance intentionally combines
-    the active conditions into one concise, severity-ranked explanation.
+    frames will produce low-disk pairs, cached triplets, full-sequence groups,
+    or no usable untouched evidence at all. The returned guidance intentionally
+    combines the active conditions into one concise, severity-ranked
+    explanation.
     """
     config = config if isinstance(config, dict) else {}
     repair = config.get('IMAGE_ASI676MC_REPAIR', {})
@@ -113,6 +114,14 @@ def capture_configuration_guidance(config):
     repair_enabled = bool(repair.get('ENABLE', False))
     exclude_only = bool(repair.get('EXCLUDE_ONLY', True))
     diagnostic_fits = bool(repair.get('SAVE_DIAGNOSTIC_FITS', False))
+    preceding_fits_configured = bool(
+        repair.get('SAVE_PRECEDING_FITS', False)
+    )
+    preceding_fits = bool(
+        repair_enabled
+        and diagnostic_fits
+        and preceding_fits_configured
+    )
     periodic_fits = bool(config.get('IMAGE_SAVE_FITS', False))
     compressed_fits = bool(config.get('IMAGE_SAVE_FITS_COMPRESSED', False))
     try:
@@ -148,6 +157,14 @@ def capture_configuration_guidance(config):
         diagnostic_text = 'Inactive (handling off)'
     else:
         diagnostic_text = 'Off'
+    if preceding_fits:
+        preceding_text = 'On (one-frame memory cache)'
+    elif preceding_fits_configured and not repair_enabled:
+        preceding_text = 'Inactive (handling off)'
+    elif preceding_fits_configured and not diagnostic_fits:
+        preceding_text = 'Inactive (Bad + following off)'
+    else:
+        preceding_text = 'Off'
     if compressed_fits and periodic_fits:
         compression_text = 'On'
     elif compressed_fits:
@@ -159,6 +176,10 @@ def capture_configuration_guidance(config):
         {
             'label': 'Bad + following RAW FITS',
             'value': diagnostic_text,
+        },
+        {
+            'label': 'Preceding RAW FITS',
+            'value': preceding_text,
         },
         {'label': 'Ordinary FITS', 'value': periodic_text},
         {
@@ -299,8 +320,8 @@ def capture_configuration_guidance(config):
                     'following RAW FITS saves each detected purple frame '
                     'unchanged and also saves the immediately following frame. '
                     'Once all evidence requirements above are met, this '
-                    'provides calibration data with minimal disk use; ordinary '
-                    'FITS can remain off.'
+                    'provides calibration data without saving every image; '
+                    'ordinary FITS can remain off.'
                 )
         elif periodic_fits and fits_period == 0:
             guidance_level = 'success'
@@ -373,7 +394,8 @@ def capture_configuration_guidance(config):
                     'the original purple frame before repair and also saves '
                     'the immediately following frame. Once all evidence '
                     'requirements above are met, this provides calibration '
-                    'data with minimal disk use; ordinary FITS can remain off.'
+                    'data without saving every image; ordinary FITS can '
+                    'remain off.'
                 )
         else:
             guidance_title = 'No untouched purple-frame FITS will be saved'
@@ -410,6 +432,16 @@ def capture_configuration_guidance(config):
                     'calibration data.'
                 )
 
+    if preceding_fits:
+        guidance_sentences.append(
+            'Preceding RAW FITS is also enabled: one untouched normal frame is '
+            'kept in memory and saved only when the next compatible frame is '
+            'purple. Together with the following FITS, this can provide a '
+            'good/purple/good triplet without saving every image, at the cost '
+            'of approximately one full FITS frame of memory and additional '
+            'disk space.'
+        )
+
     if not retention_valid:
         guidance_level = 'warning'
         if guidance_title.startswith('Ready'):
@@ -433,6 +465,7 @@ def capture_configuration_guidance(config):
         'repair_enabled': repair_enabled,
         'exclude_only': exclude_only,
         'diagnostic_fits': diagnostic_fits,
+        'preceding_fits': preceding_fits,
         'periodic_fits': periodic_fits,
         'fits_period': fits_period,
     }

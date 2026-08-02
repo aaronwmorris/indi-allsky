@@ -4600,6 +4600,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME             = BooleanField('Log Every ASI676MC Frame')
     IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE              = BooleanField('Show Purple-frame Status in Gallery')
     IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS         = BooleanField('Save Bad and Following RAW FITS')
+    IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS          = BooleanField('Also Save Preceding RAW FITS')
     IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD      = FloatField('Purple Ratio Threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator], widget=NumberInput(step=0.01))
     IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD    = FloatField('Red-side Ratio Threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator], widget=NumberInput(step=0.01))
     IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD   = FloatField('Blue-side Ratio Threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator], widget=NumberInput(step=0.01))
@@ -6834,14 +6835,19 @@ def _asi676mc_diagnostic_assets(images, camera_id, s3_prefix, local):
             continue
 
         repair_status = image_metadata.get('asi676mc_repair_status')
-        preferred_role = (
-            'bad'
+        preferred_roles = (
+            ('bad',)
             if repair_status in asi676mc.DIAGNOSTIC_BAD_STATUSES
-            else 'following'
+            # A normal frame can be the following reference for one failure
+            # and the preceding reference for the next. Prefer the latter
+            # triplet when choosing the one capture shown on that image row;
+            # each purple image still exposes its own complete group.
+            else ('preceding', 'following')
         )
         selected_role = next(
             (
                 role
+                for preferred_role in preferred_roles
                 for role in roles
                 if role.get('role') == preferred_role
             ),
@@ -6878,7 +6884,7 @@ def _asi676mc_diagnostic_assets(images, camera_id, s3_prefix, local):
             role_name = role.get('role')
             if (
                 capture_id not in capture_ids
-                or role_name not in ('bad', 'following')
+                or role_name not in ('preceding', 'bad', 'following')
             ):
                 continue
 
@@ -6910,6 +6916,7 @@ def _asi676mc_diagnostic_assets(images, camera_id, s3_prefix, local):
     for image_id, capture_id in selected_pairs.items():
         assets = pair_assets.get(capture_id, {})
         image_assets[image_id] = {
+            'preceding': assets.get('preceding'),
             'bad': assets.get('bad'),
             'following': assets.get('following'),
         }
@@ -7206,6 +7213,9 @@ class IndiAllskyImageViewer(FlaskForm):
                 image_dict['fits_id'] = None
 
             image_diagnostic_assets = diagnostic_assets.get(img.id, {})
+            image_dict['asi676mc_diagnostic_preceding_fits'] = (
+                image_diagnostic_assets.get('preceding')
+            )
             image_dict['asi676mc_diagnostic_bad_fits'] = (
                 image_diagnostic_assets.get('bad')
             )
