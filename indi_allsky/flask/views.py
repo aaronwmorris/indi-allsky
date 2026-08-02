@@ -7735,7 +7735,7 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
     """Discover local database FITS and queue a newest-first calibration.
 
     Repair-specific diagnostic records provide explicit purple/following roles.
-    Ordinary FITS are associated with image rows that the live detector marked
+    Standard FITS are associated with image rows that the live detector marked
     purple. The pure selector in ``asi676mc_calibration`` then chooses at most
     one adjacent normal file on each side and stops after the requested number
     of usable purple-frame groups. Stored metadata retains the internal role
@@ -7878,7 +7878,7 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
                 'timestamp': image.createDate.timestamp(),
                 'exposure': image.exposure,
                 'gain': image.gain,
-                'allow_ordinary': (
+                'allow_standard': (
                     (image.data or {}).get('asi676mc_repair_status')
                     == 'excluded'
                 ),
@@ -7914,7 +7914,7 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
                 discovery_error = (
                     'Purple-frame FITS were found, but none had a compatible '
                     'normal reference within {0:g} seconds. Enable Bad + '
-                    'following RAW FITS, set ordinary FITS saving to Every '
+                    'following RAW FITS, set standard FITS saving to Every '
                     'Image with Exclude Only, or increase Maximum separation '
                     'when matching frames are farther apart.'
                 ).format(max_pair_seconds)

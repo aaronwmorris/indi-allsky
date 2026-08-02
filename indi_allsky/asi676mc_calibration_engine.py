@@ -78,10 +78,6 @@ _COMPRESSED_FITS_SUFFIXES = tuple(
     '{0}.gz'.format(suffix)
     for suffix in _FITS_SUFFIXES
 )
-_CAMERA_NAME_RE = re.compile(
-    r'(?<![A-Z0-9])ASI[\s_-]*676MC(?![A-Z0-9])',
-    re.IGNORECASE,
-)
 _OTHER_ASI_CAMERA_RE = re.compile(
     r'(?<![A-Z0-9])ASI[\s_-]*(?!676MC)[0-9]+[A-Z]*',
     re.IGNORECASE,
@@ -182,7 +178,9 @@ def _camera_name(header):
 
 def _specific_camera_name(name):
     """Normalize ASI676MC names while discarding generic legacy labels."""
-    if _CAMERA_NAME_RE.search(name):
+    # Reuse the live camera gate so calibration cannot silently recognize a
+    # different set of ASI676MC name variants than runtime repair.
+    if asi676mc.camera_name_matches(name):
         return 'asi676mc'
     lowered = name.strip().lower()
     if not lowered or lowered in ('indi-allsky', 'unknown', 'camera'):
@@ -875,7 +873,7 @@ def validate_evidence(records, pairs, unmatched, allow_unmatched=False):
     other_asi = {
         name for name in explicit_names
         if _OTHER_ASI_CAMERA_RE.search(name)
-        and not _CAMERA_NAME_RE.search(name)
+        and not asi676mc.camera_name_matches(name)
     }
     if other_asi:
         raise CalibrationError(

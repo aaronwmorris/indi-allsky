@@ -394,6 +394,10 @@ class ImageWorker(Process):
             return
 
 
+        # Purple-frame handling deliberately precedes both pre-dark and
+        # post-dark standard FITS saving. In active repair mode those outputs
+        # therefore contain the restored mosaic; diagnostic FITS below retain
+        # the untouched camera input when calibration evidence is requested.
         self.image_processor.correct_asi676mc_frame(i_ref)
         try:
             self.capture_asi676mc_diagnostic_fits(filename_p, i_ref, camera)
@@ -1294,11 +1298,13 @@ class ImageWorker(Process):
     def capture_asi676mc_diagnostic_fits(self, source_filename_p, i_ref, camera):
         """Save bad/following evidence and optionally a cached preceding FITS.
 
-        The default path is deliberately unchanged: it copies only a detected
+        The default path copies only a detected
         purple frame and the next ingested frame, with no persistent RAW cache.
         ``SAVE_PRECEDING_FITS`` opts into one in-memory FITS per camera. A
         cached normal frame is written only when the immediately following
         compatible frame is purple, then the cache advances or is discarded.
+        If that normal frame was already saved as a previous group's following
+        frame, its database FITS is reused without retaining duplicate bytes.
         """
         repair_config = self.config.get('IMAGE_ASI676MC_REPAIR', {})
         camera_id = i_ref.camera_id
@@ -1453,11 +1459,19 @@ class ImageWorker(Process):
                     fits_entry=fits_entry,
                 )
                 self.asi676mc_diagnostic_previous[camera_id] = cached_context
-                logger.debug(
-                    'Cached %0.2f MiB ASI676MC preceding-frame candidate: %s',
-                    len(cached_context['fits_bytes']) / (1024 * 1024),
-                    cached_context['source_name'],
-                )
+                if fits_entry is not None:
+                    logger.debug(
+                        'Reusing saved ASI676MC FITS as a preceding-frame '
+                        'candidate: %s',
+                        cached_context['source_name'],
+                    )
+                else:
+                    logger.debug(
+                        'Cached %0.2f MiB ASI676MC preceding-frame candidate: '
+                        '%s',
+                        len(cached_context['fits_bytes']) / (1024 * 1024),
+                        cached_context['source_name'],
+                    )
             except (MemoryError, OSError, ValueError):
                 logger.exception(
                     'Unable to cache ASI676MC preceding-frame candidate: %s',
@@ -1503,18 +1517,25 @@ class ImageWorker(Process):
         i_ref,
         fits_entry=None,
     ):
-        """Read one untouched normal FITS into the opt-in per-camera cache."""
+        """Retain one normal FITS record or byte string for a possible triplet.
+
+        A normal frame that is already a saved ``following`` diagnostic needs
+        only its database ID. Other normal frames retain the untouched source
+        bytes because the capture file is deleted before the next frame is
+        classified.
+        """
         context = self._asi676mc_diagnostic_frame_context(i_ref)
         context.update({
             'source_name': Path(source_filename_p).name,
             'fits_ext': self._asi676mc_diagnostic_extension(
                 source_filename_p
             ),
-            'fits_bytes': Path(source_filename_p).read_bytes(),
             'diagnostic_fits_id': (
                 fits_entry.id if fits_entry is not None else None
             ),
         })
+        if fits_entry is None:
+            context['fits_bytes'] = Path(source_filename_p).read_bytes()
         return context
 
 

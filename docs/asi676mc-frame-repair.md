@@ -27,7 +27,7 @@ Pixel repair begins only after an operator explicitly disables Exclude Only.
 ## Runtime processing
 
 Purple-frame handling runs immediately after indi-allsky opens the camera FITS
-and before dark-frame calibration, debayering, stacking, or ordinary FITS
+and before dark-frame calibration, debayering, stacking, or standard FITS
 saving. This order is important because the detector and repair operate on the
 original RGGB parity layout.
 
@@ -133,12 +133,14 @@ can affect later processing, then saves the immediately following ingested
 frame. This mode adds no persistent full-frame memory cache.
 
 Optionally enable **Also Save Preceding RAW FITS**. The image worker then keeps
-one untouched, normal FITS byte string per active camera in memory. It writes
-that cached frame only if the next compatible frame is purple. The cache is
-advanced after each normal frame and discarded after a purple, skipped, or
-incompatible frame. The option improves evidence quality at the cost of about
-one full FITS of memory per active camera and one additional saved FITS per
-purple event.
+up to one untouched, normal FITS byte string per active camera in memory. It
+writes that cached frame only if the next compatible frame is purple. If the
+normal frame was already saved as the following member of an earlier group,
+indi-allsky reuses that database FITS and does not retain a duplicate byte
+string. The cache is advanced after each normal frame and discarded after a
+purple, skipped, or incompatible frame. The option improves evidence quality
+at the cost of up to one full FITS of memory per active camera and one
+additional saved FITS per purple event.
 
 Each diagnostic FITS is a normal database-managed FITS asset with role metadata:
 
@@ -151,15 +153,21 @@ frame. Diagnostic files use the normal FITS upload destinations, retention
 setting, and expiration task. They can be downloaded from the standard Image
 Viewer when the relevant download controls are available.
 
-### Ordinary FITS capture
+### Standard FITS capture
 
-In **Exclude Only** mode, ordinary FITS still contain the original mosaic. Set
-ordinary FITS saving to **Every Image** temporarily to collect complete
+In **Exclude Only** mode, standard FITS still contain the original mosaic. Set
+standard FITS saving to **Every Image** temporarily to collect complete
 normal/purple/normal sequences.
 
-When repair is active, ordinary FITS are written from the already repaired
+When repair is active, standard FITS are written from the already repaired
 image and may no longer contain the original failure. Use the diagnostic FITS
 option if untouched purple evidence is required.
+
+This also applies when **Save FITS Pre-Calibration** is enabled. ASI676MC
+handling runs immediately after the camera FITS is opened, before the optional
+pre-dark save point; "pre-calibration" refers to dark-frame calibration, not to
+purple-frame handling. In Exclude Only mode, both standard save paths retain
+the original mosaic.
 
 The settings and calibration pages display a combined capture outlook based on
 the current repair and FITS options. That message describes future captures;
@@ -207,7 +215,7 @@ groups. Discovery stops when it reaches that limit or runs out of usable
 evidence; it proceeds with fewer than requested when at least seven complete
 groups remain.
 
-Explicit diagnostic role metadata is preferred. Ordinary FITS can also be
+Explicit diagnostic role metadata is preferred. Standard FITS can also be
 matched by capture time and compatibility. A candidate reference must agree on
 camera, dimensions, exposure, gain, binning, and Bayer pattern. The preceding
 and following files are selected dynamically, so pairs and triplets can be
@@ -306,7 +314,7 @@ indi-allsky FITS expiration behavior.
 
 1. Confirm that the ASI676MC actually produces the purple-frame failure.
 2. Enable purple-frame handling and leave Exclude Only enabled.
-3. Choose either low-disk diagnostic FITS or temporary ordinary FITS saving for
+3. Choose either low-disk diagnostic FITS or temporary standard FITS saving for
    every image. Enable preceding-frame caching only when the additional memory
    and disk use are acceptable.
 4. Collect several purple events across at least two exposure levels.
@@ -329,7 +337,7 @@ Enable ASI676MC purple-frame handling in Image settings and sign in.
 
 The current settings describe future evidence only. Existing purple frames may
 have expired or may never have been saved as untouched FITS. Enable either
-diagnostic FITS or Exclude Only plus ordinary FITS for every image, collect new
+diagnostic FITS or Exclude Only plus standard FITS for every image, collect new
 events, and try again.
 
 **Files upload but calibration rejects the collection**

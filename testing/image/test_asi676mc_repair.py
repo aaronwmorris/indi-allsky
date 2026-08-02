@@ -272,7 +272,12 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
             "if save_preceding and repair_status == 'normal':",
             image_source,
         )
-        self.assertIn("'fits_bytes': Path(source_filename_p).read_bytes()", image_source)
+        self.assertIn("if fits_entry is None:", image_source)
+        self.assertIn(
+            "context['fits_bytes'] = Path(source_filename_p).read_bytes()",
+            image_source,
+        )
+        self.assertIn("'diagnostic_fits_id': (", image_source)
         self.assertIn("'role': 'preceding'", image_source)
         self.assertIn('_add_asi676mc_diagnostic_role', image_source)
         self.assertIn('previous_context = None', image_source)

@@ -297,7 +297,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                         max_pair_seconds=separation,
                     )
 
-    def test_database_selection_uses_flagged_ordinary_fits_and_ignores_unmatched(self):
+    def test_database_selection_uses_flagged_standard_fits_and_ignores_unmatched(self):
         records = []
         bad_frames = []
         for index in range(8):
@@ -336,7 +336,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                     'timestamp': 1000,
                     'exposure': 0.001,
                     'gain': 100.0,
-                    'allow_ordinary': False,
+                    'allow_standard': False,
                 }],
                 max_bad_frames=7,
                 max_pair_seconds=30,
@@ -935,7 +935,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         message = guidance['guidance']['text']
         self.assertIn('Exclude Only leaves purple frames unchanged', message)
         self.assertIn('immediately following frame', message)
-        self.assertIn('ordinary FITS can remain off', message)
+        self.assertIn('standard FITS can remain off', message)
 
     def test_capture_guidance_explains_opt_in_preceding_cache(self):
         guidance = asi676mc_calibration.capture_configuration_guidance({
@@ -981,7 +981,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             guidance['guidance']['title'],
             'No untouched purple-frame FITS will be saved',
         )
-        self.assertIn('periodic ordinary FITS is written after repair', message)
+        self.assertIn('periodic standard FITS is written after repair', message)
         self.assertIn('turn on Bad + following RAW FITS', message)
         self.assertIn('switch to Exclude Only', message)
 
@@ -1001,21 +1001,21 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                         (False, True),
                         periodic_modes,
                     ):
-                        periodic_fits, fits_period = periodic_mode
-                        if not periodic_fits:
-                            ordinary_mode = 'off'
+                        standard_fits, fits_period = periodic_mode
+                        if not standard_fits:
+                            standard_mode = 'off'
                         elif fits_period == 0:
-                            ordinary_mode = 'every'
+                            standard_mode = 'every'
                         elif isinstance(fits_period, int) and fits_period > 0:
-                            ordinary_mode = 'periodic'
+                            standard_mode = 'periodic'
                         else:
-                            ordinary_mode = 'invalid'
+                            standard_mode = 'invalid'
                         with self.subTest(
                             repair_enabled=repair_enabled,
                             exclude_only=exclude_only,
                             diagnostic_fits=diagnostic_fits,
                             preceding_fits=preceding_fits,
-                            periodic_fits=periodic_fits,
+                            standard_fits=standard_fits,
                             fits_period=fits_period,
                         ):
                             result = (
@@ -1027,7 +1027,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                                         'SAVE_DIAGNOSTIC_FITS': diagnostic_fits,
                                         'SAVE_PRECEDING_FITS': preceding_fits,
                                     },
-                                    'IMAGE_SAVE_FITS': periodic_fits,
+                                    'IMAGE_SAVE_FITS': standard_fits,
                                     'IMAGE_SAVE_FITS_PERIOD': fits_period,
                                     'IMAGE_FITS_EXPIRE_DAYS': 10,
                                 })
@@ -1042,12 +1042,12 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                                     'Purple-frame handling is off',
                                 )
                             elif diagnostic_fits:
-                                if ordinary_mode == 'every':
+                                if standard_mode == 'every':
                                     expected = (
                                         'success',
                                         'Ready to collect complete FITS sequences',
                                     )
-                                elif ordinary_mode in ('off', 'periodic'):
+                                elif standard_mode in ('off', 'periodic'):
                                     expected = (
                                         'success',
                                         'Ready for low-disk FITS collection',
@@ -1055,24 +1055,24 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                                 else:
                                     expected = (
                                         'warning',
-                                        'Ordinary FITS setting needs correction',
+                                        'Standard FITS setting needs correction',
                                     )
                             elif not exclude_only:
                                 expected = (
                                     'warning',
                                     'No untouched purple-frame FITS will be saved',
                                 )
-                            elif ordinary_mode == 'every':
+                            elif standard_mode == 'every':
                                 expected = (
                                     'success',
                                     'Ready to collect complete FITS sequences',
                                 )
-                            elif ordinary_mode == 'periodic':
+                            elif standard_mode == 'periodic':
                                 expected = (
                                     'warning',
                                     'Periodic FITS saving may miss purple frames',
                                 )
-                            elif ordinary_mode == 'invalid':
+                            elif standard_mode == 'invalid':
                                 expected = (
                                     'warning',
                                     'No reliable calibration FITS will be saved',
@@ -1155,7 +1155,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         )
 
     def test_invalid_retention_overlay_covers_every_capture_mode(self):
-        ordinary_modes = (
+        standard_modes = (
             (False, 7200),
             (True, 0),
             (True, 600),
@@ -1168,14 +1168,14 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         )
         for repair_enabled, exclude_only in repair_modes:
             for diagnostic_fits in (False, True):
-                for ordinary_enabled, ordinary_period in ordinary_modes:
+                for standard_enabled, standard_period in standard_modes:
                     for retention in (0, -1, 'invalid'):
                         with self.subTest(
                             repair_enabled=repair_enabled,
                             exclude_only=exclude_only,
                             diagnostic_fits=diagnostic_fits,
-                            ordinary_enabled=ordinary_enabled,
-                            ordinary_period=ordinary_period,
+                            standard_enabled=standard_enabled,
+                            standard_period=standard_period,
                             retention=retention,
                         ):
                             result = (
@@ -1186,8 +1186,8 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                                         'EXCLUDE_ONLY': exclude_only,
                                         'SAVE_DIAGNOSTIC_FITS': diagnostic_fits,
                                     },
-                                    'IMAGE_SAVE_FITS': ordinary_enabled,
-                                    'IMAGE_SAVE_FITS_PERIOD': ordinary_period,
+                                    'IMAGE_SAVE_FITS': standard_enabled,
+                                    'IMAGE_SAVE_FITS_PERIOD': standard_period,
                                     'IMAGE_FITS_EXPIRE_DAYS': retention,
                                 })
                             )
@@ -1233,7 +1233,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('Repair is active, but no FITS saving is enabled', message)
         self.assertIn('turn on Bad + following RAW FITS', message)
         self.assertIn(
-            'switch to Exclude Only and set ordinary FITS to Every Image',
+            'switch to Exclude Only and set standard FITS to Every Image',
             message,
         )
 
@@ -1271,16 +1271,16 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'Inactive (Bad + following off)',
         )
 
-        ordinary_off = asi676mc_calibration.capture_configuration_guidance({
+        standard_off = asi676mc_calibration.capture_configuration_guidance({
             'IMAGE_ASI676MC_REPAIR': {'ENABLE': True},
             'IMAGE_SAVE_FITS': False,
             'IMAGE_SAVE_FITS_COMPRESSED': True,
             'IMAGE_FITS_EXPIRE_DAYS': 7,
         })
-        facts = {item['label']: item['value'] for item in ordinary_off['facts']}
+        facts = {item['label']: item['value'] for item in standard_off['facts']}
         self.assertEqual(
-            facts['Ordinary FITS compression'],
-            'Inactive (ordinary FITS off)',
+            facts['Standard FITS compression'],
+            'Inactive (standard FITS off)',
         )
 
     def test_capture_guidance_explains_compressed_manual_upload_limit(self):
@@ -1295,8 +1295,8 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'IMAGE_FITS_EXPIRE_DAYS': 7,
         })
         facts = {item['label']: item['value'] for item in result['facts']}
-        self.assertEqual(facts['Ordinary FITS'], 'Every Image')
-        self.assertEqual(facts['Ordinary FITS compression'], 'On')
+        self.assertEqual(facts['Standard FITS'], 'Every Image')
+        self.assertEqual(facts['Standard FITS compression'], 'On')
         self.assertIn(
             'Manual upload accepts uncompressed FITS only',
             result['guidance']['text'],

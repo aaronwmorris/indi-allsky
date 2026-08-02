@@ -122,7 +122,7 @@ def capture_configuration_guidance(config):
         and diagnostic_fits
         and preceding_fits_configured
     )
-    periodic_fits = bool(config.get('IMAGE_SAVE_FITS', False))
+    standard_fits = bool(config.get('IMAGE_SAVE_FITS', False))
     compressed_fits = bool(config.get('IMAGE_SAVE_FITS_COMPRESSED', False))
     try:
         fits_period = int(config.get('IMAGE_SAVE_FITS_PERIOD', 7200))
@@ -137,14 +137,14 @@ def capture_configuration_guidance(config):
     # policy even though it can be represented in a hand-edited config file.
     retention_valid = retention_days is not None and retention_days >= 1
 
-    if not periodic_fits:
-        periodic_text = 'Off'
+    if not standard_fits:
+        standard_fits_text = 'Off'
     elif fits_period == 0:
-        periodic_text = 'Every Image'
+        standard_fits_text = 'Every Image'
     elif not fits_period_valid:
-        periodic_text = 'On (invalid interval)'
+        standard_fits_text = 'On (invalid interval)'
     else:
-        periodic_text = 'Every {0} seconds'.format(fits_period)
+        standard_fits_text = 'Every {0} seconds'.format(fits_period)
 
     mode_text = (
         'Off'
@@ -165,10 +165,10 @@ def capture_configuration_guidance(config):
         preceding_text = 'Inactive (Bad + following off)'
     else:
         preceding_text = 'Off'
-    if compressed_fits and periodic_fits:
+    if compressed_fits and standard_fits:
         compression_text = 'On'
     elif compressed_fits:
-        compression_text = 'Inactive (ordinary FITS off)'
+        compression_text = 'Inactive (standard FITS off)'
     else:
         compression_text = 'Off'
     facts = [
@@ -181,9 +181,9 @@ def capture_configuration_guidance(config):
             'label': 'Preceding RAW FITS',
             'value': preceding_text,
         },
-        {'label': 'Ordinary FITS', 'value': periodic_text},
+        {'label': 'Standard FITS', 'value': standard_fits_text},
         {
-            'label': 'Ordinary FITS compression',
+            'label': 'Standard FITS compression',
             'value': compression_text,
         },
         {
@@ -216,14 +216,14 @@ def capture_configuration_guidance(config):
                 'New purple frames will not be marked for automatic saved FITS '
                 'search.'
             )
-        if periodic_fits and fits_period == 0:
+        if standard_fits and fits_period == 0:
             # Database discovery can open indi-allsky's gzip-compressed FITS,
             # but the browser uploader deliberately accepts only uncompressed
             # files. With no purple-frame flags, decompression is therefore the
             # only way to use this particular saved sequence manually.
             if compressed_fits:
                 guidance_sentences.append(
-                    'Ordinary FITS saving is set to Every Image with '
+                    'Standard FITS saving is set to Every Image with '
                     'compression, so complete sequences are still being saved. '
                     'Manual upload accepts uncompressed FITS only; decompress '
                     'the selected files first. For automatic discovery of '
@@ -231,40 +231,40 @@ def capture_configuration_guidance(config):
                 )
             else:
                 guidance_sentences.append(
-                    'Ordinary FITS saving is set to Every Image, so complete '
+                    'Standard FITS saving is set to Every Image, so complete '
                     'sequences are still being saved and can be uploaded for '
                     'calibration. For automatic discovery of future purple '
                     'frames, enable handling in Exclude Only mode.'
                 )
-        elif periodic_fits and not fits_period_valid:
+        elif standard_fits and not fits_period_valid:
             if diagnostic_fits:
                 guidance_sentences.append(
-                    'The ordinary FITS interval is invalid. Correct or disable '
+                    'The standard FITS interval is invalid. Correct or disable '
                     'it, then enable purple-frame handling in Exclude Only mode; '
                     'the configured Bad + following RAW FITS option will begin '
                     'low-disk collection.'
                 )
             else:
                 guidance_sentences.append(
-                    'The ordinary FITS interval is invalid. Enable purple-frame '
+                    'The standard FITS interval is invalid. Enable purple-frame '
                     'handling in Exclude Only mode, then turn on Bad + following '
-                    'RAW FITS for low disk use or set ordinary FITS to Every '
+                    'RAW FITS for low disk use or set standard FITS to Every '
                     'Image for complete sequences.'
                 )
-        elif periodic_fits:
+        elif standard_fits:
             if diagnostic_fits:
                 guidance_sentences.append(
-                    'Periodic ordinary FITS may miss a randomly occurring purple '
+                    'Periodic standard FITS may miss a randomly occurring purple '
                     'frame. Enable purple-frame handling in Exclude Only mode; '
                     'the configured Bad + following RAW FITS option will then '
                     'provide the more reliable low-disk source.'
                 )
             else:
                 guidance_sentences.append(
-                    'Periodic ordinary FITS may miss a randomly occurring purple '
+                    'Periodic standard FITS may miss a randomly occurring purple '
                     'frame. Enable purple-frame handling in Exclude Only mode, '
                     'then turn on Bad + following RAW FITS for low disk use or '
-                    'set ordinary FITS to Every Image for complete sequences.'
+                    'set standard FITS to Every Image for complete sequences.'
                 )
         else:
             if diagnostic_fits:
@@ -279,38 +279,38 @@ def capture_configuration_guidance(config):
                     'No FITS saving is enabled. To collect calibration data, '
                     'enable purple-frame handling in Exclude Only mode, then '
                     'turn on Bad + following RAW FITS for low disk use or set '
-                    'ordinary FITS to Every Image for complete sequences.'
+                    'standard FITS to Every Image for complete sequences.'
                 )
     elif exclude_only:
         if diagnostic_fits:
             guidance_level = 'success'
-            if periodic_fits and fits_period == 0:
+            if standard_fits and fits_period == 0:
                 guidance_title = 'Ready to collect complete FITS sequences'
                 guidance_sentences.append(
                     'Exclude Only leaves purple frames unchanged. Bad + '
                     'following RAW FITS saves each detected purple frame '
                     'unchanged and also saves the immediately following frame. '
-                    'Ordinary FITS saving set to Every Image can add normal '
+                    'Standard FITS saving set to Every Image can add normal '
                     'references on either side for stronger good/purple/good '
                     'groups. Incompatible following frames are ignored. This '
                     'combination uses the most disk space.'
                 )
-            elif periodic_fits and not fits_period_valid:
+            elif standard_fits and not fits_period_valid:
                 guidance_level = 'warning'
-                guidance_title = 'Ordinary FITS setting needs correction'
+                guidance_title = 'Standard FITS setting needs correction'
                 guidance_sentences.append(
                     'Exclude Only and Bad + following RAW FITS provide the '
-                    'low-disk calibration source. The ordinary FITS interval '
-                    'is invalid; correct it or turn ordinary FITS saving off.'
+                    'low-disk calibration source. The standard FITS interval '
+                    'is invalid; correct it or turn standard FITS saving off.'
                 )
-            elif periodic_fits:
+            elif standard_fits:
                 guidance_title = 'Ready for low-disk FITS collection'
                 guidance_sentences.append(
                     'Exclude Only leaves purple frames unchanged, and Bad + '
                     'following RAW FITS saves each detected purple frame '
                     'unchanged and also saves the immediately following frame. '
                     'The tool uses only compatible normal references. Periodic '
-                    'ordinary FITS may add another compatible reference but is '
+                    'standard FITS may add another compatible reference but is '
                     'not required.'
                 )
             else:
@@ -321,31 +321,31 @@ def capture_configuration_guidance(config):
                     'unchanged and also saves the immediately following frame. '
                     'Once all evidence requirements above are met, this '
                     'provides calibration data without saving every image; '
-                    'ordinary FITS can remain off.'
+                    'standard FITS can remain off.'
                 )
-        elif periodic_fits and fits_period == 0:
+        elif standard_fits and fits_period == 0:
             guidance_level = 'success'
             guidance_title = 'Ready to collect complete FITS sequences'
             guidance_sentences.append(
-                'Exclude Only leaves purple frames unchanged, and ordinary '
+                'Exclude Only leaves purple frames unchanged, and standard '
                 'FITS saving set to Every Image saves complete sequences for '
                 'automatic discovery. These good/purple/good groups provide '
                 'strong evidence but use more disk space.'
             )
-        elif periodic_fits and not fits_period_valid:
+        elif standard_fits and not fits_period_valid:
             guidance_title = 'No reliable calibration FITS will be saved'
             guidance_sentences.append(
                 'Exclude Only marks purple frames without changing them, but '
-                'the ordinary FITS interval is invalid. Turn on Bad + following '
+                'the standard FITS interval is invalid. Turn on Bad + following '
                 'RAW FITS for low disk use, or correct the interval and choose '
                 'Every Image for complete sequences.'
             )
-        elif periodic_fits:
+        elif standard_fits:
             guidance_title = 'Periodic FITS saving may miss purple frames'
             guidance_sentences.append(
                 'Exclude Only marks purple frames without changing them, but a '
                 'periodic interval may not save a FITS at the right time. Turn '
-                'on Bad + following RAW FITS for low disk use, or set ordinary '
+                'on Bad + following RAW FITS for low disk use, or set standard '
                 'FITS to Every Image for complete sequences.'
             )
         else:
@@ -353,38 +353,38 @@ def capture_configuration_guidance(config):
             guidance_sentences.append(
                 'Exclude Only marks purple frames without changing them, but '
                 'no FITS saving is enabled. Turn on Bad + following RAW FITS '
-                'for low disk use, or set ordinary FITS to Every Image for '
+                'for low disk use, or set standard FITS to Every Image for '
                 'complete sequences.'
             )
     else:
         if diagnostic_fits:
             guidance_level = 'success'
-            if periodic_fits and fits_period == 0:
+            if standard_fits and fits_period == 0:
                 guidance_title = 'Ready to collect complete FITS sequences'
                 guidance_sentences.append(
                     'Repair is active, but Bad + following RAW FITS preserves '
                     'the original purple frame before repair and also saves '
-                    'the immediately following frame. Ordinary FITS saving set '
+                    'the immediately following frame. Standard FITS saving set '
                     'to Every Image can add normal references on either side. '
                     'Incompatible following frames and repaired purple-frame '
                     'copies are not used. This uses more disk space.'
                 )
-            elif periodic_fits and not fits_period_valid:
+            elif standard_fits and not fits_period_valid:
                 guidance_level = 'warning'
-                guidance_title = 'Ordinary FITS setting needs correction'
+                guidance_title = 'Standard FITS setting needs correction'
                 guidance_sentences.append(
                     'Repair is active, and Bad + following RAW FITS provides '
-                    'the pre-repair calibration source. The ordinary FITS '
-                    'interval is invalid; correct it or turn ordinary FITS '
+                    'the pre-repair calibration source. The standard FITS '
+                    'interval is invalid; correct it or turn standard FITS '
                     'saving off.'
                 )
-            elif periodic_fits:
+            elif standard_fits:
                 guidance_title = 'Ready for low-disk FITS collection'
                 guidance_sentences.append(
                     'Repair is active, but Bad + following RAW FITS preserves '
                     'the original purple frame before repair and also saves '
                     'the immediately following frame. The tool uses only '
-                    'compatible normal references. Periodic ordinary FITS may '
+                    'compatible normal references. Periodic standard FITS may '
                     'add another compatible reference but is not required.'
                 )
             else:
@@ -394,41 +394,41 @@ def capture_configuration_guidance(config):
                     'the original purple frame before repair and also saves '
                     'the immediately following frame. Once all evidence '
                     'requirements above are met, this provides calibration '
-                    'data without saving every image; ordinary FITS can '
+                    'data without saving every image; standard FITS can '
                     'remain off.'
                 )
         else:
             guidance_title = 'No untouched purple-frame FITS will be saved'
-            if periodic_fits and fits_period == 0:
+            if standard_fits and fits_period == 0:
                 guidance_sentences.append(
-                    'Repair is active, and ordinary FITS saving set to Every '
+                    'Repair is active, and standard FITS saving set to Every '
                     'Image writes files after repair, so it cannot be relied '
                     'on to preserve the original purple frame. Either turn on '
                     'Bad + following RAW FITS, or switch to Exclude Only and '
-                    'keep ordinary FITS set to Every Image to collect '
+                    'keep standard FITS set to Every Image to collect '
                     'calibration data.'
                 )
-            elif periodic_fits and not fits_period_valid:
+            elif standard_fits and not fits_period_valid:
                 guidance_sentences.append(
                     'Repair is active, Bad + following RAW FITS is off, and the '
-                    'ordinary FITS interval is invalid. Either turn on Bad + '
+                    'standard FITS interval is invalid. Either turn on Bad + '
                     'following RAW FITS, or switch to Exclude Only and set '
-                    'ordinary FITS to Every Image to collect calibration '
+                    'standard FITS to Every Image to collect calibration '
                     'data.'
                 )
-            elif periodic_fits:
+            elif standard_fits:
                 guidance_sentences.append(
-                    'Repair is active, and periodic ordinary FITS is written '
+                    'Repair is active, and periodic standard FITS is written '
                     'after repair and may also miss the relevant frames. Either '
                     'turn on Bad + following RAW FITS, or switch to Exclude '
-                    'Only and set ordinary FITS to Every Image to collect '
+                    'Only and set standard FITS to Every Image to collect '
                     'calibration data.'
                 )
             else:
                 guidance_sentences.append(
                     'Repair is active, but no FITS saving is enabled. Either '
                     'turn on Bad + following RAW FITS, or switch to Exclude '
-                    'Only and set ordinary FITS to Every Image to collect '
+                    'Only and set standard FITS to Every Image to collect '
                     'calibration data.'
                 )
 
@@ -466,7 +466,7 @@ def capture_configuration_guidance(config):
         'exclude_only': exclude_only,
         'diagnostic_fits': diagnostic_fits,
         'preceding_fits': preceding_fits,
-        'periodic_fits': periodic_fits,
+        'standard_fits': standard_fits,
         'fits_period': fits_period,
     }
 
@@ -721,7 +721,7 @@ def select_database_evidence(
     """Select newest-first purple/reference groups from normalized DB records.
 
     Explicit diagnostic roles are preferred because a FITS with the internal
-    ``bad`` role is known to be untouched purple input. Ordinary FITS are
+    ``bad`` role is known to be untouched purple input. Standard FITS are
     associated with an image row marked purple when their capture times agree
     within one second. At most one normal reference on each side is retained;
     the calibration engine subsequently reopens every selected FITS and
@@ -775,7 +775,7 @@ def select_database_evidence(
         for record in records
         if _database_record_has_role(record, 'bad')
     }
-    # Ordinary saving can create a second DB row at the same capture time as an
+    # Standard saving can create a second DB row at the same capture time as an
     # explicit diagnostic purple FITS. Even if the corresponding JPEG/image row
     # has already expired, that duplicate must not become another group's
     # supposedly normal reference.
@@ -791,9 +791,9 @@ def select_database_evidence(
             <= DATABASE_CAPTURE_TIME_TOLERANCE
         )
 
-    # Associate ordinary saved FITS with purple image rows. If an explicit
+    # Associate standard saved FITS with purple image rows. If an explicit
     # diagnostic purple capture exists at that time, keep it and do not add
-    # the post-repair ordinary FITS as a second candidate.
+    # the post-repair standard FITS as a second candidate.
     diagnostic_times = [
         float(record['timestamp'])
         for record in diagnostic_candidates
@@ -804,7 +804,7 @@ def select_database_evidence(
         reverse=True,
     ):
         bad_time = float(bad_frame['timestamp'])
-        ordinary_matches = [
+        standard_matches = [
             record for record in records
             if not record.get('roles')
             and abs(float(record['timestamp']) - bad_time)
@@ -814,12 +814,12 @@ def select_database_evidence(
             and round(float(record.get('gain', -1.0)), 6)
             == round(float(bad_frame.get('gain', -1.0)), 6)
         ]
-        known_bad_ids.update(record['id'] for record in ordinary_matches)
-        # Ordinary FITS written for an actually repaired frame contains the
+        known_bad_ids.update(record['id'] for record in standard_matches)
+        # Standard FITS written for an actually repaired frame contains the
         # corrected mosaic, not calibration evidence. The caller marks only
-        # historical Exclude Only captures as safe ordinary purple candidates;
+        # historical Exclude Only captures as safe standard purple candidates;
         # every known-purple timestamp is still excluded from normal references.
-        if not bad_frame.get('allow_ordinary', True):
+        if not bad_frame.get('allow_standard', True):
             continue
         if any(
             abs(diagnostic_time - bad_time)
@@ -827,9 +827,9 @@ def select_database_evidence(
             for diagnostic_time in diagnostic_times
         ):
             continue
-        if ordinary_matches:
+        if standard_matches:
             candidates.append(min(
-                ordinary_matches,
+                standard_matches,
                 key=lambda record: abs(float(record['timestamp']) - bad_time),
             ))
 
