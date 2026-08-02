@@ -6809,12 +6809,12 @@ class IndiAllskyAsi676mcCalibrationForm(FlaskForm):
         validators=[DataRequired(), NumberRange(min=1.0, max=3600.0)],
         widget=NumberInput(step=1.0),
     )
-    DATABASE_BAD_FRAME_LIMIT = IntegerField(
-        'Maximum purple-frame groups from saved FITS',
-        default=25,
+    DATABASE_FITS_FILE_LIMIT = IntegerField(
+        'Maximum saved FITS to inspect',
+        default=50,
         validators=[NumberRange(
-            min=asi676mc_calibration.DATABASE_BAD_FRAME_MIN,
-            max=asi676mc_calibration.DATABASE_BAD_FRAME_MAX,
+            min=asi676mc_calibration.DATABASE_FITS_FILE_MIN,
+            max=asi676mc_calibration.DATABASE_FITS_FILE_MAX,
         )],
         widget=NumberInput(step=1),
     )

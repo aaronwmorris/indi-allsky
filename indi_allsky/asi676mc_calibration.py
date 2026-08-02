@@ -46,8 +46,8 @@ MAX_DATABASE_FILE_COUNT = 300
 MAX_FILE_BYTES = 256 * 1024 * 1024
 MAX_SESSION_BYTES = 2 * 1024 * 1024 * 1024
 SESSION_RETENTION_SECONDS = 7 * 24 * 60 * 60
-DATABASE_BAD_FRAME_MIN = 7
-DATABASE_BAD_FRAME_MAX = 100
+DATABASE_FITS_FILE_MIN = 14
+DATABASE_FITS_FILE_MAX = MAX_DATABASE_FILE_COUNT
 DATABASE_CAPTURE_TIME_TOLERANCE = 1.0
 
 # Comparison tolerances are deliberately much smaller than the calibration
@@ -701,108 +701,44 @@ def _database_record_has_role(record, role_name):
     )
 
 
-def _database_compatibility_key(record):
-    """Mirror the engine's inexpensive database-visible pairing fields."""
-    return (
-        record.get('width'),
-        record.get('height'),
-        round(float(record.get('exposure', -1.0)), 12),
-        round(float(record.get('gain', -1.0)), 6),
-        int(record.get('binmode', 1)),
-    )
-
-
 def select_database_evidence(
     fits_records,
     bad_frames,
-    max_bad_frames,
-    max_pair_seconds,
+    max_fits_files,
 ):
-    """Select newest-first purple/reference groups from normalized DB records.
+    """Select the newest eligible saved FITS without trusting detector flags.
 
-    Explicit diagnostic roles are preferred because a FITS with the internal
-    ``bad`` role is known to be untouched purple input. Standard FITS are
-    associated with an image row marked purple when their capture times agree
-    within one second. At most one normal reference on each side is retained;
-    the calibration engine subsequently reopens every selected FITS and
-    verifies its true signature and complete compatibility before using it.
+    Database repair status is only a hint. The numerical engine must inspect
+    the FITS ratios itself so a camera whose failures miss the configured
+    thresholds can still reach threshold discovery. The sole exclusion is a
+    standard FITS saved after successful repair: that file contains the fixed
+    mosaic and cannot prove what the camera originally produced. Diagnostic
+    RAW FITS remain eligible because they preserve the untouched capture.
     """
-    max_bad_frames = int(max_bad_frames)
+    max_fits_files = int(max_fits_files)
     if (
-        max_bad_frames < DATABASE_BAD_FRAME_MIN
-        or max_bad_frames > DATABASE_BAD_FRAME_MAX
+        max_fits_files < DATABASE_FITS_FILE_MIN
+        or max_fits_files > DATABASE_FITS_FILE_MAX
     ):
         raise CalibrationSessionError(
-            'database purple-frame limit must be between {0} and {1}'.format(
-                DATABASE_BAD_FRAME_MIN,
-                DATABASE_BAD_FRAME_MAX,
+            'saved FITS limit must be between {0} and {1}'.format(
+                DATABASE_FITS_FILE_MIN,
+                DATABASE_FITS_FILE_MAX,
             )
-        )
-    max_pair_seconds = float(max_pair_seconds)
-    if (
-        not math.isfinite(max_pair_seconds)
-        or max_pair_seconds <= 0
-        or max_pair_seconds > 3600
-    ):
-        raise CalibrationSessionError(
-            'maximum pair separation must be greater than 0 and no more than '
-            '3600 seconds'
         )
 
     records = sorted(
         (dict(record) for record in fits_records),
         key=lambda record: float(record['timestamp']),
+        reverse=True,
     )
-    records_by_id = {record['id']: record for record in records}
-
-    # Diagnostic FITS can carry more than one role when consecutive failures
-    # occur. A record with any ``bad`` role is never eligible as a reference.
-    diagnostic_candidates = []
-    diagnostic_capture_ids = set()
-    for record in records:
-        for role in record.get('roles', ()):
-            if not isinstance(role, dict) or role.get('role') != 'bad':
-                continue
-            capture_id = str(role.get('capture_id') or '')
-            if not capture_id or capture_id in diagnostic_capture_ids:
-                continue
-            diagnostic_capture_ids.add(capture_id)
-            diagnostic_candidates.append(record)
-
-    candidates = list(diagnostic_candidates)
-    known_bad_ids = {
+    repaired_standard_ids = set()
+    flagged_hint_ids = {
         record['id']
         for record in records
         if _database_record_has_role(record, 'bad')
     }
-    # Standard saving can create a second DB row at the same capture time as an
-    # explicit diagnostic purple FITS. Even if the corresponding JPEG/image row
-    # has already expired, that duplicate must not become another group's
-    # supposedly normal reference.
-    for diagnostic_bad in diagnostic_candidates:
-        diagnostic_time = float(diagnostic_bad['timestamp'])
-        diagnostic_key = _database_compatibility_key(diagnostic_bad)
-        known_bad_ids.update(
-            record['id']
-            for record in records
-            if not record.get('roles')
-            and _database_compatibility_key(record) == diagnostic_key
-            and abs(float(record['timestamp']) - diagnostic_time)
-            <= DATABASE_CAPTURE_TIME_TOLERANCE
-        )
-
-    # Associate standard saved FITS with purple image rows. If an explicit
-    # diagnostic purple capture exists at that time, keep it and do not add
-    # the post-repair standard FITS as a second candidate.
-    diagnostic_times = [
-        float(record['timestamp'])
-        for record in diagnostic_candidates
-    ]
-    for bad_frame in sorted(
-        (dict(frame) for frame in bad_frames),
-        key=lambda frame: float(frame['timestamp']),
-        reverse=True,
-    ):
+    for bad_frame in (dict(frame) for frame in bad_frames):
         bad_time = float(bad_frame['timestamp'])
         standard_matches = [
             record for record in records
@@ -814,93 +750,33 @@ def select_database_evidence(
             and round(float(record.get('gain', -1.0)), 6)
             == round(float(bad_frame.get('gain', -1.0)), 6)
         ]
-        known_bad_ids.update(record['id'] for record in standard_matches)
-        # Standard FITS written for an actually repaired frame contains the
-        # corrected mosaic, not calibration evidence. The caller marks only
-        # historical Exclude Only captures as safe standard purple candidates;
-        # every known-purple timestamp is still excluded from normal references.
-        if not bad_frame.get('allow_standard', True):
-            continue
-        if any(
-            abs(diagnostic_time - bad_time)
-            <= DATABASE_CAPTURE_TIME_TOLERANCE
-            for diagnostic_time in diagnostic_times
-        ):
-            continue
-        if standard_matches:
-            candidates.append(min(
-                standard_matches,
-                key=lambda record: abs(float(record['timestamp']) - bad_time),
-            ))
+        if bad_frame.get('allow_standard', True):
+            flagged_hint_ids.update(
+                record['id'] for record in standard_matches
+            )
+        else:
+            repaired_standard_ids.update(
+                record['id'] for record in standard_matches
+            )
 
-    groups = []
-    selected_ids = set()
-    reference_ids = set()
-    seen_bad_ids = set()
-    for bad_record in sorted(
-        candidates,
-        key=lambda record: float(record['timestamp']),
-        reverse=True,
-    ):
-        if bad_record['id'] in seen_bad_ids:
-            continue
-        seen_bad_ids.add(bad_record['id'])
-        bad_time = float(bad_record['timestamp'])
-        compatibility_key = _database_compatibility_key(bad_record)
-        normal_candidates = [
-            record for record in records
-            if record['id'] not in known_bad_ids
-            and not _database_record_has_role(record, 'bad')
-            and _database_compatibility_key(record) == compatibility_key
-            and 0 < abs(float(record['timestamp']) - bad_time)
-            <= max_pair_seconds
-        ]
-        before = [
-            record for record in normal_candidates
-            if float(record['timestamp']) < bad_time
-        ]
-        after = [
-            record for record in normal_candidates
-            if float(record['timestamp']) > bad_time
-        ]
-        references = []
-        if before:
-            references.append(max(
-                before,
-                key=lambda record: float(record['timestamp']),
-            ))
-        if after:
-            references.append(min(
-                after,
-                key=lambda record: float(record['timestamp']),
-            ))
-        if not references:
-            continue
-
-        groups.append({
-            'bad': bad_record,
-            'references': references,
-        })
-        selected_ids.add(bad_record['id'])
-        selected_ids.update(record['id'] for record in references)
-        reference_ids.update(record['id'] for record in references)
-        if len(groups) >= max_bad_frames:
-            break
-
-    selected_records = [
-        records_by_id[record_id]
-        for record_id in selected_ids
+    eligible_records = [
+        record for record in records
+        if record['id'] not in repaired_standard_ids
     ]
-    selected_records.sort(key=lambda record: float(record['timestamp']))
+    selected_records = eligible_records[:max_fits_files]
     return selected_records, {
-        'requested_bad_count': max_bad_frames,
-        'candidate_bad_count': len(seen_bad_ids),
-        'selected_bad_count': len(groups),
-        'selected_normal_count': len(reference_ids),
+        'requested_file_count': max_fits_files,
+        'candidate_file_count': len(eligible_records),
         'selected_file_count': len(selected_records),
-        'two_sided_count': sum(
-            1 for group in groups if len(group['references']) == 2
+        'flagged_hint_count': sum(
+            record['id'] in flagged_hint_ids
+            for record in selected_records
         ),
+        'diagnostic_bad_hint_count': sum(
+            _database_record_has_role(record, 'bad')
+            for record in selected_records
+        ),
+        'excluded_repaired_standard_count': len(repaired_standard_ids),
     }
 
 
@@ -1168,7 +1044,32 @@ def _result_summary(payload):
     }
 
     return {
+        'outcome': 'calibration',
         'values': values,
+        'quality': quality_summary,
+        'warnings': _result_warnings(quality_summary),
+    }
+
+
+def _threshold_suggestion_summary(payload):
+    """Return the browser-safe preliminary threshold-analysis result."""
+    quality = payload['quality']
+    quality_summary = {
+        'preliminary': True,
+        'detected_bad_count': quality.get('detected_bad_count', 0),
+        'likely_purple_count': quality['likely_purple_count'],
+        'likely_normal_count': quality['likely_normal_count'],
+        'matched_bad_count': quality['pair_count'],
+        'unmatched_bad_count': quality.get('unmatched_bad_count', 0),
+        'matched_normal_count': quality['unique_good_count'],
+        'two_sided_count': quality['two_sided_count'],
+        'exposure_level_count': len(quality['exposure_levels']),
+        'rejected_file_count': quality.get('rejected_file_count', 0),
+    }
+    return {
+        'outcome': 'threshold_suggestion',
+        'threshold_suggestions': payload['threshold_suggestions'],
+        'signature_ranges': payload['signature_ranges'],
         'quality': quality_summary,
         'warnings': _result_warnings(quality_summary),
     }
@@ -1193,19 +1094,19 @@ def _result_warnings(quality, source_details=None, report_context=False):
     """
     warnings = []
     source_details = source_details or {}
+    preliminary = bool(quality.get('preliminary'))
 
     if (
         source_details.get('kind') == 'database'
-        and source_details.get('selected_bad_count', 0)
-        < source_details.get('requested_bad_count', 0)
+        and source_details.get('selected_file_count', 0)
+        < source_details.get('requested_file_count', 0)
     ):
         warnings.append(
-            'The saved FITS search looked for up to {1} purple frames and '
-            'found {0} usable groups before reaching the oldest retained '
-            'data. Calibration continued because the minimum of seven was '
-            'met.'.format(
-                source_details['selected_bad_count'],
-                source_details['requested_bad_count'],
+            'The saved FITS search requested up to {1} files and reached the '
+            'oldest retained data after {0}. Analysis continued because the '
+            'minimum of fourteen FITS was met.'.format(
+                source_details['selected_file_count'],
+                source_details['requested_file_count'],
             )
         )
 
@@ -1260,8 +1161,13 @@ def _result_warnings(quality, source_details=None, report_context=False):
                 for part in coverage_parts
             )
             warnings.append(
-                '{0}. Calibration is valid, but {1}.'.format(
+                '{0}. {1}, but {2}.'.format(
                     coverage_text,
+                    (
+                        'Threshold evidence is usable'
+                        if preliminary
+                        else 'Calibration is valid'
+                    ),
                     improvement,
                 )
             )
@@ -1305,8 +1211,11 @@ def _result_warnings(quality, source_details=None, report_context=False):
         )
     if skipped_parts:
         warning = (
-            'The tool skipped {0}. The remaining FITS still met the '
-            'calibration requirements.'.format(_readable_join(skipped_parts))
+            'The tool skipped {0}. The remaining FITS still met the {1} '
+            'requirements.'.format(
+                _readable_join(skipped_parts),
+                'threshold-analysis' if preliminary else 'calibration',
+            )
         )
         if rejected_count:
             if report_context:
@@ -1372,6 +1281,36 @@ def _friendly_failure_message(message):
             'Files from more than one camera were detected. Use FITS from this '
             'ASI676MC only.'
         )
+    if 'no fits matched the configured purple-frame detector' in lowered:
+        return (
+            'No FITS matched the configured purple-frame detector. Confirm '
+            'that the collection contains untouched purple frames. If it '
+            'does, this camera may need different detection thresholds in '
+            'Image Settings before calibration can identify the failures.'
+        )
+    if 'no fits remained classified as normal' in lowered:
+        return (
+            'Every compatible FITS matched the configured purple-frame '
+            'detector, so no normal references were available. Check the '
+            'collection and review the detection thresholds in Image Settings.'
+        )
+    if 'automatic threshold analysis could not make a safe suggestion' in lowered:
+        return (
+            'The configured detector did not find enough usable purple and '
+            'normal frames, and the three measured ratios did not support one '
+            'safe threshold suggestion. Confirm that the collection contains '
+            'untouched purple frames with adjacent normal FITS, include at '
+            'least seven of each across two exposure settings, and try again. '
+            'No settings were changed.'
+        )
+    # These engine messages contain only measured ratios and setting names, so
+    # they are safe and more useful to show verbatim than a generic summary.
+    if (
+        lowered.startswith('configured combined purple/green ratio threshold')
+        or lowered.startswith('configured red-side ratio threshold')
+        or lowered.startswith('configured blue-side ratio threshold')
+    ):
+        return message_text
     if (
         'misclassifies at least one supplied normal frame' in lowered
         or 'misses at least one supplied purple frame' in lowered
@@ -1460,14 +1399,30 @@ def _format_report_value(value):
     return str(value)
 
 
+def _local_timezone():
+    """Return the system timezone used by the rest of the indi-allsky UI."""
+    return datetime.now().astimezone().tzinfo
+
+
 def _format_report_timestamp(value):
-    """Turn an ISO timestamp into an explicitly UTC, human-readable value."""
+    """Turn an internal UTC timestamp into unambiguous local report time."""
     try:
         parsed = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
         if parsed.tzinfo is None:
             parsed = parsed.replace(tzinfo=timezone.utc)
-        return parsed.astimezone(timezone.utc).strftime(
-            '%Y-%m-%d %H:%M:%S UTC'
+        local_time = parsed.astimezone(_local_timezone())
+        timezone_name = local_time.tzname() or 'local time'
+        utc_offset = local_time.strftime('%z')
+        if len(utc_offset) == 5:
+            utc_offset = '{0}:{1}'.format(utc_offset[:3], utc_offset[3:])
+        if utc_offset:
+            timezone_name = '{0} (UTC{1})'.format(
+                timezone_name,
+                utc_offset,
+            )
+        return '{0} {1}'.format(
+            local_time.strftime('%Y-%m-%d %H:%M:%S'),
+            timezone_name,
         )
     except (TypeError, ValueError):
         return str(value or 'Unknown')
@@ -1563,6 +1518,216 @@ def compare_result_to_configuration(result, repair_config):
     }
 
 
+def format_threshold_suggestion_report(payload, manifest):
+    """Build the report for a safe, preliminary detector-threshold result."""
+    quality = payload['quality']
+    source_details = manifest.get('source') or {}
+    lines = [
+        'indi-allsky ASI676MC purple-frame threshold analysis report',
+        '=' * 59,
+        'Status: Preliminary threshold suggestion',
+        'Generated: {0}'.format(_format_report_timestamp(
+            payload.get('generated_utc') or manifest.get('completed_utc')
+        )),
+    ]
+
+    _append_report_section(lines, 'Analysis result')
+    if quality.get('detected_bad_count', 0) >= 7:
+        detector_summary = (
+            'The combined detector identified enough purple frames, but at '
+            'least one individual detection threshold lay outside its clean '
+            'normal/purple gap.'
+        )
+    else:
+        detector_summary = (
+            'The configured detector did not identify enough purple and '
+            'normal frames for calibration.'
+        )
+    _append_report_paragraph(
+        lines,
+        detector_summary + ' All three measured ratios nevertheless formed '
+        'two clean, consistently ordered populations. The higher-ratio '
+        'population also had compatible adjacent normal references.',
+    )
+    _append_report_paragraph(
+        lines,
+        'No repair constants were derived, no settings were changed, and this '
+        'preliminary result cannot be applied automatically. Review the '
+        'suggestions below, update only the recommended detection thresholds '
+        'in Image Settings if the evidence matches the expected purple-frame '
+        'failure, then run calibration again.',
+    )
+
+    _append_report_section(lines, 'Detection threshold suggestions')
+    rows = []
+    for item in payload['threshold_suggestions']:
+        safe_interval = '>{0:.3f} and <={1:.3f}'.format(
+            item['normal_max'],
+            item['purple_min'],
+        )
+        assessment = (
+            'Change recommended'
+            if item['change_recommended']
+            else 'Current value is already safe'
+        )
+        rows.append((
+            item['label'],
+            _format_report_value(item['current']),
+            _format_report_value(item['suggested']),
+            safe_interval,
+            assessment,
+        ))
+    widths = [
+        max(len(header), *(len(row[index]) for row in rows))
+        for index, header in enumerate((
+            'Setting', 'Current', 'Suggested', 'Observed safe interval',
+        ))
+    ]
+    table_format = '{{0:<{0}}}  {{1:>{1}}}  {{2:>{2}}}  {{3:<{3}}}  {{4}}'.format(
+        *widths
+    )
+    lines.extend((
+        '',
+        table_format.format(
+            'Setting', 'Current', 'Suggested', 'Observed safe interval',
+            'Assessment',
+        ),
+        table_format.format(
+            '-' * widths[0], '-' * widths[1], '-' * widths[2],
+            '-' * widths[3], '-' * len('Assessment'),
+        ),
+    ))
+    lines.extend(table_format.format(*row) for row in rows)
+
+    _append_report_section(lines, 'Evidence used')
+    evidence_lines = (
+        ('FITS recognised by configured detector',
+         quality.get('detected_bad_count', 0)),
+        ('FITS in likely purple population', quality['likely_purple_count']),
+        ('FITS in likely normal population', quality['likely_normal_count']),
+        ('Likely purple frames with a normal reference', quality['pair_count']),
+        ('Likely purple frames skipped without a reference',
+         quality.get('unmatched_bad_count', 0)),
+        ('Distinct normal references', quality['unique_good_count']),
+        ('Good/purple/good groups', '{0} of {1}'.format(
+            quality['two_sided_count'], quality['pair_count']
+        )),
+        ('Exposure settings represented', len(quality['exposure_levels'])),
+        ('FITS files unreadable or unusable',
+         quality.get('rejected_file_count', 0)),
+    )
+    evidence_width = max(len(label) for label, _value in evidence_lines)
+    lines.extend(
+        '{0:<{1}}  {2}'.format(label + ':', evidence_width + 1, value)
+        for label, value in evidence_lines
+    )
+    lines.append('Maximum matching separation: {0:g} seconds'.format(
+        float(manifest.get('max_pair_seconds', 0))
+    ))
+
+    _append_report_section(lines, 'Observed ratio ranges')
+    _append_report_paragraph(
+        lines,
+        'A safe threshold is greater than the likely-normal maximum and no '
+        'greater than the likely-purple minimum. Every range below had a '
+        'clean gap; the tool makes no suggestion when populations overlap.',
+    )
+    for item in payload['threshold_suggestions']:
+        values = payload['signature_ranges'][item['metric']]
+        lines.append(
+            '{0}: likely normal {1:.3f}-{2:.3f}; likely purple '
+            '{3:.3f}-{4:.3f}'.format(
+                item['label'],
+                values['good_min'],
+                values['good_max'],
+                values['bad_min'],
+                values['bad_max'],
+            )
+        )
+
+    _append_report_section(lines, 'Evidence source')
+    source_kind = source_details.get('kind')
+    selected_count = source_details.get(
+        'selected_file_count',
+        len(manifest.get('files', ())),
+    )
+    if source_kind == 'database':
+        lines.extend((
+            'Method: Saved FITS search on the ASI676MC Calibration page',
+            'Camera: {0}'.format(source_details.get('camera_name', 'Unknown')),
+            'Search order: Newest retained eligible FITS first',
+            'Requested maximum: {0}'.format(_counted_item(
+                source_details.get('requested_file_count', 0),
+                'FITS file',
+            )),
+            'FITS inspected: {0}'.format(selected_count),
+            'Previously flagged FITS among selection: {0}'.format(
+                source_details.get('flagged_hint_count', 0)
+            ),
+            'Post-repair standard FITS excluded: {0}'.format(
+                source_details.get('excluded_repaired_standard_count', 0)
+            ),
+            'FITS retention cutoff: {0} ({1})'.format(
+                source_details.get('retention_cutoff', 'Unknown'),
+                _counted_item(source_details.get('retention_days', 0), 'day')
+                if isinstance(source_details.get('retention_days'), int)
+                else 'Unknown retention',
+            ),
+        ))
+        _append_report_paragraph(
+            lines,
+            'Database flags were treated only as context; population analysis '
+            'used the FITS ratios. Temporary staging links were removed after '
+            'analysis, while the original saved FITS were left unchanged.',
+        )
+    elif source_kind == 'upload':
+        lines.extend((
+            'Method: Manual FITS upload on the ASI676MC Calibration page',
+            'FITS inspected: {0}'.format(selected_count),
+        ))
+        _append_report_paragraph(
+            lines,
+            'The private uploaded copies were removed after analysis. The '
+            'original files on the user\'s computer were never modified.',
+        )
+
+    result_summary = _threshold_suggestion_summary(payload)
+    report_notes = _result_warnings(
+        result_summary['quality'],
+        source_details,
+        report_context=True,
+    )
+    if report_notes:
+        _append_report_section(lines, 'Analysis notes')
+        for note in report_notes:
+            _append_report_paragraph(lines, note, prefix='- ')
+
+    rejected_files = payload.get('rejected_files') or ()
+    if rejected_files:
+        _append_report_section(lines, 'Rejected FITS details')
+        for rejected in rejected_files:
+            _append_report_paragraph(
+                lines,
+                '{0}: {1}'.format(
+                    _original_report_filename(
+                        rejected.get('name'),
+                        manifest.get('files'),
+                    ),
+                    rejected.get('reason') or 'Unreadable or unusable FITS',
+                ),
+                prefix='- ',
+            )
+
+    _append_report_section(lines, 'About this report')
+    _append_report_paragraph(
+        lines,
+        'This is a human-readable record from Tools > ASI676MC Calibration. '
+        'It is not a configuration file and cannot be imported. Threshold '
+        'suggestions are intentionally separate from the seven repair values.',
+    )
+    return '\n'.join(lines).rstrip() + '\n'
+
+
 def format_integrated_report(payload, manifest):
     """Build the report downloaded from the authenticated calibration page.
 
@@ -1570,6 +1735,9 @@ def format_integrated_report(payload, manifest):
     lets it name the real evidence source, compare the result with the starting
     configuration, explain cleanup, and avoid exposing the staging directory.
     """
+    if payload.get('outcome') == 'threshold_suggestion':
+        return format_threshold_suggestion_report(payload, manifest)
+
     quality = payload['quality']
     derived_settings = payload['derived_settings']
     result_summary = _result_summary(payload)
@@ -1703,18 +1871,18 @@ def format_integrated_report(payload, manifest):
         lines.extend((
             'Method: Saved FITS search on the ASI676MC Calibration page',
             'Camera: {0}'.format(source_details.get('camera_name', 'Unknown')),
-            'Search order: Newest retained FITS first',
+            'Search order: Newest retained eligible FITS first',
             'Requested maximum: {0}'.format(_counted_item(
-                source_details.get('requested_bad_count', 0),
-                'purple-frame group',
+                source_details.get('requested_file_count', 0),
+                'FITS file',
             )),
-            'Usable groups selected: {0}'.format(
-                source_details.get('selected_bad_count', 0)
+            'FITS inspected: {0}'.format(selected_file_count),
+            'Previously flagged FITS among selection: {0}'.format(
+                source_details.get('flagged_hint_count', 0)
             ),
-            'Distinct normal references selected: {0}'.format(
-                source_details.get('selected_normal_count', 0)
+            'Post-repair standard FITS excluded: {0}'.format(
+                source_details.get('excluded_repaired_standard_count', 0)
             ),
-            'Distinct FITS selected: {0}'.format(selected_file_count),
             'Saved FITS entries in retention window: {0}'.format(
                 source_details.get('database_fits_count', 0)
             ),
@@ -1733,7 +1901,9 @@ def format_integrated_report(payload, manifest):
         ))
         _append_report_paragraph(
             lines,
-            'Only the session\'s temporary staging links were removed after '
+            'Database flags were treated only as context; the FITS ratios '
+            'determined which frames were purple or normal. Only the '
+            'session\'s temporary staging links were removed after '
             'calibration. The original saved FITS were left unchanged and '
             'remain subject to the normal FITS retention setting.',
         )
@@ -1896,16 +2066,27 @@ def format_integrated_report(payload, manifest):
             'red_side_ratio': 'Red-side ratio',
             'blue_side_ratio': 'Blue-side ratio',
         }
+        signature_threshold_names = {
+            'purple_ratio': 'PURPLE_RATIO_THRESHOLD',
+            'red_side_ratio': 'RED_SIDE_RATIO_THRESHOLD',
+            'blue_side_ratio': 'BLUE_SIDE_RATIO_THRESHOLD',
+        }
         for metric, values in signature_ranges.items():
-            lines.append(
-                '{0}: normal {1:.3f}-{2:.3f}; purple {3:.3f}-{4:.3f}'.format(
-                    signature_labels.get(metric, metric),
-                    values['good_min'],
-                    values['good_max'],
-                    values['bad_min'],
-                    values['bad_max'],
-                )
+            range_text = (
+                '{0}: normal {1:.3f}-{2:.3f}; configured threshold {3:.3f}; '
+                'purple {4:.3f}-{5:.3f}'
+            ).format(
+                signature_labels.get(metric, metric),
+                values['good_min'],
+                values['good_max'],
+                float(configured_at_start.get(
+                    signature_threshold_names[metric],
+                    0.0,
+                )),
+                values['bad_min'],
+                values['bad_max'],
             )
+            lines.append(range_text)
 
     _append_report_section(lines, 'About this report')
     _append_report_paragraph(
@@ -1948,7 +2129,10 @@ def run_calibration_session(session_id, storage_root=None):
                 allow_unmatched=True,
             )
 
-        summary = _result_summary(payload)
+        if payload.get('outcome') == 'threshold_suggestion':
+            summary = _threshold_suggestion_summary(payload)
+        else:
+            summary = _result_summary(payload)
         result = {
             'format': 'indi-allsky-asi676mc-web-calibration-v1',
             'session_id': session_id,
@@ -2055,6 +2239,11 @@ def get_completed_result(session_id, owner, storage_root=None):
         result = json.loads(result_path.read_text(encoding='utf-8'))
     except (FileNotFoundError, OSError, json.JSONDecodeError) as error:
         raise CalibrationSessionError('the calibration result is missing') from error
+
+    if result.get('outcome', 'calibration') != 'calibration':
+        raise CalibrationSessionError(
+            'threshold suggestions must be reviewed and calibration rerun'
+        )
 
     values = {
         item['key']: item['value']

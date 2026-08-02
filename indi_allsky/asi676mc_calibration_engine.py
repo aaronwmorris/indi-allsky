@@ -12,6 +12,7 @@ from approving values against an algorithm that differs from the image worker.
 """
 
 from dataclasses import dataclass
+from dataclasses import replace
 from datetime import datetime
 from datetime import timezone
 from pathlib import Path
@@ -37,6 +38,14 @@ CALIBRATION_OPTIONS = {
     'RECOMMENDED_GOOD_BAD_RATIO': 2.0,
     'MAX_PAIR_SECONDS': 90.0,
     'MIN_EXPOSURE_LEVELS': 2,
+
+    # Threshold discovery is deliberately stricter than merely finding two
+    # k-means clusters. Each population must independently contain enough
+    # frames for the normal calibration minimum, and every detector metric
+    # needs a clean gap of at least ten percent. This keeps cloud movement or
+    # ordinary scene changes from being presented as a camera-failure mode.
+    'MIN_THRESHOLD_CLUSTER_SIZE': 7,
+    'MIN_THRESHOLD_GAP_FRACTION': 0.10,
 
     # Sparse central-image sampling.  This is even to preserve Bayer parity.
     'SAMPLE_STEP': 8,
@@ -83,6 +92,21 @@ _OTHER_ASI_CAMERA_RE = re.compile(
     re.IGNORECASE,
 )
 _FILENAME_TIME_RE = re.compile(r'(\d{8})[_-](\d{6})')
+
+DETECTION_THRESHOLD_DETAILS = {
+    'purple_ratio': (
+        'PURPLE_RATIO_THRESHOLD',
+        'Combined purple/green ratio threshold',
+    ),
+    'red_side_ratio': (
+        'RED_SIDE_RATIO_THRESHOLD',
+        'Red-side ratio threshold',
+    ),
+    'blue_side_ratio': (
+        'BLUE_SIDE_RATIO_THRESHOLD',
+        'Blue-side ratio threshold',
+    ),
+}
 
 
 # ---------------------------------------------------------------------------
@@ -788,27 +812,261 @@ def signature_ranges(records):
     return result
 
 
-def validate_signature_separation(ranges, settings):
-    """Require every supplied frame to fall on the correct threshold side."""
-    threshold_names = {
-        'purple_ratio': 'PURPLE_RATIO_THRESHOLD',
-        'red_side_ratio': 'RED_SIDE_RATIO_THRESHOLD',
-        'blue_side_ratio': 'BLUE_SIDE_RATIO_THRESHOLD',
+def build_detection_threshold_suggestions(ranges, settings):
+    """Build advisory thresholds only when every observed gap is strong."""
+    minimum_gap = CALIBRATION_OPTIONS['MIN_THRESHOLD_GAP_FRACTION']
+    suggestions = []
+    for metric, (threshold_name, threshold_label) in (
+        DETECTION_THRESHOLD_DETAILS.items()
+    ):
+        values = ranges[metric]
+        normal_max = values['good_max']
+        purple_min = values['bad_min']
+        gap_fraction = (
+            (purple_min - normal_max) / max(abs(normal_max), 1.0e-12)
+        )
+        if normal_max >= purple_min or gap_fraction < minimum_gap:
+            raise CalibrationError(
+                '{0} does not have the required clean gap between the two '
+                'possible populations'.format(threshold_label)
+            )
+
+        current = float(settings[threshold_name])
+        current_is_safe = normal_max < current <= purple_min
+        suggested = (
+            current
+            if current_is_safe
+            else round((normal_max + purple_min) / 2.0, 3)
+        )
+        suggestions.append({
+            'metric': metric,
+            'key': threshold_name,
+            'label': threshold_label,
+            'current': current,
+            'suggested': suggested,
+            'normal_max': normal_max,
+            'purple_min': purple_min,
+            'change_recommended': not current_is_safe,
+        })
+
+    if not any(item['change_recommended'] for item in suggestions):
+        raise CalibrationError(
+            'the configured thresholds already lie inside every observed gap; '
+            'the detector result cannot be explained safely by threshold changes'
+        )
+    return suggestions
+
+
+def threshold_suggestion_payload(
+    records,
+    evidence,
+    ranges,
+    suggestions,
+    detected_bad_count,
+):
+    """Collect the shared preliminary result for inferred or known labels."""
+    return {
+        'outcome': 'threshold_suggestion',
+        'generated_utc': datetime.now(timezone.utc).isoformat(),
+        'quality': {
+            **evidence,
+            'detected_bad_count': int(detected_bad_count),
+            'likely_purple_count': sum(record.is_bad for record in records),
+            'likely_normal_count': sum(not record.is_bad for record in records),
+        },
+        'signature_ranges': ranges,
+        'threshold_suggestions': suggestions,
     }
-    for metric, threshold_name in threshold_names.items():
+
+
+def suggest_detection_thresholds(records, settings, max_pair_seconds):
+    """Return a preliminary threshold result for two clean populations.
+
+    This path is used only when the configured detector cannot identify the
+    seven purple frames required for normal calibration. It clusters the three
+    detector ratios without using database flags or filenames, then applies
+    the same adjacency, compatibility, exposure, and camera-identity checks as
+    calibration. A result is advisory: repair constants are not fitted and the
+    web layer never applies these thresholds automatically.
+    """
+    minimum = CALIBRATION_OPTIONS['MIN_THRESHOLD_CLUSTER_SIZE']
+    if len(records) < minimum * 2:
+        raise CalibrationError(
+            'at least {0} compatible FITS are required for automatic '
+            'threshold analysis'.format(minimum * 2)
+        )
+
+    metric_names = tuple(DETECTION_THRESHOLD_DETAILS)
+    metric_values = numpy.asarray([
+        [record.signature[name] for name in metric_names]
+        for record in records
+    ], dtype=numpy.float64)
+    if (
+        not numpy.all(numpy.isfinite(metric_values))
+        or numpy.any(metric_values <= 0.0)
+    ):
+        raise CalibrationError(
+            'detector ratios contain non-finite or non-positive values'
+        )
+
+    # Ratios are multiplicative, so logarithms make proportional differences
+    # comparable. Standardising each metric gives the combined ratio and both
+    # side ratios equal influence instead of letting the widest range dominate.
+    log_values = numpy.log(metric_values)
+    scale = numpy.std(log_values, axis=0)
+    if numpy.any(scale <= numpy.finfo(numpy.float64).eps):
+        raise CalibrationError(
+            'the FITS do not vary in all three detector ratios'
+        )
+    standardized = (
+        log_values - numpy.mean(log_values, axis=0)
+    ) / scale
+
+    population_score = numpy.sum(standardized, axis=1)
+    centroids = numpy.vstack((
+        standardized[numpy.argmin(population_score)],
+        standardized[numpy.argmax(population_score)],
+    ))
+    labels = numpy.zeros(len(records), dtype=numpy.int8)
+    for _iteration in range(50):
+        distances = numpy.sum(
+            (standardized[:, numpy.newaxis, :] - centroids) ** 2,
+            axis=2,
+        )
+        next_labels = numpy.argmin(distances, axis=1).astype(numpy.int8)
+        counts = numpy.bincount(next_labels, minlength=2)
+        if numpy.any(counts == 0):
+            raise CalibrationError(
+                'the detector ratios do not form two stable populations'
+            )
+        next_centroids = numpy.vstack([
+            numpy.mean(standardized[next_labels == index], axis=0)
+            for index in range(2)
+        ])
+        if numpy.array_equal(next_labels, labels):
+            labels = next_labels
+            centroids = next_centroids
+            break
+        labels = next_labels
+        centroids = next_centroids
+
+    counts = numpy.bincount(labels, minlength=2)
+    if numpy.any(counts < minimum):
+        raise CalibrationError(
+            'the two possible populations contain {0} and {1} FITS; at least '
+            '{2} are required in each'.format(counts[0], counts[1], minimum)
+        )
+
+    raw_centroids = numpy.vstack([
+        numpy.mean(metric_values[labels == index], axis=0)
+        for index in range(2)
+    ])
+    if numpy.all(raw_centroids[0] < raw_centroids[1]):
+        purple_label = 1
+    elif numpy.all(raw_centroids[1] < raw_centroids[0]):
+        purple_label = 0
+    else:
+        raise CalibrationError(
+            'the possible higher-ratio population is not higher in all three '
+            'purple-frame detector ratios'
+        )
+    normal_label = 1 - purple_label
+
+    # A frame already recognised by the live detector must never land in the
+    # inferred normal group. Such disagreement means the collection cannot
+    # safely explain the detector miss with one set of thresholds.
+    conflicting_detected = sum(
+        record.is_bad and labels[index] == normal_label
+        for index, record in enumerate(records)
+    )
+    if conflicting_detected:
+        raise CalibrationError(
+            '{0} currently detected purple frame(s) fall in the lower-ratio '
+            'population'.format(conflicting_detected)
+        )
+
+    inferred_records = [
+        replace(
+            record,
+            signature={
+                **record.signature,
+                'is_bad': bool(labels[index] == purple_label),
+            },
+        )
+        for index, record in enumerate(records)
+    ]
+    ranges = signature_ranges(inferred_records)
+    pairs, unmatched = match_pairs(inferred_records, max_pair_seconds)
+    evidence = validate_evidence(
+        inferred_records,
+        pairs,
+        unmatched,
+        allow_unmatched=True,
+    )
+
+    suggestions = build_detection_threshold_suggestions(ranges, settings)
+    return threshold_suggestion_payload(
+        inferred_records,
+        evidence,
+        ranges,
+        suggestions,
+        detected_bad_count=sum(record.is_bad for record in records),
+    )
+
+
+def validate_signature_separation(ranges, settings):
+    """Require clean per-ratio evidence around every configured threshold.
+
+    Live detection requires all three ratios at once, but calibration is more
+    conservative: each measured ratio must independently separate the supplied
+    normal and purple populations. A successful fit should not conceal a weak
+    detector margin or silently change an operator's detection settings.
+    """
+    for metric, (threshold_name, threshold_label) in (
+        DETECTION_THRESHOLD_DETAILS.items()
+    ):
         values = ranges[metric]
         threshold = settings[threshold_name]
+        normal_max = values['good_max']
+        purple_min = values['bad_min']
+        if normal_max >= purple_min:
+            raise CalibrationError(
+                'Configured {0} cannot be checked because the supplied ranges '
+                'overlap (normal maximum {1:.3f}, purple minimum {2:.3f}). No '
+                'single threshold cleanly separates this evidence. Calibration '
+                'stopped without changing settings; check the selected files.'
+                .format(threshold_label, normal_max, purple_min)
+            )
+
+        suggested = (normal_max + purple_min) / 2.0
         if values['good_max'] >= threshold:
             raise CalibrationError(
-                f'{threshold_name} misclassifies at least one supplied normal frame'
+                'Configured {0} is {1:.3f}, but a frame currently classified '
+                'as normal reaches {2:.3f}. This may be a normal outlier or an '
+                'unrecognised purple frame. The observed gap permits a value '
+                'above {2:.3f} and no more than {3:.3f} (midpoint {4:.3f}). '
+                'Calibration stopped without changing settings; review the '
+                'evidence and threshold, then run it again.'.format(
+                    threshold_label,
+                    threshold,
+                    normal_max,
+                    purple_min,
+                    suggested,
+                )
             )
         if values['bad_min'] < threshold:
             raise CalibrationError(
-                f'{threshold_name} misses at least one supplied purple frame'
-            )
-        if values['good_max'] >= values['bad_min']:
-            raise CalibrationError(
-                f'{metric} has overlapping normal and purple ranges'
+                'Configured {0} is {1:.3f}, but the supplied purple range '
+                'falls to {2:.3f}. The observed gap permits a value above '
+                '{3:.3f} and no more than {2:.3f} (midpoint {4:.3f}). '
+                'Calibration stopped without changing settings; review the '
+                'evidence and threshold, then run it again.'.format(
+                    threshold_label,
+                    threshold,
+                    purple_min,
+                    normal_max,
+                    suggested,
+                )
             )
 
 
@@ -967,6 +1225,7 @@ def calibration_payload(
     }
 
     return {
+        'outcome': 'calibration',
         'generated_utc': datetime.now(timezone.utc).isoformat(),
         'quality': {
             **evidence,
@@ -1023,9 +1282,47 @@ def calibrate_folder(
     if not records:
         raise CalibrationError('no compatible RAW16 RGGB FITS files found')
     bad_count = sum(record.is_bad for record in records)
+    normal_count = len(records) - bad_count
+    minimum = CALIBRATION_OPTIONS['MIN_BAD_PAIRS']
+    if bad_count < minimum or normal_count < minimum:
+        print(
+            'Configured detector found {0} purple and {1} normal FITS; '
+            'checking for two clean ratio populations...'.format(
+                bad_count,
+                normal_count,
+            )
+        )
+        try:
+            payload = suggest_detection_thresholds(
+                records,
+                config,
+                max_pair_seconds,
+            )
+        except CalibrationError as error:
+            raise CalibrationError(
+                'configured detection produced {0} purple and {1} normal '
+                'FITS. Automatic threshold analysis could not make a safe '
+                'suggestion: {2}'.format(bad_count, normal_count, error)
+            ) from error
+        payload['quality']['rejected_file_count'] = len(rejected)
+        payload['rejected_files'] = [
+            {
+                'name': Path(path).name,
+                'reason': str(reason),
+            }
+            for path, reason in rejected
+        ]
+        print(
+            'Found two clean populations with {0} likely purple and {1} '
+            'likely normal FITS; returning threshold suggestions only.'.format(
+                payload['quality']['likely_purple_count'],
+                payload['quality']['likely_normal_count'],
+            )
+        )
+        return payload
     print(
         f'Classified {len(records)} files: '
-        f'{bad_count} purple, {len(records) - bad_count} normal'
+        f'{bad_count} purple, {normal_count} normal'
     )
 
     pairs, unmatched = match_pairs(records, max_pair_seconds)
@@ -1036,7 +1333,42 @@ def calibrate_folder(
         allow_unmatched=allow_unmatched,
     )
     ranges = signature_ranges(records)
-    validate_signature_separation(ranges, config)
+    try:
+        validate_signature_separation(ranges, config)
+    except CalibrationError as separation_error:
+        # The detector can find enough frames through its three-way AND rule
+        # even when one individual threshold lies outside that metric's safe
+        # gap. Present the same review-and-rerun result used for an outright
+        # detector miss instead of fitting repair constants against a weak
+        # detector configuration.
+        try:
+            suggestions = build_detection_threshold_suggestions(
+                ranges,
+                config,
+            )
+        except CalibrationError:
+            raise separation_error
+        payload = threshold_suggestion_payload(
+            records,
+            evidence,
+            ranges,
+            suggestions,
+            detected_bad_count=bad_count,
+        )
+        payload['quality']['rejected_file_count'] = len(rejected)
+        payload['rejected_files'] = [
+            {
+                'name': Path(path).name,
+                'reason': str(reason),
+            }
+            for path, reason in rejected
+        ]
+        print(
+            'Detector populations are clear, but one or more configured '
+            'thresholds lie outside their safe gaps; returning threshold '
+            'suggestions only.'
+        )
+        return payload
     print(
         'Matched {0} purple frames to {1} distinct normal frames '
         '({2:.2f}:1)'.format(

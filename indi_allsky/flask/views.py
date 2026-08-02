@@ -7626,7 +7626,7 @@ class Asi676mcCalibrationView(TemplateView):
             data={
                 'CAMERA_ID': self.camera.id,
                 'MAX_PAIR_SECONDS': 90.0,
-                'DATABASE_BAD_FRAME_LIMIT': 25,
+                'DATABASE_FITS_FILE_LIMIT': 50,
             },
         )
         context['capture_guidance'] = (
@@ -7641,6 +7641,10 @@ class Asi676mcCalibrationView(TemplateView):
             'file_count': asi676mc_calibration.MAX_FILE_COUNT,
             'file_bytes': asi676mc_calibration.MAX_FILE_BYTES,
             'session_bytes': asi676mc_calibration.MAX_SESSION_BYTES,
+        }
+        context['calibration_database_limits'] = {
+            'minimum': asi676mc_calibration.DATABASE_FITS_FILE_MIN,
+            'maximum': asi676mc_calibration.DATABASE_FITS_FILE_MAX,
         }
         return context
 
@@ -7734,12 +7738,12 @@ class AjaxAsi676mcCalibrationUploadView(BaseView):
 class AjaxAsi676mcCalibrationDatabaseView(BaseView):
     """Discover local database FITS and queue a newest-first calibration.
 
-    Repair-specific diagnostic records provide explicit purple/following roles.
-    Standard FITS are associated with image rows that the live detector marked
-    purple. The pure selector in ``asi676mc_calibration`` then chooses at most
-    one adjacent normal file on each side and stops after the requested number
-    of usable purple-frame groups. Stored metadata retains the internal role
-    name ``bad`` for compatibility with existing diagnostic FITS.
+    The selector stages the newest eligible files, regardless of whether the
+    current detector flagged them. This lets the numerical engine discover a
+    camera-specific threshold miss from the FITS ratios themselves. A standard
+    FITS written after successful repair is excluded because it no longer
+    contains the original mosaic; repair-specific diagnostic RAW FITS remain
+    eligible.
     """
 
     methods = ['POST']
@@ -7749,7 +7753,7 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
         request_data = request.get_json(silent=True) or {}
         try:
             camera_id = int(request_data.get('camera_id'))
-            max_bad_frames = int(request_data.get('max_bad_frames', 25))
+            max_fits_files = int(request_data.get('max_fits_files', 50))
             max_pair_seconds = float(
                 request_data.get('max_pair_seconds', 90.0)
             )
@@ -7761,13 +7765,13 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
             }), 400
 
         if (
-            max_bad_frames < asi676mc_calibration.DATABASE_BAD_FRAME_MIN
-            or max_bad_frames > asi676mc_calibration.DATABASE_BAD_FRAME_MAX
+            max_fits_files < asi676mc_calibration.DATABASE_FITS_FILE_MIN
+            or max_fits_files > asi676mc_calibration.DATABASE_FITS_FILE_MAX
         ):
             return jsonify({
-                'error': 'Choose a maximum of {0} to {1} purple-frame groups.'.format(
-                    asi676mc_calibration.DATABASE_BAD_FRAME_MIN,
-                    asi676mc_calibration.DATABASE_BAD_FRAME_MAX,
+                'error': 'Choose a saved FITS limit between {0} and {1}.'.format(
+                    asi676mc_calibration.DATABASE_FITS_FILE_MIN,
+                    asi676mc_calibration.DATABASE_FITS_FILE_MAX,
                 ),
             }), 400
         if (
@@ -7878,9 +7882,12 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
                 'timestamp': image.createDate.timestamp(),
                 'exposure': image.exposure,
                 'gain': image.gain,
+                # A failed validation and Exclude Only both retain the
+                # untouched source mosaic. Only successful repair makes the
+                # standard FITS unsuitable as original calibration evidence.
                 'allow_standard': (
                     (image.data or {}).get('asi676mc_repair_status')
-                    == 'excluded'
+                    != 'repaired'
                 ),
             }
             for image in bad_images
@@ -7891,54 +7898,25 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
                 asi676mc_calibration.select_database_evidence(
                     fits_records,
                     bad_frames,
-                    max_bad_frames,
-                    max_pair_seconds,
+                    max_fits_files,
                 )
             )
         except asi676mc_calibration.CalibrationSessionError as error:
             return jsonify({'error': str(error)}), 400
 
-        minimum = asi676mc_calibration.DATABASE_BAD_FRAME_MIN
-        if (
-            discovery['selected_bad_count'] < minimum
-            or discovery['selected_normal_count'] < minimum
-        ):
-            if discovery['candidate_bad_count'] == 0:
-                discovery_error = (
-                    'Saved FITS were found, but none was linked to a flagged '
-                    'purple frame. Enable ASI676MC purple-frame handling before '
-                    'future captures, or upload an existing collection so the '
-                    'tool can identify purple frames from the FITS themselves.'
-                )
-            elif discovery['selected_bad_count'] == 0:
-                discovery_error = (
-                    'Purple-frame FITS were found, but none had a compatible '
-                    'normal reference within {0:g} seconds. Enable Bad + '
-                    'following RAW FITS, set standard FITS saving to Every '
-                    'Image with Exclude Only, or increase Maximum separation '
-                    'when matching frames are farther apart.'
-                ).format(max_pair_seconds)
-            else:
-                bad_count = discovery['selected_bad_count']
-                normal_count = discovery['selected_normal_count']
-                discovery_error = (
-                    'The search found {0} and {1}. At least {2} of each are '
-                    'required. Collect more data, increase Maximum separation '
-                    'if matching frames are farther apart, or upload another '
+        minimum = asi676mc_calibration.DATABASE_FITS_FILE_MIN
+        if discovery['selected_file_count'] < minimum:
+            return jsonify({
+                'error': (
+                    'Only {0} eligible saved FITS are available within the '
+                    '{1}-day retention period; at least {2} are required to '
+                    'start analysis. Collect more data or upload an existing '
                     'collection.'
                 ).format(
-                    '{0} usable purple-frame {1}'.format(
-                        bad_count,
-                        'group' if bad_count == 1 else 'groups',
-                    ),
-                    '{0} different normal reference {1}'.format(
-                        normal_count,
-                        'frame' if normal_count == 1 else 'frames',
-                    ),
+                    discovery['selected_file_count'],
+                    retention_days,
                     minimum,
-                )
-            return jsonify({
-                'error': discovery_error,
+                ),
                 'discovery': discovery,
             }), 400
 
@@ -8229,7 +8207,11 @@ class AjaxAsi676mcCalibrationStatusView(BaseView):
         # Compare at poll time rather than storing a second configuration
         # snapshot in the result.  This keeps the hint accurate when an admin
         # revisits a retained result after changing settings elsewhere.
-        if status.get('status') == 'success' and status.get('result'):
+        if (
+            status.get('status') == 'success'
+            and status.get('result')
+            and status['result'].get('outcome', 'calibration') == 'calibration'
+        ):
             status['configuration_comparison'] = (
                 asi676mc_calibration.compare_result_to_configuration(
                     status['result'],

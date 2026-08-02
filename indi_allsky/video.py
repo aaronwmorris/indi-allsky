@@ -249,12 +249,20 @@ class VideoWorker(Process):
             return
 
         quality = result['quality']
-        task.setSuccess(
-            'ASI676MC calibration passed: {0} purple / {1} normal'.format(
+        if result.get('outcome') == 'threshold_suggestion':
+            message = (
+                'ASI676MC threshold suggestions available: {0} likely '
+                'purple / {1} likely normal'
+            ).format(
+                quality['likely_purple_count'],
+                quality['likely_normal_count'],
+            )
+        else:
+            message = 'ASI676MC calibration passed: {0} purple / {1} normal'.format(
                 quality['matched_bad_count'],
                 quality['matched_normal_count'],
-            )[:255]
-        )
+            )
+        task.setSuccess(message[:255])
 
 
     def generateVideo(self, task, **kwargs):

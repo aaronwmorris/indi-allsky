@@ -12,6 +12,54 @@ from indi_allsky import asi676mc_calibration_engine as calibration_engine
 
 class TestAsi676mcCalibrationEngine(unittest.TestCase):
 
+    @staticmethod
+    def _threshold_record(name, timestamp, exposure, ratios):
+        """Build a lightweight record for detector-threshold unit tests."""
+        return calibration_engine.FrameRecord(
+            path=Path(name),
+            timestamp=float(timestamp),
+            exposure=exposure,
+            gain=0.0,
+            xbin=1,
+            ybin=1,
+            shape=(64, 64),
+            bayer='RGGB',
+            camera_name='ZWO CCD ASI676MC',
+            signature={
+                'is_bad': False,
+                'purple_ratio': ratios[0],
+                'red_side_ratio': ratios[1],
+                'blue_side_ratio': ratios[2],
+            },
+        )
+
+    def _threshold_population_records(self, purple_blue_ratio=1.4):
+        records = []
+        for index in range(7):
+            exposure = 0.001 if index < 4 else 0.002
+            base_time = 1000 + (index * 300)
+            records.extend((
+                self._threshold_record(
+                    'normal_before_{0}.fit'.format(index),
+                    base_time,
+                    exposure,
+                    (0.90, 0.70, 1.10),
+                ),
+                self._threshold_record(
+                    'likely_purple_{0}.fit'.format(index),
+                    base_time + 20,
+                    exposure,
+                    (2.20, 1.70, purple_blue_ratio),
+                ),
+                self._threshold_record(
+                    'normal_after_{0}.fit'.format(index),
+                    base_time + 40,
+                    exposure,
+                    (0.92, 0.72, 1.12),
+                ),
+            ))
+        return records
+
     def test_engine_uses_runtime_defaults(self):
         """Calibration and live repair must share one settings definition."""
         self.assertIs(
@@ -54,6 +102,134 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
             [item.path.name for item in pairs[0].references],
             ['before.fit', 'after.fit'],
         )
+
+    def test_signature_threshold_validation_explains_safe_gap(self):
+        ranges = {
+            'purple_ratio': {
+                'good_min': 0.852,
+                'good_max': 0.905,
+                'bad_min': 2.199,
+                'bad_max': 2.261,
+            },
+            'red_side_ratio': {
+                'good_min': 0.581,
+                'good_max': 0.707,
+                'bad_min': 1.519,
+                'bad_max': 1.838,
+            },
+            'blue_side_ratio': {
+                'good_min': 1.002,
+                'good_max': 1.220,
+                'bad_min': 2.622,
+                'bad_max': 3.136,
+            },
+        }
+        calibration_engine.validate_signature_separation(
+            ranges,
+            calibration_engine.DEFAULT_SETTINGS,
+        )
+
+        normal_crosses_blue = {
+            metric: dict(values)
+            for metric, values in ranges.items()
+        }
+        normal_crosses_blue['blue_side_ratio']['good_max'] = 1.600
+        with self.assertRaisesRegex(
+            calibration_engine.CalibrationError,
+            'Configured Blue-side ratio threshold is 1.500.*midpoint 2.111',
+        ):
+            calibration_engine.validate_signature_separation(
+                normal_crosses_blue,
+                calibration_engine.DEFAULT_SETTINGS,
+            )
+
+        purple_misses_red = {
+            metric: dict(values)
+            for metric, values in ranges.items()
+        }
+        purple_misses_red['red_side_ratio']['bad_min'] = 1.200
+        with self.assertRaisesRegex(
+            calibration_engine.CalibrationError,
+            'Configured Red-side ratio threshold is 1.250.*midpoint 0.954',
+        ):
+            calibration_engine.validate_signature_separation(
+                purple_misses_red,
+                calibration_engine.DEFAULT_SETTINGS,
+            )
+
+    def test_detector_miss_returns_threshold_suggestions_without_fitting(self):
+        records = self._threshold_population_records()
+        with mock.patch.object(
+            calibration_engine,
+            'scan_folder',
+            return_value=(records, []),
+        ):
+            payload = calibration_engine.calibrate_folder(Path('unused'))
+
+        self.assertEqual(payload['outcome'], 'threshold_suggestion')
+        self.assertNotIn('derived_settings', payload)
+        self.assertEqual(payload['quality']['likely_purple_count'], 7)
+        self.assertEqual(payload['quality']['likely_normal_count'], 14)
+        suggestions = {
+            item['key']: item
+            for item in payload['threshold_suggestions']
+        }
+        self.assertFalse(
+            suggestions['PURPLE_RATIO_THRESHOLD']['change_recommended']
+        )
+        self.assertFalse(
+            suggestions['RED_SIDE_RATIO_THRESHOLD']['change_recommended']
+        )
+        self.assertTrue(
+            suggestions['BLUE_SIDE_RATIO_THRESHOLD']['change_recommended']
+        )
+        self.assertEqual(
+            suggestions['BLUE_SIDE_RATIO_THRESHOLD']['suggested'],
+            1.26,
+        )
+
+    def test_single_ratio_threshold_mismatch_uses_same_preliminary_result(self):
+        records = self._threshold_population_records(purple_blue_ratio=2.5)
+        for record in records:
+            if record.path.name.startswith('likely_purple_'):
+                record.signature['is_bad'] = True
+            elif record.path.name.startswith('normal_before_'):
+                record.signature['blue_side_ratio'] = 1.60
+            else:
+                record.signature['blue_side_ratio'] = 1.62
+
+        with mock.patch.object(
+            calibration_engine,
+            'scan_folder',
+            return_value=(records, []),
+        ):
+            payload = calibration_engine.calibrate_folder(Path('unused'))
+
+        self.assertEqual(payload['outcome'], 'threshold_suggestion')
+        suggestions = {
+            item['key']: item
+            for item in payload['threshold_suggestions']
+        }
+        self.assertTrue(
+            suggestions['BLUE_SIDE_RATIO_THRESHOLD']['change_recommended']
+        )
+        self.assertEqual(
+            suggestions['BLUE_SIDE_RATIO_THRESHOLD']['suggested'],
+            2.06,
+        )
+        self.assertNotIn('derived_settings', payload)
+
+    def test_threshold_analysis_rejects_inconsistently_ordered_populations(self):
+        records = self._threshold_population_records(purple_blue_ratio=1.0)
+        with self.assertRaisesRegex(
+            calibration_engine.CalibrationError,
+            'not higher in all three',
+        ):
+            calibration_engine.suggest_detection_thresholds(
+                records,
+                calibration_engine.DEFAULT_SETTINGS,
+                max_pair_seconds=90.0,
+            )
 
     def test_folder_scan_accepts_indi_allsky_compressed_fits(self):
         with tempfile.TemporaryDirectory() as temp_dir:
