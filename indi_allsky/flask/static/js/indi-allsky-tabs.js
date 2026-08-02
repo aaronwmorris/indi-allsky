@@ -39,8 +39,12 @@
             btn.classList.toggle('tw:tab-active', isMatch);
             btn.classList.toggle('active', isMatch);
             if (isMatch) {
+                btn.classList.add('tw:btn-primary');
+                btn.classList.remove('tw:btn-ghost', 'tw:text-base-content/60');
                 btn.setAttribute('aria-selected', 'true');
             } else {
+                btn.classList.remove('tw:btn-primary');
+                btn.classList.add('tw:btn-ghost', 'tw:text-base-content/60');
                 btn.setAttribute('aria-selected', 'false');
             }
         });
