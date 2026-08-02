@@ -276,7 +276,7 @@ download strip. The gallery deliberately exposes no diagnostic FITS controls
 or URLs, including in its enlarged PhotoSwipe view, so its toolbar cannot cover
 the timestamp or other image annotations.
 
-### Standalone repair and calibration tool
+### Repair and calibration utility
 
 `misc/asi676mc_frame_repair.py` is the publishable, self-contained companion
 to the live feature. It depends only on NumPy and Astropy and contains the same
@@ -339,7 +339,7 @@ The only calibration output is `asi676mc_calibration_report.txt`. Its first
 section is headed `TYPE THESE VALUES INTO YOUR CONFIG` and uses the exact field
 labels shown under **Configuration > Image > ASI676MC RAW16 Frame Repair**.
 Values must be typed into that normal settings form and reviewed before repair
-is enabled. The standalone tool neither reads nor writes installation
+is enabled. The command-line utility neither reads nor writes installation
 configuration files; its only calibration output is the text report.
 
 The report continues with human-readable evidence, stability, signature, and
@@ -367,7 +367,10 @@ The operator selects the complete collection in one browser file-picker action.
 JavaScript then transfers the selected files sequentially into a private,
 randomly named session. This is an implementation detail rather than a manual
 one-file-at-a-time workflow: it provides per-file progress and avoids sending a
-several-hundred-megabyte multipart request. Additional upload safeguards are:
+several-hundred-megabyte multipart request. A visible **Cancel upload** action
+aborts the current browser transfer, tombstones the server session against a
+concurrent upload request, and immediately deletes every FITS already received
+for that run. Additional upload safeguards are:
 
 - only uncompressed `.fit`, `.fits`, and `.fts` names are accepted;
 - the mandatory first FITS `SIMPLE` card is checked before admission;
@@ -375,7 +378,8 @@ several-hundred-megabyte multipart request. Additional upload safeguards are:
   validation in the background job;
 - sessions are owned by the authenticated username and use unguessable IDs;
 - file count, individual size, and total-session size are bounded; and
-- abandoned results expire after seven days.
+- every session, including an interrupted partial upload, expires after seven
+  days.
 
 The default session directory is Flask's non-public `instance` directory and
 may be overridden with `ASI676MC_CALIBRATION_FOLDER`. Do not move sessions into
@@ -389,23 +393,43 @@ request open. Normal manually generated videos use priority 100 and therefore
 remain ahead of calibration. The browser stores the current session ID locally
 and resumes status polling after a page reload.
 
-The web evidence policy differs from the standalone CLI in one documented way.
+The web evidence policy differs from the command-line utility in one documented way.
 The CLI retains its conservative default of failing when any detected bad frame
 is unmatched. The web page ignores and reports unmatched bad frames, then
 continues only if at least seven matched failures and every other existing
 evidence check pass. Unused normal frames and structurally rejected files are
 also reported rather than silently treated as evidence.
 
-On success, the page shows only the seven camera-specific values actually
+Uploaded source FITS are deleted before the worker publishes either a successful
+or failed final status. Consequently, a result visible in the browser guarantees
+that its source uploads are no longer retained. The small manifest, result,
+report, and audit log remain for up to seven days.
+
+Interrupted uploads do not depend on the browser returning to the page for
+eventual cleanup. Calibration sessions are private scratch data and have no FITS
+database row, so normal database-backed FITS expiry cannot identify them. The
+regular indi-allsky asset-expiration job now runs the calibration session's
+fixed seven-day cleanup alongside its ordinary work. Since that job normally
+runs at day/night transitions, an abandoned partial upload is removed on the
+first regular expiration pass after it becomes seven days old. Starting a new
+calibration session also performs the same cleanup immediately.
+
+On success, the page switches to a results-only view showing the seven camera-specific values actually
 derived by calibration: four Bayer gains, source saturation threshold, and two
 highlight blend boundaries. Detection thresholds, sample step, chunk size, and
 operational switches are validated/current values rather than measurements and
 are not presented as derived. The complete human-readable report is available
-through an owner-checked download route. Source FITS are deleted immediately
-after either success or failure; the small manifest, report, result, and audit
-log remain until session expiry.
+through an owner-checked download route. Returning to the page restores that
+result without restoring the browser's file selection. **Reset / recalibrate**
+deletes the retained result/report session and returns the page to its original
+file-selection state. An incomplete upload cannot be resumed after navigation,
+so it is cancelled and removed when the page is revisited.
 
 Administrators can choose **Apply values and reload** after a successful run.
+The result is compared with the currently loaded seven measured settings. An
+exact match is identified next to the button; differences below deliberately
+narrow per-field tolerances are described as effectively equivalent, because
+applying them is unlikely to change repaired pixels noticeably.
 The action verifies that the active configuration is still the same version
 used when calibration started, writes only the seven measured values through
 indi-allsky's normal versioned configuration save path, and queues a normal
@@ -413,6 +437,12 @@ configuration reload. Operational choices such as enabling repair and saving
 diagnostic FITS are preserved and are never switched on automatically. A
 configuration change made while calibration was running blocks application and
 asks the administrator to review the change and calibrate again.
+
+The page checks for multi-file selection, Fetch, FormData, Promises, async
+JavaScript, upload cancellation, and writable local browser storage before
+allowing a run. A specific warning replaces silent failure when any required
+browser feature is missing or blocked; a separate message covers JavaScript
+being disabled entirely.
 
 Direct discovery of diagnostic FITS already stored by indi-allsky remains a
 future enhancement. It can be added without changing the upload/session format.
@@ -439,14 +469,18 @@ future enhancement. It can be added without changing the upload/session format.
 - `indi_allsky/flask/views.py`
   - settings load/save wiring
   - camera-gated Image Viewer and gallery wiring
+  - authenticated calibration session, status, report, discard, and apply routes
 - `indi_allsky/flask/templates/config.html`
   - switch, help text, submission list, and master-switch grouping
 - `indi_allsky/asi676mc_calibration.py`
-  - private upload-session lifecycle, bounds, results, and report ownership
+  - private upload-session lifecycle, bounds, result/config comparison,
+    retention, and report ownership
 - `indi_allsky/video.py`
   - low-priority background calibration action
+  - regular catch-all expiration for abandoned calibration sessions
 - `indi_allsky/flask/templates/asi676mc_calibration.html`
-  - multi-select upload, progress, results, warnings, and report download
+  - browser capability checks, multi-select upload, cancellation, progress,
+    retained results, configuration-match hints, and report download
 - `indi_allsky/flask/templates/imageviewer.html`
   - `Bad FITS` and `Next FITS` controls
 - `indi_allsky/flask/templates/gallery.html`
@@ -487,7 +521,7 @@ wanted, first follow the diagnostic-removal steps above, then:
 
 1. Remove `indi_allsky/asi676mc.py` and its test module.
 2. Remove `misc/asi676mc_frame_repair.py` and
-   `testing/image/test_asi676mc_standalone.py` if the standalone detector,
+   `testing/image/test_asi676mc_calibration_tool.py` if the command-line detector,
    repairer, and calibration workflow is no longer wanted.
 3. Remove the ASI676MC result property from the processing image-reference
    object.

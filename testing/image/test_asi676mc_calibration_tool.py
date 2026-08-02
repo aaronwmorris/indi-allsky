@@ -7,14 +7,14 @@ import numpy
 from astropy.io import fits
 
 from indi_allsky import asi676mc
-from misc import asi676mc_frame_repair as standalone
+from misc import asi676mc_frame_repair as calibration_engine
 
 
-class TestAsi676mcStandalone(unittest.TestCase):
+class TestAsi676mcCalibrationTool(unittest.TestCase):
 
     def test_runtime_defaults_and_repair_are_equivalent(self):
         self.assertEqual(
-            standalone.DEFAULT_SETTINGS,
+            calibration_engine.DEFAULT_SETTINGS,
             asi676mc.DEFAULT_SETTINGS,
         )
 
@@ -29,14 +29,14 @@ class TestAsi676mcStandalone(unittest.TestCase):
         source[11:31:2, 10:30:2] = 65534
 
         runtime_data = source.copy()
-        standalone_data = source.copy()
+        tool_data = source.copy()
         asi676mc.repair_in_place(runtime_data)
-        standalone.repair_in_place(standalone_data)
-        numpy.testing.assert_array_equal(runtime_data, standalone_data)
+        calibration_engine.repair_in_place(tool_data)
+        numpy.testing.assert_array_equal(runtime_data, tool_data)
 
     def test_pairing_prefers_before_and_after(self):
         def record(name, timestamp, is_bad):
-            return standalone.FrameRecord(
+            return calibration_engine.FrameRecord(
                 path=Path(name),
                 timestamp=timestamp,
                 exposure=0.001,
@@ -60,7 +60,7 @@ class TestAsi676mcStandalone(unittest.TestCase):
             record('after.fit', 120.0, False),
             record('far.fit', 500.0, False),
         ]
-        pairs, unmatched = standalone.match_pairs(records, 90.0)
+        pairs, unmatched = calibration_engine.match_pairs(records, 90.0)
 
         self.assertFalse(unmatched)
         self.assertEqual(len(pairs), 1)
@@ -86,10 +86,10 @@ class TestAsi676mcStandalone(unittest.TestCase):
         height, width = normal.shape
         bad = numpy.zeros_like(normal)
         gains = (
-            standalone.DEFAULT_SETTINGS['GAIN_R'],
-            standalone.DEFAULT_SETTINGS['GAIN_G1'],
-            standalone.DEFAULT_SETTINGS['GAIN_G2'],
-            standalone.DEFAULT_SETTINGS['GAIN_B'],
+            calibration_engine.DEFAULT_SETTINGS['GAIN_R'],
+            calibration_engine.DEFAULT_SETTINGS['GAIN_G1'],
+            calibration_engine.DEFAULT_SETTINGS['GAIN_G2'],
+            calibration_engine.DEFAULT_SETTINGS['GAIN_B'],
         )
         for row_parity in range(2):
             for column_parity in range(2):
@@ -114,8 +114,8 @@ class TestAsi676mcStandalone(unittest.TestCase):
     def test_folder_calibration_accepts_seven_two_sided_pairs(self):
         normal = self._normal_frame()
         bad = self._bad_stream(normal)
-        self.assertFalse(standalone.frame_signature(normal)['is_bad'])
-        self.assertTrue(standalone.frame_signature(bad)['is_bad'])
+        self.assertFalse(calibration_engine.frame_signature(normal)['is_bad'])
+        self.assertTrue(calibration_engine.frame_signature(bad)['is_bad'])
 
         with tempfile.TemporaryDirectory() as temp_dir:
             folder = Path(temp_dir)
@@ -151,17 +151,17 @@ class TestAsi676mcStandalone(unittest.TestCase):
                 'BLEND_END_VALUES': (0.70, 0.75, 0.80),
             }
             with mock.patch.dict(
-                standalone.CALIBRATION_OPTIONS,
+                calibration_engine.CALIBRATION_OPTIONS,
                 overrides,
             ):
-                payload, report = standalone.calibrate_folder(folder)
+                payload, report = calibration_engine.calibrate_folder(folder)
 
         quality = payload['quality']
         settings = payload['IMAGE_ASI676MC_REPAIR']
         self.assertEqual(quality['pair_count'], 7)
         self.assertEqual(quality['two_sided_count'], 7)
         self.assertEqual(quality['good_bad_ratio'], 2.0)
-        self.assertIn('ASI676MC standalone calibration report', report)
+        self.assertIn('ASI676MC calibration report', report)
         self.assertIn('TYPE THESE VALUES INTO YOUR CONFIG', report)
         self.assertIn('Purple Ratio Threshold: 1.5', report)
         self.assertIn('Bad-frame Gain R:', report)
@@ -169,7 +169,7 @@ class TestAsi676mcStandalone(unittest.TestCase):
         for key in ('GAIN_R', 'GAIN_G1', 'GAIN_G2', 'GAIN_B'):
             self.assertAlmostEqual(
                 settings[key],
-                standalone.DEFAULT_SETTINGS[key],
+                calibration_engine.DEFAULT_SETTINGS[key],
                 delta=0.02,
             )
 

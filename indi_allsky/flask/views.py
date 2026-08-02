@@ -7679,6 +7679,31 @@ class AjaxAsi676mcCalibrationUploadView(BaseView):
         })
 
 
+class AjaxAsi676mcCalibrationCancelView(BaseView):
+    """Cancel a browser upload before it enters the background queue."""
+
+    methods = ['POST']
+    decorators = [strict_login_required, login_required]
+
+    def dispatch_request(self, session_id):
+        try:
+            manifest = asi676mc_calibration.cancel_upload_session(
+                session_id,
+                current_user.username,
+            )
+        except asi676mc_calibration.CalibrationSessionError as error:
+            return jsonify({'error': str(error)}), 409
+        except OSError:
+            app.logger.exception('Unable to cancel ASI676MC calibration upload')
+            return jsonify({'error': 'unable to remove the uploaded FITS'}), 500
+
+        return jsonify({
+            'session_id': session_id,
+            'status': manifest['status'],
+            'sources_deleted_utc': manifest.get('sources_deleted_utc'),
+        })
+
+
 class AjaxAsi676mcCalibrationStartView(BaseView):
     """Freeze an upload session and enqueue its CPU-heavy calibration job."""
 
@@ -7765,6 +7790,17 @@ class AjaxAsi676mcCalibrationStatusView(BaseView):
             )
         except asi676mc_calibration.CalibrationSessionError as error:
             return jsonify({'error': str(error)}), 404
+
+        # Compare at poll time rather than storing a second configuration
+        # snapshot in the result.  This keeps the hint accurate when an admin
+        # revisits a retained result after changing settings elsewhere.
+        if status.get('status') == 'success' and status.get('result'):
+            status['configuration_comparison'] = (
+                asi676mc_calibration.compare_result_to_configuration(
+                    status['result'],
+                    self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}),
+                )
+            )
         return jsonify(status)
 
 
@@ -7789,6 +7825,30 @@ class Asi676mcCalibrationReportView(BaseView):
             download_name='asi676mc_calibration_report.txt',
             as_attachment=True,
         )
+
+
+class AjaxAsi676mcCalibrationDiscardView(BaseView):
+    """Remove a retained result when the user chooses Reset/Recalibrate."""
+
+    methods = ['POST']
+    decorators = [strict_login_required, login_required]
+
+    def dispatch_request(self, session_id):
+        try:
+            asi676mc_calibration.discard_session(
+                session_id,
+                current_user.username,
+            )
+        except asi676mc_calibration.CalibrationSessionError as error:
+            return jsonify({'error': str(error)}), 409
+        except OSError:
+            app.logger.exception('Unable to discard ASI676MC calibration result')
+            return jsonify({'error': 'unable to remove the calibration result'}), 500
+
+        return jsonify({
+            'session_id': session_id,
+            'status': 'discarded',
+        })
 
 
 class AjaxAsi676mcCalibrationApplyView(BaseView):
@@ -12581,9 +12641,11 @@ bp_allsky.add_url_rule('/js/processing', view_func=JsonImageProcessingView.as_vi
 bp_allsky.add_url_rule('/asi676mc/calibration', view_func=Asi676mcCalibrationView.as_view('asi676mc_calibration_view', template_name='asi676mc_calibration.html'))
 bp_allsky.add_url_rule('/ajax/asi676mc/calibration/session', view_func=AjaxAsi676mcCalibrationSessionView.as_view('ajax_asi676mc_calibration_session_view'))
 bp_allsky.add_url_rule('/ajax/asi676mc/calibration/upload/<session_id>', view_func=AjaxAsi676mcCalibrationUploadView.as_view('ajax_asi676mc_calibration_upload_view'))
+bp_allsky.add_url_rule('/ajax/asi676mc/calibration/cancel/<session_id>', view_func=AjaxAsi676mcCalibrationCancelView.as_view('ajax_asi676mc_calibration_cancel_view'))
 bp_allsky.add_url_rule('/ajax/asi676mc/calibration/start/<session_id>', view_func=AjaxAsi676mcCalibrationStartView.as_view('ajax_asi676mc_calibration_start_view'))
 bp_allsky.add_url_rule('/ajax/asi676mc/calibration/status/<session_id>', view_func=AjaxAsi676mcCalibrationStatusView.as_view('ajax_asi676mc_calibration_status_view'))
 bp_allsky.add_url_rule('/asi676mc/calibration/report/<session_id>', view_func=Asi676mcCalibrationReportView.as_view('asi676mc_calibration_report_view'))
+bp_allsky.add_url_rule('/ajax/asi676mc/calibration/discard/<session_id>', view_func=AjaxAsi676mcCalibrationDiscardView.as_view('ajax_asi676mc_calibration_discard_view'))
 bp_allsky.add_url_rule('/ajax/asi676mc/calibration/apply/<session_id>', view_func=AjaxAsi676mcCalibrationApplyView.as_view('ajax_asi676mc_calibration_apply_view'))
 
 bp_allsky.add_url_rule('/longtermkeogram', view_func=LongTermKeogramView.as_view('longterm_keogram_view', template_name='longterm_keogram.html'))

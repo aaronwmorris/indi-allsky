@@ -2140,7 +2140,32 @@ class VideoWorker(Process):
                 logger.error('Cannot remove folder: %s', str(e))
 
 
-        task.setSuccess('Expired {0:d} assets'.format(delete_count))
+        # Calibration uploads are private scratch data rather than registered
+        # FITS assets, so the database-backed FITS expiry above cannot see them.
+        # Run their fixed seven-day retention cleanup alongside the regular
+        # asset expiry as a server-side catch-all for interrupted browsers,
+        # broken network connections, crashes, and power loss.
+        try:
+            calibration_session_count = (
+                asi676mc_calibration.cleanup_expired_sessions()
+            )
+        except OSError:
+            calibration_session_count = 0
+            logger.exception('Unable to expire ASI676MC calibration sessions')
+        else:
+            if calibration_session_count:
+                logger.info(
+                    'Expired %d ASI676MC calibration session(s)',
+                    calibration_session_count,
+                )
+
+
+        task.setSuccess(
+            'Expired {0:d} assets and {1:d} calibration sessions'.format(
+                delete_count,
+                calibration_session_count,
+            )
+        )
 
 
     def _deleteAssets(self, table, entry_id_list):

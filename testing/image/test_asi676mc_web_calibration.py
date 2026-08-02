@@ -1,12 +1,13 @@
 import io
 import ast
+import os
 from pathlib import Path
 import tempfile
 import unittest
 from unittest import mock
 
 from indi_allsky import asi676mc_calibration
-from misc import asi676mc_frame_repair as standalone
+from misc import asi676mc_frame_repair as calibration_engine
 
 
 class TestAsi676mcWebCalibration(unittest.TestCase):
@@ -25,7 +26,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
 
     @staticmethod
     def _successful_payload():
-        settings = dict(standalone.DEFAULT_SETTINGS)
+        settings = dict(calibration_engine.DEFAULT_SETTINGS)
         return {
             'IMAGE_ASI676MC_REPAIR': settings,
             'quality': {
@@ -100,6 +101,40 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                     root,
                 )
 
+    def test_cancel_removes_uploads_and_tombstones_the_session(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            session_id = asi676mc_calibration.create_session(
+                'alice', root
+            )['session_id']
+            asi676mc_calibration.store_upload(
+                session_id,
+                'alice',
+                self._fits_upload('partial_collection.fit'),
+                root,
+            )
+
+            manifest = asi676mc_calibration.cancel_upload_session(
+                session_id,
+                'alice',
+                root,
+            )
+            self.assertEqual(manifest['status'], 'cancelled')
+            self.assertFalse(root.joinpath(session_id, 'uploads').exists())
+            self.assertTrue(manifest['sources_deleted_utc'])
+            with self.assertRaises(
+                asi676mc_calibration.CalibrationUploadError
+            ):
+                asi676mc_calibration.store_upload(
+                    session_id,
+                    'alice',
+                    self._fits_upload('too_late.fit'),
+                    root,
+                )
+
+            asi676mc_calibration.discard_session(session_id, 'alice', root)
+            self.assertFalse(root.joinpath(session_id).exists())
+
     def test_background_run_allows_unmatched_and_removes_uploaded_fits(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -118,31 +153,44 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 'alice',
                 task_id=42,
                 max_pair_seconds=90.0,
-                settings=standalone.DEFAULT_SETTINGS,
+                settings=calibration_engine.DEFAULT_SETTINGS,
                 storage_root=root,
             )
 
             payload = self._successful_payload()
             with mock.patch.object(
-                standalone,
+                calibration_engine,
                 'calibrate_folder',
                 return_value=(payload, 'human-readable report\n'),
             ) as calibrate_folder:
-                result = asi676mc_calibration.run_calibration_session(
-                    session_id,
-                    root,
-                )
+                original_write_manifest = asi676mc_calibration._write_manifest
+                success_saw_deleted_sources = []
+
+                def observe_manifest(session_dir, manifest):
+                    if manifest.get('status') == 'success':
+                        success_saw_deleted_sources.append(
+                            not session_dir.joinpath('uploads').exists()
+                        )
+                    return original_write_manifest(session_dir, manifest)
+
+                with mock.patch.object(
+                    asi676mc_calibration,
+                    '_write_manifest',
+                    side_effect=observe_manifest,
+                ):
+                    result = asi676mc_calibration.run_calibration_session(
+                        session_id,
+                        root,
+                    )
 
             call_kwargs = calibrate_folder.call_args.kwargs
             self.assertTrue(call_kwargs['allow_unmatched'])
             self.assertFalse(call_kwargs['recursive'])
-            self.assertEqual(
-                call_kwargs['report_title'],
-                'ASI676MC web calibration report',
-            )
+            self.assertNotIn('report_title', call_kwargs)
             self.assertEqual(result['quality']['matched_bad_count'], 7)
             self.assertEqual(len(result['values']), 7)
             self.assertFalse(root.joinpath(session_id, 'uploads').exists())
+            self.assertEqual(success_saw_deleted_sources, [True])
 
             status = asi676mc_calibration.get_status(
                 session_id,
@@ -161,13 +209,66 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 'human-readable report\n',
             )
 
-    def test_standalone_strict_policy_remains_default(self):
-        """The web relaxation must not silently change the standalone CLI."""
+    def test_result_comparison_distinguishes_exact_negligible_and_different(self):
+        payload = self._successful_payload()
+        result = asi676mc_calibration._result_summary(payload)
+        current = dict(calibration_engine.DEFAULT_SETTINGS)
+
+        exact = asi676mc_calibration.compare_result_to_configuration(
+            result,
+            current,
+        )
+        self.assertEqual(exact['status'], 'exact')
+
+        current['GAIN_R'] *= 1.004
+        current['SOURCE_SATURATION_THRESHOLD'] += 64
+        current['HIGHLIGHT_BLEND_START_RATIO'] += 0.004
+        equivalent = asi676mc_calibration.compare_result_to_configuration(
+            result,
+            current,
+        )
+        self.assertEqual(equivalent['status'], 'equivalent')
+
+        current['GAIN_B'] *= 1.02
+        different = asi676mc_calibration.compare_result_to_configuration(
+            result,
+            current,
+        )
+        self.assertEqual(different['status'], 'different')
+        self.assertIn('GAIN_B', different['differing_keys'])
+
+    def test_expired_abandoned_upload_is_removed_without_page_revisit(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            session_id = asi676mc_calibration.create_session(
+                'alice', root
+            )['session_id']
+            asi676mc_calibration.store_upload(
+                session_id,
+                'alice',
+                self._fits_upload('received_before_disconnect.fit'),
+                root,
+            )
+            session_dir = root.joinpath(session_id)
+            expiry_time = (
+                1700000000 - asi676mc_calibration.SESSION_RETENTION_SECONDS - 1
+            )
+            os.utime(session_dir, (expiry_time, expiry_time))
+
+            removed = asi676mc_calibration.cleanup_expired_sessions(
+                root,
+                now=1700000000,
+            )
+            self.assertEqual(removed, 1)
+            self.assertFalse(session_dir.exists())
+
+    def test_command_line_strict_policy_remains_default(self):
+        """The web relaxation must not change the command-line policy."""
         normal_records = []
         pairs = []
         for index in range(7):
             exposure = 0.001 if index < 4 else 0.002
-            normal = standalone.FrameRecord(
+            normal = calibration_engine.FrameRecord(
                 path=Path(f'normal_{index}.fit'),
                 timestamp=float(index * 10),
                 exposure=exposure,
@@ -179,7 +280,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 camera_name='ASI676MC',
                 signature={'is_bad': False},
             )
-            bad = standalone.FrameRecord(
+            bad = calibration_engine.FrameRecord(
                 path=Path(f'bad_{index}.fit'),
                 timestamp=float(index * 10 + 1),
                 exposure=exposure,
@@ -192,14 +293,14 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 signature={'is_bad': True},
             )
             normal_records.append(normal)
-            pairs.append(standalone.MatchedPair(bad=bad, references=(normal,)))
+            pairs.append(calibration_engine.MatchedPair(bad=bad, references=(normal,)))
 
         unmatched = [pairs[0].bad]
         records = normal_records + [pair.bad for pair in pairs] + unmatched
-        with self.assertRaises(standalone.CalibrationError):
-            standalone.validate_evidence(records, pairs, unmatched)
+        with self.assertRaises(calibration_engine.CalibrationError):
+            calibration_engine.validate_evidence(records, pairs, unmatched)
 
-        evidence = standalone.validate_evidence(
+        evidence = calibration_engine.validate_evidence(
             records,
             pairs,
             unmatched,
@@ -217,9 +318,11 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'Asi676mcCalibrationView',
             'AjaxAsi676mcCalibrationSessionView',
             'AjaxAsi676mcCalibrationUploadView',
+            'AjaxAsi676mcCalibrationCancelView',
             'AjaxAsi676mcCalibrationStartView',
             'AjaxAsi676mcCalibrationStatusView',
             'Asi676mcCalibrationReportView',
+            'AjaxAsi676mcCalibrationDiscardView',
             'AjaxAsi676mcCalibrationApplyView',
         }
         found = set()
@@ -262,6 +365,25 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('Download text report', template)
         self.assertIn('Apply values and reload', template)
         self.assertIn('Current calibration-evidence settings', template)
+        self.assertIn('Cancel upload', template)
+        self.assertIn('new AbortController()', template)
+        self.assertIn('Reset / recalibrate', template)
+        self.assertIn('id="calibration-browser-warning"', template)
+        self.assertIn('window.asi676mcCalibrationBrowserSupported', template)
+        self.assertIn('id="calibration-config-match"', template)
+        self.assertIn('configuration_comparison', template)
+        self.assertIn(
+            '#calibration-setup-panel, #calibration-progress-panel',
+            template,
+        )
+
+        video_source = project_root.joinpath(
+            'indi_allsky', 'video.py'
+        ).read_text(encoding='utf-8')
+        self.assertIn(
+            'asi676mc_calibration.cleanup_expired_sessions()',
+            video_source,
+        )
 
     def test_capture_guidance_recommends_safe_low_disk_collection(self):
         guidance = asi676mc_calibration.capture_configuration_guidance({
@@ -312,6 +434,10 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn("get('EXCLUDE_ONLY', True)", processing_source)
         self.assertIn("get('EXCLUDE_ONLY', True)", views_source)
         self.assertIn('asi676mc_repair_was_enabled', settings_template)
+        self.assertIn(
+            'Only enable this feature if your ASI676MC produces purple frames.',
+            settings_template,
+        )
 
 
 if __name__ == '__main__':

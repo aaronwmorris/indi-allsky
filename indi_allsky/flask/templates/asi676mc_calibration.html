@@ -16,6 +16,15 @@
 
 <h3>ASI676MC calibration</h3>
 
+<noscript>
+    <div class="alert alert-danger">
+        This tool needs JavaScript to select, transfer, and monitor a FITS
+        collection. Enable JavaScript in this browser before using it.
+    </div>
+</noscript>
+<div id="calibration-browser-warning" class="alert alert-danger" style="display: none;"></div>
+
+<div id="calibration-setup-panel">
 <div class="alert alert-info">
     Select the complete collection in one action. The page transfers the files
     automatically, classifies good and purple frames, matches adjacent captures,
@@ -85,7 +94,7 @@
         </div>
         <div class="col-sm-7">
             Normal references farther from a bad frame than this are not paired.
-            The standalone default is 90 seconds.
+            The default is 90 seconds.
         </div>
     </div>
 
@@ -94,7 +103,11 @@
     <button id="start-calibration" type="submit" class="btn btn-primary">
         Upload and calibrate
     </button>
+    <button id="cancel-calibration-upload" type="button" class="btn btn-danger ms-2" style="display: none;">
+        Cancel upload
+    </button>
 </form>
+</div>
 
 <div id="calibration-progress-panel" class="mt-4" style="display: none;">
     <h5 id="calibration-stage">Preparing upload</h5>
@@ -108,11 +121,15 @@
     <div id="calibration-status" class="mt-2"></div>
 </div>
 
+<div id="calibration-notice" class="alert alert-info mt-4" style="display: none;"></div>
 <div id="calibration-error" class="alert alert-danger mt-4" style="display: none;"></div>
 
-<div id="calibration-results" class="mt-4" style="display: none;">
-    <div class="d-flex align-items-center justify-content-between">
-        <h4>Calibration passed</h4>
+<div id="calibration-results" class="card mt-4" style="display: none;">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <div>
+            <h4 class="mb-0">Calibration result</h4>
+            <span id="calibration-completed" class="small text-secondary"></span>
+        </div>
         <div>
             <a id="calibration-report-download" class="btn btn-info" href="#">
                 Download text report
@@ -121,44 +138,113 @@
             <button id="calibration-apply-values" type="button" class="btn btn-warning ms-2">
                 Apply values and reload
             </button>
+            <span id="calibration-config-match" class="small ms-2" style="display: none;"></span>
             {% endif %}
+            <button id="calibration-reset" type="button" class="btn btn-secondary ms-2">
+                Reset / recalibrate
+            </button>
         </div>
     </div>
 
-    <p>
-        These are the camera-specific values derived from the uploaded evidence.
-        Detection thresholds and operational checkboxes were validated but were
-        not automatically changed.
-    </p>
+    <div class="card-body">
+        <div class="alert alert-success">
+            Calibration completed successfully. Uploaded source FITS were
+            deleted before this result was published.
+        </div>
 
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr><th>Configuration field</th><th>Derived value</th></tr>
-            </thead>
-            <tbody id="calibration-values"></tbody>
-        </table>
+        <p>
+            These are the camera-specific values derived from the uploaded evidence.
+            Detection thresholds and operational checkboxes were validated but were
+            not automatically changed.
+        </p>
+
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr><th>Configuration field</th><th>Derived value</th></tr>
+                </thead>
+                <tbody id="calibration-values"></tbody>
+            </table>
+        </div>
+
+        <h5>Evidence used</h5>
+        <div id="calibration-quality" class="row"></div>
+        <div id="calibration-warnings"></div>
+        <div id="calibration-apply-result" class="alert mt-3" style="display: none;"></div>
     </div>
-
-    <h5>Evidence used</h5>
-    <div id="calibration-quality" class="row"></div>
-    <div id="calibration-warnings"></div>
-    <div id="calibration-apply-result" class="alert mt-3" style="display: none;"></div>
 </div>
 
 <script>
+// Run this deliberately old-style feature check in its own script block.  It
+// can show a useful message even when a legacy browser cannot parse the modern
+// async code used by the calibration client below.
+(function () {
+    var missing = [];
+    var storageProbe = 'indi-allsky-asi676mc-browser-check';
+    var fileInput = document.getElementById('calibration-files');
+
+    if (!window.Promise) { missing.push('Promise'); }
+    if (!window.fetch) { missing.push('Fetch'); }
+    if (!window.FormData) { missing.push('FormData'); }
+    if (!window.AbortController) { missing.push('upload cancellation'); }
+    if (!window.File || !window.FileList || !window.Blob) {
+        missing.push('local file selection');
+    }
+    if (!Array.from || !Number.isNaN) { missing.push('modern JavaScript'); }
+    if (!fileInput || !('multiple' in fileInput)) {
+        missing.push('multi-file selection');
+    }
+    try {
+        new Function('async function calibrationCheck(){ await Promise.resolve(); }');
+    } catch (error) {
+        missing.push('async JavaScript');
+    }
+    try {
+        window.localStorage.setItem(storageProbe, '1');
+        window.localStorage.removeItem(storageProbe);
+    } catch (error) {
+        missing.push('local browser storage');
+    }
+
+    window.asi676mcCalibrationBrowserSupported = missing.length === 0;
+    if (!window.asi676mcCalibrationBrowserSupported) {
+        var warning = document.getElementById('calibration-browser-warning');
+        warning.appendChild(document.createTextNode(
+            'This browser cannot run the calibration tool as intended. Missing or blocked features: '
+            + missing.join(', ')
+            + '. Try a current browser with JavaScript and local storage enabled.'
+        ));
+        warning.style.display = 'block';
+        if (fileInput) { fileInput.disabled = true; }
+        var startButton = document.getElementById('start-calibration');
+        if (startButton) { startButton.disabled = true; }
+    }
+}());
+</script>
+
+<script>
+if (window.asi676mcCalibrationBrowserSupported !== false) {
+// Server routes are rendered by Flask; the generated session ID is substituted
+// into endpoint templates only after the authenticated server creates it.
 const calibrationCsrfToken = $('#csrf_token').val();
 const calibrationSessionUrl = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_session_view') }}";
 const calibrationUploadUrlTemplate = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_upload_view', session_id='SESSION_ID') }}";
+const calibrationCancelUrlTemplate = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_cancel_view', session_id='SESSION_ID') }}";
 const calibrationStartUrlTemplate = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_start_view', session_id='SESSION_ID') }}";
 const calibrationStatusUrlTemplate = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_status_view', session_id='SESSION_ID') }}";
 const calibrationReportUrlTemplate = "{{ url_for('indi_allsky.asi676mc_calibration_report_view', session_id='SESSION_ID') }}";
+const calibrationDiscardUrlTemplate = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_discard_view', session_id='SESSION_ID') }}";
 {% if current_user.is_admin %}
 const calibrationApplyUrlTemplate = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_apply_view', session_id='SESSION_ID') }}";
 {% endif %}
 const calibrationStorageKey = 'indi-allsky-asi676mc-calibration-session';
 let completedCalibrationSessionId = null;
+let activeCalibrationSessionId = null;
+let activeUploadController = null;
+let uploadCancellationRequested = false;
 
+// Shared URL, JSON-response, and message helpers keep every request consistent
+// about CSRF handling and about errors safe to show to the operator.
 function calibrationUrl(template, sessionId) {
     return template.replace('SESSION_ID', sessionId);
 }
@@ -177,9 +263,42 @@ async function calibrationJson(response) {
 }
 
 function showCalibrationError(message) {
+    $('#calibration-notice').hide();
     $('#calibration-error').text(message).show();
     $('#start-calibration').prop('disabled', false);
+    $('#cancel-calibration-upload').hide().prop('disabled', false).text('Cancel upload');
     $('#calibration-progress').removeClass('progress-bar-animated');
+}
+
+function showCalibrationNotice(message) {
+    $('#calibration-error').hide();
+    $('#calibration-notice').text(message).show();
+}
+
+// Reset both browser state and visible controls. Server-side result deletion is
+// performed separately by discardCalibrationResult before this helper is used.
+function resetCalibrationInterface() {
+    completedCalibrationSessionId = null;
+    activeCalibrationSessionId = null;
+    activeUploadController = null;
+    uploadCancellationRequested = false;
+    localStorage.removeItem(calibrationStorageKey);
+
+    $('#calibration-results').hide();
+    $('#calibration-progress-panel').hide();
+    $('#calibration-error').hide();
+    $('#calibration-setup-panel').show();
+    $('#start-calibration').prop('disabled', false);
+    $('#cancel-calibration-upload').hide().prop('disabled', false).text('Cancel upload');
+    $('#calibration-files').val('');
+    $('#calibration-values, #calibration-quality, #calibration-warnings').empty();
+    $('#calibration-apply-result').hide().empty();
+    $('#calibration-config-match').hide().empty();
+    $('#calibration-progress')
+        .css('width', '0%')
+        .text('0%')
+        .addClass('progress-bar-animated');
+    renderSelectedFiles();
 }
 
 function setCalibrationProgress(percent, stage, status) {
@@ -207,6 +326,9 @@ function renderSelectedFiles() {
     $('#calibration-file-list').empty().append(list);
 }
 
+// Upload transport is deliberately sequential. The user selects all files in
+// one picker action, while per-file requests bound server memory and make file
+// progress and cancellation reliable on a Raspberry Pi.
 async function createCalibrationSession() {
     const response = await fetch(calibrationSessionUrl, {
         method: 'POST',
@@ -215,7 +337,7 @@ async function createCalibrationSession() {
     return calibrationJson(response);
 }
 
-async function uploadCalibrationFiles(sessionId, files) {
+async function uploadCalibrationFiles(sessionId, files, signal) {
     for (let index = 0; index < files.length; index++) {
         const file = files[index];
         setCalibrationProgress(
@@ -229,6 +351,7 @@ async function uploadCalibrationFiles(sessionId, files) {
             method: 'POST',
             headers: {'X-CSRFToken': calibrationCsrfToken},
             body: formData,
+            signal: signal,
         });
         await calibrationJson(response);
     }
@@ -257,10 +380,38 @@ function qualityCard(label, value) {
     );
 }
 
-function renderCalibrationResult(sessionId, result) {
+// Only exact/effectively-equivalent comparisons get a hint. A materially
+// different result leaves the normal Apply action uncluttered.
+function renderConfigurationComparison(comparison) {
+    const hint = $('#calibration-config-match')
+        .removeClass('text-success text-info')
+        .hide()
+        .empty();
+    if (
+        !comparison
+        || ['exact', 'equivalent'].indexOf(comparison.status) === -1
+    ) {
+        return;
+    }
+    hint
+        .addClass(comparison.status === 'exact' ? 'text-success' : 'text-info')
+        .text(comparison.message)
+        .show();
+}
+
+function renderCalibrationResult(sessionId, result, configurationComparison) {
     completedCalibrationSessionId = sessionId;
+    activeCalibrationSessionId = null;
+    activeUploadController = null;
     $('#calibration-progress').removeClass('progress-bar-animated');
-    setCalibrationProgress(100, 'Calibration complete', 'All final validation checks passed.');
+    $('#calibration-setup-panel, #calibration-progress-panel, #calibration-error, #calibration-notice').hide();
+
+    const completed = result.completed_utc ? new Date(result.completed_utc) : null;
+    $('#calibration-completed').text(
+        completed && !Number.isNaN(completed.getTime())
+            ? 'Completed ' + completed.toLocaleString()
+            : 'Completed successfully'
+    );
 
     const valuesBody = $('#calibration-values').empty();
     result.values.forEach(item => {
@@ -294,12 +445,79 @@ function renderCalibrationResult(sessionId, result) {
     $('#calibration-results').show();
     $('#calibration-apply-result').hide();
     $('#calibration-apply-values').prop('disabled', false);
-    $('#start-calibration').prop('disabled', false);
-    // Keep the completed session for seven days so a page reload can restore
-    // the values, report link, and (for admins) configuration action.
+    renderConfigurationComparison(configurationComparison);
+    // Keep the small completed result for seven days so returning to this page
+    // restores this results-only view. Source FITS have already been deleted.
+}
+
+async function requestUploadCancellation(sessionId) {
+    const response = await fetch(
+        calibrationUrl(calibrationCancelUrlTemplate, sessionId),
+        {
+            method: 'POST',
+            headers: {'X-CSRFToken': calibrationCsrfToken},
+        }
+    );
+    return calibrationJson(response);
+}
+
+// Browser cancellation and server cancellation are both required: aborting
+// fetch stops network transfer, while the authenticated endpoint tombstones the
+// session and deletes chunks or completed FITS already received by the server.
+async function cancelCalibrationUpload() {
+    if (!activeCalibrationSessionId || uploadCancellationRequested) {
+        return;
+    }
+    uploadCancellationRequested = true;
+    $('#cancel-calibration-upload').prop('disabled', true).text('Cancelling...');
+    if (activeUploadController) {
+        activeUploadController.abort();
+    }
+
+    const sessionId = activeCalibrationSessionId;
+    try {
+        await requestUploadCancellation(sessionId);
+        resetCalibrationInterface();
+        showCalibrationNotice('Upload cancelled. All FITS uploaded for that run were deleted.');
+    } catch (error) {
+        uploadCancellationRequested = false;
+        $('#cancel-calibration-upload').prop('disabled', false).text('Cancel upload');
+        showCalibrationError(error.message);
+    }
+}
+
+async function discardCalibrationResult() {
+    if (!completedCalibrationSessionId) {
+        resetCalibrationInterface();
+        return;
+    }
+
+    const resetButton = $('#calibration-reset').prop('disabled', true);
+    try {
+        const response = await fetch(
+            calibrationUrl(calibrationDiscardUrlTemplate, completedCalibrationSessionId),
+            {
+                method: 'POST',
+                headers: {'X-CSRFToken': calibrationCsrfToken},
+            }
+        );
+        await calibrationJson(response);
+        resetCalibrationInterface();
+        showCalibrationNotice('Previous calibration result removed. Select a new FITS collection when ready.');
+    } catch (error) {
+        $('#calibration-apply-result')
+            .removeClass('alert-success alert-warning')
+            .addClass('alert-danger')
+            .text(error.message)
+            .show();
+    } finally {
+        resetButton.prop('disabled', false);
+    }
 }
 
 {% if current_user.is_admin %}
+// Applying values remains admin-only and uses indi-allsky's normal versioned
+// configuration save/reload path; this client never edits operational switches.
 async function applyCalibrationValues() {
     if (!completedCalibrationSessionId) {
         showCalibrationError('No completed calibration result is available.');
@@ -327,6 +545,10 @@ async function applyCalibrationValues() {
             .addClass(result.reload_queued ? 'alert-success' : 'alert-warning')
             .text(result['success-message'])
             .show();
+        renderConfigurationComparison({
+            status: 'exact',
+            message: 'These values now match the current configuration exactly.',
+        });
     } catch (error) {
         message
             .removeClass('alert-success alert-warning')
@@ -340,6 +562,9 @@ async function applyCalibrationValues() {
 $('#calibration-apply-values').on('click', applyCalibrationValues);
 {% endif %}
 
+// Polling also restores retained results after navigation. An upload-state
+// session cannot be resumed because browsers do not restore FileList objects,
+// so revisiting it safely cancels the incomplete server collection.
 async function pollCalibration(sessionId) {
     while (true) {
         const response = await fetch(calibrationUrl(calibrationStatusUrlTemplate, sessionId), {
@@ -347,12 +572,22 @@ async function pollCalibration(sessionId) {
         });
         const status = await calibrationJson(response);
         if (status.status === 'success') {
-            renderCalibrationResult(sessionId, status.result);
+            renderCalibrationResult(
+                sessionId,
+                status.result,
+                status.configuration_comparison
+            );
             return;
         }
         if (status.status === 'failed') {
             localStorage.removeItem(calibrationStorageKey);
             throw new Error(status.error || 'Calibration failed.');
+        }
+        if (status.status === 'cancelled') {
+            localStorage.removeItem(calibrationStorageKey);
+            resetCalibrationInterface();
+            showCalibrationNotice('The incomplete upload was cancelled and removed.');
+            return;
         }
         if (status.status === 'queued') {
             setCalibrationProgress(80, 'Queued', 'Waiting for the background worker.');
@@ -362,8 +597,16 @@ async function pollCalibration(sessionId) {
                 'Analysing and validating',
                 'Large collections may take several minutes on a Raspberry Pi.'
             );
+        } else if (status.status === 'uploading') {
+            // Browser file selections cannot be restored after navigation.
+            // Cancel the incomplete server session rather than retaining a
+            // partial collection that the user cannot resume.
+            await requestUploadCancellation(sessionId);
+            resetCalibrationInterface();
+            showCalibrationNotice('An incomplete upload from the previous page visit was discarded.');
+            return;
         } else {
-            throw new Error('The saved session did not finish uploading. Please start again.');
+            throw new Error('The saved calibration session has an unknown state.');
         }
         await new Promise(resolve => setTimeout(resolve, 2000));
     }
@@ -379,25 +622,58 @@ async function submitCalibration() {
     }
 
     $('#calibration-error').hide();
+    $('#calibration-notice').hide();
     $('#calibration-results').hide();
     $('#start-calibration').prop('disabled', true);
     $('#calibration-progress').addClass('progress-bar-animated');
 
     try {
         const session = await createCalibrationSession();
-        localStorage.setItem(calibrationStorageKey, session.session_id);
-        await uploadCalibrationFiles(session.session_id, files);
+        activeCalibrationSessionId = session.session_id;
+        activeUploadController = new AbortController();
+        uploadCancellationRequested = false;
+        localStorage.setItem(calibrationStorageKey, activeCalibrationSessionId);
+        $('#cancel-calibration-upload').show();
+        await uploadCalibrationFiles(
+            activeCalibrationSessionId,
+            files,
+            activeUploadController.signal
+        );
+        if (uploadCancellationRequested) {
+            return;
+        }
+        $('#cancel-calibration-upload').hide();
+        activeUploadController = null;
         setCalibrationProgress(75, 'Upload complete', 'Queuing calibration.');
-        await startCalibrationJob(session.session_id);
-        await pollCalibration(session.session_id);
+        await startCalibrationJob(activeCalibrationSessionId);
+        const queuedSessionId = activeCalibrationSessionId;
+        activeCalibrationSessionId = null;
+        await pollCalibration(queuedSessionId);
     } catch (error) {
+        if (uploadCancellationRequested || error.name === 'AbortError') {
+            return;
+        }
+        if (activeCalibrationSessionId) {
+            try {
+                await requestUploadCancellation(activeCalibrationSessionId);
+            } catch (cancelError) {
+                // Preserve the original upload error; session expiry is the
+                // fallback if server-side cleanup itself was unavailable.
+            }
+            activeCalibrationSessionId = null;
+            localStorage.removeItem(calibrationStorageKey);
+        }
         showCalibrationError(error.message);
     }
 }
 
 $('#calibration-files').on('change', renderSelectedFiles);
 $('#form-asi676mc-calibration').on('submit', submitCalibration);
+$('#cancel-calibration-upload').on('click', cancelCalibrationUpload);
+$('#calibration-reset').on('click', discardCalibrationResult);
 
+// localStorage contains only an unguessable session ID, never FITS data or
+// calibration values. Ownership is rechecked by every server endpoint.
 $(document).ready(async function() {
     const savedSession = localStorage.getItem(calibrationStorageKey);
     if (!savedSession) {
@@ -411,6 +687,7 @@ $(document).ready(async function() {
         showCalibrationError(error.message);
     }
 });
+}
 </script>
 
 {% endblock %}

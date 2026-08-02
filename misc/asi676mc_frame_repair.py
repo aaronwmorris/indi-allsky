@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Standalone ASI676MC RAW16 detector, repairer, and calibration tool.
+"""ASI676MC RAW16 detector, repairer, and calibration tool.
 
 What goes wrong in a bad frame
 ------------------------------
@@ -96,7 +96,7 @@ import numpy
 #
 # Keep every value that affects detection, repair, or calibration in this
 # block.  A user can copy calibrated values from the text report into these
-# definitions when testing the standalone repair, or type them into fields with
+# definitions when testing the repair utility, or type them into fields with
 # the same names on indi-allsky's Image settings page.
 
 DEFAULT_SETTINGS = {
@@ -1084,7 +1084,7 @@ def collect_pair_samples(pairs):
     """Load only the central sparse samples needed by calibration.
 
     Holding these small arrays instead of complete 3552x3552 frames keeps the
-    standalone workflow practical on machines with limited memory.
+    command-line workflow practical on machines with limited memory.
     """
     step = CALIBRATION_OPTIONS['SAMPLE_STEP']
     samples = []
@@ -1638,16 +1638,12 @@ def calibration_payload(
     }
 
 
-def format_report(
-    payload,
-    rejected,
-    report_title='ASI676MC standalone calibration report',
-):
+def format_report(payload, rejected):
     """Render a user-facing result first and technical audit details second."""
     quality = payload['quality']
     settings = payload['IMAGE_ASI676MC_REPAIR']
     lines = [
-        report_title,
+        'ASI676MC calibration report',
         '=' * 40,
         f"Source: {payload['source_folder']}",
         f"Generated: {payload['generated_utc']}",
@@ -1788,7 +1784,6 @@ def calibrate_folder(
     recursive=True,
     max_pair_seconds=None,
     allow_unmatched=False,
-    report_title='ASI676MC standalone calibration report',
 ):
     """Run the complete folder calibration and return audit data plus report.
 
@@ -1859,11 +1854,7 @@ def calibrate_folder(
     )
     payload['quality']['validated_bad_repairs'] = repaired_count
     payload['quality']['validated_normal_frames'] = normal_validation_count
-    return payload, format_report(
-        payload,
-        rejected,
-        report_title=report_title,
-    )
+    return payload, format_report(payload, rejected)
 
 
 # ---------------------------------------------------------------------------
