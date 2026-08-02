@@ -52,17 +52,12 @@
     border-left-color: #dc3545;
 }
 
-/* Configuration equivalence is part of the successful outcome. Give that
- * optional second line more weight inside the existing success banner rather
- * than presenting it as a competing standalone notice. */
-.calibration-config-match {
+/* Optional comparison guidance is emphasized inside the single result-status
+ * banner rather than appearing as another alert beneath it. */
+.calibration-result-emphasis {
     font-weight: 600;
     font-size: 1.05rem;
     color: #ffffff;
-    border-top: 1px solid rgba(255, 255, 255, 0.35);
-}
-
-.calibration-result-detail {
     border-top: 1px solid rgba(255, 255, 255, 0.35);
 }
 
@@ -126,15 +121,15 @@
 <div class="mb-4">
     <h3 class="text-light mb-1">ASI676MC calibration</h3>
     <div class="text-light opacity-75">
-        Derive purple-frame repair values from FITS already saved by
-        indi-allsky or from one manually selected collection.
+        Derive purple-frame repair values from FITS saved by indi-allsky or
+        from a collection you select manually.
     </div>
 </div>
 
 <noscript>
     <div class="calibration-callout calibration-callout-danger mb-3">
-        This tool needs JavaScript to select, transfer, and monitor a FITS
-        collection. Enable JavaScript in this browser before using it.
+        This tool cannot run while JavaScript is disabled. Enable JavaScript or
+        open the page in a current browser before selecting FITS.
     </div>
 </noscript>
 <div id="calibration-browser-warning" class="calibration-callout calibration-callout-danger mb-3" style="display: none;"></div>
@@ -146,28 +141,31 @@
     <div class="col-12 col-lg-6">
         <div class="calibration-callout calibration-callout-info h-100">
             <div class="fw-semibold mb-1">How it works</div>
-            Both input methods use the same classifier, adjacent-frame matching,
-            validation, and background worker. Browser uploads remain private and
-            are deleted as soon as calibration finishes.
+            Let indi-allsky search its saved FITS, or select a complete FITS
+            collection from your device. Both methods perform the same checks
+            and produce the same calibration values. Uploaded copies remain
+            private and are deleted when the run ends.
         </div>
     </div>
     <div class="col-12 col-lg-6">
         <div class="calibration-callout calibration-callout-warning h-100">
             <div class="fw-semibold mb-1">Evidence needed</div>
-            Calibration needs at least seven matched bad frames and seven distinct
-            compatible normal frames, daylight highlights, and at least two
-            exposure levels. Unusable files are reported and ignored.
+            Use daylight data with visible highlights and at least two exposure
+            levels. Calibration needs at least seven purple frames and seven
+            different compatible normal frames; before-and-after references are
+            better. Unusable files are skipped and explained in the result.
         </div>
     </div>
 </div>
 
 <!-- This is advisory capture state, not a claim about the FITS selected later. -->
 <div class="card bg-dark border-secondary text-light mb-4">
-    <div class="card-header fw-semibold">Current calibration-evidence settings</div>
+    <div class="card-header fw-semibold">Current FITS capture settings</div>
     <div class="card-body">
         <p class="calibration-help">
-            These settings describe future captures. The tool judges stored
-            FITS by what actually exists, not by how it was originally saved.
+            These settings affect future captures only. Existing data can still
+            be used: saved FITS search works with previously flagged purple
+            frames, while manual upload identifies them from the selected files.
         </p>
         <div class="row mb-2">
             {% for fact in capture_guidance.facts %}
@@ -182,7 +180,7 @@
         <!-- The helper resolves all switch combinations into one concise
              outlook so overlapping repair/FITS advice is never stacked. -->
         <div class="calibration-callout calibration-callout-{{ capture_guidance.guidance.level }} py-2">
-            <div class="fw-semibold mb-1">Capture outlook</div>
+            <div class="fw-semibold mb-1">{{ capture_guidance.guidance.title }}</div>
             {{ capture_guidance.guidance.text }}
         </div>
     </div>
@@ -205,8 +203,9 @@
                     {{ form_calibration.MAX_PAIR_SECONDS(class='form-control bg-secondary text-light border-secondary') }}
                 </div>
                 <div class="col-md-7 calibration-help">
-                    Normal references farther from a bad frame than this are not
-                    paired. The default is 90 seconds and applies to both input methods.
+                    Normal references farther from a purple frame than this
+                    are not paired. The default is 90 seconds and applies to
+                    both input methods.
                 </div>
             </div>
         </div>
@@ -223,9 +222,10 @@
                 </div>
                 <div class="card-body">
                     <p class="calibration-help">
-                        Search this camera's local FITS records from newest to
-                        oldest, stopping at the requested number of usable groups
-                        or at the configured FITS-retention boundary.
+                        Search this camera's saved FITS from newest to oldest.
+                        The search stops after finding the requested
+                        number of usable groups or reaching the oldest retained
+                        FITS.
                     </p>
                     <div class="mb-3">
                         {{ form_calibration.DATABASE_BAD_FRAME_LIMIT.label(class='form-label fw-semibold') }}
@@ -234,8 +234,9 @@
                                 {{ form_calibration.DATABASE_BAD_FRAME_LIMIT(class='form-control bg-secondary text-light border-secondary') }}
                             </div>
                             <div class="col-sm-8 calibration-help">
-                                Choose 7-100 bad frames. Fewer are used automatically
-                                when at least seven usable groups remain.
+                                Choose 7 to 100. If at least seven usable groups
+                                exist, calibration runs with however many are
+                                found, even when that is fewer than requested.
                             </div>
                         </div>
                     </div>
@@ -268,7 +269,12 @@
                     >
                     <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
                         <span id="selected-summary" class="badge bg-secondary">No files selected</span>
-                        <span class="calibration-help small">Choose all files together; no repetitive one-by-one selection.</span>
+                        <span class="calibration-help small">Select all files at once; you do not need to upload them one by one.</span>
+                    </div>
+                    <div class="calibration-help small mt-2">
+                        Manual upload accepts uncompressed .fit, .fits, and .fts
+                        files. Automatic saved FITS search also supports
+                        indi-allsky's compressed FITS.
                     </div>
                     <div id="calibration-file-list" class="border border-secondary rounded small p-2 mt-3" style="display: none;"></div>
                     <div class="calibration-source-action">
@@ -330,24 +336,14 @@
     </div>
 
     <div class="card-body">
-        <div id="calibration-cleanup-summary" class="calibration-callout calibration-callout-success" role="status">
-            <div id="calibration-success-message">
-                Calibration completed successfully. Uploaded source FITS were
-                deleted before this result was published.
+        <div id="calibration-result-status" class="calibration-callout calibration-callout-success" role="status">
+            <div id="calibration-result-status-primary">
+                Calibration successful. Uploaded FITS were used and then
+                deleted. Only the seven calibration values shown below were
+                derived; all other settings remain unchanged.
             </div>
-            <!-- Exact and effectively equivalent configuration results appear
-                 here for both upload and database calibration sources. -->
-            <div id="calibration-config-match" class="calibration-config-match mt-2 pt-2" style="display: none;"></div>
-            <!-- Applying values is another outcome update, so keep its
-                 feedback in this single result-status banner as well. -->
-            <div id="calibration-apply-result" class="calibration-result-detail mt-2 pt-2" style="display: none;"></div>
+            <div id="calibration-result-status-detail" class="calibration-result-emphasis mt-2 pt-2" style="display: none;"></div>
         </div>
-
-        <p class="calibration-help mt-3">
-            These are the camera-specific values derived from the selected evidence.
-            Detection thresholds and operational checkboxes were validated but were
-            not automatically changed.
-        </p>
 
         <div class="table-responsive">
             <table class="calibration-values-table table table-dark table-striped align-middle mb-0">
@@ -367,7 +363,7 @@
         <!-- All non-fatal evidence observations share one dynamically populated
              box instead of appearing as a stack of near-identical alerts. -->
         <div id="calibration-warnings" class="calibration-callout calibration-callout-warning mt-3" style="display: none;">
-            <div class="fw-semibold mb-1">Review notes</div>
+            <div class="fw-semibold mb-1">Calibration notes</div>
             <ul id="calibration-warning-list" class="mb-0"></ul>
         </div>
     </div>
@@ -390,7 +386,13 @@
     if (!window.File || !window.FileList || !window.Blob) {
         missing.push('local file selection');
     }
-    if (!Array.from || !Number.isNaN || !Number.isInteger) {
+    if (
+        !Array.from
+        || !Array.prototype.find
+        || !Number.isNaN
+        || !Number.isInteger
+        || !Number.isFinite
+    ) {
         missing.push('modern JavaScript');
     }
     if (!fileInput || !('multiple' in fileInput)) {
@@ -412,9 +414,9 @@
     if (!window.asi676mcCalibrationBrowserSupported) {
         var warning = document.getElementById('calibration-browser-warning');
         warning.appendChild(document.createTextNode(
-            'This browser cannot run the calibration tool as intended. Missing or blocked features: '
+            'This browser cannot run the calibration tool. Missing or blocked features: '
             + missing.join(', ')
-            + '. Try a current browser with JavaScript and local storage enabled.'
+            + '. Use a current browser with JavaScript and local storage enabled.'
         ));
         warning.style.display = 'block';
         if (fileInput) { fileInput.disabled = true; }
@@ -439,6 +441,9 @@ const calibrationStartUrlTemplate = "{{ url_for('indi_allsky.ajax_asi676mc_calib
 const calibrationStatusUrlTemplate = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_status_view', session_id='SESSION_ID') }}";
 const calibrationReportUrlTemplate = "{{ url_for('indi_allsky.asi676mc_calibration_report_view', session_id='SESSION_ID') }}";
 const calibrationDiscardUrlTemplate = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_discard_view', session_id='SESSION_ID') }}";
+const calibrationMaxFileCount = {{ calibration_upload_limits.file_count }};
+const calibrationMaxFileBytes = {{ calibration_upload_limits.file_bytes }};
+const calibrationMaxSessionBytes = {{ calibration_upload_limits.session_bytes }};
 {% if current_user.is_admin %}
 const calibrationApplyUrlTemplate = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_apply_view', session_id='SESSION_ID') }}";
 {% endif %}
@@ -459,10 +464,20 @@ async function calibrationJson(response) {
     try {
         data = await response.json();
     } catch (error) {
-        throw new Error('The server returned an unreadable response.');
+        const responseError = new Error(
+            'The server returned an unreadable response.'
+        );
+        responseError.resultUnconfirmed = true;
+        throw responseError;
     }
     if (!response.ok) {
-        throw new Error(data.error || 'The calibration request failed.');
+        const requestError = new Error(
+            data.error || 'The calibration request failed.'
+        );
+        requestError.serverRejected = true;
+        requestError.code = data.error_code || '';
+        requestError.responseStatus = response.status;
+        throw requestError;
     }
     return data;
 }
@@ -479,6 +494,21 @@ function showCalibrationError(message) {
 function showCalibrationNotice(message) {
     $('#calibration-error').hide();
     $('#calibration-notice').text(message).show();
+}
+
+// Validate the shared matching control before either a database search or a
+// potentially very large upload starts. Server-side validation still repeats
+// the check because browser input can never be trusted on its own.
+function calibrationPairSeparation() {
+    const seconds = Number($('#MAX_PAIR_SECONDS').val());
+    if (!Number.isFinite(seconds) || seconds <= 0 || seconds > 3600) {
+        showCalibrationError(
+            'Maximum separation must be greater than 0 and no more than 3600 '
+            + 'seconds.'
+        );
+        return null;
+    }
+    return seconds;
 }
 
 // Reset both browser state and visible controls. Server-side result deletion is
@@ -500,8 +530,6 @@ function resetCalibrationInterface() {
     $('#calibration-files').val('');
     $('#calibration-values, #calibration-quality, #calibration-warning-list').empty();
     $('#calibration-warnings').hide();
-    $('#calibration-apply-result').hide().empty();
-    $('#calibration-config-match').hide().empty();
     $('#calibration-progress')
         .css('width', '0%')
         .text('0%')
@@ -532,6 +560,65 @@ function renderSelectedFiles() {
     const list = $('<ul />', {'class': 'list-unstyled mb-0'});
     files.forEach(file => list.append($('<li />').text(file.name)));
     $('#calibration-file-list').empty().append(list).show();
+}
+
+// File sizes are available locally, so reject impossible selections before
+// transferring any data over a slow connection. The server repeats every
+// limit check while streaming because client-side checks are advisory only.
+function validateSelectedFits(files) {
+    if (files.length < 14) {
+        showCalibrationError(
+            'Select at least 14 FITS in one collection: at least seven purple '
+            + 'frames and seven different compatible normal frames. The tool '
+            + 'will match adjacent frames and skip unusable files.'
+        );
+        return false;
+    }
+    if (files.length > calibrationMaxFileCount) {
+        showCalibrationError(
+            'Select no more than ' + calibrationMaxFileCount
+            + ' FITS files in one calibration run.'
+        );
+        return false;
+    }
+    const unsupportedFile = files.find(
+        file => !/\.(fit|fits|fts)$/i.test(file.name)
+    );
+    if (unsupportedFile) {
+        showCalibrationError(
+            unsupportedFile.name + ' is not an uncompressed FITS file. '
+            + 'Select .fit, .fits, or .fts files.'
+        );
+        return false;
+    }
+    const emptyFile = files.find(file => file.size === 0);
+    if (emptyFile) {
+        showCalibrationError(emptyFile.name + ' is empty and cannot be used.');
+        return false;
+    }
+    const oversizedFile = files.find(
+        file => file.size > calibrationMaxFileBytes
+    );
+    if (oversizedFile) {
+        showCalibrationError(
+            oversizedFile.name + ' is larger than the '
+            + (calibrationMaxFileBytes / (1024 * 1024)).toFixed(0)
+            + ' MiB per-file limit.'
+        );
+        return false;
+    }
+    const totalBytes = files.reduce((total, file) => total + file.size, 0);
+    if (totalBytes > calibrationMaxSessionBytes) {
+        showCalibrationError(
+            'The selected collection is '
+            + (totalBytes / (1024 * 1024 * 1024)).toFixed(1)
+            + ' GiB; the maximum per calibration run is '
+            + (calibrationMaxSessionBytes / (1024 * 1024 * 1024)).toFixed(1)
+            + ' GiB. Select a smaller collection.'
+        );
+        return false;
+    }
+    return true;
 }
 
 // Upload transport is deliberately sequential. The user selects all files in
@@ -565,7 +652,7 @@ async function uploadCalibrationFiles(sessionId, files, signal) {
     }
 }
 
-async function startCalibrationJob(sessionId) {
+async function startCalibrationJob(sessionId, maxPairSeconds) {
     const response = await fetch(calibrationUrl(calibrationStartUrlTemplate, sessionId), {
         method: 'POST',
         headers: {
@@ -573,7 +660,7 @@ async function startCalibrationJob(sessionId) {
             'X-CSRFToken': calibrationCsrfToken,
         },
         body: JSON.stringify({
-            max_pair_seconds: $('#MAX_PAIR_SECONDS').val(),
+            max_pair_seconds: maxPairSeconds,
         }),
     });
     return calibrationJson(response);
@@ -601,17 +688,22 @@ function countedResultItem(value, singular, plural) {
     return count + ' ' + (count === 1 ? singular : plural);
 }
 
-// Exact/effectively-equivalent comparisons add a prominent second line to the
-// common success banner. This is independent of the FITS evidence source.
-function renderConfigurationComparison(comparison) {
-    const hint = $('#calibration-config-match').hide().empty();
-    if (
-        !comparison
-        || ['exact', 'equivalent'].indexOf(comparison.status) === -1
-    ) {
-        return;
+// Every successful result and later apply/reset response reuses this one
+// status surface. The latest outcome replaces older guidance instead of
+// accumulating another alert beneath it.
+function setResultStatus(level, primaryMessage, detailMessage) {
+    const status = $('#calibration-result-status');
+    status
+        .removeClass(
+            'calibration-callout-success calibration-callout-info '
+            + 'calibration-callout-warning calibration-callout-danger'
+        )
+        .addClass('calibration-callout-' + level);
+    $('#calibration-result-status-primary').text(primaryMessage);
+    const detail = $('#calibration-result-status-detail').hide().empty();
+    if (detailMessage) {
+        detail.text(detailMessage).show();
     }
-    hint.text(comparison.message).show();
 }
 
 function renderCalibrationResult(sessionId, result, configurationComparison) {
@@ -628,44 +720,48 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
             : 'Completed successfully'
     );
 
-    const resultSummary = [];
+    let resultSummary;
     if (result.source && result.source.kind === 'database') {
-        resultSummary.push(
-            'Calibration completed successfully using '
-            + countedResultItem(
-                result.source.selected_bad_count,
-                'bad-frame group',
-                'bad-frame groups'
-            ) + ', '
-            + countedResultItem(
-                result.source.selected_normal_count,
-                'distinct normal reference',
-                'distinct normal references'
-            ) + ', and '
-            + countedResultItem(
-                result.source.selected_file_count,
-                'saved FITS file',
-                'saved FITS files'
-            ) + ' from '
-            + (result.source.camera_name || 'the selected camera') + '.'
-        );
-        resultSummary.push(
-            'Private staging links were removed; the original database FITS '
-            + 'were not changed or deleted. Search cutoff: '
-            + (result.source.retention_cutoff || 'configured retention boundary')
-            + '.'
+        resultSummary = (
+            'Calibration successful. Saved FITS from '
+            + (result.source.camera_name || 'the selected camera')
+            + ' were used; the original files were left unchanged.'
         );
     } else {
-        const uploadCount = result.source
-            ? result.source.selected_file_count
-            : null;
-        resultSummary.push(
-            'Calibration completed successfully using '
-            + countedResultItem(uploadCount, 'uploaded FITS file', 'uploaded FITS files')
-            + '. Uploaded source FITS were deleted before this result was published.'
+        resultSummary = (
+            'Calibration successful. Uploaded FITS were used and then deleted.'
         );
     }
-    $('#calibration-success-message').text(resultSummary.join(' '));
+    resultSummary += (
+        ' Only the seven calibration values shown below were derived; all '
+        + 'other settings remain unchanged.'
+    );
+
+    let resultLevel = 'success';
+    let comparisonMessage = '';
+    if (configurationComparison) {
+        if (['exact', 'equivalent'].indexOf(
+            configurationComparison.status
+        ) !== -1) {
+            comparisonMessage = configurationComparison.message;
+        } else if (configurationComparison.status === 'unavailable') {
+            resultLevel = 'warning';
+            comparisonMessage = configurationComparison.message;
+        } else if (configurationComparison.status === 'different') {
+            {% if current_user.is_admin %}
+            comparisonMessage = (
+                'The result differs from the current configuration. Review '
+                + 'both value columns before applying it.'
+            );
+            {% else %}
+            comparisonMessage = (
+                'The result differs from the current configuration. Review '
+                + 'both value columns; an administrator can apply it.'
+            );
+            {% endif %}
+        }
+    }
+    setResultStatus(resultLevel, resultSummary, comparisonMessage);
 
     const valuesBody = $('#calibration-values').empty();
     const configuredValues = (
@@ -691,20 +787,24 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
 
     const quality = result.quality;
     $('#calibration-quality').empty().append(
-        qualityCard('Matched bad frames', quality.matched_bad_count),
-        qualityCard('Distinct normal frames', quality.matched_normal_count),
-        qualityCard('Before/after triplets', quality.two_sided_count),
+        qualityCard('Purple frames used', quality.matched_bad_count),
+        qualityCard('Normal reference frames used', quality.matched_normal_count),
+        qualityCard('Good/bad/good groups', quality.two_sided_count),
         qualityCard('Exposure levels', quality.exposure_level_count),
-        qualityCard('Validated repairs', quality.validated_bad_count),
-        qualityCard('Validated normal frames', quality.validated_normal_count),
-        qualityCard('Unmatched bad frames', quality.unmatched_bad_count),
-        qualityCard('Rejected files', quality.rejected_file_count)
+        qualityCard('Repair checks passed', quality.validated_bad_count),
+        qualityCard('Normal-frame checks passed', quality.validated_normal_count),
+        qualityCard(
+            'Purple frames skipped (no reference)',
+            quality.unmatched_bad_count
+        ),
+        qualityCard('Files rejected', quality.rejected_file_count)
     );
 
     const warnings = $('#calibration-warnings').hide();
     const warningList = $('#calibration-warning-list').empty();
-    // The engine and database selector report different observations. Remove
-    // any exact duplicate while preserving their useful chronological order.
+    // Current results already combine related observations into a few useful
+    // notes. The Set also protects the page when it restores an older result
+    // that happened to contain an exact duplicate.
     const uniqueWarnings = Array.from(new Set(result.warnings || []));
     uniqueWarnings.forEach(message => {
         warningList.append($('<li />').text(message));
@@ -716,9 +816,7 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
         'href', calibrationUrl(calibrationReportUrlTemplate, sessionId)
     );
     $('#calibration-results').show();
-    $('#calibration-apply-result').hide();
     $('#calibration-apply-values').prop('disabled', false);
-    renderConfigurationComparison(configurationComparison);
     // Keep the small completed result for seven days so returning to this page
     // restores this results-only view. Source FITS have already been deleted.
 }
@@ -754,8 +852,17 @@ async function cancelCalibrationUpload() {
         showCalibrationNotice('Upload cancelled. All FITS uploaded for that run were deleted.');
     } catch (error) {
         uploadCancellationRequested = false;
-        $('#cancel-calibration-upload').prop('disabled', false).text('Cancel upload');
-        showCalibrationError(error.message);
+        // Keep the session and retry control available when the browser could
+        // not confirm deletion. The endpoint is idempotent, so retrying is
+        // safe even if the server completed the first request but its response
+        // was lost.
+        $('#calibration-notice').hide();
+        $('#calibration-error').text(error.message).show();
+        $('#start-calibration, #start-database-calibration').prop('disabled', true);
+        $('#cancel-calibration-upload')
+            .show()
+            .prop('disabled', false)
+            .text('Retry cancellation');
     }
 }
 
@@ -776,13 +883,26 @@ async function discardCalibrationResult() {
         );
         await calibrationJson(response);
         resetCalibrationInterface();
-        showCalibrationNotice('Previous calibration result removed. Select a new FITS collection when ready.');
+        showCalibrationNotice(
+            'Calibration result cleared. Choose saved FITS or upload a new '
+            + 'collection to calibrate again.'
+        );
     } catch (error) {
-        $('#calibration-apply-result')
-            .removeClass('text-light text-warning')
-            .addClass('text-danger')
-            .text(error.message)
-            .show();
+        if (error.serverRejected) {
+            setResultStatus(
+                'danger',
+                'The calibration result was not cleared and remains shown '
+                + 'below. Try again; if left alone, it will be removed '
+                + 'automatically after seven days.'
+            );
+        } else {
+            setResultStatus(
+                'warning',
+                'The browser could not confirm whether the result was cleared. '
+                + 'Reload this page; if the result is still available, you '
+                + 'can try again.'
+            );
+        }
     } finally {
         resetButton.prop('disabled', false);
     }
@@ -793,17 +913,25 @@ async function discardCalibrationResult() {
 // configuration save/reload path; this client never edits operational switches.
 async function applyCalibrationValues() {
     if (!completedCalibrationSessionId) {
-        showCalibrationError('No completed calibration result is available.');
+        setResultStatus(
+            'warning',
+            'This calibration result is no longer available. Reset the tool '
+            + 'and run calibration again.'
+        );
         return;
     }
     if (!window.confirm(
-        'Save these seven measured values and reload the indi-allsky configuration? Repair will not be enabled automatically.'
+        'Apply the seven derived values and reload indi-allsky? Repair mode, '
+        + 'FITS saving, and all other settings will remain unchanged.'
     )) {
         return;
     }
 
     const applyButton = $('#calibration-apply-values').prop('disabled', true);
-    const message = $('#calibration-apply-result').hide();
+    setResultStatus(
+        'info',
+        'Saving the seven derived values and requesting a configuration reload...'
+    );
     try {
         const response = await fetch(
             calibrationUrl(calibrationApplyUrlTemplate, completedCalibrationSessionId),
@@ -813,15 +941,10 @@ async function applyCalibrationValues() {
             }
         );
         const result = await calibrationJson(response);
-        message
-            .removeClass('text-danger text-warning text-light')
-            .addClass(
-                result.reload_queued
-                    ? 'text-light'
-                    : 'text-warning'
-            )
-            .text(result['success-message'])
-            .show();
+        setResultStatus(
+            result.reload_queued ? 'success' : 'warning',
+            result['success-message']
+        );
         // The server returns exactly the values it persisted. Reflect them in
         // the comparison table immediately instead of waiting for navigation.
         Object.keys(result.values || {}).forEach(key => {
@@ -829,16 +952,33 @@ async function applyCalibrationValues() {
                 return $(this).attr('data-config-key') === key;
             }).text(result.values[key]);
         });
-        renderConfigurationComparison({
-            status: 'exact',
-            message: 'These values now match the current configuration exactly.',
-        });
     } catch (error) {
-        message
-            .removeClass('text-light text-warning')
-            .addClass('text-danger')
-            .text(error.message)
-            .show();
+        if (error.serverRejected) {
+            if ([
+                'configuration_changed',
+                'result_unavailable',
+                'permission_required',
+            ].indexOf(
+                error.code
+            ) !== -1) {
+                setResultStatus('danger', error.message);
+            } else {
+                setResultStatus(
+                    'danger',
+                    'The derived values were not saved. The existing '
+                    + 'configuration is unchanged.',
+                    error.message
+                );
+            }
+        } else {
+            setResultStatus(
+                'warning',
+                'The browser could not confirm whether the values were saved. '
+                + 'Check the current values in Image Settings before trying '
+                + 'again.',
+                'Details: ' + error.message
+            );
+        }
         applyButton.prop('disabled', false);
     }
 }
@@ -865,7 +1005,25 @@ async function pollCalibration(sessionId) {
         }
         if (status.status === 'failed') {
             localStorage.removeItem(calibrationStorageKey);
-            throw new Error(status.error || 'Calibration failed.');
+            let cleanupMessage;
+            if (!status.sources_deleted_utc) {
+                cleanupMessage = (
+                    'Some temporary calibration data could not be removed '
+                    + 'immediately; regular cleanup will remove it later.'
+                );
+            } else if (status.source_kind === 'database') {
+                cleanupMessage = (
+                    'Temporary working files were removed; the original saved '
+                    + 'FITS were left unchanged.'
+                );
+            } else {
+                cleanupMessage = 'Uploaded FITS were deleted.';
+            }
+            throw new Error(
+                'Calibration failed. '
+                + (status.error || 'The selected data did not pass validation.')
+                + ' No settings were changed. ' + cleanupMessage
+            );
         }
         if (status.status === 'cancelled') {
             localStorage.removeItem(calibrationStorageKey);
@@ -874,7 +1032,11 @@ async function pollCalibration(sessionId) {
             return;
         }
         if (status.status === 'queued') {
-            setCalibrationProgress(80, 'Queued', 'Waiting for the background worker.');
+            setCalibrationProgress(
+                80,
+                'Waiting to start',
+                'The background worker will begin calibration when available.'
+            );
         } else if (status.status === 'running') {
             setCalibrationProgress(
                 90,
@@ -890,7 +1052,10 @@ async function pollCalibration(sessionId) {
             showCalibrationNotice('An incomplete upload from the previous page visit was discarded.');
             return;
         } else {
-            throw new Error('The saved calibration session has an unknown state.');
+            throw new Error(
+                'The saved calibration session reported an unknown state. '
+                + 'Reload the page; if this repeats, check the indi-allsky log.'
+            );
         }
         await new Promise(resolve => setTimeout(resolve, 2000));
     }
@@ -898,10 +1063,11 @@ async function pollCalibration(sessionId) {
 
 async function submitCalibration() {
     const files = Array.from($('#calibration-files')[0].files || []);
-    if (files.length < 14) {
-        showCalibrationError(
-            'Select at least 14 FITS files: seven bad frames and at least seven distinct normal references.'
-        );
+    if (!validateSelectedFits(files)) {
+        return;
+    }
+    const maxPairSeconds = calibrationPairSeparation();
+    if (maxPairSeconds === null) {
         return;
     }
 
@@ -929,8 +1095,11 @@ async function submitCalibration() {
         }
         $('#cancel-calibration-upload').hide();
         activeUploadController = null;
-        setCalibrationProgress(75, 'Upload complete', 'Queuing calibration.');
-        await startCalibrationJob(activeCalibrationSessionId);
+        setCalibrationProgress(75, 'Upload complete', 'Starting calibration.');
+        await startCalibrationJob(
+            activeCalibrationSessionId,
+            maxPairSeconds
+        );
         const queuedSessionId = activeCalibrationSessionId;
         activeCalibrationSessionId = null;
         await pollCalibration(queuedSessionId);
@@ -961,7 +1130,14 @@ async function submitDatabaseCalibration() {
         10
     );
     if (!Number.isInteger(maxBadFrames) || maxBadFrames < 7 || maxBadFrames > 100) {
-        showCalibrationError('Choose between 7 and 100 bad-frame groups.');
+        showCalibrationError(
+            'Choose a saved FITS search limit between 7 and 100 purple-frame '
+            + 'groups.'
+        );
+        return;
+    }
+    const maxPairSeconds = calibrationPairSeparation();
+    if (maxPairSeconds === null) {
         return;
     }
 
@@ -971,7 +1147,7 @@ async function submitDatabaseCalibration() {
     setCalibrationProgress(
         10,
         'Searching saved FITS',
-        'Checking newest database records within the configured FITS retention window.'
+        'Checking the newest saved FITS within the configured retention period.'
     );
 
     try {
@@ -984,7 +1160,7 @@ async function submitDatabaseCalibration() {
             body: JSON.stringify({
                 camera_id: $('#CAMERA_ID').val(),
                 max_bad_frames: maxBadFrames,
-                max_pair_seconds: $('#MAX_PAIR_SECONDS').val(),
+                max_pair_seconds: maxPairSeconds,
             }),
         });
         const queued = await calibrationJson(response);
@@ -992,10 +1168,18 @@ async function submitDatabaseCalibration() {
         localStorage.setItem(calibrationStorageKey, queued.session_id);
         setCalibrationProgress(
             80,
-            'Saved FITS selected and queued',
-            'Found ' + queued.discovery.selected_bad_count
-            + ' usable bad-frame group(s) in '
-            + queued.discovery.selected_file_count + ' FITS file(s).'
+            'Saved FITS ready',
+            'Found '
+            + countedResultItem(
+                queued.discovery.selected_bad_count,
+                'usable purple-frame group',
+                'usable purple-frame groups'
+            ) + ' in '
+            + countedResultItem(
+                queued.discovery.selected_file_count,
+                'FITS file',
+                'FITS files'
+            ) + '.'
         );
         await pollCalibration(queued.session_id);
     } catch (error) {

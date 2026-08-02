@@ -122,6 +122,12 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             self.assertEqual(manifest['status'], 'cancelled')
             self.assertFalse(root.joinpath(session_id, 'uploads').exists())
             self.assertTrue(manifest['sources_deleted_utc'])
+            repeated = asi676mc_calibration.cancel_upload_session(
+                session_id,
+                'alice',
+                root,
+            )
+            self.assertEqual(repeated['status'], 'cancelled')
             with self.assertRaises(
                 asi676mc_calibration.CalibrationUploadError
             ):
@@ -187,6 +193,31 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertEqual(summary['requested_bad_count'], 12)
         self.assertEqual(summary['selected_bad_count'], 10)
         self.assertEqual(len(selected), 20)
+
+    def test_database_selection_rejects_invalid_or_nonfinite_separation(self):
+        records = [
+            self._database_record(
+                1,
+                1000,
+                roles=({'capture_id': 'capture-1', 'role': 'bad'},),
+            ),
+            self._database_record(
+                2,
+                1010,
+                roles=({'capture_id': 'capture-1', 'role': 'following'},),
+            ),
+        ]
+        for separation in (0, -1, 3601, float('nan'), float('inf')):
+            with self.subTest(separation=separation):
+                with self.assertRaises(
+                    asi676mc_calibration.CalibrationSessionError
+                ):
+                    asi676mc_calibration.select_database_evidence(
+                        records,
+                        bad_frames=[],
+                        max_bad_frames=7,
+                        max_pair_seconds=separation,
+                    )
 
     def test_database_selection_uses_flagged_ordinary_fits_and_ignores_unmatched(self):
         records = []
@@ -285,9 +316,18 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'missing_local_count': 2,
         })
         self.assertIn('DATABASE FITS SELECTION', report)
-        self.assertIn('Requested bad-frame groups: 25', report)
-        self.assertIn('Selected bad-frame groups: 9', report)
+        self.assertIn('Requested purple-frame groups: 25', report)
+        self.assertIn('Selected purple-frame groups: 9', report)
+        self.assertIn('Retention cutoff: 2026-07-23 (10 days)', report)
         self.assertIn('Missing local FITS rows ignored: 2', report)
+
+        one_day_report = asi676mc_calibration.format_database_source_report({
+            'kind': 'database',
+            'retention_cutoff': '2026-08-01',
+            'retention_days': 1,
+        })
+        self.assertIn('Retention cutoff: 2026-08-01 (1 day)', one_day_report)
+        self.assertNotIn('1 days', one_day_report)
 
     def test_background_run_allows_unmatched_and_removes_uploaded_fits(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -369,9 +409,11 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             self.assertEqual(status['result']['quality']['unmatched_bad_count'], 1)
             self.assertEqual(status['result']['source']['kind'], 'database')
             warnings = ' '.join(status['result']['warnings'])
-            self.assertIn('fewer than the requested 8', warnings)
-            self.assertIn('no longer had a local file', warnings)
-            self.assertIn('unsupported filename format', warnings)
+            self.assertIn('looked for up to 8 purple frames', warnings)
+            self.assertIn('found 7 usable groups', warnings)
+            self.assertIn('whose file was no longer on disk', warnings)
+            self.assertIn('with an unsupported filename', warnings)
+            self.assertEqual(len(status['result']['warnings']), 2)
             report = asi676mc_calibration.get_report_path(
                 session_id,
                 'alice',
@@ -393,6 +435,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             current,
         )
         self.assertEqual(exact['status'], 'exact')
+        self.assertIn('No update is needed', exact['message'])
         self.assertEqual(
             exact['configured_values']['GAIN_R'],
             current['GAIN_R'],
@@ -411,6 +454,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 'Result effectively matches the current configuration'
             )
         )
+        self.assertIn('unlikely to produce a visible change', equivalent['message'])
 
         current['GAIN_B'] *= 1.02
         different = asi676mc_calibration.compare_result_to_configuration(
@@ -419,6 +463,90 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         )
         self.assertEqual(different['status'], 'different')
         self.assertIn('GAIN_B', different['differing_keys'])
+
+        unavailable = asi676mc_calibration.compare_result_to_configuration(
+            {'values': result['values'][:-1]},
+            current,
+        )
+        self.assertEqual(unavailable['status'], 'unavailable')
+        self.assertIn('could not be loaded for comparison', unavailable['message'])
+        self.assertIn('before applying', unavailable['message'])
+
+    def test_result_notes_combine_related_counts_in_plain_language(self):
+        warnings = asi676mc_calibration._result_warnings(
+            {
+                'matched_bad_count': 7,
+                'two_sided_count': 3,
+                'matched_normal_count': 7,
+                'unmatched_bad_count': 1,
+                'rejected_file_count': 2,
+            },
+            {
+                'kind': 'database',
+                'requested_bad_count': 10,
+                'selected_bad_count': 7,
+                'missing_local_count': 1,
+                'unsupported_count': 1,
+            },
+        )
+        self.assertEqual(len(warnings), 3)
+        self.assertIn('looked for up to 10 purple frames', warnings[0])
+        self.assertIn('minimum of seven was met', warnings[0])
+        self.assertIn('3 of 7 purple frames had normal references', warnings[1])
+        self.assertIn('the other 4 purple frames used one adjacent', warnings[1])
+        self.assertIn('normal references were reused', warnings[1])
+        self.assertIn('1 purple frame without a compatible', warnings[2])
+        self.assertIn('2 FITS files that could not be read or used', warnings[2])
+        self.assertNotIn('(s)', ' '.join(warnings))
+
+        reuse_only = asi676mc_calibration._result_warnings({
+            'matched_bad_count': 7,
+            'two_sided_count': 7,
+            'matched_normal_count': 13,
+            'unmatched_bad_count': 0,
+            'rejected_file_count': 0,
+        })
+        self.assertEqual(len(reuse_only), 1)
+        self.assertIn('normal references were reused', reuse_only[0])
+        self.assertIn('more independent normal references', reuse_only[0])
+
+        fully_independent = asi676mc_calibration._result_warnings({
+            'matched_bad_count': 7,
+            'two_sided_count': 7,
+            'matched_normal_count': 14,
+            'unmatched_bad_count': 0,
+            'rejected_file_count': 0,
+        })
+        self.assertEqual(fully_independent, [])
+
+    def test_engine_failures_are_translated_to_actionable_browser_text(self):
+        too_few = asi676mc_calibration._friendly_failure_message(
+            '4 matched bad frames found; need at least 7'
+        )
+        self.assertIn('Only 4 purple frames', too_few)
+        self.assertIn('at least seven are required', too_few)
+
+        no_highlights = asi676mc_calibration._friendly_failure_message(
+            'no stable jointly-clipped highlight samples were found'
+        )
+        self.assertIn('bright daylight highlights', no_highlights)
+
+        weak_samples = asi676mc_calibration._friendly_failure_message(
+            'R has usable samples in only 5 pairs'
+        )
+        self.assertIn('Too few stable pixels', weak_samples)
+
+        safety_failure = asi676mc_calibration._friendly_failure_message(
+            'normal-frame validation mutated C:\\private\\normal.fit'
+        )
+        self.assertIn('final safety checks', safety_failure)
+        self.assertNotIn('normal.fit', safety_failure)
+
+        unexpected = asi676mc_calibration._friendly_failure_message(
+            'cannot read C:\\private\\camera\\secret.fit'
+        )
+        self.assertIn('unexpected error', unexpected)
+        self.assertNotIn('secret.fit', unexpected)
 
     def test_expired_abandoned_upload_is_removed_without_page_revisit(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -548,8 +676,9 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('for (let index = 0; index < files.length; index++)', template)
         self.assertIn('Download text report', template)
         self.assertIn('Apply values and reload', template)
-        self.assertIn('Current calibration-evidence settings', template)
+        self.assertIn('Current FITS capture settings', template)
         self.assertIn('Cancel upload', template)
+        self.assertIn('Retry cancellation', template)
         self.assertIn('new AbortController()', template)
         self.assertIn('Reset / recalibrate', template)
         self.assertLess(
@@ -564,21 +693,35 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertNotIn("? 'text-success' : 'text-info'", template)
         self.assertIn('id="calibration-browser-warning"', template)
         self.assertIn('window.asi676mcCalibrationBrowserSupported', template)
+        self.assertIn('function calibrationPairSeparation()', template)
+        self.assertIn('Number.isFinite(seconds)', template)
+        self.assertIn('function validateSelectedFits(files)', template)
+        self.assertIn('calibrationMaxSessionBytes', template)
+        self.assertIn('Manual upload accepts uncompressed', template)
         self.assertIn('capture_guidance.guidance.level', template)
+        self.assertIn('capture_guidance.guidance.title', template)
         self.assertNotIn('{% for message in capture_guidance.messages %}', template)
-        self.assertIn('id="calibration-config-match"', template)
-        self.assertLess(
-            template.index('id="calibration-success-message"'),
-            template.index('id="calibration-config-match"'),
+        self.assertIn('id="calibration-result-status"', template)
+        self.assertIn('id="calibration-result-status-primary"', template)
+        self.assertIn('id="calibration-result-status-detail"', template)
+        self.assertIn('function setResultStatus(', template)
+        self.assertIn('requestError.code = data.error_code', template)
+        self.assertIn(
+            'Only the seven calibration values shown below were',
+            template,
         )
-        self.assertIn("$('#calibration-success-message').text(", template)
+        self.assertNotIn(
+            '<p class="calibration-help mt-3">\n'
+            '            Only the seven calibration values',
+            template,
+        )
+        self.assertNotIn('id="calibration-config-match"', template)
+        self.assertNotIn('id="calibration-success-message"', template)
+        self.assertNotIn('id="calibration-apply-result"', template)
         self.assertNotIn('id="calibration-source-summary"', template)
         self.assertIn('id="calibration-warning-list"', template)
+        self.assertIn('Calibration notes', template)
         self.assertIn('new Set(result.warnings || [])', template)
-        self.assertLess(
-            template.index('id="calibration-apply-result"'),
-            template.index('<h5 class="mt-4">Evidence used</h5>'),
-        )
         self.assertIn('configuration_comparison', template)
         self.assertIn('Current configured value', template)
         self.assertIn('configurationComparison.configured_values', template)
@@ -620,6 +763,18 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'IndiAllSkyDbFitsImageTable.dayDate >= retention_cutoff',
             views_source,
         )
+        self.assertIn("context['calibration_upload_limits']", views_source)
+        self.assertIn("'error_code': 'configuration_changed'", views_source)
+        self.assertIn("'error_code': 'result_unavailable'", views_source)
+        self.assertIn('Reload on Save', views_source)
+        self.assertIn(
+            'The previous calibration expired, was cleared, or is no',
+            views_source,
+        )
+        self.assertIn(
+            'The browser could not confirm whether the result was cleared',
+            template,
+        )
 
     def test_capture_guidance_recommends_safe_low_disk_collection(self):
         guidance = asi676mc_calibration.capture_configuration_guidance({
@@ -634,9 +789,14 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertTrue(guidance['exclude_only'])
         self.assertTrue(guidance['diagnostic_fits'])
         self.assertEqual(guidance['guidance']['level'], 'success')
+        self.assertEqual(
+            guidance['guidance']['title'],
+            'Ready for low-disk FITS collection',
+        )
         message = guidance['guidance']['text']
-        self.assertIn('Exclude Only is active', message)
-        self.assertIn('provides low-disk untouched', message)
+        self.assertIn('Exclude Only leaves purple frames unchanged', message)
+        self.assertIn('immediately following frame', message)
+        self.assertIn('ordinary FITS can remain off', message)
 
     def test_capture_guidance_warns_about_unsafe_or_periodic_saving(self):
         guidance = asi676mc_calibration.capture_configuration_guidance({
@@ -655,13 +815,18 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         message = guidance['guidance']['text']
         self.assertEqual(facts['Repair mode'], 'Repair active')
         self.assertEqual(guidance['guidance']['level'], 'warning')
-        self.assertEqual(message.count('Repair active.'), 1)
-        self.assertIn('may not retain the original bad mosaic', message)
-        self.assertIn('periodic ordinary FITS may also miss', message)
+        self.assertEqual(
+            guidance['guidance']['title'],
+            'No untouched purple-frame FITS will be saved',
+        )
+        self.assertIn('periodic ordinary FITS is written after repair', message)
+        self.assertIn('turn on Bad + following RAW FITS', message)
+        self.assertIn('switch to Exclude Only', message)
 
     def test_capture_guidance_consolidates_every_switch_combination(self):
         periodic_modes = (
             (False, 7200),
+            (False, 'invalid'),
             (True, 0),
             (True, 600),
             (True, 'invalid'),
@@ -671,6 +836,14 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             for exclude_only in (False, True):
                 for diagnostic_fits in (False, True):
                     for periodic_fits, fits_period in periodic_modes:
+                        if not periodic_fits:
+                            ordinary_mode = 'off'
+                        elif fits_period == 0:
+                            ordinary_mode = 'every'
+                        elif isinstance(fits_period, int) and fits_period > 0:
+                            ordinary_mode = 'periodic'
+                        else:
+                            ordinary_mode = 'invalid'
                         with self.subTest(
                             repair_enabled=repair_enabled,
                             exclude_only=exclude_only,
@@ -695,8 +868,71 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                                 result['guidance']['level'],
                                 {'success', 'info', 'warning'},
                             )
+                            if not repair_enabled:
+                                expected = (
+                                    'warning',
+                                    'Purple-frame handling is off',
+                                )
+                            elif diagnostic_fits:
+                                if ordinary_mode == 'every':
+                                    expected = (
+                                        'success',
+                                        'Ready to collect complete FITS sequences',
+                                    )
+                                elif ordinary_mode in ('off', 'periodic'):
+                                    expected = (
+                                        'success',
+                                        'Ready for low-disk FITS collection',
+                                    )
+                                else:
+                                    expected = (
+                                        'warning',
+                                        'Ordinary FITS setting needs correction',
+                                    )
+                            elif not exclude_only:
+                                expected = (
+                                    'warning',
+                                    'No untouched purple-frame FITS will be saved',
+                                )
+                            elif ordinary_mode == 'every':
+                                expected = (
+                                    'success',
+                                    'Ready to collect complete FITS sequences',
+                                )
+                            elif ordinary_mode == 'periodic':
+                                expected = (
+                                    'warning',
+                                    'Periodic FITS saving may miss purple frames',
+                                )
+                            elif ordinary_mode == 'invalid':
+                                expected = (
+                                    'warning',
+                                    'No reliable calibration FITS will be saved',
+                                )
+                            else:
+                                expected = (
+                                    'warning',
+                                    'No calibration FITS will be saved',
+                                )
+                            self.assertEqual(
+                                (
+                                    result['guidance']['level'],
+                                    result['guidance']['title'],
+                                ),
+                                expected,
+                            )
+                            self.assertTrue(result['guidance']['title'])
                             self.assertTrue(result['guidance']['text'])
                             self.assertNotIn('messages', result)
+                            self.assertNotIn('(s)', result['guidance']['text'])
+                            self.assertNotIn(
+                                'guarantees a usable pair',
+                                result['guidance']['text'],
+                            )
+                            self.assertNotIn(
+                                'next normal reference',
+                                result['guidance']['text'],
+                            )
 
     def test_capture_guidance_marks_invalid_retention_once(self):
         result = asi676mc_calibration.capture_configuration_guidance({
@@ -712,9 +948,146 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertEqual(facts['FITS retention'], 'Invalid value')
         self.assertEqual(result['guidance']['level'], 'warning')
         self.assertEqual(
-            result['guidance']['text'].count('invalid FITS retention'),
+            result['guidance']['text'].count(
+                'Set FITS retention to at least 1 day'
+            ),
             1,
         )
+
+    def test_invalid_retention_overlay_covers_every_capture_mode(self):
+        ordinary_modes = (
+            (False, 7200),
+            (True, 0),
+            (True, 600),
+            (True, 'invalid'),
+        )
+        repair_modes = (
+            (False, True),
+            (True, True),
+            (True, False),
+        )
+        for repair_enabled, exclude_only in repair_modes:
+            for diagnostic_fits in (False, True):
+                for ordinary_enabled, ordinary_period in ordinary_modes:
+                    for retention in (0, -1, 'invalid'):
+                        with self.subTest(
+                            repair_enabled=repair_enabled,
+                            exclude_only=exclude_only,
+                            diagnostic_fits=diagnostic_fits,
+                            ordinary_enabled=ordinary_enabled,
+                            ordinary_period=ordinary_period,
+                            retention=retention,
+                        ):
+                            result = (
+                                asi676mc_calibration
+                                .capture_configuration_guidance({
+                                    'IMAGE_ASI676MC_REPAIR': {
+                                        'ENABLE': repair_enabled,
+                                        'EXCLUDE_ONLY': exclude_only,
+                                        'SAVE_DIAGNOSTIC_FITS': diagnostic_fits,
+                                    },
+                                    'IMAGE_SAVE_FITS': ordinary_enabled,
+                                    'IMAGE_SAVE_FITS_PERIOD': ordinary_period,
+                                    'IMAGE_FITS_EXPIRE_DAYS': retention,
+                                })
+                            )
+                            facts = {
+                                item['label']: item['value']
+                                for item in result['facts']
+                            }
+                            self.assertEqual(
+                                facts['FITS retention'],
+                                'Invalid value',
+                            )
+                            self.assertEqual(
+                                result['guidance']['level'],
+                                'warning',
+                            )
+                            self.assertEqual(
+                                result['guidance']['text'].count(
+                                    'Set FITS retention to at least 1 day'
+                                ),
+                                1,
+                            )
+                            self.assertIn(
+                                'manual upload remains available',
+                                result['guidance']['text'],
+                            )
+
+    def test_capture_guidance_gives_both_safe_choices_when_repair_saves_no_fits(self):
+        result = asi676mc_calibration.capture_configuration_guidance({
+            'IMAGE_ASI676MC_REPAIR': {
+                'ENABLE': True,
+                'EXCLUDE_ONLY': False,
+                'SAVE_DIAGNOSTIC_FITS': False,
+            },
+            'IMAGE_SAVE_FITS': False,
+            'IMAGE_FITS_EXPIRE_DAYS': 7,
+        })
+        self.assertEqual(result['guidance']['level'], 'warning')
+        self.assertEqual(
+            result['guidance']['title'],
+            'No untouched purple-frame FITS will be saved',
+        )
+        message = result['guidance']['text']
+        self.assertIn('Repair is active, but no FITS saving is enabled', message)
+        self.assertIn('turn on Bad + following RAW FITS', message)
+        self.assertIn(
+            'switch to Exclude Only and set ordinary FITS to Every Image',
+            message,
+        )
+
+    def test_capture_guidance_marks_child_switches_inactive(self):
+        handling_off = asi676mc_calibration.capture_configuration_guidance({
+            'IMAGE_ASI676MC_REPAIR': {
+                'ENABLE': False,
+                'SAVE_DIAGNOSTIC_FITS': True,
+            },
+            'IMAGE_SAVE_FITS': False,
+            'IMAGE_FITS_EXPIRE_DAYS': 7,
+        })
+        facts = {item['label']: item['value'] for item in handling_off['facts']}
+        self.assertEqual(
+            facts['Bad + following RAW FITS'],
+            'Inactive (handling off)',
+        )
+        self.assertIn(
+            'option is inactive until purple-frame handling is enabled',
+            handling_off['guidance']['text'],
+        )
+
+        ordinary_off = asi676mc_calibration.capture_configuration_guidance({
+            'IMAGE_ASI676MC_REPAIR': {'ENABLE': True},
+            'IMAGE_SAVE_FITS': False,
+            'IMAGE_SAVE_FITS_COMPRESSED': True,
+            'IMAGE_FITS_EXPIRE_DAYS': 7,
+        })
+        facts = {item['label']: item['value'] for item in ordinary_off['facts']}
+        self.assertEqual(
+            facts['Ordinary FITS compression'],
+            'Inactive (ordinary FITS off)',
+        )
+
+    def test_capture_guidance_explains_compressed_manual_upload_limit(self):
+        result = asi676mc_calibration.capture_configuration_guidance({
+            'IMAGE_ASI676MC_REPAIR': {
+                'ENABLE': False,
+                'SAVE_DIAGNOSTIC_FITS': False,
+            },
+            'IMAGE_SAVE_FITS': True,
+            'IMAGE_SAVE_FITS_PERIOD': 0,
+            'IMAGE_SAVE_FITS_COMPRESSED': True,
+            'IMAGE_FITS_EXPIRE_DAYS': 7,
+        })
+        facts = {item['label']: item['value'] for item in result['facts']}
+        self.assertEqual(facts['Ordinary FITS'], 'Every Image')
+        self.assertEqual(facts['Ordinary FITS compression'], 'On')
+        self.assertIn(
+            'Manual upload accepts uncompressed FITS only',
+            result['guidance']['text'],
+        )
+        self.assertIn('decompress the selected files first', result['guidance']['text'])
+        self.assertIn('enable handling in Exclude Only mode', result['guidance']['text'])
 
     def test_safe_exclude_only_defaults_are_source_visible(self):
         project_root = Path(__file__).resolve().parents[2]

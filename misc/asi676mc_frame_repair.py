@@ -1659,17 +1659,17 @@ def format_report(payload, rejected):
         '==========================',
         (
             f"Validated {quality.get('validated_bad_repairs', 0)} repaired "
-            'bad frames and confirmed that '
+            'purple frames and confirmed that '
             f"{quality.get('validated_normal_frames', 0)} normal frames "
             'remain unchanged.'
         ),
         '',
-        'TYPE THESE VALUES INTO YOUR CONFIG',
-        '==================================',
-        '1. Open the indi-allsky Configuration page.',
-        '2. Open the Image tab and find "ASI676MC RAW16 Frame Repair".',
-        '3. Type the values below into the fields with the matching names.',
-        '4. Save the configuration, review the values, then enable repair.',
+        'REVIEW THESE CALIBRATION VALUES',
+        '===============================',
+        '1. Compare these values with the current configuration.',
+        '2. On the web result page, an administrator can apply all seven.',
+        '3. They can also be entered under Image > ASI676MC RAW16 Frame Repair.',
+        '4. Review the result before relying on actual repair.',
         '',
     ]
     for key, label in CONFIG_ENTRY_LABELS:
@@ -1682,32 +1682,35 @@ def format_report(payload, rejected):
         '',
         'Evidence used',
         '-------------',
-        f"Matched bad frames: {quality['pair_count']}",
-        f"Unmatched bad frames ignored: {quality['unmatched_bad_count']}",
-        f"Matched distinct normal frames: {quality['unique_good_count']}",
-        f"Normal/bad ratio: {quality['good_bad_ratio']:.2f}:1",
+        f"Purple frames used: {quality['pair_count']}",
         (
-            'Preferred 2:1 before/after pairs: '
+            'Purple frames skipped without a reference: '
+            f"{quality['unmatched_bad_count']}"
+        ),
+        f"Distinct normal references: {quality['unique_good_count']}",
+        f"Normal/purple ratio: {quality['good_bad_ratio']:.2f}:1",
+        (
+            'Good/bad/good groups: '
             f"{quality['two_sided_count']}/{quality['pair_count']}"
         ),
         f"Exposure levels: {len(quality['exposure_levels'])}",
         (
-            'Full repaired-frame validations: '
+            'Repair checks passed: '
             f"{quality.get('validated_bad_repairs', 0)}"
         ),
         (
-            'Normal no-mutation validations: '
+            'Normal-frame checks passed: '
             f"{quality.get('validated_normal_frames', 0)}"
         ),
         (
-            'Explicit camera names: '
+            'Camera names found in FITS headers: '
             + (
                 ', '.join(quality['explicit_camera_names'])
                 if quality['explicit_camera_names']
                 else 'none (generic legacy headers)'
             )
         ),
-        f"Rejected FITS files: {quality['rejected_file_count']}",
+        f"FITS files rejected: {quality['rejected_file_count']}",
         '',
         'Gain stability',
         '--------------',
@@ -1761,7 +1764,7 @@ def format_report(payload, rejected):
     ))
     for metric, values in payload['signature_ranges'].items():
         lines.append(
-            '{0}: normal {1:.3f}-{2:.3f}; bad {3:.3f}-{4:.3f}'.format(
+            '{0}: normal {1:.3f}-{2:.3f}; purple {3:.3f}-{4:.3f}'.format(
                 metric,
                 values['good_min'],
                 values['good_max'],

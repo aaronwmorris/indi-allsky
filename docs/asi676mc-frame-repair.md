@@ -1,9 +1,10 @@
 # ASI676MC frame repair and diagnostic FITS
 
-This document records the custom ASI676MC feature carried by
-`dev/asi676mc-image-correction`. It is intended to give a future maintainer—or
-another Codex chat—enough context to modify or remove the feature without
-disturbing the rest of the indi-allsky pipeline.
+This document records the custom ASI676MC repair first developed on
+`dev/asi676mc-image-correction` and its web calibration integration developed
+on `dev/asi676mc-web-calibration`. It is intended to give future maintainers
+enough context to modify or remove the feature without disturbing the rest of
+the indi-allsky pipeline.
 
 ## Change history
 
@@ -71,17 +72,19 @@ The recommended evidence-collection sequence for an affected camera is:
 
 1. Enable ASI676MC handling and leave **Exclude Only** selected.
 2. For minimal disk use, enable **Save Bad and Following RAW FITS**. This works
-   in exclude-only mode and retains an untouched bad/normal pair.
-3. For stronger triplets, temporarily enable ordinary FITS saving at **Every
-   Image** while Exclude Only remains active. A non-zero periodic interval can
-   miss randomly occurring failures.
+   in exclude-only mode and retains the untouched purple frame plus its
+   immediately following frame. That frame is used only if it passes the
+   normal-frame checks.
+3. For stronger good/bad/good groups, temporarily enable ordinary FITS saving
+   at **Every Image** while Exclude Only remains active. A non-zero periodic
+   interval can miss randomly occurring failures.
 4. Calibrate and review/apply the derived values, then clear **Exclude Only**
    to activate pixel repair.
 
 Ordinary FITS are written after ASI676MC handling, including when “Save FITS
 Pre-Calibration” is selected (that option means pre-dark-calibration). When
 actual repair is active, repair-specific diagnostic capture is therefore
-needed to guarantee that the untouched faulty mosaic survives.
+needed to preserve the untouched faulty mosaic reliably.
 
 ### Test system and evidence package
 
@@ -341,17 +344,18 @@ bad FITS and every distinct matched normal FITS. Calibration fails if a bad
 repair retains the signature, a normal frame is classified as bad, or any
 normal-frame data changes.
 
-The only calibration output is `asi676mc_calibration_report.txt`. Its first
-section is headed `TYPE THESE VALUES INTO YOUR CONFIG` and uses the exact field
-labels shown under **Configuration > Image > ASI676MC RAW16 Frame Repair**.
-Values must be typed into that normal settings form and reviewed before repair
-is enabled. The command-line utility neither reads nor writes installation
-configuration files; its only calibration output is the text report.
+The numerical calibration engine produces
+`asi676mc_calibration_report.txt`. Its first section is headed
+`REVIEW THESE CALIBRATION VALUES` and uses the exact field labels shown under
+**Configuration > Image > ASI676MC RAW16 Frame Repair**. The web integration
+also stores those seven values in its compact result so they can be reviewed
+beside the current configuration and, by an administrator, applied through
+indi-allsky's normal settings workflow.
 
 The report continues with human-readable evidence, stability, signature, and
-highlight-fit details for auditing. The tool never edits the live indi-allsky
-configuration and never overwrites source FITS. An existing report also
-requires `--overwrite`.
+highlight-fit details for auditing. The numerical engine itself never edits the
+live indi-allsky configuration and never overwrites source FITS; authenticated
+web views own the optional configuration save and source cleanup workflows.
 
 Against the complete saved development collection, the tool found 14 matched
 bad frames and 21 distinct normal references across 14 exposure levels. Seven
@@ -390,19 +394,48 @@ for that run. Additional upload safeguards are:
   days.
 
 The setup page follows indi-allsky's dark-card interface: reference matching is
-shown once because it applies to both evidence sources, while saved-FITS
+shown once because it applies to both evidence sources, while saved FITS
 discovery and manual upload use matching source cards. The cards sit side by
 side on wide displays and stack on narrow ones. Result actions wrap in a stable
 order on small screens, and the values table scrolls horizontally instead of
-compressing long configuration labels. The current repair and FITS switches
-are resolved into one state-specific capture outlook instead of stacking
-overlapping notices. Informational and warning text uses dark high-contrast
-callouts with semantic edge colors.
+compressing long configuration labels. **Current FITS capture settings** shows
+the effective state of every relevant switch and resolves the combination into
+one state-specific, action-oriented message instead of stacking overlapping
+notices. It also makes clear that these settings concern future captures;
+existing suitable FITS can still be searched or uploaded. Informational and
+warning text uses dark high-contrast callouts with semantic edge colors.
+The shared **Maximum separation** value is validated before either a saved FITS
+search or a manual upload begins, then checked again by the server; an invalid
+value therefore cannot waste a large upload or broaden matching silently.
+
+The capture message covers the settings matrix as follows:
+
+| Purple-frame mode | Bad + following RAW FITS | Ordinary FITS | Message and action |
+| --- | --- | --- | --- |
+| Off | Either (the option is inactive) | Every Image | Complete uncompressed sequences can be uploaded manually; compressed files must be decompressed first. New purple frames are not flagged for automatic search. Enable handling in Exclude Only mode for automatic discovery. |
+| Off | Either | Off, periodic, or invalid | Future collection is not dependable. Enable Exclude Only, then use Bad + following RAW FITS for low disk use or Every Image for complete sequences. |
+| Exclude Only | On | Every Image | Untouched full sequences are collected. Diagnostic FITS save each purple frame unchanged and the immediately following frame; ordinary FITS can add normal references on either side. |
+| Exclude Only | On | Off or periodic | Low-disk collection is ready. The immediately following frame is used only when compatible; periodic ordinary FITS is optional. |
+| Exclude Only | On | Invalid interval | Diagnostic FITS remain the low-disk calibration source. Correct the malformed ordinary FITS interval or turn ordinary saving off. |
+| Exclude Only | Off | Every Image | Untouched complete sequences are collected and can provide good/bad/good groups. |
+| Exclude Only | Off | Periodic | The interval may miss a random purple frame. Enable diagnostic FITS or use Every Image. |
+| Exclude Only | Off | Off or invalid | No reliable calibration FITS will be saved. Enable diagnostic FITS or correct ordinary saving and use Every Image. |
+| Repair active | On | Every Image | The diagnostic purple frame remains untouched and full-rate ordinary FITS can add reference candidates; this uses the most disk. |
+| Repair active | On | Off or periodic | Low-disk pre-repair diagnostic collection is ready; periodic ordinary FITS is optional. |
+| Repair active | On | Invalid interval | Diagnostic FITS remain the pre-repair calibration source. Correct the malformed ordinary FITS interval or turn ordinary saving off. |
+| Repair active | Off | Any | Ordinary FITS are post-repair and cannot be relied on as the original bad mosaic. Enable diagnostic FITS, or switch to Exclude Only and use Every Image. |
+
+An invalid or sub-one-day retention value adds one warning that automatic
+saved FITS search is unavailable while manual upload remains usable. FITS
+compression is displayed as inactive when ordinary FITS saving is off.
+Automatic saved FITS search reads indi-allsky's compressed FITS directly;
+manual upload accepts only uncompressed FITS, so `.fit.gz`, `.fits.gz`, and
+`.fts.gz` files must be decompressed before selection.
 
 The same page can instead select **Find saved FITS and calibrate**. The operator
-chooses a maximum of 7-100 bad-frame evidence groups; this is a bad-frame count,
+chooses a maximum of 7-100 purple-frame groups; this is a purple-frame count,
 not a raw file count, because the selector automatically includes up to two
-adjacent normal reference FITS for each bad frame. The default is 25 groups.
+adjacent normal reference FITS for each purple frame. The default is 25 groups.
 Discovery is camera-specific and works newest first. It stops when the requested
 number of usable groups has been selected or when no older eligible record
 remains inside `IMAGE_FITS_EXPIRE_DAYS`. The cutoff follows indi-allsky's own
@@ -411,7 +444,8 @@ remains inside `IMAGE_FITS_EXPIRE_DAYS`. The cutoff follows indi-allsky's own
 Two database evidence sources are combined:
 
 - repair-specific diagnostic FITS carry explicit `bad` and `following` capture
-  roles and are preferred as guaranteed untouched bad sources;
+  roles and are preferred because the bad source is guaranteed untouched; the
+  following candidate must still pass the normal-frame checks;
 - ordinary FITS are aligned by exposure time, exposure, and gain to image rows
   marked `excluded`, then the nearest compatible ordinary FITS before and/or
   after are selected as normal references.
@@ -426,12 +460,16 @@ FITS and the `.fit.gz`/`.fits.gz` forms written by indi-allsky are accepted,
 using Astropy directly without another FITS program.
 
 If fewer groups exist than requested, calibration still runs with every usable
-group found as long as at least seven bad frames and seven distinct normal
-references remain. Otherwise the page reports the counts found, the retention
-window searched, and guidance instead of queueing a job. The result-status
-banner states how many bad groups, normal references, and distinct FITS were
-selected together with the source-cleanup outcome. The downloadable text
-report appends the same database-selection audit, including the requested
+group found as long as at least seven purple frames and seven distinct normal
+references remain. Otherwise the page reports the specific shortfall and the
+next useful action instead of queueing a job: enable flagging when no saved
+frame is marked bad, collect compatible adjacent references when flagged bad
+FITS are unmatched, widen the separation only when appropriate, or upload an
+existing collection. The result-status banner states success, source cleanup,
+that only the seven derived values are in scope, and whether applying the result
+would materially change the current values.
+The structured **Evidence used** section carries the counts. The downloadable
+text report appends the full database-selection audit, including the requested
 limit, retention cutoff, and missing-local-file count.
 
 The default session directory is Flask's non-public `instance` directory and
@@ -453,17 +491,20 @@ links. Session cleanup removes only those private links; it never deletes the
 original database FITS. The existing background engine and validation policy
 are therefore identical for uploaded and discovered evidence.
 
-The web evidence policy differs from the command-line utility in one documented way.
-The CLI retains its conservative default of failing when any detected bad frame
-is unmatched. The web page ignores and reports unmatched bad frames, then
-continues only if at least seven matched failures and every other existing
-evidence check pass. Unused normal frames and structurally rejected files are
-also reported rather than silently treated as evidence.
+The web evidence policy ignores and reports unmatched purple frames, then
+continues only if at least seven matched failures and every other evidence
+check passes. Unused normal frames and structurally rejected files are also
+reported rather than silently treated as evidence.
 
 Uploaded source FITS are deleted before the worker publishes either a successful
 or failed final status. Consequently, a result visible in the browser guarantees
 that its source uploads are no longer retained. The small manifest, result,
 report, and audit log remain for up to seven days.
+
+Before a manual transfer starts, the browser checks the same 200-file,
+256-MiB-per-file, and 2-GiB-per-run limits enforced by the streaming upload
+endpoint. An impossible selection therefore fails immediately instead of after
+most of a large transfer; the server repeats every check for security.
 
 Interrupted uploads do not depend on the browser returning to the page for
 eventual cleanup. Calibration sessions are private scratch data and have no FITS
@@ -491,15 +532,27 @@ row, this reset button is immediately left of **Download text report** so the
 controls remain orderly when the header wraps on a narrow display. An
 incomplete upload cannot be resumed after navigation, so it is cancelled and
 removed when the page is revisited.
+If upload cancellation cannot be confirmed, the page retains the session ID and
+shows **Retry cancellation** instead of hiding the only cleanup action. The
+cancel endpoint is idempotent, so a retry is safe when the first request reached
+the server but its response was lost.
 
 Administrators can choose **Apply values and reload** after a successful run.
 The result is compared with the currently loaded seven measured settings. An
 exact match or a difference below deliberately narrow per-field tolerances is
 shown as an emphasized line in the shared result-status banner, because
 applying an effectively equivalent result is unlikely to change repaired
-pixels noticeably. Apply/reload feedback uses that same banner. Non-fatal
-evidence observations are deduplicated and grouped in one **Review notes**
-callout below the evidence counts.
+pixels noticeably. A material difference asks the operator to review both
+columns; an unavailable comparison says so explicitly. Apply/reload and reset
+feedback replaces the content of that same banner instead of creating another
+notice. Non-fatal observations are combined by category in one **Calibration
+notes** callout below the evidence counts: search shortfall, one-sided reference
+coverage, and skipped/unusable files each appear at most once.
+Known apply rejections carry small response codes so the browser can show the
+specific configuration-change or expired-result guidance without wrapping it
+in a second, repetitive error. A rejected reset says the result remains; a
+network or unreadable response instead asks the operator to reload because the
+browser cannot know whether server-side deletion completed.
 The action verifies that the active configuration is still the same version
 used when calibration started, writes only the seven measured values through
 indi-allsky's normal versioned configuration save path, and queues a normal
@@ -507,6 +560,14 @@ configuration reload. Operational choices such as enabling repair and saving
 diagnostic FITS are preserved and are never switched on automatically. A
 configuration change made while calibration was running blocks application and
 asks the administrator to review the change and calibrate again.
+
+Calibration-engine failures are translated into first-time-user guidance for
+the common cases: incompatible RAW data, fewer than seven matched groups, too
+few distinct normal references, only one exposure level, mixed cameras,
+overlapping normal/bad signatures, insufficient bright highlights, or final
+safety-check failure. The failure message confirms that no settings changed
+and whether uploads or temporary database links were removed. Unexpected
+internal details remain in the log rather than exposing paths in the browser.
 
 The page checks for multi-file selection, Fetch, FormData, Promises, async
 JavaScript, upload cancellation, and writable local browser storage before
@@ -530,7 +591,7 @@ being disabled entirely.
   - default for `SAVE_DIAGNOSTIC_FITS`
 - `indi_allsky/flask/forms.py`
   - settings field
-  - saved-FITS bad-group limit
+  - saved FITS purple-group limit
   - diagnostic FITS lookup/pairing
   - Image Viewer JSON fields
   - labels in the standard FITS viewer
@@ -550,7 +611,7 @@ being disabled entirely.
   - regular catch-all expiration for abandoned calibration sessions
 - `indi_allsky/flask/templates/asi676mc_calibration.html`
   - browser capability checks, multi-select upload, cancellation, progress,
-    saved-FITS controls, retained results, configuration-match hints, and report
+    saved FITS controls, retained results, configuration-match hints, and report
     download
 - `indi_allsky/flask/base_views.py` and `indi_allsky/flask/templates/base.html`
   - repair-enabled Tools-menu visibility flag and conditional menu entry

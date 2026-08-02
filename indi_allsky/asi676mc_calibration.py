@@ -1,9 +1,7 @@
 """Web-session support for ASI676MC FITS calibration.
 
-The numerical calibration remains in ``misc/asi676mc_frame_repair.py``.  That
-file is intentionally self-contained so it can still be copied to an older
-indi-allsky installation.  The web application imports it as a Python module;
-it never starts a shell command or an external FITS program.
+The web workflow imports indi-allsky's numerical calibration engine directly
+as a Python module; it never starts a shell command or an external FITS program.
 
 This module owns the web-specific concerns around that engine:
 
@@ -89,13 +87,20 @@ DERIVED_VALUE_LABELS = {
 }
 
 
+def _counted_item(count, singular, plural=None):
+    """Return a readable count without exposing ``frame(s)`` style copy."""
+    count = int(count)
+    noun = singular if count == 1 else (plural or singular + 's')
+    return '{0} {1}'.format(count, noun)
+
+
 def capture_configuration_guidance(config):
     """Describe whether current capture settings retain calibration evidence.
 
     The current configuration cannot prove how older files were captured, so
     this is deliberately advisory.  Automatic discovery will still inspect
-    the FITS that actually exist. This guidance explains why future bad frames
-    will produce low-disk pairs, full-sequence triplets, or no usable
+    the FITS that actually exist. This guidance explains why future purple
+    frames will produce low-disk pairs, full-sequence groups, or no usable
     untouched evidence at all. The returned guidance intentionally combines
     the active conditions into one concise, severity-ranked explanation.
     """
@@ -117,12 +122,14 @@ def capture_configuration_guidance(config):
     except (TypeError, ValueError):
         retention_days = None
     fits_period_valid = fits_period is not None and fits_period >= 0
-    retention_valid = retention_days is not None and retention_days >= 0
+    # Match the Image Settings validator: zero days is not a valid retention
+    # policy even though it can be represented in a hand-edited config file.
+    retention_valid = retention_days is not None and retention_days >= 1
 
     if not periodic_fits:
         periodic_text = 'Off'
     elif fits_period == 0:
-        periodic_text = 'Every image'
+        periodic_text = 'Every Image'
     elif not fits_period_valid:
         periodic_text = 'On (invalid interval)'
     else:
@@ -131,176 +138,290 @@ def capture_configuration_guidance(config):
     mode_text = (
         'Off'
         if not repair_enabled
-        else ('Exclude only' if exclude_only else 'Repair active')
+        else ('Exclude Only' if exclude_only else 'Repair active')
     )
+    if diagnostic_fits and repair_enabled:
+        diagnostic_text = 'On'
+    elif diagnostic_fits:
+        diagnostic_text = 'Inactive (handling off)'
+    else:
+        diagnostic_text = 'Off'
+    if compressed_fits and periodic_fits:
+        compression_text = 'On'
+    elif compressed_fits:
+        compression_text = 'Inactive (ordinary FITS off)'
+    else:
+        compression_text = 'Off'
     facts = [
         {'label': 'Repair mode', 'value': mode_text},
         {
             'label': 'Bad + following RAW FITS',
-            'value': 'On' if diagnostic_fits else 'Off',
+            'value': diagnostic_text,
         },
         {'label': 'Ordinary FITS', 'value': periodic_text},
         {
             'label': 'Ordinary FITS compression',
-            'value': 'On' if compressed_fits else 'Off',
+            'value': compression_text,
         },
         {
             'label': 'FITS retention',
             'value': (
-                '{0} days'.format(retention_days)
+                _counted_item(retention_days, 'day')
                 if retention_valid
                 else 'Invalid value'
             ),
         },
     ]
 
-    # Build one source-aware explanation instead of stacking independent
-    # notices whose advice often overlaps. The selected severity represents
-    # the complete capture state, not whichever sentence happened to be last.
-    guidance_level = 'info'
+    # Resolve the full switch combination into one operator-facing outcome.
+    # Lead with whether future evidence will be usable, then give the shortest
+    # concrete settings change. Implementation details matter only when they
+    # explain why an apparently enabled saving mode is insufficient.
+    guidance_level = 'warning'
+    guidance_title = 'FITS capture settings need attention'
     guidance_sentences = []
     if not repair_enabled:
-        guidance_level = 'warning'
+        guidance_title = 'Purple-frame handling is off'
         if diagnostic_fits:
             guidance_sentences.append(
-                'ASI676MC handling is disabled, so new bad frames are not '
-                'flagged and Bad and Following RAW FITS remains inactive.'
+                'New purple frames will not be marked for automatic saved FITS '
+                'search. The configured Bad + following RAW FITS option is '
+                'inactive until purple-frame handling is enabled.'
             )
         else:
             guidance_sentences.append(
-                'ASI676MC handling is disabled, so new bad frames are not '
-                'flagged by the live pipeline.'
+                'New purple frames will not be marked for automatic saved FITS '
+                'search.'
             )
         if periodic_fits and fits_period == 0:
-            guidance_sentences.append(
-                'Every-image ordinary FITS can still be classified later from '
-                'their contents, but repair-specific evidence is not collected.'
-            )
-        elif periodic_fits and not fits_period_valid:
-            guidance_sentences.append(
-                'Ordinary FITS saving has an invalid interval; correct it '
-                'before relying on future calibration evidence.'
-            )
-        elif periodic_fits:
-            guidance_sentences.append(
-                'Periodic ordinary FITS may miss randomly occurring bad frames.'
-            )
-        else:
-            guidance_sentences.append(
-                'No FITS evidence collection is currently active.'
-            )
-    elif exclude_only:
-        guidance_sentences.append(
-            'Exclude Only is active, so detected bad frames are flagged and '
-            'kept out of timelapses without changing their pixels.'
-        )
-        if diagnostic_fits:
-            guidance_level = 'success'
-            guidance_sentences.append(
-                'Bad and Following RAW FITS provides low-disk untouched '
-                'bad/following pairs.'
-            )
-            if periodic_fits and fits_period == 0:
+            # Database discovery can open indi-allsky's gzip-compressed FITS,
+            # but the browser uploader deliberately accepts only uncompressed
+            # files. With no purple-frame flags, decompression is therefore the
+            # only way to use this particular saved sequence manually.
+            if compressed_fits:
                 guidance_sentences.append(
-                    'Every-image ordinary FITS can add stronger '
-                    'good/bad/good triplets at substantially higher disk usage.'
-                )
-            elif periodic_fits and not fits_period_valid:
-                guidance_level = 'warning'
-                guidance_sentences.append(
-                    'Ordinary FITS saving has an invalid interval, although '
-                    'the repair-specific pairs remain available.'
-                )
-            elif periodic_fits:
-                guidance_sentences.append(
-                    'Periodic ordinary FITS may add context but cannot '
-                    'guarantee an additional adjacent frame.'
-                )
-        elif periodic_fits and fits_period == 0:
-            guidance_level = 'success'
-            guidance_sentences.append(
-                'Every-image ordinary FITS preserves complete '
-                'good/bad/good sequences at higher disk usage.'
-            )
-        elif periodic_fits and not fits_period_valid:
-            guidance_level = 'warning'
-            guidance_sentences.append(
-                'Ordinary FITS saving has an invalid interval; enable Bad and '
-                'Following RAW FITS or correct the interval before collecting.'
-            )
-        elif periodic_fits:
-            guidance_level = 'warning'
-            guidance_sentences.append(
-                'The periodic FITS interval may miss a bad frame; enable Bad '
-                'and Following RAW FITS or use Every Image while collecting.'
-            )
-        else:
-            guidance_level = 'warning'
-            guidance_sentences.append(
-                'No FITS evidence collection is active; enable Bad and '
-                'Following RAW FITS or use Every Image while collecting.'
-            )
-    else:
-        guidance_sentences.append(
-            'Repair active. Ordinary FITS are written after ASI676MC repair '
-            'and may not retain the original bad mosaic.'
-        )
-        if diagnostic_fits:
-            guidance_level = 'success'
-            guidance_sentences.append(
-                'Bad and Following RAW FITS preserves an untouched bad frame '
-                'and following normal reference for calibration.'
-            )
-            if periodic_fits and fits_period == 0:
-                guidance_sentences.append(
-                    'Every-image ordinary FITS can add adjacent normal '
-                    'references at substantially higher disk usage.'
-                )
-            elif periodic_fits and not fits_period_valid:
-                guidance_level = 'warning'
-                guidance_sentences.append(
-                    'Ordinary FITS saving has an invalid interval, although '
-                    'the repair-specific pair remains available.'
-                )
-            elif periodic_fits:
-                guidance_sentences.append(
-                    'Periodic ordinary FITS may add normal references but is '
-                    'not required for the preserved repair-specific pair.'
-                )
-        else:
-            guidance_level = 'warning'
-            if periodic_fits and fits_period == 0:
-                guidance_sentences.append(
-                    'Enable Bad and Following RAW FITS before collecting; '
-                    'Every-image ordinary FITS can supply normal references '
-                    'but not a reliably untouched bad frame.'
-                )
-            elif periodic_fits and not fits_period_valid:
-                guidance_sentences.append(
-                    'No untouched bad-frame evidence is retained, and ordinary '
-                    'FITS saving has an invalid interval; enable Bad and '
-                    'Following RAW FITS before collecting.'
-                )
-            elif periodic_fits:
-                guidance_sentences.append(
-                    'Enable Bad and Following RAW FITS before collecting; the '
-                    'periodic ordinary FITS may also miss adjacent references.'
+                    'Ordinary FITS saving is set to Every Image with '
+                    'compression, so complete sequences are still being saved. '
+                    'Manual upload accepts uncompressed FITS only; decompress '
+                    'the selected files first. For automatic discovery of '
+                    'future purple frames, enable handling in Exclude Only mode.'
                 )
             else:
                 guidance_sentences.append(
-                    'No untouched FITS evidence is retained; enable Bad and '
-                    'Following RAW FITS before collecting calibration data.'
+                    'Ordinary FITS saving is set to Every Image, so complete '
+                    'sequences are still being saved and can be uploaded for '
+                    'calibration. For automatic discovery of future purple '
+                    'frames, enable handling in Exclude Only mode.'
+                )
+        elif periodic_fits and not fits_period_valid:
+            if diagnostic_fits:
+                guidance_sentences.append(
+                    'The ordinary FITS interval is invalid. Correct or disable '
+                    'it, then enable purple-frame handling in Exclude Only mode; '
+                    'the configured Bad + following RAW FITS option will begin '
+                    'low-disk collection.'
+                )
+            else:
+                guidance_sentences.append(
+                    'The ordinary FITS interval is invalid. Enable purple-frame '
+                    'handling in Exclude Only mode, then turn on Bad + following '
+                    'RAW FITS for low disk use or set ordinary FITS to Every '
+                    'Image for complete sequences.'
+                )
+        elif periodic_fits:
+            if diagnostic_fits:
+                guidance_sentences.append(
+                    'Periodic ordinary FITS may miss a randomly occurring purple '
+                    'frame. Enable purple-frame handling in Exclude Only mode; '
+                    'the configured Bad + following RAW FITS option will then '
+                    'provide the more reliable low-disk source.'
+                )
+            else:
+                guidance_sentences.append(
+                    'Periodic ordinary FITS may miss a randomly occurring purple '
+                    'frame. Enable purple-frame handling in Exclude Only mode, '
+                    'then turn on Bad + following RAW FITS for low disk use or '
+                    'set ordinary FITS to Every Image for complete sequences.'
+                )
+        else:
+            if diagnostic_fits:
+                guidance_sentences.append(
+                    'No FITS files are currently being saved. Enable purple-frame '
+                    'handling in Exclude Only mode; the configured Bad + '
+                    'following RAW FITS option will then begin low-disk '
+                    'collection.'
+                )
+            else:
+                guidance_sentences.append(
+                    'No FITS saving is enabled. To collect calibration data, '
+                    'enable purple-frame handling in Exclude Only mode, then '
+                    'turn on Bad + following RAW FITS for low disk use or set '
+                    'ordinary FITS to Every Image for complete sequences.'
+                )
+    elif exclude_only:
+        if diagnostic_fits:
+            guidance_level = 'success'
+            if periodic_fits and fits_period == 0:
+                guidance_title = 'Ready to collect complete FITS sequences'
+                guidance_sentences.append(
+                    'Exclude Only leaves purple frames unchanged. Bad + '
+                    'following RAW FITS saves each detected purple frame '
+                    'unchanged and also saves the immediately following frame. '
+                    'Ordinary FITS saving set to Every Image can add normal '
+                    'references on either side for stronger good/bad/good '
+                    'groups. Incompatible following frames are ignored. This '
+                    'combination uses the most disk space.'
+                )
+            elif periodic_fits and not fits_period_valid:
+                guidance_level = 'warning'
+                guidance_title = 'Ordinary FITS setting needs correction'
+                guidance_sentences.append(
+                    'Exclude Only and Bad + following RAW FITS provide the '
+                    'low-disk calibration source. The ordinary FITS interval '
+                    'is invalid; correct it or turn ordinary FITS saving off.'
+                )
+            elif periodic_fits:
+                guidance_title = 'Ready for low-disk FITS collection'
+                guidance_sentences.append(
+                    'Exclude Only leaves purple frames unchanged, and Bad + '
+                    'following RAW FITS saves each detected purple frame '
+                    'unchanged and also saves the immediately following frame. '
+                    'The tool uses only compatible normal references. Periodic '
+                    'ordinary FITS may add another compatible reference but is '
+                    'not required.'
+                )
+            else:
+                guidance_title = 'Ready for low-disk FITS collection'
+                guidance_sentences.append(
+                    'Exclude Only leaves purple frames unchanged, and Bad + '
+                    'following RAW FITS saves each detected purple frame '
+                    'unchanged and also saves the immediately following frame. '
+                    'Once all evidence requirements above are met, this '
+                    'provides calibration data with minimal disk use; ordinary '
+                    'FITS can remain off.'
+                )
+        elif periodic_fits and fits_period == 0:
+            guidance_level = 'success'
+            guidance_title = 'Ready to collect complete FITS sequences'
+            guidance_sentences.append(
+                'Exclude Only leaves purple frames unchanged, and ordinary '
+                'FITS saving set to Every Image saves complete sequences for '
+                'automatic discovery. These good/bad/good groups provide '
+                'strong evidence but use more disk space.'
+            )
+        elif periodic_fits and not fits_period_valid:
+            guidance_title = 'No reliable calibration FITS will be saved'
+            guidance_sentences.append(
+                'Exclude Only marks purple frames without changing them, but '
+                'the ordinary FITS interval is invalid. Turn on Bad + following '
+                'RAW FITS for low disk use, or correct the interval and choose '
+                'Every Image for complete sequences.'
+            )
+        elif periodic_fits:
+            guidance_title = 'Periodic FITS saving may miss purple frames'
+            guidance_sentences.append(
+                'Exclude Only marks purple frames without changing them, but a '
+                'periodic interval may not save a FITS at the right time. Turn '
+                'on Bad + following RAW FITS for low disk use, or set ordinary '
+                'FITS to Every Image for complete sequences.'
+            )
+        else:
+            guidance_title = 'No calibration FITS will be saved'
+            guidance_sentences.append(
+                'Exclude Only marks purple frames without changing them, but '
+                'no FITS saving is enabled. Turn on Bad + following RAW FITS '
+                'for low disk use, or set ordinary FITS to Every Image for '
+                'complete sequences.'
+            )
+    else:
+        if diagnostic_fits:
+            guidance_level = 'success'
+            if periodic_fits and fits_period == 0:
+                guidance_title = 'Ready to collect complete FITS sequences'
+                guidance_sentences.append(
+                    'Repair is active, but Bad + following RAW FITS preserves '
+                    'the original purple frame before repair and also saves '
+                    'the immediately following frame. Ordinary FITS saving set '
+                    'to Every Image can add normal references on either side. '
+                    'Incompatible following frames and repaired purple-frame '
+                    'copies are not used. This uses more disk space.'
+                )
+            elif periodic_fits and not fits_period_valid:
+                guidance_level = 'warning'
+                guidance_title = 'Ordinary FITS setting needs correction'
+                guidance_sentences.append(
+                    'Repair is active, and Bad + following RAW FITS provides '
+                    'the pre-repair calibration source. The ordinary FITS '
+                    'interval is invalid; correct it or turn ordinary FITS '
+                    'saving off.'
+                )
+            elif periodic_fits:
+                guidance_title = 'Ready for low-disk FITS collection'
+                guidance_sentences.append(
+                    'Repair is active, but Bad + following RAW FITS preserves '
+                    'the original purple frame before repair and also saves '
+                    'the immediately following frame. The tool uses only '
+                    'compatible normal references. Periodic ordinary FITS may '
+                    'add another compatible reference but is not required.'
+                )
+            else:
+                guidance_title = 'Ready for low-disk FITS collection'
+                guidance_sentences.append(
+                    'Repair is active, and Bad + following RAW FITS preserves '
+                    'the original purple frame before repair and also saves '
+                    'the immediately following frame. Once all evidence '
+                    'requirements above are met, this provides calibration '
+                    'data with minimal disk use; ordinary FITS can remain off.'
+                )
+        else:
+            guidance_title = 'No untouched purple-frame FITS will be saved'
+            if periodic_fits and fits_period == 0:
+                guidance_sentences.append(
+                    'Repair is active, and ordinary FITS saving set to Every '
+                    'Image writes files after repair, so it cannot be relied '
+                    'on to preserve the original purple frame. Either turn on '
+                    'Bad + following RAW FITS, or switch to Exclude Only and '
+                    'keep ordinary FITS set to Every Image to collect '
+                    'calibration data.'
+                )
+            elif periodic_fits and not fits_period_valid:
+                guidance_sentences.append(
+                    'Repair is active, Bad + following RAW FITS is off, and the '
+                    'ordinary FITS interval is invalid. Either turn on Bad + '
+                    'following RAW FITS, or switch to Exclude Only and set '
+                    'ordinary FITS to Every Image to collect calibration '
+                    'data.'
+                )
+            elif periodic_fits:
+                guidance_sentences.append(
+                    'Repair is active, and periodic ordinary FITS is written '
+                    'after repair and may also miss the relevant frames. Either '
+                    'turn on Bad + following RAW FITS, or switch to Exclude '
+                    'Only and set ordinary FITS to Every Image to collect '
+                    'calibration data.'
+                )
+            else:
+                guidance_sentences.append(
+                    'Repair is active, but no FITS saving is enabled. Either '
+                    'turn on Bad + following RAW FITS, or switch to Exclude '
+                    'Only and set ordinary FITS to Every Image to collect '
+                    'calibration data.'
                 )
 
     if not retention_valid:
         guidance_level = 'warning'
+        if guidance_title.startswith('Ready'):
+            guidance_title = (
+                'FITS can be saved, but automatic search is unavailable'
+            )
         guidance_sentences.append(
-            'Correct the invalid FITS retention value before relying on '
-            'automatic saved-FITS discovery.'
+            'Set FITS retention to at least 1 day before using Find saved '
+            'FITS; manual upload remains available.'
         )
 
     guidance = {
         'level': guidance_level,
+        'title': guidance_title,
         'text': ' '.join(guidance_sentences),
     }
 
@@ -577,15 +698,20 @@ def select_database_evidence(
         or max_bad_frames > DATABASE_BAD_FRAME_MAX
     ):
         raise CalibrationSessionError(
-            'database bad-frame limit must be between {0} and {1}'.format(
+            'database purple-frame limit must be between {0} and {1}'.format(
                 DATABASE_BAD_FRAME_MIN,
                 DATABASE_BAD_FRAME_MAX,
             )
         )
     max_pair_seconds = float(max_pair_seconds)
-    if max_pair_seconds <= 0 or max_pair_seconds > 3600:
+    if (
+        not math.isfinite(max_pair_seconds)
+        or max_pair_seconds <= 0
+        or max_pair_seconds > 3600
+    ):
         raise CalibrationSessionError(
-            'maximum pair separation must be between 0 and 3600 seconds'
+            'maximum pair separation must be greater than 0 and no more than '
+            '3600 seconds'
         )
 
     records = sorted(
@@ -886,9 +1012,13 @@ def cancel_upload_session(session_id, owner, storage_root=None):
 
     The marker is written before deletion so an upload still executing in a
     second web worker cannot restore a stale manifest after cancellation.
-    Queued or running numerical jobs are intentionally not interruptible.
+    Repeating a completed cancellation is harmless, which lets the browser
+    retry safely after losing the first response. Queued or running numerical
+    jobs are intentionally not interruptible.
     """
     session_dir, manifest = get_session(session_id, owner, storage_root)
+    if manifest.get('status') == 'cancelled':
+        return manifest
     if manifest.get('status') != 'uploading':
         raise CalibrationSessionError(
             'only an upload that has not been queued can be cancelled'
@@ -936,14 +1066,19 @@ def mark_queued(
         raise CalibrationSessionError('this calibration session has already started')
     if len(manifest.get('files', [])) < 14:
         raise CalibrationSessionError(
-            'select at least 14 FITS files: seven bad frames and at least '
+            'select at least 14 FITS files: seven purple frames and at least '
             'seven distinct normal references'
         )
 
     max_pair_seconds = float(max_pair_seconds)
-    if max_pair_seconds <= 0 or max_pair_seconds > 3600:
+    if (
+        not math.isfinite(max_pair_seconds)
+        or max_pair_seconds <= 0
+        or max_pair_seconds > 3600
+    ):
         raise CalibrationSessionError(
-            'maximum pair separation must be between 0 and 3600 seconds'
+            'maximum pair separation must be greater than 0 and no more than '
+            '3600 seconds'
         )
 
     manifest['status'] = 'queued'
@@ -984,39 +1119,254 @@ def _result_summary(payload):
         for key in DERIVED_VALUE_KEYS
     ]
 
-    warnings = []
-    if quality.get('unmatched_bad_count'):
-        warnings.append(
-            '{0} detected bad frame(s) had no compatible adjacent normal FITS '
-            'and were ignored.'.format(quality['unmatched_bad_count'])
-        )
-    if quality.get('rejected_file_count'):
-        warnings.append(
-            '{0} input FITS file(s) were rejected; see the text report for '
-            'details.'.format(quality['rejected_file_count'])
-        )
-    if quality.get('good_bad_ratio', 0) < 2.0:
-        warnings.append(
-            'Calibration passed, but fewer than two distinct normal references '
-            'per bad frame were available. Triplets would improve confidence.'
-        )
+    quality_summary = {
+        'matched_bad_count': quality['pair_count'],
+        'unmatched_bad_count': quality.get('unmatched_bad_count', 0),
+        'matched_normal_count': quality['unique_good_count'],
+        'normal_bad_ratio': quality['good_bad_ratio'],
+        'two_sided_count': quality['two_sided_count'],
+        'exposure_level_count': len(quality['exposure_levels']),
+        'validated_bad_count': quality.get('validated_bad_repairs', 0),
+        'validated_normal_count': quality.get('validated_normal_frames', 0),
+        'rejected_file_count': quality['rejected_file_count'],
+        'highlight_sample_count': quality['highlight_sample_count'],
+    }
 
     return {
         'values': values,
-        'quality': {
-            'matched_bad_count': quality['pair_count'],
-            'unmatched_bad_count': quality.get('unmatched_bad_count', 0),
-            'matched_normal_count': quality['unique_good_count'],
-            'normal_bad_ratio': quality['good_bad_ratio'],
-            'two_sided_count': quality['two_sided_count'],
-            'exposure_level_count': len(quality['exposure_levels']),
-            'validated_bad_count': quality.get('validated_bad_repairs', 0),
-            'validated_normal_count': quality.get('validated_normal_frames', 0),
-            'rejected_file_count': quality['rejected_file_count'],
-            'highlight_sample_count': quality['highlight_sample_count'],
-        },
-        'warnings': warnings,
+        'quality': quality_summary,
+        'warnings': _result_warnings(quality_summary),
     }
+
+
+def _readable_join(parts):
+    """Join short UI phrases with natural punctuation."""
+    parts = list(parts)
+    if len(parts) < 2:
+        return ''.join(parts)
+    if len(parts) == 2:
+        return '{0} and {1}'.format(parts[0], parts[1])
+    return '{0}, and {1}'.format(', '.join(parts[:-1]), parts[-1])
+
+
+def _result_warnings(quality, source_details=None):
+    """Build a small set of non-overlapping, first-time-user result notes."""
+    warnings = []
+    source_details = source_details or {}
+
+    if (
+        source_details.get('kind') == 'database'
+        and source_details.get('selected_bad_count', 0)
+        < source_details.get('requested_bad_count', 0)
+    ):
+        warnings.append(
+            'The saved FITS search looked for up to {1} purple frames and '
+            'found {0} usable groups before reaching the oldest retained '
+            'data. Calibration continued because the minimum of seven was '
+            'met.'.format(
+                source_details['selected_bad_count'],
+                source_details['requested_bad_count'],
+            )
+        )
+
+    matched_count = int(quality.get('matched_bad_count', 0))
+    two_sided_count = int(quality.get('two_sided_count', 0))
+    normal_count = int(quality.get('matched_normal_count', 0))
+    if matched_count:
+        one_sided_count = matched_count - two_sided_count
+        # Each one-sided group uses one reference and each two-sided group uses
+        # two. Fewer distinct files than that total means at least one normal
+        # reference was reused; comparing only against the purple-frame count
+        # would miss reuse in otherwise complete groups.
+        reference_use_count = matched_count + two_sided_count
+        references_reused = normal_count < reference_use_count
+        coverage_parts = []
+        if one_sided_count == matched_count:
+            coverage_parts.append(
+                'all {0} purple frames used one adjacent normal reference'
+                .format(matched_count)
+            )
+        elif one_sided_count:
+            remaining_text = (
+                'the remaining purple frame'
+                if one_sided_count == 1
+                else 'the other {0} purple frames'.format(one_sided_count)
+            )
+            coverage_parts.append(
+                '{0} of {1} purple frames had normal references on both '
+                'sides; {2} used one adjacent normal reference'
+                .format(two_sided_count, matched_count, remaining_text)
+            )
+        if references_reused:
+            coverage_parts.append(
+                'some normal references were reused for more than one group'
+            )
+        if coverage_parts:
+            if one_sided_count and references_reused:
+                improvement = (
+                    'more complete, independent good/bad/good groups would '
+                    'improve confidence'
+                )
+            elif one_sided_count:
+                improvement = (
+                    'more complete good/bad/good groups would improve confidence'
+                )
+            else:
+                improvement = (
+                    'more independent normal references would improve confidence'
+                )
+            coverage_text = '. '.join(
+                part[:1].upper() + part[1:]
+                for part in coverage_parts
+            )
+            warnings.append(
+                '{0}. Calibration is valid, but {1}.'.format(
+                    coverage_text,
+                    improvement,
+                )
+            )
+
+    skipped_parts = []
+    unmatched_count = int(quality.get('unmatched_bad_count', 0))
+    if unmatched_count:
+        skipped_parts.append(
+            '{0} without a compatible nearby normal FITS'.format(
+                _counted_item(unmatched_count, 'purple frame')
+            )
+        )
+    rejected_count = int(quality.get('rejected_file_count', 0))
+    if rejected_count:
+        skipped_parts.append(
+            '{0} that could not be read or used'.format(
+                _counted_item(rejected_count, 'FITS file')
+            )
+        )
+    missing_count = int(source_details.get('missing_local_count', 0))
+    if missing_count:
+        skipped_parts.append(
+            '{0} whose {1} no longer on disk'.format(
+                _counted_item(
+                    missing_count,
+                    'saved FITS entry',
+                    'saved FITS entries',
+                ),
+                'file was' if missing_count == 1 else 'files were',
+            )
+        )
+    unsupported_count = int(source_details.get('unsupported_count', 0))
+    if unsupported_count:
+        skipped_parts.append(
+            '{0} with {1}'.format(
+                _counted_item(unsupported_count, 'saved FITS file'),
+                'an unsupported filename'
+                if unsupported_count == 1
+                else 'unsupported filenames',
+            )
+        )
+    if skipped_parts:
+        warning = (
+            'The tool skipped {0}. The remaining FITS still met the '
+            'calibration requirements.'.format(_readable_join(skipped_parts))
+        )
+        if rejected_count:
+            warning += ' Download the text report for rejected-file details.'
+        warnings.append(warning)
+
+    return warnings
+
+
+def _friendly_failure_message(message):
+    """Translate calibration-engine failures into safe, actionable UI copy."""
+    message_text = str(message or '')
+    lowered = message_text.lower()
+    matched_count = re.search(r'(\d+) matched bad frames found', lowered)
+    if 'no compatible raw16 rggb fits files found' in lowered:
+        return (
+            'No compatible unprocessed ASI676MC RAW16 RGGB FITS were found. '
+            'Choose a collection containing the original camera FITS.'
+        )
+    if matched_count:
+        return (
+            'Only {0} purple frames had a compatible nearby normal FITS; at '
+            'least seven are required.'.format(matched_count.group(1))
+        )
+    if 'both normal and bad frames are required' in lowered:
+        return (
+            'The collection did not contain both recognisable purple frames '
+            'and normal frames. Check the selected FITS and try again.'
+        )
+    if 'matched normal/bad ratio' in lowered:
+        return (
+            'There were not enough different normal reference frames. Provide '
+            'at least one distinct compatible normal frame for each purple frame.'
+        )
+    if 'cover only one exposure' in lowered:
+        return (
+            'The matched purple frames use only one exposure. Include data from '
+            'at least two exposure settings.'
+        )
+    if (
+        'more than one explicit camera identity' in lowered
+        or 'different explicit asi camera' in lowered
+    ):
+        return (
+            'Files from more than one camera were detected. Use FITS from this '
+            'ASI676MC only.'
+        )
+    if (
+        'misclassifies at least one supplied normal frame' in lowered
+        or 'misses at least one supplied bad frame' in lowered
+        or 'overlapping normal and bad ranges' in lowered
+    ):
+        return (
+            'The normal and purple frames could not be separated reliably. '
+            'Check that the collection contains genuine purple frames with '
+            'nearby normal frames, then review the detection thresholds in '
+            'Image Settings.'
+        )
+    if (
+        'no source green plateau' in lowered
+        or 'stable jointly-clipped highlight samples' in lowered
+        or 'no valid highlight blend candidates' in lowered
+    ):
+        return (
+            'The collection does not contain enough stable bright daylight '
+            'highlights. Add brighter daylight pairs or good/bad/good groups.'
+        )
+    if 'has usable samples in only' in lowered:
+        return (
+            'Too few stable pixels could be compared across the matched '
+            'frames. Try clearer daylight data with less cloud or scene change.'
+        )
+    if (
+        'calibrated repair validation failed' in lowered
+        or 'calibrated detector rejects normal frame' in lowered
+        or 'normal-frame validation mutated' in lowered
+        or 'repair validation failed' in lowered
+    ):
+        return (
+            'The derived values did not pass the final safety checks, so no '
+            'result was produced. Try a larger, cleaner, more varied collection.'
+        )
+    if 'queue' in lowered and 'calibration' in lowered:
+        return (
+            'Calibration could not be started because the background worker is '
+            'unavailable. Check that indi-allsky is running and try again.'
+        )
+    if 'session' in lowered and (
+        'not found' in lowered
+        or 'not queued' in lowered
+        or 'no longer' in lowered
+    ):
+        return (
+            'The previous calibration expired or is no longer available. Start '
+            'a new calibration.'
+        )
+    return (
+        'An unexpected error occurred while checking the FITS. Try again or '
+        'use a different FITS collection; if the problem repeats, check the '
+        'indi-allsky log.'
+    )
 
 
 def format_database_source_report(source_details):
@@ -1026,14 +1376,19 @@ def format_database_source_report(source_details):
     return '\n'.join((
         'DATABASE FITS SELECTION',
         'Camera: {0}'.format(source_details.get('camera_name', 'Unknown')),
-        'Retention cutoff: {0} ({1} days)'.format(
+        'Retention cutoff: {0} ({1})'.format(
             source_details.get('retention_cutoff', 'Unknown'),
-            source_details.get('retention_days', 'Unknown'),
+            _counted_item(
+                source_details.get('retention_days', 0),
+                'day',
+            )
+            if isinstance(source_details.get('retention_days'), int)
+            else 'Unknown retention',
         ),
-        'Requested bad-frame groups: {0}'.format(
+        'Requested purple-frame groups: {0}'.format(
             source_details.get('requested_bad_count', 0)
         ),
-        'Selected bad-frame groups: {0}'.format(
+        'Selected purple-frame groups: {0}'.format(
             source_details.get('selected_bad_count', 0)
         ),
         'Selected distinct normal references: {0}'.format(
@@ -1092,8 +1447,9 @@ def compare_result_to_configuration(result, repair_config):
     except (KeyError, TypeError, ValueError) as error:
         return {
             'status': 'unavailable',
-            'message': 'Current configuration could not be compared: {0}'.format(
-                error
+            'message': (
+                'The current repair values could not be loaded for comparison. '
+                'Open Image Settings to review them before applying this result.'
             ),
             'configured_values': {},
             'differing_keys': [],
@@ -1108,8 +1464,8 @@ def compare_result_to_configuration(result, repair_config):
         return {
             'status': 'exact',
             'message': (
-                'Already matches the current configuration exactly; applying '
-                'again is unnecessary.'
+                'The derived values already match the current configuration '
+                'exactly. No update is needed.'
             ),
             'configured_values': configured_values,
             'differing_keys': [],
@@ -1118,8 +1474,8 @@ def compare_result_to_configuration(result, repair_config):
         return {
             'status': 'equivalent',
             'message': (
-                'Result effectively matches the current configuration; applying '
-                'these tiny differences is unlikely to have a noticeable effect.'
+                'Result effectively matches the current configuration. '
+                'Applying it is unlikely to produce a visible change.'
             ),
             'configured_values': configured_values,
             'differing_keys': [],
@@ -1166,39 +1522,10 @@ def run_calibration_session(session_id, storage_root=None):
         source_details = manifest.get('source')
         if source_details:
             result['source'] = source_details
-            if (
-                source_details.get('kind') == 'database'
-                and source_details.get('selected_bad_count', 0)
-                < source_details.get('requested_bad_count', 0)
-            ):
-                result['warnings'].append(
-                    'The database contained {0} usable bad-frame group(s), '
-                    'fewer than the requested {1}; calibration used all that '
-                    'were available within FITS retention.'.format(
-                        source_details['selected_bad_count'],
-                        source_details['requested_bad_count'],
-                    )
-                )
-            if (
-                source_details.get('kind') == 'database'
-                and source_details.get('missing_local_count', 0)
-            ):
-                result['warnings'].append(
-                    '{0} FITS database row(s) no longer had a local file and '
-                    'were ignored.'.format(
-                        source_details['missing_local_count']
-                    )
-                )
-            if (
-                source_details.get('kind') == 'database'
-                and source_details.get('unsupported_count', 0)
-            ):
-                result['warnings'].append(
-                    '{0} local FITS database asset(s) used an unsupported '
-                    'filename format and were ignored.'.format(
-                        source_details['unsupported_count']
-                    )
-                )
+        result['warnings'] = _result_warnings(
+            result['quality'],
+            source_details,
+        )
         database_report = format_database_source_report(source_details)
         if database_report:
             report_text = '{0}\n\n{1}\n'.format(
@@ -1252,13 +1579,19 @@ def run_calibration_session(session_id, storage_root=None):
 def get_status(session_id, owner, storage_root=None):
     """Return the browser-safe status/result for an owned session."""
     session_dir, manifest = get_session(session_id, owner, storage_root)
+    source = manifest.get('source') or {}
     response = {
         'session_id': session_id,
         'status': manifest['status'],
         'file_count': len(manifest.get('files', [])),
         'total_bytes': manifest.get('total_bytes', 0),
         'task_id': manifest.get('task_id'),
-        'error': manifest.get('error'),
+        'error': (
+            _friendly_failure_message(manifest.get('error'))
+            if manifest.get('status') == 'failed'
+            else manifest.get('error')
+        ),
+        'source_kind': source.get('kind'),
         'sources_deleted_utc': manifest.get('sources_deleted_utc'),
         'report_available': session_dir.joinpath(
             'asi676mc_calibration_report.txt'
@@ -1266,7 +1599,15 @@ def get_status(session_id, owner, storage_root=None):
     }
     result_path = session_dir.joinpath('result.json')
     if manifest['status'] == 'success' and result_path.is_file():
-        response['result'] = json.loads(result_path.read_text(encoding='utf-8'))
+        result = json.loads(result_path.read_text(encoding='utf-8'))
+        # Rebuild human-facing notes when an older retained result is opened.
+        # This applies current consolidated wording immediately without
+        # modifying the auditable result stored on disk.
+        result['warnings'] = _result_warnings(
+            result.get('quality', {}),
+            result.get('source') or source,
+        )
+        response['result'] = result
     return response
 
 
