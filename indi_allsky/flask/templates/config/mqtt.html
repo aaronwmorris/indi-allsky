@@ -5,15 +5,15 @@
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
-                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">MQTT Broker Publishing</span>
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">MQTT Broker Publishing</span>
                     <a href="https://github.com/aaronwmorris/indi-allsky/wiki/MQTT-Broker-Publishing" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">MQTT Wiki</a>
                 </div>
 
                 <!-- Enable MQTT -->
                 <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__ENABLE.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/50">Enable publishing telemetry to MQTT broker</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__ENABLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Enable publishing telemetry to MQTT broker</span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
                         {{ form_config.MQTTPUBLISH__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -24,14 +24,14 @@
                 <!-- Host & Port -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__HOST.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__HOST.label.text }}</span>
                         {{ form_config.MQTTPUBLISH__HOST(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="MQTTPUBLISH__HOST-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__PORT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__PORT.label.text }}</span>
                         {{ form_config.MQTTPUBLISH__PORT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">1883 = standard, 8883 = TLS</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">1883 = standard, 8883 = TLS</span>
                         <div id="MQTTPUBLISH__PORT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -39,12 +39,12 @@
                 <!-- Transport & Protocol -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__TRANSPORT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__TRANSPORT.label.text }}</span>
                         {{ form_config.MQTTPUBLISH__TRANSPORT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="MQTTPUBLISH__TRANSPORT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__PROTOCOL.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__PROTOCOL.label.text }}</span>
                         {{ form_config.MQTTPUBLISH__PROTOCOL(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="MQTTPUBLISH__PROTOCOL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -53,12 +53,12 @@
                 <!-- Credentials (Username & Password) -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__USERNAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__USERNAME.label.text }}</span>
                         {{ form_config.MQTTPUBLISH__USERNAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="MQTTPUBLISH__USERNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__PASSWORD.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__PASSWORD.label.text }}</span>
                         {{ form_config.MQTTPUBLISH__PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="MQTTPUBLISH__PASSWORD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -67,14 +67,14 @@
                 <!-- Base Topic & QoS -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__BASE_TOPIC.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__BASE_TOPIC.label.text }}</span>
                         {{ form_config.MQTTPUBLISH__BASE_TOPIC(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="MQTTPUBLISH__BASE_TOPIC-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__QOS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__QOS.label.text }}</span>
                         {{ form_config.MQTTPUBLISH__QOS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">0 (default), 1, or 2</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">0 (default), 1, or 2</span>
                         <div id="MQTTPUBLISH__QOS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -83,24 +83,24 @@
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <div class="tw:flex tw:flex-col">
-                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__TLS.label.text }}</span>
-                            <span class="tw:text-[10px] tw:text-base-content/40">Use TLS/SSL</span>
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__TLS.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Use TLS/SSL</span>
                         </div>
                         {{ form_config.MQTTPUBLISH__TLS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="MQTTPUBLISH__TLS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <div class="tw:flex tw:flex-col">
-                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__CERT_BYPASS.label.text }}</span>
-                            <span class="tw:text-[10px] tw:text-base-content/40">Bypass SSL cert</span>
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__CERT_BYPASS.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Bypass SSL cert</span>
                         </div>
                         {{ form_config.MQTTPUBLISH__CERT_BYPASS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="MQTTPUBLISH__CERT_BYPASS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <div class="tw:flex tw:flex-col">
-                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__PUBLISH_IMAGE.label.text }}</span>
-                            <span class="tw:text-[10px] tw:text-base-content/40">Publish image payload</span>
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__PUBLISH_IMAGE.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Publish image payload</span>
                         </div>
                         {{ form_config.MQTTPUBLISH__PUBLISH_IMAGE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="MQTTPUBLISH__PUBLISH_IMAGE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>

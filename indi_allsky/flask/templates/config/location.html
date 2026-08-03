@@ -4,13 +4,13 @@
         <!-- Location & GPS Settings Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Location & GPS Services</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Location & GPS Services</span>
 
                 <!-- GPS Enable -->
                 <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.GPS_ENABLE.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/50">Enable using GPS location services. Requires GPS hardware and <a href="https://github.com/aaronwmorris/indi-allsky/wiki/GPSd-NTP-Time-Sync" class="tw:link tw:link-info tw:no-underline" target="_blank">GPSd installation</a></span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.GPS_ENABLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Enable using GPS location services. Requires GPS hardware and <a href="https://github.com/aaronwmorris/indi-allsky/wiki/GPSd-NTP-Time-Sync" class="tw:link tw:link-info tw:no-underline" target="_blank">GPSd installation</a></span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
                         {{ form_config.GPS_ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -21,8 +21,8 @@
                 <!-- Privacy Mode -->
                 <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.PRIVACY_MODE.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/50">Reduces precision of Latitude and Longitude information when it is exposed</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.PRIVACY_MODE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Reduces precision of Latitude and Longitude information when it is exposed</span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
                         {{ form_config.PRIVACY_MODE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -33,8 +33,8 @@
                 <!-- EXIF Privacy -->
                 <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_EXIF_PRIVACY.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/50">Exclude private identifying information from image EXIF tags including owner and GPS details. Only valid for JPEG images.</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_EXIF_PRIVACY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Exclude private identifying information from image EXIF tags including owner and GPS details. Only valid for JPEG images.</span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
                         {{ form_config.IMAGE_EXIF_PRIVACY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -50,8 +50,8 @@
                 <!-- Location Name -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LOCATION_NAME.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Free form input</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LOCATION_NAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Free form input</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.LOCATION_NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -62,8 +62,8 @@
                 <!-- Location Latitude -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LOCATION_LATITUDE.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Min: -90, Max: 90 [+ Northern / - Southern]</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LOCATION_LATITUDE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Min: -90, Max: 90 [+ Northern / - Southern]</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.LOCATION_LATITUDE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -74,8 +74,8 @@
                 <!-- Location Longitude -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LOCATION_LONGITUDE.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Min: -180, Max: 180 [+ Eastern / - Western]</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LOCATION_LONGITUDE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Min: -180, Max: 180 [+ Eastern / - Western]</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.LOCATION_LONGITUDE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -86,8 +86,8 @@
                 <!-- Browser Location Button -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">Browser Location</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Approve permission when prompted</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">Browser Location</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Approve permission when prompted</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:items-center tw:gap-3">
                         <button type="button" class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-accent-hover tw:gap-2" onclick="setLocationFromBrowser();">
@@ -101,8 +101,8 @@
                 <!-- Location Elevation -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LOCATION_ELEVATION.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Elevation in meters</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LOCATION_ELEVATION.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Elevation in meters</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.LOCATION_ELEVATION(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -117,7 +117,7 @@
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
-                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Lens & Optical Geometry</span>
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Lens & Optical Geometry</span>
                     <a href="{{ url_for('indi_allsky.camera_lens_view') }}" class="tw:btn tw:btn-xs tw:btn-info tw:no-underline tw:gap-1">
                         <i class="tw:icon-[lucide--camera] tw:w-3.5 tw:h-3.5"></i> Camera Info
                     </a>
@@ -126,8 +126,8 @@
                 <!-- Owner -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.OWNER.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Copyright owner tag</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.OWNER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Copyright owner tag</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.OWNER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -138,8 +138,8 @@
                 <!-- Lens Name -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_NAME.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Descriptive lens model</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_NAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Descriptive lens model</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.LENS_NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -150,12 +150,12 @@
                 <!-- Lens Focal Length & Ratio -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_FOCAL_LENGTH.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_FOCAL_LENGTH.label.text }}</span>
                         {{ form_config.LENS_FOCAL_LENGTH(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="LENS_FOCAL_LENGTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_FOCAL_RATIO.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_FOCAL_RATIO.label.text }}</span>
                         {{ form_config.LENS_FOCAL_RATIO(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="LENS_FOCAL_RATIO-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -164,8 +164,8 @@
                 <!-- Lens Image Circle -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_IMAGE_CIRCLE.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Image circle in pixels (<a href="{{ url_for('indi_allsky.image_circle_helper_view') }}" class="tw:link tw:link-info tw:no-underline" target="_blank">Helper</a>)</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_IMAGE_CIRCLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Image circle in pixels (<a href="{{ url_for('indi_allsky.image_circle_helper_view') }}" class="tw:link tw:link-info tw:no-underline" target="_blank">Helper</a>)</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.LENS_IMAGE_CIRCLE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -176,12 +176,12 @@
                 <!-- Lens Offsets X & Y -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_OFFSET_X.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_OFFSET_X.label.text }}</span>
                         {{ form_config.LENS_OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="LENS_OFFSET_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_OFFSET_Y.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_OFFSET_Y.label.text }}</span>
                         {{ form_config.LENS_OFFSET_Y(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="LENS_OFFSET_Y-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -190,12 +190,12 @@
                 <!-- Lens Altitude & Azimuth -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_ALTITUDE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_ALTITUDE.label.text }}</span>
                         {{ form_config.LENS_ALTITUDE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="LENS_ALTITUDE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_AZIMUTH.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_AZIMUTH.label.text }}</span>
                         {{ form_config.LENS_AZIMUTH(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="LENS_AZIMUTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -207,21 +207,21 @@
         <!-- Night & Celestial Thresholds Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Night & Moon Mode Thresholds</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Night & Moon Mode Thresholds</span>
 
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:py-3">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.NIGHT_SUN_ALT_DEG.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.NIGHT_SUN_ALT_DEG.label.text }}</span>
                         {{ form_config.NIGHT_SUN_ALT_DEG(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="NIGHT_SUN_ALT_DEG-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.NIGHT_MOONMODE_ALT_DEG.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.NIGHT_MOONMODE_ALT_DEG.label.text }}</span>
                         {{ form_config.NIGHT_MOONMODE_ALT_DEG(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="NIGHT_MOONMODE_ALT_DEG-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.NIGHT_MOONMODE_PHASE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.NIGHT_MOONMODE_PHASE.label.text }}</span>
                         {{ form_config.NIGHT_MOONMODE_PHASE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="NIGHT_MOONMODE_PHASE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -233,19 +233,19 @@
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
-                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">VirtualSky Overlay Geometry</span>
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">VirtualSky Overlay Geometry</span>
                     <a href="https://github.com/aaronwmorris/indi-allsky/wiki/VirtualSky" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Wiki Reference</a>
                 </div>
 
                 <!-- Offsets Latitude & Longitude -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__LATITUDE_OFFSET.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__LATITUDE_OFFSET.label.text }}</span>
                         {{ form_config.VIRTUALSKY__LATITUDE_OFFSET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="VIRTUALSKY__LATITUDE_OFFSET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__LONGITUDE_OFFSET.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__LONGITUDE_OFFSET.label.text }}</span>
                         {{ form_config.VIRTUALSKY__LONGITUDE_OFFSET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="VIRTUALSKY__LONGITUDE_OFFSET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -254,22 +254,22 @@
                 <!-- Diameter, Offsets X & Y, Magnitude -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__IMAGE_CIRCLE_DIAMETER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__IMAGE_CIRCLE_DIAMETER.label.text }}</span>
                         {{ form_config.VIRTUALSKY__IMAGE_CIRCLE_DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="VIRTUALSKY__IMAGE_CIRCLE_DIAMETER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__OFFSET_X.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__OFFSET_X.label.text }}</span>
                         {{ form_config.VIRTUALSKY__OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="VIRTUALSKY__OFFSET_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__OFFSET_Y.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__OFFSET_Y.label.text }}</span>
                         {{ form_config.VIRTUALSKY__OFFSET_Y(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="VIRTUALSKY__OFFSET_Y-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__MAGNITUDE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__MAGNITUDE.label.text }}</span>
                         {{ form_config.VIRTUALSKY__MAGNITUDE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="VIRTUALSKY__MAGNITUDE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -278,32 +278,32 @@
                 <!-- Toggles Grid -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-3 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__CONSTELLATIONS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__CONSTELLATIONS.label.text }}</span>
                         {{ form_config.VIRTUALSKY__CONSTELLATIONS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="VIRTUALSKY__CONSTELLATIONS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__CONSTELLATIONLABELS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__CONSTELLATIONLABELS.label.text }}</span>
                         {{ form_config.VIRTUALSKY__CONSTELLATIONLABELS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="VIRTUALSKY__CONSTELLATIONLABELS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__SHOWSTARS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__SHOWSTARS.label.text }}</span>
                         {{ form_config.VIRTUALSKY__SHOWSTARS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="VIRTUALSKY__SHOWSTARS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__SHOWSTARLABELS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__SHOWSTARLABELS.label.text }}</span>
                         {{ form_config.VIRTUALSKY__SHOWSTARLABELS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="VIRTUALSKY__SHOWSTARLABELS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__SHOWPLANETS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__SHOWPLANETS.label.text }}</span>
                         {{ form_config.VIRTUALSKY__SHOWPLANETS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="VIRTUALSKY__SHOWPLANETS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__SHOWPLANETLABELS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__SHOWPLANETLABELS.label.text }}</span>
                         {{ form_config.VIRTUALSKY__SHOWPLANETLABELS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="VIRTUALSKY__SHOWPLANETLABELS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>

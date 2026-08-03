@@ -91,7 +91,7 @@ function populate_videos(video_list) {
     
     // Header
     var header_div = $('<div />', {
-        'class' : "tw:hidden md:tw:grid tw:grid-cols-12 tw:gap-4 tw:px-4 tw:py-2 tw:bg-base-300/50 tw:rounded-[var(--radius-box)] tw:text-[10px] tw:font-black tw:uppercase tw:tracking-widest tw:text-base-content/40",
+        'class' : "tw:hidden md:tw:grid tw:grid-cols-12 tw:gap-4 tw:px-4 tw:py-2 tw:bg-base-300/50 tw:rounded-[var(--radius-box)] tw:text-[0.625rem] tw:font-black tw:uppercase tw:tracking-widest tw:text-base-content/40",
     });
 
     $('<div />', { 'class' : "tw:col-span-2", 'text' : 'Timestamp' }).appendTo(header_div);
@@ -121,7 +121,7 @@ function populate_videos(video_list) {
 
         $('<div />', { 'class' : "tw:w-full tw:h-px tw:bg-base-content/10" }).appendTo(datetime_div);
 
-        var stats_grid = $('<div />', { 'class' : "tw:grid tw:grid-cols-1 tw:gap-0.5 tw:text-[10px] tw:font-mono tw:text-base-content/50" }).appendTo(datetime_div);
+        var stats_grid = $('<div />', { 'class' : "tw:grid tw:grid-cols-1 tw:gap-0.5 tw:text-[0.625rem] tw:font-mono tw:text-base-content/50" }).appendTo(datetime_div);
 
         if (item['night']) {
             $('<div />', { 'text' : 'MAX STARS: ' + item['max_stars'] }).appendTo(stats_grid);

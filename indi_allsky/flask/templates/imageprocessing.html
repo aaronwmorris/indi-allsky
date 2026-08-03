@@ -87,14 +87,14 @@ var fullscreen = false;  //initial state
 
                         <div class="tw:form-control">
                             <label class="tw:label tw:cursor-pointer tw:flex-col tw:items-start tw:gap-1">
-                                <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Disable Processing</span>
+                                <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Disable Processing</span>
                                 {{ form_image_processing.DISABLE_PROCESSING(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                             </label>
                         </div>
 
                         <div class="tw:form-control tw:flex-1">
                             <label class="tw:label tw:py-0">
-                                <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Output Type</span>
+                                <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Output Type</span>
                             </label>
                             {{ form_image_processing.OUTPUT_IMAGE_TYPE(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
                             <div id="OUTPUT_IMAGE_TYPE-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
@@ -131,27 +131,27 @@ var fullscreen = false;  //initial state
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                         {{ form_image_processing.IMAGE_CALIBRATE_DARK(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Calibrate Dark</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Calibrate Dark</span>
                                     </label>
                                     <div id="IMAGE_CALIBRATE_DARK-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                         {{ form_image_processing.IMAGE_CALIBRATE_BPM(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Calibrate BPM</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Calibrate BPM</span>
                                     </label>
                                     <div id="IMAGE_CALIBRATE_BPM-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                             </div>
 
-                            <div class="tw:alert tw:alert-warning tw:py-2 tw:text-[10px] tw:rounded-[var(--radius-box)]">
+                            <div class="tw:alert tw:alert-warning tw:py-2 tw:text-[0.625rem] tw:rounded-[var(--radius-box)]">
                                 <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
                                 <span>Do not enable dark calibration unless you know what you are doing.</span>
                             </div>
 
                             <div class="tw:form-control tw:w-full">
                                 <label class="tw:label tw:py-1">
-                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Manual Offset</span>
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Manual Offset</span>
                                 </label>
                                 {{ form_image_processing.IMAGE_CALIBRATE_MANUAL_OFFSET(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                 <div id="IMAGE_CALIBRATE_MANUAL_OFFSET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -161,13 +161,13 @@ var fullscreen = false;  //initial state
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                         {{ form_image_processing.IMAGE_CALIBRATE_FIX_HOLES(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Fix Holes</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Fix Holes</span>
                                     </label>
                                     <div id="IMAGE_CALIBRATE_FIX_HOLES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Hole Threshold</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Hole Threshold</span>
                                     </label>
                                     {{ form_image_processing.IMAGE_CALIBRATE_HOLE_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     <div id="IMAGE_CALIBRATE_HOLE_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -179,14 +179,14 @@ var fullscreen = false;  //initial state
                             <div class="tw:grid tw:grid-cols-2 tw:gap-4">
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Bit Depth</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Bit Depth</span>
                                     </label>
                                     {{ form_image_processing.CCD_BIT_DEPTH(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
                                     <div id="CCD_BIT_DEPTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">SQM Region</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">SQM Region</span>
                                     </label>
                                     {{ form_image_processing.SQM_FOV_DIV(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
                                     <div id="SQM_FOV_DIV-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -195,7 +195,7 @@ var fullscreen = false;  //initial state
 
                             <div class="tw:form-control">
                                 <label class="tw:label tw:py-1">
-                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Detection Mask (PNG)</span>
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Detection Mask (PNG)</span>
                                 </label>
                                 {{ form_image_processing.DETECT_MASK(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                 <div id="DETECT_MASK-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -203,7 +203,7 @@ var fullscreen = false;  //initial state
 
                             <!-- ROI Grid -->
                             <div class="tw:flex tw:flex-col tw:gap-2">
-                                <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">SQM / Star ROI</span>
+                                <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">SQM / Star ROI</span>
                                 <div class="tw:grid tw:grid-cols-2 tw:gap-2">
                                     {{ form_image_processing.SQM_ROI_X1(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full', placeholder='X1') }}
                                     {{ form_image_processing.SQM_ROI_Y1(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full', placeholder='Y1') }}
@@ -226,14 +226,14 @@ var fullscreen = false;  //initial state
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                             {{ form_image_processing.NIGHT_CONTRAST_ENHANCE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">CLAHE (8-bit)</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">CLAHE (8-bit)</span>
                                         </label>
                                         <div id="NIGHT_CONTRAST_ENHANCE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                             {{ form_image_processing.CONTRAST_ENHANCE_16BIT(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">CLAHE (16-bit)</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">CLAHE (16-bit)</span>
                                         </label>
                                         <div id="CONTRAST_ENHANCE_16BIT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                     </div>
@@ -241,14 +241,14 @@ var fullscreen = false;  //initial state
                                 <div class="tw:grid tw:grid-cols-2 tw:gap-4">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Clip Limit</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Clip Limit</span>
                                         </label>
                                         {{ form_image_processing.CLAHE_CLIPLIMIT(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                         <div id="CLAHE_CLIPLIMIT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Grid Size</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Grid Size</span>
                                         </label>
                                         {{ form_image_processing.CLAHE_GRIDSIZE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                         <div id="CLAHE_GRIDSIZE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -261,7 +261,7 @@ var fullscreen = false;  //initial state
                             <!-- Stretch Section -->
                             <div class="tw:form-control">
                                 <label class="tw:label tw:py-1">
-                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Stretch Algorithm</span>
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Stretch Algorithm</span>
                                 </label>
                                 {{ form_image_processing.IMAGE_STRETCH__CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
                                 <div id="IMAGE_STRETCH__CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -270,14 +270,14 @@ var fullscreen = false;  //initial state
                             <div class="tw:grid tw:grid-cols-2 tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M1 Gamma</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M1 Gamma</span>
                                     </label>
                                     {{ form_image_processing.IMAGE_STRETCH__MODE1_GAMMA(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     <div id="IMAGE_STRETCH__MODE1_GAMMA-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M1 StdDevs</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M1 StdDevs</span>
                                     </label>
                                     {{ form_image_processing.IMAGE_STRETCH__MODE1_STDDEVS(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     <div id="IMAGE_STRETCH__MODE1_STDDEVS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -287,21 +287,21 @@ var fullscreen = false;  //initial state
                             <div class="tw:grid tw:grid-cols-3 tw:gap-2 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M2 Shadows</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M2 Shadows</span>
                                     </label>
                                     {{ form_image_processing.IMAGE_STRETCH__MODE2_SHADOWS(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     <div id="IMAGE_STRETCH__MODE2_SHADOWS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M2 Mid</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M2 Mid</span>
                                     </label>
                                     {{ form_image_processing.IMAGE_STRETCH__MODE2_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     <div id="IMAGE_STRETCH__MODE2_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M2 High</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M2 High</span>
                                     </label>
                                     {{ form_image_processing.IMAGE_STRETCH__MODE2_HIGHLIGHTS(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     <div id="IMAGE_STRETCH__MODE2_HIGHLIGHTS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -311,28 +311,28 @@ var fullscreen = false;  //initial state
                             <div class="tw:grid tw:grid-cols-2 tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M3 Black Clip</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M3 Black Clip</span>
                                     </label>
                                     {{ form_image_processing.IMAGE_STRETCH__MODE3_BLACK_CLIP(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     <div id="IMAGE_STRETCH__MODE3_BLACK_CLIP-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M3 Shadows</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M3 Shadows</span>
                                     </label>
                                     {{ form_image_processing.IMAGE_STRETCH__MODE3_SHADOWS(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     <div id="IMAGE_STRETCH__MODE3_SHADOWS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M3 Mid</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M3 Mid</span>
                                     </label>
                                     {{ form_image_processing.IMAGE_STRETCH__MODE3_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     <div id="IMAGE_STRETCH__MODE3_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M3 High</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M3 High</span>
                                     </label>
                                     {{ form_image_processing.IMAGE_STRETCH__MODE3_HIGHLIGHTS(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     <div id="IMAGE_STRETCH__MODE3_HIGHLIGHTS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -345,14 +345,14 @@ var fullscreen = false;  //initial state
                             <div class="tw:grid tw:grid-cols-2 tw:gap-4">
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">CFA Pattern</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">CFA Pattern</span>
                                     </label>
                                     {{ form_image_processing.CFA_PATTERN(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
                                     <div id="CFA_PATTERN-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">SCNR Algo</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">SCNR Algo</span>
                                     </label>
                                     {{ form_image_processing.SCNR_ALGORITHM(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
                                     <div id="SCNR_ALGORITHM-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -360,7 +360,7 @@ var fullscreen = false;  //initial state
                             </div>
                             <div class="tw:form-control">
                                 <label class="tw:label tw:py-1">
-                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">SCNR Midtones</span>
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">SCNR Midtones</span>
                                 </label>
                                 {{ form_image_processing.SCNR_MTF_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                 <div id="SCNR_MTF_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -372,14 +372,14 @@ var fullscreen = false;  //initial state
                             <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Denoise Method</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Denoise Method</span>
                                     </label>
                                     {{ form_image_processing.IMAGE_DENOISE(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
                                     <div id="IMAGE_DENOISE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Strength (1-5)</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Strength (1-5)</span>
                                     </label>
                                     {{ form_image_processing.IMAGE_DENOISE_STRENGTH(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     <div id="IMAGE_DENOISE_STRENGTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -387,14 +387,14 @@ var fullscreen = false;  //initial state
                                 <div class="tw:grid tw:grid-cols-2 tw:gap-4">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Bilateral Color</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Bilateral Color</span>
                                         </label>
                                         {{ form_image_processing.BILATERAL_SIGMA_COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                         <div id="BILATERAL_SIGMA_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Bilateral Space</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Bilateral Space</span>
                                         </label>
                                         {{ form_image_processing.BILATERAL_SIGMA_SPACE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                         <div id="BILATERAL_SIGMA_SPACE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -409,26 +409,26 @@ var fullscreen = false;  //initial state
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                         {{ form_image_processing.AUTO_WB(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Auto White Balance</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Auto White Balance</span>
                                     </label>
                                     <div id="AUTO_WB-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:grid tw:grid-cols-3 tw:gap-2">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">R-Factor</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">R-Factor</span>
                                         </label>
                                         {{ form_image_processing.WBR_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">G-Factor</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">G-Factor</span>
                                         </label>
                                         {{ form_image_processing.WBG_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">B-Factor</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">B-Factor</span>
                                         </label>
                                         {{ form_image_processing.WBB_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
@@ -436,19 +436,19 @@ var fullscreen = false;  //initial state
                                 <div class="tw:grid tw:grid-cols-3 tw:gap-2">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">R-MTF</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">R-MTF</span>
                                         </label>
                                         {{ form_image_processing.WBR_MTF_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">G-MTF</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">G-MTF</span>
                                         </label>
                                         {{ form_image_processing.WBG_MTF_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">B-MTF</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">B-MTF</span>
                                         </label>
                                         {{ form_image_processing.WBB_MTF_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
@@ -461,21 +461,21 @@ var fullscreen = false;  //initial state
                             <div class="tw:grid tw:grid-cols-3 tw:gap-2">
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Saturation</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Saturation</span>
                                     </label>
                                     {{ form_image_processing.SATURATION_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     <div id="SATURATION_FACTOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Gamma</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Gamma</span>
                                     </label>
                                     {{ form_image_processing.GAMMA_CORRECTION(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     <div id="GAMMA_CORRECTION-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Sharpen</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Sharpen</span>
                                     </label>
                                     {{ form_image_processing.SHARPEN_AMOUNT(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     <div id="SHARPEN_AMOUNT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -484,7 +484,7 @@ var fullscreen = false;  //initial state
 
                             <div class="tw:form-control">
                                 <label class="tw:label tw:py-1">
-                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Colormap</span>
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Colormap</span>
                                 </label>
                                 {{ form_image_processing.IMAGE_COLORMAP(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
                                 <div id="IMAGE_COLORMAP-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -494,7 +494,7 @@ var fullscreen = false;  //initial state
 
                             <!-- Border Section -->
                             <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
-                                <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Image Border</span>
+                                <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Image Border</span>
                                 <div class="tw:grid tw:grid-cols-4 tw:gap-2">
                                     {{ form_image_processing.IMAGE_BORDER__TOP(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full', placeholder='Top') }}
                                     {{ form_image_processing.IMAGE_BORDER__BOTTOM(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full', placeholder='Bottom') }}
@@ -510,7 +510,7 @@ var fullscreen = false;  //initial state
                             <div class="tw:form-control">
                                 <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                     {{ form_image_processing.IMAGE_CROP_IMAGE_CIRCLE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Crop to Circle</span>
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Crop to Circle</span>
                                 </label>
                                 <div id="IMAGE_CROP_IMAGE_CIRCLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                             </div>
@@ -519,17 +519,17 @@ var fullscreen = false;  //initial state
 
                             <!-- Geometry Section -->
                             <div class="tw:flex tw:flex-col tw:gap-4">
-                                <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Geometry Adjustments</span>
+                                <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Geometry Adjustments</span>
                                 <div class="tw:grid tw:grid-cols-2 tw:gap-4">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Rotate</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Rotate</span>
                                         </label>
                                         {{ form_image_processing.IMAGE_ROTATE(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Angle</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Angle</span>
                                         </label>
                                         {{ form_image_processing.IMAGE_ROTATE_ANGLE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
@@ -538,13 +538,13 @@ var fullscreen = false;  //initial state
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                             {{ form_image_processing.IMAGE_FLIP_V(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Flip V</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Flip V</span>
                                         </label>
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                             {{ form_image_processing.IMAGE_FLIP_H(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Flip H</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Flip H</span>
                                         </label>
                                     </div>
                                 </div>
@@ -559,17 +559,17 @@ var fullscreen = false;  //initial state
                             
                             <!-- Stacking Section -->
                             <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
-                                <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Stacking</span>
+                                <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Stacking</span>
                                 <div class="tw:grid tw:grid-cols-2 tw:gap-4">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Count</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Count</span>
                                         </label>
                                         {{ form_image_processing.IMAGE_STACK_COUNT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Method</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Method</span>
                                         </label>
                                         {{ form_image_processing.IMAGE_STACK_METHOD(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
                                     </div>
@@ -577,26 +577,26 @@ var fullscreen = false;  //initial state
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                         {{ form_image_processing.IMAGE_STACK_ALIGN(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Align Frames</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Align Frames</span>
                                     </label>
                                     <div id="IMAGE_STACK_ALIGN-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:grid tw:grid-cols-3 tw:gap-2">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Sigma</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Sigma</span>
                                         </label>
                                         {{ form_image_processing.IMAGE_ALIGN_DETECTSIGMA(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Points</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Points</span>
                                         </label>
                                         {{ form_image_processing.IMAGE_ALIGN_POINTS(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Min Area</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Min Area</span>
                                         </label>
                                         {{ form_image_processing.IMAGE_ALIGN_SOURCEMINAREA(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
@@ -610,19 +610,19 @@ var fullscreen = false;  //initial state
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                         {{ form_image_processing.FISH2PANO__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Fisheye to Pano</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Fisheye to Pano</span>
                                     </label>
                                 </div>
                                 <div class="tw:grid tw:grid-cols-2 tw:gap-4">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Diameter</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Diameter</span>
                                         </label>
                                         {{ form_image_processing.FISH2PANO__DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Rotation</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Rotation</span>
                                         </label>
                                         {{ form_image_processing.FISH2PANO__ROTATE_ANGLE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
@@ -631,12 +631,12 @@ var fullscreen = false;  //initial state
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                             {{ form_image_processing.FISH2PANO__FLIP_H(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Flip H</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Flip H</span>
                                         </label>
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Scale</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Scale</span>
                                         </label>
                                         {{ form_image_processing.FISH2PANO__SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
@@ -645,25 +645,25 @@ var fullscreen = false;  //initial state
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                         {{ form_image_processing.FISH2PANO__ENABLE_CARDINAL_DIRS(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Cardinal Dirs</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Cardinal Dirs</span>
                                     </label>
                                 </div>
                                 <div class="tw:grid tw:grid-cols-3 tw:gap-2">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Offset Btm</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Offset Btm</span>
                                         </label>
                                         {{ form_image_processing.FISH2PANO__DIRS_OFFSET_BOTTOM(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Font Scl</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Font Scl</span>
                                         </label>
                                         {{ form_image_processing.FISH2PANO__OPENCV_FONT_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">PIL Size</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">PIL Size</span>
                                         </label>
                                         {{ form_image_processing.FISH2PANO__PIL_FONT_SIZE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
@@ -677,19 +677,19 @@ var fullscreen = false;  //initial state
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                         {{ form_image_processing.IMAGE_CIRCLE_MASK__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Circle Mask</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Circle Mask</span>
                                     </label>
                                 </div>
                                 <div class="tw:grid tw:grid-cols-2 tw:gap-4">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Diameter</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Diameter</span>
                                         </label>
                                         {{ form_image_processing.IMAGE_CIRCLE_MASK__DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Blur</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Blur</span>
                                         </label>
                                         {{ form_image_processing.IMAGE_CIRCLE_MASK__BLUR(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
@@ -697,14 +697,14 @@ var fullscreen = false;  //initial state
                                 <div class="tw:grid tw:grid-cols-2 tw:gap-4">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Opacity</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Opacity</span>
                                         </label>
                                         {{ form_image_processing.IMAGE_CIRCLE_MASK__OPACITY(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control tw:justify-end">
                                         <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                             {{ form_image_processing.IMAGE_CIRCLE_MASK__OUTLINE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Outline</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Outline</span>
                                         </label>
                                     </div>
                                 </div>
@@ -719,21 +719,21 @@ var fullscreen = false;  //initial state
                             
                             <div class="tw:form-control">
                                 <label class="tw:label tw:py-1">
-                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Label System</span>
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Label System</span>
                                 </label>
                                 {{ form_image_processing.IMAGE_LABEL_SYSTEM(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
                             </div>
 
                             <div class="tw:form-control">
                                 <label class="tw:label tw:py-1">
-                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Label Template</span>
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Label Template</span>
                                 </label>
                                 {{ form_image_processing.IMAGE_LABEL_TEMPLATE(class='tw:textarea tw:textarea-bordered tw:w-full tw:h-32 tw:text-xs tw:font-mono') }}
                             </div>
 
                             <div class="tw:form-control">
                                 <label class="tw:label tw:py-1">
-                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Extra Text File</span>
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Extra Text File</span>
                                 </label>
                                 {{ form_image_processing.IMAGE_EXTRA_TEXT(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                             </div>
@@ -742,51 +742,51 @@ var fullscreen = false;  //initial state
 
                             <!-- Fonts Section -->
                             <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
-                                <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Typography (PIL)</span>
+                                <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Typography (PIL)</span>
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Font File</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Font File</span>
                                     </label>
                                     {{ form_image_processing.TEXT_PROPERTIES__PIL_FONT_FILE(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
                                 </div>
                                 <div class="tw:grid tw:grid-cols-2 tw:gap-4">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">PIL Size</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">PIL Size</span>
                                         </label>
                                         {{ form_image_processing.TEXT_PROPERTIES__PIL_FONT_SIZE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Custom Path</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Custom Path</span>
                                         </label>
                                         {{ form_image_processing.TEXT_PROPERTIES__PIL_FONT_CUSTOM(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                 </div>
                                 <div class="tw:divider tw:my-1"></div>
-                                <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Typography (OpenCV)</span>
+                                <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Typography (OpenCV)</span>
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Face</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Face</span>
                                     </label>
                                     {{ form_image_processing.TEXT_PROPERTIES__FONT_FACE(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
                                 </div>
                                 <div class="tw:grid tw:grid-cols-3 tw:gap-2">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Scale</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Scale</span>
                                         </label>
                                         {{ form_image_processing.TEXT_PROPERTIES__FONT_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Thick</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Thick</span>
                                         </label>
                                         {{ form_image_processing.TEXT_PROPERTIES__FONT_THICKNESS(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Height</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Height</span>
                                         </label>
                                         {{ form_image_processing.TEXT_PROPERTIES__FONT_HEIGHT(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
@@ -794,19 +794,19 @@ var fullscreen = false;  //initial state
                                 <div class="tw:grid tw:grid-cols-3 tw:gap-2">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">X Pos</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">X Pos</span>
                                         </label>
                                         {{ form_image_processing.TEXT_PROPERTIES__FONT_X(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Y Pos</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Y Pos</span>
                                         </label>
                                         {{ form_image_processing.TEXT_PROPERTIES__FONT_Y(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Color RGB</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Color RGB</span>
                                         </label>
                                         {{ form_image_processing.TEXT_PROPERTIES__FONT_COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
@@ -814,7 +814,7 @@ var fullscreen = false;  //initial state
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                         {{ form_image_processing.TEXT_PROPERTIES__FONT_OUTLINE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Text Outline</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Text Outline</span>
                                     </label>
                                 </div>
                             </div>
@@ -826,19 +826,19 @@ var fullscreen = false;  //initial state
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                         {{ form_image_processing.MOON_OVERLAY__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Moon Overlay</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Moon Overlay</span>
                                     </label>
                                 </div>
                                 <div class="tw:grid tw:grid-cols-2 tw:gap-4">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">X Offset</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">X Offset</span>
                                         </label>
                                         {{ form_image_processing.MOON_OVERLAY__X(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Y Offset</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Y Offset</span>
                                         </label>
                                         {{ form_image_processing.MOON_OVERLAY__Y(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
@@ -847,26 +847,26 @@ var fullscreen = false;  //initial state
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                             {{ form_image_processing.MOON_OVERLAY__FLIP_V(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Flip V</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Flip V</span>
                                         </label>
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                             {{ form_image_processing.MOON_OVERLAY__FLIP_H(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Flip H</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Flip H</span>
                                         </label>
                                     </div>
                                 </div>
                                 <div class="tw:grid tw:grid-cols-2 tw:gap-4">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Scale</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Scale</span>
                                         </label>
                                         {{ form_image_processing.MOON_OVERLAY__SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Dark Side</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Dark Side</span>
                                         </label>
                                         {{ form_image_processing.MOON_OVERLAY__DARK_SIDE_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
@@ -880,25 +880,25 @@ var fullscreen = false;  //initial state
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                         {{ form_image_processing.LIGHTGRAPH_OVERLAY__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Lightgraph Overlay</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Lightgraph Overlay</span>
                                     </label>
                                 </div>
                                 <div class="tw:grid tw:grid-cols-3 tw:gap-2">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Height</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Height</span>
                                         </label>
                                         {{ form_image_processing.LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Border</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Border</span>
                                         </label>
                                         {{ form_image_processing.LIGHTGRAPH_OVERLAY__GRAPH_BORDER(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Marker</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Marker</span>
                                         </label>
                                         {{ form_image_processing.LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
@@ -906,19 +906,19 @@ var fullscreen = false;  //initial state
                                 <div class="tw:grid tw:grid-cols-3 tw:gap-2">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Y Pos</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Y Pos</span>
                                         </label>
                                         {{ form_image_processing.LIGHTGRAPH_OVERLAY__Y(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">X Offset</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">X Offset</span>
                                         </label>
                                         {{ form_image_processing.LIGHTGRAPH_OVERLAY__OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Scale</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Scale</span>
                                         </label>
                                         {{ form_image_processing.LIGHTGRAPH_OVERLAY__SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     </div>
@@ -926,49 +926,49 @@ var fullscreen = false;  //initial state
                                 <!-- Dense Color List -->
                                 <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem;">
                                     <div class="tw:form-control">
-                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[9px] tw:uppercase tw:opacity-60">Day</span></label>
+                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Day</span></label>
                                         {{ form_image_processing.LIGHTGRAPH_OVERLAY__DAY_COLOR(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
-                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[9px] tw:uppercase tw:opacity-60">Dusk</span></label>
+                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Dusk</span></label>
                                         {{ form_image_processing.LIGHTGRAPH_OVERLAY__DUSK_COLOR(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
-                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[9px] tw:uppercase tw:opacity-60">Night</span></label>
+                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Night</span></label>
                                         {{ form_image_processing.LIGHTGRAPH_OVERLAY__NIGHT_COLOR(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
-                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[9px] tw:uppercase tw:opacity-60">Moon</span></label>
+                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Moon</span></label>
                                         {{ form_image_processing.LIGHTGRAPH_OVERLAY__MOONMODE_COLOR(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
-                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[9px] tw:uppercase tw:opacity-60">Hour</span></label>
+                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Hour</span></label>
                                         {{ form_image_processing.LIGHTGRAPH_OVERLAY__HOUR_COLOR(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
-                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[9px] tw:uppercase tw:opacity-60">Border</span></label>
+                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Border</span></label>
                                         {{ form_image_processing.LIGHTGRAPH_OVERLAY__BORDER_COLOR(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
-                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[9px] tw:uppercase tw:opacity-60">Now</span></label>
+                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Now</span></label>
                                         {{ form_image_processing.LIGHTGRAPH_OVERLAY__NOW_COLOR(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
-                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[9px] tw:uppercase tw:opacity-60">Font</span></label>
+                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Font</span></label>
                                         {{ form_image_processing.LIGHTGRAPH_OVERLAY__FONT_COLOR(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
                                     </div>
                                 </div>
                                 <div class="tw:grid tw:grid-cols-3 tw:gap-2">
                                     <div class="tw:form-control">
-                                        <label class="tw:label tw:py-1"><span class="tw:label-text tw:text-[9px] tw:uppercase tw:opacity-60">Opacity</span></label>
+                                        <label class="tw:label tw:py-1"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Opacity</span></label>
                                         {{ form_image_processing.LIGHTGRAPH_OVERLAY__OPACITY(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
-                                        <label class="tw:label tw:py-1"><span class="tw:label-text tw:text-[9px] tw:uppercase tw:opacity-60">PIL Size</span></label>
+                                        <label class="tw:label tw:py-1"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">PIL Size</span></label>
                                         {{ form_image_processing.LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
-                                        <label class="tw:label tw:py-1"><span class="tw:label-text tw:text-[9px] tw:uppercase tw:opacity-60">CV Scale</span></label>
+                                        <label class="tw:label tw:py-1"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">CV Scale</span></label>
                                         {{ form_image_processing.LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
                                     </div>
                                 </div>
@@ -976,13 +976,13 @@ var fullscreen = false;  //initial state
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                             {{ form_image_processing.LIGHTGRAPH_OVERLAY__LABEL(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Labels</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Labels</span>
                                         </label>
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                             {{ form_image_processing.LIGHTGRAPH_OVERLAY__HOUR_LINES(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Hour Lines</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Hour Lines</span>
                                         </label>
                                     </div>
                                 </div>
@@ -995,20 +995,20 @@ var fullscreen = false;  //initial state
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                         {{ form_image_processing.CARDINAL_DIRS__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Cardinal Dirs</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Cardinal Dirs</span>
                                     </label>
                                 </div>
                                 <div class="tw:grid tw:grid-cols-2 tw:gap-4">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                             {{ form_image_processing.CARDINAL_DIRS__SWAP_NS(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Swap N/S</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Swap N/S</span>
                                         </label>
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                             {{ form_image_processing.CARDINAL_DIRS__SWAP_EW(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                            <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Swap E/W</span>
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Swap E/W</span>
                                         </label>
                                     </div>
                                 </div>
@@ -1020,18 +1020,18 @@ var fullscreen = false;  //initial state
                                 </div>
                                 <div class="tw:grid tw:grid-cols-2 tw:gap-4">
                                     <div class="tw:form-control">
-                                        <label class="tw:label tw:py-1"><span class="tw:label-text tw:text-[9px] tw:uppercase tw:opacity-60">Color RGB</span></label>
+                                        <label class="tw:label tw:py-1"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Color RGB</span></label>
                                         {{ form_image_processing.CARDINAL_DIRS__FONT_COLOR(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
                                     </div>
                                     <div class="tw:form-control">
-                                        <label class="tw:label tw:py-1"><span class="tw:label-text tw:text-[9px] tw:uppercase tw:opacity-60">Diameter</span></label>
+                                        <label class="tw:label tw:py-1"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Diameter</span></label>
                                         {{ form_image_processing.CARDINAL_DIRS__DIAMETER(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
                                     </div>
                                 </div>
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
                                         {{ form_image_processing.CARDINAL_DIRS__OUTLINE_CIRCLE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Outline Circle</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Outline Circle</span>
                                     </label>
                                 </div>
                             </div>
@@ -1045,7 +1045,7 @@ var fullscreen = false;  //initial state
                             
                             <div class="tw:form-control">
                                 <label class="tw:label tw:py-1">
-                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Lens Image Circle</span>
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Lens Image Circle</span>
                                 </label>
                                 {{ form_image_processing.LENS_IMAGE_CIRCLE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                 <div id="LENS_IMAGE_CIRCLE-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
@@ -1054,13 +1054,13 @@ var fullscreen = false;  //initial state
                             <div class="tw:grid tw:grid-cols-2 tw:gap-4">
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Lens Offset X</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Lens Offset X</span>
                                     </label>
                                     {{ form_image_processing.LENS_OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                 </div>
                                 <div class="tw:form-control">
                                     <label class="tw:label tw:py-1">
-                                        <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Lens Offset Y</span>
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Lens Offset Y</span>
                                     </label>
                                     {{ form_image_processing.LENS_OFFSET_Y(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                 </div>
@@ -1068,7 +1068,7 @@ var fullscreen = false;  //initial state
 
                             <div class="tw:form-control">
                                 <label class="tw:label tw:py-1">
-                                    <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Lens Azimuth</span>
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Lens Azimuth</span>
                                 </label>
                                 {{ form_image_processing.LENS_AZIMUTH(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                 <div id="LENS_AZIMUTH-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
@@ -1243,7 +1243,7 @@ function submitProcessingData() {
                     'class' : "tw:no-underline",
                 }).append($('<span />', {
                     'text': 'DOWNLOAD',
-                    'class': "tw:badge tw:badge-info tw:font-bold tw:text-[10px]",
+                    'class': "tw:badge tw:badge-info tw:font-bold tw:text-[0.625rem]",
                 }))
             );
 

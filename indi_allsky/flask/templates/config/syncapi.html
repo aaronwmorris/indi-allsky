@@ -5,15 +5,15 @@
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
-                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Remote SyncAPI Configuration</span>
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Remote SyncAPI Configuration</span>
                     <a href="https://github.com/aaronwmorris/indi-allsky/wiki/SyncAPI-Setup" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">SyncAPI Wiki</a>
                 </div>
 
                 <!-- Enable SyncAPI -->
                 <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__ENABLE.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/50">Enable SyncAPI service for remote instance synchronization</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__ENABLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Enable SyncAPI service for remote instance synchronization</span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
                         {{ form_config.SYNCAPI__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -24,8 +24,8 @@
                 <!-- Base URL -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__BASEURL.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Base URL for remote instance</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__BASEURL.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Base URL for remote instance</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.SYNCAPI__BASEURL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -36,12 +36,12 @@
                 <!-- Credentials (Username & API Key) -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__USERNAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__USERNAME.label.text }}</span>
                         {{ form_config.SYNCAPI__USERNAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="SYNCAPI__USERNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__APIKEY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__APIKEY.label.text }}</span>
                         {{ form_config.SYNCAPI__APIKEY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="SYNCAPI__APIKEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -50,8 +50,8 @@
                 <!-- Cert Bypass -->
                 <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__CERT_BYPASS.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/50">Bypass SSL certificate validation for self-signed certificates</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__CERT_BYPASS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Bypass SSL certificate validation for self-signed certificates</span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
                         {{ form_config.SYNCAPI__CERT_BYPASS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -65,20 +65,20 @@
         <!-- Sync Policy & Transfers Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Upload Frequency & Timeouts</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Upload Frequency & Timeouts</span>
 
                 <!-- Upload Image & Upload Panorama -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__UPLOAD_IMAGE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__UPLOAD_IMAGE.label.text }}</span>
                         {{ form_config.SYNCAPI__UPLOAD_IMAGE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">0 = disable, 1 = every image, 2 = every 2nd, etc.</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">0 = disable, 1 = every image, 2 = every 2nd, etc.</span>
                         <div id="SYNCAPI__UPLOAD_IMAGE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__UPLOAD_PANORAMA.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__UPLOAD_PANORAMA.label.text }}</span>
                         {{ form_config.SYNCAPI__UPLOAD_PANORAMA(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">0 = disable, 1 = every panorama, etc.</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">0 = disable, 1 = every panorama, etc.</span>
                         <div id="SYNCAPI__UPLOAD_PANORAMA-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -86,14 +86,14 @@
                 <!-- Connect Timeout & Transfer Timeout -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__CONNECT_TIMEOUT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__CONNECT_TIMEOUT.label.text }}</span>
                         {{ form_config.SYNCAPI__CONNECT_TIMEOUT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="SYNCAPI__CONNECT_TIMEOUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__TIMEOUT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__TIMEOUT.label.text }}</span>
                         {{ form_config.SYNCAPI__TIMEOUT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">Total transfer timeout (seconds)</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Total transfer timeout (seconds)</span>
                         <div id="SYNCAPI__TIMEOUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -101,8 +101,8 @@
                 <!-- Upload Video Toggle -->
                 <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__UPLOAD_VIDEO.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/50">Timelapses, star trails, and keograms are always synced when enabled</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__UPLOAD_VIDEO.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Timelapses, star trails, and keograms are always synced when enabled</span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
                         {{ form_config.SYNCAPI__UPLOAD_VIDEO(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -114,16 +114,16 @@
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <div class="tw:flex tw:flex-col">
-                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__POST_S3.label.text }}</span>
-                            <span class="tw:text-[10px] tw:text-base-content/40">Sync after S3 upload</span>
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__POST_S3.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Sync after S3 upload</span>
                         </div>
                         {{ form_config.SYNCAPI__POST_S3(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="SYNCAPI__POST_S3-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <div class="tw:flex tw:flex-col">
-                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__EMPTY_FILE.label.text }}</span>
-                            <span class="tw:text-[10px] tw:text-base-content/40">Upload to S3 only</span>
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__EMPTY_FILE.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Upload to S3 only</span>
                         </div>
                         {{ form_config.SYNCAPI__EMPTY_FILE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="SYNCAPI__EMPTY_FILE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>

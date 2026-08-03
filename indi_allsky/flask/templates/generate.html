@@ -43,7 +43,7 @@ var camera_id = {{ camera_id }};
             <div class="tw:card-body tw:p-6">
                 <!-- Steps Progress Wizard -->
                 <div class="tw:w-full tw:flex tw:justify-center tw:pb-4 tw:mb-4 tw:border-b tw:border-base-content/10">
-                    <ul class="tw:steps tw:steps-horizontal tw:w-full tw:max-w-xl tw:text-[10px] tw:font-bold tw:uppercase">
+                    <ul class="tw:steps tw:steps-horizontal tw:w-full tw:max-w-xl tw:text-[0.625rem] tw:font-bold tw:uppercase">
                         <li id="step-action" class="tw:step tw:step-primary">Select Action</li>
                         <li id="step-day" class="tw:step">Select Day</li>
                         <li id="step-confirm" class="tw:step">Confirm & Launch</li>
@@ -61,7 +61,7 @@ var camera_id = {{ camera_id }};
                     <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-6">
                         <div class="tw:form-control tw:w-full">
                             <label class="tw:label tw:pb-1">
-                                <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_timelapsegen.ACTION_SELECT.label.text }}</span>
+                                <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_timelapsegen.ACTION_SELECT.label.text }}</span>
                             </label>
                             {{ form_timelapsegen.ACTION_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary') }}
                             <div id="ACTION_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
@@ -69,7 +69,7 @@ var camera_id = {{ camera_id }};
                         
                         <div class="tw:form-control tw:w-full">
                             <label class="tw:label tw:pb-1">
-                                <span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_timelapsegen.DAY_SELECT.label.text }}</span>
+                                <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_timelapsegen.DAY_SELECT.label.text }}</span>
                             </label>
                             {{ form_timelapsegen.DAY_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary') }}
                             <div id="DAY_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
@@ -100,7 +100,7 @@ var camera_id = {{ camera_id }};
             
             <!-- Wiki Links Container -->
             <div class="tw:bg-base-300/40 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:flex tw:flex-col tw:w-full">
-                <h3 class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/40 tw:mb-3">Documentation Wiki Links</h3>
+                <h3 class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/40 tw:mb-3">Documentation Wiki Links</h3>
                 <div class="tw:flex tw:flex-col tw:gap-2 tw:grow tw:justify-center">
                     <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Timelapses" class="tw:btn tw:btn-neutral tw:btn-accent-hover tw:btn-sm tw:text-xs tw:justify-between tw:bg-base-100 hover:tw:bg-base-300 tw:w-full tw:no-underline tw:border-none tw:h-10 tw:rounded-[var(--radius-box)]" target="_blank">
                         Timelapse Guide
@@ -115,15 +115,15 @@ var camera_id = {{ camera_id }};
 
             <!-- Legend Container -->
             <div class="tw:bg-base-300/40 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10 tw:w-full">
-                <h3 class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/40 tw:mb-3">Flag Index Legend</h3>
+                <h3 class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/40 tw:mb-3">Flag Index Legend</h3>
                 <ul style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem;" class="tw:text-xs tw:font-semibold tw:text-base-content/70">
-                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[9px]">T</span> Timelapse</li>
-                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[9px]">K</span> Keogram</li>
-                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[9px]">P</span> Panorama</li>
-                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[9px]">S</span> Star Trail</li>
-                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[9px]">ST</span> Trail Video</li>
-                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-error tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[9px]">!</span> Failed</li>
-                    <li class="tw:flex tw:items-center tw:gap-2" style="grid-column: span 2 / span 2;"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[9px]">#/#</span> Image Fractions</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[0.5625rem]">T</span> Timelapse</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[0.5625rem]">K</span> Keogram</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[0.5625rem]">P</span> Panorama</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[0.5625rem]">S</span> Star Trail</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[0.5625rem]">ST</span> Trail Video</li>
+                    <li class="tw:flex tw:items-center tw:gap-2"><span class="tw:badge tw:badge-sm tw:badge-error tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[0.5625rem]">!</span> Failed</li>
+                    <li class="tw:flex tw:items-center tw:gap-2" style="grid-column: span 2 / span 2;"><span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-mono tw:w-6 tw:rounded-[var(--radius-box)] tw:text-[0.5625rem]">#/#</span> Image Fractions</li>
                 </ul>
             </div>
         </div>
@@ -135,12 +135,12 @@ var camera_id = {{ camera_id }};
 
     <!-- Bottom Queue Table -->
     <div class="tw:flex tw:flex-col tw:gap-3 tw:w-full">
-        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50 tw:pl-1">System Tasks Queue</span>
+        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50 tw:pl-1">System Tasks Queue</span>
         
         <div class="tw:overflow-x-auto tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50 tw:w-full">
             <table id="tasks-table" class="tw:table tw:table-xs tw:w-full tw:m-0">
                 <thead>
-                    <tr class="tw:bg-base-300/60 tw:text-[10px] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
+                    <tr class="tw:bg-base-300/60 tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
                         <th class="tw:pl-4 tw:py-3">ID</th>
                         <th class="tw:py-3">Date</th>
                         <th class="tw:py-3">Queue</th>
@@ -154,18 +154,18 @@ var camera_id = {{ camera_id }};
                     <tr class="hover:tw:bg-base-content/5 tw:transition-colors tw:text-xs">
                         <td class="tw:pl-4 tw:font-mono tw:font-bold tw:text-base-content/90">{{ task.id }}</td>
                         <td class="tw:whitespace-nowrap tw:text-base-content/80">{{ task.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                        <td><span class="tw:badge tw:badge-sm tw:badge-ghost tw:font-semibold tw:text-[9px] tw:uppercase">{{ task.queue }}</span></td>
+                        <td><span class="tw:badge tw:badge-sm tw:badge-ghost tw:font-semibold tw:text-[0.5625rem] tw:uppercase">{{ task.queue }}</span></td>
                         <td class="tw:font-medium tw:text-base-content/90">{{ task.action }}</td>
                         <td>
                             {% if task.state in ['failed', 'error'] %}
-                            <span class="tw:badge tw:badge-error tw:badge-sm tw:font-bold tw:uppercase tw:text-[9px] tw:rounded-[var(--radius-box)]">failed</span>
+                            <span class="tw:badge tw:badge-error tw:badge-sm tw:font-bold tw:uppercase tw:text-[0.5625rem] tw:rounded-[var(--radius-box)]">failed</span>
                             {% elif task.state in ['completed', 'success'] %}
-                            <span class="tw:badge tw:badge-success tw:badge-outline tw:badge-sm tw:font-bold tw:uppercase tw:text-[9px] tw:rounded-[var(--radius-box)]">success</span>
+                            <span class="tw:badge tw:badge-success tw:badge-outline tw:badge-sm tw:font-bold tw:uppercase tw:text-[0.5625rem] tw:rounded-[var(--radius-box)]">success</span>
                             {% else %}
-                            <span class="tw:badge tw:badge-info tw:badge-outline tw:badge-sm tw:font-bold tw:uppercase tw:text-[9px] tw:rounded-[var(--radius-box)]">{{ task.state }}</span>
+                            <span class="tw:badge tw:badge-info tw:badge-outline tw:badge-sm tw:font-bold tw:uppercase tw:text-[0.5625rem] tw:rounded-[var(--radius-box)]">{{ task.state }}</span>
                             {% endif %}
                         </td>
-                        <td class="tw:pr-4 tw:max-w-xs tw:truncate tw:font-mono tw:text-[11px] tw:text-base-content/60" title="{{ task.result }}">{{ task.result }}</td>
+                        <td class="tw:pr-4 tw:max-w-xs tw:truncate tw:font-mono tw:text-[0.6875rem] tw:text-base-content/60" title="{{ task.result }}">{{ task.result }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

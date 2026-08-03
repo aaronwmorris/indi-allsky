@@ -5,15 +5,15 @@
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
-                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Timelapse Generation & Pipeline</span>
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Timelapse Generation & Pipeline</span>
                     <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Timelapses" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Timelapse Wiki</a>
                 </div>
 
                 <!-- Enable Timelapse -->
                 <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE_ENABLE.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/50">Enable automatic timelapse, keogram, and star trail video creation</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE_ENABLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Enable automatic timelapse, keogram, and star trail video creation</span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
                         {{ form_config.TIMELAPSE_ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -24,8 +24,8 @@
                 <!-- Daytime Timelapse Enable -->
                 <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DAYTIME_TIMELAPSE.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/50">Enable daytime timelapse video generation</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DAYTIME_TIMELAPSE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Enable daytime timelapse video generation</span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
                         {{ form_config.DAYTIME_TIMELAPSE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -36,8 +36,8 @@
                 <!-- Pre-Processor Selection -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE__PRE_PROCESSOR.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Night pre-processing engine</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE__PRE_PROCESSOR.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Night pre-processing engine</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.TIMELAPSE__PRE_PROCESSOR(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -48,15 +48,15 @@
                 <!-- Framerate & Bitrate -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_FRAMERATE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_FRAMERATE.label.text }}</span>
                         {{ form_config.FFMPEG_FRAMERATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">Default framerate (FPS)</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default framerate (FPS)</span>
                         <div id="FFMPEG_FRAMERATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_BITRATE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_BITRATE.label.text }}</span>
                         {{ form_config.FFMPEG_BITRATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">e.g. 5000k, 15000k (1080p), 30000k (4K)</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">e.g. 5000k, 15000k (1080p), 30000k (4K)</span>
                         <div id="FFMPEG_BITRATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -64,12 +64,12 @@
                 <!-- Scaling & Star Trail Scaling -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_VFSCALE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_VFSCALE.label.text }}</span>
                         {{ form_config.FFMPEG_VFSCALE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FFMPEG_VFSCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_VFSCALE_STARTRAIL.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_VFSCALE_STARTRAIL.label.text }}</span>
                         {{ form_config.FFMPEG_VFSCALE_STARTRAIL(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FFMPEG_VFSCALE_STARTRAIL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -78,17 +78,17 @@
                 <!-- Codec, Extra Options & Skip Frames -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:py-3">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_CODEC.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_CODEC.label.text }}</span>
                         {{ form_config.FFMPEG_CODEC(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FFMPEG_CODEC-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_EXTRA_OPTIONS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_EXTRA_OPTIONS.label.text }}</span>
                         {{ form_config.FFMPEG_EXTRA_OPTIONS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FFMPEG_EXTRA_OPTIONS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE_SKIP_FRAMES.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE_SKIP_FRAMES.label.text }}</span>
                         {{ form_config.TIMELAPSE_SKIP_FRAMES(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="TIMELAPSE_SKIP_FRAMES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -100,13 +100,13 @@
         <!-- Daytime Specific Timelapse Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Daytime Specific Overrides</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Daytime Specific Overrides</span>
 
                 <!-- Use Night Config Override -->
                 <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE__USE_NIGHT_CONFIG.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/50">Use night configuration settings during daytime timelapse generation</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE__USE_NIGHT_CONFIG.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Use night configuration settings during daytime timelapse generation</span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
                         {{ form_config.TIMELAPSE__USE_NIGHT_CONFIG(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -117,8 +117,8 @@
                 <!-- Daytime Pre-Processor -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE__PRE_PROCESSOR_DAY.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Daytime pre-processing engine</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE__PRE_PROCESSOR_DAY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Daytime pre-processing engine</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.TIMELAPSE__PRE_PROCESSOR_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -129,12 +129,12 @@
                 <!-- Daytime Framerate & Bitrate -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_FRAMERATE_DAY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_FRAMERATE_DAY.label.text }}</span>
                         {{ form_config.FFMPEG_FRAMERATE_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FFMPEG_FRAMERATE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_BITRATE_DAY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_BITRATE_DAY.label.text }}</span>
                         {{ form_config.FFMPEG_BITRATE_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FFMPEG_BITRATE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -143,12 +143,12 @@
                 <!-- Daytime Scaling & Extra Options -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_VFSCALE_DAY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_VFSCALE_DAY.label.text }}</span>
                         {{ form_config.FFMPEG_VFSCALE_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FFMPEG_VFSCALE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_EXTRA_OPTIONS_DAY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_EXTRA_OPTIONS_DAY.label.text }}</span>
                         {{ form_config.FFMPEG_EXTRA_OPTIONS_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FFMPEG_EXTRA_OPTIONS_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -160,13 +160,13 @@
         <!-- Advanced Processing Options Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Advanced Geometry & Debugging Options</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Advanced Geometry & Debugging Options</span>
 
                 <!-- ffmpeg Debug Report Toggle -->
                 <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE__FFMPEG_REPORT.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/50">Generate ffmpeg report files in $HOME for debugging</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE__FFMPEG_REPORT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Generate ffmpeg report files in $HOME for debugging</span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
                         {{ form_config.TIMELAPSE__FFMPEG_REPORT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -177,17 +177,17 @@
                 <!-- Image Circle, Pre-Scale & Keogram Ratio -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE__IMAGE_CIRCLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE__IMAGE_CIRCLE.label.text }}</span>
                         {{ form_config.TIMELAPSE__IMAGE_CIRCLE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="TIMELAPSE__IMAGE_CIRCLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE__PRE_SCALE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE__PRE_SCALE.label.text }}</span>
                         {{ form_config.TIMELAPSE__PRE_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="TIMELAPSE__PRE_SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE__KEOGRAM_RATIO.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE__KEOGRAM_RATIO.label.text }}</span>
                         {{ form_config.TIMELAPSE__KEOGRAM_RATIO(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="TIMELAPSE__KEOGRAM_RATIO-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>

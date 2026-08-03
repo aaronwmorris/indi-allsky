@@ -289,7 +289,7 @@ function loadJS(url, data, onDone, onError) {
                     <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
                         {% for field in [form_virtualsky.AZIMUTH_ANGLE, form_virtualsky.LATITUDE_OFFSET, form_virtualsky.LONGITUDE_OFFSET] %}
                         <div class="tw:form-control">
-                            <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ field.label.text }}</span></label>
+                            <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ field.label.text }}</span></label>
                             {{ field(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:text-sm tw:w-full') }}
                         </div>
                         {% endfor %}
@@ -298,7 +298,7 @@ function loadJS(url, data, onDone, onError) {
                     <div class="tw:grid tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4">
                         {% for field in [form_virtualsky.IMAGE_CIRCLE_DIAMETER, form_virtualsky.OFFSET_X, form_virtualsky.OFFSET_Y, form_virtualsky.MAGNITUDE] %}
                         <div class="tw:form-control">
-                            <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ field.label.text }}</span></label>
+                            <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ field.label.text }}</span></label>
                             {{ field(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:text-sm tw:w-full') }}
                         </div>
                         {% endfor %}
@@ -308,7 +308,7 @@ function loadJS(url, data, onDone, onError) {
                         {% for field in [form_virtualsky.CONSTELLATIONS, form_virtualsky.SHOWSTARS, form_virtualsky.SHOWPLANETS, form_virtualsky.CONSTELLATIONLABELS, form_virtualsky.SHOWSTARLABELS, form_virtualsky.SHOWPLANETLABELS] %}
                         <div class="tw:flex tw:items-center tw:gap-2.5">
                             <input type="checkbox" class="tw:toggle tw:toggle-primary tw:toggle-sm" {{ 'checked' if field.data else '' }} id="{{ field.id }}" name="{{ field.name }}">
-                            <label for="{{ field.id }}" class="tw:label-text tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/85 tw:cursor-pointer">{{ field.label.text }}</label>
+                            <label for="{{ field.id }}" class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/85 tw:cursor-pointer">{{ field.label.text }}</label>
                         </div>
                         {% endfor %}
                         

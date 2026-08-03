@@ -24,8 +24,8 @@ var camera_id = {{ camera_id }};
                 <div class="tw:space-y-3">
                     {% for label, val in [("Name", camera.name), ("Driver", camera.driver), ("Resolution", camera.width ~ " x " ~ camera.height), ("Pixels", ("%0.2f"|format(camera.pixelSize | float)) ~ "µm"), ("CFA", camera_cfa), ("Bits", camera.bits | int)] %}
                     <div class="tw:flex tw:justify-between tw:border-b tw:border-base-300/50 tw:pb-1">
-                        <span class="tw:text-[10px] tw:text-base-content/60">{{ label }}</span>
-                        <span class="tw:text-[10px] tw:font-mono tw:font-bold">{{ val }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/60">{{ label }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-mono tw:font-bold">{{ val }}</span>
                     </div>
                     {% endfor %}
                 </div>
@@ -38,8 +38,8 @@ var camera_id = {{ camera_id }};
                 <div class="tw:space-y-3">
                     {% for label, val in [("Owner", owner), ("Lens", camera.lensName), ("Focal Length", ("%0.2f"|format(camera.lensFocalLength | float)) ~ "mm"), ("Aperture", ("%0.2f"|format(lensAperture | float)) ~ "mm"), ("Focal Ratio", "ƒ/" ~ ("%0.2f"|format(camera.lensFocalRatio | float)))] %}
                     <div class="tw:flex tw:justify-between tw:border-b tw:border-base-300/50 tw:pb-1">
-                        <span class="tw:text-[10px] tw:text-base-content/60">{{ label }}</span>
-                        <span class="tw:text-[10px] tw:font-mono tw:font-bold">{{ val }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/60">{{ label }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-mono tw:font-bold">{{ val }}</span>
                     </div>
                     {% endfor %}
                 </div>
@@ -52,8 +52,8 @@ var camera_id = {{ camera_id }};
                 <div class="tw:space-y-3">
                     {% for label, val in [("Arcsec/px", ("%0.2f"|format(arcsec_pixel | float))), ("FoV", ("%0.1f"|format(deg_fov_width | float)) ~ "° x " ~ ("%0.1f"|format(deg_fov_height | float)) ~ "°"), ("Arcsec/µm", ("%0.2f"|format(arcsec_um | float))), ("Deg²/px", ("%0.5f"|format(deg2_px | float)))] %}
                     <div class="tw:flex tw:justify-between tw:border-b tw:border-base-300/50 tw:pb-1">
-                        <span class="tw:text-[10px] tw:text-base-content/60">{{ label }}</span>
-                        <span class="tw:text-[10px] tw:font-mono tw:font-bold">{{ val }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/60">{{ label }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-mono tw:font-bold">{{ val }}</span>
                     </div>
                     {% endfor %}
                 </div>

@@ -4,7 +4,7 @@
         <!-- Admin Configuration Action Buttons Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Configuration Management</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Configuration Management</span>
                 <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
                     <a href="{{ url_for('indi_allsky.config_list_view') }}" class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-accent-hover tw:gap-2 tw:no-underline">
                         <i class="tw:icon-[lucide--history] tw:w-4 tw:h-4"></i> Config History
@@ -25,13 +25,13 @@
         <!-- Data Retention & Expiration Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Database & Data Expiration Policy</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Database & Data Expiration Policy</span>
 
                 <!-- Database Backup Period -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.BACKUP_DB_PERIOD_DAYS.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Period in days (0 = disabled, SQLite only)</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.BACKUP_DB_PERIOD_DAYS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Period in days (0 = disabled, SQLite only)</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.BACKUP_DB_PERIOD_DAYS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -42,22 +42,22 @@
                 <!-- Expire Days (Image, RAW, FITS, Timelapse) -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_EXPIRE_DAYS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_EXPIRE_DAYS.label.text }}</span>
                         {{ form_config.IMAGE_EXPIRE_DAYS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_EXPIRE_DAYS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_RAW_EXPIRE_DAYS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_RAW_EXPIRE_DAYS.label.text }}</span>
                         {{ form_config.IMAGE_RAW_EXPIRE_DAYS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_RAW_EXPIRE_DAYS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_FITS_EXPIRE_DAYS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_FITS_EXPIRE_DAYS.label.text }}</span>
                         {{ form_config.IMAGE_FITS_EXPIRE_DAYS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_FITS_EXPIRE_DAYS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE_EXPIRE_DAYS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE_EXPIRE_DAYS.label.text }}</span>
                         {{ form_config.TIMELAPSE_EXPIRE_DAYS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="TIMELAPSE_EXPIRE_DAYS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -66,8 +66,8 @@
                 <!-- Overwrite Existing Timelapse -->
                 <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE_OVERWRITE.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/50">Overwrite existing timelapses instead of skipping execution</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE_OVERWRITE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Overwrite existing timelapses instead of skipping execution</span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
                         {{ form_config.TIMELAPSE_OVERWRITE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -81,13 +81,13 @@
         <!-- Directories & Web Display Settings Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Storage Directories & Status Template</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Storage Directories & Status Template</span>
 
                 <!-- Image Folder -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_FOLDER.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Default: /var/www/html/allsky/images</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_FOLDER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default: /var/www/html/allsky/images</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.IMAGE_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -98,8 +98,8 @@
                 <!-- VarLib Folder -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VARLIB_FOLDER.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Default: /var/lib/indi-allsky</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VARLIB_FOLDER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default: /var/lib/indi-allsky</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.VARLIB_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -110,8 +110,8 @@
                 <!-- Web Status Template -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WEB_STATUS_TEMPLATE.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">HTML template for status bar (<a href="https://github.com/aaronwmorris/indi-allsky/wiki/Web-Status-Configuration" class="tw:link tw:link-info tw:no-underline" target="_blank">Wiki</a>)</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WEB_STATUS_TEMPLATE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">HTML template for status bar (<a href="https://github.com/aaronwmorris/indi-allsky/wiki/Web-Status-Configuration" class="tw:link tw:link-info tw:no-underline" target="_blank">Wiki</a>)</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.WEB_STATUS_TEMPLATE(class='tw:textarea tw:textarea-bordered tw:bg-base-100 tw:text-base-content tw:w-full tw:font-mono tw:text-xs', rows='6') }}
@@ -122,12 +122,12 @@
                 <!-- Web Extra Text, Title & Encryption -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WEBSITE__TITLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WEBSITE__TITLE.label.text }}</span>
                         {{ form_config.WEBSITE__TITLE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="WEBSITE__TITLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WEB_EXTRA_TEXT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WEB_EXTRA_TEXT.label.text }}</span>
                         {{ form_config.WEB_EXTRA_TEXT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="WEB_EXTRA_TEXT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -139,95 +139,95 @@
         <!-- Custom Charts Slots Grid Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Custom Charts Sensor Slots (1 to 9)</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Custom Charts Sensor Slots (1 to 9)</span>
 
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
                     <!-- Slot 1 -->
                     <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/70">Chart Slot 1</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/70">Chart Slot 1</span>
                         {{ form_config.CHARTS__CUSTOM_SLOT_1(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CHARTS__CUSTOM_SLOT_1-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Slot 1 Min</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Slot 1 Min</span>
                         {{ form_config.CHARTS__CUSTOM_SLOT_1_MIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CHARTS__CUSTOM_SLOT_1_MIN-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
                     </div>
 
                     <!-- Slot 2 -->
                     <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/70">Chart Slot 2</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/70">Chart Slot 2</span>
                         {{ form_config.CHARTS__CUSTOM_SLOT_2(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CHARTS__CUSTOM_SLOT_2-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Slot 2 Min</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Slot 2 Min</span>
                         {{ form_config.CHARTS__CUSTOM_SLOT_2_MIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CHARTS__CUSTOM_SLOT_2_MIN-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
                     </div>
 
                     <!-- Slot 3 -->
                     <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/70">Chart Slot 3</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/70">Chart Slot 3</span>
                         {{ form_config.CHARTS__CUSTOM_SLOT_3(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CHARTS__CUSTOM_SLOT_3-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Slot 3 Min</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Slot 3 Min</span>
                         {{ form_config.CHARTS__CUSTOM_SLOT_3_MIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CHARTS__CUSTOM_SLOT_3_MIN-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
                     </div>
 
                     <!-- Slot 4 -->
                     <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/70">Chart Slot 4</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/70">Chart Slot 4</span>
                         {{ form_config.CHARTS__CUSTOM_SLOT_4(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CHARTS__CUSTOM_SLOT_4-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Slot 4 Min</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Slot 4 Min</span>
                         {{ form_config.CHARTS__CUSTOM_SLOT_4_MIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CHARTS__CUSTOM_SLOT_4_MIN-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
                     </div>
 
                     <!-- Slot 5 -->
                     <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/70">Chart Slot 5</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/70">Chart Slot 5</span>
                         {{ form_config.CHARTS__CUSTOM_SLOT_5(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CHARTS__CUSTOM_SLOT_5-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Slot 5 Min</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Slot 5 Min</span>
                         {{ form_config.CHARTS__CUSTOM_SLOT_5_MIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CHARTS__CUSTOM_SLOT_5_MIN-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
                     </div>
 
                     <!-- Slot 6 -->
                     <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/70">Chart Slot 6</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/70">Chart Slot 6</span>
                         {{ form_config.CHARTS__CUSTOM_SLOT_6(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CHARTS__CUSTOM_SLOT_6-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Slot 6 Min</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Slot 6 Min</span>
                         {{ form_config.CHARTS__CUSTOM_SLOT_6_MIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CHARTS__CUSTOM_SLOT_6_MIN-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
                     </div>
 
                     <!-- Slot 7 -->
                     <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/70">Chart Slot 7</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/70">Chart Slot 7</span>
                         {{ form_config.CHARTS__CUSTOM_SLOT_7(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CHARTS__CUSTOM_SLOT_7-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Slot 7 Min</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Slot 7 Min</span>
                         {{ form_config.CHARTS__CUSTOM_SLOT_7_MIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CHARTS__CUSTOM_SLOT_7_MIN-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
                     </div>
 
                     <!-- Slot 8 -->
                     <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/70">Chart Slot 8</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/70">Chart Slot 8</span>
                         {{ form_config.CHARTS__CUSTOM_SLOT_8(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CHARTS__CUSTOM_SLOT_8-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Slot 8 Min</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Slot 8 Min</span>
                         {{ form_config.CHARTS__CUSTOM_SLOT_8_MIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CHARTS__CUSTOM_SLOT_8_MIN-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
                     </div>
 
                     <!-- Slot 9 -->
                     <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/70">Chart Slot 9</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/70">Chart Slot 9</span>
                         {{ form_config.CHARTS__CUSTOM_SLOT_9(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CHARTS__CUSTOM_SLOT_9-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Slot 9 Min</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Slot 9 Min</span>
                         {{ form_config.CHARTS__CUSTOM_SLOT_9_MIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CHARTS__CUSTOM_SLOT_9_MIN-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
                     </div>
@@ -239,20 +239,20 @@
         <!-- Healthcheck, Networks & Security Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Healthcheck & Administrative Security</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Healthcheck & Administrative Security</span>
 
                 <!-- Healthcheck Disk & Swap Usage -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.HEALTHCHECK__DISK_USAGE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.HEALTHCHECK__DISK_USAGE.label.text }}</span>
                         {{ form_config.HEALTHCHECK__DISK_USAGE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">Disk usage warning percentage</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Disk usage warning percentage</span>
                         <div id="HEALTHCHECK__DISK_USAGE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.HEALTHCHECK__SWAP_USAGE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.HEALTHCHECK__SWAP_USAGE.label.text }}</span>
                         {{ form_config.HEALTHCHECK__SWAP_USAGE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">Swap usage warning percentage</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Swap usage warning percentage</span>
                         <div id="HEALTHCHECK__SWAP_USAGE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -260,8 +260,8 @@
                 <!-- Admin Networks Flask -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ADMIN_NETWORKS_FLASK.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Subnets allowed for administrative requests</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ADMIN_NETWORKS_FLASK.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Subnets allowed for administrative requests</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.ADMIN_NETWORKS_FLASK(class='tw:textarea tw:textarea-bordered tw:bg-base-100 tw:text-base-content tw:w-full tw:font-mono tw:text-xs', rows='4') }}
@@ -273,24 +273,24 @@
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <div class="tw:flex tw:flex-col">
-                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WEB_NONLOCAL_IMAGES.label.text }}</span>
-                            <span class="tw:text-[10px] tw:text-base-content/40">Non-local media only</span>
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WEB_NONLOCAL_IMAGES.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Non-local media only</span>
                         </div>
                         {{ form_config.WEB_NONLOCAL_IMAGES(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="WEB_NONLOCAL_IMAGES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <div class="tw:flex tw:flex-col">
-                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WEB_LOCAL_IMAGES_ADMIN.label.text }}</span>
-                            <span class="tw:text-[10px] tw:text-base-content/40">Local media for admin</span>
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WEB_LOCAL_IMAGES_ADMIN.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Local media for admin</span>
                         </div>
                         {{ form_config.WEB_LOCAL_IMAGES_ADMIN(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="WEB_LOCAL_IMAGES_ADMIN-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <div class="tw:flex tw:flex-col">
-                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ENCRYPT_PASSWORDS.label.text }}</span>
-                            <span class="tw:text-[10px] tw:text-base-content/40">Encrypt database passwords</span>
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ENCRYPT_PASSWORDS.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Encrypt database passwords</span>
                         </div>
                         {{ form_config.ENCRYPT_PASSWORDS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="ENCRYPT_PASSWORDS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>

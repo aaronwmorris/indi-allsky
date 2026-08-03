@@ -5,79 +5,79 @@
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
-                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Image Label Templates & Text Properties</span>
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Image Label Templates & Text Properties</span>
                     <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Image-Labels" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Image Labels Wiki</a>
                 </div>
 
                 <!-- Label System, Template & Extra Text -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_LABEL_SYSTEM.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_LABEL_SYSTEM.label.text }}</span>
                         {{ form_config.IMAGE_LABEL_SYSTEM(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_LABEL_SYSTEM-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_EXTRA_TEXT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_EXTRA_TEXT.label.text }}</span>
                         {{ form_config.IMAGE_EXTRA_TEXT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_EXTRA_TEXT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_LABEL_TEMPLATE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_LABEL_TEMPLATE.label.text }}</span>
                         {{ form_config.IMAGE_LABEL_TEMPLATE(class='tw:textarea tw:textarea-bordered tw:bg-base-100 tw:text-base-content tw:w-full tw:text-xs', rows='3') }}
                         <div id="IMAGE_LABEL_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
 
                 <!-- Pillow Fonts -->
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">Pillow TrueType Font Options</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">Pillow TrueType Font Options</span>
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEXT_PROPERTIES__PIL_FONT_FILE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEXT_PROPERTIES__PIL_FONT_FILE.label.text }}</span>
                         {{ form_config.TEXT_PROPERTIES__PIL_FONT_FILE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="TEXT_PROPERTIES__PIL_FONT_FILE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEXT_PROPERTIES__PIL_FONT_SIZE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEXT_PROPERTIES__PIL_FONT_SIZE.label.text }}</span>
                         {{ form_config.TEXT_PROPERTIES__PIL_FONT_SIZE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="TEXT_PROPERTIES__PIL_FONT_SIZE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEXT_PROPERTIES__PIL_FONT_CUSTOM.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEXT_PROPERTIES__PIL_FONT_CUSTOM.label.text }}</span>
                         {{ form_config.TEXT_PROPERTIES__PIL_FONT_CUSTOM(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="TEXT_PROPERTIES__PIL_FONT_CUSTOM-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
 
                 <!-- OpenCV Fonts & Positioning -->
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">OpenCV Font & Placement</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">OpenCV Font & Placement</span>
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEXT_PROPERTIES__FONT_FACE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEXT_PROPERTIES__FONT_FACE.label.text }}</span>
                         {{ form_config.TEXT_PROPERTIES__FONT_FACE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="TEXT_PROPERTIES__FONT_FACE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         {{ form_config.TEXT_PROPERTIES__FONT_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1', placeholder='Scale') }}
                         <div id="TEXT_PROPERTIES__FONT_SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEXT_PROPERTIES__FONT_THICKNESS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEXT_PROPERTIES__FONT_THICKNESS.label.text }}</span>
                         {{ form_config.TEXT_PROPERTIES__FONT_THICKNESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="TEXT_PROPERTIES__FONT_THICKNESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         {{ form_config.TEXT_PROPERTIES__FONT_HEIGHT(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1', placeholder='Height') }}
                         <div id="TEXT_PROPERTIES__FONT_HEIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">Position (X, Y)</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">Position (X, Y)</span>
                         {{ form_config.TEXT_PROPERTIES__FONT_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full', placeholder='X') }}
                         <div id="TEXT_PROPERTIES__FONT_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         {{ form_config.TEXT_PROPERTIES__FONT_Y(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1', placeholder='Y') }}
                         <div id="TEXT_PROPERTIES__FONT_Y-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEXT_PROPERTIES__FONT_COLOR.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEXT_PROPERTIES__FONT_COLOR.label.text }}</span>
                         {{ form_config.TEXT_PROPERTIES__FONT_COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="TEXT_PROPERTIES__FONT_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         <div class="tw:flex tw:items-center tw:justify-between tw:p-2 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:mt-1">
-                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">Outline</span>
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">Outline</span>
                             {{ form_config.TEXT_PROPERTIES__FONT_OUTLINE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="TEXT_PROPERTIES__FONT_OUTLINE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
@@ -90,36 +90,36 @@
         <!-- Moon Overlay Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Moon Phase Overlay</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Moon Phase Overlay</span>
 
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-6 tw:gap-4">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.MOON_OVERLAY__ENABLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.MOON_OVERLAY__ENABLE.label.text }}</span>
                         {{ form_config.MOON_OVERLAY__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="MOON_OVERLAY__ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.MOON_OVERLAY__X.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.MOON_OVERLAY__X.label.text }}</span>
                         {{ form_config.MOON_OVERLAY__X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="MOON_OVERLAY__X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.MOON_OVERLAY__Y.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.MOON_OVERLAY__Y.label.text }}</span>
                         {{ form_config.MOON_OVERLAY__Y(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="MOON_OVERLAY__Y-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.MOON_OVERLAY__FLIP_V.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.MOON_OVERLAY__FLIP_V.label.text }}</span>
                         {{ form_config.MOON_OVERLAY__FLIP_V(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="MOON_OVERLAY__FLIP_V-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.MOON_OVERLAY__FLIP_H.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.MOON_OVERLAY__FLIP_H.label.text }}</span>
                         {{ form_config.MOON_OVERLAY__FLIP_H(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="MOON_OVERLAY__FLIP_H-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">Scale & Shading</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">Scale & Shading</span>
                         {{ form_config.MOON_OVERLAY__SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Scale') }}
                         <div id="MOON_OVERLAY__SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         {{ form_config.MOON_OVERLAY__DARK_SIDE_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1', placeholder='Dark Scale') }}
@@ -133,75 +133,75 @@
         <!-- Lightgraph Overlay Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Lightgraph Overlay (Day/Night Timeline)</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Lightgraph Overlay (Day/Night Timeline)</span>
 
                 <!-- Dimensions & Offsets -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-6 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__ENABLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__ENABLE.label.text }}</span>
                         {{ form_config.LIGHTGRAPH_OVERLAY__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="LIGHTGRAPH_OVERLAY__ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT.label.text }}</span>
                         {{ form_config.LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__GRAPH_BORDER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__GRAPH_BORDER.label.text }}</span>
                         {{ form_config.LIGHTGRAPH_OVERLAY__GRAPH_BORDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="LIGHTGRAPH_OVERLAY__GRAPH_BORDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE.label.text }}</span>
                         {{ form_config.LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__OFFSET_X.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__OFFSET_X.label.text }}</span>
                         {{ form_config.LIGHTGRAPH_OVERLAY__OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="LIGHTGRAPH_OVERLAY__OFFSET_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__Y.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__Y.label.text }}</span>
                         {{ form_config.LIGHTGRAPH_OVERLAY__Y(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="LIGHTGRAPH_OVERLAY__Y-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
 
                 <!-- Palette & Fonts -->
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">Color Palette & Fonts</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">Color Palette & Fonts</span>
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 md:tw:grid-cols-5 tw:gap-3 tw:pt-2">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">Day & Dusk</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">Day & Dusk</span>
                         {{ form_config.LIGHTGRAPH_OVERLAY__DAY_COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Day') }}
                         <div id="LIGHTGRAPH_OVERLAY__DAY_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         {{ form_config.LIGHTGRAPH_OVERLAY__DUSK_COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1', placeholder='Dusk') }}
                         <div id="LIGHTGRAPH_OVERLAY__DUSK_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">Night & Moon</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">Night & Moon</span>
                         {{ form_config.LIGHTGRAPH_OVERLAY__NIGHT_COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Night') }}
                         <div id="LIGHTGRAPH_OVERLAY__NIGHT_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         {{ form_config.LIGHTGRAPH_OVERLAY__MOONMODE_COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1', placeholder='Moonmode') }}
                         <div id="LIGHTGRAPH_OVERLAY__MOONMODE_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">Hour & Border</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">Hour & Border</span>
                         {{ form_config.LIGHTGRAPH_OVERLAY__HOUR_COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Hour') }}
                         <div id="LIGHTGRAPH_OVERLAY__HOUR_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         {{ form_config.LIGHTGRAPH_OVERLAY__BORDER_COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1', placeholder='Border') }}
                         <div id="LIGHTGRAPH_OVERLAY__BORDER_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">Now & Font</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">Now & Font</span>
                         {{ form_config.LIGHTGRAPH_OVERLAY__NOW_COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Now') }}
                         <div id="LIGHTGRAPH_OVERLAY__NOW_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         {{ form_config.LIGHTGRAPH_OVERLAY__FONT_COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1', placeholder='Font') }}
                         <div id="LIGHTGRAPH_OVERLAY__FONT_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">Scale & Toggles</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">Scale & Toggles</span>
                         {{ form_config.LIGHTGRAPH_OVERLAY__SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Scale') }}
                         <div id="LIGHTGRAPH_OVERLAY__SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         {{ form_config.LIGHTGRAPH_OVERLAY__OPACITY(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1', placeholder='Opacity') }}
@@ -211,22 +211,22 @@
 
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-4 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE.label.text }}</span>
                         {{ form_config.LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE.label.text }}</span>
                         {{ form_config.LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__LABEL.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__LABEL.label.text }}</span>
                         {{ form_config.LIGHTGRAPH_OVERLAY__LABEL(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="LIGHTGRAPH_OVERLAY__LABEL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__HOUR_LINES.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__HOUR_LINES.label.text }}</span>
                         {{ form_config.LIGHTGRAPH_OVERLAY__HOUR_LINES(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="LIGHTGRAPH_OVERLAY__HOUR_LINES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -238,22 +238,22 @@
         <!-- Remote Image Overlay Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Remote Image Overlay (Weather Maps, Radar, etc.)</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Remote Image Overlay (Weather Maps, Radar, etc.)</span>
 
                 <!-- Remote Image Setup -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__ENABLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__ENABLE.label.text }}</span>
                         {{ form_config.IMAGE_OVERLAY__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_OVERLAY__ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__LOAD_INTERVAL.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__LOAD_INTERVAL.label.text }}</span>
                         {{ form_config.IMAGE_OVERLAY__LOAD_INTERVAL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_OVERLAY__LOAD_INTERVAL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__A_IMAGE_FILE_TYPE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__A_IMAGE_FILE_TYPE.label.text }}</span>
                         {{ form_config.IMAGE_OVERLAY__A_IMAGE_FILE_TYPE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_OVERLAY__A_IMAGE_FILE_TYPE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -261,17 +261,17 @@
 
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__A_URL.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__A_URL.label.text }}</span>
                         {{ form_config.IMAGE_OVERLAY__A_URL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_OVERLAY__A_URL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__A_USERNAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__A_USERNAME.label.text }}</span>
                         {{ form_config.IMAGE_OVERLAY__A_USERNAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_OVERLAY__A_USERNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__A_PASSWORD.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__A_PASSWORD.label.text }}</span>
                         {{ form_config.IMAGE_OVERLAY__A_PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_OVERLAY__A_PASSWORD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -279,22 +279,22 @@
 
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__A_WIDTH.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__A_WIDTH.label.text }}</span>
                         {{ form_config.IMAGE_OVERLAY__A_WIDTH(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_OVERLAY__A_WIDTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__A_HEIGHT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__A_HEIGHT.label.text }}</span>
                         {{ form_config.IMAGE_OVERLAY__A_HEIGHT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_OVERLAY__A_HEIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__A_X.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__A_X.label.text }}</span>
                         {{ form_config.IMAGE_OVERLAY__A_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_OVERLAY__A_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__A_Y.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__A_Y.label.text }}</span>
                         {{ form_config.IMAGE_OVERLAY__A_Y(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_OVERLAY__A_Y-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -306,27 +306,27 @@
         <!-- Cardinal Directions Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Cardinal Directions Overlay (N, S, E, W)</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Cardinal Directions Overlay (N, S, E, W)</span>
 
                 <!-- Toggles & Color -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__ENABLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__ENABLE.label.text }}</span>
                         {{ form_config.CARDINAL_DIRS__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="CARDINAL_DIRS__ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__SWAP_NS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__SWAP_NS.label.text }}</span>
                         {{ form_config.CARDINAL_DIRS__SWAP_NS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="CARDINAL_DIRS__SWAP_NS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__SWAP_EW.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__SWAP_EW.label.text }}</span>
                         {{ form_config.CARDINAL_DIRS__SWAP_EW(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="CARDINAL_DIRS__SWAP_EW-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__FONT_COLOR.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__FONT_COLOR.label.text }}</span>
                         {{ form_config.CARDINAL_DIRS__FONT_COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="CARDINAL_DIRS__FONT_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -335,22 +335,22 @@
                 <!-- Custom Characters (N, E, S, W) -->
                 <div class="tw:grid tw:grid-cols-2 sm:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__CHAR_NORTH.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__CHAR_NORTH.label.text }}</span>
                         {{ form_config.CARDINAL_DIRS__CHAR_NORTH(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="CARDINAL_DIRS__CHAR_NORTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__CHAR_EAST.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__CHAR_EAST.label.text }}</span>
                         {{ form_config.CARDINAL_DIRS__CHAR_EAST(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="CARDINAL_DIRS__CHAR_EAST-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__CHAR_SOUTH.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__CHAR_SOUTH.label.text }}</span>
                         {{ form_config.CARDINAL_DIRS__CHAR_SOUTH(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="CARDINAL_DIRS__CHAR_SOUTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__CHAR_WEST.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__CHAR_WEST.label.text }}</span>
                         {{ form_config.CARDINAL_DIRS__CHAR_WEST(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="CARDINAL_DIRS__CHAR_WEST-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -359,40 +359,40 @@
                 <!-- Circle Offsets & Debug -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 md:tw:grid-cols-6 tw:gap-3 tw:pt-2">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__DIAMETER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__DIAMETER.label.text }}</span>
                         {{ form_config.CARDINAL_DIRS__DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="CARDINAL_DIRS__DIAMETER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">Offsets (X, Y)</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">Offsets (X, Y)</span>
                         {{ form_config.CARDINAL_DIRS__OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='X') }}
                         <div id="CARDINAL_DIRS__OFFSET_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         {{ form_config.CARDINAL_DIRS__OFFSET_Y(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1', placeholder='Y') }}
                         <div id="CARDINAL_DIRS__OFFSET_Y-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">Offsets (Top, Bottom)</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">Offsets (Top, Bottom)</span>
                         {{ form_config.CARDINAL_DIRS__OFFSET_TOP(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Top') }}
                         <div id="CARDINAL_DIRS__OFFSET_TOP-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         {{ form_config.CARDINAL_DIRS__OFFSET_BOTTOM(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1', placeholder='Bottom') }}
                         <div id="CARDINAL_DIRS__OFFSET_BOTTOM-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">Offsets (Left, Right)</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">Offsets (Left, Right)</span>
                         {{ form_config.CARDINAL_DIRS__OFFSET_LEFT(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Left') }}
                         <div id="CARDINAL_DIRS__OFFSET_LEFT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         {{ form_config.CARDINAL_DIRS__OFFSET_RIGHT(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1', placeholder='Right') }}
                         <div id="CARDINAL_DIRS__OFFSET_RIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">Fonts</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">Fonts</span>
                         {{ form_config.CARDINAL_DIRS__OPENCV_FONT_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Scale') }}
                         <div id="CARDINAL_DIRS__OPENCV_FONT_SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         {{ form_config.CARDINAL_DIRS__PIL_FONT_SIZE(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1', placeholder='PIL Size') }}
                         <div id="CARDINAL_DIRS__PIL_FONT_SIZE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__OUTLINE_CIRCLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__OUTLINE_CIRCLE.label.text }}</span>
                         {{ form_config.CARDINAL_DIRS__OUTLINE_CIRCLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="CARDINAL_DIRS__OUTLINE_CIRCLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -405,39 +405,39 @@
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
-                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Sun & Moon Orbs + Watermark Logo</span>
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Sun & Moon Orbs + Watermark Logo</span>
                     <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Orbs" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Orb Wiki</a>
                 </div>
 
                 <!-- Orbs Setup -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-6 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ORB_PROPERTIES__MODE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ORB_PROPERTIES__MODE.label.text }}</span>
                         {{ form_config.ORB_PROPERTIES__MODE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="ORB_PROPERTIES__MODE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ORB_PROPERTIES__RADIUS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ORB_PROPERTIES__RADIUS.label.text }}</span>
                         {{ form_config.ORB_PROPERTIES__RADIUS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="ORB_PROPERTIES__RADIUS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ORB_PROPERTIES__AZ_OFFSET.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ORB_PROPERTIES__AZ_OFFSET.label.text }}</span>
                         {{ form_config.ORB_PROPERTIES__AZ_OFFSET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="ORB_PROPERTIES__AZ_OFFSET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ORB_PROPERTIES__RETROGRADE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ORB_PROPERTIES__RETROGRADE.label.text }}</span>
                         {{ form_config.ORB_PROPERTIES__RETROGRADE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="ORB_PROPERTIES__RETROGRADE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ORB_PROPERTIES__SUN_COLOR.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ORB_PROPERTIES__SUN_COLOR.label.text }}</span>
                         {{ form_config.ORB_PROPERTIES__SUN_COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="ORB_PROPERTIES__SUN_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ORB_PROPERTIES__MOON_COLOR.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ORB_PROPERTIES__MOON_COLOR.label.text }}</span>
                         {{ form_config.ORB_PROPERTIES__MOON_COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="ORB_PROPERTIES__MOON_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -446,8 +446,8 @@
                 <!-- Logo Overlay Image File -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4 tw:pt-2 tw:items-center">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LOGO_OVERLAY.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Watermark PNG file with alpha channel</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LOGO_OVERLAY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Watermark PNG file with alpha channel</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.LOGO_OVERLAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}

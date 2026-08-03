@@ -4,27 +4,27 @@
         <!-- Star & Meteor Detection Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Star & Meteor Detection Engine</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Star & Meteor Detection Engine</span>
 
                 <!-- Star & Meteor Toggles + Thresholds -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_STARS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_STARS.label.text }}</span>
                         {{ form_config.DETECT_STARS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="DETECT_STARS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_STARS_THOLD.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_STARS_THOLD.label.text }}</span>
                         {{ form_config.DETECT_STARS_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="DETECT_STARS_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_METEORS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_METEORS.label.text }}</span>
                         {{ form_config.DETECT_METEORS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="DETECT_METEORS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_METEORS_THOLD.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_METEORS_THOLD.label.text }}</span>
                         {{ form_config.DETECT_METEORS_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="DETECT_METEORS_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -34,15 +34,15 @@
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4 tw:pt-2 tw:items-center">
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col tw:gap-1">
                         <div class="tw:flex tw:items-center tw:justify-between">
-                            <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_MASK.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_MASK.label.text }}</span>
                             <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Detection-Masks" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Detection Mask Wiki</a>
                         </div>
                         {{ form_config.DETECT_MASK(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="DETECT_MASK-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                        <span class="tw:text-[10px] tw:text-base-content/40">PNG image mask for star, meteor, and SQM detection</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">PNG image mask for star, meteor, and SQM detection</span>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_DRAW.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_DRAW.label.text }}</span>
                         {{ form_config.DETECT_DRAW(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="DETECT_DRAW-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -55,29 +55,29 @@
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
-                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Image Circle Masking & SQM Region of Interest</span>
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Image Circle Masking & SQM Region of Interest</span>
                     <a href="{{ url_for('indi_allsky.image_circle_helper_view') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Image Circle Helper</a>
                 </div>
 
                 <!-- Circle Mask Options -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__ENABLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__ENABLE.label.text }}</span>
                         {{ form_config.IMAGE_CIRCLE_MASK__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_CIRCLE_MASK__ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__DIAMETER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__DIAMETER.label.text }}</span>
                         {{ form_config.IMAGE_CIRCLE_MASK__DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_CIRCLE_MASK__DIAMETER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__BLUR.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__BLUR.label.text }}</span>
                         {{ form_config.IMAGE_CIRCLE_MASK__BLUR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_CIRCLE_MASK__BLUR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__OPACITY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__OPACITY.label.text }}</span>
                         {{ form_config.IMAGE_CIRCLE_MASK__OPACITY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_CIRCLE_MASK__OPACITY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -85,17 +85,17 @@
 
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__OFFSET_X.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__OFFSET_X.label.text }}</span>
                         {{ form_config.IMAGE_CIRCLE_MASK__OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_CIRCLE_MASK__OFFSET_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__OFFSET_Y.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__OFFSET_Y.label.text }}</span>
                         {{ form_config.IMAGE_CIRCLE_MASK__OFFSET_Y(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_CIRCLE_MASK__OFFSET_Y-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__OUTLINE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__OUTLINE.label.text }}</span>
                         {{ form_config.IMAGE_CIRCLE_MASK__OUTLINE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_CIRCLE_MASK__OUTLINE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -104,12 +104,12 @@
                 <!-- SQM FoV & ROI Coordinates -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:pt-2">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SQM_FOV_DIV.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SQM_FOV_DIV.label.text }}</span>
                         {{ form_config.SQM_FOV_DIV(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="SQM_FOV_DIV-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">SQM / Star Region of Interest (x1, y1, x2, y2)</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">SQM / Star Region of Interest (x1, y1, x2, y2)</span>
                         <div class="tw:grid tw:grid-cols-2 sm:tw:grid-cols-4 tw:gap-2">
                             {{ form_config.SQM_ROI_X1(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='x1') }}
                         <div id="SQM_ROI_X1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -129,27 +129,27 @@
         <!-- Image Stacking & Alignment Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Image Stacking & Star Registration Alignment</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Image Stacking & Star Registration Alignment</span>
 
                 <!-- Count & Method -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_COUNT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_COUNT.label.text }}</span>
                         {{ form_config.IMAGE_STACK_COUNT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_STACK_COUNT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_METHOD.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_METHOD.label.text }}</span>
                         {{ form_config.IMAGE_STACK_METHOD(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_STACK_METHOD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_ALIGN.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_ALIGN.label.text }}</span>
                         {{ form_config.IMAGE_STACK_ALIGN(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_STACK_ALIGN-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_SPLIT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_SPLIT.label.text }}</span>
                         {{ form_config.IMAGE_STACK_SPLIT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_STACK_SPLIT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -158,17 +158,17 @@
                 <!-- Registration Alignment Parameters -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ALIGN_DETECTSIGMA.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ALIGN_DETECTSIGMA.label.text }}</span>
                         {{ form_config.IMAGE_ALIGN_DETECTSIGMA(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_ALIGN_DETECTSIGMA-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ALIGN_POINTS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ALIGN_POINTS.label.text }}</span>
                         {{ form_config.IMAGE_ALIGN_POINTS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_ALIGN_POINTS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ALIGN_SOURCEMINAREA.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ALIGN_SOURCEMINAREA.label.text }}</span>
                         {{ form_config.IMAGE_ALIGN_SOURCEMINAREA(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_ALIGN_SOURCEMINAREA-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -177,12 +177,12 @@
                 <!-- Stack Toggles (Moonmode & Day) -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_MOONMODE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_MOONMODE.label.text }}</span>
                         {{ form_config.IMAGE_STACK_MOONMODE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_STACK_MOONMODE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_DAY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_DAY.label.text }}</span>
                         {{ form_config.IMAGE_STACK_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_STACK_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -195,95 +195,95 @@
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
-                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Keogram Processing (Nightly, Long-Term & Realtime)</span>
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Keogram Processing (Nightly, Long-Term & Realtime)</span>
                     <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Keogram" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Keogram Wiki</a>
                 </div>
 
                 <!-- Daily Keogram Parameters -->
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">Daily Keogram Options</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">Daily Keogram Options</span>
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 md:tw:grid-cols-6 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.KEOGRAM_ANGLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.KEOGRAM_ANGLE.label.text }}</span>
                         {{ form_config.KEOGRAM_ANGLE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="KEOGRAM_ANGLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.KEOGRAM_H_SCALE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.KEOGRAM_H_SCALE.label.text }}</span>
                         {{ form_config.KEOGRAM_H_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="KEOGRAM_H_SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.KEOGRAM_V_SCALE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.KEOGRAM_V_SCALE.label.text }}</span>
                         {{ form_config.KEOGRAM_V_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="KEOGRAM_V_SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.KEOGRAM_CROP_TOP.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.KEOGRAM_CROP_TOP.label.text }}</span>
                         {{ form_config.KEOGRAM_CROP_TOP(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="KEOGRAM_CROP_TOP-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.KEOGRAM_CROP_BOTTOM.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.KEOGRAM_CROP_BOTTOM.label.text }}</span>
                         {{ form_config.KEOGRAM_CROP_BOTTOM(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="KEOGRAM_CROP_BOTTOM-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.KEOGRAM_LABEL.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.KEOGRAM_LABEL.label.text }}</span>
                         {{ form_config.KEOGRAM_LABEL(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="KEOGRAM_LABEL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
 
                 <!-- Long-term Keogram -->
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Long-Term Keograms</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Long-Term Keograms</span>
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 md:tw:grid-cols-6 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LONGTERM_KEOGRAM__ENABLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LONGTERM_KEOGRAM__ENABLE.label.text }}</span>
                         {{ form_config.LONGTERM_KEOGRAM__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="LONGTERM_KEOGRAM__ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LONGTERM_KEOGRAM__OFFSET_X.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LONGTERM_KEOGRAM__OFFSET_X.label.text }}</span>
                         {{ form_config.LONGTERM_KEOGRAM__OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="LONGTERM_KEOGRAM__OFFSET_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LONGTERM_KEOGRAM__OFFSET_Y.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LONGTERM_KEOGRAM__OFFSET_Y.label.text }}</span>
                         {{ form_config.LONGTERM_KEOGRAM__OFFSET_Y(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="LONGTERM_KEOGRAM__OFFSET_Y-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LONGTERM_KEOGRAM__MONTH_LABEL_TEMPLATE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LONGTERM_KEOGRAM__MONTH_LABEL_TEMPLATE.label.text }}</span>
                         {{ form_config.LONGTERM_KEOGRAM__MONTH_LABEL_TEMPLATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="LONGTERM_KEOGRAM__MONTH_LABEL_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LONGTERM_KEOGRAM__PIL_FONT_SIZE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LONGTERM_KEOGRAM__PIL_FONT_SIZE.label.text }}</span>
                         {{ form_config.LONGTERM_KEOGRAM__PIL_FONT_SIZE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="LONGTERM_KEOGRAM__PIL_FONT_SIZE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LONGTERM_KEOGRAM__OPENCV_FONT_SCALE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LONGTERM_KEOGRAM__OPENCV_FONT_SCALE.label.text }}</span>
                         {{ form_config.LONGTERM_KEOGRAM__OPENCV_FONT_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="LONGTERM_KEOGRAM__OPENCV_FONT_SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
 
                 <!-- Realtime Keogram -->
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Realtime Keograms</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Realtime Keograms</span>
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.REALTIME_KEOGRAM__MAX_ENTRIES.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.REALTIME_KEOGRAM__MAX_ENTRIES.label.text }}</span>
                         {{ form_config.REALTIME_KEOGRAM__MAX_ENTRIES(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="REALTIME_KEOGRAM__MAX_ENTRIES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.REALTIME_KEOGRAM__SAVE_INTERVAL.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.REALTIME_KEOGRAM__SAVE_INTERVAL.label.text }}</span>
                         {{ form_config.REALTIME_KEOGRAM__SAVE_INTERVAL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="REALTIME_KEOGRAM__SAVE_INTERVAL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.REALTIME_KEOGRAM__LABEL.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.REALTIME_KEOGRAM__LABEL.label.text }}</span>
                         {{ form_config.REALTIME_KEOGRAM__LABEL(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="REALTIME_KEOGRAM__LABEL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -296,29 +296,29 @@
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
-                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Star Trails Generation & Filtering</span>
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Star Trails Generation & Filtering</span>
                     <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Startrails" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Star Trails Wiki</a>
                 </div>
 
                 <!-- Sun & Moon Thresholds -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_SUN_ALT_THOLD.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_SUN_ALT_THOLD.label.text }}</span>
                         {{ form_config.STARTRAILS_SUN_ALT_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="STARTRAILS_SUN_ALT_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MOONMODE_THOLD.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MOONMODE_THOLD.label.text }}</span>
                         {{ form_config.STARTRAILS_MOONMODE_THOLD(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="STARTRAILS_MOONMODE_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MOON_ALT_THOLD.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MOON_ALT_THOLD.label.text }}</span>
                         {{ form_config.STARTRAILS_MOON_ALT_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="STARTRAILS_MOON_ALT_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MOON_PHASE_THOLD.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MOON_PHASE_THOLD.label.text }}</span>
                         {{ form_config.STARTRAILS_MOON_PHASE_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="STARTRAILS_MOON_PHASE_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -327,22 +327,22 @@
                 <!-- ADU, Mask, Pixel & Star Thresholds -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MAX_ADU.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MAX_ADU.label.text }}</span>
                         {{ form_config.STARTRAILS_MAX_ADU(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="STARTRAILS_MAX_ADU-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MASK_THOLD.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MASK_THOLD.label.text }}</span>
                         {{ form_config.STARTRAILS_MASK_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="STARTRAILS_MASK_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_PIXEL_THOLD.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_PIXEL_THOLD.label.text }}</span>
                         {{ form_config.STARTRAILS_PIXEL_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="STARTRAILS_PIXEL_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MIN_STARS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MIN_STARS.label.text }}</span>
                         {{ form_config.STARTRAILS_MIN_STARS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="STARTRAILS_MIN_STARS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -351,42 +351,42 @@
                 <!-- Database Reuse & Timelapse -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_USE_DB_DATA.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_USE_DB_DATA.label.text }}</span>
                         {{ form_config.STARTRAILS_USE_DB_DATA(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="STARTRAILS_USE_DB_DATA-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_TIMELAPSE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_TIMELAPSE.label.text }}</span>
                         {{ form_config.STARTRAILS_TIMELAPSE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="STARTRAILS_TIMELAPSE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_TIMELAPSE_MINFRAMES.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_TIMELAPSE_MINFRAMES.label.text }}</span>
                         {{ form_config.STARTRAILS_TIMELAPSE_MINFRAMES(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="STARTRAILS_TIMELAPSE_MINFRAMES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
 
                 <!-- Star Trails Circle Mask -->
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Star Trails Image Circle Mask</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Star Trails Image Circle Mask</span>
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE.label.text }}</span>
                         {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER.label.text }}</span>
                         {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_BLUR.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_BLUR.label.text }}</span>
                         {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_BLUR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="STARTRAILS__IMAGE_CIRCLE_MASK_BLUR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY.label.text }}</span>
                         {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -398,32 +398,32 @@
         <!-- Fish2Pano Panorama Generator Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Fisheye to Panorama (Fish2Pano) Conversion</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Fisheye to Panorama (Fish2Pano) Conversion</span>
 
                 <!-- Enable, Diameter, Offsets & Rotation -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-5 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__ENABLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__ENABLE.label.text }}</span>
                         {{ form_config.FISH2PANO__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FISH2PANO__ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__DIAMETER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__DIAMETER.label.text }}</span>
                         {{ form_config.FISH2PANO__DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FISH2PANO__DIAMETER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__OFFSET_X.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__OFFSET_X.label.text }}</span>
                         {{ form_config.FISH2PANO__OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FISH2PANO__OFFSET_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__OFFSET_Y.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__OFFSET_Y.label.text }}</span>
                         {{ form_config.FISH2PANO__OFFSET_Y(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FISH2PANO__OFFSET_Y-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__ROTATE_ANGLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__ROTATE_ANGLE.label.text }}</span>
                         {{ form_config.FISH2PANO__ROTATE_ANGLE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FISH2PANO__ROTATE_ANGLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -432,17 +432,17 @@
                 <!-- Flip, Scale & Modulus -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__FLIP_H.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__FLIP_H.label.text }}</span>
                         {{ form_config.FISH2PANO__FLIP_H(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FISH2PANO__FLIP_H-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__SCALE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__SCALE.label.text }}</span>
                         {{ form_config.FISH2PANO__SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FISH2PANO__SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__MODULUS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__MODULUS.label.text }}</span>
                         {{ form_config.FISH2PANO__MODULUS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FISH2PANO__MODULUS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -451,22 +451,22 @@
                 <!-- Cardinal Directions & Fonts -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__ENABLE_CARDINAL_DIRS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__ENABLE_CARDINAL_DIRS.label.text }}</span>
                         {{ form_config.FISH2PANO__ENABLE_CARDINAL_DIRS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FISH2PANO__ENABLE_CARDINAL_DIRS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__DIRS_OFFSET_BOTTOM.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__DIRS_OFFSET_BOTTOM.label.text }}</span>
                         {{ form_config.FISH2PANO__DIRS_OFFSET_BOTTOM(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FISH2PANO__DIRS_OFFSET_BOTTOM-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__OPENCV_FONT_SCALE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__OPENCV_FONT_SCALE.label.text }}</span>
                         {{ form_config.FISH2PANO__OPENCV_FONT_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FISH2PANO__OPENCV_FONT_SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__PIL_FONT_SIZE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__PIL_FONT_SIZE.label.text }}</span>
                         {{ form_config.FISH2PANO__PIL_FONT_SIZE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FISH2PANO__PIL_FONT_SIZE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -478,22 +478,22 @@
         <!-- Circular Display & Custom Script Hooks Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Circular Displays & External Script Hooks</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Circular Displays & External Script Hooks</span>
 
                 <!-- Circular Display Options -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CIRCULAR_DISPLAY__ENABLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CIRCULAR_DISPLAY__ENABLE.label.text }}</span>
                         {{ form_config.CIRCULAR_DISPLAY__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="CIRCULAR_DISPLAY__ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CIRCULAR_DISPLAY__RESOLUTION.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CIRCULAR_DISPLAY__RESOLUTION.label.text }}</span>
                         {{ form_config.CIRCULAR_DISPLAY__RESOLUTION(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="CIRCULAR_DISPLAY__RESOLUTION-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER.label.text }}</span>
                         {{ form_config.CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -502,13 +502,13 @@
                 <!-- Capture & Save Hooks -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAPTURE_HOOK_PRE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAPTURE_HOOK_PRE.label.text }}</span>
                         {{ form_config.CAPTURE_HOOK_PRE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="CAPTURE_HOOK_PRE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Script to run before image capture</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Script to run before image capture</span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAPTURE_HOOK_TIMEOUT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAPTURE_HOOK_TIMEOUT.label.text }}</span>
                         {{ form_config.CAPTURE_HOOK_TIMEOUT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="CAPTURE_HOOK_TIMEOUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -516,17 +516,17 @@
 
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_HOOK_PRE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_HOOK_PRE.label.text }}</span>
                         {{ form_config.IMAGE_SAVE_HOOK_PRE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_SAVE_HOOK_PRE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_HOOK_POST.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_HOOK_POST.label.text }}</span>
                         {{ form_config.IMAGE_SAVE_HOOK_POST(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_SAVE_HOOK_POST-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_HOOK_TIMEOUT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_HOOK_TIMEOUT.label.text }}</span>
                         {{ form_config.IMAGE_SAVE_HOOK_TIMEOUT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_SAVE_HOOK_TIMEOUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>

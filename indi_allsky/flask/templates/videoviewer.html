@@ -196,7 +196,7 @@ function populate_videos(video_list) {
         $('<div />', { 'class': 'tw:divider tw:my-1 tw:opacity-20 tw:w-full' }).appendTo(start_div);
         
         var stats_grid = $('<div />', {
-            'class': 'tw:grid tw:grid-cols-1 tw:gap-0.5 tw:text-[10px] tw:font-mono tw:text-base-content/50 max-md:tw:text-left tw:text-right'
+            'class': 'tw:grid tw:grid-cols-1 tw:gap-0.5 tw:text-[0.625rem] tw:font-mono tw:text-base-content/50 max-md:tw:text-left tw:text-right'
         }).appendTo(start_div);
         
         if (item['night']) {
@@ -232,7 +232,7 @@ function populate_videos(video_list) {
         
         $('<span />', {
             'text': 'Keogram',
-            'class': 'tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/40'
+            'class': 'tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/40'
         }).appendTo(keogram_container);
         
         var k_content_div = $('<div />', {
@@ -254,7 +254,7 @@ function populate_videos(video_list) {
             }).appendTo(k_a);
         } else {
             $('<div />', {
-                'class': 'tw:w-full tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[10px] tw:font-black tw:uppercase tw:text-base-content/20',
+                'class': 'tw:w-full tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[0.625rem] tw:font-black tw:uppercase tw:text-base-content/20',
                 'text': 'No Thumbnail'
             }).appendTo(k_a);
         }
@@ -272,7 +272,7 @@ function populate_videos(video_list) {
             'href': "/indi-allsky/watch_timelapse?id=" + item['id'],
             'target': '_blank',
             'rel': 'noopener noreferrer',
-            'class': 'tw:btn tw:btn-xs tw:btn-primary tw:btn-outline tw:w-full tw:text-[9px] tw:font-black tw:uppercase',
+            'class': 'tw:btn tw:btn-xs tw:btn-primary tw:btn-outline tw:w-full tw:text-[0.563rem] tw:font-black tw:uppercase',
             'text': 'View Timelapse'
         }).appendTo(keogram_actions);
         
@@ -281,7 +281,7 @@ function populate_videos(video_list) {
                 'href': "/indi-allsky/watch_panorama?id=" + item['panorama_timelapse_id'],
                 'target': '_blank',
                 'rel': 'noopener noreferrer',
-                'class': 'tw:btn tw:btn-xs tw:btn-success tw:btn-outline tw:w-full tw:text-[9px] tw:font-black tw:uppercase',
+                'class': 'tw:btn tw:btn-xs tw:btn-success tw:btn-outline tw:w-full tw:text-[0.563rem] tw:font-black tw:uppercase',
                 'text': 'View Panorama'
             }).appendTo(keogram_actions);
         }
@@ -310,7 +310,7 @@ function populate_videos(video_list) {
             
             $('<span />', {
                 'text': 'Star Trail',
-                'class': 'tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/40'
+                'class': 'tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/40'
             }).appendTo(startrail_container);
 
             if (item['startrail'] !== 'None') {
@@ -344,7 +344,7 @@ function populate_videos(video_list) {
                         'href': "/indi-allsky/watch_startrail?id=" + item['startrail_timelapse_id'],
                         'target': '_blank',
                         'rel': 'noopener noreferrer',
-                        'class': 'tw:btn tw:btn-xs tw:btn-primary tw:btn-outline tw:w-full tw:text-[9px] tw:font-black tw:uppercase',
+                        'class': 'tw:btn tw:btn-xs tw:btn-primary tw:btn-outline tw:w-full tw:text-[0.563rem] tw:font-black tw:uppercase',
                         'text': 'View Timelapse'
                     }).appendTo(startrail_actions);
                 }
@@ -366,7 +366,7 @@ function populate_videos(video_list) {
                 }
             } else {
                 $('<div />', {
-                    'class': 'tw:aspect-video tw:rounded-[var(--radius-box)] tw:border tw:border-dashed tw:border-base-content/20 tw:flex tw:items-center tw:justify-center tw:text-[10px] tw:font-black tw:uppercase tw:text-base-content/20 thumbnail-card',
+                    'class': 'tw:aspect-video tw:rounded-[var(--radius-box)] tw:border tw:border-dashed tw:border-base-content/20 tw:flex tw:items-center tw:justify-center tw:text-[0.625rem] tw:font-black tw:uppercase tw:text-base-content/20 thumbnail-card',
                     'text': 'No Startrail Generated'
                 }).appendTo(startrail_container);
             }

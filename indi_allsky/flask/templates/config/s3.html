@@ -9,13 +9,13 @@
         <!-- S3 Main Storage & Provider Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Object Storage Provider & Credentials</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Object Storage Provider & Credentials</span>
 
                 <!-- Enable S3 -->
                 <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__ENABLE.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/50">Upload captured images, panoramas, timelapses, star trails, and keograms to Object Storage</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__ENABLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Upload captured images, panoramas, timelapses, star trails, and keograms to Object Storage</span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
                         {{ form_config.S3UPLOAD__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -26,8 +26,8 @@
                 <!-- Provider Class -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__CLASSNAME.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Storage client driver</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__CLASSNAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Storage client driver</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.S3UPLOAD__CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -38,13 +38,13 @@
                 <!-- Credentials Access Key & Secret Key -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__ACCESS_KEY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__ACCESS_KEY.label.text }}</span>
                         {{ form_config.S3UPLOAD__ACCESS_KEY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">AWS / S3 Access Key</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">AWS / S3 Access Key</span>
                         <div id="S3UPLOAD__ACCESS_KEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__SECRET_KEY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__SECRET_KEY.label.text }}</span>
                         {{ form_config.S3UPLOAD__SECRET_KEY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="S3UPLOAD__SECRET_KEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -53,8 +53,8 @@
                 <!-- Credentials File (GCP / OCI) -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__CREDS_FILE.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">GCP / OCI Service Key Filepath</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__CREDS_FILE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">GCP / OCI Service Key Filepath</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.S3UPLOAD__CREDS_FILE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -68,13 +68,13 @@
         <!-- Bucket & Endpoint Configuration Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Bucket & Endpoint Parameters</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Bucket & Endpoint Parameters</span>
 
                 <!-- Bucket Name -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__BUCKET.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Target bucket name</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__BUCKET.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Target bucket name</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.S3UPLOAD__BUCKET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -85,8 +85,8 @@
                 <!-- Endpoint URL -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__ENDPOINT_URL.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Used for generic boto3 / S3 endpoints</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__ENDPOINT_URL.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Used for generic boto3 / S3 endpoints</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.S3UPLOAD__ENDPOINT_URL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -97,15 +97,15 @@
                 <!-- Region & Host -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__REGION.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__REGION.label.text }}</span>
                         {{ form_config.S3UPLOAD__REGION(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">Use "auto" for Cloudflare R2</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Use "auto" for Cloudflare R2</span>
                         <div id="S3UPLOAD__REGION-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__HOST.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__HOST.label.text }}</span>
                         {{ form_config.S3UPLOAD__HOST(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">amazonaws.com / storage.googleapis.com</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">amazonaws.com / storage.googleapis.com</span>
                         <div id="S3UPLOAD__HOST-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -113,13 +113,13 @@
                 <!-- Namespace & URL Template -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__NAMESPACE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__NAMESPACE.label.text }}</span>
                         {{ form_config.S3UPLOAD__NAMESPACE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">Oracle OCI specific</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Oracle OCI specific</span>
                         <div id="S3UPLOAD__NAMESPACE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__URL_TEMPLATE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__URL_TEMPLATE.label.text }}</span>
                         {{ form_config.S3UPLOAD__URL_TEMPLATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="S3UPLOAD__URL_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -131,18 +131,18 @@
         <!-- ACLs, Storage Classes & Network Timeouts Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">ACLs, Storage Class & Network Options</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">ACLs, Storage Class & Network Options</span>
 
                 <!-- ACL & Storage Class -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__ACL.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__ACL.label.text }}</span>
                         {{ form_config.S3UPLOAD__ACL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">public-read / publicRead</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">public-read / publicRead</span>
                         <div id="S3UPLOAD__ACL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__STORAGE_CLASS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__STORAGE_CLASS.label.text }}</span>
                         {{ form_config.S3UPLOAD__STORAGE_CLASS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="S3UPLOAD__STORAGE_CLASS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -151,17 +151,17 @@
                 <!-- Port, Connect Timeout & Timeout -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__PORT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__PORT.label.text }}</span>
                         {{ form_config.S3UPLOAD__PORT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="S3UPLOAD__PORT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__CONNECT_TIMEOUT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__CONNECT_TIMEOUT.label.text }}</span>
                         {{ form_config.S3UPLOAD__CONNECT_TIMEOUT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="S3UPLOAD__CONNECT_TIMEOUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__TIMEOUT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__TIMEOUT.label.text }}</span>
                         {{ form_config.S3UPLOAD__TIMEOUT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="S3UPLOAD__TIMEOUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -170,22 +170,22 @@
                 <!-- TLS, Cert Bypass & Asset Toggles Grid -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__TLS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__TLS.label.text }}</span>
                         {{ form_config.S3UPLOAD__TLS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="S3UPLOAD__TLS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__CERT_BYPASS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__CERT_BYPASS.label.text }}</span>
                         {{ form_config.S3UPLOAD__CERT_BYPASS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="S3UPLOAD__CERT_BYPASS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__UPLOAD_FITS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__UPLOAD_FITS.label.text }}</span>
                         {{ form_config.S3UPLOAD__UPLOAD_FITS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="S3UPLOAD__UPLOAD_FITS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__UPLOAD_RAW.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__UPLOAD_RAW.label.text }}</span>
                         {{ form_config.S3UPLOAD__UPLOAD_RAW(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="S3UPLOAD__UPLOAD_RAW-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>

@@ -5,21 +5,21 @@
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
-                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Remote Server & Credentials</span>
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Remote Server & Credentials</span>
                     <a href="https://github.com/aaronwmorris/indi-allsky/wiki/File-transfers" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">File Transfer Wiki</a>
                 </div>
 
                 <!-- Protocol Class & Workers -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__CLASSNAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__CLASSNAME.label.text }}</span>
                         {{ form_config.FILETRANSFER__CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.UPLOAD_WORKERS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.UPLOAD_WORKERS.label.text }}</span>
                         {{ form_config.UPLOAD_WORKERS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">Number of upload threads</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Number of upload threads</span>
                         <div id="UPLOAD_WORKERS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -27,14 +27,14 @@
                 <!-- Host & Port -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__HOST.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__HOST.label.text }}</span>
                         {{ form_config.FILETRANSFER__HOST(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__HOST-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__PORT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__PORT.label.text }}</span>
                         {{ form_config.FILETRANSFER__PORT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">0 for protocol default</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">0 for protocol default</span>
                         <div id="FILETRANSFER__PORT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -42,12 +42,12 @@
                 <!-- Username & Password -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__USERNAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__USERNAME.label.text }}</span>
                         {{ form_config.FILETRANSFER__USERNAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__USERNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__PASSWORD.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__PASSWORD.label.text }}</span>
                         {{ form_config.FILETRANSFER__PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__PASSWORD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -56,12 +56,12 @@
                 <!-- SSH Keys (Private & Public) -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__PRIVATE_KEY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__PRIVATE_KEY.label.text }}</span>
                         {{ form_config.FILETRANSFER__PRIVATE_KEY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__PRIVATE_KEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__PUBLIC_KEY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__PUBLIC_KEY.label.text }}</span>
                         {{ form_config.FILETRANSFER__PUBLIC_KEY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__PUBLIC_KEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -70,14 +70,14 @@
                 <!-- Timeouts & Connection Options -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__CONNECT_TIMEOUT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__CONNECT_TIMEOUT.label.text }}</span>
                         {{ form_config.FILETRANSFER__CONNECT_TIMEOUT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__CONNECT_TIMEOUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__TIMEOUT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__TIMEOUT.label.text }}</span>
                         {{ form_config.FILETRANSFER__TIMEOUT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">Whole transfer timeout (seconds)</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Whole transfer timeout (seconds)</span>
                         <div id="FILETRANSFER__TIMEOUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -85,22 +85,22 @@
                 <!-- Protocol Toggles (Cert Bypass, Atomic, IPv4, IPv6) -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__CERT_BYPASS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__CERT_BYPASS.label.text }}</span>
                         {{ form_config.FILETRANSFER__CERT_BYPASS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__CERT_BYPASS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__ATOMIC_TRANSFERS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__ATOMIC_TRANSFERS.label.text }}</span>
                         {{ form_config.FILETRANSFER__ATOMIC_TRANSFERS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__ATOMIC_TRANSFERS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__FORCE_IPV4.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__FORCE_IPV4.label.text }}</span>
                         {{ form_config.FILETRANSFER__FORCE_IPV4(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__FORCE_IPV4-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__FORCE_IPV6.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__FORCE_IPV6.label.text }}</span>
                         {{ form_config.FILETRANSFER__FORCE_IPV6(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__FORCE_IPV6-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -109,8 +109,8 @@
                 <!-- Libcurl Options -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:pt-2">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__LIBCURL_OPTIONS.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">libcurl options for PycURL classes</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__LIBCURL_OPTIONS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">libcurl options for PycURL classes</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.FILETRANSFER__LIBCURL_OPTIONS(class='tw:textarea tw:textarea-bordered tw:bg-base-100 tw:text-base-content tw:w-full tw:font-mono tw:text-xs', rows='3') }}
@@ -124,17 +124,17 @@
         <!-- Remote Asset Naming & Folder Targets Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Remote Folders & Filename Templates</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Remote Folders & Filename Templates</span>
 
                 <!-- Image -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_IMAGE_NAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_IMAGE_NAME.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_IMAGE_NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_IMAGE_NAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_IMAGE_FOLDER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_IMAGE_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_IMAGE_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_IMAGE_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -143,12 +143,12 @@
                 <!-- Panorama -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_PANORAMA_NAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_PANORAMA_NAME.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_PANORAMA_NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_PANORAMA_NAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_PANORAMA_FOLDER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_PANORAMA_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_PANORAMA_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_PANORAMA_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -157,12 +157,12 @@
                 <!-- Metadata -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_METADATA_NAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_METADATA_NAME.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_METADATA_NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_METADATA_NAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_METADATA_FOLDER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_METADATA_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_METADATA_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_METADATA_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -171,12 +171,12 @@
                 <!-- RAW -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_RAW_NAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_RAW_NAME.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_RAW_NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_RAW_NAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_RAW_FOLDER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_RAW_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_RAW_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_RAW_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -185,12 +185,12 @@
                 <!-- FITS -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_FITS_NAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_FITS_NAME.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_FITS_NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_FITS_NAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_FITS_FOLDER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_FITS_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_FITS_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_FITS_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -199,12 +199,12 @@
                 <!-- Video -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_VIDEO_NAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_VIDEO_NAME.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_VIDEO_NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_VIDEO_NAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_VIDEO_FOLDER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_VIDEO_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_VIDEO_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_VIDEO_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -213,12 +213,12 @@
                 <!-- Mini Video -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_MINI_VIDEO_NAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_MINI_VIDEO_NAME.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_MINI_VIDEO_NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_MINI_VIDEO_NAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_MINI_VIDEO_FOLDER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_MINI_VIDEO_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_MINI_VIDEO_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_MINI_VIDEO_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -227,12 +227,12 @@
                 <!-- Keogram -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_KEOGRAM_NAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_KEOGRAM_NAME.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_KEOGRAM_NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_KEOGRAM_NAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_KEOGRAM_FOLDER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_KEOGRAM_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_KEOGRAM_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_KEOGRAM_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -241,12 +241,12 @@
                 <!-- Star Trail -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_STARTRAIL_NAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_STARTRAIL_NAME.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_STARTRAIL_NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_STARTRAIL_NAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_STARTRAIL_FOLDER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_STARTRAIL_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_STARTRAIL_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_STARTRAIL_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -255,12 +255,12 @@
                 <!-- Star Trail Video -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_STARTRAIL_VIDEO_NAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_STARTRAIL_VIDEO_NAME.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_STARTRAIL_VIDEO_NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_STARTRAIL_VIDEO_NAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -269,12 +269,12 @@
                 <!-- Panorama Video -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_PANORAMA_VIDEO_NAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_PANORAMA_VIDEO_NAME.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_PANORAMA_VIDEO_NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_PANORAMA_VIDEO_NAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_PANORAMA_VIDEO_FOLDER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_PANORAMA_VIDEO_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_PANORAMA_VIDEO_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_PANORAMA_VIDEO_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -283,12 +283,12 @@
                 <!-- Realtime Keogram -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_REALTIME_KEOGRAM_NAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_REALTIME_KEOGRAM_NAME.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_REALTIME_KEOGRAM_NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_REALTIME_KEOGRAM_NAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_REALTIME_KEOGRAM_FOLDER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_REALTIME_KEOGRAM_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_REALTIME_KEOGRAM_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_REALTIME_KEOGRAM_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -297,17 +297,17 @@
                 <!-- EndOfNight, Latest & DB Backup Folders -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:py-3">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_LATEST_FOLDER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_LATEST_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_LATEST_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_LATEST_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_DB_BACKUP_FOLDER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_DB_BACKUP_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_DB_BACKUP_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="FILETRANSFER__REMOTE_DB_BACKUP_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -319,26 +319,26 @@
         <!-- Upload Trigger Toggles Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Upload Triggers & Frequencies</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Upload Triggers & Frequencies</span>
 
                 <!-- Numeric Frequency Inputs (Image, Panorama, Realtime Keogram) -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_IMAGE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_IMAGE.label.text }}</span>
                         {{ form_config.FILETRANSFER__UPLOAD_IMAGE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">0 = disable, 1 = every image, 2 = 2nd...</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">0 = disable, 1 = every image, 2 = 2nd...</span>
                         <div id="FILETRANSFER__UPLOAD_IMAGE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_PANORAMA.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_PANORAMA.label.text }}</span>
                         {{ form_config.FILETRANSFER__UPLOAD_PANORAMA(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">0 = disable, 1 = every panorama...</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">0 = disable, 1 = every panorama...</span>
                         <div id="FILETRANSFER__UPLOAD_PANORAMA-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_REALTIME_KEOGRAM.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_REALTIME_KEOGRAM.label.text }}</span>
                         {{ form_config.FILETRANSFER__UPLOAD_REALTIME_KEOGRAM(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">Realtime keogram upload rate</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Realtime keogram upload rate</span>
                         <div id="FILETRANSFER__UPLOAD_REALTIME_KEOGRAM-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -346,82 +346,82 @@
                 <!-- Toggles Grid (Metadata, RAW, FITS, Video, Mini, Keogram, Star Trail, Star Trail Video, Panorama Video, EndOfNight, DB Backup) -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_METADATA.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_METADATA.label.text }}</span>
                         {{ form_config.FILETRANSFER__UPLOAD_METADATA(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__UPLOAD_METADATA-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_RAW.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_RAW.label.text }}</span>
                         {{ form_config.FILETRANSFER__UPLOAD_RAW(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__UPLOAD_RAW-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_FITS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_FITS.label.text }}</span>
                         {{ form_config.FILETRANSFER__UPLOAD_FITS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__UPLOAD_FITS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_VIDEO.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_VIDEO.label.text }}</span>
                         {{ form_config.FILETRANSFER__UPLOAD_VIDEO(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__UPLOAD_VIDEO-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_MINI_VIDEO.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_MINI_VIDEO.label.text }}</span>
                         {{ form_config.FILETRANSFER__UPLOAD_MINI_VIDEO(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__UPLOAD_MINI_VIDEO-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_KEOGRAM.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_KEOGRAM.label.text }}</span>
                         {{ form_config.FILETRANSFER__UPLOAD_KEOGRAM(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__UPLOAD_KEOGRAM-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_STARTRAIL.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_STARTRAIL.label.text }}</span>
                         {{ form_config.FILETRANSFER__UPLOAD_STARTRAIL(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__UPLOAD_STARTRAIL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_STARTRAIL_VIDEO.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_STARTRAIL_VIDEO.label.text }}</span>
                         {{ form_config.FILETRANSFER__UPLOAD_STARTRAIL_VIDEO(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__UPLOAD_STARTRAIL_VIDEO-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_PANORAMA_VIDEO.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_PANORAMA_VIDEO.label.text }}</span>
                         {{ form_config.FILETRANSFER__UPLOAD_PANORAMA_VIDEO(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__UPLOAD_PANORAMA_VIDEO-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_ENDOFNIGHT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_ENDOFNIGHT.label.text }}</span>
                         {{ form_config.FILETRANSFER__UPLOAD_ENDOFNIGHT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__UPLOAD_ENDOFNIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_DB_BACKUP.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_DB_BACKUP.label.text }}</span>
                         {{ form_config.FILETRANSFER__UPLOAD_DB_BACKUP(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__UPLOAD_DB_BACKUP-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
 
                 <!-- Latest Upload Toggles Sub-Grid -->
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Latest Asset Upload Toggles</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Latest Asset Upload Toggles</span>
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_LATEST_IMAGE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_LATEST_IMAGE.label.text }}</span>
                         {{ form_config.FILETRANSFER__UPLOAD_LATEST_IMAGE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__UPLOAD_LATEST_IMAGE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_LATEST_PANORAMA.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_LATEST_PANORAMA.label.text }}</span>
                         {{ form_config.FILETRANSFER__UPLOAD_LATEST_PANORAMA(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__UPLOAD_LATEST_PANORAMA-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_LATEST_RAW.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_LATEST_RAW.label.text }}</span>
                         {{ form_config.FILETRANSFER__UPLOAD_LATEST_RAW(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__UPLOAD_LATEST_RAW-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_LATEST_VIDEO.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_LATEST_VIDEO.label.text }}</span>
                         {{ form_config.FILETRANSFER__UPLOAD_LATEST_VIDEO(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__UPLOAD_LATEST_VIDEO-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>

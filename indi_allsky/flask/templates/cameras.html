@@ -18,7 +18,7 @@ var camera_id = {{ camera_id }};
         <div class="tw:overflow-x-auto">
             <table id="cameras-table" class="tw:table tw:table-sm tw:table-pin-rows tw:w-full">
                 <thead>
-                    <tr class="tw:border-b tw:border-base-300 tw:bg-base-300/60 tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">
+                    <tr class="tw:border-b tw:border-base-300 tw:bg-base-300/60 tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">
                         <th class="tw:py-3.5 tw:px-4">ID</th>
                         <th class="tw:py-3.5">Device Node</th>
                         <th class="tw:py-3.5">Driver Initialization</th>
@@ -50,7 +50,7 @@ var camera_id = {{ camera_id }};
                         </td>
                         
                         <td class="tw:py-3">
-                            <span class="tw:badge tw:badge-neutral tw:bg-base-300 tw:border-none tw:text-[10px] tw:font-mono tw:font-bold">
+                            <span class="tw:badge tw:badge-neutral tw:bg-base-300 tw:border-none tw:text-[0.625rem] tw:font-mono tw:font-bold">
                                 {{ camera.bits | int }}-bit
                             </span>
                         </td>
@@ -64,9 +64,9 @@ var camera_id = {{ camera_id }};
                         </td>
                         
                         <td class="tw:py-3 tw:px-4 tw:font-mono tw:text-info tw:font-medium">
-                            {{ "%0.6f"|format(camera.minExposure | float) }}<span class="tw:text-base-content/30 tw:text-[10px] tw:ml-0.5">s</span> 
+                            {{ "%0.6f"|format(camera.minExposure | float) }}<span class="tw:text-base-content/30 tw:text-[0.625rem] tw:ml-0.5">s</span> 
                             <span class="tw:text-base-content/30 tw:mx-1">/</span> 
-                            {{ "%0.1f"|format(camera.maxExposure | float) }}<span class="tw:text-base-content/30 tw:text-[10px] tw:ml-0.5">s</span>
+                            {{ "%0.1f"|format(camera.maxExposure | float) }}<span class="tw:text-base-content/30 tw:text-[0.625rem] tw:ml-0.5">s</span>
                         </td>
                     </tr>
                     {% endfor %}

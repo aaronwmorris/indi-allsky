@@ -88,7 +88,7 @@ $(document).ready(function() {
                 <h3 class="tw:text-sm tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content tw:m-0">Sensor Panel</h3>
                 
                 {% if last_update %}
-                    <div class="tw:text-[11px] tw:text-base-content/60 tw:mt-1 tw:font-medium tw:flex tw:items-center tw:gap-1.5">
+                    <div class="tw:text-[0.6875rem] tw:text-base-content/60 tw:mt-1 tw:font-medium tw:flex tw:items-center tw:gap-1.5">
                         <i class="tw:icon-[lucide--clock] tw:w-3.5 tw:h-3.5 tw:text-base-content/40"></i>
                         <span>Last update: <span id="sp_last_update" class="tw:font-mono tw:text-base-content tw:font-semibold">{{ last_update }}</span></span>
                         {% if last_update_age_s is not none %}
@@ -98,7 +98,7 @@ $(document).ready(function() {
                         {% endif %}
                     </div>
                 {% else %}
-                    <div class="tw:text-[11px] tw:text-warning tw:mt-1 tw:font-semibold tw:flex tw:items-center tw:gap-1.5">
+                    <div class="tw:text-[0.6875rem] tw:text-warning tw:mt-1 tw:font-semibold tw:flex tw:items-center tw:gap-1.5">
                         <i class="tw:icon-[lucide--alert-triangle] tw:w-3.5 tw:h-3.5"></i>
                         No recent image metadata available (waiting for first capture?)
                     </div>
@@ -131,7 +131,7 @@ $(document).ready(function() {
             <div class="tw:overflow-x-auto">
                 <table class="tw:table tw:table-xs tw:w-full tw:m-0">
                     <thead>
-                        <tr class="tw:border-b tw:border-base-300 tw:bg-base-300/30 tw:text-[10px] tw:uppercase tw:tracking-wider tw:text-base-content/60">
+                        <tr class="tw:border-b tw:border-base-300 tw:bg-base-300/30 tw:text-[0.625rem] tw:uppercase tw:tracking-wider tw:text-base-content/60">
                             <th style="width: 120px;" class="tw:pl-4 tw:py-3 tw:font-bold">Slot</th>
                             <th class="tw:py-3 tw:font-bold">Label</th>
                             <th style="width: 160px;" class="tw:text-end tw:pr-4 tw:py-3 tw:font-bold">Value</th>
@@ -162,7 +162,7 @@ $(document).ready(function() {
             <div class="tw:overflow-x-auto">
                 <table class="tw:table tw:table-xs tw:w-full tw:m-0">
                     <thead>
-                        <tr class="tw:border-b tw:border-base-300 tw:bg-base-300/30 tw:text-[10px] tw:uppercase tw:tracking-wider tw:text-base-content/60">
+                        <tr class="tw:border-b tw:border-base-300 tw:bg-base-300/30 tw:text-[0.625rem] tw:uppercase tw:tracking-wider tw:text-base-content/60">
                             <th style="width: 120px;" class="tw:pl-4 tw:py-3 tw:font-bold">Slot</th>
                             <th class="tw:py-3 tw:font-bold">Label</th>
                             <th style="width: 160px;" class="tw:text-end tw:pr-4 tw:py-3 tw:font-bold">Value</th>

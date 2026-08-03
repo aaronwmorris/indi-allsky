@@ -17,6 +17,9 @@
             var darkTheme = localStorage.getItem('allsky-dark-theme') || 'forest';
             var activeTheme = (preferredMode === 'light') ? lightTheme : darkTheme;
             document.documentElement.setAttribute('data-theme', activeTheme);
+            
+            var savedFontSize = localStorage.getItem('allsky-font-size') || '100%';
+            document.documentElement.style.fontSize = savedFontSize;
         })();
     </script>
 
@@ -100,7 +103,7 @@
                 <form id="form_camera_select" onSubmit="return false;">
                     {{ form_camera_select.CAMERA_SELECT(class='tw:select tw:select-sm tw:w-full tw:font-semibold tw:text-xs tw:bg-base-300 tw:border tw:border-base-content/10 tw:focus:outline-none tw:focus:border-base-content/20 tw:transition-all') }}
                 </form>
-                <div class="tw:text-[10px] tw:uppercase tw:tracking-wider tw:opacity-40 tw:mt-2 tw:px-1 tw:font-semibold tw:whitespace-nowrap">
+                <div class="tw:text-[0.625rem] tw:uppercase tw:tracking-wider tw:opacity-40 tw:mt-2 tw:px-1 tw:font-semibold tw:whitespace-nowrap">
                     Cameras Available: {{ camera_count }}
                 </div>
             </div>
@@ -114,7 +117,7 @@
                         class="tw:flex tw:items-center tw:w-full tw:px-4 tw:py-2 tw:bg-base-200/50 hover:tw:bg-base-300/80 tw:rounded-[var(--radius-selector)] tw:border tw:border-base-content/10 tw:text-base-content/70 hover:tw:text-base-content tw:transition-all tw:duration-200">
                         <div class="tw:flex tw:items-center tw:gap-3">
                             <i class="tw:icon-[lucide--home] tw:w-4 tw:h-4 tw:opacity-50"></i>
-                            <span class="tw:font-medium tw:text-[14px]">Latest</span>
+                            <span class="tw:font-medium tw:text-[0.875rem]">Latest</span>
                         </div>
                     </a>
                 </li>
@@ -124,7 +127,7 @@
                         class="tw:flex tw:items-center tw:w-full tw:px-4 tw:py-2 tw:bg-base-200/50 hover:tw:bg-base-300/80 tw:rounded-[var(--radius-selector)] tw:border tw:border-base-content/10 tw:text-base-content/70 hover:tw:text-base-content tw:transition-all tw:duration-200">
                         <div class="tw:flex tw:items-center tw:gap-3">
                             <i class="tw:icon-[lucide--infinity] tw:w-4 tw:h-4 tw:opacity-50"></i>
-                            <span class="tw:font-medium tw:text-[14px]">Loop</span>
+                            <span class="tw:font-medium tw:text-[0.875rem]">Loop</span>
                         </div>
                     </a>
                 </li>
@@ -180,7 +183,7 @@
                             class="tw:flex tw:items-center tw:justify-between tw:w-full tw:px-4 tw:py-2 tw:bg-base-200/50 hover:tw:bg-base-300/80 tw:rounded-[var(--radius-selector)] tw:cursor-pointer tw:list-none tw:border tw:border-base-content/10 tw:text-base-content/70 hover:tw:text-base-content tw:transition-all">
                             <div class="tw:flex tw:items-center tw:gap-3">
                                 <i class="tw:icon-[lucide--{{ group_icon }}] tw:w-4 tw:h-4 tw:opacity-50"></i>
-                                <span class="tw:font-medium tw:text-[14px]">{{ group_label }}</span>
+                                <span class="tw:font-medium tw:text-[0.875rem]">{{ group_label }}</span>
                             </div>
                         </summary>
                         <ul
@@ -203,7 +206,7 @@
         </div>
         <div class="tw:p-4 tw:bg-base-200/60 tw:border-t tw:border-base-content/10 tw:flex-shrink-0">
             <div id="status_text"
-                class="tw:text-[12.5px] tw:opacity-85 tw:grid tw:grid-cols-[auto_1fr] tw:gap-x-3 tw:mb-3 [&_br]:tw:hidden [&_b]:tw:font-semibold [&_b]:tw:text-base-content/70 [&_b]:after:tw:content-[':']">
+                class="tw:text-[0.781rem] tw:opacity-85 tw:grid tw:grid-cols-[auto_1fr] tw:gap-x-3 tw:mb-3 [&_br]:tw:hidden [&_b]:tw:font-semibold [&_b]:tw:text-base-content/70 [&_b]:after:tw:content-[':']">
                 {{ status_text|safe }}
             </div>
             <div class="tw:divider tw:my-2.5 tw:opacity-20"></div>
@@ -249,7 +252,7 @@
                 <div>
                     <h3 class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-widest tw:m-0" id="notificationLabel">
                     </h3>
-                    <div id="notification_date" class="tw:text-[10px] tw:opacity-40 tw:font-mono tw:mt-0.5"></div>
+                    <div id="notification_date" class="tw:text-[0.625rem] tw:opacity-40 tw:font-mono tw:mt-0.5"></div>
                 </div>
             </div>
 

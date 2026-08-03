@@ -32,7 +32,7 @@ var camera_id = {{ camera_id }};
             <div class="tw:stat-figure tw:text-info">
                 <i class="tw:icon-[lucide--sun-dim] tw:w-8 tw:h-8"></i>
             </div>
-            <div class="tw:stat-title tw:text-[10px] tw:uppercase tw:tracking-widest">ADU Average</div>
+            <div class="tw:stat-title tw:text-[0.625rem] tw:uppercase tw:tracking-widest">ADU Average</div>
             <div class="tw:stat-value tw:text-info tw:text-2xl">{{ "%0.1f"|format(ns.adu_sum / ns.count) }}</div>
             <div class="tw:stat-desc">Over {{ ns.count }} 15-min intervals</div>
         </div>
@@ -41,7 +41,7 @@ var camera_id = {{ camera_id }};
             <div class="tw:stat-figure tw:text-warning">
                 <i class="tw:icon-[lucide--telescope] tw:w-8 tw:h-8"></i>
             </div>
-            <div class="tw:stat-title tw:text-[10px] tw:uppercase tw:tracking-widest">jSQM Average</div>
+            <div class="tw:stat-title tw:text-[0.625rem] tw:uppercase tw:tracking-widest">jSQM Average</div>
             <div class="tw:stat-value tw:text-warning tw:text-2xl">{{ "%0.2f"|format(ns.sqm_sum / ns.count) }}</div>
             <div class="tw:stat-desc">Sky quality metric</div>
         </div>
@@ -50,7 +50,7 @@ var camera_id = {{ camera_id }};
             <div class="tw:stat-figure tw:text-success">
                 <i class="tw:icon-[lucide--star] tw:w-8 tw:h-8"></i>
             </div>
-            <div class="tw:stat-title tw:text-[10px] tw:uppercase tw:tracking-widest">Stars Average</div>
+            <div class="tw:stat-title tw:text-[0.625rem] tw:uppercase tw:tracking-widest">Stars Average</div>
             <div class="tw:stat-value tw:text-success tw:text-2xl">{{ "%0.0f"|format(ns.stars_sum / ns.count) }}</div>
             <div class="tw:stat-desc">Detected per frame</div>
         </div>
@@ -68,7 +68,7 @@ var camera_id = {{ camera_id }};
             <div class="tw:overflow-x-auto tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
                 <table id="adu-table" class="tw:table tw:table-zebra tw:table-xs tw:w-full tw:m-0">
                     <thead>
-                        <tr class="tw:bg-base-300/60 tw:text-[10px] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
+                        <tr class="tw:bg-base-300/60 tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
                             <th class="tw:pl-4 tw:py-3">Date</th>
                             <th class="tw:py-3">Count</th>
                             <th class="tw:py-3">Exposure Avg</th>

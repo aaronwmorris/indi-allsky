@@ -15,7 +15,7 @@
     <div class="tw:w-full tw:flex tw:items-center tw:justify-between tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm">
         <div>
             <h1 class="tw:text-base tw:font-black tw:uppercase tw:tracking-widest tw:text-base-content tw:m-0">User Info</h1>
-            <p class="tw:text-[11px] tw:text-base-content/50 tw:mt-0.5 tw:font-mono">Account identity, security & UI appearance settings</p>
+            <p class="tw:text-[0.6875rem] tw:text-base-content/50 tw:mt-0.5 tw:font-mono">Account identity, security & UI appearance settings</p>
         </div>
         <a href="{{ url_for('auth_indi_allsky.logout_view') }}" class="tw:no-underline tw:btn tw:btn-error tw:btn-outline tw:btn-sm tw:h-10 tw:px-4 tw:text-xs tw:font-bold tw:tracking-wide tw:uppercase tw:gap-2">
             <i class="tw:icon-[lucide--log-out] tw:w-4 tw:h-4"></i>
@@ -34,7 +34,7 @@
                 </h4>
 
                 <div class="tw:form-control tw:flex tw:flex-col tw:gap-1.5">
-                    <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                         {{ form_userinfo.USERNAME.label.text }}
                     </label>
                     {{ form_userinfo.USERNAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -42,7 +42,7 @@
                 </div>
 
                 <div class="tw:form-control tw:flex tw:flex-col tw:gap-1.5">
-                    <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                         {{ form_userinfo.NAME.label.text }}
                     </label>
                     {{ form_userinfo.NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -50,16 +50,16 @@
                 </div>
 
                 <div class="tw:form-control tw:flex tw:flex-col tw:gap-1.5">
-                    <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                         {{ form_userinfo.EMAIL.label.text }}
                     </label>
                     {{ form_userinfo.EMAIL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-300 tw:text-base-content/70 tw:w-full tw:cursor-not-allowed', readonly=true) }}
-                    <span class="tw:text-[10px] tw:font-semibold tw:text-base-content/40 tw:italic">(read-only)</span>
+                    <span class="tw:text-[0.625rem] tw:font-semibold tw:text-base-content/40 tw:italic">(read-only)</span>
                     <div id="EMAIL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                 </div>
 
                 <div class="tw:form-control tw:flex tw:items-center tw:justify-between tw:pt-2">
-                    <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                         {{ form_userinfo.ADMIN.label.text }}
                     </label>
                     <div class="tw:flex tw:items-center">
@@ -76,7 +76,7 @@
                 </h4>
 
                 <div class="tw:form-control tw:flex tw:flex-col tw:gap-1.5">
-                    <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                         {{ form_userinfo.CURRENT_PASSWORD.label.text }}
                     </label>
                     {{ form_userinfo.CURRENT_PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full', autocomplete='new-password') }}
@@ -84,7 +84,7 @@
                 </div>
 
                 <div class="tw:form-control tw:flex tw:flex-col tw:gap-1.5">
-                    <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                         {{ form_userinfo.NEW_PASSWORD.label.text }}
                     </label>
                     {{ form_userinfo.NEW_PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full', autocomplete='new-password') }}
@@ -92,7 +92,7 @@
                 </div>
 
                 <div class="tw:form-control tw:flex tw:flex-col tw:gap-1.5">
-                    <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                         Confirm Password
                     </label>
                     {{ form_userinfo.NEW_PASSWORD2(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full', autocomplete='new-password') }}
@@ -121,13 +121,13 @@
             <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:m-0">
                 Theme & Appearance
             </h4>
-            <p class="tw:text-[11px] tw:text-base-content/40 tw:m-0 tw:mt-0.5">Customize your DaisyUI color palette. Selecting a theme previews it live and switches to that mode.</p>
+            <p class="tw:text-[0.6875rem] tw:text-base-content/40 tw:m-0 tw:mt-0.5">Customize your DaisyUI color palette. Selecting a theme previews it live and switches to that mode.</p>
         </div>
 
         <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-6">
             <!-- Light Theme Dropdown -->
             <div class="tw:form-control tw:flex tw:flex-col tw:gap-2">
-                <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                     Light Theme Preset
                 </label>
                 <select id="select_light_theme" class="tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full">
@@ -150,12 +150,12 @@
                     <option value="{{ ctheme }}">{{ ctheme }} (Custom Theme)</option>
                     {% endfor %}
                 </select>
-                <span class="tw:text-[10px] tw:text-base-content/40">Selecting a light preset switches the UI to Light mode.</span>
+                <span class="tw:text-[0.625rem] tw:text-base-content/40">Selecting a light preset switches the UI to Light mode.</span>
             </div>
 
             <!-- Dark Theme Dropdown -->
             <div class="tw:form-control tw:flex tw:flex-col tw:gap-2">
-                <label class="tw:text-[10px] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
                     Dark Theme Preset
                 </label>
                 <select id="select_dark_theme" class="tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full">
@@ -176,7 +176,39 @@
                     <option value="{{ ctheme }}">{{ ctheme }} (Custom Theme)</option>
                     {% endfor %}
                 </select>
-                <span class="tw:text-[10px] tw:text-base-content/40">Selecting a dark preset switches the UI to Dark mode.</span>
+                <span class="tw:text-[0.625rem] tw:text-base-content/40">Selecting a dark preset switches the UI to Dark mode.</span>
+            </div>
+        </div>
+        
+        <!-- Text Size Scaling Sub-Section -->
+        <div class="tw:border-t tw:border-base-300 tw:pt-6 tw:flex tw:flex-col tw:gap-4">
+            <div>
+                <h5 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/70 tw:m-0">
+                    Text & Interface Scaling
+                </h5>
+                <p class="tw:text-[0.6875rem] tw:text-base-content/40 tw:m-0 tw:mt-0.5">
+                    Adjust the base font size to scale all text and interface layouts to your liking.
+                </p>
+            </div>
+            
+            <div class="tw:flex tw:flex-col md:tw:flex-row tw:items-center tw:gap-6 tw:bg-base-300/40 tw:p-4 tw:rounded-[var(--radius-box)]">
+                <div class="tw:flex-1 tw:w-full">
+                    <input id="font_size_slider" type="range" min="70" max="130" value="100" class="tw:range tw:range-primary tw:w-full" step="5" />
+                    <div class="tw:w-full tw:flex tw:justify-between tw:text-[0.625rem] tw:px-1 tw:font-mono tw:text-base-content/40 tw:mt-1">
+                        <span>70%</span>
+                        <span>85%</span>
+                        <span>100% (Default)</span>
+                        <span>115%</span>
+                        <span>130%</span>
+                    </div>
+                </div>
+                <div class="tw:flex tw:items-center tw:gap-3 tw:shrink-0 max-md:tw:w-full max-md:tw:justify-between">
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">Current Scale:</span>
+                    <span id="font_size_display" class="tw:badge tw:badge-primary tw:font-mono tw:text-xs tw:py-3 tw:px-4">100%</span>
+                    <button id="btn_reset_font_size" class="tw:btn tw:btn-xs tw:btn-ghost tw:border tw:border-base-content/10 tw:gap-1 shadow-sm">
+                        <i class="tw:icon-[lucide--rotate-ccw] tw:w-3 tw:h-3"></i> Reset
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -187,7 +219,7 @@
                     <h5 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/70 tw:m-0">
                         Custom Theme Injector
                     </h5>
-                    <p class="tw:text-[11px] tw:text-base-content/40 tw:m-0 tw:mt-0.5">
+                    <p class="tw:text-[0.6875rem] tw:text-base-content/40 tw:m-0 tw:mt-0.5">
                         Design a custom color scheme using the <a href="https://daisyui.com/theme-generator/" target="_blank" class="tw:link tw:link-info tw:no-underline tw:font-semibold">DaisyUI Theme Generator <i class="tw:icon-[lucide--external-link] tw:w-3 tw:h-3 tw:inline"></i></a> and paste your exported theme below. After saving, compiling, and reloading the page, your custom theme will be available to select in the preset dropdowns above.
                     </p>
                 </div>
@@ -261,6 +293,31 @@ function updateCustomThemeDropdowns() {
 
 // Theme Management Logic
 $(document).ready(function() {
+    // Text Sizing Controller Logic
+    var savedFontSize = localStorage.getItem('allsky-font-size') || '100%';
+    var savedPercent = parseInt(savedFontSize.replace('%', ''), 10);
+    if (isNaN(savedPercent)) savedPercent = 100;
+
+    $('#font_size_slider').val(savedPercent);
+    $('#font_size_display').text(savedPercent + '%');
+
+    function applyFontSize(percent) {
+        var val = percent + '%';
+        localStorage.setItem('allsky-font-size', val);
+        document.documentElement.style.fontSize = val;
+        $('#font_size_display').text(val);
+    }
+
+    $('#font_size_slider').on('input change', function() {
+        var val = $(this).val();
+        applyFontSize(val);
+    });
+
+    $('#btn_reset_font_size').on('click', function() {
+        $('#font_size_slider').val(100);
+        applyFontSize(100);
+    });
+
     var lightT = localStorage.getItem('allsky-light-theme') || 'fantasy';
     var darkT = localStorage.getItem('allsky-dark-theme') || 'forest';
 

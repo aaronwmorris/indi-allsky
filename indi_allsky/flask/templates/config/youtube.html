@@ -10,15 +10,15 @@
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
-                    <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">YouTube Authorization & OAuth2</span>
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">YouTube Authorization & OAuth2</span>
                     <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Youtube-Uploads" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">YouTube Wiki</a>
                 </div>
 
                 <!-- Enable YouTube -->
                 <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__ENABLE.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/50">Enable automatic video uploading to YouTube</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__ENABLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Enable automatic video uploading to YouTube</span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
                         {{ form_config.YOUTUBE__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -29,8 +29,8 @@
                 <!-- Secrets File -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__SECRETS_FILE.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">JSON client secrets filepath</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__SECRETS_FILE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">JSON client secrets filepath</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.YOUTUBE__SECRETS_FILE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -41,8 +41,8 @@
                 <!-- OAuth2 Action Controls -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">OAuth2 Actions</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Authorize or manage tokens</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">OAuth2 Actions</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Authorize or manage tokens</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-wrap tw:items-center tw:gap-3">
                         <a href="{{ url_for('indi_allsky.youtube_authorize_view') }}" class="tw:btn tw:btn-sm tw:btn-success tw:gap-2 tw:no-underline">
@@ -60,8 +60,8 @@
                 <!-- Credentials Stored Toggle -->
                 <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__CREDS_STORED.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/50">Indicates valid stored OAuth2 tokens</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__CREDS_STORED.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Indicates valid stored OAuth2 tokens</span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
                         {{ form_config.YOUTUBE__CREDS_STORED(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -72,8 +72,8 @@
                 <!-- Redirect URI -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__REDIRECT_URI.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Must be a real TLD domain</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__REDIRECT_URI.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Must be a real TLD domain</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.YOUTUBE__REDIRECT_URI(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -87,19 +87,19 @@
         <!-- Video Metadata Template Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Video Metadata & Category</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Video Metadata & Category</span>
 
                 <!-- Privacy Status & Category -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__PRIVACY_STATUS.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__PRIVACY_STATUS.label.text }}</span>
                         {{ form_config.YOUTUBE__PRIVACY_STATUS(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="YOUTUBE__PRIVACY_STATUS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__CATEGORY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__CATEGORY.label.text }}</span>
                         {{ form_config.YOUTUBE__CATEGORY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">22 = People & Blogs (<a href="https://developers.google.com/youtube/v3/docs/videoCategories/list" class="tw:link tw:link-info tw:no-underline" target="_blank">Categories API</a>)</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">22 = People & Blogs (<a href="https://developers.google.com/youtube/v3/docs/videoCategories/list" class="tw:link tw:link-info tw:no-underline" target="_blank">Categories API</a>)</span>
                         <div id="YOUTUBE__CATEGORY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -107,13 +107,13 @@
                 <!-- Title Template & Description Template -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__TITLE_TEMPLATE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__TITLE_TEMPLATE.label.text }}</span>
                         {{ form_config.YOUTUBE__TITLE_TEMPLATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[10px] tw:text-base-content/40">Vars: day_date, timeofday, asset_label</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Vars: day_date, timeofday, asset_label</span>
                         <div id="YOUTUBE__TITLE_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__DESCRIPTION_TEMPLATE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__DESCRIPTION_TEMPLATE.label.text }}</span>
                         {{ form_config.YOUTUBE__DESCRIPTION_TEMPLATE(class='tw:textarea tw:textarea-bordered tw:bg-base-100 tw:text-base-content tw:w-full tw:font-mono tw:text-xs', rows='3') }}
                         <div id="YOUTUBE__DESCRIPTION_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -122,8 +122,8 @@
                 <!-- Tags String -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__TAGS_STR.label.text }}</span>
-                        <span class="tw:text-[10px] tw:text-base-content/40">Comma separated tags</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__TAGS_STR.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Comma separated tags</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.YOUTUBE__TAGS_STR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -137,26 +137,26 @@
         <!-- Video Upload Selections Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Video Asset Upload Triggers</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Video Asset Upload Triggers</span>
 
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__UPLOAD_VIDEO.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__UPLOAD_VIDEO.label.text }}</span>
                         {{ form_config.YOUTUBE__UPLOAD_VIDEO(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="YOUTUBE__UPLOAD_VIDEO-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__UPLOAD_MINI_VIDEO.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__UPLOAD_MINI_VIDEO.label.text }}</span>
                         {{ form_config.YOUTUBE__UPLOAD_MINI_VIDEO(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="YOUTUBE__UPLOAD_MINI_VIDEO-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__UPLOAD_STARTRAIL_VIDEO.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__UPLOAD_STARTRAIL_VIDEO.label.text }}</span>
                         {{ form_config.YOUTUBE__UPLOAD_STARTRAIL_VIDEO(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="YOUTUBE__UPLOAD_STARTRAIL_VIDEO-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[10px] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__UPLOAD_PANORAMA_VIDEO.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.YOUTUBE__UPLOAD_PANORAMA_VIDEO.label.text }}</span>
                         {{ form_config.YOUTUBE__UPLOAD_PANORAMA_VIDEO(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="YOUTUBE__UPLOAD_PANORAMA_VIDEO-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
