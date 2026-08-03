@@ -18,7 +18,7 @@ INDI_PORT = 7624
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.INFO)
+logger.setLevel(level=logging.WARNING)
 
 LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(funcName)s() [%(lineno)d]: %(message)s')
 LOG_HANDLER_STREAM = logging.StreamHandler()
@@ -80,7 +80,7 @@ class IndiProperties(PyIndi.BaseClient):
             str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
         ))
 
-        logger.warning("INDI version: %s", pyindi_version)
+        logger.info("INDI version: %s", pyindi_version)
 
 
     def newDevice(self, d):
@@ -136,7 +136,7 @@ class IndiProperties(PyIndi.BaseClient):
 
 
             while not device_ccd.isConnected():
-                logger.warning('Waiting on ccd connection')
+                logger.info('Waiting on ccd connection')
                 time.sleep(0.5)
 
             logger.info("ccd connected")
@@ -151,15 +151,15 @@ class IndiProperties(PyIndi.BaseClient):
             table_switch = PrettyTable()
             table_switch.field_names = ['Control', 'Property', 'Label', 'State', 'Perm']
 
-            table_light = PrettyTable()
-            table_light.field_names = ['Control', 'Property', 'Label', 'State', 'Perm']
-
             table_blob = PrettyTable()
             table_blob.field_names = ['Control', 'Property', 'Label', 'Perm']
 
+            #table_light = PrettyTable()
+            #table_light.field_names = ['Control', 'Property', 'Label', 'State']
+
 
             print('#########################################')
-            print('########## Start properties #############')
+            print('### Camera "{0:s}" Properties'.format(device_ccd.getDeviceName()))
             print('#########################################')
             print('```')  # github formatting
 
@@ -220,19 +220,6 @@ class IndiProperties(PyIndi.BaseClient):
 
                     table_switch.add_divider()
 
-                elif prop_v['type'] == PyIndi.INDI_LIGHT:
-                    # light
-                    for c in prop_v['controls']:
-                        table_light.add_row([
-                            prop,
-                            c['name'],
-                            '"{0:s}"'.format(c['label']),
-                            self.__state_to_str_s[c['state']],
-                            self.__perm_to_str[prop_v['permissions']],
-                        ])
-
-                    table_text.add_divider()
-
                 elif prop_v['type'] == PyIndi.INDI_BLOB:
                     # blob
                     for c in prop_v['controls']:
@@ -242,6 +229,20 @@ class IndiProperties(PyIndi.BaseClient):
                             '"{0:s}"'.format(c['label']),
                             self.__perm_to_str[prop_v['permissions']],
                         ])
+
+                #elif prop_v['type'] == PyIndi.INDI_LIGHT:
+                #    # light
+                #    for c in prop_v['controls']:
+                #        table_light.add_row([
+                #            prop,
+                #            c['name'],
+                #            '"{0:s}"'.format(c['label']),
+                #            self.__state_to_str_s[c['state']],
+                #        ])
+                else:
+                    # the only remaining vector is Light
+                    continue
+
 
 
             print('Control Type: Number')
@@ -256,17 +257,17 @@ class IndiProperties(PyIndi.BaseClient):
             print(table_switch)
 
             print()
-            print('Control Type: Light')
-            print(table_light)
-
-            print()
             print('Control Type: Blob')
             print(table_blob)
+
+            #print()
+            #print('Control Type: Light')
+            #print(table_light)
 
 
             print('```')  # github formatting
             print('#########################################')
-            print('########### End properties ##############')
+            print('### End "{0:s}" Properties'.format(device_ccd.getDeviceName()))
             print('#########################################')
 
 
@@ -274,11 +275,16 @@ class IndiProperties(PyIndi.BaseClient):
         properties = dict()
 
         for p in device.getProperties():
+            if p.getType() in [PyIndi.INDI_LIGHT]:
+                # skip these
+                continue
+
+
             name = p.getName()
 
             properties[name] = {
-                'type'        : p.getType(),
                 'permissions' : p.getPermission(),
+                'type'        : p.getType(),
                 'controls'    : list(),
             }
 
@@ -287,9 +293,9 @@ class IndiProperties(PyIndi.BaseClient):
 
                 for t in p.getText():
                     control = {
-                        'name'    : t.getName(),
-                        'label'   : t.getLabel(),
-                        'text'    : t.getText(),
+                        'name'        : t.getName(),
+                        'label'       : t.getLabel(),
+                        'text'        : t.getText(),
                     }
 
                     properties[name]['controls'].append(control)
@@ -298,12 +304,12 @@ class IndiProperties(PyIndi.BaseClient):
             elif p.getType() == PyIndi.INDI_NUMBER:
                 for t in p.getNumber():
                     control = {
-                        'name'    : t.getName(),
-                        'label'   : t.getLabel(),
-                        'value'   : t.getValue(),
-                        'min'     : t.getMin(),
-                        'max'     : t.getMax(),
-                        'format'  : t.getFormat(),
+                        'name'        : t.getName(),
+                        'label'       : t.getLabel(),
+                        'value'       : t.getValue(),
+                        'min'         : t.getMin(),
+                        'max'         : t.getMax(),
+                        'format'      : t.getFormat(),
                     }
 
                     properties[name]['controls'].append(control)
@@ -312,20 +318,9 @@ class IndiProperties(PyIndi.BaseClient):
             elif p.getType() == PyIndi.INDI_SWITCH:
                 for t in p.getSwitch():
                     control = {
-                        'name'    : t.getName(),
-                        'label'   : t.getLabel(),
-                        'state'   : t.getState(),
-                    }
-
-                    properties[name]['controls'].append(control)
-
-                continue
-            elif p.getType() == PyIndi.INDI_LIGHT:
-                for t in p.getLight():
-                    control = {
-                        'name'    : t.getName(),
-                        'label'   : t.getLabel(),
-                        'state'   : t.getState(),
+                        'name'        : t.getName(),
+                        'label'       : t.getLabel(),
+                        'state'       : t.getState(),
                     }
 
                     properties[name]['controls'].append(control)
@@ -334,15 +329,24 @@ class IndiProperties(PyIndi.BaseClient):
             elif p.getType() == PyIndi.INDI_BLOB:
                 for t in p.getBLOB():
                     control = {
-                        'name'    : t.getName(),
-                        'label'   : t.getLabel(),
+                        'name'        : t.getName(),
+                        'label'       : t.getLabel(),
                     }
 
                     properties[name]['controls'].append(control)
 
                 continue
-            #else:
-            #    logger.info('%s', p.getType())
+            #elif p.getType() == PyIndi.INDI_LIGHT:
+            #    for t in p.getLight():
+            #        control = {
+            #            'name'    : t.getName(),
+            #            'label'   : t.getLabel(),
+            #            'state'   : t.getState(),
+            #        }
+
+            #    continue
+            else:
+                continue
 
 
         #logger.warning('%s', pformat(properties))
@@ -375,7 +379,7 @@ class IndiProperties(PyIndi.BaseClient):
             for k, v in self.__indi_interfaces.items():
                 if device_interfaces & k:
                     if k == PyIndi.BaseDevice.CCD_INTERFACE:
-                        logger.info(' Detected %s', device.getDeviceName())
+                        logger.warning(' Detected %s', device.getDeviceName())
                         ccd_list.append(device)
 
         return ccd_list
