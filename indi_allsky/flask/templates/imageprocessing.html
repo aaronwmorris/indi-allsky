@@ -105,7 +105,10 @@ var fullscreen = false;  //initial state
                 </div>
 
                 <!-- Feedback Messages -->
-                <div id="success-message" class="tw:alert tw:alert-success tw:py-2 tw:text-sm" style="display: none;"></div>
+                <div id="success-message" class="tw:alert tw:alert-success tw:py-2 tw:text-sm" style="display: none;">
+                    <i class="tw:icon-[lucide--check-circle] tw:w-4 tw:h-4 tw:shrink-0"></i>
+                    <span id="success-message-text"></span>
+                </div>
                 <div id="failure-message" class="tw:alert tw:alert-error tw:py-2 tw:text-sm" style="display: none;"></div>
                 <div id="form_global-error" class="tw:alert tw:alert-warning tw:py-2.5 tw:text-sm tw:rounded-[var(--radius-box)]" style="display: none;">
                     <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4 tw:shrink-0"></i>
@@ -720,6 +723,9 @@ var fullscreen = false;  //initial state
 
                         </div>
                     </div>
+                    {# Hidden fields not shown in UI but required for server validation #}
+                    {{ form_image_processing.IMAGE_CIRCLE_MASK__OFFSET_X(type='hidden') }}
+                    {{ form_image_processing.IMAGE_CIRCLE_MASK__OFFSET_Y(type='hidden') }}
 
                     <!-- TAB: OVERLAYS -->
                     <div id="nav-overlays" class="tab-pane">
@@ -1046,8 +1052,17 @@ var fullscreen = false;  //initial state
 
                         </div>
                     </div>
+                    {# Hidden fields not shown in UI but required for server validation #}
+                    {{ form_image_processing.CARDINAL_DIRS__OFFSET_X(type='hidden') }}
+                    {{ form_image_processing.CARDINAL_DIRS__OFFSET_Y(type='hidden') }}
+                    {{ form_image_processing.CARDINAL_DIRS__OFFSET_TOP(type='hidden') }}
+                    {{ form_image_processing.CARDINAL_DIRS__OFFSET_LEFT(type='hidden') }}
+                    {{ form_image_processing.CARDINAL_DIRS__OFFSET_RIGHT(type='hidden') }}
+                    {{ form_image_processing.CARDINAL_DIRS__OFFSET_BOTTOM(type='hidden') }}
+                    {{ form_image_processing.CARDINAL_DIRS__OPENCV_FONT_SCALE(type='hidden') }}
+                    {{ form_image_processing.CARDINAL_DIRS__PIL_FONT_SIZE(type='hidden') }}
 
-                    <!-- TAB: LOCATION -->
+
                     <div id="nav-location" class="tab-pane">
                         <div class="tw:flex tw:flex-col tw:gap-6">
                             
@@ -1215,7 +1230,9 @@ function submitProcessingData() {
     Object.keys(fields).forEach(key => {
         fields[key].error.hide();
         if(fields[key].input) {
-            fields[key].input.removeClass('allsky-field-error tw:input-error tw:select-error tw:textarea-error');
+            fields[key].input.removeClass('tw:input-error tw:select-error tw:textarea-error tw:toggle-error');
+            // also clear any inline --input-color left by a previous approach
+            if (fields[key].input[0]) fields[key].input[0].style.removeProperty('--input-color');
         }
     });
 
@@ -1229,8 +1246,12 @@ function submitProcessingData() {
         contentType: "application/json",
         data: JSON.stringify(submit_data),
         success: function(rdata){
-            successMessage.html(rdata['success-message']).show();
-            setTimeout(() => successMessage.fadeOut(), 10000);
+            if (!_initLoad) {
+                var msg = rdata['success-message'] || ('Image processed in ' + rdata['processing_elapsed_s'] + 's');
+                $('#success-message-text').text(msg);
+                successMessage.show();
+                setTimeout(() => successMessage.fadeOut(), 10000);
+            }
             json_data = rdata;
             showImage(json_data['image_b64']);
 
@@ -1268,15 +1289,8 @@ function submitProcessingData() {
                     if (key === 'form_global') {
                         globalMsg = errors[key][0];
                     } else if (fields[key]) {
-                        // Apply the correct native daisyUI error modifier by element type
-                        var $el = fields[key].input;
-                        if ($el.is('select')) {
-                            $el.addClass('tw:select-error');
-                        } else if ($el.is('textarea')) {
-                            $el.addClass('tw:textarea-error');
-                        } else {
-                            $el.addClass('tw:input-error');
-                        }
+                        // Mirror config.html's proven pattern: add all error classes at once
+                        fields[key].input.addClass('tw:input-error tw:select-error tw:textarea-error tw:toggle-error');
                         fields[key].error.html(errors[key][0]).show();
                         errorList.push(errors[key][0]);
 
