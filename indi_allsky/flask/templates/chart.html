@@ -1001,7 +1001,7 @@ $( document ).ready(function() {
 <div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-4">
 
     <form id="form_history" onSubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)]">
-        <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-6">
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-center tw:gap-6">
             
             <div class="tw:flex tw:items-center tw:gap-2">
                 {{ form_history.HISTORY_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
@@ -1010,7 +1010,7 @@ $( document ).ready(function() {
                 </div>
             </div>
 
-            <div class="tw:flex tw:items-center tw:ml-auto">
+            <div class="tw:flex tw:items-center">
                 <span id="loader_chart" class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary" style="display: none;"></span>
             </div>
 
@@ -1024,10 +1024,6 @@ $( document ).ready(function() {
                 <span class="tw:text-base-content/80 tw:font-medium">If you recently changed the custom charts, a restart will be necessary for the new selections to appear.</span>
             </div>
         </div>
-    </div>
-
-    <div class="tw:w-full">
-        <hr class="tw:border-base-300 tw:my-1">
     </div>
 
     <div class="tw:w-full">

@@ -78,9 +78,9 @@ function closeFullscreen() {
 
     <!-- Form Control Toolbar -->
     <div class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-md">
-        <form id="form_fits_viewer" onSubmit="return false;" class="tw:flex tw:flex-col tw:gap-4">
+        <form id="form_fits_viewer" onSubmit="return false;">
             {{ form_fits_viewer.csrf_token }}
-            <div class="tw:text-error tw:text-sm tw:my-1 tw:font-semibold" id="csrf_token-error"></div>
+            <div class="tw:text-error tw:text-xs tw:font-semibold tw:mb-2" id="csrf_token-error" style="display: none;"></div>
 
             <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-center tw:gap-6">
                 
@@ -119,7 +119,7 @@ function closeFullscreen() {
                     </div>
                 </div>
 
-                <div class="tw:flex tw:items-center tw:ml-auto">
+                <div class="tw:flex tw:items-center">
                     <span id="loader_filter" class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary" style="display: none;"></span>
                 </div>
 

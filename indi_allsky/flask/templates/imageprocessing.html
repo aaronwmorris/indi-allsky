@@ -4,6 +4,7 @@
 
 {% block head %}
 <meta charset="UTF-8">
+<script src="{{ url_for('indi_allsky.static', filename='js/indi-allsky-tabs.js') }}"></script>
 <style>
     /* Mandatory Grid Layout Override */
     .allsky-top-row-grid {
@@ -29,6 +30,7 @@
         overflow: hidden;
         min-height: 400px;
     }
+
 </style>
 <script type="text/javascript">
 var img;
@@ -67,9 +69,9 @@ var fullscreen = false;  //initial state
                          onload="this.style.display='block';">
                 </div>
 
-                <div class="tw:flex tw:flex-col tw:items-center tw:gap-2 tw:bg-base-200/50 tw:p-3 tw:rounded-[var(--radius-box)]">
+                <div id="processing-info-bar" class="tw:flex tw:flex-col tw:items-center tw:gap-2 tw:bg-base-200/50 tw:p-3 tw:rounded-[var(--radius-box)]" style="display: none;">
                     <div class="tw:flex tw:gap-4 tw:text-sm tw:font-mono">
-                        <span id="processing_time" class="tw:text-info">Unprocessed image</span>
+                        <span id="processing_time" class="tw:text-info"></span>
                         <span id="img_download"></span>
                     </div>
                     <div id="processing_message" class="tw:text-xs tw:opacity-70"></div>
@@ -105,25 +107,31 @@ var fullscreen = false;  //initial state
                 <!-- Feedback Messages -->
                 <div id="success-message" class="tw:alert tw:alert-success tw:py-2 tw:text-sm" style="display: none;"></div>
                 <div id="failure-message" class="tw:alert tw:alert-error tw:py-2 tw:text-sm" style="display: none;"></div>
-                <div id="form_global-error" class="tw:text-error tw:text-xs tw:mt-1.5 tw:text-center tw:font-bold" style="display: none;"></div>
+                <div id="form_global-error" class="tw:alert tw:alert-warning tw:py-2.5 tw:text-sm tw:rounded-[var(--radius-box)]" style="display: none;">
+                    <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4 tw:shrink-0"></i>
+                    <div>
+                        <p id="form_global-error-text" class="tw:font-semibold"></p>
+                        <ul id="form_global-error-list" class="tw:list-disc tw:list-inside tw:mt-1 tw:text-xs tw:opacity-80"></ul>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- ROW 2: Tabs & Settings Content -->
         <div class="tw:flex tw:flex-col tw:gap-4">
             <!-- Settings Tabs - Styled as Pills -->
-            <div role="tablist" class="tw:flex tw:flex-wrap tw:gap-2">
-                <button type="button" class="tw:btn tw:btn-sm tw:btn-primary nav-tab-btn tw:px-6" data-target="nav-image">IMAGE</button>
-                <button type="button" class="tw:btn tw:btn-sm tw:bg-base-300 nav-tab-btn tw:px-6" data-target="nav-processing">PROCESSING</button>
-                <button type="button" class="tw:btn tw:btn-sm tw:bg-base-300 nav-tab-btn tw:px-6" data-target="nav-overlays">OVERLAYS</button>
-                <button type="button" class="tw:btn tw:btn-sm tw:bg-base-300 nav-tab-btn tw:px-6" data-target="nav-location">LOCATION</button>
+            <div role="tablist" class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm" id="nav-tab">
+                <button type="button" class="tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:uppercase tw:tracking-wider" id="nav-image-tab" data-tab-target="nav-image">Image</button>
+                <button type="button" class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" id="nav-processing-tab" data-tab-target="nav-processing">Processing</button>
+                <button type="button" class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" id="nav-overlays-tab" data-tab-target="nav-overlays">Overlays</button>
+                <button type="button" class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" id="nav-location-tab" data-tab-target="nav-location">Location</button>
             </div>
 
             <div class="tw:card tw:bg-base-200 tw:shadow-sm tw:overflow-hidden">
                 <div class="tw:card-body tw:p-6">
                     
                     <!-- TAB: IMAGE -->
-                    <div id="nav-image" class="tab-content-panel active">
+                    <div id="nav-image" class="tab-pane show active">
                         <div class="tw:flex tw:flex-col tw:gap-6">
                             
                             <!-- Calibration Section -->
@@ -554,7 +562,7 @@ var fullscreen = false;  //initial state
                     </div>
 
                     <!-- TAB: PROCESSING -->
-                    <div id="nav-processing" class="tab-content-panel">
+                    <div id="nav-processing" class="tab-pane">
                         <div class="tw:flex tw:flex-col tw:gap-6">
                             
                             <!-- Stacking Section -->
@@ -714,7 +722,7 @@ var fullscreen = false;  //initial state
                     </div>
 
                     <!-- TAB: OVERLAYS -->
-                    <div id="nav-overlays" class="tab-content-panel">
+                    <div id="nav-overlays" class="tab-pane">
                         <div class="tw:flex tw:flex-col tw:gap-6">
                             
                             <div class="tw:form-control">
@@ -1040,7 +1048,7 @@ var fullscreen = false;  //initial state
                     </div>
 
                     <!-- TAB: LOCATION -->
-                    <div id="nav-location" class="tab-content-panel">
+                    <div id="nav-location" class="tab-pane">
                         <div class="tw:flex tw:flex-col tw:gap-6">
                             
                             <div class="tw:form-control">
@@ -1134,13 +1142,7 @@ function closeFullscreen() {
 const successMessage = $('#success-message');
 const failureMessage = $('#failure-message');
 
-// TAB SWITCHER
-$('.nav-tab-btn').on('click', function() {
-    $('.nav-tab-btn').removeClass('tw:btn-primary').addClass('tw:bg-base-300');
-    $(this).removeClass('tw:bg-base-300').addClass('tw:btn-primary');
-    $('.tab-content-panel').removeClass('active');
-    $('#' + $(this).data('target')).addClass('active');
-});
+// Tab switching handled by indi-allsky-tabs.js
 
 const field_names = [
     'csrf_token', 'CAMERA_ID', 'FRAME_TYPE', 'OUTPUT_IMAGE_TYPE', 'FITS_ID',
@@ -1202,19 +1204,18 @@ field_names.concat(checkbox_field_names).forEach(item => {
     fields[item] = { 'input': $('#' + item), 'error': $('#' + item + '-error') };
 });
 
-fields['form_global'] = { 'input': failureMessage, 'error': $('#form_global-error') };
-
 function submitProcessingData() {
     $('#processing_time').text('Processing...');
     $("#loader_processing").show();
     successMessage.hide();
     failureMessage.hide();
     $('#form_global-error').hide();
+    $('#form_global-error-list').empty();
     
     Object.keys(fields).forEach(key => {
         fields[key].error.hide();
         if(fields[key].input) {
-            fields[key].input.removeClass('tw:border-error');
+            fields[key].input.removeClass('allsky-field-error tw:input-error tw:select-error tw:textarea-error');
         }
     });
 
@@ -1248,19 +1249,66 @@ function submitProcessingData() {
             );
 
             $("#loader_processing").hide();
-            $('#processing_time').text('Processed in ' + json_data['processing_elapsed_s'] + 's');
+            if (_initLoad) {
+                $('#processing_time').text('Unprocessed image');
+                _initLoad = false;
+            } else {
+                $('#processing_time').text('Processed in ' + json_data['processing_elapsed_s'] + 's');
+            }
             $('#processing_message').text(json_data['message']);
+            $('#processing-info-bar').show();
         },
         error: function(rdata){
-            $("#generate-button").attr("class", "tw:btn tw:btn-error tw:btn-sm");
-            
-            var errors = JSON.parse(rdata.responseText);
-            Object.keys(errors).forEach((key) => {
-                if(fields[key]) {
-                    fields[key].input.addClass('tw:border-error');
-                    fields[key].error.html(errors[key][0]).show();
+            var errorList = [];
+            var globalMsg = 'Please fix the errors above';
+            try {
+                var errors = JSON.parse(rdata.responseText);
+                var firstErrorTab = null;
+                Object.keys(errors).forEach((key) => {
+                    if (key === 'form_global') {
+                        globalMsg = errors[key][0];
+                    } else if (fields[key]) {
+                        // Apply the correct native daisyUI error modifier by element type
+                        var $el = fields[key].input;
+                        if ($el.is('select')) {
+                            $el.addClass('tw:select-error');
+                        } else if ($el.is('textarea')) {
+                            $el.addClass('tw:textarea-error');
+                        } else {
+                            $el.addClass('tw:input-error');
+                        }
+                        fields[key].error.html(errors[key][0]).show();
+                        errorList.push(errors[key][0]);
+
+                        // Track the first tab that has an errored field
+                        if (!firstErrorTab) {
+                            var $pane = fields[key].input.closest('.tab-pane');
+                            if ($pane.length) {
+                                firstErrorTab = $pane.attr('id').replace(/^nav-/, '');
+                            }
+                        }
+                    }
+                });
+
+                // Switch to the first tab containing errors so they're visible
+                if (firstErrorTab) {
+                    var $btn = $('[data-tab-target="nav-' + firstErrorTab + '"]');
+                    if ($btn.length) $btn[0].click();
                 }
-            });
+            } catch(e) {
+                globalMsg = 'An unexpected error occurred. Please check the logs.';
+            }
+
+            // Build and show the warning box
+            $('#form_global-error-text').text(globalMsg);
+            if (errorList.length > 0) {
+                $('#form_global-error-list').html(
+                    errorList.map(e => '<li>' + $('<span>').text(e).html() + '</li>').join('')
+                );
+            } else {
+                $('#form_global-error-list').empty();
+            }
+            $('#form_global-error').show();
             $("#loader_processing").hide();
         },
     });
@@ -1268,10 +1316,11 @@ function submitProcessingData() {
 
 $('#form_image_processing').on('submit', submitProcessingData);
 
+var _initLoad = false;
 function init() {
+    _initLoad = true;
     $('#DISABLE_PROCESSING').prop('checked', true);
     submitProcessingData();
-    $('#processing_time').text('Unprocessed image');
     $('#DISABLE_PROCESSING').prop('checked', false);
 }
 

@@ -104,7 +104,14 @@ function loadJS(url, data, onDone, onError) {
         success: function(rdata){
             $("#loader_loop").hide();
             json_data = rdata;
-            $('#message').html(json_data['message']);
+            const msg = json_data['message'];
+            if (msg) {
+                $('#message').html(msg);
+                $('#message-wrapper').show();
+            } else {
+                $('#message').html('');
+                $('#message-wrapper').hide();
+            }
         },
         error: function(rdata){
             $("#loader_loop").hide();
@@ -186,7 +193,7 @@ $( document ).ready(function() {
 <div class="tw:flex tw:flex-col tw:h-full tw:gap-4">
 
     <form id="form_history" onsubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-        <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-6">
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-center tw:gap-6">
             
             <div class="tw:flex tw:items-center tw:gap-2">
                 {{ form_history.HISTORY_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
@@ -205,15 +212,18 @@ $( document ).ready(function() {
                 </div>
             </div>
 
-            <div class="tw:flex tw:items-center tw:ml-auto">
+            <div class="tw:flex tw:items-center">
                 <span id="loader_loop" class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary" style="display: none;"></span>
             </div>
 
         </div>
     </form>
 
-    <div class="tw:flex tw:justify-center">
-        <div class="tw:text-base-content tw:text-center tw:font-medium" id="message"></div>
+    <div class="tw:flex tw:justify-center" id="message-wrapper" style="display: none;">
+        <div class="tw:alert tw:alert-error tw:py-2.5 tw:text-sm tw:rounded-[var(--radius-box)] tw:shadow-sm tw:flex tw:items-center tw:gap-2">
+            <i class="tw:icon-[lucide--alert-circle] tw:w-4 tw:h-4 tw:shrink-0"></i>
+            <span id="message"></span>
+        </div>
     </div>
 
     <div class="tw:flex-1 tw:bg-base-300 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-inner tw:flex tw:items-center tw:justify-center tw:overflow-hidden tw:min-h-[50vh] tw:relative">
