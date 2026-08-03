@@ -365,12 +365,6 @@ echo "indi connections"
 ss -ant | grep 7624 || true
 
 
-echo
-echo "Detected indi properties"
-# this defaults to localhost, will not return data on remote indiserver
-indi_getprop -v 2>&1 | grep -v "^Telescope Simulator" || true
-
-
 if pkg-config --exists libcamera; then
     DETECTED_LIBCAMERA=$(pkg-config --modversion libcamera)
     echo
@@ -446,7 +440,13 @@ if [[ -n "${VIRTUAL_ENV:-}" ]]; then
     echo "virtualenv python modules"
     pip freeze || true
 
+
+    echo
     echo "\`\`\`"  # markdown
+
+
+    echo
+    "${ALLSKY_DIRECTORY}/misc/camera_properties.py" || true
 
 
     echo

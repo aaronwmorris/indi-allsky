@@ -127,6 +127,36 @@ echo "### Welcome to the indi-allsky web setup script ###"
 echo "###################################################"
 
 
+if [[ -d "/etc/stellarmate" ]]; then
+    echo
+    echo
+    echo "Detected Stellarmate"
+    echo
+    echo
+    echo "This script does not support Stellarmate"
+    echo
+    exit 1
+elif [[ -f "/etc/astroberry/version" ]]; then
+    echo
+    echo
+    echo "Detected Astroberry 3"
+    echo
+    echo
+    echo "This script does not support Astroberry"
+    echo
+    exit 1
+elif [[ -f "/etc/astroberry.version" ]]; then
+    echo
+    echo
+    echo "Detected Astroberry Server 2.0"
+    echo
+    echo
+    echo "This script does not support Astroberry"
+    echo
+    exit 1
+fi
+
+
 if [[ -n "${VIRTUAL_ENV:-}" ]]; then
     echo "Please do not run $(basename "$0") with a virtualenv active"
     echo "Run \"deactivate\" to exit your current virtualenv"
