@@ -82,7 +82,7 @@ var fullscreen = false;  //initial state
             <div class="tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:card tw:bg-base-200 tw:shadow-sm">
                     <div class="tw:card-body tw:p-4 tw:flex-row tw:items-center tw:gap-4">
-                        <button type="submit" class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:px-6">PROCESS</button>
+                        <button type="submit" id="process-btn" class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:px-6">PROCESS</button>
                         <span id="loader_processing" class="tw:loading tw:loading-spinner tw:loading-sm tw:text-primary" style="display: none;"></span>
                         
                         <div class="tw:divider tw:divider-horizontal"></div>
@@ -104,19 +104,18 @@ var fullscreen = false;  //initial state
                     </div>
                 </div>
 
+                <!-- Process error hint -->
+                <div id="process-error-msg" class="tw:flex tw:items-center tw:gap-1.5 tw:text-error tw:text-xs tw:font-semibold" style="display: none;">
+                    <i class="tw:icon-[lucide--triangle-alert] tw:w-3.5 tw:h-3.5"></i>
+                    Fix the errors below and try again
+                </div>
+
                 <!-- Feedback Messages -->
                 <div id="success-message" class="tw:alert tw:alert-success tw:py-2 tw:text-sm" style="display: none;">
                     <i class="tw:icon-[lucide--check-circle] tw:w-4 tw:h-4 tw:shrink-0"></i>
                     <span id="success-message-text"></span>
                 </div>
-                <div id="failure-message" class="tw:alert tw:alert-error tw:py-2 tw:text-sm" style="display: none;"></div>
-                <div id="form_global-error" class="tw:alert tw:alert-warning tw:py-2.5 tw:text-sm tw:rounded-[var(--radius-box)]" style="display: none;">
-                    <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4 tw:shrink-0"></i>
-                    <div>
-                        <p id="form_global-error-text" class="tw:font-semibold"></p>
-                        <ul id="form_global-error-list" class="tw:list-disc tw:list-inside tw:mt-1 tw:text-xs tw:opacity-80"></ul>
-                    </div>
-                </div>
+
             </div>
         </div>
 
@@ -430,18 +429,21 @@ var fullscreen = false;  //initial state
                                             <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">R-Factor</span>
                                         </label>
                                         {{ form_image_processing.WBR_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="WBR_FACTOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
                                             <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">G-Factor</span>
                                         </label>
                                         {{ form_image_processing.WBG_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="WBG_FACTOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
                                             <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">B-Factor</span>
                                         </label>
                                         {{ form_image_processing.WBB_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="WBB_FACTOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                     </div>
                                 </div>
                                 <div class="tw:grid tw:grid-cols-3 tw:gap-2">
@@ -450,18 +452,21 @@ var fullscreen = false;  //initial state
                                             <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">R-MTF</span>
                                         </label>
                                         {{ form_image_processing.WBR_MTF_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="WBR_MTF_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
                                             <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">G-MTF</span>
                                         </label>
                                         {{ form_image_processing.WBG_MTF_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="WBG_MTF_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                     </div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
                                             <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">B-MTF</span>
                                         </label>
                                         {{ form_image_processing.WBB_MTF_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="WBB_MTF_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                     </div>
                                 </div>
                             </div>
@@ -1155,7 +1160,6 @@ function closeFullscreen() {
 }
 
 const successMessage = $('#success-message');
-const failureMessage = $('#failure-message');
 
 // Tab switching handled by indi-allsky-tabs.js
 
@@ -1220,12 +1224,12 @@ field_names.concat(checkbox_field_names).forEach(item => {
 });
 
 function submitProcessingData() {
+    // Restore button and hide error hint
+    $('#process-btn').attr('class', 'tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:px-6');
+    $('#process-error-msg').hide();
     $('#processing_time').text('Processing...');
     $("#loader_processing").show();
     successMessage.hide();
-    failureMessage.hide();
-    $('#form_global-error').hide();
-    $('#form_global-error-list').empty();
     
     Object.keys(fields).forEach(key => {
         fields[key].error.hide();
@@ -1280,49 +1284,33 @@ function submitProcessingData() {
             $('#processing-info-bar').show();
         },
         error: function(rdata){
-            var errorList = [];
-            var globalMsg = 'Please fix the errors above';
+            // Turn button red and show hint
+            $('#process-btn').attr('class', 'tw:btn tw:btn-error tw:btn-sm tw:h-11 tw:px-6');
+            $('#process-error-msg').show();
+            $('#processing_time').text('');
             try {
                 var errors = JSON.parse(rdata.responseText);
                 var firstErrorTab = null;
                 Object.keys(errors).forEach((key) => {
-                    if (key === 'form_global') {
-                        globalMsg = errors[key][0];
-                    } else if (fields[key]) {
-                        // Mirror config.html's proven pattern: add all error classes at once
-                        fields[key].input.addClass('tw:input-error tw:select-error tw:textarea-error tw:toggle-error');
-                        fields[key].error.html(errors[key][0]).show();
-                        errorList.push(errors[key][0]);
+                    if (key === 'form_global' || !fields[key]) return;
+                    fields[key].input.addClass('tw:input-error tw:select-error tw:textarea-error tw:toggle-error');
+                    fields[key].error.html(errors[key][0]).show();
 
-                        // Track the first tab that has an errored field
-                        if (!firstErrorTab) {
-                            var $pane = fields[key].input.closest('.tab-pane');
-                            if ($pane.length) {
-                                firstErrorTab = $pane.attr('id').replace(/^nav-/, '');
-                            }
+                    if (!firstErrorTab) {
+                        var $pane = fields[key].input.closest('.tab-pane');
+                        if ($pane.length) {
+                            firstErrorTab = $pane.attr('id').replace(/^nav-/, '');
                         }
                     }
                 });
 
-                // Switch to the first tab containing errors so they're visible
                 if (firstErrorTab) {
                     var $btn = $('[data-tab-target="nav-' + firstErrorTab + '"]');
                     if ($btn.length) $btn[0].click();
                 }
             } catch(e) {
-                globalMsg = 'An unexpected error occurred. Please check the logs.';
+                console.error('Error parsing validation response', e);
             }
-
-            // Build and show the warning box
-            $('#form_global-error-text').text(globalMsg);
-            if (errorList.length > 0) {
-                $('#form_global-error-list').html(
-                    errorList.map(e => '<li>' + $('<span>').text(e).html() + '</li>').join('')
-                );
-            } else {
-                $('#form_global-error-list').empty();
-            }
-            $('#form_global-error').show();
             $("#loader_processing").hide();
         },
     });

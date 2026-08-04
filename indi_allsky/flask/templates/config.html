@@ -13,7 +13,7 @@ var camera_id = {{ camera_id }};
 {% block content %}
 <div class="tw:container tw:mx-auto tw:px-4 tw:py-6">
 
-<form id="form_config" onSubmit="return false;" autocomplete="off">
+<form id="form_config" onSubmit="return false;" autocomplete="off" novalidate>
 
 <nav class="tw:mb-6">
   <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm" id="nav-tab" role="tablist">
@@ -52,6 +52,34 @@ var camera_id = {{ camera_id }};
 </div>
 {% endif %}
 
+<div class="tw:flex tw:flex-col tw:gap-2 tw:mb-4">
+    <div id="success-message" class="tw:alert tw:alert-success tw:shadow-sm" style="display: none;"></div>
+    <div id="save-error-banner" class="tw:alert tw:alert-error tw:py-2.5 tw:text-sm" style="display: none;">
+        <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4 tw:shrink-0"></i>
+        <div>
+            <p class="tw:font-semibold">Save failed &mdash; please fix these fields:</p>
+            <p id="save-error-fields" class="tw:text-xs tw:opacity-90 tw:mt-0.5"></p>
+        </div>
+    </div>
+</div>
+
+<!-- Save & Note Footer Bar -->
+<div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-md tw:my-4">
+    <div class="tw:card-body tw:p-4 sm:tw:p-6 tw:flex tw:flex-row tw:items-center tw:gap-4">
+        <button id="save-button" class="tw:btn tw:btn-primary tw:btn-md tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider tw:flex-shrink-0 shadow-sm">
+            <i class="tw:icon-[lucide--save] tw:w-4 tw:h-4"></i>
+            Save Configuration
+        </button>
+        <div class="tw:flex tw:items-center tw:gap-3 tw:flex-1">
+            <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/70 tw:whitespace-nowrap">{{ form_config.CONFIG_NOTE.label.text }}:</span>
+            <div class="tw:flex-1">
+                {{ form_config.CONFIG_NOTE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full', placeholder='Optional note describing this configuration change...') }}
+                <div id="CONFIG_NOTE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="tab-content" id="nav-tabContent">
     {% include 'config/camera.html' %}
     {% include 'config/image.html' %}
@@ -71,28 +99,7 @@ var camera_id = {{ camera_id }};
     {% include 'config/sat_track.html' %}
 </div>
 
-<!-- Save & Note Footer Bar -->
-<div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-md tw:mt-8">
-    <div class="tw:card-body tw:p-4 sm:tw:p-6 tw:flex tw:flex-row tw:items-center tw:gap-4">
-        <button id="save-button" class="tw:btn tw:btn-primary tw:btn-md tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider tw:flex-shrink-0 shadow-sm">
-            <i class="tw:icon-[lucide--save] tw:w-4 tw:h-4"></i>
-            Save Configuration
-        </button>
-        <div class="tw:flex tw:items-center tw:gap-3 tw:flex-1">
-            <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/70 tw:whitespace-nowrap">{{ form_config.CONFIG_NOTE.label.text }}:</span>
-            <div class="tw:flex-1">
-                {{ form_config.CONFIG_NOTE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full', placeholder='Optional note describing this configuration change...') }}
-                <div id="CONFIG_NOTE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="tw:mt-4">
-    <div id="success-message" class="tw:alert tw:alert-success tw:shadow-sm" style="display: none;"></div>
-    <div id="failure-message" class="tw:alert tw:alert-error tw:shadow-sm" style="display: none;"></div>
-    <div id="failure-fields" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-</div>
 
 
 </form>
@@ -100,7 +107,7 @@ var camera_id = {{ camera_id }};
 
 <script>
 const successMessage = $('#success-message');
-const failureMessage = $('#failure-message');
+
 const field_names = [
     'csrf_token',
     'CAMERA_INTERFACE',
@@ -853,20 +860,24 @@ checkbox_field_names.forEach(item => {
     };
 });
 
-fields['form_global'] = {
-    'input' : failureMessage,
-    'error' : failureMessage,
-};
+
 
 
 $('#form_config').on('submit', function() {
-    // hide all errors
+    const defaultSaveBtnClass = "tw:btn tw:btn-primary tw:btn-md tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider tw:flex-shrink-0 shadow-sm";
+    const defaultSaveBtnHtml = '<i class="tw:icon-[lucide--save] tw:w-4 tw:h-4"></i> Save Configuration';
+
+    // hide and remove all errors
     successMessage.css({'display' : 'none'});
+    $('#save-error-banner').hide();
+    // Restore save button if it was red from a previous failure
+    $("#save-button").attr("class", defaultSaveBtnClass);
+    $("#save-button").html(defaultSaveBtnHtml);
+    $('.allsky-dyn-error').remove();
     Object.keys(fields).forEach((key) => {
         fields[key].input.removeClass('tw:input-error tw:select-error tw:toggle-error is-invalid');
         fields[key].error.css({'display' : 'none'});
     });
-    $('#failure-fields').css({'display' : 'none'});
 
 
     // Populate fields object
@@ -874,9 +885,6 @@ $('#form_config').on('submit', function() {
     field_names.forEach(item => {
         json_data[item] = fields[item].input.val();
     });
-
-    const defaultSaveBtnClass = "tw:btn tw:btn-primary tw:btn-md tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider tw:flex-shrink-0 shadow-sm";
-    const defaultSaveBtnHtml = '<i class="tw:icon-[lucide--save] tw:w-4 tw:h-4"></i> Save Configuration';
 
     $("#save-button").attr("class", "tw:btn tw:btn-neutral tw:btn-md tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider tw:flex-shrink-0 shadow-sm");
     $("#save-button").html(
@@ -921,27 +929,48 @@ $('#form_config').on('submit', function() {
             $("#save-button").html(
                 '<i class="tw:icon-[lucide--x] tw:w-4 tw:h-4"></i> Save Failed'
             );
-
-            setTimeout(function() {
-                $("#save-button").attr("class", defaultSaveBtnClass);
-                $("#save-button").html(defaultSaveBtnHtml);
-            }, 4000);
+            // Button stays red until re-submit — no auto-reset timer
 
             var errors = JSON.parse(rdata.responseText);
+            var errorFieldNames = [];
 
-            var error_fields = new Array();
+            var firstErrorTab = null;
             Object.keys(errors).forEach((key) => {
-                fields[key].input.addClass('tw:input-error tw:select-error tw:toggle-error');
-                fields[key].error.html(errors[key].join('<br>'));
-                fields[key].error.css({'display' : 'block'});
+                if (key === 'form_global' || !fields[key]) return;
 
-                if (key != 'form_global') {
-                    error_fields.push(key);
-                };
+                errorFieldNames.push(key);
+
+                // Red outline
+                fields[key].input.addClass('tw:input-error tw:select-error tw:toggle-error');
+
+                // Show message under field — inject div if not already in HTML
+                var $err = fields[key].error;
+                if ($err.length === 0) {
+                    fields[key].input.after('<div id="' + key + '-error" class="allsky-dyn-error tw:text-error tw:text-xs tw:mt-1"></div>');
+                    $err = $('#' + key + '-error');
+                }
+                $err.html(errors[key].join('<br>')).css('display', 'block');
+
+                // Track first errored tab for auto-switch
+                if (!firstErrorTab) {
+                    var $pane = fields[key].input.closest('.tab-pane');
+                    if ($pane.length) {
+                        firstErrorTab = $pane.attr('id').replace(/^nav-/, '');
+                    }
+                }
             });
 
-            $('#failure-fields').html(error_fields.join('<br>'));
-            $('#failure-fields').css({'display' : 'block'});
+            // Show banner and scroll it into view
+            if (errorFieldNames.length > 0) {
+                $('#save-error-fields').text(errorFieldNames.join(', '));
+                $('#save-error-banner').show()[0].scrollIntoView({behavior: 'smooth', block: 'nearest'});
+            }
+
+            // Switch to first tab containing errors
+            if (firstErrorTab) {
+                var $btn = $('[data-tab-target="nav-' + firstErrorTab + '"]');
+                if ($btn.length) $btn[0].click();
+            }
         },
     });
 

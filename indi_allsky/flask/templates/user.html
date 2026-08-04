@@ -379,7 +379,7 @@ $('#form_userinfo').on('submit', function() {
     Object.keys(fields).forEach((key) => {
         fields[key].error.hide();
         if(fields[key].input) {
-            fields[key].input.removeClass('tw:border-error');
+            fields[key].input.removeClass('tw:input-error tw:select-error tw:toggle-error');
         }
     });
 
@@ -412,7 +412,8 @@ $('#form_userinfo').on('submit', function() {
         error: function(data){
             var errors = JSON.parse(data.responseText);
             Object.keys(errors).forEach((key) => {
-                fields[key].input.addClass('tw:border-error');
+                if (key === 'form_global' || !fields[key]) return;
+                fields[key].input.addClass('tw:input-error tw:select-error tw:toggle-error');
                 fields[key].error.html(errors[key][0]).show();
             });
         },
