@@ -9,9 +9,9 @@
   "devDependencies": {
     "@iconify-json/lucide": "^1.2.5",
     "@iconify/tailwind4": "^1.1.4",
-    "@tailwindcss/cli": "^4.3.0",
-    "daisyui": "^5.5.23",
-    "tailwindcss": "^4.3.0"
+    "@tailwindcss/cli": "^4.3.3",
+    "daisyui": "^5.7.14",
+    "tailwindcss": "^4.3.3"
   },
   "dependencies": {
     "cally": "^0.9.2"
