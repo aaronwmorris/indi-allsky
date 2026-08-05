@@ -12437,3 +12437,67 @@ bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view',
 bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', template_name='users.html'))
+
+
+@bp_allsky.route('/sw.js')
+def service_worker():
+    return send_from_directory(
+        os.path.join(app.root_path, 'static', 'js'),
+        'sw.js',
+        mimetype='application/javascript'
+    )
+
+
+@bp_allsky.route('/manifest.json')
+def manifest():
+    manifest_data = {
+        "name": "indi-allsky",
+        "short_name": "Allsky",
+        "description": "INDI Allsky Camera Portal",
+        "start_url": url_for('indi_allsky.index_view'),
+        "scope": url_for('indi_allsky.index_view'),
+        "display": "standalone",
+        "background_color": "#0f172a",
+        "theme_color": "#0f172a",
+        "icons": [
+            {
+                "src": url_for('indi_allsky.static', filename='images/icon-192.png'),
+                "sizes": "192x192",
+                "type": "image/png",
+                "purpose": "any"
+            },
+            {
+                "src": url_for('indi_allsky.static', filename='images/icon-512.png'),
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "any"
+            },
+            {
+                "src": url_for('indi_allsky.static', filename='images/icon-512.png'),
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "maskable"
+            }
+        ],
+        "screenshots": [
+            {
+                "src": url_for('indi_allsky.static', filename='images/screenshot-desktop.png'),
+                "sizes": "1280x720",
+                "type": "image/png",
+                "form_factor": "wide",
+                "label": "indi-allsky Desktop Dashboard"
+            },
+            {
+                "src": url_for('indi_allsky.static', filename='images/screenshot-mobile.png'),
+                "sizes": "540x960",
+                "type": "image/png",
+                "form_factor": "narrow",
+                "label": "indi-allsky Mobile View"
+            }
+        ]
+    }
+    response = jsonify(manifest_data)
+    response.headers['Content-Type'] = 'application/manifest+json'
+    return response
+
+

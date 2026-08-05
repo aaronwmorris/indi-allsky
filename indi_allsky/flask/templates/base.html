@@ -10,6 +10,14 @@
     <link rel="icon" type="image/png" href="{{ url_for('indi_allsky.static', filename='images/favicon_128.png') }}"
         sizes="128x128">
 
+    <!-- PWA Meta & Manifest -->
+    <link rel="manifest" href="{{ url_for('indi_allsky.manifest') }}">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="{{ url_for('indi_allsky.static', filename='images/icon-192.png') }}">
+
     <script>
         (function() {
             var preferredMode = localStorage.getItem('allsky-theme-mode') || 'dark';
@@ -21,6 +29,18 @@
             var savedFontSize = localStorage.getItem('allsky-font-size') || '100%';
             document.documentElement.style.fontSize = savedFontSize;
         })();
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register("{{ url_for('indi_allsky.service_worker') }}")
+                    .then(function(reg) {
+                        console.log('ServiceWorker registered:', reg.scope);
+                    })
+                    .catch(function(err) {
+                        console.error('ServiceWorker registration failed:', err);
+                    });
+            });
+        }
     </script>
 
     <link href="{{ url_for('indi_allsky.static', filename='css/dist.css') }}" rel="stylesheet">
