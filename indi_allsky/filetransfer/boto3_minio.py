@@ -66,7 +66,12 @@ class boto3_minio(GenericFileTransfer):
         boto_config = Config(
             connect_timeout=self.connect_timeout,
             read_timeout=self.timeout,
-            retries={'max_attempts': 0},
+            # Retry transient errors instead of dropping the asset. With
+            # max_attempts=0 a single transient error -- e.g. a Backblaze B2
+            # InternalError (HTTP 500) or a dropped connection -- fails the
+            # PutObject permanently, and the failed upload task is not re-queued,
+            # so the asset silently stays only on local disk.
+            retries={'max_attempts': 5, 'mode': 'adaptive'},
         )
 
         self.client = boto3.client(
