@@ -388,3 +388,65 @@ calendar-select-month::part(option):disabled,
 calendar-select-year::part(option):disabled {
   color: color-mix(in srgb, var(--color-base-content) 25%, transparent) !important;
 }
+
+/* Custom Input Rainbow Aura Focus Effect */
+.login-input-aura {
+    position: relative;
+    border-radius: var(--radius-field, 0.5rem);
+    transition: all 0.3s ease;
+}
+
+.login-input-aura::before {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: calc(var(--radius-field, 0.5rem) + 3px);
+    padding: 3px;
+    background: conic-gradient(
+        from 0deg,
+        #ff007f,
+        #7f00ff,
+        #007fff,
+        #00ff7f,
+        #ffff00,
+        #ff7f00,
+        #ff007f
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    filter: blur(4px);
+    transition: opacity 0.3s ease, filter 0.3s ease;
+    pointer-events: none;
+    z-index: 20;
+}
+
+.login-input-aura:focus-within::before {
+    opacity: 1;
+    filter: blur(3px);
+    animation: rainbow-rotate 3s linear infinite;
+}
+
+/* Completely eliminate the browser white outline on the input inside the aura wrapper */
+.login-input-aura input,
+.login-input-aura input:focus,
+.login-input-aura input:focus-visible,
+.login-input-aura input:active {
+    outline: none !important;
+    outline-offset: 0 !important;
+    box-shadow: none !important;
+}
+
+.login-input-aura:focus-within input {
+    border-color: transparent !important;
+}
+
+@keyframes rainbow-rotate {
+    0% {
+        filter: blur(3px) hue-rotate(0deg);
+    }
+    100% {
+        filter: blur(3px) hue-rotate(360deg);
+    }
+}

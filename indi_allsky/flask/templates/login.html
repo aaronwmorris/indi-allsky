@@ -34,14 +34,14 @@
         <div class="tw:hidden md:tw:block tw:h-36 tw:w-[1px] tw:bg-base-content/10 tw:shrink-0"></div>
 
         <div
-            class="tw:card tw:w-full tw:bg-base-200/90 tw:backdrop-blur-md tw:border tw:border-base-content/10 tw:shadow-2xl tw:p-6 md:tw:p-8 tw:rounded-[var(--radius-box)]">
+            class="tw:card tw:w-full tw:bg-base-200/35 tw:backdrop-blur-2xl tw:border tw:border-white/15 tw:shadow-[0_25px_60px_rgba(0,0,0,0.5)] tw:p-6 md:tw:p-8 tw:rounded-[var(--radius-box)]">
 
             <div class="tw:text-center tw:mb-6">
                 <h2 class="tw:text-xl tw:font-black tw:tracking-tight">Login</h2>
                 <p id="greeting-subtitle" class="tw:text-xs tw:opacity-40 tw:mt-1 tw:tracking-wide tw:capitalize"></p>
             </div>
 
-            <form id="form_login" onsubmit="return false;" class="tw:flex tw:flex-col tw:gap-4">
+            <form id="form_login" onsubmit="return false;" novalidate class="tw:flex tw:flex-col tw:gap-4">
                 {{ form_login.csrf_token }}
                 <div class="tw:text-error tw:text-xs tw:font-semibold tw:text-center" id="csrf_token-error"></div>
 
@@ -56,9 +56,9 @@
                             {{ form_login.NEXT(class='tw:input') }}
                         </div>
 
-                        <div class="tw:relative tw:flex tw:items-center">
-                            <i class="tw:icon-[lucide--user] tw:w-4 tw:h-4 tw:absolute tw:left-3.5 tw:opacity-50 tw:z-10"></i>
-                            {{ form_login.USERNAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:pl-10 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary tw:transition-all') }}
+                        <div class="tw:relative tw:flex tw:items-center tw:group login-input-aura">
+                            <i class="tw:icon-[lucide--user] tw:w-4 tw:h-4 tw:absolute tw:left-3.5 tw:opacity-50 group-focus-within:tw:opacity-100 group-focus-within:tw:text-primary tw:transition-all tw:z-10"></i>
+                            {{ form_login.USERNAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:pl-10 tw:bg-base-100/50 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-transparent tw:transition-all') }}
                         </div>
                         <div id="USERNAME-error" class="tw:text-error tw:text-xs tw:mt-1.5 tw:font-medium"
                             style="display: none;"></div>
@@ -69,9 +69,13 @@
                             <span
                                 class="tw:label-text tw:text-xs tw:font-bold tw:tracking-wider tw:text-base-content/60 tw:uppercase">Password</span>
                         </label>
-                        <div class="tw:relative tw:flex tw:items-center">
-                            <i class="tw:icon-[lucide--lock] tw:w-4 tw:h-4 tw:absolute tw:left-3.5 tw:opacity-50 tw:z-10"></i>
-                            {{ form_login.PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:pl-10 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary tw:transition-all') }}
+                        <div class="tw:relative tw:flex tw:items-center tw:group login-input-aura">
+                            <i class="tw:icon-[lucide--lock] tw:w-4 tw:h-4 tw:absolute tw:left-3.5 tw:opacity-50 group-focus-within:tw:opacity-100 group-focus-within:tw:text-primary tw:transition-all tw:z-10"></i>
+                            {{ form_login.PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:pl-10 tw:pr-10 tw:bg-base-100/50 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-transparent tw:transition-all') }}
+                            <button type="button" id="toggle_password_btn" aria-label="Toggle password visibility"
+                                class="tw:absolute tw:right-3 tw:text-base-content/40 hover:tw:text-base-content tw:z-10 tw:p-1 tw:rounded hover:tw:bg-base-content/5 tw:transition-colors">
+                                <i class="tw:icon-[lucide--eye] tw:w-4 tw:h-4" id="toggle_password_icon"></i>
+                            </button>
                         </div>
                         <div id="PASSWORD-error" class="tw:text-error tw:text-xs tw:mt-1.5 tw:font-medium"
                             style="display: none;"></div>
@@ -79,7 +83,7 @@
 
                     <div class="tw:form-control tw:mt-4">
                         <button type="submit"
-                            class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:w-full tw:text-sm tw:font-bold tw:uppercase tw:tracking-wider tw:gap-2">
+                            class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:w-full tw:text-sm tw:font-bold tw:uppercase tw:tracking-wider tw:gap-2 tw:shadow-[0_0_20px_rgba(59,130,246,0.35)] hover:tw:shadow-[0_0_28px_rgba(59,130,246,0.55)] active:tw:scale-[0.98] tw:transition-all">
                             <i class="tw:icon-[lucide--key] tw:w-4 tw:h-4"></i> Sign In
                         </button>
                     </div>
@@ -164,6 +168,15 @@
         generateGreetings();
         generateNebulaBackground();
 
+        $('#toggle_password_btn').on('click', function () {
+            const passwordInput = $('#PASSWORD');
+            const icon = $('#toggle_password_icon');
+            const isPassword = passwordInput.attr('type') === 'password';
+            passwordInput.attr('type', isPassword ? 'text' : 'password');
+            icon.toggleClass('tw:icon-[lucide--eye]', !isPassword);
+            icon.toggleClass('tw:icon-[lucide--eye-off]', isPassword);
+        });
+
         $.ajaxSetup({
             beforeSend: function (xhr, settings) {
                 xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
@@ -177,7 +190,7 @@
             Object.keys(fields).forEach((key) => {
                 fields[key].error.css({ 'display': 'none' });
                 if (fields[key].input) {
-                    fields[key].input.removeClass('tw:border-error focus:tw:border-error');
+                    fields[key].input.removeClass('tw:border-error focus:tw:border-error tw:input-error');
                 }
             });
 
@@ -201,7 +214,7 @@
                     Object.keys(errors).forEach((key) => {
                         if (fields[key]) {
                             if (fields[key].input) {
-                                fields[key].input.addClass('tw:border-error focus:tw:border-error');
+                                fields[key].input.addClass('tw:border-error focus:tw:border-error tw:input-error');
                             }
                             fields[key].error.html(errors[key][0]);
                             fields[key].error.css({ 'display': 'block' });

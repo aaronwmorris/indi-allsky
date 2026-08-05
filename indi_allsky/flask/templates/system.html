@@ -22,11 +22,11 @@ var camera_id = {{ camera_id }};
 
     <!-- Prominent Navigation Tabs -->
     <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-md">
-        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-info">Information</button>
-        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" data-target="tab-time">Time</button>
-        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" data-target="tab-indiserver">INDI Drivers</button>
-        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" data-target="tab-services">Services</button>
-        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" data-target="tab-powercontrol">Utilities</button>
+        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:uppercase tw:tracking-wider tw:gap-1.5" data-target="tab-info"><i class="tw:icon-[lucide--info] tw:w-3.5 tw:h-3.5"></i> Information</button>
+        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5" data-target="tab-time"><i class="tw:icon-[lucide--clock] tw:w-3.5 tw:h-3.5"></i> Time</button>
+        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5" data-target="tab-indiserver"><i class="tw:icon-[lucide--plug] tw:w-3.5 tw:h-3.5"></i> INDI Drivers</button>
+        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5" data-target="tab-services"><i class="tw:icon-[lucide--activity] tw:w-3.5 tw:h-3.5"></i> Services</button>
+        <button type="button" class="sys-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5" data-target="tab-powercontrol"><i class="tw:icon-[lucide--power] tw:w-3.5 tw:h-3.5"></i> Utilities</button>
     </div>
 
     <div class="tw:w-full tw:mt-4">
@@ -36,8 +36,8 @@ var camera_id = {{ camera_id }};
             <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
                 <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-6">
                     
-                    <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:m-0">
-                        System Information
+                    <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:m-0 tw:flex tw:items-center tw:gap-2">
+                        <i class="tw:icon-[lucide--cpu] tw:w-4 tw:h-4 tw:text-primary"></i> System Information
                     </h4>
 
                     <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-6">
