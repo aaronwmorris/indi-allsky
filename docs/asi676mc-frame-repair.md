@@ -248,9 +248,10 @@ streamed requests, cancellation, progress, polling, and result restoration. It
 checks these capabilities on load and displays a blocking explanation if the
 browser cannot provide them.
 
-The cancel action aborts an active upload, cancels a queued job, or asks a
-running worker to stop at its next safe checkpoint. A server-side marker also
-prevents a late request from reviving a cancelled session.
+The cancel action aborts an active upload, stops saved-FITS discovery or
+private staging at its next safe checkpoint, cancels a queued job, or asks a
+running worker to stop cooperatively. A server-side marker also prevents a
+late request from reviving a cancelled session.
 
 ### Discover saved FITS
 
@@ -295,6 +296,10 @@ archive with no bad frames, or only bad frames, from creating unbounded or
 quadratic work. A hard link keeps the selected content stable without a second
 copy. If hard links are unavailable, the tool makes a private copy; it never
 uses a symbolic-link fallback whose target could change after selection.
+The browser reserves a camera-bound private session before discovery begins,
+so **Cancel saved-FITS search** is available throughout database inspection and
+staging. Cancellation removes only the session's private hard links, copies,
+or partial copy; database rows and their source FITS are never changed.
 
 ## Evidence validation and fitting
 
@@ -393,9 +398,10 @@ may read them concurrently.
 The CPU-heavy fit and full-resolution validation run as a low-priority video
 queue task rather than inside a web request. Session changes are protected by
 cross-process locks, and a queued job can be claimed only once. Each owner may
-have two active sessions and the installation may have four. Queued/running
-jobs can be cancelled cooperatively; stale queued jobs and workers with an old
-heartbeat are failed or cancelled so the browser cannot poll forever.
+have two active sessions and the installation may have four. Saved-FITS
+searches, queued jobs, and running jobs can be cancelled at safe checkpoints;
+stale queued jobs and workers with an old heartbeat are failed or cancelled so
+the browser cannot poll forever.
 
 Input cleanup is source-aware:
 
@@ -403,7 +409,7 @@ Input cleanup is source-aware:
   fails;
 - private hard links or copies staged from the database are deleted
   immediately, while their database source FITS remain untouched; and
-- cancellation and reset remove the session directly.
+- cancellation and reset remove the session's private inputs directly.
 
 If immediate cleanup is interrupted by a crash, power loss, or unavailable
 filesystem, the regular expiration task removes calibration sessions older

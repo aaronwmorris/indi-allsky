@@ -46,6 +46,7 @@ FITS_SUFFIXES = ('.fit', '.fits', '.fts')
 MAX_FILE_COUNT = 200
 MAX_FILE_BYTES = 256 * 1024 * 1024
 MAX_SESSION_BYTES = 2 * 1024 * 1024 * 1024
+TRANSFER_CHUNK_BYTES = 1024 * 1024
 MAX_ACTIVE_SESSIONS_PER_OWNER = 2
 MAX_ACTIVE_SESSIONS_GLOBAL = 4
 SESSION_RETENTION_SECONDS = 7 * 24 * 60 * 60
@@ -841,6 +842,23 @@ def get_session(session_id, owner=None, storage_root=None):
     return session_dir, manifest
 
 
+def database_search_checkpoint(session_id, owner, storage_root=None):
+    """Stop database discovery promptly after its owned session is cancelled."""
+    session_dir, manifest = get_session(session_id, owner, storage_root)
+    if (
+        manifest.get('status') == 'cancelled'
+        or _cancel_marker_path(session_dir).exists()
+    ):
+        raise CalibrationSessionError(
+            'this calibration database search was cancelled'
+        )
+    if manifest.get('status') != 'uploading':
+        raise CalibrationSessionError(
+            'this calibration session is no longer searching saved FITS'
+        )
+    return manifest
+
+
 def _unique_upload_name(upload_dir, original_name):
     """Return a sanitized collision-free FITS name inside an upload folder."""
     # Keep this module usable in numerical/unit-test environments that do not
@@ -1200,6 +1218,34 @@ def select_database_evidence(
     }
 
 
+def _copy_database_file(source, destination, cancel_marker):
+    """Copy one cross-filesystem database FITS with cancellation checkpoints."""
+    partial = destination.with_name(destination.name + '.part')
+    try:
+        with source.open('rb') as source_file, partial.open('xb') as output_file:
+            while True:
+                if cancel_marker.exists():
+                    raise CalibrationSessionError(
+                        'this calibration database search was cancelled'
+                    )
+                chunk = source_file.read(TRANSFER_CHUNK_BYTES)
+                if not chunk:
+                    break
+                output_file.write(chunk)
+        if cancel_marker.exists():
+            raise CalibrationSessionError(
+                'this calibration database search was cancelled'
+            )
+        shutil.copystat(source, partial)
+        os.replace(partial, destination)
+    except Exception:
+        try:
+            partial.unlink()
+        except FileNotFoundError:
+            pass
+        raise
+
+
 def _stage_database_files_unlocked(
     session_id,
     owner,
@@ -1227,10 +1273,11 @@ def _stage_database_files_unlocked(
         )
 
     upload_dir = session_dir.joinpath('uploads')
+    cancel_marker = _cancel_marker_path(session_dir)
     from . import asi676mc
     try:
         for sequence, record in enumerate(records):
-            if _cancel_marker_path(session_dir).exists():
+            if cancel_marker.exists():
                 raise CalibrationSessionError(
                     'this calibration database search was cancelled'
                 )
@@ -1265,7 +1312,7 @@ def _stage_database_files_unlocked(
                 os.link(str(source), str(destination))
                 link_type = 'hardlink'
             except OSError:
-                shutil.copy2(source, destination)
+                _copy_database_file(source, destination, cancel_marker)
                 link_type = 'copy'
 
             manifest['files'].append({
@@ -1410,7 +1457,7 @@ def store_upload(session_id, owner, file_storage, storage_root=None):
 
 
 def _cancel_session_unlocked(session_id, owner, storage_root=None):
-    """Cancel an upload/queued job or request cooperative worker cancellation."""
+    """Cancel input discovery/queueing or request worker cancellation."""
     session_dir, manifest = get_session(session_id, owner, storage_root)
     status = manifest.get('status')
     if status in ('cancelled', 'cancel_requested'):
@@ -1442,8 +1489,8 @@ def _cancel_session_unlocked(session_id, owner, storage_root=None):
     return manifest
 
 
-def cancel_upload_session(session_id, owner, storage_root=None):
-    """Serialize cancellation with upload, queue, and worker transitions."""
+def cancel_session(session_id, owner, storage_root=None):
+    """Serialize cancellation with staging, queue, and worker transitions."""
     session_dir = _session_dir(session_id, storage_root)
     # Authenticate first, then publish the marker before waiting for a large
     # upload or cross-filesystem database copy to release the session lock.
@@ -1462,6 +1509,11 @@ def cancel_upload_session(session_id, owner, storage_root=None):
             owner,
             storage_root=storage_root,
         )
+
+
+def cancel_upload_session(session_id, owner, storage_root=None):
+    """Retain compatibility with the original upload-only helper name."""
+    return cancel_session(session_id, owner, storage_root)
 
 
 def discard_session(session_id, owner, storage_root=None):
@@ -1488,6 +1540,8 @@ def _mark_queued_unlocked(
 ):
     """Freeze the staged evidence set and record background-job parameters."""
     session_dir, manifest = get_session(session_id, owner, storage_root)
+    if _cancel_marker_path(session_dir).exists():
+        raise CalibrationSessionError('this calibration was cancelled')
     if manifest.get('status') != 'uploading':
         raise CalibrationSessionError('this calibration session has already started')
     if len(manifest.get('files', [])) < 14:

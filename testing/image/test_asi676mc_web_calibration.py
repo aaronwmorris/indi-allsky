@@ -230,7 +230,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 root,
             )
 
-            manifest = asi676mc_calibration.cancel_upload_session(
+            manifest = asi676mc_calibration.cancel_session(
                 session_id,
                 'alice',
                 root,
@@ -238,7 +238,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             self.assertEqual(manifest['status'], 'cancelled')
             self.assertFalse(root.joinpath(session_id, 'uploads').exists())
             self.assertTrue(manifest['sources_deleted_utc'])
-            repeated = asi676mc_calibration.cancel_upload_session(
+            repeated = asi676mc_calibration.cancel_session(
                 session_id,
                 'alice',
                 root,
@@ -256,6 +256,34 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
 
             asi676mc_calibration.discard_session(session_id, 'alice', root)
             self.assertFalse(root.joinpath(session_id).exists())
+
+    def test_database_search_checkpoint_rejects_cancelled_session(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            session_id = asi676mc_calibration.create_session(
+                'alice', root
+            )['session_id']
+
+            manifest = asi676mc_calibration.database_search_checkpoint(
+                session_id,
+                'alice',
+                root,
+            )
+            self.assertEqual(manifest['status'], 'uploading')
+            asi676mc_calibration.cancel_session(
+                session_id,
+                'alice',
+                root,
+            )
+            with self.assertRaisesRegex(
+                asi676mc_calibration.CalibrationSessionError,
+                'database search was cancelled',
+            ):
+                asi676mc_calibration.database_search_checkpoint(
+                    session_id,
+                    'alice',
+                    root,
+                )
 
     @staticmethod
     def _database_record(record_id, timestamp, roles=()):
@@ -514,7 +542,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             self.assertTrue(
                 session_root.joinpath(session_id, 'uploads').is_dir()
             )
-            asi676mc_calibration.cancel_upload_session(
+            asi676mc_calibration.cancel_session(
                 session_id,
                 'alice',
                 session_root,
@@ -551,6 +579,31 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             self.assertEqual(manifest['files'][0]['link_type'], 'copy')
             self.assertTrue(staged.is_file())
             self.assertFalse(staged.is_symlink())
+
+    def test_database_copy_cancellation_removes_partial_file(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            source = root.joinpath('source.fit')
+            destination = root.joinpath('staged.fit')
+            source.write_bytes(
+                b'x' * (asi676mc_calibration.TRANSFER_CHUNK_BYTES + 1)
+            )
+            cancel_marker = mock.Mock()
+            cancel_marker.exists.side_effect = [False, True]
+
+            with self.assertRaisesRegex(
+                asi676mc_calibration.CalibrationSessionError,
+                'database search was cancelled',
+            ):
+                asi676mc_calibration._copy_database_file(
+                    source,
+                    destination,
+                    cancel_marker,
+                )
+
+            self.assertTrue(source.is_file())
+            self.assertFalse(destination.exists())
+            self.assertFalse(root.joinpath('staged.fit.part').exists())
 
     def test_database_staging_rejects_a_mixed_upload_session(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -604,7 +657,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             ):
                 asi676mc_calibration.create_session('alice', root)
 
-            asi676mc_calibration.cancel_upload_session(
+            asi676mc_calibration.cancel_session(
                 sessions[0]['session_id'],
                 'alice',
                 root,
@@ -1326,8 +1379,15 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('Apply values and reload', template)
         self.assertIn('Current FITS capture settings', template)
         self.assertIn('Cancel upload', template)
+        self.assertIn('Cancel saved-FITS search', template)
         self.assertIn('Retry cancellation', template)
         self.assertIn('new AbortController()', template)
+        self.assertIn('session_id: activeCalibrationSessionId', template)
+        self.assertIn('signal: activeRequestController.signal', template)
+        self.assertIn(
+            'Saved-FITS search cancelled. Database FITS were not changed.',
+            template,
+        )
         self.assertIn('Reset / recalibrate', template)
         self.assertLess(
             template.index('id="calibration-reset"'),
@@ -1433,6 +1493,14 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         )
         self.assertIn(
             'IndiAllSkyDbFitsImageTable.dayDate >= retention_cutoff',
+            views_source,
+        )
+        self.assertIn(
+            "request_data.get('session_id')",
+            views_source,
+        )
+        self.assertIn(
+            'asi676mc_calibration.database_search_checkpoint(',
             views_source,
         )
         self.assertIn("context['calibration_upload_limits']", views_source)

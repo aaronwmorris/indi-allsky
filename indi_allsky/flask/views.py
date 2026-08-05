@@ -7843,6 +7843,8 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
     def dispatch_request(self):
         """Select saved FITS, stage them privately, and queue analysis."""
         request_data = request.get_json(silent=True) or {}
+        session_id = str(request_data.get('session_id') or '')
+        owner = _calibration_owner()
         try:
             camera_id = int(request_data.get('camera_id'))
             target_groups = int(request_data.get('target_groups', 25))
@@ -7888,6 +7890,44 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
             }), 404
 
         try:
+            search_manifest = (
+                asi676mc_calibration.database_search_checkpoint(
+                    session_id,
+                    owner,
+                )
+            )
+        except asi676mc_calibration.CalibrationSessionError as error:
+            return jsonify({'error': str(error)}), 409
+        bound_camera = search_manifest.get('camera') or {}
+        try:
+            bound_camera_id = int(bound_camera.get('id'))
+        except (TypeError, ValueError):
+            bound_camera_id = -1
+        if (
+            bound_camera_id != camera.id
+            or not bound_camera.get('uuid')
+            or not camera.uuid
+            or str(camera.uuid) != str(bound_camera.get('uuid') or '')
+        ):
+            return jsonify({
+                'error': (
+                    'The ASI676MC selected for this saved-FITS search has '
+                    'changed. Cancel this run and start again.'
+                ),
+            }), 409
+
+        def database_checkpoint():
+            """Return an HTTP cancellation response at safe search boundaries."""
+            try:
+                asi676mc_calibration.database_search_checkpoint(
+                    session_id,
+                    owner,
+                )
+            except asi676mc_calibration.CalibrationSessionError as error:
+                return jsonify({'error': str(error)}), 409
+            return None
+
+        try:
             retention_days = int(
                 self.indi_allsky_config.get('IMAGE_FITS_EXPIRE_DAYS', 10)
             )
@@ -7919,10 +7959,18 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
             .limit(asi676mc_calibration.DATABASE_QUERY_MAX_FILES)\
             .all()
 
+        checkpoint_response = database_checkpoint()
+        if checkpoint_response:
+            return checkpoint_response
+
         fits_records = []
         missing_local_count = 0
         unsupported_count = 0
-        for fits_entry in fits_entries:
+        for entry_index, fits_entry in enumerate(fits_entries):
+            if entry_index % 25 == 0:
+                checkpoint_response = database_checkpoint()
+                if checkpoint_response:
+                    return checkpoint_response
             try:
                 source_path = fits_entry.getFilesystemPath()
                 if not source_path.is_file():
@@ -7979,6 +8027,9 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
                 ],
             })
 
+        checkpoint_response = database_checkpoint()
+        if checkpoint_response:
+            return checkpoint_response
         if not fits_records:
             return jsonify({
                 'error': (
@@ -7999,8 +8050,16 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
             .limit(asi676mc_calibration.DATABASE_QUERY_MAX_FILES)\
             .all()
-        bad_frames = [
-            {
+        checkpoint_response = database_checkpoint()
+        if checkpoint_response:
+            return checkpoint_response
+        bad_frames = []
+        for image_index, image in enumerate(bad_images):
+            if image_index % 25 == 0:
+                checkpoint_response = database_checkpoint()
+                if checkpoint_response:
+                    return checkpoint_response
+            bad_frames.append({
                 'timestamp': image.createDate.timestamp(),
                 'exposure': image.exposure,
                 'gain': image.gain,
@@ -8015,11 +8074,13 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
                     ).get('asi676mc_repair_status')
                     != 'repaired'
                 ),
-            }
-            for image in bad_images
-        ]
+            })
 
         try:
+            asi676mc_calibration.database_search_checkpoint(
+                session_id,
+                owner,
+            )
             selected_records, discovery = (
                 asi676mc_calibration.select_database_evidence(
                     fits_records,
@@ -8028,8 +8089,12 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
                     max_pair_seconds,
                 )
             )
+            asi676mc_calibration.database_search_checkpoint(
+                session_id,
+                owner,
+            )
         except asi676mc_calibration.CalibrationSessionError as error:
-            return jsonify({'error': str(error)}), 400
+            return jsonify({'error': str(error)}), 409
 
         minimum = 14
         if discovery['selected_file_count'] < minimum:
@@ -8064,14 +8129,9 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
             settings = asi676mc.normalize_settings(
                 self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {})
             )
-            manifest = asi676mc_calibration.create_session(
-                _calibration_owner(),
-                camera_identity=_camera_identity(camera),
-            )
-            session_id = manifest['session_id']
             asi676mc_calibration.stage_database_files(
                 session_id,
-                _calibration_owner(),
+                owner,
                 selected_records,
             )
         except (
@@ -8084,9 +8144,9 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
             app.logger.exception('Unable to stage database FITS for calibration')
             if 'session_id' in locals():
                 try:
-                    asi676mc_calibration.cancel_upload_session(
+                    asi676mc_calibration.cancel_session(
                         session_id,
-                        _calibration_owner(),
+                        owner,
                     )
                 except (OSError, asi676mc_calibration.CalibrationSessionError):
                     app.logger.exception(
@@ -8129,7 +8189,7 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
             db.session.flush()
             manifest = asi676mc_calibration.mark_queued(
                 session_id,
-                _calibration_owner(),
+                owner,
                 task.id,
                 max_pair_seconds,
                 settings,
@@ -8140,9 +8200,9 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
         except asi676mc_calibration.CalibrationSessionError as error:
             db.session.rollback()
             try:
-                asi676mc_calibration.cancel_upload_session(
+                asi676mc_calibration.cancel_session(
                     session_id,
-                    _calibration_owner(),
+                    owner,
                 )
             except (OSError, asi676mc_calibration.CalibrationSessionError):
                 app.logger.exception(
@@ -8155,7 +8215,7 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
             try:
                 asi676mc_calibration.mark_failed(
                     session_id,
-                    _calibration_owner(),
+                    owner,
                     'unable to queue the database calibration job',
                 )
             except (OSError, asi676mc_calibration.CalibrationSessionError):
@@ -8179,27 +8239,27 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
 
 
 class AjaxAsi676mcCalibrationCancelView(BaseView):
-    """Cancel a browser upload before it enters the background queue."""
+    """Cancel an upload, saved-FITS search, or background calibration."""
 
     methods = ['POST']
     decorators = [asi676mc_calibration_required, login_required]
 
     def dispatch_request(self, session_id):
-        """Cancel an owned upload, queued job, or running calibration."""
+        """Cancel an owned input session or background calibration."""
         try:
-            manifest = asi676mc_calibration.cancel_upload_session(
+            manifest = asi676mc_calibration.cancel_session(
                 session_id,
                 _calibration_owner(),
             )
         except asi676mc_calibration.CalibrationSessionError as error:
             return jsonify({'error': str(error)}), 409
         except OSError:
-            app.logger.exception('Unable to cancel ASI676MC calibration upload')
+            app.logger.exception('Unable to cancel ASI676MC calibration')
             return jsonify({
                 'error': (
-                    'Upload cancellation could not be confirmed. Any temporary '
-                    'FITS left on the server will be removed automatically '
-                    'after seven days.'
+                    'Calibration cancellation could not be confirmed. Any '
+                    'private FITS left on the server will be removed '
+                    'automatically after seven days.'
                 ),
             }), 500
 

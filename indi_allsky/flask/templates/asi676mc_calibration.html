@@ -304,9 +304,6 @@
                         <button id="start-calibration" type="submit" class="btn btn-primary">
                             Upload and calibrate
                         </button>
-                        <button id="cancel-calibration-upload" type="button" class="btn btn-danger" style="display: none;">
-                            Cancel upload
-                        </button>
                     </div>
                 </div>
             </div>
@@ -328,6 +325,13 @@
             >0%</div>
         </div>
         <div id="calibration-status" class="calibration-help mt-2"></div>
+        <!-- One cancellation control serves upload, database discovery/staging,
+             and the common queued/running calibration states. -->
+        <div class="mt-3">
+            <button id="cancel-calibration" type="button" class="btn btn-danger" style="display: none;">
+                Cancel calibration
+            </button>
+        </div>
     </div>
 </div>
 
@@ -551,8 +555,9 @@ let completedCalibrationSessionId = null;
 let completedCalibrationOutcome = null;
 let activeCalibrationSessionId = null;
 let pollingCalibrationSessionId = null;
-let activeUploadController = null;
-let uploadCancellationRequested = false;
+let activeRequestController = null;
+let calibrationCancellationRequested = false;
+let activeCalibrationSourceKind = null;
 
 function storedCalibrationSessions() {
     try {
@@ -624,7 +629,7 @@ function showCalibrationError(message) {
     $('#calibration-error').text(message).show();
     $('#start-calibration').prop('disabled', false);
     $('#start-database-calibration').prop('disabled', false);
-    $('#cancel-calibration-upload').hide().prop('disabled', false).text('Cancel upload');
+    $('#cancel-calibration').hide().prop('disabled', false).text('Cancel calibration');
     $('#calibration-progress').removeClass('progress-bar-animated');
 }
 
@@ -659,8 +664,9 @@ function resetCalibrationInterface() {
     completedCalibrationOutcome = null;
     activeCalibrationSessionId = null;
     pollingCalibrationSessionId = null;
-    activeUploadController = null;
-    uploadCancellationRequested = false;
+    activeRequestController = null;
+    calibrationCancellationRequested = false;
+    activeCalibrationSourceKind = null;
 
     $('#calibration-results').hide();
     $('#calibration-progress-panel').hide();
@@ -668,7 +674,7 @@ function resetCalibrationInterface() {
     $('#calibration-setup-panel').show();
     $('#start-calibration').prop('disabled', false);
     $('#start-database-calibration').prop('disabled', false);
-    $('#cancel-calibration-upload').hide().prop('disabled', false).text('Cancel upload');
+    $('#cancel-calibration').hide().prop('disabled', false).text('Cancel calibration');
     $('#calibration-files').val('');
     $('#calibration-values, #calibration-threshold-values, #calibration-threshold-advisory-values, #calibration-population-evidence, #calibration-quality, #calibration-warning-list').empty();
     $('#confirm-higher-population').prop('checked', false);
@@ -863,8 +869,9 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
     completedCalibrationOutcome = 'calibration';
     activeCalibrationSessionId = null;
     pollingCalibrationSessionId = null;
-    $('#cancel-calibration-upload').hide();
-    activeUploadController = null;
+    $('#cancel-calibration').hide();
+    activeRequestController = null;
+    activeCalibrationSourceKind = null;
     $('#calibration-progress').removeClass('progress-bar-animated');
     $('#calibration-setup-panel, #calibration-progress-panel, #calibration-error, #calibration-notice').hide();
     $('#calibration-result-title').text('Calibration result');
@@ -1021,8 +1028,9 @@ function renderThresholdSuggestion(sessionId, result) {
     completedCalibrationOutcome = 'threshold_suggestion';
     activeCalibrationSessionId = null;
     pollingCalibrationSessionId = null;
-    $('#cancel-calibration-upload').hide();
-    activeUploadController = null;
+    $('#cancel-calibration').hide();
+    activeRequestController = null;
+    activeCalibrationSourceKind = null;
     $('#calibration-progress').removeClass('progress-bar-animated');
     $('#calibration-setup-panel, #calibration-progress-panel, #calibration-error, #calibration-notice').hide();
     $('#calibration-result-title').text('Detection threshold suggestion');
@@ -1134,7 +1142,7 @@ function renderThresholdSuggestion(sessionId, result) {
     $('#calibration-results').show();
 }
 
-async function requestUploadCancellation(sessionId) {
+async function requestCalibrationCancellation(sessionId) {
     const response = await fetch(
         calibrationUrl(calibrationCancelUrlTemplate, sessionId),
         {
@@ -1145,22 +1153,23 @@ async function requestUploadCancellation(sessionId) {
     return calibrationJson(response);
 }
 
-// Browser cancellation and server cancellation are both required: aborting
-// fetch stops network transfer, while the authenticated endpoint tombstones the
-// session and deletes chunks or completed FITS already received by the server.
-async function cancelCalibrationUpload() {
+// Browser and server cancellation are both required. Aborting fetch stops an
+// upload or saved-FITS request, while the authenticated endpoint tombstones
+// the session and removes only private uploaded or staged FITS.
+async function cancelCalibration() {
     const sessionId = activeCalibrationSessionId || pollingCalibrationSessionId;
-    if (!sessionId || uploadCancellationRequested) {
+    if (!sessionId || calibrationCancellationRequested) {
         return;
     }
-    uploadCancellationRequested = true;
-    $('#cancel-calibration-upload').prop('disabled', true).text('Cancelling...');
-    if (activeUploadController) {
-        activeUploadController.abort();
+    const sourceKind = activeCalibrationSourceKind;
+    calibrationCancellationRequested = true;
+    $('#cancel-calibration').prop('disabled', true).text('Cancelling...');
+    if (activeRequestController) {
+        activeRequestController.abort();
     }
 
     try {
-        const cancellation = await requestUploadCancellation(sessionId);
+        const cancellation = await requestCalibrationCancellation(sessionId);
         if (cancellation.status === 'cancel_requested') {
             showCalibrationNotice(
                 'Cancellation requested. The current validation step will '
@@ -1169,9 +1178,13 @@ async function cancelCalibrationUpload() {
             return;
         }
         resetCalibrationInterface();
-        showCalibrationNotice('Calibration cancelled. Temporary FITS were deleted.');
+        showCalibrationNotice(
+            sourceKind === 'database'
+                ? 'Saved-FITS search cancelled. Database FITS were not changed.'
+                : 'Calibration cancelled. Temporary FITS were deleted.'
+        );
     } catch (error) {
-        uploadCancellationRequested = false;
+        calibrationCancellationRequested = false;
         // Keep the session and retry control available when the browser could
         // not confirm deletion. The endpoint is idempotent, so retrying is
         // safe even if the server completed the first request but its response
@@ -1179,7 +1192,7 @@ async function cancelCalibrationUpload() {
         $('#calibration-notice').hide();
         $('#calibration-error').text(error.message).show();
         $('#start-calibration, #start-database-calibration').prop('disabled', true);
-        $('#cancel-calibration-upload')
+        $('#cancel-calibration')
             .show()
             .prop('disabled', false)
             .text('Retry cancellation');
@@ -1498,12 +1511,15 @@ async function pollCalibration(sessionId) {
                 );
             }
         } else if (status.status === 'uploading') {
-            // Browser file selections cannot be restored after navigation.
-            // Cancel the incomplete server session rather than retaining a
-            // partial collection that the user cannot resume.
-            await requestUploadCancellation(sessionId);
+            // An input session left in this state cannot be resumed safely:
+            // browser files cannot be reselected automatically and a saved-
+            // FITS request interrupted by navigation has no live progress UI.
+            await requestCalibrationCancellation(sessionId);
             resetCalibrationInterface();
-            showCalibrationNotice('An incomplete upload from the previous page visit was discarded.');
+            showCalibrationNotice(
+                'An incomplete calibration setup from the previous page '
+                + 'visit was discarded.'
+            );
             return;
         } else {
             throw new Error(
@@ -1535,20 +1551,24 @@ async function submitCalibration() {
     try {
         const session = await createCalibrationSession();
         activeCalibrationSessionId = session.session_id;
-        activeUploadController = new AbortController();
-        uploadCancellationRequested = false;
+        activeRequestController = new AbortController();
+        calibrationCancellationRequested = false;
+        activeCalibrationSourceKind = 'upload';
         rememberCalibrationSession(activeCalibrationSessionId);
-        $('#cancel-calibration-upload').show();
+        $('#cancel-calibration')
+            .show()
+            .prop('disabled', false)
+            .text('Cancel upload');
         await uploadCalibrationFiles(
             activeCalibrationSessionId,
             files,
-            activeUploadController.signal
+            activeRequestController.signal
         );
-        if (uploadCancellationRequested) {
+        if (calibrationCancellationRequested) {
             return;
         }
-        $('#cancel-calibration-upload').hide();
-        activeUploadController = null;
+        $('#cancel-calibration').hide();
+        activeRequestController = null;
         setCalibrationProgress(75, 'Upload complete', 'Starting calibration.');
         await startCalibrationJob(
             activeCalibrationSessionId,
@@ -1557,21 +1577,21 @@ async function submitCalibration() {
         const queuedSessionId = activeCalibrationSessionId;
         pollingCalibrationSessionId = queuedSessionId;
         activeCalibrationSessionId = null;
-        $('#cancel-calibration-upload')
+        $('#cancel-calibration')
             .show()
             .prop('disabled', false)
             .text('Cancel calibration');
         await pollCalibration(queuedSessionId);
         pollingCalibrationSessionId = null;
-        $('#cancel-calibration-upload').hide();
+        $('#cancel-calibration').hide();
     } catch (error) {
-        if (uploadCancellationRequested || error.name === 'AbortError') {
+        if (calibrationCancellationRequested || error.name === 'AbortError') {
             return;
         }
         if (activeCalibrationSessionId) {
             const failedSessionId = activeCalibrationSessionId;
             try {
-                await requestUploadCancellation(failedSessionId);
+                await requestCalibrationCancellation(failedSessionId);
             } catch (cancelError) {
                 // Preserve the original upload error; session expiry is the
                 // fallback if server-side cleanup itself was unavailable.
@@ -1579,13 +1599,15 @@ async function submitCalibration() {
             activeCalibrationSessionId = null;
             forgetCalibrationSession(failedSessionId);
         }
+        activeRequestController = null;
+        activeCalibrationSourceKind = null;
         showCalibrationError(error.message);
     }
 }
 
-// Database discovery and staging happen in one authenticated request. The
-// server takes stable private references (hard links or copies), queues the
-// same background calibration worker, and returns a pollable session ID.
+// Reserve the camera-bound private session before database discovery so the
+// browser has a cancellable handle throughout the search and staging request.
+// Database-owned source FITS are never modified or deleted by cancellation.
 async function submitDatabaseCalibration() {
     const targetGroups = Number.parseInt(
         $('#DATABASE_GROUP_LIMIT').val(),
@@ -1618,6 +1640,17 @@ async function submitDatabaseCalibration() {
     );
 
     try {
+        const session = await createCalibrationSession();
+        activeCalibrationSessionId = session.session_id;
+        activeRequestController = new AbortController();
+        calibrationCancellationRequested = false;
+        activeCalibrationSourceKind = 'database';
+        rememberCalibrationSession(activeCalibrationSessionId);
+        $('#cancel-calibration')
+            .show()
+            .prop('disabled', false)
+            .text('Cancel saved-FITS search');
+
         const response = await fetch(calibrationDatabaseUrl, {
             method: 'POST',
             headers: {
@@ -1625,16 +1658,28 @@ async function submitDatabaseCalibration() {
                 'X-CSRFToken': calibrationCsrfToken,
             },
             body: JSON.stringify({
+                session_id: activeCalibrationSessionId,
                 camera_id: $('#CAMERA_ID').val(),
                 target_groups: targetGroups,
                 max_pair_seconds: maxPairSeconds,
             }),
+            signal: activeRequestController.signal,
         });
         const queued = await calibrationJson(response);
+        if (calibrationCancellationRequested) {
+            return;
+        }
+        if (queued.session_id !== activeCalibrationSessionId) {
+            throw new Error(
+                'The server returned a different calibration session. '
+                + 'Cancel this run and try again.'
+            );
+        }
         completedCalibrationSessionId = null;
-        rememberCalibrationSession(queued.session_id);
         pollingCalibrationSessionId = queued.session_id;
-        $('#cancel-calibration-upload')
+        activeCalibrationSessionId = null;
+        activeRequestController = null;
+        $('#cancel-calibration')
             .show()
             .prop('disabled', false)
             .text('Cancel calibration');
@@ -1655,13 +1700,24 @@ async function submitDatabaseCalibration() {
         );
         await pollCalibration(queued.session_id);
         pollingCalibrationSessionId = null;
-        $('#cancel-calibration-upload').hide();
+        $('#cancel-calibration').hide();
     } catch (error) {
-        if (error.serverRejected) {
-            forgetCalibrationSession(
-                sessionStorage.getItem(calibrationTabStorageKey)
-            );
+        if (calibrationCancellationRequested || error.name === 'AbortError') {
+            return;
         }
+        if (activeCalibrationSessionId) {
+            const failedSessionId = activeCalibrationSessionId;
+            try {
+                await requestCalibrationCancellation(failedSessionId);
+            } catch (cancelError) {
+                // Preserve the discovery error; fixed session expiry is the
+                // fallback if immediate private staging cleanup was unavailable.
+            }
+            activeCalibrationSessionId = null;
+            forgetCalibrationSession(failedSessionId);
+        }
+        activeRequestController = null;
+        activeCalibrationSourceKind = null;
         showCalibrationError(error.message);
     }
 }
@@ -1669,7 +1725,7 @@ async function submitDatabaseCalibration() {
 $('#calibration-files').on('change', renderSelectedFiles);
 $('#form-asi676mc-calibration').on('submit', submitCalibration);
 $('#start-database-calibration').on('click', submitDatabaseCalibration);
-$('#cancel-calibration-upload').on('click', cancelCalibrationUpload);
+$('#cancel-calibration').on('click', cancelCalibration);
 $('#calibration-reset').on('click', discardCalibrationResult);
 
 // localStorage contains only an unguessable session ID, never FITS data or
@@ -1681,7 +1737,7 @@ $(document).ready(async function() {
     }
     $('#start-calibration').prop('disabled', true);
     pollingCalibrationSessionId = savedSession;
-    $('#cancel-calibration-upload')
+    $('#cancel-calibration')
         .show()
         .prop('disabled', false)
         .text('Cancel calibration');
