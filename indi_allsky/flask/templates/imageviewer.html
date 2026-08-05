@@ -777,6 +777,8 @@ function init() {
                 $('#fits_processing').empty();
             };
 
+            // Diagnostic roles are database assets with ordinary protected
+            // download URLs; only this standard viewer exposes the links.
             const asi676mc_preceding_fits = (
                 image_data[image_index]['asi676mc_diagnostic_preceding_fits']
             );

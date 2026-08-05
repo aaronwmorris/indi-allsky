@@ -256,6 +256,8 @@ class IndiAllSkyConfigBase(object):
             "IMAGE_CIRCLE_MASK_BLUR"     : 35,
             "IMAGE_CIRCLE_MASK_OPACITY"  : 100,
         },
+        # Opt-in, model-specific RAW correction. Runtime performs its own
+        # camera/layout checks even if this configuration block is enabled.
         "IMAGE_ASI676MC_REPAIR" : {
             "ENABLE"                      : False,
             # Detection-only is the safe starting point. The settings page

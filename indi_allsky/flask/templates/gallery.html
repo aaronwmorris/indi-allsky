@@ -23,6 +23,7 @@ figure img {width: 100%;}
   animation: spin 2s linear infinite;
 }
 
+/* Make model-specific outcomes visible without replacing existing captions. */
 .asi676mc-repaired-thumbnail {
   outline: 4px solid #fd7e14;
   outline-offset: -4px;
@@ -245,6 +246,8 @@ function populate_gallery(gallery_data) {
     $('#allsky-gallery').empty();
 
     gallery_data.forEach(item => {
+        // Render only server-provided audit status; gallery display never
+        // reclassifies an image or changes its exclusion state.
         const repair_status = (
             asi676mc_repair_gallery_enabled
             ? item['asi676mc_repair_status']
@@ -268,7 +271,7 @@ function populate_gallery(gallery_data) {
         } else if (repair_validation_failed) {
             repair_title = 'ASI676MC repair validation failed; original frame retained';
         } else if (repair_excluded) {
-            repair_title = 'Purple frame detected; original frame retained and excluded from timelapses';
+            repair_title = 'Purple frame detected; original frame retained and excluded from standard timelapses';
         }
 
         var a_tag = $('<a />', {

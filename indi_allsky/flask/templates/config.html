@@ -2649,7 +2649,7 @@ var camera_id = {{ camera_id }};
             </div>
             <div>
                 Detect the ASI676MC purple-frame RAW16 failure before calibration and debayering,
-                then either repair it or leave it unchanged and exclude it from timelapses.
+                then either repair it or leave it unchanged and exclude it from standard timelapses.
                 Frames from other camera models are always left unchanged.
                 Detected ASI676MC camera{% if asi676mc_camera_names|length != 1 %}s{% endif %}: {{ asi676mc_camera_names|join(', ') }}.
             </div>
@@ -2674,7 +2674,8 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             Detect purple frames without repairing them. The normal pipeline still saves the faulty rendered image,
-            then its database entry is flagged as <em>excluded</em> and automatically omitted from timelapses.
+            then its database entry is flagged as <em>excluded</em> and automatically omitted from standard timelapses.
+            Other derived timelapse-style outputs do not all honor indi-allsky's existing exclude flag.
             This is selected automatically when the overall feature is first enabled and should remain selected
             while collecting calibration evidence. For stronger good/purple/good triplets, enable
             <em>Also Save Preceding RAW FITS</em>, or temporarily set standard FITS saving to
@@ -2746,7 +2747,7 @@ var camera_id = {{ camera_id }};
             </div>
         </div>
         <div class="col-sm-8">
-            When Bad and Following RAW FITS is enabled, also retain one untouched normal FITS in memory.
+            When Save Bad and Following RAW FITS is enabled, also retain one untouched normal FITS in memory.
             If the next compatible frame is purple, that cached frame is saved as the preceding reference,
             producing a stronger good/purple/good triplet when the following frame is also available.
             This uses approximately one full FITS frame of additional memory per active camera and more disk space.

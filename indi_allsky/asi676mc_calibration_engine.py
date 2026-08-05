@@ -56,6 +56,9 @@ CALIBRATION_OPTIONS = {
     'MAX_REFERENCE_CHANGE_FRACTION': 0.15,
     'REFERENCE_CHANGE_FLOOR': 256,
     'MIN_GAIN_SAMPLES_PER_PARITY': 500,
+    'MIN_CALIBRATED_GAIN': 0.25,
+    'MAX_CALIBRATED_GAIN': 4.0,
+    'MAX_GAIN_RELATIVE_MAD': 0.15,
 
     # A RAW16 plateau near 65534 is expected.  Values close to the existing
     # 65000 threshold are deliberately snapped to that proven default.
@@ -79,8 +82,16 @@ CALIBRATION_OPTIONS = {
     # improves the cross-pair score by more than two percent.  This guards
     # against fitting cloud movement or a small number of transition pixels.
     'PREFER_DEFAULT_SCORE_TOLERANCE': 0.02,
+    'MAX_HIGHLIGHT_SCORE': 0.08,
+
+    # A real phase-shift repair must make the bad capture materially closer to
+    # its adjacent normal reference, not merely clear the detector ratios.
+    'MAX_REPAIRED_REFERENCE_ERROR': 0.35,
+    'MIN_REFERENCE_ERROR_IMPROVEMENT': 0.10,
 
 }
+
+MAX_DECODED_FITS_BYTES = 256 * 1024 * 1024
 
 
 _FITS_SUFFIXES = ('.fit', '.fits', '.fts')
@@ -127,19 +138,32 @@ def _fits_module():
 
 
 def _read_fits(path, copy=False):
-    """Return image data, a copied header, and the image-HDU index."""
+    """Return image data, merged metadata, and the image-HDU index."""
     fits = _fits_module()
     with fits.open(path, memmap=False, uint=True) as hdulist:
         for index, hdu in enumerate(hdulist):
             if hdu.data is None:
                 continue
             data = numpy.squeeze(numpy.asarray(hdu.data))
+            if data.nbytes > MAX_DECODED_FITS_BYTES:
+                raise ValueError(
+                    'decoded FITS image exceeds the {0:d} MiB safety limit'.format(
+                        MAX_DECODED_FITS_BYTES // (1024 * 1024),
+                    )
+                )
             if copy:
                 data = data.copy()
             asi676mc.validate_raw_mosaic(data)
-            header = hdu.header.copy()
+            # Camera metadata is commonly stored in the primary header while
+            # pixels live in an extension. Image-HDU values override matching
+            # primary values because they describe the selected array.
+            header = hdulist[0].header.copy()
+            if index:
+                header.extend(hdu.header, update=True, unique=True)
             bayer = str(header.get('BAYERPAT', '')).strip().upper()
-            if bayer and bayer != 'RGGB':
+            if not bayer:
+                raise ValueError('missing explicit BAYERPAT=RGGB metadata')
+            if bayer != 'RGGB':
                 raise ValueError(f'expected RGGB Bayer data, got {bayer}')
             return data, header, index
     raise ValueError('FITS file contains no image data')
@@ -186,8 +210,9 @@ def _header_float(header, *keys, default=None):
     return default
 
 
-def _camera_name(header):
-    """Return the first useful camera identity from several FITS conventions."""
+def _camera_names(header):
+    """Return all explicit camera identities from common FITS conventions."""
+    values = []
     for key in (
         'CAMERA',
         'CAMMODEL',
@@ -196,9 +221,18 @@ def _camera_name(header):
         'TELESCOP',
     ):
         value = str(header.get(key, '')).strip()
-        if value:
-            return value
-    return ''
+        if value and value not in values:
+            values.append(value)
+    return values
+
+
+def _camera_name(header):
+    """Prefer a positive ASI676MC identity over generic legacy labels."""
+    values = _camera_names(header)
+    return next(
+        (value for value in values if asi676mc.camera_name_matches(value)),
+        values[0] if values else '',
+    )
 
 
 def _specific_camera_name(name):
@@ -226,6 +260,8 @@ class FrameRecord:
     bayer: str
     camera_name: str
     signature: dict
+    x_bayer_offset: int = 0
+    y_bayer_offset: int = 0
 
     @property
     def is_bad(self):
@@ -242,6 +278,8 @@ class FrameRecord:
             round(self.gain, 6),
             self.xbin,
             self.ybin,
+            self.x_bayer_offset,
+            self.y_bayer_offset,
             _specific_camera_name(self.camera_name),
         )
 
@@ -269,16 +307,45 @@ def inspect_fits(path, settings):
     signature = asi676mc.frame_signature(data, settings)
     exposure = _header_float(header, 'EXPTIME', 'EXPOSURE', default=-1.0)
     gain = _header_float(header, 'GAIN', 'CCD-GAIN', default=-1.0)
+    if not numpy.isfinite(exposure) or exposure <= 0.0:
+        raise ValueError('exposure must be a finite value greater than zero')
+    if not numpy.isfinite(gain) or gain < 0.0:
+        raise ValueError('gain must be a finite non-negative value')
+    xbin = int(_header_float(header, 'XBINNING', default=-1))
+    ybin = int(_header_float(header, 'YBINNING', default=-1))
+    if xbin != 1 or ybin != 1:
+        raise ValueError('calibration requires XBINNING=1 and YBINNING=1')
+    x_bayer_offset = int(_header_float(header, 'XBAYROFF', default=0))
+    y_bayer_offset = int(_header_float(header, 'YBAYROFF', default=0))
+    if x_bayer_offset or y_bayer_offset:
+        raise ValueError('calibration requires zero Bayer offsets')
+    camera_names = _camera_names(header)
+    conflicting_asi = [
+        name for name in camera_names
+        if _OTHER_ASI_CAMERA_RE.search(name)
+        and not asi676mc.camera_name_matches(name)
+    ]
+    if conflicting_asi:
+        raise ValueError(
+            'FITS contains a different or conflicting ASI camera identity: {0}'.format(
+                ', '.join(conflicting_asi),
+            )
+        )
+    camera_name = _camera_name(header)
+    if not asi676mc.camera_name_matches(camera_name):
+        raise ValueError('FITS does not explicitly identify an ASI676MC camera')
     return FrameRecord(
         path=path,
         timestamp=_parse_timestamp(header, path),
         exposure=exposure,
         gain=gain,
-        xbin=int(_header_float(header, 'XBINNING', default=1)),
-        ybin=int(_header_float(header, 'YBINNING', default=1)),
+        xbin=xbin,
+        ybin=ybin,
+        x_bayer_offset=x_bayer_offset,
+        y_bayer_offset=y_bayer_offset,
         shape=tuple(data.shape),
-        bayer=str(header.get('BAYERPAT', 'RGGB')).strip().upper() or 'RGGB',
-        camera_name=_camera_name(header),
+        bayer=str(header['BAYERPAT']).strip().upper(),
+        camera_name=camera_name,
         signature=signature,
     )
 
@@ -308,17 +375,30 @@ def inspect_fits_metadata(path, metadata, settings):
         and signature['red_side_ratio'] >= settings['RED_SIDE_RATIO_THRESHOLD']
         and signature['blue_side_ratio'] >= settings['BLUE_SIDE_RATIO_THRESHOLD']
     )
-    binmode = int(metadata.get('binmode', 1))
+    binmode = int(metadata.get('binmode', -1))
+    exposure = float(metadata.get('exposure', -1.0))
+    gain = float(metadata.get('gain', -1.0))
+    camera_name = str(metadata.get('camera_name') or '')
+    if binmode != 1:
+        raise ValueError('calibration requires unbinned database FITS')
+    if not numpy.isfinite(exposure) or exposure <= 0.0:
+        raise ValueError('database FITS exposure is invalid')
+    if not numpy.isfinite(gain) or gain < 0.0:
+        raise ValueError('database FITS gain is invalid')
+    if not asi676mc.camera_name_matches(camera_name):
+        raise ValueError('database FITS is not positively identified as ASI676MC')
     return FrameRecord(
         path=path,
         timestamp=float(metadata['timestamp']),
-        exposure=float(metadata.get('exposure', -1.0)),
-        gain=float(metadata.get('gain', -1.0)),
+        exposure=exposure,
+        gain=gain,
         xbin=binmode,
         ybin=binmode,
+        x_bayer_offset=0,
+        y_bayer_offset=0,
         shape=(int(metadata['height']), int(metadata['width'])),
         bayer='RGGB',
-        camera_name=str(metadata.get('camera_name') or 'ASI676MC'),
+        camera_name=camera_name,
         signature=signature,
     )
 
@@ -352,6 +432,16 @@ def scan_folder(
         try:
             metadata = metadata_by_name.get(path.name)
             if metadata:
+                metadata_camera_name = str(
+                    metadata.get('camera_name') or ''
+                )
+                if (
+                    metadata_camera_name
+                    and not asi676mc.camera_name_matches(metadata_camera_name)
+                ):
+                    raise ValueError(
+                        'database metadata identifies a non-ASI676MC camera'
+                    )
                 try:
                     record = inspect_fits_metadata(path, metadata, settings)
                 except (KeyError, TypeError, ValueError):
@@ -361,7 +451,7 @@ def scan_folder(
             records.append(record)
             if record.is_bad:
                 detected_bad_count += 1
-        except (OSError, ValueError) as error:
+        except (OSError, OverflowError, TypeError, ValueError) as error:
             rejected.append((path, str(error)))
         if (
             index >= 14
@@ -409,14 +499,8 @@ def scan_folder(
 
 
 def _compatible(left, right):
-    """Compare capture settings while tolerating generic camera headers."""
-    left_key = left.compatibility_key[:-1]
-    right_key = right.compatibility_key[:-1]
-    if left_key != right_key:
-        return False
-    left_camera = _specific_camera_name(left.camera_name)
-    right_camera = _specific_camera_name(right.camera_name)
-    return not left_camera or not right_camera or left_camera == right_camera
+    """Compare all capture settings, including positive camera identity."""
+    return left.compatibility_key == right.compatibility_key
 
 
 def match_pairs(records, max_pair_seconds):
@@ -428,6 +512,8 @@ def match_pairs(records, max_pair_seconds):
         candidates = [
             record for record in normal
             if _compatible(bad, record)
+            and record.path != bad.path
+            and record.timestamp != bad.timestamp
             and abs(record.timestamp - bad.timestamp) <= max_pair_seconds
         ]
         before = [
@@ -465,9 +551,8 @@ def match_pairs(records, max_pair_seconds):
 # ---------------------------------------------------------------------------
 
 
-def _sample_planes(record, bad_source, step):
-    """Copy sparse central Bayer planes; shift bad source rows by one."""
-    data, _header, _index = _read_fits(record.path)
+def _sample_array_planes(data, bad_source, step):
+    """Copy sparse central Bayer planes from one decoded mosaic."""
     height, width = data.shape
     y_start = (height // 4) & ~1
     y_stop = (3 * height // 4) & ~1
@@ -482,6 +567,12 @@ def _sample_planes(record, bad_source, step):
         for row in range(2)
         for column in range(2)
     )
+
+
+def _sample_planes(record, bad_source, step):
+    """Copy sparse central Bayer planes; shift bad source rows by one."""
+    data, _header, _index = _read_fits(record.path)
+    return _sample_array_planes(data, bad_source=bad_source, step=step)
 
 
 def _reference_planes(pair, step):
@@ -647,6 +738,28 @@ def estimate_gains(samples):
             'pair_values': values,
             'sample_count': sample_counts[name],
         }
+        value = estimates[name]['value']
+        relative_mad = estimates[name]['mad'] / max(abs(value), 1.0e-12)
+        estimates[name]['relative_mad'] = float(relative_mad)
+        if (
+            value < CALIBRATION_OPTIONS['MIN_CALIBRATED_GAIN']
+            or value > CALIBRATION_OPTIONS['MAX_CALIBRATED_GAIN']
+        ):
+            raise CalibrationError(
+                '{0} estimate {1:.5f} is outside the plausible ASI676MC '
+                'range {2:g}-{3:g}'.format(
+                    name,
+                    value,
+                    CALIBRATION_OPTIONS['MIN_CALIBRATED_GAIN'],
+                    CALIBRATION_OPTIONS['MAX_CALIBRATED_GAIN'],
+                )
+            )
+        if relative_mad > CALIBRATION_OPTIONS['MAX_GAIN_RELATIVE_MAD']:
+            raise CalibrationError(
+                '{0} varies too much between pairs (relative MAD {1:.3f}); '
+                'the higher-ratio frames do not describe one stable camera '
+                'failure'.format(name, relative_mad)
+            )
     return estimates
 
 
@@ -864,6 +977,14 @@ def estimate_highlight_ratios(samples, gains, saturation_threshold):
     else:
         selected = raw_best
         preferred_default = False
+    if selected[0] > CALIBRATION_OPTIONS['MAX_HIGHLIGHT_SCORE']:
+        raise CalibrationError(
+            'best clipped-highlight fit score {0:.4f} exceeds the safe '
+            'maximum {1:.4f}'.format(
+                selected[0],
+                CALIBRATION_OPTIONS['MAX_HIGHLIGHT_SCORE'],
+            )
+        )
     runner_up = candidates[1] if len(candidates) > 1 else raw_best
     return {
         'start_ratio': selected[1],
@@ -1002,6 +1123,20 @@ def threshold_suggestion_payload(
     detected_bad_count,
 ):
     """Collect the shared preliminary result for inferred or known labels."""
+    population_evidence = [
+        {
+            'name': record.path.name,
+            'timestamp_utc': datetime.fromtimestamp(
+                record.timestamp,
+                tz=timezone.utc,
+            ).isoformat(),
+            'population': 'higher ratio' if record.is_bad else 'lower ratio',
+            'purple_ratio': record.signature['purple_ratio'],
+            'red_side_ratio': record.signature['red_side_ratio'],
+            'blue_side_ratio': record.signature['blue_side_ratio'],
+        }
+        for record in sorted(records, key=lambda item: item.timestamp)
+    ]
     return {
         'outcome': 'threshold_suggestion',
         'generated_utc': datetime.now(timezone.utc).isoformat(),
@@ -1013,6 +1148,7 @@ def threshold_suggestion_payload(
         },
         'signature_ranges': ranges,
         'threshold_suggestions': suggestions,
+        'population_evidence': population_evidence,
     }
 
 
@@ -1225,6 +1361,27 @@ def validate_evidence(records, pairs, unmatched, allow_unmatched=False):
     """
     bad_records = [record for record in records if record.is_bad]
     normal_records = [record for record in records if not record.is_bad]
+    invalid_records = [
+        record for record in records
+        if (
+            not asi676mc.camera_name_matches(record.camera_name)
+            or record.bayer != 'RGGB'
+            or record.xbin != 1
+            or record.ybin != 1
+            or record.x_bayer_offset != 0
+            or record.y_bayer_offset != 0
+            or not numpy.isfinite(record.exposure)
+            or record.exposure <= 0.0
+            or not numpy.isfinite(record.gain)
+            or record.gain < 0.0
+        )
+    ]
+    if invalid_records:
+        raise CalibrationError(
+            '{0} evidence file(s) lack the required ASI676MC RAW16 RGGB, '
+            'unbinned, zero-offset capture identity or valid exposure/gain '
+            'metadata'.format(len(invalid_records))
+        )
     minimum = CALIBRATION_OPTIONS['MIN_BAD_PAIRS']
     if len(pairs) < minimum:
         raise CalibrationError(
@@ -1260,20 +1417,10 @@ def validate_evidence(records, pairs, unmatched, allow_unmatched=False):
         for record in records
         if _specific_camera_name(record.camera_name)
     }
-    if len(explicit_names) > 1:
+    if explicit_names != {'asi676mc'}:
         raise CalibrationError(
-            'evidence contains more than one explicit camera identity: '
+            'all evidence must explicitly identify ASI676MC; found: '
             + ', '.join(sorted(explicit_names))
-        )
-    other_asi = {
-        name for name in explicit_names
-        if _OTHER_ASI_CAMERA_RE.search(name)
-        and not asi676mc.camera_name_matches(name)
-    }
-    if other_asi:
-        raise CalibrationError(
-            'evidence contains a different explicit ASI camera: '
-            + ', '.join(sorted(other_asi))
         )
 
     return {
@@ -1289,10 +1436,71 @@ def validate_evidence(records, pairs, unmatched, allow_unmatched=False):
     }
 
 
+def _reference_error(observed_planes, reference_planes, stable_masks):
+    """Return a robust sparse error against a time-matched normal reference."""
+    parity_errors = []
+    minimum = CALIBRATION_OPTIONS['MIN_REFERENCE_VALUE']
+    maximum = CALIBRATION_OPTIONS['MAX_REFERENCE_VALUE']
+    for observed, reference, stable in zip(
+        observed_planes,
+        reference_planes,
+        stable_masks,
+    ):
+        observed = observed.astype(numpy.float64)
+        mask = (
+            stable
+            & (reference >= minimum)
+            & (reference <= maximum)
+            & numpy.isfinite(observed)
+        )
+        required_samples = min(100, max(16, observed.size // 4))
+        if numpy.count_nonzero(mask) < required_samples:
+            continue
+        relative_error = (
+            numpy.abs(observed[mask] - reference[mask])
+            / numpy.maximum(reference[mask], minimum)
+        )
+        parity_errors.append(float(numpy.median(relative_error)))
+    if len(parity_errors) != 4:
+        raise CalibrationError(
+            'too few stable samples to compare a repaired frame with its reference'
+        )
+    return float(statistics.mean(parity_errors))
+
+
+def _best_gain_only_planes(observed_planes, reference_planes, stable_masks):
+    """Fit the best counterfactual with no row-phase correction."""
+    corrected = []
+    minimum = CALIBRATION_OPTIONS['MIN_REFERENCE_VALUE']
+    maximum = CALIBRATION_OPTIONS['MAX_REFERENCE_VALUE']
+    for observed, reference, stable in zip(
+        observed_planes,
+        reference_planes,
+        stable_masks,
+    ):
+        observed_float = observed.astype(numpy.float64)
+        mask = (
+            stable
+            & (reference >= minimum)
+            & (reference <= maximum)
+            & (observed_float >= minimum)
+        )
+        if not numpy.any(mask):
+            raise CalibrationError(
+                'too few samples for the gain-only phase countercheck'
+            )
+        ratio = float(numpy.median(observed_float[mask] / reference[mask]))
+        if not numpy.isfinite(ratio) or ratio <= 0.0:
+            raise CalibrationError('invalid gain-only phase countercheck')
+        corrected.append(observed_float / ratio)
+    return tuple(corrected)
+
+
 def validate_calibrated_frames(pairs, settings):
     """Apply final rounded settings to every pair without writing outputs."""
     repaired_count = 0
     normal_count = 0
+    similarity_checks = []
     unique_normal = {
         reference.path: reference
         for pair in pairs
@@ -1303,11 +1511,73 @@ def validate_calibrated_frames(pairs, settings):
     # that every failure clears detection after repair.
     for pair in pairs:
         data, _header, _index = _read_fits(pair.bad.path, copy=True)
+        original = data.copy()
+        reference_planes, stable_masks = _reference_planes(
+            pair,
+            CALIBRATION_OPTIONS['SAMPLE_STEP'],
+        )
+        original_planes = _sample_array_planes(
+            original,
+            bad_source=False,
+            step=CALIBRATION_OPTIONS['SAMPLE_STEP'],
+        )
+        original_error = _reference_error(
+            original_planes,
+            reference_planes,
+            stable_masks,
+        )
         result = asi676mc.repair_if_needed(data, settings)
         if not result['repaired'] or result['validation_failed']:
             raise CalibrationError(
                 f'calibrated repair validation failed for {pair.bad.path}'
             )
+        repaired_planes = _sample_array_planes(
+            data,
+            bad_source=False,
+            step=CALIBRATION_OPTIONS['SAMPLE_STEP'],
+        )
+        repaired_error = _reference_error(
+            repaired_planes,
+            reference_planes,
+            stable_masks,
+        )
+
+        # Compare with a counterfactual that applies the fitted gains without
+        # the ASI676MC one-row phase correction. A genuine phase-shift failure
+        # should match its neighbors better after the row correction; two
+        # ordinary colour/brightness populations generally will not.
+        unshifted_corrected = _best_gain_only_planes(
+            original_planes,
+            reference_planes,
+            stable_masks,
+        )
+        unshifted_error = _reference_error(
+            unshifted_corrected,
+            reference_planes,
+            stable_masks,
+        )
+        improvement = CALIBRATION_OPTIONS['MIN_REFERENCE_ERROR_IMPROVEMENT']
+        if repaired_error > CALIBRATION_OPTIONS['MAX_REPAIRED_REFERENCE_ERROR']:
+            raise CalibrationError(
+                'repaired frame remains too different from its normal '
+                'reference: {0}'.format(pair.bad.path)
+            )
+        if repaired_error > original_error * (1.0 - improvement):
+            raise CalibrationError(
+                'repair does not materially improve agreement with the normal '
+                'reference: {0}'.format(pair.bad.path)
+            )
+        if repaired_error > unshifted_error * (1.0 - improvement):
+            raise CalibrationError(
+                'evidence does not confirm the ASI676MC one-row phase shift: '
+                '{0}'.format(pair.bad.path)
+            )
+        similarity_checks.append({
+            'name': pair.bad.path.name,
+            'original_error': original_error,
+            'gain_only_error': unshifted_error,
+            'repaired_error': repaired_error,
+        })
         repaired_count += 1
 
     # A normal frame must take the fast no-op path.  The array comparison also
@@ -1325,7 +1595,7 @@ def validate_calibrated_frames(pairs, settings):
                 f'normal-frame validation mutated {record.path}'
             )
         normal_count += 1
-    return repaired_count, normal_count
+    return repaired_count, normal_count, similarity_checks
 
 
 def calibration_payload(
@@ -1478,6 +1748,7 @@ def calibrate_folder(
     )
 
     def finish_scan_payload(payload):
+        """Attach progressive-scan coverage fields to either result shape."""
         payload['quality']['scanned_file_count'] = scanned_file_count
         payload['quality']['available_file_count'] = available_file_count
         payload['quality']['search_stopped_early'] = (
@@ -1626,10 +1897,18 @@ def calibrate_folder(
         })
     validation_settings = dict(config)
     validation_settings.update(payload['derived_settings'])
-    repaired_count, normal_validation_count = validate_calibrated_frames(
+    (
+        repaired_count,
+        normal_validation_count,
+        similarity_checks,
+    ) = validate_calibrated_frames(
         pairs,
         validation_settings,
     )
     payload['quality']['validated_bad_repairs'] = repaired_count
     payload['quality']['validated_normal_frames'] = normal_validation_count
+    payload['quality']['reference_similarity_checks'] = similarity_checks
+    payload['quality']['worst_repaired_reference_error'] = max(
+        check['repaired_error'] for check in similarity_checks
+    )
     return finish_scan_payload(payload)

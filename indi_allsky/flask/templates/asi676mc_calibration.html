@@ -119,7 +119,7 @@
 
 <div id="calibration-shell">
 <div class="mb-4">
-    <h3 class="text-light mb-1">ASI676MC calibration</h3>
+    <h3 class="text-light mb-1">ASI676MC Calibration</h3>
     <div class="text-light opacity-75">
         Derive purple-frame repair values from FITS saved by indi-allsky or
         from a collection you select manually.
@@ -188,7 +188,25 @@
 
 <form id="form-asi676mc-calibration" onSubmit="return false;">
     {{ form_calibration.csrf_token }}
-    {{ form_calibration.CAMERA_ID }}
+
+    <div class="card bg-dark border-secondary text-light mb-4">
+        <div class="card-header fw-semibold">Camera</div>
+        <div class="card-body">
+            <div class="row align-items-center g-3">
+                <div class="col-md-3">
+                    {{ form_calibration.CAMERA_ID.label(class='col-form-label fw-semibold') }}
+                </div>
+                <div class="col-md-4">
+                    {{ form_calibration.CAMERA_ID(class='form-select bg-secondary text-light border-secondary') }}
+                </div>
+                <div class="col-md-5 calibration-help">
+                    Evidence and results are bound to this local ASI676MC and
+                    rechecked before saving. The repair settings are global, so
+                    saved values apply to every ASI676MC using this configuration.
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Pair separation is shared by discovery and upload, so it is presented
          once above both source choices. -->
@@ -332,7 +350,7 @@
             <a id="calibration-report-download" class="btn btn-info" href="#">
                 Download text report
             </a>
-            {% if current_user.is_admin %}
+            {% if calibration_can_save_config %}
             <button id="calibration-apply-values" type="button" class="btn btn-warning">
                 Apply values and reload
             </button>
@@ -370,7 +388,9 @@
             <div class="calibration-help mb-2">
                 Calibration succeeded, but these thresholds are close to the
                 observed normal or purple range. Collect more varied FITS and
-                rerun before deciding whether to change them.
+                rerun before deciding whether to change them. Applying the
+                seven derived values does not change detection thresholds;
+                any threshold change must be made manually in Image Settings.
             </div>
             <div class="table-responsive">
                 <table class="table table-dark table-sm align-middle mb-0">
@@ -388,8 +408,8 @@
         </div>
 
         <!-- A detector miss produces a deliberately separate preliminary
-             result. An administrator may save only the suggested detector
-             thresholds; repair constants still require a second run. -->
+             result. A Config-authorized operator may save only the suggested
+             detector thresholds; repair constants still require a second run. -->
         <div id="calibration-threshold-result" class="table-responsive" style="display: none;">
             <table class="calibration-values-table table table-dark table-striped align-middle mb-0">
                 <thead>
@@ -403,6 +423,33 @@
                 </thead>
                 <tbody id="calibration-threshold-values"></tbody>
             </table>
+            <div id="calibration-population-confirmation" class="calibration-callout calibration-callout-warning mt-3">
+                <div class="form-check">
+                    <input id="confirm-higher-population" class="form-check-input" type="checkbox">
+                    <label class="form-check-label fw-semibold" for="confirm-higher-population">
+                        I checked the examples below and confirm that the
+                        higher-ratio population is the ASI676MC purple-frame failure.
+                    </label>
+                </div>
+                <div class="calibration-help mt-2">
+                    Two ordinary lighting regimes can also form two clean
+                    populations. Detection thresholds cannot be saved until
+                    this fault-specific confirmation is checked.
+                </div>
+            </div>
+            <div class="table-responsive mt-3">
+                <table class="table table-dark table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Population</th>
+                            <th>Capture time</th>
+                            <th>FITS file</th>
+                            <th>Purple / red / blue ratios</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calibration-population-evidence"></tbody>
+                </table>
+            </div>
         </div>
 
         <h5 class="mt-4">Evidence used</h5>
@@ -453,6 +500,8 @@
     try {
         window.localStorage.setItem(storageProbe, '1');
         window.localStorage.removeItem(storageProbe);
+        window.sessionStorage.setItem(storageProbe, '1');
+        window.sessionStorage.removeItem(storageProbe);
     } catch (error) {
         missing.push('local browser storage');
     }
@@ -493,15 +542,53 @@ const calibrationMaxFileBytes = {{ calibration_upload_limits.file_bytes }};
 const calibrationMaxSessionBytes = {{ calibration_upload_limits.session_bytes }};
 const calibrationMinDatabaseGroupCount = {{ calibration_database_limits.minimum }};
 const calibrationMaxDatabaseGroupCount = {{ calibration_database_limits.maximum }};
-{% if current_user.is_admin %}
+{% if calibration_can_save_config %}
 const calibrationApplyUrlTemplate = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_apply_view', session_id='SESSION_ID') }}";
 {% endif %}
 const calibrationStorageKey = 'indi-allsky-asi676mc-calibration-session';
+const calibrationTabStorageKey = calibrationStorageKey + '-tab';
 let completedCalibrationSessionId = null;
 let completedCalibrationOutcome = null;
 let activeCalibrationSessionId = null;
+let pollingCalibrationSessionId = null;
 let activeUploadController = null;
 let uploadCancellationRequested = false;
+
+function storedCalibrationSessions() {
+    try {
+        const value = JSON.parse(localStorage.getItem(calibrationStorageKey) || '[]');
+        return Array.isArray(value) ? value.filter(item => typeof item === 'string') : [];
+    } catch (error) {
+        return [];
+    }
+}
+
+function rememberCalibrationSession(sessionId) {
+    const sessions = storedCalibrationSessions().filter(item => item !== sessionId);
+    sessions.push(sessionId);
+    localStorage.setItem(calibrationStorageKey, JSON.stringify(sessions));
+    sessionStorage.setItem(calibrationTabStorageKey, sessionId);
+}
+
+function forgetCalibrationSession(sessionId) {
+    if (!sessionId) { return; }
+    const sessions = storedCalibrationSessions().filter(item => item !== sessionId);
+    if (sessions.length) {
+        localStorage.setItem(calibrationStorageKey, JSON.stringify(sessions));
+    } else {
+        localStorage.removeItem(calibrationStorageKey);
+    }
+    if (sessionStorage.getItem(calibrationTabStorageKey) === sessionId) {
+        sessionStorage.removeItem(calibrationTabStorageKey);
+    }
+}
+
+function recoverCalibrationSession() {
+    const tabSession = sessionStorage.getItem(calibrationTabStorageKey);
+    if (tabSession) { return tabSession; }
+    const sessions = storedCalibrationSessions();
+    return sessions.length ? sessions[sessions.length - 1] : null;
+}
 
 // Shared URL, JSON-response, and message helpers keep every request consistent
 // about CSRF handling and about errors safe to show to the operator.
@@ -564,12 +651,16 @@ function calibrationPairSeparation() {
 // Reset both browser state and visible controls. Server-side result deletion is
 // performed separately by discardCalibrationResult before this helper is used.
 function resetCalibrationInterface() {
+    const sessionToForget = completedCalibrationSessionId
+        || activeCalibrationSessionId
+        || sessionStorage.getItem(calibrationTabStorageKey);
+    forgetCalibrationSession(sessionToForget);
     completedCalibrationSessionId = null;
     completedCalibrationOutcome = null;
     activeCalibrationSessionId = null;
+    pollingCalibrationSessionId = null;
     activeUploadController = null;
     uploadCancellationRequested = false;
-    localStorage.removeItem(calibrationStorageKey);
 
     $('#calibration-results').hide();
     $('#calibration-progress-panel').hide();
@@ -579,7 +670,8 @@ function resetCalibrationInterface() {
     $('#start-database-calibration').prop('disabled', false);
     $('#cancel-calibration-upload').hide().prop('disabled', false).text('Cancel upload');
     $('#calibration-files').val('');
-    $('#calibration-values, #calibration-threshold-values, #calibration-threshold-advisory-values, #calibration-quality, #calibration-warning-list').empty();
+    $('#calibration-values, #calibration-threshold-values, #calibration-threshold-advisory-values, #calibration-population-evidence, #calibration-quality, #calibration-warning-list').empty();
+    $('#confirm-higher-population').prop('checked', false);
     $('#calibration-value-result').show();
     $('#calibration-threshold-result, #calibration-threshold-advisory').hide();
     $('#calibration-result-title').text('Calibration result');
@@ -683,7 +775,11 @@ function validateSelectedFits(files) {
 async function createCalibrationSession() {
     const response = await fetch(calibrationSessionUrl, {
         method: 'POST',
-        headers: {'X-CSRFToken': calibrationCsrfToken},
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': calibrationCsrfToken,
+        },
+        body: JSON.stringify({camera_id: $('#CAMERA_ID').val()}),
     });
     return calibrationJson(response);
 }
@@ -766,6 +862,8 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
     completedCalibrationSessionId = sessionId;
     completedCalibrationOutcome = 'calibration';
     activeCalibrationSessionId = null;
+    pollingCalibrationSessionId = null;
+    $('#cancel-calibration-upload').hide();
     activeUploadController = null;
     $('#calibration-progress').removeClass('progress-bar-animated');
     $('#calibration-setup-panel, #calibration-progress-panel, #calibration-error, #calibration-notice').hide();
@@ -812,7 +910,7 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
             resultLevel = 'warning';
             comparisonMessage = configurationComparison.message;
         } else if (configurationComparison.status === 'different') {
-            {% if current_user.is_admin %}
+            {% if calibration_can_save_config %}
             comparisonMessage = (
                 'The result differs from the current configuration. Review '
                 + 'both value columns before applying it.'
@@ -820,7 +918,8 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
             {% else %}
             comparisonMessage = (
                 'The result differs from the current configuration. Review '
-                + 'both value columns; an administrator can apply it.'
+                + 'both value columns; an authorized Config operator can '
+                + 'apply it.'
             );
             {% endif %}
         }
@@ -921,6 +1020,8 @@ function renderThresholdSuggestion(sessionId, result) {
     completedCalibrationSessionId = sessionId;
     completedCalibrationOutcome = 'threshold_suggestion';
     activeCalibrationSessionId = null;
+    pollingCalibrationSessionId = null;
+    $('#cancel-calibration-upload').hide();
     activeUploadController = null;
     $('#calibration-progress').removeClass('progress-bar-animated');
     $('#calibration-setup-panel, #calibration-progress-panel, #calibration-error, #calibration-notice').hide();
@@ -928,7 +1029,7 @@ function renderThresholdSuggestion(sessionId, result) {
     $('#calibration-value-result').hide();
     $('#calibration-threshold-result').show();
     $('#calibration-threshold-advisory').hide();
-    {% if current_user.is_admin %}
+    {% if calibration_can_save_config %}
     $('#calibration-apply-values')
         .show()
         .text('Apply thresholds and reload');
@@ -984,6 +1085,29 @@ function renderThresholdSuggestion(sessionId, result) {
         );
     });
 
+    const populationBody = $('#calibration-population-evidence').empty();
+    (result.population_evidence || []).forEach(item => {
+        const captured = new Date(item.timestamp_utc);
+        populationBody.append(
+            $('<tr />').append(
+                $('<td />').text(item.population),
+                $('<td />').text(
+                    Number.isNaN(captured.getTime())
+                        ? item.timestamp_utc
+                        : captured.toLocaleString()
+                ),
+                $('<td />').text(item.name),
+                $('<td />').text(
+                    Number(item.purple_ratio).toFixed(3) + ' / '
+                    + Number(item.red_side_ratio).toFixed(3) + ' / '
+                    + Number(item.blue_side_ratio).toFixed(3)
+                )
+            )
+        );
+    });
+    $('#confirm-higher-population').prop('checked', false);
+    $('#calibration-apply-values').prop('disabled', true);
+
     $('#calibration-quality').empty().append(
         qualityCard('Recognised by current detector', quality.detected_bad_count),
         qualityCard('Likely purple population', quality.likely_purple_count),
@@ -1025,7 +1149,8 @@ async function requestUploadCancellation(sessionId) {
 // fetch stops network transfer, while the authenticated endpoint tombstones the
 // session and deletes chunks or completed FITS already received by the server.
 async function cancelCalibrationUpload() {
-    if (!activeCalibrationSessionId || uploadCancellationRequested) {
+    const sessionId = activeCalibrationSessionId || pollingCalibrationSessionId;
+    if (!sessionId || uploadCancellationRequested) {
         return;
     }
     uploadCancellationRequested = true;
@@ -1034,11 +1159,17 @@ async function cancelCalibrationUpload() {
         activeUploadController.abort();
     }
 
-    const sessionId = activeCalibrationSessionId;
     try {
-        await requestUploadCancellation(sessionId);
+        const cancellation = await requestUploadCancellation(sessionId);
+        if (cancellation.status === 'cancel_requested') {
+            showCalibrationNotice(
+                'Cancellation requested. The current validation step will '
+                + 'stop at its next safe checkpoint.'
+            );
+            return;
+        }
         resetCalibrationInterface();
-        showCalibrationNotice('Upload cancelled. All FITS uploaded for that run were deleted.');
+        showCalibrationNotice('Calibration cancelled. Temporary FITS were deleted.');
     } catch (error) {
         uploadCancellationRequested = false;
         // Keep the session and retry control available when the browser could
@@ -1097,9 +1228,9 @@ async function discardCalibrationResult() {
     }
 }
 
-{% if current_user.is_admin %}
-// Applying values remains admin-only and uses indi-allsky's normal versioned
-// configuration save/reload path; this client never edits operational switches.
+{% if calibration_can_save_config %}
+// Applying values uses indi-allsky's normal versioned configuration
+// save/reload path; this client never edits operational switches.
 async function applyCalibrationValues() {
     if (!completedCalibrationSessionId) {
         setResultStatus(
@@ -1112,6 +1243,17 @@ async function applyCalibrationValues() {
     const applyingThresholds = (
         completedCalibrationOutcome === 'threshold_suggestion'
     );
+    if (
+        applyingThresholds
+        && !$('#confirm-higher-population').prop('checked')
+    ) {
+        setResultStatus(
+            'warning',
+            'Review the listed FITS examples and confirm that the higher-ratio '
+            + 'population is the actual purple-frame failure before saving.'
+        );
+        return;
+    }
     const confirmation = applyingThresholds
         ? 'Apply only the recommended detection thresholds and reload '
             + 'indi-allsky? Repair constants, repair mode, FITS saving, and '
@@ -1137,7 +1279,14 @@ async function applyCalibrationValues() {
             calibrationUrl(calibrationApplyUrlTemplate, completedCalibrationSessionId),
             {
                 method: 'POST',
-                headers: {'X-CSRFToken': calibrationCsrfToken},
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': calibrationCsrfToken,
+                },
+                body: JSON.stringify({
+                    confirm_higher_population: applyingThresholds
+                        && $('#confirm-higher-population').prop('checked'),
+                }),
             }
         );
         const result = await calibrationJson(response);
@@ -1188,17 +1337,49 @@ async function applyCalibrationValues() {
 }
 
 $('#calibration-apply-values').on('click', applyCalibrationValues);
+$('#confirm-higher-population').on('change', function() {
+    if (completedCalibrationOutcome === 'threshold_suggestion') {
+        $('#calibration-apply-values').prop('disabled', !this.checked);
+    }
+});
 {% endif %}
 
 // Polling also restores retained results after navigation. An upload-state
 // session cannot be resumed because browsers do not restore FileList objects,
 // so revisiting it safely cancels the incomplete server collection.
+async function fetchCalibrationStatus(sessionId) {
+    let lastError = null;
+    for (let attempt = 1; attempt <= 5; attempt++) {
+        try {
+            const response = await fetch(
+                calibrationUrl(calibrationStatusUrlTemplate, sessionId),
+                {headers: {'X-CSRFToken': calibrationCsrfToken}}
+            );
+            return await calibrationJson(response);
+        } catch (error) {
+            if (error.serverRejected) { throw error; }
+            lastError = error;
+            setCalibrationProgress(
+                75,
+                'Reconnecting',
+                'The status request was interrupted. Retrying without losing '
+                + 'this calibration session (' + attempt + ' of 5).'
+            );
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+    }
+    const error = new Error(
+        'The browser cannot currently reach the calibration worker. This '
+        + 'session was retained; reload the page to continue checking it. '
+        + (lastError ? lastError.message : '')
+    );
+    error.resultUnconfirmed = true;
+    throw error;
+}
+
 async function pollCalibration(sessionId) {
     while (true) {
-        const response = await fetch(calibrationUrl(calibrationStatusUrlTemplate, sessionId), {
-            headers: {'X-CSRFToken': calibrationCsrfToken},
-        });
-        const status = await calibrationJson(response);
+        const status = await fetchCalibrationStatus(sessionId);
         if (status.status === 'success') {
             if (status.result.outcome === 'threshold_suggestion') {
                 renderThresholdSuggestion(sessionId, status.result);
@@ -1212,7 +1393,7 @@ async function pollCalibration(sessionId) {
             return;
         }
         if (status.status === 'failed') {
-            localStorage.removeItem(calibrationStorageKey);
+            forgetCalibrationSession(sessionId);
             let cleanupMessage;
             if (!status.sources_deleted_utc) {
                 cleanupMessage = (
@@ -1234,7 +1415,7 @@ async function pollCalibration(sessionId) {
             );
         }
         if (status.status === 'cancelled') {
-            localStorage.removeItem(calibrationStorageKey);
+            forgetCalibrationSession(sessionId);
             resetCalibrationInterface();
             showCalibrationNotice('The incomplete upload was cancelled and removed.');
             return;
@@ -1245,7 +1426,10 @@ async function pollCalibration(sessionId) {
                 'Waiting to start',
                 'The background worker will begin calibration when available.'
             );
-        } else if (status.status === 'running') {
+        } else if (
+            status.status === 'running'
+            || status.status === 'cancel_requested'
+        ) {
             const progress = status.progress || {};
             const processed = Number(progress.processed_files || 0);
             const available = Number(progress.total_files || 0);
@@ -1256,7 +1440,13 @@ async function pollCalibration(sessionId) {
                 ? Math.min(1, processed / available)
                 : 0;
             const scanPercent = 73 + (ratio * 12);
-            if (progress.phase === 'threshold_search') {
+            if (status.status === 'cancel_requested') {
+                setCalibrationProgress(
+                    96,
+                    'Stopping calibration',
+                    'Waiting for the current safe validation checkpoint.'
+                );
+            } else if (progress.phase === 'threshold_search') {
                 setCalibrationProgress(
                     scanPercent,
                     'Searching for missed purple frames',
@@ -1347,7 +1537,7 @@ async function submitCalibration() {
         activeCalibrationSessionId = session.session_id;
         activeUploadController = new AbortController();
         uploadCancellationRequested = false;
-        localStorage.setItem(calibrationStorageKey, activeCalibrationSessionId);
+        rememberCalibrationSession(activeCalibrationSessionId);
         $('#cancel-calibration-upload').show();
         await uploadCalibrationFiles(
             activeCalibrationSessionId,
@@ -1365,29 +1555,37 @@ async function submitCalibration() {
             maxPairSeconds
         );
         const queuedSessionId = activeCalibrationSessionId;
+        pollingCalibrationSessionId = queuedSessionId;
         activeCalibrationSessionId = null;
+        $('#cancel-calibration-upload')
+            .show()
+            .prop('disabled', false)
+            .text('Cancel calibration');
         await pollCalibration(queuedSessionId);
+        pollingCalibrationSessionId = null;
+        $('#cancel-calibration-upload').hide();
     } catch (error) {
         if (uploadCancellationRequested || error.name === 'AbortError') {
             return;
         }
         if (activeCalibrationSessionId) {
+            const failedSessionId = activeCalibrationSessionId;
             try {
-                await requestUploadCancellation(activeCalibrationSessionId);
+                await requestUploadCancellation(failedSessionId);
             } catch (cancelError) {
                 // Preserve the original upload error; session expiry is the
                 // fallback if server-side cleanup itself was unavailable.
             }
             activeCalibrationSessionId = null;
-            localStorage.removeItem(calibrationStorageKey);
+            forgetCalibrationSession(failedSessionId);
         }
         showCalibrationError(error.message);
     }
 }
 
 // Database discovery and staging happen in one authenticated request. The
-// server uses zero-copy links to the selected local FITS, queues the same
-// background calibration worker, and returns a normal pollable session ID.
+// server takes stable private references (hard links or copies), queues the
+// same background calibration worker, and returns a pollable session ID.
 async function submitDatabaseCalibration() {
     const targetGroups = Number.parseInt(
         $('#DATABASE_GROUP_LIMIT').val(),
@@ -1434,7 +1632,12 @@ async function submitDatabaseCalibration() {
         });
         const queued = await calibrationJson(response);
         completedCalibrationSessionId = null;
-        localStorage.setItem(calibrationStorageKey, queued.session_id);
+        rememberCalibrationSession(queued.session_id);
+        pollingCalibrationSessionId = queued.session_id;
+        $('#cancel-calibration-upload')
+            .show()
+            .prop('disabled', false)
+            .text('Cancel calibration');
         setCalibrationProgress(
             72,
             'Saved FITS ready',
@@ -1451,8 +1654,14 @@ async function submitDatabaseCalibration() {
                     + 'missed purple frames.'
         );
         await pollCalibration(queued.session_id);
+        pollingCalibrationSessionId = null;
+        $('#cancel-calibration-upload').hide();
     } catch (error) {
-        localStorage.removeItem(calibrationStorageKey);
+        if (error.serverRejected) {
+            forgetCalibrationSession(
+                sessionStorage.getItem(calibrationTabStorageKey)
+            );
+        }
         showCalibrationError(error.message);
     }
 }
@@ -1466,15 +1675,22 @@ $('#calibration-reset').on('click', discardCalibrationResult);
 // localStorage contains only an unguessable session ID, never FITS data or
 // calibration values. Ownership is rechecked by every server endpoint.
 $(document).ready(async function() {
-    const savedSession = localStorage.getItem(calibrationStorageKey);
+    const savedSession = recoverCalibrationSession();
     if (!savedSession) {
         return;
     }
     $('#start-calibration').prop('disabled', true);
+    pollingCalibrationSessionId = savedSession;
+    $('#cancel-calibration-upload')
+        .show()
+        .prop('disabled', false)
+        .text('Cancel calibration');
     try {
         await pollCalibration(savedSession);
     } catch (error) {
-        localStorage.removeItem(calibrationStorageKey);
+        if (error.serverRejected) {
+            forgetCalibrationSession(savedSession);
+        }
         showCalibrationError(error.message);
     }
 });

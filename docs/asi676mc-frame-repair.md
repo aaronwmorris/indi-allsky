@@ -3,9 +3,9 @@
 ## Purpose and safety boundary
 
 Some ZWO ASI676MC cameras occasionally deliver a RAW16 RGGB mosaic with a
-strong purple cast. This feature detects that specific failure, can exclude the
-affected frame without modifying it, and can optionally repair it before the
-normal indi-allsky image pipeline continues.
+strong purple cast. This feature detects that specific failure, can flag the
+affected frame for exclusion without modifying it, and can optionally repair
+it before the normal indi-allsky image pipeline continues.
 
 Leave **Enable ASI676MC Purple-frame Handling** off unless the camera actually
 produces this failure. The implementation is deliberately narrow:
@@ -21,8 +21,14 @@ Unsupported input is not changed. A reason is recorded in the image metadata
 and written to the log.
 
 New configurations default to **Exclude Only**. This mode detects and flags a
-purple frame, preserves its original pixels, and excludes it from timelapses.
-Pixel repair begins only after an operator explicitly disables Exclude Only.
+purple frame, preserves its original pixels, and excludes it from standard
+timelapses. Pixel repair begins only after an operator explicitly disables
+Exclude Only.
+
+The existing indi-allsky `exclude` flag is not honored by every derived
+timelapse-style output. This feature deliberately uses that standard flag
+without changing its wider propagation; non-standard outputs may still include
+an Exclude Only frame.
 
 ## Runtime processing
 
@@ -51,7 +57,7 @@ The status stored under `asi676mc_repair_status` is one of:
 | Status | Meaning |
 | --- | --- |
 | `normal` | The frame did not match the purple-frame signature. |
-| `excluded` | A purple frame was detected in Exclude Only mode; pixels were retained and the frame was excluded from timelapses. |
+| `excluded` | A purple frame was detected in Exclude Only mode; pixels were retained and the frame was excluded from standard timelapses. |
 | `repaired` | A purple frame was repaired and passed post-repair validation. |
 | `validation_failed` | Repair output still matched the failure; the original frame was retained. |
 | `skipped` | The camera or RAW layout did not meet the safety boundary, or the configuration was invalid. |
@@ -88,8 +94,11 @@ and filenames do not decide inferred populations.
 Threshold discovery is a preliminary outcome, not calibration. It derives no
 repair constants and changes no settings during analysis. The operator must
 confirm that the higher-ratio population represents the expected purple-frame
-failure. An administrator can then use **Apply thresholds and reload**, or
-enter only the recommended thresholds in Image Settings, and rerun calibration.
+failure. A user who can save the standard Config can then use **Apply
+thresholds and reload**, or enter only the recommended thresholds in Image
+Settings, and rerun calibration. Saving is blocked until the user confirms,
+after reviewing listed filenames and capture times, that the higher-ratio
+population is the actual failure rather than an ordinary scene regime.
 A configured threshold already inside an observed safe gap is retained rather
 than replaced by a cosmetically different midpoint. Overlapping or
 inconsistently ordered populations produce an explanation instead of an unsafe
@@ -207,10 +216,13 @@ availability.
 
 ## Calibration tool
 
-The authenticated tool appears in the Tools menu only while purple-frame
-handling is enabled. A real signed-in session is required even on installations
-where the general login requirement is relaxed. Applying values additionally
-requires an administrator account.
+The tool appears in the Tools menu only when the ASI676MC master switch is
+enabled, a visible local camera is positively identified as an ASI676MC, and
+the current user can save the standard Config. Direct calibration URLs enforce
+the same three conditions. With normal authentication that means an
+administrator. With `LOGIN_DISABLED`, the same anonymous browser access
+allowed by Config is used; private calibration ownership is still separated
+by a browser-specific token.
 
 The page supports two input paths.
 
@@ -236,9 +248,9 @@ streamed requests, cancellation, progress, polling, and result restoration. It
 checks these capabilities on load and displays a blocking explanation if the
 browser cannot provide them.
 
-The **Cancel upload** action aborts the current request and asks the server to
-discard the session. A server-side marker also prevents a late request from
-reviving a cancelled session.
+The cancel action aborts an active upload, cancels a queued job, or asks a
+running worker to stop at its next safe checkpoint. A server-side marker also
+prevents a late request from reviving a cancelled session.
 
 ### Discover saved FITS
 
@@ -252,7 +264,7 @@ retention period:
 - with zero to six usable marked groups, three FITS per requested group form
   the initial search target. The worker checks for an actionable result as it
   progresses, so it may stop earlier; otherwise it continues newest-first
-  through all eligible retained FITS to the retention boundary.
+  through the bounded newest retained evidence set.
 
 The second path intentionally ignores the target as a stopping limit. That is
 necessary when the current detector missed every purple frame and their random
@@ -272,22 +284,28 @@ eligible. Pairs and triplets can be mixed in one run.
 Newly saved FITS database rows retain the three measured detector ratios as
 small, threshold-independent metadata. A progressive search can reclassify
 those captures against current settings without decoding every full image.
-Older FITS without the metadata remain compatible and are opened normally.
-Only the purple and adjacent normal FITS selected for numerical fitting are
-necessarily decoded after discovery.
+Older FITS without those stored ratios remain eligible for direct inspection;
+as with uploads, a file is rejected if its own headers lack the required
+camera identity or RAW layout metadata. Only the purple and adjacent normal
+FITS selected for numerical fitting are necessarily decoded after discovery.
 
-Database files are staged with filesystem links where possible. This consumes
-no second copy of the FITS data. A hard link keeps the selected content stable
-if regular expiry reaches the original database row while calibration is
-running; a symbolic link is the cross-filesystem fallback. Removing a staging
-link never removes the database FITS it points to.
+Database discovery queries at most 600 newest candidate rows, then bounds
+grouping and staging to 200 FITS and 2 GiB. This prevents a large retained
+archive with no bad frames, or only bad frames, from creating unbounded or
+quadratic work. A hard link keeps the selected content stable without a second
+copy. If hard links are unavailable, the tool makes a private copy; it never
+uses a symbolic-link fallback whose target could change after selection.
 
 ## Evidence validation and fitting
 
 Before fitting, the engine opens FITS through the Astropy support already used
-by indi-allsky and rejects unreadable, non-RAW16, non-RGGB, odd-sized, or
-clearly different-camera input. It classifies every usable frame with the
-same signature implementation used by live processing.
+by indi-allsky. Primary and image-extension headers are merged. It requires an
+explicit ASI676MC identity, `BAYERPAT=RGGB`, RAW16 even dimensions, 1x1
+binning, zero Bayer offsets, and finite positive exposure plus finite
+non-negative gain. Repaired FITS marked `ASI676FX` and conflicting camera
+identities are rejected. Decoded image size is bounded independently of the
+compressed upload size. Every usable frame is classified with the same
+signature implementation used by live processing.
 
 A successful calibration requires:
 
@@ -296,8 +314,11 @@ A successful calibration requires:
 - at least one normal reference for every used purple frame;
 - at least two exposure levels;
 - clean separation between normal and purple signature ranges;
-- sufficient unsaturated samples for each Bayer parity; and
-- sufficient clipped-highlight evidence to fit both blend boundaries.
+- sufficient unsaturated samples for each Bayer parity;
+- sufficient clipped-highlight evidence to fit both blend boundaries;
+- plausible gains with low between-pair median absolute deviation; and
+- a repair materially closer to adjacent normal evidence than both the
+  original and the best gain-only, no-row-shift counterfactual.
 
 Normal references that change too much across a two-sided triplet are rejected
 at the affected sample locations. This prevents moving cloud, aircraft, or
@@ -330,8 +351,10 @@ A successful results page shows:
 A preliminary threshold result instead shows current and suggested detection
 values, each observed safe interval, population and adjacency evidence, and a
 prominent instruction to review and rerun. The repair-value table is hidden.
-For an administrator, **Apply thresholds and reload** saves only fields marked
-Change recommended; it never saves repair constants from a preliminary result.
+For a user who can save Config, **Apply thresholds and reload** saves only
+fields marked Change recommended; it never saves repair constants from a
+preliminary result. The result lists population filenames, capture times, and
+ratios, and requires explicit higher-population confirmation.
 
 A normal calibration whose detector margin is narrow remains successful. Its
 status area and a dedicated table identify the affected threshold, current
@@ -343,20 +366,22 @@ records the evidence source, quality assessment, values, comparison with the
 configuration at the start of calibration, warnings, cleanup outcome, and
 recommended next actions. It never exposes private staging paths.
 
-An administrator can select **Apply values and reload**. The server writes only
-the seven derived keys, using the same configuration-save mechanism as the
-settings page, then queues an application reload. It refuses the update if the
-configuration changed after calibration began; this prevents an older result
-from overwriting a newer settings edit. Operational switches such as Enable and
-Exclude Only are never changed by calibration. The preliminary apply action
-uses the same version check but permits only the three detection-threshold keys
-that the result explicitly marked for change.
+A user who can save the standard Config can select **Apply values and reload**.
+The server writes only the seven derived keys, using the same configuration-save
+mechanism as the settings page, then queues an application reload. It refuses
+the update if the configuration or bound ASI676MC identity changed after the
+run began. Operational switches such as Enable and Exclude Only are never
+changed. Detection thresholds also remain unchanged after a successful
+seven-value calibration; a narrow-margin notice directs the user to change
+them manually if later evidence supports that choice. The preliminary apply
+action permits only threshold keys explicitly marked for change.
 
-Results are retained in the browser by an unguessable session ID so a user can
-visit another page and return. The browser stores no FITS data or calibration
-values. Every result, report, discard, and apply request rechecks session
-ownership. **Reset / recalibrate** discards the retained result and returns the
-page to the input view.
+Results are retained in the browser by unguessable session IDs so a user can
+visit another page and return. Per-tab state plus a shared list prevents tabs
+from overwriting each other's run. Transient polling failures retry without
+discarding the handle. The browser stores no FITS data or calibration values.
+Every result, report, discard, and apply request rechecks ownership and camera
+binding. **Reset / recalibrate** discards the retained result.
 
 ## Session storage and cleanup
 
@@ -366,15 +391,18 @@ result files are written atomically because web workers and the video worker
 may read them concurrently.
 
 The CPU-heavy fit and full-resolution validation run as a low-priority video
-queue task rather than inside a web request. This avoids request timeouts and
-keeps capture and web workers responsive.
+queue task rather than inside a web request. Session changes are protected by
+cross-process locks, and a queued job can be claimed only once. Each owner may
+have two active sessions and the installation may have four. Queued/running
+jobs can be cancelled cooperatively; stale queued jobs and workers with an old
+heartbeat are failed or cancelled so the browser cannot poll forever.
 
 Input cleanup is source-aware:
 
 - browser-uploaded FITS are deleted immediately after the run succeeds or
   fails;
-- database staging links are deleted immediately, while their database source
-  FITS remain untouched; and
+- private hard links or copies staged from the database are deleted
+  immediately, while their database source FITS remain untouched; and
 - cancellation and reset remove the session directly.
 
 If immediate cleanup is interrupted by a crash, power loss, or unavailable
@@ -391,14 +419,14 @@ indi-allsky FITS expiration behavior.
    every image. Enable preceding-frame caching only when the additional memory
    and disk use are acceptable.
 4. Collect several purple events across at least two exposure levels.
-5. Open **Tools -> ASI676MC Calibration** while signed in.
+5. Open **Tools > ASI676MC Calibration** as a user who can save Config.
 6. Discover saved FITS or select a multi-file upload.
 7. If preliminary threshold suggestions appear, verify the populations, apply
    or manually edit only the recommended detection fields, reset the tool, and
    rerun.
 8. Review the evidence summary, warnings, derived values, and current values.
 9. Download the report if an audit copy is useful.
-10. As an administrator, apply the result only after it looks credible.
+10. Apply the result only after it looks credible.
 11. Disable Exclude Only to activate repair, then monitor gallery status and
     logs for validation failures.
 12. Return FITS-saving options to the desired long-term disk-use policy.
@@ -407,7 +435,9 @@ indi-allsky FITS expiration behavior.
 
 **The tool is absent from the menu**
 
-Enable ASI676MC purple-frame handling in Image settings and sign in.
+Connect a visible local ASI676MC, enable the ASI676MC master switch in Config,
+and use an account that can save Config. When login is disabled, the tool
+follows the same open access policy as Config.
 
 **Fewer than 14 eligible saved FITS are found**
 
@@ -426,8 +456,8 @@ reported likely-normal and likely-purple populations. When all three ratios
 have strong gaps, the tool may show preliminary threshold suggestions instead
 of failing. Change a recommended threshold only after confirming that the
 higher-ratio files are the expected camera failure, then rerun calibration;
-the tool never changes detection thresholds during analysis. An administrator
-may save the recommended subset from the preliminary result after reviewing it.
+the tool never changes detection thresholds during analysis. A user who can
+save Config may save the recommended subset after reviewing it.
 
 **The report time differs from UTC**
 
@@ -438,9 +468,9 @@ between the web and background workers remain unambiguous.
 
 **Calibration succeeds but applying values is refused**
 
-The indi-allsky configuration changed after the run began, or the signed-in
-account is not an administrator. Start a new calibration against the current
-configuration.
+The indi-allsky configuration changed after the run began, the bound camera is
+no longer the same local ASI676MC, or the user cannot save Config. Start a new
+calibration against the current configuration and camera.
 
 **Repair validation fails during capture**
 

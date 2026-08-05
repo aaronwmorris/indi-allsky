@@ -304,6 +304,7 @@ class ImageWorker(Process):
         exp_date = datetime.fromtimestamp(i_dict['exp_time'])
         exp_elapsed = i_dict['exp_elapsed']
         camera_id = i_dict['camera_id']
+        detected_camera_name = i_dict.get('camera_name')
         filename_t = i_dict.get('filename_t')
         sqm_exposure = i_dict.get('sqm_exposure')
 
@@ -349,7 +350,17 @@ class ImageWorker(Process):
 
         ### Special function: image is for SQM calculations only
         if sqm_exposure:
-            self.process_sqm_exposure(filename_p, exposure, gain, binning, exp_date, exp_elapsed, camera, libcamera_black_level)
+            self.process_sqm_exposure(
+                filename_p,
+                exposure,
+                gain,
+                binning,
+                exp_date,
+                exp_elapsed,
+                camera,
+                libcamera_black_level,
+                detected_camera_name=detected_camera_name,
+            )
             return
 
 
@@ -386,6 +397,7 @@ class ImageWorker(Process):
                 exp_date,
                 exp_elapsed,
                 camera,
+                detected_camera_name=detected_camera_name,
             )
         except BadImage as e:
             logger.error('Bad Image: %s', str(e))
@@ -817,7 +829,10 @@ class ImageWorker(Process):
             asi676mc_repair_result = i_ref.asi676mc_repair_result
             if (
                 asi676mc_repair_result
-                and asi676mc_repair_result['status'] == 'excluded'
+                and asi676mc_repair_result['status'] in (
+                    'excluded',
+                    'validation_failed',
+                )
             ):
                 # The processed JPEG has already been written.  Mark its new
                 # database row so existing timelapse queries skip it.
@@ -1312,6 +1327,9 @@ class ImageWorker(Process):
         if (
             not repair_config.get('ENABLE', False)
             or not repair_config.get('SAVE_DIAGNOSTIC_FITS', False)
+            or not asi676mc.camera_name_matches(
+                i_ref.detected_camera_name
+            )
         ):
             self.asi676mc_diagnostic_pending.pop(camera_id, None)
             self.asi676mc_diagnostic_previous.pop(camera_id, None)
@@ -2986,7 +3004,19 @@ class ImageWorker(Process):
         return False
 
 
-    def process_sqm_exposure(self, filename_p, exposure, gain, binning, exp_date, exp_elapsed, camera, libcamera_black_level):
+    def process_sqm_exposure(
+        self,
+        filename_p,
+        exposure,
+        gain,
+        binning,
+        exp_date,
+        exp_elapsed,
+        camera,
+        libcamera_black_level,
+        detected_camera_name=None,
+    ):
+        """Process an SQM-only capture through the same camera safety gate."""
         logger.warning('Processing SQM exposure')
 
         try:
@@ -2998,6 +3028,7 @@ class ImageWorker(Process):
                 exp_date,
                 exp_elapsed,
                 camera,
+                detected_camera_name=detected_camera_name,
             )
         except BadImage as e:
             logger.error('Bad Image: %s', str(e))

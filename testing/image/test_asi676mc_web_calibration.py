@@ -6,6 +6,7 @@ from itertools import product
 import os
 from pathlib import Path
 import tempfile
+import threading
 import unittest
 from unittest import mock
 
@@ -261,12 +262,14 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         return {
             'id': record_id,
             'path': Path('unused_{0}.fit'.format(record_id)),
+            'size': 1024,
             'timestamp': float(timestamp),
             'exposure': 0.001,
             'gain': 100.0,
             'binmode': 1,
             'width': 3552,
             'height': 3552,
+            'camera_name': 'ZWO CCD ASI676MC',
             'roles': list(roles),
         }
 
@@ -299,6 +302,67 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertEqual(summary['requested_group_count'], 10)
         self.assertEqual(summary['selected_file_count'], 20)
         self.assertEqual(len(selected), 20)
+
+    def test_database_search_is_bounded_before_population_grouping(self):
+        records = [
+            self._database_record(index, 1000 + index)
+            for index in range(1, 251)
+        ]
+        selected, summary = asi676mc_calibration.select_database_evidence(
+            records,
+            bad_frames=[],
+            target_groups=100,
+            max_pair_seconds=90.0,
+        )
+
+        self.assertEqual(len(selected), asi676mc_calibration.DATABASE_MAX_FILES)
+        self.assertTrue(summary['selection_limit_reached'])
+        self.assertEqual(summary['retained_candidate_count'], 250)
+        self.assertEqual(selected[0]['id'], 250)
+
+    def test_database_search_rejects_non_asi676mc_records(self):
+        records = [self._database_record(index, 1000 + index) for index in range(20)]
+        for record in records:
+            record['camera_name'] = 'ZWO CCD ASI678MC'
+
+        selected, summary = asi676mc_calibration.select_database_evidence(
+            records,
+            bad_frames=[],
+            target_groups=7,
+            max_pair_seconds=90.0,
+        )
+        self.assertFalse(selected)
+        self.assertEqual(summary['retained_candidate_count'], 0)
+
+    def test_database_search_ignores_malformed_capture_metadata(self):
+        records = [
+            self._database_record(index, 1000 + index)
+            for index in range(1, 15)
+        ]
+        invalid_timestamp = self._database_record(101, 2001)
+        invalid_timestamp['timestamp'] = float('nan')
+        invalid_exposure = self._database_record(102, 2002)
+        invalid_exposure['exposure'] = float('inf')
+        invalid_binning = self._database_record(103, 2003)
+        invalid_binning['binmode'] = 2
+        invalid_shape = self._database_record(104, 2004)
+        invalid_shape['width'] = 3551
+        records.extend([
+            invalid_timestamp,
+            invalid_exposure,
+            invalid_binning,
+            invalid_shape,
+        ])
+
+        selected, summary = asi676mc_calibration.select_database_evidence(
+            records,
+            bad_frames=[{'timestamp': float('nan')}],
+            target_groups=7,
+            max_pair_seconds=90.0,
+        )
+
+        self.assertEqual(len(selected), 14)
+        self.assertEqual(summary['retained_candidate_count'], 14)
 
     def test_database_selection_uses_saved_preceding_and_following_triplet(self):
         records = [
@@ -434,6 +498,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 records.append({
                     'id': index + 1,
                     'path': source,
+                    'camera_name': 'ZWO CCD ASI676MC',
                 })
 
             session_id = asi676mc_calibration.create_session(
@@ -455,6 +520,251 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 session_root,
             )
             self.assertTrue(all(record['path'].is_file() for record in records))
+
+    def test_database_staging_copies_when_hardlinks_are_unavailable(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            source = root.joinpath('source.fit')
+            source.write_bytes(b'database fits placeholder')
+            session_root = root.joinpath('sessions')
+            session_id = asi676mc_calibration.create_session(
+                'alice', session_root
+            )['session_id']
+            records = [{
+                'id': 1,
+                'path': source,
+                'camera_name': 'ZWO CCD ASI676MC',
+            }]
+            with mock.patch.object(os, 'link', side_effect=OSError('cross-device')):
+                manifest = asi676mc_calibration.stage_database_files(
+                    session_id,
+                    'alice',
+                    records,
+                    session_root,
+                )
+
+            staged = session_root.joinpath(
+                session_id,
+                'uploads',
+                manifest['files'][0]['name'],
+            )
+            self.assertEqual(manifest['files'][0]['link_type'], 'copy')
+            self.assertTrue(staged.is_file())
+            self.assertFalse(staged.is_symlink())
+
+    def test_database_staging_rejects_a_mixed_upload_session(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            session_root = root.joinpath('sessions')
+            session_id = asi676mc_calibration.create_session(
+                'alice', session_root
+            )['session_id']
+            asi676mc_calibration.store_upload(
+                session_id,
+                'alice',
+                self._fits_upload('browser.fit'),
+                session_root,
+            )
+            source = root.joinpath('database.fit')
+            source.write_bytes(b'database fits placeholder')
+            with self.assertRaisesRegex(
+                asi676mc_calibration.CalibrationSessionError,
+                'new empty',
+            ):
+                asi676mc_calibration.stage_database_files(
+                    session_id,
+                    'alice',
+                    [{
+                        'id': 1,
+                        'path': source,
+                        'camera_name': 'ZWO CCD ASI676MC',
+                    }],
+                    session_root,
+                )
+            self.assertTrue(
+                session_root.joinpath(
+                    session_id,
+                    'uploads',
+                    'browser.fit',
+                ).is_file()
+            )
+
+    def test_active_session_quota_is_per_owner_and_recoverable(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            sessions = [
+                asi676mc_calibration.create_session('alice', root)
+                for _index in range(
+                    asi676mc_calibration.MAX_ACTIVE_SESSIONS_PER_OWNER
+                )
+            ]
+            with self.assertRaisesRegex(
+                asi676mc_calibration.CalibrationSessionError,
+                'finish or cancel',
+            ):
+                asi676mc_calibration.create_session('alice', root)
+
+            asi676mc_calibration.cancel_upload_session(
+                sessions[0]['session_id'],
+                'alice',
+                root,
+            )
+            replacement = asi676mc_calibration.create_session('alice', root)
+            self.assertEqual(replacement['status'], 'uploading')
+
+    def test_parallel_uploads_serialize_manifest_updates(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            session_id = asi676mc_calibration.create_session(
+                'alice', root
+            )['session_id']
+            errors = []
+
+            def upload(index):
+                try:
+                    asi676mc_calibration.store_upload(
+                        session_id,
+                        'alice',
+                        self._fits_upload(
+                            'parallel_{0}.fit'.format(index)
+                        ),
+                        root,
+                    )
+                except Exception as error:  # pragma: no cover - assertion aid
+                    errors.append(error)
+
+            threads = [
+                threading.Thread(target=upload, args=(index,))
+                for index in range(12)
+            ]
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join(5)
+
+            self.assertFalse(any(thread.is_alive() for thread in threads))
+            self.assertFalse(errors)
+            manifest = asi676mc_calibration._read_manifest(
+                root.joinpath(session_id)
+            )
+            self.assertEqual(len(manifest['files']), 12)
+            self.assertEqual(manifest['total_bytes'], 12 * 2880)
+            self.assertFalse(list(
+                root.joinpath(session_id, 'uploads').glob('*.part')
+            ))
+
+    def test_parallel_session_creation_enforces_global_quota(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            created = []
+            rejected = []
+
+            def create(index):
+                try:
+                    created.append(asi676mc_calibration.create_session(
+                        'owner-{0}'.format(index),
+                        root,
+                    ))
+                except asi676mc_calibration.CalibrationSessionError as error:
+                    rejected.append(str(error))
+
+            threads = [
+                threading.Thread(target=create, args=(index,))
+                for index in range(10)
+            ]
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join(5)
+
+            self.assertFalse(any(thread.is_alive() for thread in threads))
+            self.assertEqual(
+                len(created),
+                asi676mc_calibration.MAX_ACTIVE_SESSIONS_GLOBAL,
+            )
+            self.assertEqual(
+                len(rejected),
+                10 - asi676mc_calibration.MAX_ACTIVE_SESSIONS_GLOBAL,
+            )
+            self.assertTrue(all(
+                'active-session limit' in message
+                for message in rejected
+            ))
+
+    def test_stale_session_is_recovered_before_enforcing_quota(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            sessions = [
+                asi676mc_calibration.create_session('alice', root)
+                for _index in range(
+                    asi676mc_calibration.MAX_ACTIVE_SESSIONS_PER_OWNER
+                )
+            ]
+            stale_dir = root.joinpath(sessions[0]['session_id'])
+            stale_manifest = asi676mc_calibration._read_manifest(stale_dir)
+            stale_manifest['status'] = 'queued'
+            stale_manifest['updated_utc'] = '2000-01-01T00:00:00+00:00'
+            asi676mc_calibration._atomic_write_json(
+                stale_dir.joinpath('manifest.json'),
+                stale_manifest,
+            )
+
+            replacement = asi676mc_calibration.create_session('alice', root)
+
+            self.assertEqual(replacement['status'], 'uploading')
+            recovered = asi676mc_calibration._read_manifest(stale_dir)
+            self.assertEqual(recovered['status'], 'failed')
+            self.assertIn('stopped responding', recovered['error'])
+            self.assertFalse(stale_dir.joinpath('uploads').exists())
+
+    def test_manifest_json_never_serializes_nan_or_infinity(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir).joinpath('strict.json')
+            with self.assertRaises(ValueError):
+                asi676mc_calibration._atomic_write_json(
+                    path,
+                    {'unsafe': float('nan')},
+                )
+            self.assertFalse(path.exists())
+            self.assertFalse(list(path.parent.glob('.manifest-*.tmp')))
+
+    def test_worker_claim_is_single_use(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            manifest = asi676mc_calibration.create_session('alice', root)
+            session_id = manifest['session_id']
+            for index in range(14):
+                asi676mc_calibration.store_upload(
+                    session_id,
+                    'alice',
+                    self._fits_upload('evidence_{0}.fit'.format(index)),
+                    root,
+                )
+            asi676mc_calibration.mark_queued(
+                session_id,
+                'alice',
+                task_id=1,
+                max_pair_seconds=90.0,
+                settings=calibration_engine.DEFAULT_SETTINGS,
+                storage_root=root,
+            )
+            with mock.patch.object(
+                calibration_engine,
+                'calibrate_folder',
+                return_value=self._successful_payload(),
+            ):
+                asi676mc_calibration.run_calibration_session(
+                    session_id,
+                    storage_root=root,
+                )
+                with self.assertRaisesRegex(
+                    asi676mc_calibration.CalibrationSessionError,
+                    'not queued',
+                ):
+                    asi676mc_calibration.run_calibration_session(
+                        session_id,
+                        storage_root=root,
+                    )
 
     def test_integrated_database_report_is_actionable_and_auditable(self):
         payload = self._successful_payload()
@@ -996,7 +1306,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             }
             self.assertEqual(
                 decorator_names,
-                {'strict_login_required', 'login_required'},
+                {'asi676mc_calibration_required', 'login_required'},
             )
         self.assertEqual(found, protected_classes)
 
@@ -1071,13 +1381,25 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn("result.outcome === 'threshold_suggestion'", template)
         self.assertIn('id="calibration-threshold-values"', template)
         self.assertIn('Apply thresholds and reload', template)
+        self.assertIn('id="confirm-higher-population"', template)
+        self.assertIn('id="calibration-population-evidence"', template)
+        self.assertIn('confirm_higher_population', template)
         self.assertIn('id="calibration-threshold-advisory"', template)
+        self.assertIn(
+            'any threshold change must be made manually in Image Settings',
+            template,
+        )
         self.assertIn('No repair values', template)
         self.assertIn('calibrationDatabaseUrl', template)
         self.assertIn(
             '#calibration-setup-panel, #calibration-progress-panel',
             template,
         )
+        self.assertIn('rememberCalibrationSession', template)
+        self.assertIn('sessionStorage', template)
+        self.assertIn('Reconnecting', template)
+        self.assertIn("camera_id: $('#CAMERA_ID').val()", template)
+        self.assertIn('Cancel calibration', template)
 
         video_source = project_root.joinpath(
             'indi_allsky', 'video.py'
@@ -1096,11 +1418,15 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         views_source = project_root.joinpath(
             'indi_allsky', 'flask', 'views.py'
         ).read_text(encoding='utf-8')
-        self.assertIn("context['asi676mc_repair_enabled']", base_view_source)
         self.assertIn(
-            'current_user.is_authenticated and asi676mc_repair_enabled',
-            base_template,
+            "context['asi676mc_calibration_available']",
+            base_view_source,
         )
+        self.assertIn(
+            'and asi676mc.feature_enabled(self.indi_allsky_config)',
+            base_view_source,
+        )
+        self.assertIn('asi676mc_calibration_available', base_template)
         self.assertIn(
             'class AjaxAsi676mcCalibrationDatabaseView',
             views_source,
@@ -1111,6 +1437,12 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         )
         self.assertIn("context['calibration_upload_limits']", views_source)
         self.assertIn("context['calibration_database_limits']", views_source)
+        self.assertIn('def _can_save_standard_configuration()', views_source)
+        self.assertIn('def _asi676mc_feature_enabled()', views_source)
+        self.assertIn('if not _asi676mc_feature_enabled():', views_source)
+        self.assertIn("app.config.get('LOGIN_DISABLED', False)", views_source)
+        self.assertIn("'error_code': 'camera_changed'", views_source)
+        self.assertIn('IndiAllSkyDbCameraTable.local == sa_true()', views_source)
         self.assertIn("'error_code': 'configuration_changed'", views_source)
         self.assertIn("'error_code': 'result_unavailable'", views_source)
         self.assertIn('Reload on Save', views_source)
@@ -1160,7 +1492,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         facts = {item['label']: item['value'] for item in guidance['facts']}
         self.assertTrue(guidance['preceding_fits'])
         self.assertEqual(
-            facts['Preceding RAW FITS'],
+            facts['Also Save Preceding RAW FITS'],
             'On (one-frame memory cache)',
         )
         message = guidance['guidance']['text']
@@ -1191,7 +1523,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'No untouched purple-frame FITS will be saved',
         )
         self.assertIn('periodic standard FITS is written after repair', message)
-        self.assertIn('turn on Bad + following RAW FITS', message)
+        self.assertIn('enable Save Bad and Following RAW FITS', message)
         self.assertIn('switch to Exclude Only', message)
 
     def test_capture_guidance_consolidates_every_switch_combination(self):
@@ -1317,7 +1649,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                             if preceding_fits and repair_enabled and diagnostic_fits:
                                 self.assertTrue(result['preceding_fits'])
                                 self.assertEqual(
-                                    facts['Preceding RAW FITS'],
+                                    facts['Also Save Preceding RAW FITS'],
                                     'On (one-frame memory cache)',
                                 )
                                 self.assertIn(
@@ -1327,19 +1659,19 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                             elif preceding_fits and not repair_enabled:
                                 self.assertFalse(result['preceding_fits'])
                                 self.assertEqual(
-                                    facts['Preceding RAW FITS'],
+                                    facts['Also Save Preceding RAW FITS'],
                                     'Inactive (handling off)',
                                 )
                             elif preceding_fits:
                                 self.assertFalse(result['preceding_fits'])
                                 self.assertEqual(
-                                    facts['Preceding RAW FITS'],
-                                    'Inactive (Bad + following off)',
+                                    facts['Also Save Preceding RAW FITS'],
+                                    'Inactive (Save Bad and Following RAW FITS off)',
                                 )
                             else:
                                 self.assertFalse(result['preceding_fits'])
                                 self.assertEqual(
-                                    facts['Preceding RAW FITS'],
+                                    facts['Also Save Preceding RAW FITS'],
                                     'Off',
                                 )
 
@@ -1440,7 +1772,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         )
         message = result['guidance']['text']
         self.assertIn('Repair is active, but no FITS saving is enabled', message)
-        self.assertIn('turn on Bad + following RAW FITS', message)
+        self.assertIn('enable Save Bad and Following RAW FITS', message)
         self.assertIn(
             'switch to Exclude Only and set standard FITS to Every Image',
             message,
@@ -1457,7 +1789,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         })
         facts = {item['label']: item['value'] for item in handling_off['facts']}
         self.assertEqual(
-            facts['Bad + following RAW FITS'],
+            facts['Save Bad and Following RAW FITS'],
             'Inactive (handling off)',
         )
         self.assertIn(
@@ -1476,8 +1808,8 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         })
         facts = {item['label']: item['value'] for item in parent_off['facts']}
         self.assertEqual(
-            facts['Preceding RAW FITS'],
-            'Inactive (Bad + following off)',
+            facts['Also Save Preceding RAW FITS'],
+            'Inactive (Save Bad and Following RAW FITS off)',
         )
 
         standard_off = asi676mc_calibration.capture_configuration_guidance({

@@ -8,8 +8,8 @@ This module owns the web-specific concerns around that engine:
 * private, per-user staging sessions;
 * conservative file-count and storage limits;
 * atomic manifest/result files shared by gunicorn and the video worker;
-* deletion of uploaded FITS or database staging links as soon as a job finishes;
-* a compact result shape suitable for polling from the browser.
+* deletion of uploaded FITS or private database staging files when a job ends;
+* a compact result shape suitable for polling from the browser; and
 * a web-native text report that never exposes private staging paths.
 
 Session data lives below Flask's non-public instance directory by default.
@@ -18,6 +18,7 @@ therefore cannot reliably read files uploaded into the web process's ``/tmp``.
 Deployments may override the location with ``ASI676MC_CALIBRATION_FOLDER``.
 """
 
+from contextlib import contextmanager
 from contextlib import redirect_stdout
 from datetime import datetime
 from datetime import timezone
@@ -30,6 +31,7 @@ import re
 import shutil
 import tempfile
 import textwrap
+import threading
 import time
 import unicodedata
 import uuid
@@ -44,11 +46,32 @@ FITS_SUFFIXES = ('.fit', '.fits', '.fts')
 MAX_FILE_COUNT = 200
 MAX_FILE_BYTES = 256 * 1024 * 1024
 MAX_SESSION_BYTES = 2 * 1024 * 1024 * 1024
+MAX_ACTIVE_SESSIONS_PER_OWNER = 2
+MAX_ACTIVE_SESSIONS_GLOBAL = 4
 SESSION_RETENTION_SECONDS = 7 * 24 * 60 * 60
+QUEUED_STALE_SECONDS = 30 * 60
+RUNNING_STALE_SECONDS = 2 * 60 * 60
 DATABASE_GROUP_MIN = 7
 DATABASE_GROUP_MAX = 100
 DATABASE_INITIAL_FILES_PER_GROUP = 3
 DATABASE_CAPTURE_TIME_TOLERANCE = 1.0
+DATABASE_MAX_FILES = MAX_FILE_COUNT
+DATABASE_MAX_BYTES = MAX_SESSION_BYTES
+DATABASE_QUERY_MAX_FILES = DATABASE_MAX_FILES * 3
+ACTIVE_SESSION_STATUSES = (
+    'uploading',
+    'queued',
+    'running',
+    'cancel_requested',
+)
+
+# POSIX/Windows advisory locks coordinate different processes, but Windows may
+# report EDEADLK when two threads in one gunicorn process lock the same byte.
+# Serialize those threads first. The reference count lets completed session
+# paths leave this registry without splitting existing waiters across two
+# different process-local locks.
+_PROCESS_FILE_LOCKS = {}
+_PROCESS_FILE_LOCKS_GUARD = threading.Lock()
 
 # Comparison tolerances are deliberately much smaller than the calibration
 # engine's useful fitting resolution.  They are only used to tell an operator
@@ -182,7 +205,7 @@ def capture_configuration_guidance(config):
     elif preceding_fits_configured and not repair_enabled:
         preceding_text = 'Inactive (handling off)'
     elif preceding_fits_configured and not diagnostic_fits:
-        preceding_text = 'Inactive (Bad + following off)'
+        preceding_text = 'Inactive (Save Bad and Following RAW FITS off)'
     else:
         preceding_text = 'Off'
     if compressed_fits and standard_fits:
@@ -194,11 +217,11 @@ def capture_configuration_guidance(config):
     facts = [
         {'label': 'Repair mode', 'value': mode_text},
         {
-            'label': 'Bad + following RAW FITS',
+            'label': 'Save Bad and Following RAW FITS',
             'value': diagnostic_text,
         },
         {
-            'label': 'Preceding RAW FITS',
+            'label': 'Also Save Preceding RAW FITS',
             'value': preceding_text,
         },
         {'label': 'Standard FITS', 'value': standard_fits_text},
@@ -228,7 +251,7 @@ def capture_configuration_guidance(config):
         if diagnostic_fits:
             guidance_sentences.append(
                 'New purple frames will not be marked for automatic saved FITS '
-                'search. The configured Bad + following RAW FITS option is '
+                'search. The configured Save Bad and Following RAW FITS option is '
                 'inactive until purple-frame handling is enabled.'
             )
         else:
@@ -261,13 +284,13 @@ def capture_configuration_guidance(config):
                 guidance_sentences.append(
                     'The standard FITS interval is invalid. Correct or disable '
                     'it, then enable purple-frame handling in Exclude Only mode; '
-                    'the configured Bad + following RAW FITS option will begin '
+                    'the configured Save Bad and Following RAW FITS option will begin '
                     'low-disk collection.'
                 )
             else:
                 guidance_sentences.append(
                     'The standard FITS interval is invalid. Enable purple-frame '
-                    'handling in Exclude Only mode, then turn on Bad + following '
+                    'handling in Exclude Only mode, then enable Save Bad and Following '
                     'RAW FITS for low disk use or set standard FITS to Every '
                     'Image for complete sequences.'
                 )
@@ -276,29 +299,29 @@ def capture_configuration_guidance(config):
                 guidance_sentences.append(
                     'Periodic standard FITS may miss a randomly occurring purple '
                     'frame. Enable purple-frame handling in Exclude Only mode; '
-                    'the configured Bad + following RAW FITS option will then '
+                    'the configured Save Bad and Following RAW FITS option will then '
                     'provide the more reliable low-disk source.'
                 )
             else:
                 guidance_sentences.append(
                     'Periodic standard FITS may miss a randomly occurring purple '
                     'frame. Enable purple-frame handling in Exclude Only mode, '
-                    'then turn on Bad + following RAW FITS for low disk use or '
+                    'then enable Save Bad and Following RAW FITS for low disk use or '
                     'set standard FITS to Every Image for complete sequences.'
                 )
         else:
             if diagnostic_fits:
                 guidance_sentences.append(
                     'No FITS files are currently being saved. Enable purple-frame '
-                    'handling in Exclude Only mode; the configured Bad + '
-                    'following RAW FITS option will then begin low-disk '
+                    'handling in Exclude Only mode; the configured Save Bad and '
+                    'Following RAW FITS option will then begin low-disk '
                     'collection.'
                 )
             else:
                 guidance_sentences.append(
                     'No FITS saving is enabled. To collect calibration data, '
                     'enable purple-frame handling in Exclude Only mode, then '
-                    'turn on Bad + following RAW FITS for low disk use or set '
+                    'enable Save Bad and Following RAW FITS for low disk use or set '
                     'standard FITS to Every Image for complete sequences.'
                 )
     elif exclude_only:
@@ -307,8 +330,8 @@ def capture_configuration_guidance(config):
             if standard_fits and fits_period == 0:
                 guidance_title = 'Ready to collect complete FITS sequences'
                 guidance_sentences.append(
-                    'Exclude Only leaves purple frames unchanged. Bad + '
-                    'following RAW FITS saves each detected purple frame '
+                    'Exclude Only leaves purple frames unchanged. Save Bad and '
+                    'Following RAW FITS saves each detected purple frame '
                     'unchanged and also saves the immediately following frame. '
                     'Standard FITS saving set to Every Image can add normal '
                     'references on either side for stronger good/purple/good '
@@ -319,15 +342,15 @@ def capture_configuration_guidance(config):
                 guidance_level = 'warning'
                 guidance_title = 'Standard FITS setting needs correction'
                 guidance_sentences.append(
-                    'Exclude Only and Bad + following RAW FITS provide the '
+                    'Exclude Only and Save Bad and Following RAW FITS provide the '
                     'low-disk calibration source. The standard FITS interval '
                     'is invalid; correct it or turn standard FITS saving off.'
                 )
             elif standard_fits:
                 guidance_title = 'Ready for low-disk FITS collection'
                 guidance_sentences.append(
-                    'Exclude Only leaves purple frames unchanged, and Bad + '
-                    'following RAW FITS saves each detected purple frame '
+                    'Exclude Only leaves purple frames unchanged, and Save Bad '
+                    'and Following RAW FITS saves each detected purple frame '
                     'unchanged and also saves the immediately following frame. '
                     'The tool uses only compatible normal references. Periodic '
                     'standard FITS may add another compatible reference but is '
@@ -336,8 +359,8 @@ def capture_configuration_guidance(config):
             else:
                 guidance_title = 'Ready for low-disk FITS collection'
                 guidance_sentences.append(
-                    'Exclude Only leaves purple frames unchanged, and Bad + '
-                    'following RAW FITS saves each detected purple frame '
+                    'Exclude Only leaves purple frames unchanged, and Save Bad '
+                    'and Following RAW FITS saves each detected purple frame '
                     'unchanged and also saves the immediately following frame. '
                     'Once all evidence requirements above are met, this '
                     'provides calibration data without saving every image; '
@@ -356,23 +379,23 @@ def capture_configuration_guidance(config):
             guidance_title = 'No reliable calibration FITS will be saved'
             guidance_sentences.append(
                 'Exclude Only marks purple frames without changing them, but '
-                'the standard FITS interval is invalid. Turn on Bad + following '
-                'RAW FITS for low disk use, or correct the interval and choose '
+                'the standard FITS interval is invalid. Enable Save Bad and '
+                'Following RAW FITS for low disk use, or correct the interval and choose '
                 'Every Image for complete sequences.'
             )
         elif standard_fits:
             guidance_title = 'Periodic FITS saving may miss purple frames'
             guidance_sentences.append(
                 'Exclude Only marks purple frames without changing them, but a '
-                'periodic interval may not save a FITS at the right time. Turn '
-                'on Bad + following RAW FITS for low disk use, or set standard '
+                'periodic interval may not save a FITS at the right time. Enable '
+                'Save Bad and Following RAW FITS for low disk use, or set standard '
                 'FITS to Every Image for complete sequences.'
             )
         else:
             guidance_title = 'No calibration FITS will be saved'
             guidance_sentences.append(
                 'Exclude Only marks purple frames without changing them, but '
-                'no FITS saving is enabled. Turn on Bad + following RAW FITS '
+                'no FITS saving is enabled. Enable Save Bad and Following RAW FITS '
                 'for low disk use, or set standard FITS to Every Image for '
                 'complete sequences.'
             )
@@ -382,7 +405,7 @@ def capture_configuration_guidance(config):
             if standard_fits and fits_period == 0:
                 guidance_title = 'Ready to collect complete FITS sequences'
                 guidance_sentences.append(
-                    'Repair is active, but Bad + following RAW FITS preserves '
+                    'Repair is active, but Save Bad and Following RAW FITS preserves '
                     'the original purple frame before repair and also saves '
                     'the immediately following frame. Standard FITS saving set '
                     'to Every Image can add normal references on either side. '
@@ -393,7 +416,7 @@ def capture_configuration_guidance(config):
                 guidance_level = 'warning'
                 guidance_title = 'Standard FITS setting needs correction'
                 guidance_sentences.append(
-                    'Repair is active, and Bad + following RAW FITS provides '
+                    'Repair is active, and Save Bad and Following RAW FITS provides '
                     'the pre-repair calibration source. The standard FITS '
                     'interval is invalid; correct it or turn standard FITS '
                     'saving off.'
@@ -401,7 +424,7 @@ def capture_configuration_guidance(config):
             elif standard_fits:
                 guidance_title = 'Ready for low-disk FITS collection'
                 guidance_sentences.append(
-                    'Repair is active, but Bad + following RAW FITS preserves '
+                    'Repair is active, but Save Bad and Following RAW FITS preserves '
                     'the original purple frame before repair and also saves '
                     'the immediately following frame. The tool uses only '
                     'compatible normal references. Periodic standard FITS may '
@@ -410,7 +433,7 @@ def capture_configuration_guidance(config):
             else:
                 guidance_title = 'Ready for low-disk FITS collection'
                 guidance_sentences.append(
-                    'Repair is active, and Bad + following RAW FITS preserves '
+                    'Repair is active, and Save Bad and Following RAW FITS preserves '
                     'the original purple frame before repair and also saves '
                     'the immediately following frame. Once all evidence '
                     'requirements above are met, this provides calibration '
@@ -424,15 +447,15 @@ def capture_configuration_guidance(config):
                     'Repair is active, and standard FITS saving set to Every '
                     'Image writes files after repair, so it cannot be relied '
                     'on to preserve the original purple frame. Either turn on '
-                    'Bad + following RAW FITS, or switch to Exclude Only and '
+                    'Save Bad and Following RAW FITS, or switch to Exclude Only and '
                     'keep standard FITS set to Every Image to collect '
                     'calibration data.'
                 )
             elif standard_fits and not fits_period_valid:
                 guidance_sentences.append(
-                    'Repair is active, Bad + following RAW FITS is off, and the '
-                    'standard FITS interval is invalid. Either turn on Bad + '
-                    'following RAW FITS, or switch to Exclude Only and set '
+                    'Repair is active, Save Bad and Following RAW FITS is off, and '
+                    'the standard FITS interval is invalid. Either turn on '
+                    'Save Bad and Following RAW FITS, or switch to Exclude Only and set '
                     'standard FITS to Every Image to collect calibration '
                     'data.'
                 )
@@ -440,21 +463,21 @@ def capture_configuration_guidance(config):
                 guidance_sentences.append(
                     'Repair is active, and periodic standard FITS is written '
                     'after repair and may also miss the relevant frames. Either '
-                    'turn on Bad + following RAW FITS, or switch to Exclude '
+                    'enable Save Bad and Following RAW FITS, or switch to Exclude '
                     'Only and set standard FITS to Every Image to collect '
                     'calibration data.'
                 )
             else:
                 guidance_sentences.append(
                     'Repair is active, but no FITS saving is enabled. Either '
-                    'turn on Bad + following RAW FITS, or switch to Exclude '
+                    'enable Save Bad and Following RAW FITS, or switch to Exclude '
                     'Only and set standard FITS to Every Image to collect '
                     'calibration data.'
                 )
 
     if preceding_fits:
         guidance_sentences.append(
-            'Preceding RAW FITS is also enabled: one untouched normal frame is '
+            'Also Save Preceding RAW FITS is enabled: one untouched normal frame is '
             'kept in memory and saved only when the next compatible frame is '
             'purple. Together with the following FITS, this can provide a '
             'good/purple/good triplet without saving every image, at the cost '
@@ -499,7 +522,12 @@ class CalibrationUploadError(CalibrationSessionError):
     """Raised when an uploaded file is unsafe or outside the accepted limits."""
 
 
+class CalibrationCancelled(CalibrationSessionError):
+    """Raised inside the worker when an owner requests cancellation."""
+
+
 def _utc_now_text():
+    """Return an unambiguous timezone-aware timestamp for session files."""
     return datetime.now(timezone.utc).isoformat()
 
 
@@ -539,29 +567,92 @@ def _session_dir(session_id, storage_root=None):
 
 
 def _manifest_path(session_dir):
+    """Return the durable state file for one private calibration session."""
     return session_dir.joinpath('manifest.json')
 
 
 def _cancel_marker_path(session_dir):
-    """Return the tombstone checked by concurrent upload requests."""
-    return session_dir.joinpath('.upload-cancelled')
+    """Return the tombstone checked by uploads and the background worker."""
+    return session_dir.joinpath('.cancel-requested')
+
+
+@contextmanager
+def _file_lock(lock_path):
+    """Hold one process-local and cross-process advisory path lock."""
+    lock_path = Path(lock_path).resolve()
+    lock_key = str(lock_path)
+    with _PROCESS_FILE_LOCKS_GUARD:
+        process_entry = _PROCESS_FILE_LOCKS.get(lock_key)
+        if process_entry is None:
+            process_entry = [threading.RLock(), 0]
+            _PROCESS_FILE_LOCKS[lock_key] = process_entry
+        process_entry[1] += 1
+    process_lock = process_entry[0]
+    process_lock.acquire()
+    try:
+        lock_path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        with lock_path.open('a+b') as lock_file:
+            lock_file.seek(0, os.SEEK_END)
+            if lock_file.tell() == 0:
+                lock_file.write(b'0')
+                lock_file.flush()
+            lock_file.seek(0)
+            if os.name == 'nt':
+                import msvcrt
+                msvcrt.locking(lock_file.fileno(), msvcrt.LK_LOCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                lock_file.seek(0)
+                if os.name == 'nt':
+                    msvcrt.locking(lock_file.fileno(), msvcrt.LK_UNLCK, 1)
+                else:
+                    fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+    finally:
+        process_lock.release()
+        with _PROCESS_FILE_LOCKS_GUARD:
+            process_entry[1] -= 1
+            if process_entry[1] == 0:
+                _PROCESS_FILE_LOCKS.pop(lock_key, None)
+
+
+def _session_lock_path(session_dir):
+    """Return the per-session mutation lock shared by web and video workers."""
+    return Path(session_dir).joinpath('.session.lock')
 
 
 def _atomic_write_json(path, data):
     """Publish JSON atomically so browser polling never sees half a file."""
     path = Path(path)
-    with tempfile.NamedTemporaryFile(
-        mode='w',
-        encoding='utf-8',
-        dir=path.parent,
-        prefix='.manifest-',
-        suffix='.tmp',
-        delete=False,
-    ) as temporary_file:
-        json.dump(data, temporary_file, indent=2, sort_keys=True)
-        temporary_name = temporary_file.name
-
-    os.replace(temporary_name, path)
+    temporary_name = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode='w',
+            encoding='utf-8',
+            dir=path.parent,
+            prefix='.manifest-',
+            suffix='.tmp',
+            delete=False,
+        ) as temporary_file:
+            temporary_name = temporary_file.name
+            json.dump(
+                data,
+                temporary_file,
+                indent=2,
+                sort_keys=True,
+                allow_nan=False,
+            )
+        os.replace(temporary_name, path)
+    except Exception:
+        if temporary_name:
+            try:
+                Path(temporary_name).unlink()
+            except FileNotFoundError:
+                pass
+        raise
     try:
         path.chmod(0o600)
     except OSError:
@@ -569,6 +660,7 @@ def _atomic_write_json(path, data):
 
 
 def _read_manifest(session_dir):
+    """Load a session manifest and translate storage damage to a safe error."""
     try:
         return json.loads(_manifest_path(session_dir).read_text(encoding='utf-8'))
     except FileNotFoundError as error:
@@ -578,12 +670,18 @@ def _read_manifest(session_dir):
 
 
 def _write_manifest(session_dir, manifest):
+    """Atomically publish session state without undoing a concurrent cancel."""
     # A cancel request may be handled by a different gunicorn worker while an
     # upload request is still unwinding.  Never let that older request publish
     # its stale ``uploading`` manifest over the cancellation result.
     if (
         _cancel_marker_path(session_dir).exists()
-        and manifest.get('status') != 'cancelled'
+        and manifest.get('status') not in (
+            'cancel_requested',
+            'cancelled',
+            'failed',
+            'success',
+        )
     ):
         raise CalibrationSessionError('this calibration upload was cancelled')
     manifest['updated_utc'] = _utc_now_text()
@@ -591,10 +689,48 @@ def _write_manifest(session_dir, manifest):
 
 
 def _remove_upload_dir(session_dir):
-    """Remove private uploads or database links, retaining small results."""
+    """Remove private uploads or staged database files, retaining results."""
     upload_dir = session_dir.joinpath('uploads')
     if upload_dir.exists():
         shutil.rmtree(upload_dir)
+
+
+def _recover_stale_session_unlocked(session_dir, manifest):
+    """Fail or cancel an abandoned worker session while its lock is held."""
+    status = manifest.get('status')
+    if status not in ('queued', 'running', 'cancel_requested'):
+        return manifest
+
+    running = status in ('running', 'cancel_requested')
+    timestamp_key = 'heartbeat_utc' if running else 'updated_utc'
+    stale_limit = RUNNING_STALE_SECONDS if running else QUEUED_STALE_SECONDS
+    try:
+        last_update = datetime.fromisoformat(
+            str(manifest.get(timestamp_key) or '')
+        )
+        age_seconds = (
+            datetime.now(timezone.utc) - last_update
+        ).total_seconds()
+    except (TypeError, ValueError):
+        age_seconds = stale_limit + 1
+
+    if age_seconds <= stale_limit:
+        return manifest
+
+    _remove_upload_dir(session_dir)
+    manifest['status'] = (
+        'cancelled' if status == 'cancel_requested' else 'failed'
+    )
+    manifest['completed_utc'] = _utc_now_text()
+    manifest['sources_deleted_utc'] = _utc_now_text()
+    manifest['error'] = (
+        None
+        if status == 'cancel_requested'
+        else 'calibration worker stopped responding; start a new run'
+    )
+    manifest.pop('worker_token', None)
+    _write_manifest(session_dir, manifest)
+    return manifest
 
 
 def cleanup_expired_sessions(storage_root=None, now=None):
@@ -631,33 +767,68 @@ def cleanup_expired_sessions(storage_root=None, now=None):
     return removed
 
 
-def create_session(owner, storage_root=None):
-    """Create a private staging session owned by one authenticated user."""
+def create_session(owner, storage_root=None, camera_identity=None):
+    """Create a private, quota-bounded calibration staging session."""
     owner = str(owner or '').strip()
     if not owner:
-        raise CalibrationSessionError('an authenticated owner is required')
+        raise CalibrationSessionError('a calibration session owner is required')
 
     root = get_storage_root(storage_root)
-    cleanup_expired_sessions(root)
-    session_id = uuid.uuid4().hex
-    session_dir = _session_dir(session_id, root)
-    upload_dir = session_dir.joinpath('uploads')
-    upload_dir.mkdir(mode=0o700, parents=True)
+    with _file_lock(root.joinpath('.sessions.lock')):
+        cleanup_expired_sessions(root)
+        active_manifests = []
+        for candidate in root.iterdir():
+            if not candidate.is_dir() or not SESSION_ID_RE.fullmatch(candidate.name):
+                continue
+            try:
+                candidate_manifest = _read_manifest(candidate)
+                if candidate_manifest.get('status') in (
+                    'queued',
+                    'running',
+                    'cancel_requested',
+                ):
+                    with _file_lock(_session_lock_path(candidate)):
+                        candidate_manifest = _recover_stale_session_unlocked(
+                            candidate,
+                            _read_manifest(candidate),
+                        )
+            except CalibrationSessionError:
+                continue
+            if candidate_manifest.get('status') in ACTIVE_SESSION_STATUSES:
+                active_manifests.append(candidate_manifest)
+        owner_active = sum(
+            manifest.get('owner') == owner
+            for manifest in active_manifests
+        )
+        if owner_active >= MAX_ACTIVE_SESSIONS_PER_OWNER:
+            raise CalibrationSessionError(
+                'finish or cancel an existing calibration before starting another'
+            )
+        if len(active_manifests) >= MAX_ACTIVE_SESSIONS_GLOBAL:
+            raise CalibrationSessionError(
+                'the calibration service is at its active-session limit; try again later'
+            )
 
-    manifest = {
-        'version': 1,
-        'session_id': session_id,
-        'owner': owner,
-        'status': 'uploading',
-        'created_utc': _utc_now_text(),
-        'updated_utc': _utc_now_text(),
-        'files': [],
-        'total_bytes': 0,
-        'task_id': None,
-        'error': None,
-    }
-    _write_manifest(session_dir, manifest)
-    return manifest
+        session_id = uuid.uuid4().hex
+        session_dir = _session_dir(session_id, root)
+        upload_dir = session_dir.joinpath('uploads')
+        upload_dir.mkdir(mode=0o700, parents=True)
+
+        manifest = {
+            'version': 2,
+            'session_id': session_id,
+            'owner': owner,
+            'status': 'uploading',
+            'created_utc': _utc_now_text(),
+            'updated_utc': _utc_now_text(),
+            'files': [],
+            'total_bytes': 0,
+            'task_id': None,
+            'camera': dict(camera_identity or {}),
+            'error': None,
+        }
+        _write_manifest(session_dir, manifest)
+        return manifest
 
 
 def get_session(session_id, owner=None, storage_root=None):
@@ -671,6 +842,7 @@ def get_session(session_id, owner=None, storage_root=None):
 
 
 def _unique_upload_name(upload_dir, original_name):
+    """Return a sanitized collision-free FITS name inside an upload folder."""
     # Keep this module usable in numerical/unit-test environments that do not
     # install the Flask web stack.  The conservative basename sanitizer has the
     # same security purpose as Werkzeug's secure_filename: remove path pieces,
@@ -766,8 +938,69 @@ def select_database_evidence(
             '3600 seconds'
         )
 
+    from . import asi676mc
+
+    candidate_records = []
+    for source_record in fits_records:
+        record = dict(source_record)
+        if not asi676mc.camera_name_matches(record.get('camera_name')):
+            continue
+        try:
+            file_size = int(record.get('size') or Path(record['path']).stat().st_size)
+            timestamp = float(record['timestamp'])
+            exposure = float(record.get('exposure', -1.0))
+            gain = float(record.get('gain', -1.0))
+            binmode = int(record.get('binmode', -1))
+            width = int(record.get('width', -1))
+            height = int(record.get('height', -1))
+            int(record['id'])
+        except (KeyError, OSError, OverflowError, TypeError, ValueError):
+            continue
+        if (
+            file_size <= 0
+            or file_size > MAX_FILE_BYTES
+            or not math.isfinite(timestamp)
+            or not math.isfinite(exposure)
+            or exposure <= 0.0
+            or not math.isfinite(gain)
+            or gain < 0.0
+            or binmode != 1
+            or width <= 0
+            or height <= 0
+            or width % 2
+            or height % 2
+        ):
+            continue
+        record.update({
+            'size': file_size,
+            'timestamp': timestamp,
+            'exposure': exposure,
+            'gain': gain,
+            'binmode': binmode,
+            'width': width,
+            'height': height,
+        })
+        candidate_records.append(record)
+
+    # Bound the expensive grouping work before its nested comparisons. Newest
+    # evidence is preferred, and both the logical bytes and record count use
+    # the same limits later enforced by private staging.
+    candidate_records.sort(
+        key=lambda record: float(record['timestamp']),
+        reverse=True,
+    )
+    retained_candidate_count = len(candidate_records)
+    bounded_records = []
+    bounded_bytes = 0
+    for record in candidate_records:
+        if len(bounded_records) >= DATABASE_MAX_FILES:
+            break
+        if bounded_bytes + record['size'] > DATABASE_MAX_BYTES:
+            continue
+        bounded_records.append(record)
+        bounded_bytes += record['size']
     records = sorted(
-        (dict(record) for record in fits_records),
+        bounded_records,
         key=lambda record: float(record['timestamp']),
     )
     records_by_id = {record['id']: record for record in records}
@@ -808,12 +1041,36 @@ def select_database_evidence(
             <= DATABASE_CAPTURE_TIME_TOLERANCE
         )
 
+    valid_bad_frames = []
+    for source_bad_frame in bad_frames:
+        try:
+            bad_frame = dict(source_bad_frame)
+            bad_time = float(bad_frame['timestamp'])
+            bad_exposure = float(bad_frame.get('exposure', -1.0))
+            bad_gain = float(bad_frame.get('gain', -1.0))
+        except (KeyError, OverflowError, TypeError, ValueError):
+            continue
+        if (
+            not math.isfinite(bad_time)
+            or not math.isfinite(bad_exposure)
+            or bad_exposure <= 0.0
+            or not math.isfinite(bad_gain)
+            or bad_gain < 0.0
+        ):
+            continue
+        bad_frame.update({
+            'timestamp': bad_time,
+            'exposure': bad_exposure,
+            'gain': bad_gain,
+        })
+        valid_bad_frames.append(bad_frame)
+
     for bad_frame in sorted(
-        (dict(frame) for frame in bad_frames),
-        key=lambda frame: float(frame['timestamp']),
+        valid_bad_frames,
+        key=lambda frame: frame['timestamp'],
         reverse=True,
     ):
-        bad_time = float(bad_frame['timestamp'])
+        bad_time = bad_frame['timestamp']
         standard_matches = [
             record for record in records
             if not record.get('roles')
@@ -928,6 +1185,13 @@ def select_database_evidence(
         'selected_file_count': len(selected_records),
         'initial_scan_file_count': initial_scan_file_count,
         'available_file_count': len(eligible_records),
+        'retained_candidate_count': retained_candidate_count,
+        'selection_limit_reached': len(records) < retained_candidate_count,
+        'selection_limit_file_count': DATABASE_MAX_FILES,
+        'selection_limit_bytes': DATABASE_MAX_BYTES,
+        'selected_logical_bytes': sum(
+            int(record.get('size', 0)) for record in selected_records
+        ),
         'metadata_signature_count': sum(
             bool(record.get('signature')) for record in selected_records
         ),
@@ -936,72 +1200,122 @@ def select_database_evidence(
     }
 
 
-def stage_database_files(session_id, owner, records, storage_root=None):
+def _stage_database_files_unlocked(
+    session_id,
+    owner,
+    records,
+    storage_root=None,
+):
     """Link selected local DB assets into a private calibration session.
 
     Hard links keep a selected FITS alive if its database row expires while the
     job is queued without duplicating large files. On a separate filesystem a
-    symbolic link provides the same zero-copy workspace; only the private link
-    is removed when calibration finishes, never the database-owned source.
+    private copy is used; a symbolic link would let a replaced database path
+    change the evidence after selection.
     """
     session_dir, manifest = get_session(session_id, owner, storage_root)
     if manifest.get('status') != 'uploading':
         raise CalibrationSessionError('this calibration session is not staging')
+    if manifest.get('files') or manifest.get('total_bytes'):
+        raise CalibrationSessionError(
+            'database discovery requires a new empty calibration session'
+        )
     records = list(records)
+    if len(records) > MAX_FILE_COUNT:
+        raise CalibrationSessionError(
+            'database evidence exceeds the calibration file-count limit'
+        )
 
     upload_dir = session_dir.joinpath('uploads')
-    for sequence, record in enumerate(records):
-        source = Path(record['path']).resolve()
-        if not source.is_file():
-            raise CalibrationSessionError(
-                'a selected database FITS is no longer available: {0}'.format(
-                    source.name
+    from . import asi676mc
+    try:
+        for sequence, record in enumerate(records):
+            if _cancel_marker_path(session_dir).exists():
+                raise CalibrationSessionError(
+                    'this calibration database search was cancelled'
                 )
+            source = Path(record['path']).resolve()
+            if not source.is_file():
+                raise CalibrationSessionError(
+                    'a selected database FITS is no longer available: {0}'.format(
+                        source.name
+                    )
+                )
+            if not is_database_fits_path(source):
+                raise CalibrationSessionError(
+                    'unsupported database FITS format: {0}'.format(source.name)
+                )
+            if not asi676mc.camera_name_matches(record.get('camera_name')):
+                raise CalibrationSessionError(
+                    'database evidence is not positively identified as ASI676MC'
+                )
+            file_size = source.stat().st_size
+            if file_size <= 0 or file_size > MAX_FILE_BYTES:
+                raise CalibrationSessionError(
+                    'database FITS exceeds the per-file calibration limit'
+                )
+            if manifest['total_bytes'] + file_size > MAX_SESSION_BYTES:
+                raise CalibrationSessionError(
+                    'database evidence exceeds the calibration-session size limit'
+                )
+            destination = upload_dir.joinpath(
+                '{0:06d}_{1}_{2}'.format(sequence, record['id'], source.name)
             )
-        if not is_database_fits_path(source):
-            raise CalibrationSessionError(
-                'unsupported database FITS format: {0}'.format(source.name)
-            )
-        destination = upload_dir.joinpath(
-            '{0:06d}_{1}_{2}'.format(sequence, record['id'], source.name)
-        )
-        try:
-            os.link(str(source), str(destination))
-            link_type = 'hardlink'
-        except OSError:
-            destination.symlink_to(source)
-            link_type = 'symlink'
+            try:
+                os.link(str(source), str(destination))
+                link_type = 'hardlink'
+            except OSError:
+                shutil.copy2(source, destination)
+                link_type = 'copy'
 
-        file_size = source.stat().st_size
-        manifest['files'].append({
-            'name': destination.name,
-            'original_name': source.name,
-            'size': file_size,
-            'database_id': int(record['id']),
-            'link_type': link_type,
-            # New FITS rows carry threshold-independent detector ratios. The
-            # staged manifest keeps them beside the zero-copy link so the
-            # background worker can avoid reopening files during discovery.
-            'signature': (
-                dict(record['signature'])
-                if record.get('signature')
-                else None
-            ),
-            'timestamp': float(record.get('timestamp', 0.0)),
-            'exposure': float(record.get('exposure', -1.0)),
-            'gain': float(record.get('gain', -1.0)),
-            'binmode': int(record.get('binmode', 1)),
-            'width': record.get('width'),
-            'height': record.get('height'),
-            'camera_name': record.get('camera_name'),
-        })
-        manifest['total_bytes'] += file_size
+            manifest['files'].append({
+                'name': destination.name,
+                'original_name': source.name,
+                'size': file_size,
+                'database_id': int(record['id']),
+                'link_type': link_type,
+                # New FITS rows carry threshold-independent detector ratios.
+                'signature': (
+                    dict(record['signature'])
+                    if record.get('signature')
+                    else None
+                ),
+                'timestamp': float(record.get('timestamp', 0.0)),
+                'exposure': float(record.get('exposure', -1.0)),
+                'gain': float(record.get('gain', -1.0)),
+                'binmode': int(record.get('binmode', 1)),
+                'width': record.get('width'),
+                'height': record.get('height'),
+                'camera_name': record.get('camera_name'),
+            })
+            manifest['total_bytes'] += file_size
+    except Exception:
+        _remove_upload_dir(session_dir)
+        upload_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+        raise
 
     _write_manifest(session_dir, manifest)
     return manifest
 
 
-def store_upload(session_id, owner, file_storage, storage_root=None):
+def stage_database_files(session_id, owner, records, storage_root=None):
+    """Serialize database staging so parallel requests cannot corrupt it."""
+    session_dir = _session_dir(session_id, storage_root)
+    with _file_lock(_session_lock_path(session_dir)):
+        return _stage_database_files_unlocked(
+            session_id,
+            owner,
+            records,
+            storage_root=storage_root,
+        )
+
+
+def _store_upload_unlocked(
+    session_id,
+    owner,
+    file_storage,
+    storage_root=None,
+):
     """Stream one browser-selected FITS into its private session.
 
     The browser calls this once per selected file, automatically.  Sequential
@@ -1083,21 +1397,27 @@ def store_upload(session_id, owner, file_storage, storage_root=None):
     return entry, manifest
 
 
-def cancel_upload_session(session_id, owner, storage_root=None):
-    """Cancel an unqueued upload and immediately remove its source FITS.
+def store_upload(session_id, owner, file_storage, storage_root=None):
+    """Serialize upload mutation across browser tabs and web workers."""
+    session_dir = _session_dir(session_id, storage_root)
+    with _file_lock(_session_lock_path(session_dir)):
+        return _store_upload_unlocked(
+            session_id,
+            owner,
+            file_storage,
+            storage_root=storage_root,
+        )
 
-    The marker is written before deletion so an upload still executing in a
-    second web worker cannot restore a stale manifest after cancellation.
-    Repeating a completed cancellation is harmless, which lets the browser
-    retry safely after losing the first response. Queued or running numerical
-    jobs are intentionally not interruptible.
-    """
+
+def _cancel_session_unlocked(session_id, owner, storage_root=None):
+    """Cancel an upload/queued job or request cooperative worker cancellation."""
     session_dir, manifest = get_session(session_id, owner, storage_root)
-    if manifest.get('status') == 'cancelled':
+    status = manifest.get('status')
+    if status in ('cancelled', 'cancel_requested'):
         return manifest
-    if manifest.get('status') != 'uploading':
+    if status not in ('uploading', 'queued', 'running'):
         raise CalibrationSessionError(
-            'only an upload that has not been queued can be cancelled'
+            'only an active calibration session can be cancelled'
         )
 
     marker_path = _cancel_marker_path(session_dir)
@@ -1106,6 +1426,12 @@ def cancel_upload_session(session_id, owner, storage_root=None):
         marker_path.chmod(0o600)
     except OSError:
         pass
+
+    if status == 'running':
+        manifest['status'] = 'cancel_requested'
+        manifest['error'] = None
+        _write_manifest(session_dir, manifest)
+        return manifest
 
     manifest['status'] = 'cancelled'
     manifest['completed_utc'] = _utc_now_text()
@@ -1116,17 +1442,41 @@ def cancel_upload_session(session_id, owner, storage_root=None):
     return manifest
 
 
+def cancel_upload_session(session_id, owner, storage_root=None):
+    """Serialize cancellation with upload, queue, and worker transitions."""
+    session_dir = _session_dir(session_id, storage_root)
+    # Authenticate first, then publish the marker before waiting for a large
+    # upload or cross-filesystem database copy to release the session lock.
+    # Those staging loops check the marker between chunks/files and unwind.
+    _loaded_dir, manifest = get_session(session_id, owner, storage_root)
+    if manifest.get('status') in ('uploading', 'queued', 'running'):
+        marker_path = _cancel_marker_path(session_dir)
+        marker_path.write_text(_utc_now_text(), encoding='ascii')
+        try:
+            marker_path.chmod(0o600)
+        except OSError:
+            pass
+    with _file_lock(_session_lock_path(session_dir)):
+        return _cancel_session_unlocked(
+            session_id,
+            owner,
+            storage_root=storage_root,
+        )
+
+
 def discard_session(session_id, owner, storage_root=None):
     """Delete a finished/cancelled owned session and its retained results."""
-    session_dir, manifest = get_session(session_id, owner, storage_root)
-    if manifest.get('status') in ('uploading', 'queued', 'running'):
-        raise CalibrationSessionError(
-            'an active calibration session cannot be discarded'
-        )
+    session_dir = _session_dir(session_id, storage_root)
+    with _file_lock(_session_lock_path(session_dir)):
+        _loaded_dir, manifest = get_session(session_id, owner, storage_root)
+        if manifest.get('status') in ACTIVE_SESSION_STATUSES:
+            raise CalibrationSessionError(
+                'an active calibration session cannot be discarded'
+            )
     shutil.rmtree(session_dir)
 
 
-def mark_queued(
+def _mark_queued_unlocked(
     session_id,
     owner,
     task_id,
@@ -1157,10 +1507,19 @@ def mark_queued(
             '3600 seconds'
         )
 
+    from . import asi676mc
+
+    try:
+        normalized_settings = asi676mc.normalize_settings(settings)
+    except (OverflowError, TypeError, ValueError) as error:
+        raise CalibrationSessionError(
+            'calibration settings are invalid: {0}'.format(error)
+        ) from error
+
     manifest['status'] = 'queued'
     manifest['task_id'] = int(task_id)
     manifest['max_pair_seconds'] = max_pair_seconds
-    manifest['settings'] = dict(settings)
+    manifest['settings'] = normalized_settings
     manifest['config_id'] = int(config_id) if config_id is not None else None
     manifest['source'] = dict(source_details or {
         'kind': 'upload',
@@ -1177,19 +1536,47 @@ def mark_queued(
     return manifest
 
 
+def mark_queued(
+    session_id,
+    owner,
+    task_id,
+    max_pair_seconds,
+    settings,
+    config_id=None,
+    source_details=None,
+    storage_root=None,
+):
+    """Atomically freeze one session and reject duplicate queue requests."""
+    session_dir = _session_dir(session_id, storage_root)
+    with _file_lock(_session_lock_path(session_dir)):
+        return _mark_queued_unlocked(
+            session_id,
+            owner,
+            task_id,
+            max_pair_seconds,
+            settings,
+            config_id=config_id,
+            source_details=source_details,
+            storage_root=storage_root,
+        )
+
+
 def mark_failed(session_id, owner, message, storage_root=None):
     """Record a pre-worker failure such as a database queueing error."""
-    session_dir, manifest = get_session(session_id, owner, storage_root)
-    _remove_upload_dir(session_dir)
-    manifest['status'] = 'failed'
-    manifest['completed_utc'] = _utc_now_text()
-    manifest['sources_deleted_utc'] = _utc_now_text()
-    manifest['error'] = str(message)
-    _write_manifest(session_dir, manifest)
-    return manifest
+    session_dir = _session_dir(session_id, storage_root)
+    with _file_lock(_session_lock_path(session_dir)):
+        _loaded_dir, manifest = get_session(session_id, owner, storage_root)
+        _remove_upload_dir(session_dir)
+        manifest['status'] = 'failed'
+        manifest['completed_utc'] = _utc_now_text()
+        manifest['sources_deleted_utc'] = _utc_now_text()
+        manifest['error'] = str(message)
+        _write_manifest(session_dir, manifest)
+        return manifest
 
 
 def _result_summary(payload):
+    """Reduce a successful engine payload to the browser-safe result schema."""
     settings = payload['derived_settings']
     quality = payload['quality']
     values = [
@@ -1210,6 +1597,9 @@ def _result_summary(payload):
         'exposure_level_count': len(quality['exposure_levels']),
         'validated_bad_count': quality.get('validated_bad_repairs', 0),
         'validated_normal_count': quality.get('validated_normal_frames', 0),
+        'worst_repaired_reference_error': quality.get(
+            'worst_repaired_reference_error'
+        ),
         'rejected_file_count': quality['rejected_file_count'],
         'highlight_sample_count': quality['highlight_sample_count'],
         'scanned_file_count': quality.get('scanned_file_count', 0),
@@ -1248,6 +1638,7 @@ def _threshold_suggestion_summary(payload):
         'outcome': 'threshold_suggestion',
         'threshold_suggestions': payload['threshold_suggestions'],
         'signature_ranges': payload['signature_ranges'],
+        'population_evidence': payload.get('population_evidence', []),
         'quality': quality_summary,
         'warnings': _result_warnings(quality_summary),
     }
@@ -1790,7 +2181,8 @@ def format_threshold_suggestion_report(payload, manifest):
         lines,
         'No repair constants were derived and no settings were changed during '
         'analysis. If the evidence matches the expected purple-frame failure, '
-        'an administrator may use Apply thresholds and reload on the result '
+        'a user who can save the standard Config may use Apply thresholds and '
+        'reload on the result '
         'page, or enter only the fields marked Change recommended in Image '
         'Settings. Reset the tool and run calibration again afterwards.',
     )
@@ -1881,6 +2273,30 @@ def format_threshold_suggestion_report(payload, manifest):
                 values['bad_max'],
             )
         )
+
+    population_evidence = payload.get('population_evidence') or ()
+    if population_evidence:
+        _append_report_section(lines, 'Population examples to verify')
+        _append_report_paragraph(
+            lines,
+            'Review these filenames and capture times before saving threshold '
+            'changes. The higher-ratio group must be the actual ASI676MC '
+            'purple-frame failure, not a second ordinary lighting regime.',
+        )
+        for item in population_evidence:
+            lines.append(
+                '{0} | {1} | {2} | ratios {3:.3f}/{4:.3f}/{5:.3f}'.format(
+                    item.get('population', 'Unknown population'),
+                    _format_report_timestamp(item.get('timestamp_utc')),
+                    _original_report_filename(
+                        item.get('name'),
+                        manifest.get('files'),
+                    ),
+                    float(item.get('purple_ratio', 0.0)),
+                    float(item.get('red_side_ratio', 0.0)),
+                    float(item.get('blue_side_ratio', 0.0)),
+                )
+            )
 
     _append_report_section(lines, 'Evidence source')
     source_kind = source_details.get('kind')
@@ -2033,16 +2449,17 @@ def format_integrated_report(payload, manifest):
     _append_report_paragraph(
         lines,
         'Running the calibration did not change the indi-allsky configuration. '
-        'Only an administrator can apply the result from the calibration page.',
+        'An operator who can save the standard Config can apply the result '
+        'from the calibration page.',
     )
 
     _append_report_section(lines, 'Recommended calibration values')
     _append_report_paragraph(
         lines,
-        'Review these values under Tools > ASI676MC Calibration. An '
-        'administrator can use Apply and reload, or the values can be entered '
-        'manually under Configuration > Image > ASI676MC RAW16 Purple-frame '
-        'Handling.',
+        'Review these values under Tools > ASI676MC Calibration. An operator '
+        'who can save Config can use Apply values and reload, or the values '
+        'can be entered manually under Config > Image > ASI676MC RAW16 '
+        'Purple-frame Handling.',
     )
 
     configured_values = comparison.get('configured_values', {})
@@ -2406,13 +2823,39 @@ def format_integrated_report(payload, manifest):
 
 def run_calibration_session(session_id, storage_root=None):
     """Run the calibration engine for one queued web session."""
-    session_dir, manifest = get_session(session_id, storage_root=storage_root)
-    if manifest.get('status') not in ('queued', 'running'):
-        raise CalibrationSessionError('calibration session is not queued')
+    session_dir = _session_dir(session_id, storage_root)
+    worker_token = uuid.uuid4().hex
+    with _file_lock(_session_lock_path(session_dir)):
+        _loaded_dir, manifest = get_session(
+            session_id,
+            storage_root=storage_root,
+        )
+        # Only the first worker may claim a queued session. Accepting running
+        # here allowed duplicate jobs to fit and overwrite the same result.
+        if manifest.get('status') != 'queued':
+            raise CalibrationSessionError('calibration session is not queued')
+        if _cancel_marker_path(session_dir).exists():
+            raise CalibrationCancelled('calibration was cancelled before it started')
+        manifest['status'] = 'running'
+        manifest['started_utc'] = _utc_now_text()
+        manifest['heartbeat_utc'] = manifest['started_utc']
+        manifest['worker_token'] = worker_token
+        _write_manifest(session_dir, manifest)
 
-    manifest['status'] = 'running'
-    manifest['started_utc'] = _utc_now_text()
-    _write_manifest(session_dir, manifest)
+    def active_manifest():
+        """Re-read and validate this worker's claim under the session lock."""
+        current = _read_manifest(session_dir)
+        if (
+            _cancel_marker_path(session_dir).exists()
+            or current.get('status') == 'cancel_requested'
+        ):
+            raise CalibrationCancelled('calibration was cancelled')
+        if (
+            current.get('status') != 'running'
+            or current.get('worker_token') != worker_token
+        ):
+            raise CalibrationSessionError('calibration worker claim was lost')
+        return current
 
     upload_dir = session_dir.joinpath('uploads')
     captured_output = io.StringIO()
@@ -2439,8 +2882,11 @@ def run_calibration_session(session_id, storage_root=None):
                 processed != int(progress.get('total_files', 0))
             ):
                 return
-            manifest['progress'] = progress
-            _write_manifest(session_dir, manifest)
+            with _file_lock(_session_lock_path(session_dir)):
+                current = active_manifest()
+                current['progress'] = progress
+                current['heartbeat_utc'] = _utc_now_text()
+                _write_manifest(session_dir, current)
             last_progress = progress
 
         with redirect_stdout(captured_output):
@@ -2462,6 +2908,11 @@ def run_calibration_session(session_id, storage_root=None):
                 ),
             )
 
+        with _file_lock(_session_lock_path(session_dir)):
+            manifest = active_manifest()
+            manifest['heartbeat_utc'] = _utc_now_text()
+            _write_manifest(session_dir, manifest)
+
         # The current engine always supplies scan audit fields. Defaults keep
         # retained results and test/dry-run engines readable without making
         # the web session depend on a single engine payload revision.
@@ -2476,6 +2927,16 @@ def run_calibration_session(session_id, storage_root=None):
         )
         payload_quality.setdefault('search_stopped_early', False)
 
+        original_names = {
+            entry.get('name'): entry.get('original_name') or entry.get('name')
+            for entry in manifest.get('files', ())
+        }
+        for evidence_item in payload.get('population_evidence', ()):
+            evidence_item['name'] = original_names.get(
+                evidence_item.get('name'),
+                evidence_item.get('name'),
+            )
+
         if payload.get('outcome') == 'threshold_suggestion':
             summary = _threshold_suggestion_summary(payload)
         else:
@@ -2489,6 +2950,8 @@ def run_calibration_session(session_id, storage_root=None):
         source_details = manifest.get('source')
         if source_details:
             result['source'] = source_details
+        if manifest.get('camera'):
+            result['camera'] = dict(manifest['camera'])
         result['warnings'] = _result_warnings(
             result['quality'],
             source_details,
@@ -2510,30 +2973,52 @@ def run_calibration_session(session_id, storage_root=None):
 
         # Remove private inputs before publishing ``success``. For browser
         # uploads this deletes the large sources; for database discovery it
-        # unlinks only the session's hard/symbolic links and leaves the
+        # removes only the session's hard links/private copies and leaves the
         # database-owned FITS untouched.
-        _remove_upload_dir(session_dir)
-        manifest['status'] = 'success'
-        manifest['completed_utc'] = result['completed_utc']
-        manifest['sources_deleted_utc'] = _utc_now_text()
-        manifest['error'] = None
-        manifest['progress'] = {
-            'phase': 'complete',
-            'processed_files': result['quality'].get(
-                'scanned_file_count',
-                len(manifest.get('files', [])),
-            ),
-            'total_files': result['quality'].get(
-                'available_file_count',
-                len(manifest.get('files', [])),
-            ),
-            'detected_bad_count': result['quality'].get(
-                'matched_bad_count',
-                result['quality'].get('detected_bad_count', 0),
-            ),
-        }
-        _write_manifest(session_dir, manifest)
+        with _file_lock(_session_lock_path(session_dir)):
+            manifest = active_manifest()
+            _remove_upload_dir(session_dir)
+            manifest['status'] = 'success'
+            manifest['completed_utc'] = result['completed_utc']
+            manifest['sources_deleted_utc'] = _utc_now_text()
+            manifest['error'] = None
+            manifest['progress'] = {
+                'phase': 'complete',
+                'processed_files': result['quality'].get(
+                    'scanned_file_count',
+                    len(manifest.get('files', [])),
+                ),
+                'total_files': result['quality'].get(
+                    'available_file_count',
+                    len(manifest.get('files', [])),
+                ),
+                'detected_bad_count': result['quality'].get(
+                    'matched_bad_count',
+                    result['quality'].get('detected_bad_count', 0),
+                ),
+            }
+            manifest.pop('worker_token', None)
+            _write_manifest(session_dir, manifest)
         return result
+    except CalibrationCancelled:
+        for result_name in (
+            'result.json',
+            'asi676mc_calibration_report.txt',
+        ):
+            try:
+                session_dir.joinpath(result_name).unlink()
+            except FileNotFoundError:
+                pass
+        _remove_upload_dir(session_dir)
+        with _file_lock(_session_lock_path(session_dir)):
+            manifest = _read_manifest(session_dir)
+            manifest['status'] = 'cancelled'
+            manifest['completed_utc'] = _utc_now_text()
+            manifest['sources_deleted_utc'] = _utc_now_text()
+            manifest['error'] = None
+            manifest.pop('worker_token', None)
+            _write_manifest(session_dir, manifest)
+        return None
     except Exception as error:
         session_dir.joinpath('calibration.log').write_text(
             captured_output.getvalue(),
@@ -2544,22 +3029,32 @@ def run_calibration_session(session_id, storage_root=None):
             _remove_upload_dir(session_dir)
         except OSError as cleanup_exception:
             cleanup_error = cleanup_exception
-        manifest['status'] = 'failed'
-        manifest['completed_utc'] = _utc_now_text()
-        if cleanup_error is None:
-            manifest['sources_deleted_utc'] = _utc_now_text()
-            manifest['error'] = str(error)
-        else:
-            manifest['error'] = (
-                '{0}; private calibration input cleanup also failed: {1}'
-            ).format(error, cleanup_error)
-        _write_manifest(session_dir, manifest)
+        with _file_lock(_session_lock_path(session_dir)):
+            manifest = _read_manifest(session_dir)
+            cancelled = (
+                _cancel_marker_path(session_dir).exists()
+                or manifest.get('status') == 'cancel_requested'
+            )
+            manifest['status'] = 'cancelled' if cancelled else 'failed'
+            manifest['completed_utc'] = _utc_now_text()
+            if cleanup_error is None:
+                manifest['sources_deleted_utc'] = _utc_now_text()
+                manifest['error'] = None if cancelled else str(error)
+            else:
+                manifest['error'] = (
+                    '{0}; private calibration input cleanup also failed: {1}'
+                ).format(error, cleanup_error)
+            manifest.pop('worker_token', None)
+            _write_manifest(session_dir, manifest)
         raise
 
 
 def get_status(session_id, owner, storage_root=None):
     """Return the browser-safe status/result for an owned session."""
-    session_dir, manifest = get_session(session_id, owner, storage_root)
+    session_dir = _session_dir(session_id, storage_root)
+    with _file_lock(_session_lock_path(session_dir)):
+        _loaded_dir, manifest = get_session(session_id, owner, storage_root)
+        manifest = _recover_stale_session_unlocked(session_dir, manifest)
     source = manifest.get('source') or {}
     response = {
         'session_id': session_id,
@@ -2595,7 +3090,7 @@ def get_status(session_id, owner, storage_root=None):
 
 
 def get_completed_result(session_id, owner, storage_root=None):
-    """Return the safe subset an admin may transfer to configuration.
+    """Return the safe subset an authorized operator may save to configuration.
 
     A complete calibration supplies all seven repair constants. Preliminary
     threshold discovery supplies only detector fields explicitly marked for a

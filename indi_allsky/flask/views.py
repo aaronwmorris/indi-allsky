@@ -146,8 +146,10 @@ bp_allsky = Blueprint(
 
 
 def _visible_asi676mc_cameras():
+    """Return visible local records whose current identity is ASI676MC."""
     visible_cameras = IndiAllSkyDbCameraTable.query\
         .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
+        .filter(IndiAllSkyDbCameraTable.local == sa_true())\
         .all()
 
     return [
@@ -157,20 +159,77 @@ def _visible_asi676mc_cameras():
     ]
 
 
-def strict_login_required(func):
-    """Require a real user even when Flask-Login is globally disabled.
+def _can_save_standard_configuration():
+    """Mirror the standard Config save policy exactly."""
+    return bool(
+        app.config.get('LOGIN_DISABLED', False)
+        or (
+            current_user.is_authenticated
+            and current_user.is_admin
+        )
+    )
 
-    Most indi-allsky pages intentionally become public when ``LOGIN_DISABLED``
-    is configured.  Uploaded RAW FITS may contain sensitive location and camera
-    metadata, so the calibration tool has the stricter policy requested for
-    this feature.  Combining this decorator with Flask-Login preserves the
-    normal redirect-to-login behavior while still rejecting anonymous access
-    on installations where login bypass is enabled.
-    """
+
+def _asi676mc_feature_enabled():
+    """Read the current persisted master switch before opening the tool."""
+    from ..config import IndiAllSkyConfig
+
+    return asi676mc.feature_enabled(IndiAllSkyConfig().config)
+
+
+def _calibration_owner():
+    """Return a stable per-user or per-browser private session owner."""
+    if current_user.is_authenticated:
+        return 'user:{0}'.format(current_user.username)
+    owner_token = session.get('asi676mc_calibration_owner')
+    if not owner_token:
+        owner_token = os.urandom(16).hex()
+        session['asi676mc_calibration_owner'] = owner_token
+    return 'browser:{0}'.format(owner_token)
+
+
+def _calibration_save_actor():
+    """Return the Config audit name used with or without authentication."""
+    return current_user.username if current_user.is_authenticated else 'system'
+
+
+def _camera_identity(camera):
+    """Freeze the camera record identity bound to one calibration result."""
+    camera_data = camera.data if isinstance(camera.data, dict) else {}
+    return {
+        'id': int(camera.id),
+        'uuid': str(camera.uuid),
+        'name': str(camera_data.get('detected_name') or camera.name),
+    }
+
+
+def _supported_asi676mc_camera(camera_id):
+    """Resolve one selectable visible local ASI676MC by database ID."""
+    try:
+        camera_id = int(camera_id)
+    except (TypeError, ValueError):
+        return None
+    camera = IndiAllSkyDbCameraTable.query\
+        .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+        .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
+        .filter(IndiAllSkyDbCameraTable.local == sa_true())\
+        .first()
+    if camera is None or not asi676mc.camera_record_matches(camera):
+        return None
+    return camera
+
+
+def asi676mc_calibration_required(func):
+    """Require Config-save capability and a local supported camera."""
     @wraps(func)
     def decorated(*args, **kwargs):
-        if not current_user.is_authenticated:
-            abort(401)
+        """Enforce the complete calibration availability gate."""
+        if not _can_save_standard_configuration():
+            abort(403)
+        if not _asi676mc_feature_enabled():
+            abort(404)
+        if not _visible_asi676mc_cameras():
+            abort(404)
         return func(*args, **kwargs)
 
     return decorated
@@ -7618,16 +7677,40 @@ class Asi676mcCalibrationView(TemplateView):
     """Authenticated landing page for both calibration evidence sources."""
 
     page_title = 'ASI676MC Calibration'
-    decorators = [strict_login_required, login_required]
+    decorators = [asi676mc_calibration_required, login_required]
 
     def get_context(self):
+        """Build camera choices, capture guidance, and browser limits."""
         context = super(Asi676mcCalibrationView, self).get_context()
-        context['form_calibration'] = IndiAllskyAsi676mcCalibrationForm(
+        supported_cameras = _visible_asi676mc_cameras()
+        supported_ids = {camera.id for camera in supported_cameras}
+        selected_camera = (
+            self.camera
+            if self.camera.id in supported_ids
+            else supported_cameras[0]
+        )
+        calibration_form = IndiAllskyAsi676mcCalibrationForm(
             data={
-                'CAMERA_ID': self.camera.id,
+                'CAMERA_ID': selected_camera.id,
                 'MAX_PAIR_SECONDS': 90.0,
                 'DATABASE_GROUP_LIMIT': 25,
             },
+        )
+        calibration_form.CAMERA_ID.choices = [
+            (
+                camera.id,
+                '{0} ({1})'.format(
+                    camera.friendlyName or camera.name,
+                    _camera_identity(camera)['name'],
+                ),
+            )
+            for camera in supported_cameras
+        ]
+        calibration_form.CAMERA_ID.data = selected_camera.id
+        context['form_calibration'] = calibration_form
+        context['calibration_camera_count'] = len(supported_cameras)
+        context['calibration_can_save_config'] = (
+            _can_save_standard_configuration()
         )
         context['capture_guidance'] = (
             asi676mc_calibration.capture_configuration_guidance(
@@ -7650,23 +7733,31 @@ class Asi676mcCalibrationView(TemplateView):
 
 
 class AjaxAsi676mcCalibrationSessionView(BaseView):
-    """Create one private upload session for the signed-in user."""
+    """Create one private upload session for the authorized operator."""
 
     methods = ['POST']
-    decorators = [strict_login_required, login_required]
+    decorators = [asi676mc_calibration_required, login_required]
 
     def dispatch_request(self):
+        """Create a camera-bound private upload session."""
+        request_data = request.get_json(silent=True) or {}
+        camera = _supported_asi676mc_camera(request_data.get('camera_id'))
+        if camera is None:
+            return jsonify({
+                'error': 'Select a currently available local ASI676MC camera.',
+            }), 400
         try:
             manifest = asi676mc_calibration.create_session(
-                current_user.username
+                _calibration_owner(),
+                camera_identity=_camera_identity(camera),
             )
-        except asi676mc_calibration.CalibrationSessionError:
-            app.logger.exception('Unable to create ASI676MC calibration session')
+        except asi676mc_calibration.CalibrationSessionError as error:
+            app.logger.warning(
+                'Unable to create ASI676MC calibration session: %s',
+                str(error),
+            )
             return jsonify({
-                'error': (
-                    'A private calibration workspace could not be created. '
-                    'Reload the page and try again.'
-                ),
+                'error': str(error),
             }), 400
         except OSError:
             app.logger.exception('Unable to create ASI676MC calibration session')
@@ -7689,13 +7780,14 @@ class AjaxAsi676mcCalibrationUploadView(BaseView):
     """
 
     methods = ['POST']
-    decorators = [strict_login_required, login_required]
+    decorators = [asi676mc_calibration_required, login_required]
 
     def dispatch_request(self, session_id):
+        """Store one validated FITS in an owned staging session."""
         try:
             entry, manifest = asi676mc_calibration.store_upload(
                 session_id,
-                current_user.username,
+                _calibration_owner(),
                 request.files.get('file'),
             )
         except asi676mc_calibration.CalibrationUploadError as error:
@@ -7746,9 +7838,10 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
     """
 
     methods = ['POST']
-    decorators = [strict_login_required, login_required]
+    decorators = [asi676mc_calibration_required, login_required]
 
     def dispatch_request(self):
+        """Select saved FITS, stage them privately, and queue analysis."""
         request_data = request.get_json(silent=True) or {}
         try:
             camera_id = int(request_data.get('camera_id'))
@@ -7788,10 +7881,7 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
                 ),
             }), 400
 
-        camera = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
-            .first()
+        camera = _supported_asi676mc_camera(camera_id)
         if camera is None:
             return jsonify({
                 'error': 'The selected camera is no longer available.',
@@ -7826,30 +7916,46 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
             .filter(IndiAllSkyDbFitsImageTable.camera_id == camera.id)\
             .filter(IndiAllSkyDbFitsImageTable.dayDate >= retention_cutoff)\
             .order_by(IndiAllSkyDbFitsImageTable.createDate.desc())\
+            .limit(asi676mc_calibration.DATABASE_QUERY_MAX_FILES)\
             .all()
 
         fits_records = []
         missing_local_count = 0
         unsupported_count = 0
         for fits_entry in fits_entries:
-            source_path = fits_entry.getFilesystemPath()
-            if not source_path.is_file():
+            try:
+                source_path = fits_entry.getFilesystemPath()
+                if not source_path.is_file():
+                    missing_local_count += 1
+                    continue
+                source_size = source_path.stat().st_size
+            except OSError:
                 missing_local_count += 1
                 continue
             if not asi676mc_calibration.is_database_fits_path(source_path):
                 unsupported_count += 1
                 continue
-            diagnostic = (fits_entry.data or {}).get(
+            fits_data = (
+                fits_entry.data
+                if isinstance(fits_entry.data, dict)
+                else {}
+            )
+            diagnostic = fits_data.get(
                 asi676mc.DIAGNOSTIC_METADATA_KEY,
                 {},
             )
-            roles = diagnostic.get('roles', ())
-            signature = (fits_entry.data or {}).get(
+            roles = (
+                diagnostic.get('roles', ())
+                if isinstance(diagnostic, dict)
+                else ()
+            )
+            signature = fits_data.get(
                 asi676mc.SIGNATURE_METADATA_KEY,
             )
             fits_records.append({
                 'id': fits_entry.id,
                 'path': source_path,
+                'size': source_size,
                 'timestamp': fits_entry.createDate.timestamp(),
                 'exposure': fits_entry.exposure,
                 'gain': fits_entry.gain,
@@ -7865,7 +7971,7 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
                     if isinstance(signature, dict)
                     else None
                 ),
-                'camera_name': camera.name,
+                'camera_name': _camera_identity(camera)['name'],
                 'roles': [
                     dict(role)
                     for role in roles
@@ -7891,6 +7997,7 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
             .filter(IndiAllSkyDbImageTable.dayDate >= retention_cutoff)\
             .filter(repair_status.in_(asi676mc.DIAGNOSTIC_BAD_STATUSES))\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .limit(asi676mc_calibration.DATABASE_QUERY_MAX_FILES)\
             .all()
         bad_frames = [
             {
@@ -7901,7 +8008,11 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
                 # untouched source mosaic. Only successful repair makes the
                 # standard FITS unsuitable as original calibration evidence.
                 'allow_standard': (
-                    (image.data or {}).get('asi676mc_repair_status')
+                    (
+                        image.data
+                        if isinstance(image.data, dict)
+                        else {}
+                    ).get('asi676mc_repair_status')
                     != 'repaired'
                 ),
             }
@@ -7954,12 +8065,13 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
                 self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {})
             )
             manifest = asi676mc_calibration.create_session(
-                current_user.username
+                _calibration_owner(),
+                camera_identity=_camera_identity(camera),
             )
             session_id = manifest['session_id']
             asi676mc_calibration.stage_database_files(
                 session_id,
-                current_user.username,
+                _calibration_owner(),
                 selected_records,
             )
         except (
@@ -7974,7 +8086,7 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
                 try:
                     asi676mc_calibration.cancel_upload_session(
                         session_id,
-                        current_user.username,
+                        _calibration_owner(),
                     )
                 except (OSError, asi676mc_calibration.CalibrationSessionError):
                     app.logger.exception(
@@ -7989,11 +8101,12 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
                 error,
                 asi676mc_calibration.CalibrationSessionError,
             ):
+                error_message = str(error)
                 error_message = (
-                    'The selected saved FITS could not be prepared. A file may '
-                    'have changed during the search; try the search again or '
-                    'upload an existing collection.'
+                    error_message[:1].upper() + error_message[1:]
                 )
+                if not error_message.endswith(('.', '!', '?')):
+                    error_message += '.'
             else:
                 error_message = (
                     'The selected saved FITS could not be prepared. Check '
@@ -8016,7 +8129,7 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
             db.session.flush()
             manifest = asi676mc_calibration.mark_queued(
                 session_id,
-                current_user.username,
+                _calibration_owner(),
                 task.id,
                 max_pair_seconds,
                 settings,
@@ -8029,7 +8142,7 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
             try:
                 asi676mc_calibration.cancel_upload_session(
                     session_id,
-                    current_user.username,
+                    _calibration_owner(),
                 )
             except (OSError, asi676mc_calibration.CalibrationSessionError):
                 app.logger.exception(
@@ -8042,7 +8155,7 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
             try:
                 asi676mc_calibration.mark_failed(
                     session_id,
-                    current_user.username,
+                    _calibration_owner(),
                     'unable to queue the database calibration job',
                 )
             except (OSError, asi676mc_calibration.CalibrationSessionError):
@@ -8069,13 +8182,14 @@ class AjaxAsi676mcCalibrationCancelView(BaseView):
     """Cancel a browser upload before it enters the background queue."""
 
     methods = ['POST']
-    decorators = [strict_login_required, login_required]
+    decorators = [asi676mc_calibration_required, login_required]
 
     def dispatch_request(self, session_id):
+        """Cancel an owned upload, queued job, or running calibration."""
         try:
             manifest = asi676mc_calibration.cancel_upload_session(
                 session_id,
-                current_user.username,
+                _calibration_owner(),
             )
         except asi676mc_calibration.CalibrationSessionError as error:
             return jsonify({'error': str(error)}), 409
@@ -8100,9 +8214,10 @@ class AjaxAsi676mcCalibrationStartView(BaseView):
     """Freeze an upload session and enqueue its CPU-heavy calibration job."""
 
     methods = ['POST']
-    decorators = [strict_login_required, login_required]
+    decorators = [asi676mc_calibration_required, login_required]
 
     def dispatch_request(self, session_id):
+        """Freeze a manual upload and enqueue its background analysis."""
         request_data = request.get_json(silent=True) or {}
         try:
             max_pair_seconds = float(request_data.get('max_pair_seconds', 90.0))
@@ -8121,6 +8236,28 @@ class AjaxAsi676mcCalibrationStartView(BaseView):
                     'more than 3600 seconds.'
                 ),
             }), 400
+
+        try:
+            _session_dir, upload_manifest = asi676mc_calibration.get_session(
+                session_id,
+                _calibration_owner(),
+            )
+        except asi676mc_calibration.CalibrationSessionError as error:
+            return jsonify({'error': str(error)}), 400
+        bound_camera = upload_manifest.get('camera') or {}
+        current_camera = _supported_asi676mc_camera(bound_camera.get('id'))
+        if (
+            current_camera is None
+            or not bound_camera.get('uuid')
+            or not current_camera.uuid
+            or str(current_camera.uuid) != str(bound_camera.get('uuid') or '')
+        ):
+            return jsonify({
+                'error': (
+                    'The ASI676MC selected for this upload is no longer '
+                    'available. Cancel this run and start again.'
+                ),
+            }), 409
 
         # Use a snapshot of the currently configured detector thresholds.  The
         # calibration job derives gains/saturation/highlight values, but it must
@@ -8158,7 +8295,7 @@ class AjaxAsi676mcCalibrationStartView(BaseView):
             db.session.flush()
             manifest = asi676mc_calibration.mark_queued(
                 session_id,
-                current_user.username,
+                _calibration_owner(),
                 task.id,
                 max_pair_seconds,
                 settings,
@@ -8174,7 +8311,7 @@ class AjaxAsi676mcCalibrationStartView(BaseView):
             try:
                 asi676mc_calibration.mark_failed(
                     session_id,
-                    current_user.username,
+                    _calibration_owner(),
                     'unable to queue the calibration job',
                 )
             except (OSError, asi676mc_calibration.CalibrationSessionError):
@@ -8200,13 +8337,14 @@ class AjaxAsi676mcCalibrationStatusView(BaseView):
     """Return upload/job progress and the compact successful result."""
 
     methods = ['GET']
-    decorators = [strict_login_required, login_required]
+    decorators = [asi676mc_calibration_required, login_required]
 
     def dispatch_request(self, session_id):
+        """Return progress or the compact result for an owned session."""
         try:
             status = asi676mc_calibration.get_status(
                 session_id,
-                current_user.username,
+                _calibration_owner(),
             )
         except asi676mc_calibration.CalibrationSessionError as error:
             app.logger.info(
@@ -8241,13 +8379,14 @@ class Asi676mcCalibrationReportView(BaseView):
     """Download the completed text report after rechecking session ownership."""
 
     methods = ['GET']
-    decorators = [strict_login_required, login_required]
+    decorators = [asi676mc_calibration_required, login_required]
 
     def dispatch_request(self, session_id):
+        """Download the human-readable report for an owned result."""
         try:
             report_path = asi676mc_calibration.get_report_path(
                 session_id,
-                current_user.username,
+                _calibration_owner(),
             )
         except asi676mc_calibration.CalibrationSessionError as error:
             app.logger.info(
@@ -8272,13 +8411,14 @@ class AjaxAsi676mcCalibrationDiscardView(BaseView):
     """Remove a retained result when the user chooses Reset/Recalibrate."""
 
     methods = ['POST']
-    decorators = [strict_login_required, login_required]
+    decorators = [asi676mc_calibration_required, login_required]
 
     def dispatch_request(self, session_id):
+        """Delete an owned finished result when the operator resets."""
         try:
             asi676mc_calibration.discard_session(
                 session_id,
-                current_user.username,
+                _calibration_owner(),
             )
         except asi676mc_calibration.CalibrationSessionError as error:
             # Expiry can race a user's Reset click. In that case the requested
@@ -8313,31 +8453,22 @@ class AjaxAsi676mcCalibrationDiscardView(BaseView):
 class AjaxAsi676mcCalibrationApplyView(BaseView):
     """Apply only the result's safe subset to a version-checked configuration.
 
-    Running a calibration is available to every authenticated user. Persisting
-    configuration follows the existing Config page policy and is admin-only.
+    Access and persistence follow the existing Config save policy exactly.
     Complete results may write seven repair constants; preliminary results may
     write only detection thresholds explicitly recommended for change.
     Operational switches are preserved and repair is never enabled implicitly.
     """
 
     methods = ['POST']
-    decorators = [strict_login_required, login_required]
+    decorators = [asi676mc_calibration_required, login_required]
 
     def dispatch_request(self, session_id):
-        if not current_user.is_admin:
-            return jsonify({
-                'error': (
-                    'Administrator permission is required to save calibration '
-                    'values.'
-                ),
-                'error_code': 'permission_required',
-            }), 403
-
+        """Version-check and save only the result's allowed Config subset."""
         try:
             manifest, result, values = (
                 asi676mc_calibration.get_completed_result(
                     session_id,
-                    current_user.username,
+                    _calibration_owner(),
                 )
             )
         except asi676mc_calibration.CalibrationSessionError as error:
@@ -8354,6 +8485,34 @@ class AjaxAsi676mcCalibrationApplyView(BaseView):
             }), 400
 
         result_outcome = result.get('outcome', 'calibration')
+        bound_camera = manifest.get('camera') or {}
+        current_camera = _supported_asi676mc_camera(bound_camera.get('id'))
+        if (
+            current_camera is None
+            or not bound_camera.get('uuid')
+            or not current_camera.uuid
+            or str(current_camera.uuid) != str(bound_camera.get('uuid') or '')
+        ):
+            return jsonify({
+                'error': (
+                    'The ASI676MC selected for this run is no longer the same '
+                    'available camera. Reset the tool and calibrate again.'
+                ),
+                'error_code': 'camera_changed',
+            }), 409
+        request_data = request.get_json(silent=True) or {}
+        if (
+            result_outcome == 'threshold_suggestion'
+            and request_data.get('confirm_higher_population') is not True
+        ):
+            return jsonify({
+                'error': (
+                    'Confirm that the listed higher-ratio population is the '
+                    'actual ASI676MC purple-frame failure before saving '
+                    'detection thresholds.'
+                ),
+                'error_code': 'population_confirmation_required',
+            }), 400
         calibration_config_id = manifest.get('config_id')
         if calibration_config_id != self.indi_allsky_config_id:
             return jsonify({
@@ -8392,7 +8551,7 @@ class AjaxAsi676mcCalibrationApplyView(BaseView):
                     result['quality']['matched_bad_count'],
                     result['quality']['matched_normal_count'],
                 )
-            self._indi_allsky_config_obj.save(current_user.username, note)
+            self._indi_allsky_config_obj.save(_calibration_save_actor(), note)
         except (ConfigSaveException, KeyError, TypeError, ValueError) as error:
             # The configuration object is shared by this request. Restore it
             # when validation or persistence fails so a failed request cannot
@@ -13167,6 +13326,8 @@ bp_allsky.add_url_rule('/ajax/astropanel', view_func=AjaxAstroPanelView.as_view(
 bp_allsky.add_url_rule('/processing', view_func=ImageProcessingView.as_view('image_processing_view', template_name='imageprocessing.html'))
 bp_allsky.add_url_rule('/js/processing', view_func=JsonImageProcessingView.as_view('js_image_processing_view'))
 
+# Keep every calibration endpoint in one route block; each view independently
+# applies the same login, Config-save, master-switch, and camera gate.
 bp_allsky.add_url_rule('/asi676mc/calibration', view_func=Asi676mcCalibrationView.as_view('asi676mc_calibration_view', template_name='asi676mc_calibration.html'))
 bp_allsky.add_url_rule('/ajax/asi676mc/calibration/session', view_func=AjaxAsi676mcCalibrationSessionView.as_view('ajax_asi676mc_calibration_session_view'))
 bp_allsky.add_url_rule('/ajax/asi676mc/calibration/upload/<session_id>', view_func=AjaxAsi676mcCalibrationUploadView.as_view('ajax_asi676mc_calibration_upload_view'))

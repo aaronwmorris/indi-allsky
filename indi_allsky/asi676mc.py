@@ -36,6 +36,17 @@ DEFAULT_SETTINGS = {
 }
 
 
+# Public safety bounds shared by the configuration form and runtime. They are
+# intentionally wider than the calibrated ASI676MC values, but prevent values
+# which make detection ineffective or turn repair into an unbounded full-frame
+# transformation.
+RATIO_THRESHOLD_MAX = 100.0
+SAMPLE_STEP_MAX = 256
+GAIN_MIN = 0.1
+GAIN_MAX = 10.0
+CHUNK_ROWS_MAX = 4096
+
+
 # Jointly clipped highlights retain useful red/blue color information after
 # gain repair.  Keep the factor-two estimate at strongly colored boundaries,
 # then blend to the maximum channel as the red/blue pair becomes more
@@ -64,11 +75,32 @@ def camera_name_matches(camera_name):
     return bool(_CAMERA_NAME_RE.search(str(camera_name or '')))
 
 
+def feature_enabled(config):
+    """Return whether the ASI676MC master switch is explicitly enabled."""
+    if not isinstance(config, dict):
+        return False
+    repair_config = config.get('IMAGE_ASI676MC_REPAIR', {})
+    return bool(
+        isinstance(repair_config, dict)
+        and repair_config.get('ENABLE', False)
+    )
+
+
 def camera_record_matches(camera):
-    """Return whether any persistent name for a camera identifies an ASI676MC."""
+    """Return whether the current persistent identity identifies an ASI676MC.
+
+    New records retain the most recently detected device name in their data
+    field. When present it is authoritative: a friendly label or historical
+    alias must not turn another camera into an ASI676MC. Aliases remain a
+    compatibility fallback for older records.
+    """
+    camera_data = getattr(camera, 'data', None)
+    if isinstance(camera_data, dict) and 'detected_name' in camera_data:
+        return camera_name_matches(camera_data.get('detected_name'))
+
     return any(
         camera_name_matches(getattr(camera, attr, None))
-        for attr in ('name', 'name_alt1', 'name_alt2', 'friendlyName')
+        for attr in ('name', 'name_alt1', 'name_alt2')
     )
 
 
@@ -154,12 +186,19 @@ def normalize_settings(settings=None):
     if settings:
         config.update(settings)
 
+    try:
+        sample_step = int(config['SAMPLE_STEP'])
+        saturation_threshold = int(config['SOURCE_SATURATION_THRESHOLD'])
+        chunk_rows = int(config['CHUNK_ROWS'])
+    except (OverflowError, TypeError, ValueError) as error:
+        raise ValueError('integer repair settings must be finite numbers') from error
+
     normalized = {
         'PURPLE_RATIO_THRESHOLD': float(config['PURPLE_RATIO_THRESHOLD']),
         'RED_SIDE_RATIO_THRESHOLD': float(config['RED_SIDE_RATIO_THRESHOLD']),
         'BLUE_SIDE_RATIO_THRESHOLD': float(config['BLUE_SIDE_RATIO_THRESHOLD']),
-        'SAMPLE_STEP': int(config['SAMPLE_STEP']),
-        'SOURCE_SATURATION_THRESHOLD': int(config['SOURCE_SATURATION_THRESHOLD']),
+        'SAMPLE_STEP': sample_step,
+        'SOURCE_SATURATION_THRESHOLD': saturation_threshold,
         'GAIN_R': float(config['GAIN_R']),
         'GAIN_G1': float(config['GAIN_G1']),
         'GAIN_G2': float(config['GAIN_G2']),
@@ -170,7 +209,7 @@ def normalize_settings(settings=None):
         'HIGHLIGHT_BLEND_END_RATIO': float(
             config['HIGHLIGHT_BLEND_END_RATIO']
         ),
-        'CHUNK_ROWS': int(config['CHUNK_ROWS']),
+        'CHUNK_ROWS': chunk_rows,
     }
 
     for key in (
@@ -178,15 +217,36 @@ def normalize_settings(settings=None):
         'RED_SIDE_RATIO_THRESHOLD',
         'BLUE_SIDE_RATIO_THRESHOLD',
     ):
-        if normalized[key] <= 0:
-            raise ValueError('{0:s} must be greater than zero'.format(key))
+        if not numpy.isfinite(normalized[key]) or normalized[key] <= 0:
+            raise ValueError(
+                '{0:s} must be a finite value greater than zero'.format(key)
+            )
+        if normalized[key] > RATIO_THRESHOLD_MAX:
+            raise ValueError(
+                '{0:s} must be no more than {1:g}'.format(
+                    key,
+                    RATIO_THRESHOLD_MAX,
+                )
+            )
 
     for key in ('GAIN_R', 'GAIN_G1', 'GAIN_G2', 'GAIN_B'):
-        if normalized[key] <= 0:
-            raise ValueError('{0:s} must be greater than zero'.format(key))
+        if not numpy.isfinite(normalized[key]):
+            raise ValueError('{0:s} must be finite'.format(key))
+        if normalized[key] < GAIN_MIN or normalized[key] > GAIN_MAX:
+            raise ValueError(
+                '{0:s} must be between {1:g} and {2:g}'.format(
+                    key,
+                    GAIN_MIN,
+                    GAIN_MAX,
+                )
+            )
 
     highlight_blend_start = normalized['HIGHLIGHT_BLEND_START_RATIO']
     highlight_blend_end = normalized['HIGHLIGHT_BLEND_END_RATIO']
+    if not numpy.isfinite(highlight_blend_start):
+        raise ValueError('HIGHLIGHT_BLEND_START_RATIO must be finite')
+    if not numpy.isfinite(highlight_blend_end):
+        raise ValueError('HIGHLIGHT_BLEND_END_RATIO must be finite')
     if highlight_blend_start <= 0 or highlight_blend_start >= 1:
         raise ValueError(
             'HIGHLIGHT_BLEND_START_RATIO must be greater than zero and less than one'
@@ -204,15 +264,31 @@ def normalize_settings(settings=None):
         highlight_blend_end,
     )
 
-    if normalized['SAMPLE_STEP'] < 2 or normalized['SAMPLE_STEP'] % 2:
-        raise ValueError('SAMPLE_STEP must be an even number of at least two')
+    if (
+        normalized['SAMPLE_STEP'] < 2
+        or normalized['SAMPLE_STEP'] > SAMPLE_STEP_MAX
+        or normalized['SAMPLE_STEP'] % 2
+    ):
+        raise ValueError(
+            'SAMPLE_STEP must be an even number between 2 and {0:d}'.format(
+                SAMPLE_STEP_MAX,
+            )
+        )
 
     saturation_threshold = normalized['SOURCE_SATURATION_THRESHOLD']
     if saturation_threshold < 1 or saturation_threshold > 65535:
         raise ValueError('SOURCE_SATURATION_THRESHOLD must be between 1 and 65535')
 
-    if normalized['CHUNK_ROWS'] < 2 or normalized['CHUNK_ROWS'] % 2:
-        raise ValueError('CHUNK_ROWS must be an even number of at least two')
+    if (
+        normalized['CHUNK_ROWS'] < 2
+        or normalized['CHUNK_ROWS'] > CHUNK_ROWS_MAX
+        or normalized['CHUNK_ROWS'] % 2
+    ):
+        raise ValueError(
+            'CHUNK_ROWS must be an even number between 2 and {0:d}'.format(
+                CHUNK_ROWS_MAX,
+            )
+        )
 
     return normalized
 
@@ -221,6 +297,7 @@ def normalize_settings(settings=None):
 def highlight_blend_base_boundaries(start_ratio, end_ratio):
     """Map configured low/high ratios to factor-two base/high fixed points."""
     def base_ratio(channel_ratio):
+        """Convert a channel ratio to its squared-error blend boundary."""
         return 1.0 - (((1.0 - channel_ratio) ** 2) / 2.0)
 
     base_start = round(
@@ -259,18 +336,22 @@ def audit_metadata(
         if not signature:
             continue
 
-        metadata[key] = {
+        values = {
             'purple_ratio'    : float(signature['purple_ratio']),
             'red_side_ratio'  : float(signature['red_side_ratio']),
             'blue_side_ratio' : float(signature['blue_side_ratio']),
         }
+        if all(numpy.isfinite(value) for value in values.values()):
+            metadata[key] = values
 
     if timing:
-        metadata['timing'] = {
+        timing_values = {
             'detection_s' : float(timing.get('detection_s', 0.0)),
             'repair_s'    : float(timing.get('repair_s', 0.0)),
             'total_s'     : float(timing.get('total_s', 0.0)),
         }
+        if all(numpy.isfinite(value) for value in timing_values.values()):
+            metadata['timing'] = timing_values
 
     return metadata
 
@@ -371,13 +452,17 @@ def _frame_signature(data, config):
     ]
 
     green_sum = medians[1] + medians[2]
-    purple_ratio = (
-        (medians[0] + medians[3]) / green_sum
-        if green_sum > 0
-        else float('inf')
-    )
-    red_side_ratio = medians[0] / medians[1] if medians[1] > 0 else float('inf')
-    blue_side_ratio = medians[3] / medians[2] if medians[2] > 0 else float('inf')
+    if green_sum <= 0 or medians[1] <= 0 or medians[2] <= 0:
+        raise ValueError('sampled frame has no usable green signal')
+    purple_ratio = (medians[0] + medians[3]) / green_sum
+    red_side_ratio = medians[0] / medians[1]
+    blue_side_ratio = medians[3] / medians[2]
+    if not all(numpy.isfinite(value) for value in (
+        purple_ratio,
+        red_side_ratio,
+        blue_side_ratio,
+    )):
+        raise ValueError('sampled frame produced a non-finite detector ratio')
 
     is_bad = (
         purple_ratio >= config['PURPLE_RATIO_THRESHOLD']
@@ -453,6 +538,7 @@ def _reconstruct_clipped_green(
         'HIGHLIGHT_BLEND_END_RATIO'
     ],
 ):
+    """Rebuild green samples clipped by the faulty shifted RAW16 stream."""
     red = data[0::2, 0::2]
     green1 = data[0::2, 1::2]
     green2 = data[1::2, 0::2]
@@ -706,10 +792,37 @@ def repair_if_needed(data, settings=None):
         'total_s': total_elapsed_s,
     }
 
-    if signature_after['is_bad']:
+    # Clearing the three detector ratios alone is not enough to commit a
+    # full-frame mutation. Catch collapsed, blank, or wildly rescaled output
+    # independently so malformed but finite settings cannot manufacture a
+    # detector pass.
+    source_sample = data[::config['SAMPLE_STEP'], ::config['SAMPLE_STEP']]
+    repaired_sample = repaired_data[
+        ::config['SAMPLE_STEP'],
+        ::config['SAMPLE_STEP'],
+    ]
+    source_level = float(numpy.percentile(source_sample, 95))
+    repaired_level = float(numpy.percentile(repaired_sample, 95))
+    sane_repair = (
+        source_level > 0.0
+        and repaired_level > 0.0
+        and repaired_level >= source_level * 0.05
+        and repaired_level <= source_level * 20.0
+        and numpy.count_nonzero(repaired_sample) >= (
+            numpy.count_nonzero(source_sample) * 0.05
+        )
+    )
+
+    if signature_after['is_bad'] or not sane_repair:
+        validation_reason = (
+            'post-repair signature still matches the purple-frame failure'
+            if signature_after['is_bad']
+            else 'post-repair signal sanity check failed'
+        )
         return {
             'repaired': False,
             'validation_failed': True,
+            'validation_reason': validation_reason,
             'signature_before': signature_before,
             'signature_after': signature_after,
             'timing': timing,

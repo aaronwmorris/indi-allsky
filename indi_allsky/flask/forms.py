@@ -3,6 +3,7 @@ from pathlib import Path
 import io
 import re
 import json
+import math
 import time
 from collections import OrderedDict
 from datetime import datetime
@@ -474,25 +475,36 @@ def IMAGE_CALIBRATE_HOLE_THOLD_validator(form, field):
 
 
 def IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator(form, field):
-    if not isinstance(field.data, (int, float)):
+    """Keep detector ratios finite, positive, and operationally bounded."""
+    if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
         raise ValidationError('Please enter valid number')
 
     if field.data <= 0:
         raise ValidationError('Ratio must be greater than 0')
 
-    if field.data > 100:
-        raise ValidationError('Ratio must be 100 or less')
+    if field.data > asi676mc.RATIO_THRESHOLD_MAX:
+        raise ValidationError(
+            'Ratio must be {0:g} or less'.format(
+                asi676mc.RATIO_THRESHOLD_MAX,
+            )
+        )
 
 
 def IMAGE_ASI676MC_REPAIR__SAMPLE_STEP_validator(form, field):
+    """Preserve Bayer parity while bounding detector sampling work."""
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
 
-    if field.data < 2 or field.data % 2:
-        raise ValidationError('Sample step must be an even number of at least 2')
+    if field.data < 2 or field.data > asi676mc.SAMPLE_STEP_MAX or field.data % 2:
+        raise ValidationError(
+            'Sample step must be an even number between 2 and {0:d}'.format(
+                asi676mc.SAMPLE_STEP_MAX,
+            )
+        )
 
 
 def IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD_validator(form, field):
+    """Restrict the clipping plateau to the unsigned RAW16 range."""
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
 
@@ -501,18 +513,22 @@ def IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD_validator(form, field):
 
 
 def IMAGE_ASI676MC_REPAIR__GAIN_validator(form, field):
-    if not isinstance(field.data, (int, float)):
+    """Reject non-finite or destructive per-parity repair gains."""
+    if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
         raise ValidationError('Please enter valid number')
 
-    if field.data <= 0:
-        raise ValidationError('Gain must be greater than 0')
-
-    if field.data > 10:
-        raise ValidationError('Gain must be 10 or less')
+    if field.data < asi676mc.GAIN_MIN or field.data > asi676mc.GAIN_MAX:
+        raise ValidationError(
+            'Gain must be between {0:g} and {1:g}'.format(
+                asi676mc.GAIN_MIN,
+                asi676mc.GAIN_MAX,
+            )
+        )
 
 
 def IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_RATIO_validator(form, field):
-    if not isinstance(field.data, (int, float)):
+    """Require one finite normalized highlight transition ratio."""
+    if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
         raise ValidationError('Please enter valid number')
 
     if field.data <= 0 or field.data > 1:
@@ -520,6 +536,7 @@ def IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_RATIO_validator(form, field):
 
 
 def IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO_validator(form, field):
+    """Require an ordered highlight transition representable at runtime."""
     IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_RATIO_validator(form, field)
 
     start_ratio = form.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO.data
@@ -536,11 +553,16 @@ def IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO_validator(form, field):
 
 
 def IMAGE_ASI676MC_REPAIR__CHUNK_ROWS_validator(form, field):
+    """Preserve Bayer parity while bounding repair working memory."""
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
 
-    if field.data < 2 or field.data % 2:
-        raise ValidationError('Chunk rows must be an even number of at least 2')
+    if field.data < 2 or field.data > asi676mc.CHUNK_ROWS_MAX or field.data % 2:
+        raise ValidationError(
+            'Chunk rows must be an even number between 2 and {0:d}'.format(
+                asi676mc.CHUNK_ROWS_MAX,
+            )
+        )
 
 
 def CCD_TEMP_SCRIPT_validator(form, field):
@@ -4595,6 +4617,8 @@ class IndiAllskyConfigForm(FlaskForm):
     STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER  = IntegerField('Mask Diameter', validators=[DataRequired(), IMAGE_CIRCLE_MASK__DIAMETER_validator])
     STARTRAILS__IMAGE_CIRCLE_MASK_BLUR      = IntegerField('Mask Blur', validators=[IMAGE_CIRCLE_MASK__BLUR_validator])
     STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY   = IntegerField('Mask Opacity %', validators=[IMAGE_CIRCLE_MASK__OPACITY_validator])
+    # Keep the complete model-specific configuration surface together so new
+    # controls cannot silently miss the Config load/save wiring below.
     IMAGE_ASI676MC_REPAIR__ENABLE                      = BooleanField('Enable ASI676MC Purple-frame Handling')
     IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY                = BooleanField('Exclude Only (Do Not Repair)')
     IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME             = BooleanField('Log Every ASI676MC Frame')
@@ -6802,7 +6826,11 @@ class IndiAllskyAsi676mcCalibrationForm(FlaskForm):
     only one selection action from the user.
     """
 
-    CAMERA_ID = HiddenField('Camera ID', validators=[DataRequired()])
+    CAMERA_ID = SelectField(
+        'ASI676MC camera',
+        coerce=int,
+        validators=[DataRequired()],
+    )
     MAX_PAIR_SECONDS = FloatField(
         'Maximum separation between purple and normal FITS (seconds)',
         default=90.0,
@@ -6821,6 +6849,7 @@ class IndiAllskyAsi676mcCalibrationForm(FlaskForm):
 
 
 def _asi676mc_diagnostic_assets(images, camera_id, s3_prefix, local):
+    """Resolve diagnostic triplets for image-viewer download controls."""
     selected_pairs = {}
     capture_ids = set()
 
@@ -7553,6 +7582,7 @@ class IndiAllskyGalleryViewer(FlaskForm):
 
 
     def _apply_asi676mc_repaired_filter(self, query):
+        """Limit one gallery query to successfully repaired image rows."""
         if not self.asi676mc_repaired_only:
             return query
 

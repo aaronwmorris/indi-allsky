@@ -125,6 +125,18 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
         self.assertFalse(asi676mc.camera_name_matches('ZWO CCD ASI678MC'))
         self.assertFalse(asi676mc.camera_name_matches(''))
 
+    def test_master_switch_requires_an_explicit_enabled_config_block(self):
+        self.assertTrue(asi676mc.feature_enabled({
+            'IMAGE_ASI676MC_REPAIR': {'ENABLE': True},
+        }))
+        self.assertFalse(asi676mc.feature_enabled({
+            'IMAGE_ASI676MC_REPAIR': {'ENABLE': False},
+        }))
+        self.assertFalse(asi676mc.feature_enabled({}))
+        self.assertFalse(asi676mc.feature_enabled({
+            'IMAGE_ASI676MC_REPAIR': 'invalid',
+        }))
+
     def test_camera_record_gate_checks_persistent_names(self):
         asi_camera = SimpleNamespace(
             name='ZWO CCD',
@@ -141,6 +153,79 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
 
         self.assertTrue(asi676mc.camera_record_matches(asi_camera))
         self.assertFalse(asi676mc.camera_record_matches(other_camera))
+
+    def test_camera_record_gate_uses_current_identity_not_friendly_label(self):
+        friendly_only = SimpleNamespace(
+            name='ZWO CCD ASI678MC',
+            name_alt1=None,
+            name_alt2=None,
+            friendlyName='My ASI676MC',
+            data={},
+        )
+        stale_alias = SimpleNamespace(
+            name='ZWO CCD ASI676MC',
+            name_alt1=None,
+            name_alt2=None,
+            friendlyName='All sky',
+            data={'detected_name': 'ZWO CCD ASI678MC'},
+        )
+        current_asi = SimpleNamespace(
+            name='Generic ZWO CCD',
+            name_alt1=None,
+            name_alt2=None,
+            friendlyName='All sky',
+            data={'detected_name': 'ZWO CCD ASI676MC'},
+        )
+
+        self.assertFalse(asi676mc.camera_record_matches(friendly_only))
+        self.assertFalse(asi676mc.camera_record_matches(stale_alias))
+        self.assertTrue(asi676mc.camera_record_matches(current_asi))
+
+    def test_settings_reject_nonfinite_and_destructive_values(self):
+        unsafe_settings = (
+            {'PURPLE_RATIO_THRESHOLD': float('nan')},
+            {'RED_SIDE_RATIO_THRESHOLD': float('inf')},
+            {'GAIN_R': 0.01},
+            {'GAIN_G1': float('inf')},
+            {'SAMPLE_STEP': asi676mc.SAMPLE_STEP_MAX + 2},
+            {'SAMPLE_STEP': float('inf')},
+            {'CHUNK_ROWS': asi676mc.CHUNK_ROWS_MAX + 2},
+        )
+        for settings in unsafe_settings:
+            with self.subTest(settings=settings):
+                with self.assertRaises(ValueError):
+                    asi676mc.normalize_settings(settings)
+
+    def test_zero_signal_is_skipped_without_json_infinity(self):
+        zero_frame = numpy.zeros((64, 64), dtype=numpy.uint16)
+        with self.assertRaisesRegex(ValueError, 'no usable green signal'):
+            asi676mc.detect_frame(zero_frame)
+
+        metadata = asi676mc.audit_metadata(
+            'skipped',
+            signature_before={
+                'purple_ratio': float('inf'),
+                'red_side_ratio': float('inf'),
+                'blue_side_ratio': float('inf'),
+            },
+        )
+        self.assertNotIn('signature_before', metadata)
+        self.assertNotIn('Infinity', json.dumps(metadata, allow_nan=False))
+
+    def test_runtime_marks_repaired_fits_and_excludes_failed_validation(self):
+        project_root = Path(__file__).resolve().parents[2]
+        processing_source = project_root.joinpath(
+            'indi_allsky',
+            'processing.py',
+        ).read_text(encoding='utf-8')
+        image_source = project_root.joinpath(
+            'indi_allsky',
+            'image.py',
+        ).read_text(encoding='utf-8')
+
+        self.assertIn("header['ASI676FX']", processing_source)
+        self.assertIn("'validation_failed',", image_source)
+        self.assertIn("image_metadata['exclude'] = True", image_source)
 
     def test_diagnostic_capture_plan_pairs_bad_and_following_frames(self):
         bad_roles, pending_id = asi676mc.diagnostic_capture_plan(

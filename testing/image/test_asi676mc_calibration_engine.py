@@ -103,6 +103,28 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
             ['before.fit', 'after.fit'],
         )
 
+    def test_pairing_never_uses_same_timestamp_as_its_own_reference(self):
+        def record(name, is_bad):
+            return calibration_engine.FrameRecord(
+                path=Path(name),
+                timestamp=100.0,
+                exposure=0.001,
+                gain=0.0,
+                xbin=1,
+                ybin=1,
+                shape=(64, 64),
+                bayer='RGGB',
+                camera_name='ZWO CCD ASI676MC',
+                signature={'is_bad': is_bad},
+            )
+
+        pairs, unmatched = calibration_engine.match_pairs(
+            [record('bad.fit', True), record('same_capture.fit', False)],
+            max_pair_seconds=90.0,
+        )
+        self.assertFalse(pairs)
+        self.assertEqual(len(unmatched), 1)
+
     def test_signature_threshold_validation_explains_safe_gap(self):
         ranges = {
             'purple_ratio': {
@@ -270,6 +292,15 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
         self.assertNotIn('derived_settings', payload)
         self.assertEqual(payload['quality']['likely_purple_count'], 7)
         self.assertEqual(payload['quality']['likely_normal_count'], 14)
+        self.assertEqual(len(payload['population_evidence']), 21)
+        self.assertEqual(
+            {item['population'] for item in payload['population_evidence']},
+            {'higher ratio', 'lower ratio'},
+        )
+        self.assertTrue(all(
+            item['timestamp_utc'].endswith('+00:00')
+            for item in payload['population_evidence']
+        ))
         suggestions = {
             item['key']: item
             for item in payload['threshold_suggestions']
@@ -331,6 +362,62 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
                 max_pair_seconds=90.0,
             )
 
+    def test_single_population_all_normal_or_all_bad_fails_safely(self):
+        for is_bad in (False, True):
+            records = [
+                self._threshold_record(
+                    'frame_{0}.fit'.format(index),
+                    float(index),
+                    0.001 if index < 10 else 0.002,
+                    (0.9, 0.7, 1.1),
+                )
+                for index in range(20)
+            ]
+            for record in records:
+                record.signature['is_bad'] = is_bad
+            with self.subTest(is_bad=is_bad):
+                with self.assertRaises(calibration_engine.CalibrationError):
+                    calibration_engine.suggest_detection_thresholds(
+                        records,
+                        calibration_engine.DEFAULT_SETTINGS,
+                        max_pair_seconds=90.0,
+                    )
+
+    def test_gain_fit_rejects_unstable_or_implausible_populations(self):
+        reference = numpy.full((32, 32), 2000.0)
+        stable = numpy.ones(reference.shape, dtype=numpy.bool_)
+
+        def samples_for(ratios):
+            return [
+                calibration_engine.PairSamples(
+                    pair=None,
+                    bad_planes=tuple(
+                        numpy.rint(reference * ratio).astype(numpy.uint16)
+                        for _parity in range(4)
+                    ),
+                    reference_planes=tuple(
+                        reference.copy() for _parity in range(4)
+                    ),
+                    stable_masks=tuple(
+                        stable.copy() for _parity in range(4)
+                    ),
+                )
+                for ratio in ratios
+            ]
+
+        with self.assertRaisesRegex(
+            calibration_engine.CalibrationError,
+            'varies too much',
+        ):
+            calibration_engine.estimate_gains(
+                samples_for((0.5, 3.0, 0.5, 3.0, 0.5, 3.0, 1.75))
+            )
+        with self.assertRaisesRegex(
+            calibration_engine.CalibrationError,
+            'outside the plausible',
+        ):
+            calibration_engine.estimate_gains(samples_for((5.0,) * 7))
+
     def test_folder_scan_accepts_indi_allsky_compressed_fits(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             folder = Path(temp_dir)
@@ -339,6 +426,10 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
             header['EXPTIME'] = 0.001
             header['GAIN'] = 0.0
             header['BAYERPAT'] = 'RGGB'
+            header['XBINNING'] = 1
+            header['YBINNING'] = 1
+            header['XBAYROFF'] = 0
+            header['YBAYROFF'] = 0
             header['INSTRUME'] = 'ZWO CCD ASI676MC'
             fits.PrimaryHDU(
                 data=self._normal_frame(64, 64),
@@ -354,6 +445,75 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
         self.assertFalse(rejected)
         self.assertEqual(len(records), 1)
         self.assertEqual(records[0].path.name, 'saved_by_indi_allsky.fit.gz')
+
+    def test_fits_inspection_merges_primary_and_image_extension_metadata(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir).joinpath('extension.fit')
+            primary_header = fits.Header()
+            primary_header['DATE-OBS'] = '2026-07-01T00:00:00'
+            primary_header['EXPTIME'] = 0.001
+            primary_header['GAIN'] = 0.0
+            primary_header['BAYERPAT'] = 'RGGB'
+            primary_header['XBINNING'] = 1
+            primary_header['YBINNING'] = 1
+            primary_header['XBAYROFF'] = 0
+            primary_header['YBAYROFF'] = 0
+            primary_header['CAMERA'] = 'indi-allsky'
+            primary_header['INSTRUME'] = 'ZWO CCD ASI676MC'
+            fits.HDUList([
+                fits.PrimaryHDU(header=primary_header),
+                fits.ImageHDU(data=self._normal_frame(64, 64)),
+            ]).writeto(path)
+
+            record = calibration_engine.inspect_fits(
+                path,
+                calibration_engine.DEFAULT_SETTINGS,
+            )
+
+        self.assertEqual(record.camera_name, 'ZWO CCD ASI676MC')
+        self.assertEqual(record.xbin, 1)
+        self.assertEqual(record.bayer, 'RGGB')
+
+    def test_fits_inspection_rejects_runtime_incompatible_metadata(self):
+        cases = (
+            ({'BAYERPAT': None}, 'BAYERPAT'),
+            ({'BAYERPAT': 'BGGR'}, 'expected RGGB'),
+            ({'XBINNING': 2}, 'XBINNING=1'),
+            ({'XBAYROFF': 1}, 'zero Bayer offsets'),
+            ({'EXPTIME': 'Infinity'}, 'exposure'),
+            ({'GAIN': 'NaN'}, 'gain'),
+            ({'ASI676FX': True}, 'already repaired'),
+            ({'INSTRUME': 'ZWO CCD ASI678MC'}, 'ASI camera identity'),
+            ({'CAMERA': 'ZWO CCD ASI678MC'}, 'ASI camera identity'),
+        )
+        for changes, message in cases:
+            with self.subTest(changes=changes):
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    path = Path(temp_dir).joinpath('bad_metadata.fit')
+                    header = fits.Header()
+                    header['DATE-OBS'] = '2026-07-01T00:00:00'
+                    header['EXPTIME'] = 0.001
+                    header['GAIN'] = 0.0
+                    header['BAYERPAT'] = 'RGGB'
+                    header['XBINNING'] = 1
+                    header['YBINNING'] = 1
+                    header['XBAYROFF'] = 0
+                    header['YBAYROFF'] = 0
+                    header['INSTRUME'] = 'ZWO CCD ASI676MC'
+                    for key, value in changes.items():
+                        if value is None:
+                            del header[key]
+                        else:
+                            header[key] = value
+                    fits.PrimaryHDU(
+                        data=self._normal_frame(64, 64),
+                        header=header,
+                    ).writeto(path)
+                    with self.assertRaisesRegex(ValueError, message):
+                        calibration_engine.inspect_fits(
+                            path,
+                            calibration_engine.DEFAULT_SETTINGS,
+                        )
 
     @staticmethod
     def _normal_frame(height=128, width=128):
@@ -458,6 +618,63 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
                 calibration_engine.DEFAULT_SETTINGS[key],
                 delta=0.02,
             )
+
+    def test_two_normal_colour_regimes_do_not_pass_as_phase_shift_failure(self):
+        normal = self._normal_frame()
+        higher_ratio = normal.copy()
+        gains = (2.0, 0.7, 0.7, 2.0)
+        for row_parity in range(2):
+            for column_parity in range(2):
+                plane = higher_ratio[row_parity::2, column_parity::2]
+                plane[:] = numpy.rint(numpy.clip(
+                    plane.astype(numpy.float64)
+                    * gains[row_parity * 2 + column_parity],
+                    0,
+                    65534,
+                )).astype(numpy.uint16)
+        self.assertTrue(asi676mc.frame_signature(higher_ratio)['is_bad'])
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            folder = Path(temp_dir)
+            for index in range(7):
+                exposure = 0.001 if index < 4 else 0.002
+                base_second = index * 300
+                for role, second, data in (
+                    ('before', base_second, normal),
+                    ('bad', base_second + 20, higher_ratio),
+                    ('after', base_second + 40, normal),
+                ):
+                    header = fits.Header()
+                    header['DATE-OBS'] = (
+                        '2026-07-01T00:{0:02d}:{1:02d}'.format(
+                            second // 60,
+                            second % 60,
+                        )
+                    )
+                    header['EXPTIME'] = exposure
+                    header['GAIN'] = 0.0
+                    header['XBINNING'] = 1
+                    header['YBINNING'] = 1
+                    header['BAYERPAT'] = 'RGGB'
+                    header['INSTRUME'] = 'ZWO CCD ASI676MC'
+                    fits.PrimaryHDU(data=data, header=header).writeto(
+                        folder / '{0:02d}_{1}.fit'.format(index, role)
+                    )
+
+            overrides = {
+                'MIN_GAIN_SAMPLES_PER_PARITY': 10,
+                'MIN_HIGHLIGHT_SAMPLES_TOTAL': 10,
+                'MIN_HIGHLIGHT_SAMPLES_PER_PAIR': 1,
+            }
+            with mock.patch.dict(
+                calibration_engine.CALIBRATION_OPTIONS,
+                overrides,
+            ):
+                with self.assertRaisesRegex(
+                    calibration_engine.CalibrationError,
+                    'one-row phase shift',
+                ):
+                    calibration_engine.calibrate_folder(folder)
 
 
 if __name__ == '__main__':

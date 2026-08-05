@@ -181,7 +181,9 @@
                                 <a href="{{ url_for('indi_allsky.image_processing_view') }}" class="dropdown-item">
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/magic.svg') }}" width="16" height="16" alt="FITS Processing"><span class="ms-1 d-none d-sm-inline">Process FITS</span> </a>
                             </li>
-                            {% if current_user.is_authenticated and asi676mc_repair_enabled %}
+                            {# Server context applies the same permission, camera,
+                               and master-switch gate as the direct routes. #}
+                            {% if asi676mc_calibration_available %}
                             <li>
                                 <a href="{{ url_for('indi_allsky.asi676mc_calibration_view') }}" class="dropdown-item">
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/magic.svg') }}" width="16" height="16" alt="ASI676MC Calibration"><span class="ms-1 d-none d-sm-inline">ASI676MC Calibration</span> </a>

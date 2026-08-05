@@ -422,7 +422,18 @@ class ImageProcessor(object):
                         self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM_ADU] = 0.0
 
 
-    def add(self, filename, exposure, gain, binning, exp_date, exp_elapsed, camera):
+    def add(
+        self,
+        filename,
+        exposure,
+        gain,
+        binning,
+        exp_date,
+        exp_elapsed,
+        camera,
+        detected_camera_name=None,
+    ):
+        """Ingest one capture and retain its authoritative device identity."""
         if isinstance(self._detection_mask_dict, type(None)):
             # binning_av needs to be populated before running this
             self.post_init()
@@ -448,14 +459,34 @@ class ImageProcessor(object):
                 self.image_list.pop()
 
 
-        i_ref = self._add(filename, exposure, gain, binning, exp_date, exp_elapsed, camera)
+        i_ref = self._add(
+            filename,
+            exposure,
+            gain,
+            binning,
+            exp_date,
+            exp_elapsed,
+            camera,
+            detected_camera_name=detected_camera_name,
+        )
 
         self.image_list.insert(0, i_ref)  # new image is first in list
 
         return i_ref
 
 
-    def _add(self, filename, exposure, gain, binning, exp_date, exp_elapsed, camera):
+    def _add(
+        self,
+        filename,
+        exposure,
+        gain,
+        binning,
+        exp_date,
+        exp_elapsed,
+        camera,
+        detected_camera_name=None,
+    ):
+        """Decode one capture into ImageData without updating the stack."""
         from astropy.io import fits
 
         filename_p = Path(filename)
@@ -817,6 +848,7 @@ class ImageProcessor(object):
             image_bitpix,
             image_bayerpat,
             target_adu,
+            detected_camera_name=detected_camera_name,
         )
 
 
@@ -957,6 +989,7 @@ class ImageProcessor(object):
         signature_after=None,
         timing=None,
     ):
+        """Attach JSON-safe ASI676MC audit metadata to one image."""
         i_ref.asi676mc_repair_result = asi676mc.audit_metadata(
             status,
             reason=reason,
@@ -969,14 +1002,15 @@ class ImageProcessor(object):
 
 
     def correct_asi676mc_frame(self, i_ref):
+        """Detect or repair one eligible ASI676MC RAW16 frame in place."""
         repair_config = self.config.get('IMAGE_ASI676MC_REPAIR', {})
         if not repair_config.get('ENABLE', False):
             return False
 
-        if not asi676mc.camera_name_matches(i_ref.camera_name):
+        if not asi676mc.camera_name_matches(i_ref.detected_camera_name):
             logger.debug(
                 'ASI676MC frame repair skipped for camera: %s',
-                i_ref.camera_name,
+                i_ref.detected_camera_name or 'unset capture identity',
             )
             return False
 
@@ -1029,7 +1063,7 @@ class ImageProcessor(object):
             if result['is_bad']:
                 logger.warning(
                     'ASI676MC purple-frame failure detected; original frame retained '
-                    'and excluded from timelapses '
+                    'and excluded from standard timelapses '
                     '(purple ratio: %0.3f, red-side ratio: %0.3f, '
                     'blue-side ratio: %0.3f, detection: %0.3f ms, total: %0.3f ms)',
                     signature_before['purple_ratio'],
@@ -1095,7 +1129,10 @@ class ImageProcessor(object):
             return self._set_asi676mc_repair_result(
                 i_ref,
                 'validation_failed',
-                reason='post-repair signature still matches the purple-frame failure',
+                reason=result.get(
+                    'validation_reason',
+                    'post-repair validation failed',
+                ),
                 signature_before=signature_before,
                 signature_after=signature_after,
                 timing=timing,
@@ -1125,6 +1162,10 @@ class ImageProcessor(object):
             )
 
         signature_after = result['signature_after']
+        i_ref.hdulist[0].header['ASI676FX'] = (
+            True,
+            'ASI676MC purple-frame repair applied',
+        )
         logger.warning(
             'ASI676MC purple-frame failure repaired '
             '(purple ratio: %0.3f -> %0.3f, detection: %0.3f ms, '
@@ -4450,6 +4491,7 @@ class ImageData(object):
         image_bitpix,
         image_bayerpat,
         target_adu,
+        detected_camera_name=None,
     ):
         self.config = config
 
@@ -4464,6 +4506,7 @@ class ImageData(object):
         self._day_date = day_date
         self._camera_id = camera_id
         self._camera_name = camera_name
+        self._detected_camera_name = str(detected_camera_name or '')
         self._camera_uuid = camera_uuid
         self._owner = owner
         self._location = location
@@ -4547,6 +4590,11 @@ class ImageData(object):
         return self._camera_name
 
     @property
+    def detected_camera_name(self):
+        """Return the capture-time device name supplied by the camera worker."""
+        return self._detected_camera_name
+
+    @property
     def camera_uuid(self):
         return self._camera_uuid
 
@@ -4585,10 +4633,12 @@ class ImageData(object):
 
     @property
     def asi676mc_repair_result(self):
+        """Return JSON-safe detection/repair audit metadata for this frame."""
         return self._asi676mc_repair_result
 
     @asi676mc_repair_result.setter
     def asi676mc_repair_result(self, new_asi676mc_repair_result):
+        """Store detection/repair audit metadata produced before processing."""
         self._asi676mc_repair_result = new_asi676mc_repair_result
 
     @property
