@@ -1468,6 +1468,33 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('Download text report', template)
         self.assertIn('Apply values and reload', template)
         self.assertIn('Current FITS capture settings', template)
+        self.assertIn('id="calibration-capture-facts"', template)
+        self.assertIn('class="calibration-fact-grid mb-3"', template)
+        self.assertIn('id="calibration-settings"', template)
+        self.assertIn('>Calibration settings</div>', template)
+        self.assertIn('calibration-camera-control', template)
+        self.assertIn('calibration-reference-control', template)
+        self.assertIn(
+            'id="calibration-quality" class="calibration-fact-grid"',
+            template,
+        )
+        quality_card_body = template.split(
+            'function qualityCard(label, value) {',
+            1,
+        )[1].split('function countedResultItem(', 1)[0]
+        self.assertIn("{'class': 'calibration-fact'}", quality_card_body)
+        self.assertNotIn('col-sm-6 col-lg-3', quality_card_body)
+        self.assertNotIn('p-3', quality_card_body)
+        self.assertNotIn(
+            '<div class="card-header fw-semibold">Reference matching</div>',
+            template,
+        )
+        shell_style = template.split('#calibration-shell {', 1)[1].split(
+            '}',
+            1,
+        )[0]
+        self.assertIn('width: 100%;', shell_style)
+        self.assertNotIn('max-width:', shell_style)
         self.assertIn('Cancel upload', template)
         self.assertIn('Cancel saved-FITS search', template)
         self.assertIn('Retry cancellation', template)

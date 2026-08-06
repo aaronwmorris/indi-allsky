@@ -5,11 +5,10 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
-/* Limit line length on wide installations while allowing the base template's
- * sidebar and responsive grid to keep controlling the available width. */
+/* Use the full content column supplied by the base template. The source cards,
+ * status grid, and result tables all benefit from additional desktop width. */
 #calibration-shell {
-    max-width: 1180px;
-    margin: 0 auto;
+    width: 100%;
     padding-bottom: 2rem;
 }
 
@@ -69,8 +68,32 @@
     color: rgba(248, 249, 250, 0.72);
 }
 
+/* A one-pixel grid divider keeps capture and result-evidence summaries
+ * readable without separately padded cards. Items wrap as the viewport narrows. */
+.calibration-fact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 1px;
+    overflow: hidden;
+    background-color: #6c757d;
+    border: 1px solid #6c757d;
+    border-radius: 0.375rem;
+}
+
 .calibration-fact {
-    background-color: rgba(0, 0, 0, 0.18);
+    min-width: 0;
+    padding: 0.55rem 0.75rem;
+    background-color: rgba(20, 23, 26, 0.98);
+}
+
+/* The page may now use an ultrawide content column, but form controls remain
+ * comfortably sized instead of stretching across their entire grid cells. */
+.calibration-camera-control {
+    max-width: 36rem;
+}
+
+.calibration-reference-control {
+    max-width: 14rem;
 }
 
 .calibration-source-card .card-body {
@@ -162,18 +185,16 @@
 <div class="card bg-dark border-secondary text-light mb-4">
     <div class="card-header fw-semibold">Current FITS capture settings</div>
     <div class="card-body">
-        <p class="calibration-help">
+        <p class="calibration-help small mb-2">
             These settings affect future captures only. Existing data can still
             be used: saved FITS search works with previously flagged purple
             frames, while manual upload identifies them from the selected files.
         </p>
-        <div class="row mb-2">
+        <div id="calibration-capture-facts" class="calibration-fact-grid mb-3">
             {% for fact in capture_guidance.facts %}
-            <div class="col-md mb-2">
-                <div class="calibration-fact border border-secondary rounded p-3 h-100">
-                    <div class="calibration-help small">{{ fact.label }}</div>
-                    <div class="fw-semibold">{{ fact.value }}</div>
-                </div>
+            <div class="calibration-fact">
+                <div class="calibration-help small">{{ fact.label }}</div>
+                <div class="fw-semibold">{{ fact.value }}</div>
             </div>
             {% endfor %}
         </div>
@@ -189,41 +210,29 @@
 <form id="form-asi676mc-calibration" onSubmit="return false;">
     {{ form_calibration.csrf_token }}
 
-    <div class="card bg-dark border-secondary text-light mb-4">
-        <div class="card-header fw-semibold">Camera</div>
+    <!-- Both controls apply to automatic discovery and manual upload, so one
+         responsive settings card avoids repeating card chrome and help rows. -->
+    <div id="calibration-settings" class="card bg-dark border-secondary text-light mb-4">
+        <div class="card-header fw-semibold">Calibration settings</div>
         <div class="card-body">
-            <div class="row align-items-center g-3">
-                <div class="col-md-3">
-                    {{ form_calibration.CAMERA_ID.label(class='col-form-label fw-semibold') }}
+            <div class="row g-3">
+                <div class="col-12 col-lg-7">
+                    {{ form_calibration.CAMERA_ID.label(class='form-label fw-semibold') }}
+                    {{ form_calibration.CAMERA_ID(class='form-select calibration-camera-control bg-secondary text-light border-secondary') }}
+                    <div class="calibration-help small mt-1">
+                        Evidence and results are bound to this local ASI676MC and
+                        rechecked before saving. Saved repair settings apply to
+                        every ASI676MC using this configuration.
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    {{ form_calibration.CAMERA_ID(class='form-select bg-secondary text-light border-secondary') }}
-                </div>
-                <div class="col-md-5 calibration-help">
-                    Evidence and results are bound to this local ASI676MC and
-                    rechecked before saving. The repair settings are global, so
-                    saved values apply to every ASI676MC using this configuration.
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Pair separation is shared by discovery and upload, so it is presented
-         once above both source choices. -->
-    <div class="card bg-dark border-secondary text-light mb-4">
-        <div class="card-header fw-semibold">Reference matching</div>
-        <div class="card-body">
-            <div class="row align-items-center g-3">
-                <div class="col-md-3">
-                    {{ form_calibration.MAX_PAIR_SECONDS.label(class='col-form-label fw-semibold') }}
-                </div>
-                <div class="col-md-2">
-                    {{ form_calibration.MAX_PAIR_SECONDS(class='form-control bg-secondary text-light border-secondary') }}
-                </div>
-                <div class="col-md-7 calibration-help">
-                    Normal references farther from a purple frame than this
-                    are not paired. The default is 90 seconds and applies to
-                    both input methods.
+                <div class="col-12 col-lg-5">
+                    {{ form_calibration.MAX_PAIR_SECONDS.label(class='form-label fw-semibold') }}
+                    {{ form_calibration.MAX_PAIR_SECONDS(class='form-control calibration-reference-control bg-secondary text-light border-secondary') }}
+                    <div class="calibration-help small mt-1">
+                        Normal references farther from a purple frame than this
+                        are not paired. The 90-second default applies to both
+                        input methods.
+                    </div>
                 </div>
             </div>
         </div>
@@ -458,7 +467,7 @@
         </div>
 
         <h5 class="mt-4">Evidence used</h5>
-        <div id="calibration-quality" class="row g-2"></div>
+        <div id="calibration-quality" class="calibration-fact-grid"></div>
         <!-- All non-fatal evidence observations share one dynamically populated
              box instead of appearing as a stack of near-identical alerts. -->
         <div id="calibration-warnings" class="calibration-callout calibration-callout-warning mt-3" style="display: none;">
@@ -848,13 +857,9 @@ async function startCalibrationJob(sessionId, maxPairSeconds) {
 }
 
 function qualityCard(label, value) {
-    return $('<div />', {'class': 'col-sm-6 col-lg-3'}).append(
-        $('<div />', {
-            'class': 'calibration-fact border border-secondary rounded p-3 h-100',
-        }).append(
-            $('<div />', {'class': 'calibration-help small'}).text(label),
-            $('<div />', {'class': 'fs-5'}).text(value)
-        )
+    return $('<div />', {'class': 'calibration-fact'}).append(
+        $('<div />', {'class': 'calibration-help small'}).text(label),
+        $('<div />', {'class': 'fw-semibold'}).text(value)
     );
 }
 
