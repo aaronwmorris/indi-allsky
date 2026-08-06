@@ -36,7 +36,7 @@ from wtforms.validators import DataRequired
 from wtforms.validators import ValidationError
 from markupsafe import Markup
 
-#from sqlalchemy import extract
+from sqlalchemy import extract
 #from sqlalchemy import asc
 from sqlalchemy import func
 #from sqlalchemy.types import DateTime
@@ -6725,10 +6725,9 @@ class IndiAllskyImageViewer(FlaskForm):
         years_query = db.session.query(
             IndiAllSkyDbImageTable.createDate_year,
         )\
-            .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.camera_id == self.camera_id,
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                 )
         )
@@ -6764,10 +6763,9 @@ class IndiAllskyImageViewer(FlaskForm):
             IndiAllSkyDbImageTable.createDate_year,
             IndiAllSkyDbImageTable.createDate_month,
         )\
-            .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.camera_id == self.camera_id,
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                     IndiAllSkyDbImageTable.createDate_year == year,
                 )
@@ -6807,10 +6805,9 @@ class IndiAllskyImageViewer(FlaskForm):
             IndiAllSkyDbImageTable.createDate_month,
             IndiAllSkyDbImageTable.createDate_day,
         )\
-            .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.camera_id == self.camera_id,
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                     IndiAllSkyDbImageTable.createDate_year == year,
                     IndiAllSkyDbImageTable.createDate_month == month,
@@ -6850,10 +6847,9 @@ class IndiAllskyImageViewer(FlaskForm):
             IndiAllSkyDbImageTable.createDate_day,
             IndiAllSkyDbImageTable.createDate_hour,
         )\
-            .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.camera_id == self.camera_id,
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                     IndiAllSkyDbImageTable.createDate_year == year,
                     IndiAllSkyDbImageTable.createDate_month == month,
@@ -6891,10 +6887,9 @@ class IndiAllskyImageViewer(FlaskForm):
         images_query = db.session.query(
             IndiAllSkyDbImageTable,
         )\
-            .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.camera_id == self.camera_id,
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                     IndiAllSkyDbImageTable.createDate_year == year,
                     IndiAllSkyDbImageTable.createDate_month == month,
@@ -7006,10 +7001,9 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
         last_image = db.session.query(
             IndiAllSkyDbImageTable,
         )\
-            .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.camera_id == self.camera_id,
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                 )
         )\
@@ -7061,8 +7055,7 @@ class IndiAllskyFitsImageViewer(FlaskForm):
         years_query = db.session.query(
             self.model.createDate_year,
         )\
-            .join(self.model.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)
+            .filter(self.model.camera_id == self.camera_id)
 
 
         years_query = years_query\
@@ -7086,10 +7079,9 @@ class IndiAllskyFitsImageViewer(FlaskForm):
             self.model.createDate_year,
             self.model.createDate_month,
         )\
-            .join(self.model.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    self.model.camera_id == self.camera_id,
                     self.model.createDate_year == year,
                 )
         )
@@ -7117,10 +7109,9 @@ class IndiAllskyFitsImageViewer(FlaskForm):
             self.model.createDate_month,
             self.model.createDate_day,
         )\
-            .join(self.model.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    self.model.camera_id == self.camera_id,
                     self.model.createDate_year == year,
                     self.model.createDate_month == month,
                 )
@@ -7148,10 +7139,9 @@ class IndiAllskyFitsImageViewer(FlaskForm):
             self.model.createDate_day,
             self.model.createDate_hour,
         )\
-            .join(self.model.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    self.model.camera_id == self.camera_id,
                     self.model.createDate_year == year,
                     self.model.createDate_month == month,
                     self.model.createDate_day == day,
@@ -7177,10 +7167,9 @@ class IndiAllskyFitsImageViewer(FlaskForm):
         images_query = db.session.query(
             self.model,
         )\
-            .join(self.model.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    self.model.camera_id == self.camera_id,
                     self.model.createDate_year == year,
                     self.model.createDate_month == month,
                     self.model.createDate_day == day,
@@ -7227,8 +7216,7 @@ class IndiAllskyFitsImageViewerPreload(IndiAllskyFitsImageViewer):
         last_fits_image = db.session.query(
             self.model,
         )\
-            .join(self.model.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+            .filter(self.model.camera_id == self.camera_id)\
             .order_by(self.model.createDate.desc())\
             .first()
 
@@ -7278,10 +7266,9 @@ class IndiAllskyGalleryViewer(FlaskForm):
         years_query = db.session.query(
             IndiAllSkyDbImageTable.createDate_year,
         )\
-            .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.camera_id == self.camera_id,
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                 )
         )
@@ -7321,10 +7308,9 @@ class IndiAllskyGalleryViewer(FlaskForm):
             IndiAllSkyDbImageTable.createDate_year,
             IndiAllSkyDbImageTable.createDate_month,
         )\
-            .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.camera_id == self.camera_id,
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                     IndiAllSkyDbImageTable.createDate_year == year,
                 )
@@ -7367,10 +7353,9 @@ class IndiAllskyGalleryViewer(FlaskForm):
             IndiAllSkyDbImageTable.createDate_month,
             IndiAllSkyDbImageTable.createDate_day,
         )\
-            .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.camera_id == self.camera_id,
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                     IndiAllSkyDbImageTable.createDate_year == year,
                     IndiAllSkyDbImageTable.createDate_month == month,
@@ -7414,10 +7399,9 @@ class IndiAllskyGalleryViewer(FlaskForm):
             IndiAllSkyDbImageTable.createDate_day,
             IndiAllSkyDbImageTable.createDate_hour,
         )\
-            .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.camera_id == self.camera_id,
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                     IndiAllSkyDbImageTable.createDate_year == year,
                     IndiAllSkyDbImageTable.createDate_month == month,
@@ -7460,11 +7444,10 @@ class IndiAllskyGalleryViewer(FlaskForm):
             IndiAllSkyDbImageTable,
             IndiAllSkyDbThumbnailTable,
         )\
-            .join(IndiAllSkyDbImageTable.camera)\
             .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    IndiAllSkyDbImageTable.camera_id == self.camera_id,
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                     IndiAllSkyDbImageTable.createDate_year == year,
                     IndiAllSkyDbImageTable.createDate_month == month,
@@ -7583,11 +7566,13 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
     def getYears(self):
-        years_query = db.session.query(
+        year_col = func.coalesce(
             IndiAllSkyDbVideoTable.dayDate_year,
-        )\
-            .join(IndiAllSkyDbVideoTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)
+            extract('year', IndiAllSkyDbVideoTable.dayDate),
+        ).label('year_val')
+
+        years_query = db.session.query(year_col)\
+            .filter(IndiAllSkyDbVideoTable.camera_id == self.camera_id)
 
 
         if not self.local:
@@ -7603,12 +7588,15 @@ class IndiAllskyVideoViewer(FlaskForm):
 
         years_query = years_query\
             .distinct()\
-            .order_by(IndiAllSkyDbVideoTable.dayDate_year.desc())
+            .order_by(year_col.desc())
 
 
         year_choices = []
         for y in years_query:
-            entry = (y.dayDate_year, str(y.dayDate_year))
+            if y.year_val is None:
+                continue
+            year_val = int(y.year_val)
+            entry = (year_val, str(year_val))
             year_choices.append(entry)
 
 
@@ -7616,15 +7604,20 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
     def getMonths(self, year):
-        months_query = db.session.query(
+        year_col = func.coalesce(
             IndiAllSkyDbVideoTable.dayDate_year,
+            extract('year', IndiAllSkyDbVideoTable.dayDate),
+        )
+        month_col = func.coalesce(
             IndiAllSkyDbVideoTable.dayDate_month,
-        )\
-            .join(IndiAllSkyDbVideoTable.camera)\
+            extract('month', IndiAllSkyDbVideoTable.dayDate),
+        ).label('month_val')
+
+        months_query = db.session.query(month_col)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
-                    IndiAllSkyDbVideoTable.dayDate_year == year,
+                    IndiAllSkyDbVideoTable.camera_id == self.camera_id,
+                    year_col == year,
                 )
         )
 
@@ -7642,14 +7635,17 @@ class IndiAllskyVideoViewer(FlaskForm):
 
         months_query = months_query\
             .distinct()\
-            .order_by(IndiAllSkyDbVideoTable.dayDate_month.desc())
+            .order_by(month_col.desc())
 
 
         month_choices = []
         for m in months_query:
-            month_name = datetime.strptime('{0} {1}'.format(year, m.dayDate_month), '%Y %m')\
+            if m.month_val is None:
+                continue
+            month_val = int(m.month_val)
+            month_name = datetime.strptime('{0} {1}'.format(year, month_val), '%Y %m')\
                 .strftime('%B')
-            entry = (m.dayDate_month, month_name)
+            entry = (month_val, month_name)
             month_choices.append(entry)
 
 
@@ -7657,13 +7653,21 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
     def getVideos(self, year, month, timeofday):
+        year_col = func.coalesce(
+            IndiAllSkyDbVideoTable.dayDate_year,
+            extract('year', IndiAllSkyDbVideoTable.dayDate),
+        )
+        month_col = func.coalesce(
+            IndiAllSkyDbVideoTable.dayDate_month,
+            extract('month', IndiAllSkyDbVideoTable.dayDate),
+        )
+
         videos_query = IndiAllSkyDbVideoTable.query\
-            .join(IndiAllSkyDbVideoTable.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
-                    IndiAllSkyDbVideoTable.dayDate_year == year,
-                    IndiAllSkyDbVideoTable.dayDate_month == month,
+                    IndiAllSkyDbVideoTable.camera_id == self.camera_id,
+                    year_col == year,
+                    month_col == month,
                 )
             )
 
@@ -7739,10 +7743,9 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             ### Keogram
             keogram_entry_q = IndiAllSkyDbKeogramTable.query\
-                .join(IndiAllSkyDbKeogramTable.camera)\
                 .filter(
                     and_(
-                        IndiAllSkyDbCameraTable.id == self.camera_id,
+                        IndiAllSkyDbKeogramTable.camera_id == self.camera_id,
                         IndiAllSkyDbKeogramTable.dayDate == dayDate,
                         IndiAllSkyDbKeogramTable.night == entry['night'],
                     )
@@ -7800,10 +7803,9 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             ### Star trail
             startrail_entry_q = IndiAllSkyDbStarTrailsTable.query\
-                .join(IndiAllSkyDbStarTrailsTable.camera)\
                 .filter(
                     and_(
-                        IndiAllSkyDbCameraTable.id == self.camera_id,
+                        IndiAllSkyDbStarTrailsTable.camera_id == self.camera_id,
                         IndiAllSkyDbStarTrailsTable.dayDate == dayDate,
                         IndiAllSkyDbStarTrailsTable.night == entry['night'],
                     )
@@ -7861,10 +7863,9 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             ### Star trail timelapses
             startrail_video_entry_q = IndiAllSkyDbStarTrailsVideoTable.query\
-                .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
                 .filter(
                     and_(
-                        IndiAllSkyDbCameraTable.id == self.camera_id,
+                        IndiAllSkyDbStarTrailsVideoTable.camera_id == self.camera_id,
                         IndiAllSkyDbStarTrailsVideoTable.dayDate == dayDate,
                         IndiAllSkyDbStarTrailsVideoTable.night == entry['night'],
                     )
@@ -7913,10 +7914,9 @@ class IndiAllskyVideoViewer(FlaskForm):
 
             ### Panorama timelapses
             panorama_video_entry_q = IndiAllSkyDbPanoramaVideoTable.query\
-                .join(IndiAllSkyDbPanoramaVideoTable.camera)\
                 .filter(
                     and_(
-                        IndiAllSkyDbCameraTable.id == self.camera_id,
+                        IndiAllSkyDbPanoramaVideoTable.camera_id == self.camera_id,
                         IndiAllSkyDbPanoramaVideoTable.dayDate == dayDate,
                         IndiAllSkyDbPanoramaVideoTable.night == entry['night'],
                     )
@@ -7990,8 +7990,7 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
         super(IndiAllskyVideoViewerPreload, self).__init__(*args, **kwargs)
 
         last_video = IndiAllSkyDbVideoTable.query\
-            .join(IndiAllSkyDbVideoTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+            .filter(IndiAllSkyDbVideoTable.camera_id == self.camera_id)\
             .order_by(IndiAllSkyDbVideoTable.dayDate.desc())\
             .first()
 
@@ -8028,11 +8027,13 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
 
 
     def getYears(self):
-        years_query = db.session.query(
+        year_col = func.coalesce(
             IndiAllSkyDbMiniVideoTable.dayDate_year,
-        )\
-            .join(IndiAllSkyDbMiniVideoTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)
+            extract('year', IndiAllSkyDbMiniVideoTable.dayDate),
+        ).label('year_val')
+
+        years_query = db.session.query(year_col)\
+            .filter(IndiAllSkyDbMiniVideoTable.camera_id == self.camera_id)
 
 
         if not self.local:
@@ -8048,12 +8049,15 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
 
         years_query = years_query\
             .distinct()\
-            .order_by(IndiAllSkyDbMiniVideoTable.dayDate_year.desc())
+            .order_by(year_col.desc())
 
 
         year_choices = []
         for y in years_query:
-            entry = (y.dayDate_year, str(y.dayDate_year))
+            if y.year_val is None:
+                continue
+            year_val = int(y.year_val)
+            entry = (year_val, str(year_val))
             year_choices.append(entry)
 
 
@@ -8061,15 +8065,20 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
 
 
     def getMonths(self, year):
-        months_query = db.session.query(
+        year_col = func.coalesce(
             IndiAllSkyDbMiniVideoTable.dayDate_year,
+            extract('year', IndiAllSkyDbMiniVideoTable.dayDate),
+        )
+        month_col = func.coalesce(
             IndiAllSkyDbMiniVideoTable.dayDate_month,
-        )\
-            .join(IndiAllSkyDbMiniVideoTable.camera)\
+            extract('month', IndiAllSkyDbMiniVideoTable.dayDate),
+        ).label('month_val')
+
+        months_query = db.session.query(month_col)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
-                    IndiAllSkyDbMiniVideoTable.dayDate_year == year,
+                    IndiAllSkyDbMiniVideoTable.camera_id == self.camera_id,
+                    year_col == year,
                 )
         )
 
@@ -8087,14 +8096,17 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
 
         months_query = months_query\
             .distinct()\
-            .order_by(IndiAllSkyDbMiniVideoTable.dayDate_month.desc())
+            .order_by(month_col.desc())
 
 
         month_choices = []
         for m in months_query:
-            month_name = datetime.strptime('{0} {1}'.format(year, m.dayDate_month), '%Y %m')\
+            if m.month_val is None:
+                continue
+            month_val = int(m.month_val)
+            month_name = datetime.strptime('{0} {1}'.format(year, month_val), '%Y %m')\
                 .strftime('%B')
-            entry = (m.dayDate_month, month_name)
+            entry = (month_val, month_name)
             month_choices.append(entry)
 
 
@@ -8103,15 +8115,23 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
 
 
     def getVideos(self, year, month):
+        year_col = func.coalesce(
+            IndiAllSkyDbMiniVideoTable.dayDate_year,
+            extract('year', IndiAllSkyDbMiniVideoTable.dayDate),
+        )
+        month_col = func.coalesce(
+            IndiAllSkyDbMiniVideoTable.dayDate_month,
+            extract('month', IndiAllSkyDbMiniVideoTable.dayDate),
+        )
+
         videos_query = db.session.query(
             IndiAllSkyDbMiniVideoTable,
         )\
-            .join(IndiAllSkyDbMiniVideoTable.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == self.camera_id,
-                    IndiAllSkyDbMiniVideoTable.dayDate_year == year,
-                    IndiAllSkyDbMiniVideoTable.dayDate_month == month,
+                    IndiAllSkyDbMiniVideoTable.camera_id == self.camera_id,
+                    year_col == year,
+                    month_col == month,
                 )
         )
 
@@ -8196,8 +8216,7 @@ class IndiAllskyMiniVideoViewerPreload(IndiAllskyMiniVideoViewer):
         super(IndiAllskyMiniVideoViewerPreload, self).__init__(*args, **kwargs)
 
         last_video = IndiAllSkyDbMiniVideoTable.query\
-            .join(IndiAllSkyDbMiniVideoTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+            .filter(IndiAllSkyDbMiniVideoTable.camera_id == self.camera_id)\
             .order_by(IndiAllSkyDbMiniVideoTable.dayDate.desc())\
             .first()
 

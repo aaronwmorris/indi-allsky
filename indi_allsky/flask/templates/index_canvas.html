@@ -2,6 +2,8 @@
 
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
+{% block header_title %}Latest Capture (Canvas){% endblock %}
+
 {% block head %}
 <meta charset="UTF-8">
 <style>
@@ -23,30 +25,21 @@ var refreshInterval = {{ refreshInterval | int }};
 var night = {{ night }};
 var fullscreen = false;  //initial state
 
-
 function init() {
     loadNextImage();
     loop();
 }
 
-
 async function loop() {
-    //console.log('Starting loop');
-
     while(json_data['latest_image']['url'] == null) {
         await sleep(100);
     }
 
-
     showImage(json_data['latest_image']);
-
     setTimeout(loop, refreshInterval);
 }
 
-
 function showImage(entry) {
-    console.log('Showing image ' + entry["url"]);
-
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
 
@@ -59,25 +52,17 @@ function showImage(entry) {
         var vRatio = canvas.height / this.height;
         var ratio  = Math.min ( hRatio, vRatio );
 
-        //canvas.width = this.width * ratio;
-        //canvas.height = this.height * ratio;
-
         var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
         var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
 
-        //context.imageSmoothingEnabled = false;
         context.drawImage(this, 0, 0, this.width, this.height,
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
-
     };
-
 
     img.src = entry["url"];
 }
 
-
 function loadNextImage() {
-    console.log('Loading next image');
     loadJS("{{ url_for(latest_image_view) }}", {'camera_id' : camera_id, 'limit_s' : max_age, 'night' : night}, function() {});
     setTimeout(loadNextImage, refreshInterval);
 }
@@ -96,17 +81,23 @@ function loadJS(url, data, onDone, onError) {
         contentType: "application/json",
         data: data,
         success: function(rdata){
-            json_data = rdata
-            $('#message').html(json_data['latest_image']['message']);
+            json_data = rdata;
+            const msg = json_data['latest_image']['message'];
+            const overlay = $('#status-overlay');
+            if (msg && msg.trim() !== '') {
+                $('#message').html(msg);
+                overlay.removeClass('tw:hidden');
+            } else {
+                overlay.addClass('tw:hidden');
+            }
         },
         error: function(rdata){
-            onError(rdata.status);
-            $('#message').html('Error loading data.  Please check the logs.');
+            onError(rdata.status);
+            $('#message').html('Error loading data.');
+            $('#status-overlay').removeClass('tw:hidden');
         },
     });
-
 }
-
 
 function setResizeHandler(callback, timeout) {
     var timer_id = undefined;
@@ -129,7 +120,6 @@ function resize_callback() {
 }
 setResizeHandler(resize_callback, 200);
 
-
 function goFullscreen(elem) {
     if(fullscreen) {
         closeFullscreen();
@@ -146,7 +136,6 @@ function openFullscreen(elem) {
     } else if (elem.msRequestFullscreen) { /* IE11 */
         elem.msRequestFullscreen();
     }
-
     fullscreen = true;
 }
 
@@ -158,30 +147,41 @@ function closeFullscreen() {
     } else if (document.msExitFullscreen) { /* IE11 */
         document.msExitFullscreen();
     }
-
     fullscreen = false;
 }
-
-
 
 $( document ).ready(function() {
     $('#canvas').on("click", function() {
         goFullscreen(this);
     });
-
     init();
 });
-
 </script>
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="text-muted text-center" id="message">Loading...</div>
-</div>
-<div class="row">
-    <div class="text-center">
-        <canvas id="canvas"></canvas>
+<div class="tw:flex tw:flex-col tw:h-full tw:gap-4">
+    <div class="tw:flex-1 tw:bg-base-300 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-inner tw:flex tw:items-center tw:justify-center tw:overflow-hidden tw:min-h-[50vh] tw:relative">
+        <div class="tw:absolute tw:inset-0 tw:bg-base-content/2 tw:pointer-events-none"></div>
+        
+        <!-- Status Overlay -->
+        <div id="status-overlay" class="tw:absolute tw:top-4 tw:left-4 tw:z-20 tw:hidden">
+            <div class="tw:badge tw:badge-soft tw:badge-info tw:gap-2 tw:py-3.5 tw:px-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm tw:backdrop-blur-md">
+                <i class="tw:icon-[lucide--info] tw:w-3.5 tw:h-3.5"></i>
+                <span id="message" class="tw:font-bold tw:text-[0.625rem] tw:uppercase tw:tracking-wider">Syncing Data...</span>
+            </div>
+        </div>
+
+        <!-- Control Overlay -->
+        <div class="tw:absolute tw:top-4 tw:right-4 tw:z-20">
+            <button onclick="goFullscreen(document.getElementById('canvas'))" 
+                    title="Toggle Fullscreen"
+                    class="tw:btn tw:btn-square tw:btn-sm tw:bg-base-100/50 tw:backdrop-blur-md tw:border-base-300 hover:tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:cursor-pointer tw:transition-all shadow-sm">
+                <i class="tw:icon-[lucide--maximize] tw:w-4 tw:h-4 tw:opacity-70"></i>
+            </button>
+        </div>
+
+        <canvas id="canvas" class="tw:mx-auto tw:max-h-full tw:max-w-full tw:object-contain tw:rounded-[var(--radius-box)] tw:shadow-2xl tw:cursor-zoom-in"></canvas>
     </div>
 </div>
 {% endblock %}

@@ -4,12 +4,6 @@
 
 {% block head %}
 <meta charset="UTF-8">
-<style>
-canvas {
-    width: 80%;
-    height: auto;
-};
-</style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/chart.umd.js') }}"></script>
 <script type="text/javascript">
 var img;
@@ -185,8 +179,8 @@ function focuserMove(direction, degrees) {
         success: function(response_data){
             $('#focus_controller_error').empty();
 
-            $('#FOCUS_CCW').addClass("btn-primary");
-            $('#FOCUS_CW').addClass("btn-danger");
+            $('#FOCUS_CCW').addClass("tw:btn-primary");
+            $('#FOCUS_CW').addClass("tw:btn-error");
             $('#FOCUS_CCW').prop("disabled", false);
             $('#FOCUS_CW').prop("disabled", false);
 
@@ -200,8 +194,8 @@ function focuserMove(direction, degrees) {
             $('#focus_controller_error').text(errors['focuser_error'][0]);
 
             // Leave disabled on errors
-            //$('#FOCUS_CCW').addClass("btn-primary");
-            //$('#FOCUS_CW').addClass("btn-danger");
+            //$('#FOCUS_CCW').addClass("tw:btn-primary");
+            //$('#FOCUS_CW').addClass("tw:btn-error");
             //$('#FOCUS_CCW').prop("disabled", false);
             //$('#FOCUS_CW').prop("disabled", false);
         },
@@ -263,66 +257,123 @@ function closeFullscreen() {
     fullscreen = false;
 }
 
-
-
 </script>
 {% endblock %}
 
 {% block content %}
-<div class="container h-100">
+<style>
+    /* Force row layout on desktop screens layout bypass */
+    @media (min-width: 1024px) {
+        .force-desktop-row {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: stretch !important;
+            width: 100% !important;
+        }
+        .force-desktop-row > div {
+            flex: 1 1 0% !important; /* Forces equal width columns */
+            min-width: 0 !important;
+        }
+    }
+</style>
 
-<form id="form_focus" onSubmit="return false;">
-    <div class="form-group row">
-        <div class="col-sm-1">
-            <div>{{ form_focus.REFRESH_SELECT.label(class='col-form-label') }}</div>
-            <div>{{ form_focus.ZOOM_SELECT.label(class='col-form-label') }}</div>
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6 focus-wrapper">
+
+    <form id="form_focus" onSubmit="return false;" class="tw:w-full tw:flex tw:flex-col tw:gap-6 force-desktop-row">
+        
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-5 tw:flex tw:flex-col tw:justify-center tw:gap-4 shadow-sm">
+            <div class="tw:flex tw:items-center tw:gap-4">
+                <label class="tw:w-20 tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">
+                    {{ form_focus.REFRESH_SELECT.label.text }}
+                </label>
+                <div class="tw:flex-1">
+                    {{ form_focus.REFRESH_SELECT(class='tw:select tw:select-bordered tw:bg-base-100 tw:w-full tw:select-sm tw:h-11') }}
+                </div>
+            </div>
+            <div class="tw:flex tw:items-center tw:gap-4">
+                <label class="tw:w-20 tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">
+                    {{ form_focus.ZOOM_SELECT.label.text }}
+                </label>
+                <div class="tw:flex-1">
+                    {{ form_focus.ZOOM_SELECT(class='tw:select tw:select-bordered tw:bg-base-100 tw:w-full tw:select-sm tw:h-11') }}
+                </div>
+            </div>
         </div>
-        <div class="col-sm-2">
-            <div>{{ form_focus.REFRESH_SELECT(class='form-select bg-secondary') }}</div>
-            <div>{{ form_focus.ZOOM_SELECT(class='form-select bg-secondary') }}</div>
+
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-5 tw:flex tw:flex-col tw:justify-center tw:gap-4 shadow-sm">
+            <div class="tw:flex tw:items-center tw:gap-4">
+                <label class="tw:w-20 tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">
+                    {{ form_focus.X_OFFSET.label.text }}
+                </label>
+                <div class="tw:flex-1">
+                    {{ form_focus.X_OFFSET(class='tw:input tw:input-bordered tw:bg-base-100 tw:font-mono tw:w-full tw:input-sm tw:h-11') }}
+                </div>
+            </div>
+            <div class="tw:flex tw:items-center tw:gap-4">
+                <label class="tw:w-20 tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">
+                    {{ form_focus.Y_OFFSET.label.text }}
+                </label>
+                <div class="tw:flex-1">
+                    {{ form_focus.Y_OFFSET(class='tw:input tw:input-bordered tw:bg-base-100 tw:font-mono tw:w-full tw:input-sm tw:h-11') }}
+                </div>
+            </div>
         </div>
-        <div class="col-sm-1">
-            <div>{{ form_focus.X_OFFSET.label(class='col-form-label') }}</div>
-            <div>{{ form_focus.Y_OFFSET.label(class='col-form-label') }}</div>
+
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4 tw:flex tw:items-center tw:justify-center shadow-sm lg:tw:h-[120px]">
+            <div class="tw:w-full tw:h-full tw:bg-base-300/30 tw:border tw:border-base-content/10 tw:rounded-[var(--radius-box)] tw:p-2 tw:flex tw:items-center tw:justify-center tw:overflow-hidden">
+                <canvas id="focus-chart" class="tw:w-full" style="display: block; max-height: 88px !important; height: 88px !important;"></canvas>
+            </div>
         </div>
-        <div class="col-sm-2">
-            <div>{{ form_focus.X_OFFSET(class='form-control bg-secondary') }}</div>
-            <div>{{ form_focus.Y_OFFSET(class='form-control bg-secondary') }}</div>
-        </div>
-        <div class="col-sm-3 offset-1 bg-dark">
-            <canvas id="focus-chart"></canvas>
+
+    </form>
+
+    <div class="tw:w-full tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4 tw:flex tw:justify-center tw:items-center shadow-sm">
+        <div class="tw:w-full tw:overflow-auto tw:flex tw:justify-center tw:rounded-[var(--radius-box)] tw:bg-black/10">
+            <canvas id="image-canvas" class="tw:block tw:max-w-full tw:h-auto"></canvas>
         </div>
     </div>
-</form>
 
-<hr>
-
-<div class="row">
-    <div class="text-center">
-        <canvas id="image-canvas"/></canvas>
+    <div class="tw:w-full tw:alert tw:alert-warning tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm">
+        <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4"></i>
+        <span>Do not forget to enable <strong class="tw:font-black">Focus Mode</strong> in the configuration and reload the configuration!</span>
     </div>
-</div>
 
-<div class="row">
-    <div class="text-center">
-        Do not forget to enable <b>Focus Mode</b> in the configuration and reload the configuration!
-    <div>
-</div>
+    <div id="focus_controller_div" class="tw:w-full tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-6 tw:flex tw:flex-col tw:items-center tw:justify-center tw:gap-4 shadow-sm" style="display: none;">
+        
+        <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:w-full tw:text-center tw:mb-2">
+            Focus Motor Controller
+        </h4>
 
-<div id="focus_controller_div" class="row justify-content-center" style="display: none;">
-    <div class="col-sm-1"><button id="FOCUS_CCW" class="btn btn-primary">Focus<br>-</button></div>
-    <div class="col-sm-2">
-        <div>{{ form_focuscontroller.STEP_DEGREES(class='form-select bg-secondary') }}</div>
-        <div id="offset_div">0 Steps Offset</div>
+        <div class="tw:flex tw:flex-col tw:items-center tw:gap-3 tw:w-full tw:max-w-md">
+            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Focuser Adjustment</span>
+            
+            <div class="tw:join tw:w-full">
+                <!-- Inward / CCW -->
+                <button id="FOCUS_CCW" class="tw:btn tw:btn-sm tw:btn-primary tw:join-item tw:flex-1 tw:h-11 tw:rounded-l-[var(--radius-box)]">
+                    <i class="tw:icon-[lucide--chevron-left] tw:w-4 tw:h-4 tw:block"></i> Inward
+                </button>
+                
+                <!-- Step selector dropdown -->
+                {{ form_focuscontroller.STEP_DEGREES(class='tw:select tw:select-bordered tw:bg-base-100 tw:select-sm tw:join-item tw:w-32 tw:h-11 tw:font-mono tw:text-center') }}
+                
+                <!-- Outward / CW -->
+                <button id="FOCUS_CW" class="tw:btn tw:btn-sm tw:btn-error tw:join-item tw:flex-1 tw:h-11 tw:rounded-r-[var(--radius-box)]">
+                    Outward <i class="tw:icon-[lucide--chevron-right] tw:w-4 tw:h-4 tw:block"></i>
+                </button>
+            </div>
+            
+            <div id="offset_div" class="tw:text-[0.625rem] tw:font-mono tw:font-bold tw:bg-base-300/60 tw:border tw:border-base-content/10 tw:px-3 tw:py-1.5 tw:rounded-[var(--radius-box)] tw:text-base-content/70">
+                0 Steps Offset
+            </div>
+        </div>
+
     </div>
-    <div class="col-sm-1"><button id="FOCUS_CW" class="btn btn-danger">Focus<br>+</button></div>
-</div>
-<div class="row justify-content-center">
-    <div id="focus_controller_error" class="text-danger"></div>
-</div>
+
+    <div class="tw:w-full tw:flex tw:justify-center">
+        <div id="focus_controller_error" class="tw:text-center tw:text-xs tw:font-mono tw:font-bold tw:text-error tw:empty:hidden"></div>
+    </div>
 
 </div>
-
 
 <script>
 $("#REFRESH_SELECT").on("change", function() {
@@ -341,8 +392,8 @@ $("#FOCUS_CCW").on("click", function() {
     console.log('Focus CCW');
     $('#FOCUS_CCW').prop("disabled", true);
     $('#FOCUS_CW').prop("disabled", true);
-    $('#FOCUS_CCW').removeClass("btn-primary");
-    $('#FOCUS_CW').removeClass("btn-danger");
+    $('#FOCUS_CCW').removeClass("tw:btn-primary");
+    $('#FOCUS_CW').removeClass("tw:btn-error");
     focuserMove('ccw', $('#STEP_DEGREES').val());
 });
 
@@ -350,8 +401,8 @@ $("#FOCUS_CW").on("click", function() {
     console.log('Focus CW');
     $('#FOCUS_CCW').prop("disabled", true);
     $('#FOCUS_CW').prop("disabled", true);
-    $('#FOCUS_CCW').removeClass("btn-primary");
-    $('#FOCUS_CW').removeClass("btn-danger");
+    $('#FOCUS_CCW').removeClass("tw:btn-primary");
+    $('#FOCUS_CW').removeClass("tw:btn-error");
     focuserMove('cw', $('#STEP_DEGREES').val());
 });
 
@@ -425,7 +476,6 @@ function init() {
                     beginAtZero:true,
                     grid: {
                         display: false,
-                        drawTicks: false,
                         color: 'rgba(75, 75, 75, 1)',
                         stacked: true,
                     },

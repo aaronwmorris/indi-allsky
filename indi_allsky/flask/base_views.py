@@ -234,24 +234,24 @@ class BaseView(View):
         data = {}
 
         if not self.local_indi_allsky:
-            data['status'] = '<span class="text-secondary">REMOTE</span>'
+            data['status'] = '<span class="tw:text-base-content/60">REMOTE</span>'
             return data
 
 
         try:
             watchdog_time = int(self._miscDb.getState('WATCHDOG'))
         except NoResultFound:
-            data['status'] = '<span class="text-warning">UNKNOWN</span>'
+            data['status'] = '<span class="tw:text-warning">UNKNOWN</span>'
             return data
         except ValueError:
-            data['status'] = '<span class="text-warning">UNKNOWN</span>'
+            data['status'] = '<span class="tw:text-warning">UNKNOWN</span>'
             return data
 
 
         now = time.time()
 
         if now > (watchdog_time + 600):
-            data['status'] = '<span class="text-danger">DOWN</span>'
+            data['status'] = '<span class="tw:text-error">DOWN</span>'
             return data
 
 
@@ -259,7 +259,7 @@ class BaseView(View):
 
 
         if self.indi_allsky_config.get('FOCUS_MODE', False):
-            data['status'] = '<span class="text-warning">FOCUS MODE</span>'
+            data['status'] = '<span class="tw:text-warning">FOCUS MODE</span>'
             return data
 
 
@@ -278,36 +278,36 @@ class BaseView(View):
             status = int(self._miscDb.getState('STATUS'))
         except NoResultFound:
             # legacy
-            data['status'] = '<span class="text-success">RUNNING</span>'
+            data['status'] = '<span class="tw:text-success">RUNNING</span>'
             return data
         except ValueError:
             # legacy
-            data['status'] = '<span class="text-danger">UNKNOWN</span>'
+            data['status'] = '<span class="tw:text-error">UNKNOWN</span>'
             return data
 
 
         if status == constants.STATUS_RUNNING:
-            data['status'] = '<span class="text-success">RUNNING</span>'
+            data['status'] = '<span class="tw:text-success">RUNNING</span>'
         elif status == constants.STATUS_SLEEPING:
-            data['status'] = '<span class="text-muted">SLEEPING</span>'
+            data['status'] = '<span class="tw:text-base-content/60">SLEEPING</span>'
         elif status == constants.STATUS_RELOADING:
-            data['status'] = '<span class="text-warning">RELOADING</span>'
+            data['status'] = '<span class="tw:text-warning">RELOADING</span>'
         elif status == constants.STATUS_STARTING:
-            data['status'] = '<span class="text-info">STARTING</span>'
+            data['status'] = '<span class="tw:text-info">STARTING</span>'
         elif status == constants.STATUS_STOPPING:
-            data['status'] = '<span class="text-primary">STOPPING</span>'
+            data['status'] = '<span class="tw:text-primary">STOPPING</span>'
         elif status == constants.STATUS_STOPPED:
-            data['status'] = '<span class="text-primary">STOPPED</span>'
+            data['status'] = '<span class="tw:text-primary">STOPPED</span>'
         elif status == constants.STATUS_PAUSED:
-            data['status'] = '<span class="text-muted">PAUSED</span>'
+            data['status'] = '<span class="tw:text-base-content/60">PAUSED</span>'
         elif status == constants.STATUS_NOCAMERA:
-            data['status'] = '<span class="text-danger">NO CAMERA</span>'
+            data['status'] = '<span class="tw:text-error">NO CAMERA</span>'
         elif status == constants.STATUS_CAMERAERROR:
-            data['status'] = '<span class="text-danger">CAMERA ERROR</span>'
+            data['status'] = '<span class="tw:text-error">CAMERA ERROR</span>'
         elif status == constants.STATUS_NOINDISERVER:
-            data['status'] = '<span class="text-danger">NO INDISERVER</span>'
+            data['status'] = '<span class="tw:text-error">NO INDISERVER</span>'
         else:
-            data['status'] = '<span class="text-danger">UNKNOWN</span>'
+            data['status'] = '<span class="tw:text-error">UNKNOWN</span>'
 
         return data
 
@@ -666,13 +666,13 @@ class BaseView(View):
         if kpindex_current == 0:
             data['kpindex_rating'] = ''
         elif kpindex_current > 0 and kpindex_current < 5.0:
-            data['kpindex_rating'] = '<span class="text-secondary">LOW</span>'
+            data['kpindex_rating'] = '<span class="tw:text-base-content/60">LOW</span>'
         elif kpindex_current >= 5.0 and kpindex_current < 6.0:
-            data['kpindex_rating'] = '<span class="text-warning">MEDIUM</span>'
+            data['kpindex_rating'] = '<span class="tw:text-warning">MEDIUM</span>'
         elif kpindex_current >= 6.0 and kpindex_current < 8.0:
-            data['kpindex_rating'] = '<span class="text-danger">HIGH</span>'
+            data['kpindex_rating'] = '<span class="tw:text-error">HIGH</span>'
         elif kpindex_current >= 8.0:
-            data['kpindex_rating'] = '<span class="text-danger">VERY HIGH</span>'
+            data['kpindex_rating'] = '<span class="tw:text-error">VERY HIGH</span>'
         else:
             # this should never happen
             data['kpindex_rating'] = 'ERROR'

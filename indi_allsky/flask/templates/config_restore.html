@@ -3,98 +3,96 @@
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
 {% block head %}
-<style>
-</style>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
 {% endblock %}
 
 {% block content %}
-<div class="container h-100">
+<div class="tw:container tw:mx-auto tw:px-4 tw:py-6">
+    <div class="tw:max-w-4xl tw:mx-auto tw:flex tw:flex-col tw:gap-6">
 
-<form id="form_config_restore" onSubmit="return false;" autocomplete="off">
-{{ form_config_restore.csrf_token }}
-
-    <hr>
-
-    <div><span class="badge rounded-pill bg-danger text-dark">Warning</span> Restoring a configuration will completely overwrite your existing configuration.  Older configurations will still remain available unless you flush previous configurations.<div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2"></div>
-        <div class="col-sm-2">
-            <div><a href="{{ url_for('indi_allsky.config_list_view') }}"><span class="badge bg-success">Config History</span></a></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config_restore.CONFIG_UPLOAD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-6">
-            {{ form_config_restore.CONFIG_UPLOAD(class='form-control bg-secondary') }}
-            <div id="CONFIG_UPLOAD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-4">
-            <div></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config_restore.FLUSH_CONFIGS.label }}
-        </div>
-        <div class="col-sm-1">
-            <div class="form-switch">
-                {{ form_config_restore.FLUSH_CONFIGS(class='form-check-input') }}
-                <div id="FLUSH_CONFIGS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        <!-- Top Header & Navigation -->
+        <div class="tw:flex tw:items-center tw:justify-between tw:p-4 tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:flex tw:items-center tw:gap-3">
+                <i class="tw:icon-[lucide--rotate-ccw] tw:w-6 tw:h-6 tw:text-warning"></i>
+                <div>
+                    <h1 class="tw:text-base tw:font-bold tw:text-base-content tw:m-0">Restore Configuration</h1>
+                    <p class="tw:text-[0.6875rem] tw:text-base-content/50 tw:mt-0.5">Upload a saved configuration backup to restore system parameters</p>
+                </div>
             </div>
+            <a href="{{ url_for('indi_allsky.config_list_view') }}" class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-accent-hover tw:gap-2 tw:no-underline">
+                <i class="tw:icon-[lucide--history] tw:w-4 tw:h-4"></i>
+                Config History
+            </a>
         </div>
-        <div class="col-sm-8">
-            <div>Remove all previous configs</div>
-        </div>
-    </div>
 
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config_restore.RESET_KEYS.label }}
+        <!-- Warning Alert -->
+        <div class="tw:alert tw:alert-error tw:py-3 tw:text-xs tw:rounded-[var(--radius-box)] shadow-sm">
+            <i class="tw:icon-[lucide--alert-triangle] tw:w-5 tw:h-5"></i>
+            <span><strong>Warning:</strong> Restoring a configuration will completely overwrite your existing configuration. Older configurations will still remain available in history unless flushed.</span>
         </div>
-        <div class="col-sm-1">
-            <div class="form-switch">
-                {{ form_config_restore.RESET_KEYS(class='form-check-input') }}
-                <div id="RESET_KEYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+
+        <!-- Main Form Card -->
+        <form id="form_config_restore" onSubmit="return false;" autocomplete="off">
+            {{ form_config_restore.csrf_token }}
+
+            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-md tw:p-6 tw:flex tw:flex-col tw:gap-6">
+                
+                <!-- File Upload Field -->
+                <div class="tw:flex tw:flex-col tw:gap-2">
+                    <label class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">
+                        {{ form_config_restore.CONFIG_UPLOAD.label.text }}
+                    </label>
+                    {{ form_config_restore.CONFIG_UPLOAD(class='tw:file-input tw:file-input-bordered tw:file-input-primary tw:w-full tw:bg-base-100') }}
+                    <div id="CONFIG_UPLOAD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                </div>
+
+                <div class="tw:divider tw:my-0"></div>
+
+                <!-- Flush Configs Toggle -->
+                <div class="tw:flex tw:items-center tw:justify-between tw:p-4 tw:bg-base-300/30 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10">
+                    <div class="tw:flex tw:flex-col tw:gap-0.5">
+                        <span class="tw:text-sm tw:font-bold tw:text-base-content">{{ form_config_restore.FLUSH_CONFIGS.label.text }}</span>
+                        <span class="tw:text-xs tw:text-base-content/60">Permanently remove all previous configuration backups from the system database</span>
+                    </div>
+                    <div>
+                        {{ form_config_restore.FLUSH_CONFIGS(class='tw:toggle tw:toggle-warning') }}
+                        <div id="FLUSH_CONFIGS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Reset Keys Toggle -->
+                <div class="tw:flex tw:items-center tw:justify-between tw:p-4 tw:bg-base-300/30 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10">
+                    <div class="tw:flex tw:flex-col tw:gap-0.5">
+                        <span class="tw:text-sm tw:font-bold tw:text-base-content">{{ form_config_restore.RESET_KEYS.label.text }}</span>
+                        <span class="tw:text-xs tw:text-error">Delete and recreate new security keys for Flask. (Invalidates active sessions & forces re-login)</span>
+                    </div>
+                    <div>
+                        {{ form_config_restore.RESET_KEYS(class='tw:toggle tw:toggle-error') }}
+                        <div id="RESET_KEYS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="tw:divider tw:my-0"></div>
+
+                <!-- Action Bar -->
+                <div class="tw:flex tw:items-center tw:justify-between tw:gap-4">
+                    <button id="restore-button" type="submit" class="tw:btn tw:btn-sm tw:btn-error tw:h-11 tw:px-6 tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider tw:shadow-sm">
+                        <i class="tw:icon-[lucide--rotate-ccw] tw:w-4 tw:h-4"></i>
+                        Restore Configuration
+                    </button>
+                </div>
+
+                <!-- Feedback Messages -->
+                <div class="tw:mt-2">
+                    <div id="success-message" class="tw:alert tw:alert-success tw:shadow-sm" style="display: none;"></div>
+                    <div id="failure-message" class="tw:alert tw:alert-error tw:shadow-sm" style="display: none;"></div>
+                    <div id="failure-fields" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                </div>
             </div>
-        </div>
-        <div class="col-sm-8">
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> This will delete and recreate new security keys for flask</div>
-            <div>Your session will become invalidated and you will be forced to re-login</div>
-        </div>
+        </form>
     </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-1">
-            <button id="restore-button" class="btn btn-primary">Restore</button>
-        </div>
-    </div>
-
-    <div class="form-group row" style="height:100px;">
-        <div class="col-sm-2">
-            <div id="success-message" class="alert alert-success" role="alert" style="display: none;"></div>
-            <div id="failure-message" class="alert alert-danger" role="alert" style="display: none;"></div>
-            <div id="failure-fields" class="invalid-feedback text-warning" style="display: none;"></div>
-        </div>
-    </div>
-</form>
 </div>
 
 <script>
@@ -138,41 +136,35 @@ file_field_names.forEach(item => {
     };
 });
 
-
 fields['form_global'] = {
     'input' : failureMessage,
     'error' : failureMessage,
 };
 
+const defaultRestoreBtnClass = "tw:btn tw:btn-sm tw:btn-error tw:h-11 tw:px-6 tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider tw:shadow-sm";
+const defaultRestoreBtnHtml = '<i class="tw:icon-[lucide--rotate-ccw] tw:w-4 tw:h-4"></i> Restore Configuration';
 
 $('#form_config_restore').on('submit', function() {
     // hide all errors
     successMessage.css({'display' : 'none'});
     Object.keys(fields).forEach((key) => {
+        fields[key].input.removeClass('tw:file-input-error tw:toggle-error');
         fields[key].error.css({'display' : 'none'});
     });
     $('#failure-fields').css({'display' : 'none'});
 
-
     var formData = new FormData();
 
-
-    $("#restore-button").attr("class", "btn btn-secondary");
+    $("#restore-button").attr("class", "tw:btn tw:btn-sm tw:btn-neutral tw:h-11 tw:px-6 tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider tw:shadow-sm");
     $("#restore-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Restore</span>'
+      '<span class="tw:loading tw:loading-spinner tw:loading-xs"></span> Restoring...'
     );
 
-
-    // Populate fields object
-    var json_data = {};
     field_names.forEach(item => {
-        //json_data[item] = fields[item].input.val();
         formData.append(item, fields[item].input.val());
     });
 
-    // checkboxes
     checkbox_field_names.forEach(item => {
-        //json_data[item] = fields[item].input.prop('checked');
         if (fields[item].input.prop('checked')) {
             formData.append(item, fields[item].input.prop('checked'));
         } else {
@@ -180,28 +172,29 @@ $('#form_config_restore').on('submit', function() {
         }
     });
 
-
-    // files
     file_field_names.forEach(item => {
         var file_input = fields[item].input.prop('files');
-        formData.append(item, file_input[0]);
+        if (file_input.length > 0) {
+            formData.append(item, file_input[0]);
+        }
     });
-
 
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_config_restore_view') }}",
-        //contentType: "application/json",
-        //data: JSON.stringify(json_data),
-        processData: false,  // tell jQuery not to process the data
-        contentType: false,  // tell jQuery not to set contentType
+        processData: false,
+        contentType: false,
         data: formData,
         success: function(rdata){
-            $("#restore-button").attr("class", "btn btn-success");
+            $("#restore-button").attr("class", "tw:btn tw:btn-sm tw:btn-success tw:h-11 tw:px-6 tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider tw:shadow-sm");
             $("#restore-button").html(
-                'Restore'
+                '<i class="tw:icon-[lucide--check] tw:w-4 tw:h-4"></i> Restored'
             );
 
+            setTimeout(function() {
+                $("#restore-button").attr("class", defaultRestoreBtnClass);
+                $("#restore-button").html(defaultRestoreBtnHtml);
+            }, 4000);
 
             successMessage.html(rdata['success-message']);
             successMessage.css({'display' : 'block'});
@@ -209,32 +202,30 @@ $('#form_config_restore').on('submit', function() {
                 successMessage.css({'display' : 'none'});
             }, 15000);
 
-
-            // reset fields
             $("#CONFIG_UPLOAD").val('');
             $("#FLUSH_CONFIGS").prop('checked', false);
             $("#RESET_KEYS").prop('checked', false);
-
         },
         error: function(rdata){
-            $("#restore-button").attr("class", "btn btn-danger");
+            $("#restore-button").attr("class", "tw:btn tw:btn-sm tw:btn-error tw:h-11 tw:px-6 tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider tw:shadow-sm");
             $("#restore-button").html(
-                'Restore'
+                '<i class="tw:icon-[lucide--x] tw:w-4 tw:h-4"></i> Restore Failed'
             );
 
-            var errors = JSON.parse(rdata.responseText);
+            setTimeout(function() {
+                $("#restore-button").attr("class", defaultRestoreBtnClass);
+                $("#restore-button").html(defaultRestoreBtnHtml);
+            }, 4000);
 
-            var error_fields = new Array();
+            var errors = JSON.parse(rdata.responseText);
             Object.keys(errors).forEach((key) => {
-                fields[key].input.addClass('is-invalid');
+                fields[key].input.addClass('tw:file-input-error tw:toggle-error');
                 fields[key].error.html(errors[key].join('<br>'));
                 fields[key].error.css({'display' : 'block'});
             });
         },
     });
-
 });
-
 
 function init() {
     $("#CONFIG_UPLOAD").val('');
@@ -242,11 +233,8 @@ function init() {
     $("#FLUSH_CONFIGS").prop('checked', false);
 }
 
-
-$( document ).ready(function() {
+$(document).ready(function() {
     init();
 });
-
 </script>
-
 {% endblock %}

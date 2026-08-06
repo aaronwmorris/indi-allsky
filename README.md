@@ -707,6 +707,24 @@ Please let me know if you want to make an addition or correction.
 * [Optimal configuration for indi-allsky](https://allsky-rodgau.com/optimal-configuration-for-indi-allsky-stable-day-night-transition-and-reliable-moon-mode-1541/)
 
 
+## Frontend Development
+
+When modifying frontend templates, CSS, or JS assets, keep the following development setup in mind:
+
+### Environment Setup & Git Hooks
+Run `npm install` once in the repository root to install dependencies and configure Git hooks:
+```bash
+npm install
+```
+This automatically configures the Git pre-commit hook (`githooks/pre-commit`), which runs `npm run build` and stages updated assets before every commit.
+
+### Building & Testing Assets
+When testing template or CSS changes locally, compile the assets manually:
+```bash
+npm run build
+```
+
+
 ## Alternatives
 
 * Thomas Jacquin's Allsky

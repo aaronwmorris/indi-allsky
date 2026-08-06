@@ -2,14 +2,10 @@
 
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
+{% block header_title %}Sky Quality Meter (SQM){% endblock %}
+
 {% block head %}
 <meta charset="UTF-8">
-<style>
-canvas {
-    width: 100%;
-    height: auto;
-};
-</style>
 <script type="text/javascript">
 var img;
 var json_data = {
@@ -37,10 +33,67 @@ async function loop() {
         await sleep(100);
     }
 
-
     showImage(json_data['image_list'][0]);
+    updateMetricsUI();
 
     setTimeout(loop, refreshInterval);
+}
+
+function updateMetricsUI() {
+    if (!json_data['image_list'] || json_data['image_list'].length === 0) return;
+    
+    var firstEntry = json_data['image_list'][0];
+
+    // Status Message
+    if (json_data['message']) {
+        $('#status-message').text(json_data['message']);
+    } else {
+        $('#status-message').text('Active Polling');
+    }
+
+    // Detection Alert Banner
+    if (firstEntry["detections"] > 0) {
+        $('#detection-alert').show();
+    } else {
+        $('#detection-alert').hide();
+    }
+
+    // jSQM Metrics
+    if (firstEntry["jsqm"] !== undefined) {
+        $('#val-jsqm-current').text(parseFloat(firstEntry["jsqm"]).toFixed(1));
+    }
+    if (json_data['jsqm_data']) {
+        $('#val-jsqm-max').text(parseFloat(json_data['jsqm_data']['max']).toFixed(1));
+        $('#val-jsqm-avg').text(parseFloat(json_data['jsqm_data']['avg']).toFixed(1));
+        $('#val-jsqm-min').text(parseFloat(json_data['jsqm_data']['min']).toFixed(1));
+    }
+
+    // Star Metrics
+    if (firstEntry["stars"] !== undefined) {
+        $('#val-stars-current').text(parseFloat(firstEntry["stars"]));
+    }
+    if (json_data['stars_data']) {
+        $('#val-stars-max').text(parseFloat(json_data['stars_data']['max']));
+        $('#val-stars-avg').text(parseFloat(json_data['stars_data']['avg']).toFixed(1));
+        $('#val-stars-min').text(parseFloat(json_data['stars_data']['min']));
+    }
+
+    // Camera SQM
+    if (json_data['camera_sqm_adu_data'] && json_data['camera_sqm_adu_data']['last'] > 0) {
+        $('#card-camera-sqm').show();
+        $('#val-cam-mag').text(parseFloat(json_data['camera_sqm_mag_data']['last']).toFixed(3));
+        $('#val-cam-adu').text(parseFloat(json_data['camera_sqm_adu_data']['last']).toFixed(3));
+    } else {
+        $('#card-camera-sqm').hide();
+    }
+
+    // Device SQM
+    if (json_data['device_sqm_mag_data'] && json_data['device_sqm_mag_data']['last'] > 0) {
+        $('#card-device-sqm').show();
+        $('#val-dev-mag').text(parseFloat(json_data['device_sqm_mag_data']['last']).toFixed(3));
+    } else {
+        $('#card-device-sqm').hide();
+    }
 }
 
 
@@ -52,153 +105,20 @@ function showImage(entry) {
 
     img = new Image();
     img.onload = function() {
-        canvas.setAttribute("width", window.innerWidth);
-        canvas.setAttribute("height", window.innerHeight);
+        var container = canvas.parentElement;
+        var maxWidth = container.clientWidth || 800;
+        var maxHeight = window.innerHeight * 0.65;
 
-        var hRatio = canvas.width  / this.width;
-        var vRatio = canvas.height / this.height;
-        var ratio  = Math.min ( hRatio, vRatio );
+        var hRatio = maxWidth / this.width;
+        var vRatio = maxHeight / this.height;
+        var ratio  = Math.min(hRatio, vRatio);
 
-        //canvas.width = this.width * ratio;
-        //canvas.height = this.height * ratio;
+        canvas.width = this.width * ratio;
+        canvas.height = this.height * ratio;
 
-        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
-        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
-
-        //context.imageSmoothingEnabled = false;
         context.drawImage(this, 0, 0, this.width, this.height,
-            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
-
-
-        context.textAlign = 'left';
-        context.lineWidth = 10;
-        var maxWidth = 200;
-        var x_right = canvas.width - 10 - maxWidth;
-        var y_bottom = canvas.height - 190;
-
-
-        // round the background strokes to prevent spikes
-        context.lineJoin = 'round';
-        //context.miterLimit = 2;
-
-
-        // Lines
-        if (json_data['image_list'][0]["detections"] > 0) {
-            context.font = '20px serif';
-
-            var detect_text = "*** Detection ***";
-            context.strokeStyle = 'black';
-            context.strokeText(detect_text, x_right - 110, y_bottom - 40, maxWidth);
-            context.fillStyle = 'lightgrey';
-            context.fillText(detect_text, x_right - 110, y_bottom - 40, maxWidth);
-        }
-
-
-        // SQM
-        if (json_data['device_sqm_mag_data']['last'] > 0) {
-            context.font = '32px serif';
-
-            context.strokeStyle = 'black';
-            context.strokeText('Device SQM', 10, y_bottom, 400);
-            context.fillStyle = 'lightgrey';
-            context.fillText('Device SQM', 10, y_bottom, 400);
-
-            context.font = '20px serif';
-
-            var device_sqm_mag_text = "Mag: " + parseFloat(json_data['device_sqm_mag_data']['last']).toFixed(3);
-            context.strokeStyle = 'black';
-            context.strokeText(device_sqm_mag_text, 10, y_bottom + 40, 400);
-            context.fillStyle = 'lightgrey';
-            context.fillText(device_sqm_mag_text, 10, y_bottom + 40, 400);
-        }
-
-
-        if (json_data['camera_sqm_adu_data']['last'] > 0) {
-            context.font = '32px serif';
-
-            context.strokeStyle = 'black';
-            context.strokeText('Camera SQM', 10, y_bottom + 80, 400);
-            context.fillStyle = 'lightgrey';
-            context.fillText('Camera SQM', 10, y_bottom + 80, 400);
-
-            context.font = '20px serif';
-
-            var camera_sqm_mag_text = "Mag: " + parseFloat(json_data['camera_sqm_mag_data']['last']).toFixed(3);
-            context.strokeStyle = 'black';
-            context.strokeText(camera_sqm_mag_text, 10, y_bottom + 120, 400);
-            context.fillStyle = 'lightgrey';
-            context.fillText(camera_sqm_mag_text, 10, y_bottom + 120, 400);
-
-            var camera_sqm_adu_text = "ADU: " + parseFloat(json_data['camera_sqm_adu_data']['last']).toFixed(3);
-            context.strokeStyle = 'black';
-            context.strokeText(camera_sqm_adu_text, 10, y_bottom + 160, 400);
-            context.fillStyle = 'lightgrey';
-            context.fillText(camera_sqm_adu_text, 10, y_bottom + 160, 400);
-        }
-
-
-        context.font = '32px serif';
-
-        // Stars
-        var stars_text = "Stars " + parseFloat(json_data['image_list'][0]["stars"]);
-        context.strokeStyle = 'black';
-        context.strokeText(stars_text, x_right - 175, y_bottom + 40, maxWidth);
-        context.fillStyle = 'lightgrey';
-        context.fillText(stars_text, x_right - 175, y_bottom + 40, maxWidth);
-
-        context.font = '20px serif';
-
-        var stars_max_text = "Max " + parseFloat(json_data['stars_data']['max']);
-        context.strokeStyle = 'black';
-        context.strokeText(stars_max_text, x_right - 175, y_bottom + 80, maxWidth);
-        context.fillStyle = 'lightgrey';
-        context.fillText(stars_max_text, x_right - 175, y_bottom + 80, maxWidth);
-
-        var stars_avg_text = "Avg " + parseFloat(json_data['stars_data']['avg']).toFixed(1);
-        context.strokeStyle = 'black';
-        context.strokeText(stars_avg_text, x_right - 175, y_bottom + 120, maxWidth);
-        context.fillStyle = 'lightgrey';
-        context.fillText(stars_avg_text, x_right - 175, y_bottom + 120, maxWidth);
-
-        var stars_min_text = "Min " + parseFloat(json_data['stars_data']['min']);
-        context.strokeStyle = 'black';
-        context.strokeText(stars_min_text, x_right - 175, y_bottom + 160, maxWidth);
-        context.fillStyle = 'lightgrey';
-        context.fillText(stars_min_text, x_right - 175, y_bottom + 160, maxWidth);
-
-
-        // SQM
-        context.font = '32px serif';
-
-        var jsqm_text = "jSQM " + parseFloat(json_data['image_list'][0]["jsqm"]).toFixed(1);
-        context.strokeStyle = 'black';
-        context.strokeText(jsqm_text, x_right, y_bottom + 40, maxWidth);
-        context.fillStyle = 'lightgrey';
-        context.fillText(jsqm_text, x_right, y_bottom + 40, maxWidth);
-
-
-
-        context.font = '20px serif';
-
-        var jsqm_max_text = "Max " + parseFloat(json_data['jsqm_data']['max']).toFixed(1);
-        context.strokeStyle = 'black';
-        context.strokeText(jsqm_max_text, x_right, y_bottom + 80, maxWidth);
-        context.fillStyle = 'lightgrey';
-        context.fillText(jsqm_max_text, x_right, y_bottom + 80, maxWidth);
-
-        var jsqm_avg_text = "Avg " + parseFloat(json_data['jsqm_data']['avg']).toFixed(1);
-        context.strokeStyle = 'black';
-        context.strokeText(jsqm_avg_text, x_right, y_bottom + 120, maxWidth);
-        context.fillStyle = 'lightgrey';
-        context.fillText(jsqm_avg_text, x_right, y_bottom + 120, maxWidth);
-
-        var jsqm_min_text = "Min " + parseFloat(json_data['jsqm_data']['min']).toFixed(1);
-        context.strokeStyle = 'black';
-        context.strokeText(jsqm_min_text, x_right, y_bottom + 160, maxWidth);
-        context.fillStyle = 'lightgrey';
-        context.fillText(jsqm_min_text, x_right, y_bottom + 160, maxWidth);
+            0, 0, canvas.width, canvas.height);
     };
-
 
     img.src = entry["url"];
 }
@@ -224,15 +144,14 @@ function loadJS(url, data, onDone, onError) {
         contentType: "application/json",
         data: data,
         success: function(rdata){
-            json_data = rdata
-            $('#message').html(json_data['message']);
+            json_data = rdata;
+            updateMetricsUI();
         },
         error: function(rdata){
-            onError(rdata.status);
-            $('#message').text('Error loading data.  Please check the logs.');
+            onError(rdata.status);
+            $('#status-message').text('Error loading data. Please check logs.');
         },
     });
-
 }
 
 
@@ -251,7 +170,7 @@ function setResizeHandler(callback, timeout) {
 }
 
 function resize_callback() {
-    if (json_data['image_list'][0]) {
+    if (json_data['image_list'] && json_data['image_list'][0]) {
         showImage(json_data['image_list'][0]);
     };
 }
@@ -269,28 +188,24 @@ function goFullscreen(elem) {
 function openFullscreen(elem) {
     if (elem.requestFullscreen) {
         elem.requestFullscreen();
-    } else if (elem.webkitRequestFullscreen) { /* Safari */
+    } else if (elem.webkitRequestFullscreen) {
         elem.webkitRequestFullscreen();
-    } else if (elem.msRequestFullscreen) { /* IE11 */
+    } else if (elem.msRequestFullscreen) {
         elem.msRequestFullscreen();
     }
-
     fullscreen = true;
 }
 
 function closeFullscreen() {
     if (document.exitFullscreen) {
         document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) { /* Safari */
+    } else if (document.webkitExitFullscreen) {
         document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) { /* IE11 */
+    } else if (document.msExitFullscreen) {
         document.msExitFullscreen();
     }
-
     fullscreen = false;
 }
-
-
 
 $( document ).ready(function() {
     $('#canvas').on("click", function() {
@@ -299,23 +214,124 @@ $( document ).ready(function() {
 
     init();
 });
-
 </script>
 {% endblock %}
 
 {% block content %}
-<div class="container h-100">
+<div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-4">
 
-<div class="row">
-    <div class="text-center">
-        <div class="text-muted" id="message">Loading...</div>
+    <!-- Top Status Bar -->
+    <div class="tw:w-full tw:bg-base-200 tw:p-3.5 tw:px-5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:flex tw:items-center tw:justify-between">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <span class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary"></span>
+            <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/70" id="status-message">Loading SQM metrics...</span>
+        </div>
+        <div id="detection-alert" class="tw:badge tw:badge-error tw:gap-1.5 tw:font-bold tw:py-2.5 tw:px-3.5" style="display: none;">
+            <i class="tw:icon-[lucide--triangle-alert] tw:w-3.5 tw:h-3.5"></i>
+            Detection Active
+        </div>
     </div>
-</div>
-<div class="row">
-    <div class="text-center">
-        <canvas id="canvas"></canvas>
+
+    <!-- Main Workspace: Left Canvas Image + Right Telemetry Cards -->
+    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-3 tw:gap-4">
+        
+        <!-- Left: Image Viewer Canvas Card -->
+        <div class="lg:tw:col-span-2 tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:flex tw:flex-col tw:items-center tw:justify-center tw:min-h-[50vh] tw:relative">
+            <canvas id="canvas" class="tw:rounded-[var(--radius-box)] tw:shadow-2xl tw:cursor-zoom-in tw:max-w-full"></canvas>
+            <div class="tw:text-[0.625rem] tw:text-base-content/40 tw:mt-3 tw:font-medium">
+                Click image to toggle fullscreen
+            </div>
+        </div>
+
+        <!-- Right: Telemetry Dashboard Cards -->
+        <div class="tw:flex tw:flex-col tw:gap-4">
+            
+            <!-- jSQM Card -->
+            <div class="tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 hover:tw:border-primary/40 tw:transition-all tw:shadow-md tw:flex tw:flex-col tw:gap-3">
+                <div class="tw:flex tw:items-center tw:justify-between">
+                    <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:flex tw:items-center tw:gap-2">
+                        <i class="tw:icon-[lucide--gauge] tw:w-4 tw:h-4 tw:text-primary"></i> jSQM Quality Score
+                    </span>
+                    <span class="tw:badge tw:badge-primary tw:badge-outline tw:font-semibold tw:text-[0.625rem]">Index</span>
+                </div>
+                <div class="tw:text-3xl tw:font-black tw:tracking-tight tw:text-primary tw:drop-shadow-[0_0_12px_rgba(59,130,246,0.4)]" id="val-jsqm-current">--</div>
+                <div class="tw:grid tw:grid-cols-3 tw:gap-2 tw:pt-2 tw:border-t tw:border-base-300 tw:text-center">
+                    <div class="tw:bg-base-100 tw:p-2 tw:rounded-[var(--radius-box)]">
+                        <div class="tw:text-[0.625rem] tw:text-base-content/50 tw:font-medium">Max</div>
+                        <div class="tw:text-xs tw:font-bold tw:font-mono tw:mt-0.5" id="val-jsqm-max">--</div>
+                    </div>
+                    <div class="tw:bg-base-100 tw:p-2 tw:rounded-[var(--radius-box)]">
+                        <div class="tw:text-[0.625rem] tw:text-base-content/50 tw:font-medium">Avg</div>
+                        <div class="tw:text-xs tw:font-bold tw:font-mono tw:mt-0.5" id="val-jsqm-avg">--</div>
+                    </div>
+                    <div class="tw:bg-base-100 tw:p-2 tw:rounded-[var(--radius-box)]">
+                        <div class="tw:text-[0.625rem] tw:text-base-content/50 tw:font-medium">Min</div>
+                        <div class="tw:text-xs tw:font-bold tw:font-mono tw:mt-0.5" id="val-jsqm-min">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stars Metrics Card -->
+            <div class="tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 hover:tw:border-warning/40 tw:transition-all tw:shadow-md tw:flex tw:flex-col tw:gap-3">
+                <div class="tw:flex tw:items-center tw:justify-between">
+                    <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:flex tw:items-center tw:gap-2">
+                        <i class="tw:icon-[lucide--sparkles] tw:w-4 tw:h-4 tw:text-warning"></i> Detected Stars
+                    </span>
+                    <span class="tw:badge tw:badge-warning tw:badge-outline tw:font-semibold tw:text-[0.625rem]">Count</span>
+                </div>
+                <div class="tw:text-3xl tw:font-black tw:tracking-tight tw:text-warning tw:drop-shadow-[0_0_12px_rgba(245,158,11,0.4)]" id="val-stars-current">--</div>
+                <div class="tw:grid tw:grid-cols-3 tw:gap-2 tw:pt-2 tw:border-t tw:border-base-300 tw:text-center">
+                    <div class="tw:bg-base-100 tw:p-2 tw:rounded-[var(--radius-box)]">
+                        <div class="tw:text-[0.625rem] tw:text-base-content/50 tw:font-medium">Max</div>
+                        <div class="tw:text-xs tw:font-bold tw:font-mono tw:mt-0.5" id="val-stars-max">--</div>
+                    </div>
+                    <div class="tw:bg-base-100 tw:p-2 tw:rounded-[var(--radius-box)]">
+                        <div class="tw:text-[0.625rem] tw:text-base-content/50 tw:font-medium">Avg</div>
+                        <div class="tw:text-xs tw:font-bold tw:font-mono tw:mt-0.5" id="val-stars-avg">--</div>
+                    </div>
+                    <div class="tw:bg-base-100 tw:p-2 tw:rounded-[var(--radius-box)]">
+                        <div class="tw:text-[0.625rem] tw:text-base-content/50 tw:font-medium">Min</div>
+                        <div class="tw:text-xs tw:font-bold tw:font-mono tw:mt-0.5" id="val-stars-min">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Camera SQM Card -->
+            <div id="card-camera-sqm" class="tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-md tw:flex tw:flex-col tw:gap-3" style="display: none;">
+                <div class="tw:flex tw:items-center tw:justify-between">
+                    <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:flex tw:items-center tw:gap-2">
+                        <i class="tw:icon-[lucide--camera] tw:w-4 tw:h-4 tw:text-info"></i> Camera SQM
+                    </span>
+                    <span class="tw:badge tw:badge-info tw:badge-outline tw:font-semibold tw:text-[0.625rem]">Sensor</span>
+                </div>
+                <div class="tw:grid tw:grid-cols-2 tw:gap-3">
+                    <div class="tw:bg-base-100 tw:p-3 tw:rounded-[var(--radius-box)]">
+                        <div class="tw:text-[0.625rem] tw:text-base-content/50 tw:font-medium">Magnitude</div>
+                        <div class="tw:text-sm tw:font-bold tw:font-mono tw:mt-0.5 tw:text-info" id="val-cam-mag">--</div>
+                    </div>
+                    <div class="tw:bg-base-100 tw:p-3 tw:rounded-[var(--radius-box)]">
+                        <div class="tw:text-[0.625rem] tw:text-base-content/50 tw:font-medium">ADU Value</div>
+                        <div class="tw:text-sm tw:font-bold tw:font-mono tw:mt-0.5 tw:text-info" id="val-cam-adu">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Device SQM Card -->
+            <div id="card-device-sqm" class="tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-md tw:flex tw:flex-col tw:gap-3" style="display: none;">
+                <div class="tw:flex tw:items-center tw:justify-between">
+                    <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:flex tw:items-center tw:gap-2">
+                        <i class="tw:icon-[lucide--cpu] tw:w-4 tw:h-4 tw:text-success"></i> Device SQM
+                    </span>
+                    <span class="tw:badge tw:badge-success tw:badge-outline tw:font-semibold tw:text-[0.625rem]">Hardware</span>
+                </div>
+                <div class="tw:bg-base-100 tw:p-3 tw:rounded-[var(--radius-box)]">
+                    <div class="tw:text-[0.625rem] tw:text-base-content/50 tw:font-medium">Hardware Magnitude</div>
+                    <div class="tw:text-lg tw:font-bold tw:font-mono tw:mt-0.5 tw:text-success" id="val-dev-mag">--</div>
+                </div>
+            </div>
+
+        </div>
     </div>
-</div>
 
 </div>
 {% endblock %}

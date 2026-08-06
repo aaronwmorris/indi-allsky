@@ -269,18 +269,18 @@ class JsonLatestImageView(JsonView):
                 if self.sun_set_date:
                     utcnow = datetime.now(tz=timezone.utc)
                     delta_sun_set = self.sun_set_date - utcnow.replace(tzinfo=None)
-                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="text-warning">Night starts in {0:0.1f} hours.</div>'.format(delta_sun_set.total_seconds() / 3600)
+                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="tw:text-warning">Night starts in {0:0.1f} hours.</div>'.format(delta_sun_set.total_seconds() / 3600)
                 else:
-                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="text-warning">Sun never sets.</div>'
+                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="tw:text-warning">Sun never sets.</div>'
 
                 return data
             elif not self.daytime_capture:
                 if self.sun_set_date:
                     utcnow = datetime.now(tz=timezone.utc)
                     delta_sun_set = self.sun_set_date - utcnow.replace(tzinfo=None)
-                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="text-warning">Night starts in {0:0.1f} hours.</div>'.format(delta_sun_set.total_seconds() / 3600)
+                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="tw:text-warning">Night starts in {0:0.1f} hours.</div>'.format(delta_sun_set.total_seconds() / 3600)
                 else:
-                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="text-warning">Sun never sets.</div>'
+                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="tw:text-warning">Sun never sets.</div>'
 
             elif self.daytime_capture and not self.daytime_capture_save:
                 if self.web_nonlocal_images:
@@ -2049,7 +2049,7 @@ class ConfigView(FormView):
 
         ### timezone validator
         if not self.validate_longitude_timezone():
-            context['longitude_validation_message'] = '<span class="badge rounded-pill bg-warning text-dark">Warning</span><span class="text-warning"> Longitude validation failed.  Incorrect time, timezone, or longitude could cause this condition</span>'
+            context['longitude_validation_message'] = '<div class="tw:alert tw:alert-warning tw:py-2.5 tw:text-xs tw:rounded-[var(--radius-box)] shadow-sm tw:my-2"><i class="tw:icon-[lucide--alert-triangle] tw:w-4 tw:h-4"></i><span>Warning: Longitude validation failed. Incorrect time, timezone, or longitude could cause this condition</span></div>'
         else:
             context['longitude_validation_message'] = ''
 
@@ -4082,7 +4082,6 @@ class AjaxConfigView(BaseView):
             }
             return jsonify(error_data), 400
 
-
         if reload_on_save:
             self._miscDb.setState('STATUS', constants.STATUS_RELOADING)
 
@@ -4097,13 +4096,12 @@ class AjaxConfigView(BaseView):
             db.session.commit()
 
             message = {
-                'success-message' : 'Saved new config,  Reloading indi-allsky service.',
+                'success-message' : 'Saved new config, Reloading indi-allsky service.',
             }
         else:
             message = {
                 'success-message' : 'Saved new config',
             }
-
 
         return jsonify(message)
 
@@ -4352,9 +4350,11 @@ class AjaxImageViewerView(BaseView):
             day = form_datetime.day
 
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
-            hour = json_data['HOUR_SELECT'][0][0]
-
-            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            if json_data['HOUR_SELECT']:
+                hour = json_data['HOUR_SELECT'][0][0]
+                json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            else:
+                json_data['IMAGE_DATA'] = []
 
         elif form_month:
             form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
@@ -4363,12 +4363,19 @@ class AjaxImageViewerView(BaseView):
             month = form_datetime.month
 
             json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
-            day = json_data['DAY_SELECT'][0][0]
-
-            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
-            hour = json_data['HOUR_SELECT'][0][0]
-
-            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            if json_data['DAY_SELECT']:
+                day = json_data['DAY_SELECT'][0][0]
+                json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+                if json_data['HOUR_SELECT']:
+                    hour = json_data['HOUR_SELECT'][0][0]
+                    json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+                else:
+                    json_data['HOUR_SELECT'] = []
+                    json_data['IMAGE_DATA'] = []
+            else:
+                json_data['DAY_SELECT'] = []
+                json_data['HOUR_SELECT'] = []
+                json_data['IMAGE_DATA'] = []
 
         elif form_year:
             form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
@@ -4376,15 +4383,27 @@ class AjaxImageViewerView(BaseView):
             year = form_datetime.year
 
             json_data['MONTH_SELECT'] = form_viewer.getMonths(year)
-            month = json_data['MONTH_SELECT'][0][0]
-
-            json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
-            day = json_data['DAY_SELECT'][0][0]
-
-            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
-            hour = json_data['HOUR_SELECT'][0][0]
-
-            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            if json_data['MONTH_SELECT']:
+                month = json_data['MONTH_SELECT'][0][0]
+                json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+                if json_data['DAY_SELECT']:
+                    day = json_data['DAY_SELECT'][0][0]
+                    json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+                    if json_data['HOUR_SELECT']:
+                        hour = json_data['HOUR_SELECT'][0][0]
+                        json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+                    else:
+                        json_data['HOUR_SELECT'] = []
+                        json_data['IMAGE_DATA'] = []
+                else:
+                    json_data['DAY_SELECT'] = []
+                    json_data['HOUR_SELECT'] = []
+                    json_data['IMAGE_DATA'] = []
+            else:
+                json_data['MONTH_SELECT'] = []
+                json_data['DAY_SELECT'] = []
+                json_data['HOUR_SELECT'] = []
+                json_data['IMAGE_DATA'] = []
 
         else:
             # this happens when filtering images on detections
@@ -4487,9 +4506,11 @@ class AjaxFitsImageViewerView(BaseView):
             day = form_datetime.day
 
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
-            hour = json_data['HOUR_SELECT'][0][0]
-
-            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            if json_data['HOUR_SELECT']:
+                hour = json_data['HOUR_SELECT'][0][0]
+                json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            else:
+                json_data['IMAGE_DATA'] = []
 
         elif form_month:
             form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
@@ -4498,12 +4519,19 @@ class AjaxFitsImageViewerView(BaseView):
             month = form_datetime.month
 
             json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
-            day = json_data['DAY_SELECT'][0][0]
-
-            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
-            hour = json_data['HOUR_SELECT'][0][0]
-
-            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            if json_data['DAY_SELECT']:
+                day = json_data['DAY_SELECT'][0][0]
+                json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+                if json_data['HOUR_SELECT']:
+                    hour = json_data['HOUR_SELECT'][0][0]
+                    json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+                else:
+                    json_data['HOUR_SELECT'] = []
+                    json_data['IMAGE_DATA'] = []
+            else:
+                json_data['DAY_SELECT'] = []
+                json_data['HOUR_SELECT'] = []
+                json_data['IMAGE_DATA'] = []
 
         elif form_year:
             form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
@@ -4511,15 +4539,27 @@ class AjaxFitsImageViewerView(BaseView):
             year = form_datetime.year
 
             json_data['MONTH_SELECT'] = form_viewer.getMonths(year)
-            month = json_data['MONTH_SELECT'][0][0]
-
-            json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
-            day = json_data['DAY_SELECT'][0][0]
-
-            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
-            hour = json_data['HOUR_SELECT'][0][0]
-
-            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            if json_data['MONTH_SELECT']:
+                month = json_data['MONTH_SELECT'][0][0]
+                json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+                if json_data['DAY_SELECT']:
+                    day = json_data['DAY_SELECT'][0][0]
+                    json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+                    if json_data['HOUR_SELECT']:
+                        hour = json_data['HOUR_SELECT'][0][0]
+                        json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+                    else:
+                        json_data['HOUR_SELECT'] = []
+                        json_data['IMAGE_DATA'] = []
+                else:
+                    json_data['DAY_SELECT'] = []
+                    json_data['HOUR_SELECT'] = []
+                    json_data['IMAGE_DATA'] = []
+            else:
+                json_data['MONTH_SELECT'] = []
+                json_data['DAY_SELECT'] = []
+                json_data['HOUR_SELECT'] = []
+                json_data['IMAGE_DATA'] = []
 
         else:
             # this happens when filtering images on detections
@@ -4781,9 +4821,11 @@ class AjaxGalleryViewerView(BaseView):
             day = form_datetime.day
 
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
-            hour = json_data['HOUR_SELECT'][0][0]
-
-            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            if json_data['HOUR_SELECT']:
+                hour = json_data['HOUR_SELECT'][0][0]
+                json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            else:
+                json_data['IMAGE_DATA'] = []
 
         elif form_month:
             form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
@@ -4792,12 +4834,19 @@ class AjaxGalleryViewerView(BaseView):
             month = form_datetime.month
 
             json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
-            day = json_data['DAY_SELECT'][0][0]
-
-            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
-            hour = json_data['HOUR_SELECT'][0][0]
-
-            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            if json_data['DAY_SELECT']:
+                day = json_data['DAY_SELECT'][0][0]
+                json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+                if json_data['HOUR_SELECT']:
+                    hour = json_data['HOUR_SELECT'][0][0]
+                    json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+                else:
+                    json_data['HOUR_SELECT'] = []
+                    json_data['IMAGE_DATA'] = []
+            else:
+                json_data['DAY_SELECT'] = []
+                json_data['HOUR_SELECT'] = []
+                json_data['IMAGE_DATA'] = []
 
         elif form_year:
             form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
@@ -4805,15 +4854,27 @@ class AjaxGalleryViewerView(BaseView):
             year = form_datetime.year
 
             json_data['MONTH_SELECT'] = form_viewer.getMonths(year)
-            month = json_data['MONTH_SELECT'][0][0]
-
-            json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
-            day = json_data['DAY_SELECT'][0][0]
-
-            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
-            hour = json_data['HOUR_SELECT'][0][0]
-
-            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+            if json_data['MONTH_SELECT']:
+                month = json_data['MONTH_SELECT'][0][0]
+                json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+                if json_data['DAY_SELECT']:
+                    day = json_data['DAY_SELECT'][0][0]
+                    json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+                    if json_data['HOUR_SELECT']:
+                        hour = json_data['HOUR_SELECT'][0][0]
+                        json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+                    else:
+                        json_data['HOUR_SELECT'] = []
+                        json_data['IMAGE_DATA'] = []
+                else:
+                    json_data['DAY_SELECT'] = []
+                    json_data['HOUR_SELECT'] = []
+                    json_data['IMAGE_DATA'] = []
+            else:
+                json_data['MONTH_SELECT'] = []
+                json_data['DAY_SELECT'] = []
+                json_data['HOUR_SELECT'] = []
+                json_data['IMAGE_DATA'] = []
 
         else:
             # this happens when filtering images on detections
@@ -4931,9 +4992,12 @@ class AjaxVideoViewerView(BaseView):
             year = form_datetime.year
 
             json_data['MONTH_SELECT'] = form_video_viewer.getMonths(year)
-            month = json_data['MONTH_SELECT'][0][0]
 
-            json_data['video_list'] = form_video_viewer.getVideos(year, month, form_timeofday)
+            if json_data['MONTH_SELECT']:
+                month = json_data['MONTH_SELECT'][0][0]
+                json_data['video_list'] = form_video_viewer.getVideos(year, month, form_timeofday)
+            else:
+                json_data['video_list'] = []
         else:
             # No entries in DB
             json_data['MONTH_SELECT'] = (('', 'None'),)
@@ -4987,8 +5051,8 @@ class AjaxMiniVideoViewerView(BaseView):
 
     def dispatch_request(self):
         camera_id      = int(request.json['CAMERA_ID'])
-        form_year      = int(request.json.get('YEAR_SELECT', 0))
-        form_month     = int(request.json.get('MONTH_SELECT', 0))
+        form_year      = int(request.json.get('YEAR_SELECT') or 0)
+        form_month     = int(request.json.get('MONTH_SELECT') or 0)
 
         self.cameraSetup(camera_id=camera_id)
 
@@ -5024,9 +5088,12 @@ class AjaxMiniVideoViewerView(BaseView):
             year = form_datetime.year
 
             json_data['MONTH_SELECT'] = form_mini_video_viewer.getMonths(year)
-            month = json_data['MONTH_SELECT'][0][0]
 
-            json_data['video_list'] = form_mini_video_viewer.getVideos(year, month)
+            if json_data['MONTH_SELECT']:
+                month = json_data['MONTH_SELECT'][0][0]
+                json_data['video_list'] = form_mini_video_viewer.getVideos(year, month)
+            else:
+                json_data['video_list'] = tuple()
         else:
             # No entries in DB
             json_data['MONTH_SELECT'] = (('', 'None'),)
@@ -5825,6 +5892,42 @@ class AjaxSystemInfoView(BaseView):
         }
 
         return jsonify(json_data)
+
+
+class AjaxSystemStatsView(SystemInfoView):
+    methods = ['GET']
+    decorators = [login_required]
+
+    def __init__(self, **kwargs):
+        super(AjaxSystemStatsView, self).__init__(template_name=None, **kwargs)
+
+    def dispatch_request(self):
+        context = self.get_context()
+        
+        now_dt = context.get('now')
+        now_str = now_dt.strftime('%Y-%m-%d %H:%M:%S') if now_dt else ''
+        now_date = now_dt.strftime('%m / %d / %Y') if now_dt else ''
+        now_time = now_dt.strftime('%I : %M : %S %P') if now_dt else ''
+
+        data = {
+            'cpu_usage': context.get('cpu_usage'),
+            'cpu_count': context.get('cpu_count'),
+            'cpu_load5': context.get('cpu_load5'),
+            'cpu_load10': context.get('cpu_load10'),
+            'cpu_load15': context.get('cpu_load15'),
+            'mem_total': context.get('mem_total'),
+            'mem_usage': context.get('mem_usage'),
+            'swap_total': context.get('swap_total'),
+            'swap_usage': context.get('swap_usage'),
+            'fs_data': context.get('fs_data'),
+            'uptime_str': context.get('uptime_str'),
+            'temp_list': context.get('temp_list'),
+            'fan_list': context.get('fan_list'),
+            'now': now_str,
+            'now_date': now_date,
+            'now_time': now_time,
+        }
+        return jsonify(data)
 
 
     def rebootSystemd(self):
@@ -8830,7 +8933,70 @@ class UserInfoView(TemplateView):
 
         context['form_userinfo'] = IndiAllskyUserInfoForm(data=form_data)
 
+        custom_css_path = os.path.join(app.static_folder, 'css', 'custom.css')
+        user_custom_css = ''
+        if os.path.exists(custom_css_path):
+            try:
+                with open(custom_css_path, 'r', encoding='utf-8') as f:
+                    user_custom_css = f.read()
+            except Exception:
+                user_custom_css = ''
+
+        context['user_custom_css'] = user_custom_css
+
+        import re
+        user_custom_themes = []
+        if user_custom_css:
+            matches = re.findall(r'name\s*:\s*["\']?([a-zA-Z0-9_\-]+)["\']?', user_custom_css)
+            for m in matches:
+                if m not in user_custom_themes:
+                    user_custom_themes.append(m)
+
+        context['user_custom_themes'] = user_custom_themes
+
         return context
+
+
+class AjaxCustomCssView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def dispatch_request(self):
+        data = request.get_json(force=True, silent=True) or {}
+        custom_css_new = str(data.get('custom_css', ''))
+        custom_css_path = os.path.join(app.static_folder, 'css', 'custom.css')
+
+        try:
+            with open(custom_css_path, 'w', encoding='utf-8') as f:
+                f.write(custom_css_new)
+        except Exception as e:
+            return jsonify({'error': f'Failed to save custom.css: {str(e)}'}), 500
+
+        repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        try:
+            import subprocess
+            build_res = subprocess.run(
+                ["npm", "run", "build"],
+                cwd=repo_root,
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+            if build_res.returncode == 0:
+                return jsonify({
+                    'success': True,
+                    'message': 'Custom CSS saved and stylesheet recompiled successfully!'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': f'Custom CSS saved, but stylesheet build failed: {build_res.stderr.strip()}'
+                }), 400
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': f'Custom CSS saved, but build trigger failed: {str(e)}'
+            }), 500
 
 
 class AjaxUserInfoView(BaseView):
@@ -10160,6 +10326,33 @@ class NetworkManagerView(TemplateView):
     decorators = [login_required]
     page_title = 'Network'
 
+    def getNetworkIps(self):
+        net_info = psutil.net_if_addrs()
+
+        net_list = list()
+        for dev, addr_info in net_info.items():
+            if dev == 'lo':
+                # skip loopback
+                continue
+
+            dev_info = {
+                'name'  : dev,
+                'inet4' : [],
+                'inet6' : [],
+            }
+
+            for addr in addr_info:
+                if addr.family == socket.AF_INET:
+                    cidr = ipaddress.IPv4Network('0.0.0.0/{0:s}'.format(addr.netmask)).prefixlen
+                    dev_info['inet4'].append('{0:s}/{1:d}'.format(addr.address, cidr))
+
+                elif addr.family == socket.AF_INET6:
+                    dev_info['inet6'].append('{0:s}'.format(addr.address))
+
+            net_list.append(dev_info)
+
+        return net_list
+
     def get_context(self):
         context = super(NetworkManagerView, self).get_context()
 
@@ -10182,8 +10375,8 @@ class NetworkManagerView(TemplateView):
 
 
         context['nm_installed'] = nm_installed
-
         context['form_connections'] = IndiAllskyNetworkManagerForm()
+        context['net_list'] = self.getNetworkIps()
 
         return context
 
@@ -12149,6 +12342,7 @@ bp_allsky.add_url_rule('/ajax/config/restore', view_func=AjaxConfigRestoreView.a
 
 bp_allsky.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
 bp_allsky.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
+bp_allsky.add_url_rule('/ajax/system/stats', view_func=AjaxSystemStatsView.as_view('ajax_system_stats_view'))
 bp_allsky.add_url_rule('/ajax/settime', view_func=AjaxSetTimeView.as_view('ajax_settime_view'))
 bp_allsky.add_url_rule('/ajax/settimezone', view_func=AjaxSetTimezoneView.as_view('ajax_settimezone_view'))
 bp_allsky.add_url_rule('/ajax/indiserver', view_func=AjaxIndiServerChangeView.as_view('ajax_indiserver_change_view'))
@@ -12176,6 +12370,7 @@ bp_allsky.add_url_rule('/js/support', view_func=JsonSupportInfoView.as_view('js_
 
 bp_allsky.add_url_rule('/user', view_func=UserInfoView.as_view('user_view', template_name='user.html'))
 bp_allsky.add_url_rule('/ajax/user', view_func=AjaxUserInfoView.as_view('ajax_user_view'))
+bp_allsky.add_url_rule('/ajax/custom_css', view_func=AjaxCustomCssView.as_view('ajax_custom_css_view'))
 
 bp_allsky.add_url_rule('/astropanel', view_func=AstroPanelView.as_view('astropanel_view', template_name='astropanel.html'))
 bp_allsky.add_url_rule('/ajax/astropanel', view_func=AjaxAstroPanelView.as_view('ajax_astropanel_view'))
@@ -12242,3 +12437,67 @@ bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view',
 bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', template_name='users.html'))
+
+
+@bp_allsky.route('/sw.js')
+def service_worker():
+    return send_from_directory(
+        os.path.join(app.root_path, 'static', 'js'),
+        'sw.js',
+        mimetype='application/javascript'
+    )
+
+
+@bp_allsky.route('/manifest.json')
+def manifest():
+    manifest_data = {
+        "name": "indi-allsky",
+        "short_name": "Allsky",
+        "description": "INDI Allsky Camera Portal",
+        "start_url": url_for('indi_allsky.index_view'),
+        "scope": url_for('indi_allsky.index_view'),
+        "display": "standalone",
+        "background_color": "#0f172a",
+        "theme_color": "#0f172a",
+        "icons": [
+            {
+                "src": url_for('indi_allsky.static', filename='images/icon-192.png'),
+                "sizes": "192x192",
+                "type": "image/png",
+                "purpose": "any"
+            },
+            {
+                "src": url_for('indi_allsky.static', filename='images/icon-512.png'),
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "any"
+            },
+            {
+                "src": url_for('indi_allsky.static', filename='images/icon-512.png'),
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "maskable"
+            }
+        ],
+        "screenshots": [
+            {
+                "src": url_for('indi_allsky.static', filename='images/screenshot-desktop.png'),
+                "sizes": "1280x720",
+                "type": "image/png",
+                "form_factor": "wide",
+                "label": "indi-allsky Desktop Dashboard"
+            },
+            {
+                "src": url_for('indi_allsky.static', filename='images/screenshot-mobile.png'),
+                "sizes": "540x960",
+                "type": "image/png",
+                "form_factor": "narrow",
+                "label": "indi-allsky Mobile View"
+            }
+        ]
+    }
+    response = jsonify(manifest_data)
+    response.headers['Content-Type'] = 'application/manifest+json'
+    return response
+
+

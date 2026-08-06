@@ -3,108 +3,165 @@
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
 {% block head %}
-<style>
-table, th, td {
-  border: 1px solid black;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 5px;
-}
-</style>
 <link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
 <script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
+
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
-
 {% endblock %}
 
 {% block content %}
-<h3>Dark Frames</h3>
-<table id="darks-table" class="table table-striped compact" data-bs-theme="dark">
-  <thead>
-    <th>ID</th>
-    <th>Date</th>
-    <th>Active</th>
-    <th>Resolution</th>
-    <th>Bits</th>
-    <th>Gain</th>
-    <th>Exposure</th>
-    <th>Bin</th>
-    <th>Temp</th>
-    <th>ADU</th>
-    <th>Hot Pixels</th>
-    <th>View</th>
-    <th>File</th>
-    <th>Size (MB)</th>
-    <th>Method</th>
-  </thead>
-  <tbody>
-    {% for dark in darkframe_list %}
-    <tr>
-      <td>{{ dark.id }}</td>
-      <td>{{ dark.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-      <td>{{ dark.active }}</td>
-      <td>{{ dark.width }}x{{ dark.height }}</td>
-      <td>{{ dark.bitdepth }}</td>
-      <td>{{ "%0.2f"|format(dark.gain | float) }}</td>
-      <td>{{ dark.exposure }}</td>
-      <td>{{ dark.binmode }}</td>
-      <td>{{ "%0.2f"|format(dark.temp | float) }}</td>
-      <td>{{ "%0.1f"|format(dark.adu | float) }}</td>
-      <td>{{ dark.hot_pixels }}</td>
-      <td><a href="{{ url_for('indi_allsky.image_processing_view', type='dark', id=dark.id) }}"><span class="badge bg-success">Process</span></a></td>
-      <td><a href="{{ dark.url }}" class="text-decoration-none link-info"><span class="badge bg-primary">Download</span></a></td>
-      <td>{{ "%0.1f"|format(dark.size_mb | float) }}</td>
-      <td>{{ dark.method }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6 tw:w-full">
 
-<hr>
+    <!-- Tab Selection Header -->
+    <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm">
+        <button type="button" class="dark-tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-darks">Dark Frames</button>
+        <button type="button" class="dark-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" data-target="tab-bpm">Bad Pixel Maps</button>
+    </div>
 
-<h3>Bad Pixel Maps</h3>
-<table id="bpm-table" class="table table-striped compact" data-bs-theme="dark">
-  <thead>
-    <th>ID</th>
-    <th>Date</th>
-    <th>Active</th>
-    <th>Resolution</th>
-    <th>Bits</th>
-    <th>Gain</th>
-    <th>Exposure</th>
-    <th>Bin</th>
-    <th>Temp</th>
-    <th>ADU</th>
-    <th>Hot Pixels</th>
-    <th>View</th>
-    <th>File</th>
-    <th>Size (MB)</th>
-  </thead>
-  <tbody>
-    {% for bpm in bpm_list %}
-    <tr>
-      <td>{{ bpm.id }}</td>
-      <td>{{ bpm.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-      <td>{{ bpm.active }}</td>
-      <td>{{ bpm.width }}x{{ bpm.height }}</td>
-      <td>{{ bpm.bitdepth }}</td>
-      <td>{{ "%0.2f"|format(bpm.gain | float) }}</td>
-      <td>{{ bpm.exposure }}</td>
-      <td>{{ bpm.binmode }}</td>
-      <td>{{ "%0.2f"|format(bpm.temp | float) }}</td>
-      <td>{{ "%0.1f"|format(bpm.adu | float) }}</td>
-      <td>{{ bpm.hot_pixels }}</td>
-      <td><a href="{{ url_for('indi_allsky.image_processing_view', type='bpm', id=bpm.id) }}"><span class="badge bg-success">Process</span></a></td>
-      <td><a href="{{ bpm.url }}" class="text-decoration-none link-info"><span class="badge bg-primary">Download</span></a></td>
-      <td>{{ "%0.1f"|format(bpm.size_mb | float) }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+    <div class="tw:w-full">
+        
+        <!-- Dark Frames Tab Panel -->
+        <div id="tab-darks" class="dark-tab-pane">
+            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+                <div class="tw:card-body tw:p-6">
+                    <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:mb-6">
+                        Dark Frame Library
+                    </h4>
+                    
+                    <div class="tw:overflow-x-auto tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
+                        <table id="darks-table" class="tw:table tw:table-zebra tw:table-xs tw:w-full tw:m-0">
+                            <thead>
+                                <tr class="tw:bg-base-300/60 tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
+                                    <th class="tw:pl-4 tw:py-3">ID</th>
+                                    <th class="tw:py-3">Date</th>
+                                    <th class="tw:py-3">Active</th>
+                                    <th class="tw:py-3">Resolution</th>
+                                    <th class="tw:py-3">Bits</th>
+                                    <th class="tw:py-3">Gain</th>
+                                    <th class="tw:py-3">Exposure</th>
+                                    <th class="tw:py-3">Bin</th>
+                                    <th class="tw:py-3">Temp</th>
+                                    <th class="tw:py-3">ADU</th>
+                                    <th class="tw:py-3">Hot Pixels</th>
+                                    <th class="tw:py-3">View</th>
+                                    <th class="tw:py-3">File</th>
+                                    <th class="tw:py-3">Size (MB)</th>
+                                    <th class="tw:pr-4 tw:py-3">Method</th>
+                                </tr>
+                            </thead>
+                            <tbody class="tw:divide-y tw:divide-base-content/5">
+                                {% for dark in darkframe_list %}
+                                <tr class="hover:tw:bg-base-content/5 tw:transition-colors tw:text-xs">
+                                    <td class="tw:pl-4 tw:font-mono tw:text-base-content/70">{{ dark.id }}</td>
+                                    <td class="tw:whitespace-nowrap tw:text-base-content/90">{{ dark.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                    <td>
+                                        {% if dark.active %}
+                                            <span class="tw:badge tw:badge-success tw:badge-sm tw:font-semibold tw:rounded-[var(--radius-box)]">Active</span>
+                                        {% else %}
+                                            <span class="tw:badge tw:badge-ghost tw:badge-sm tw:text-base-content/40 tw:font-semibold tw:rounded-[var(--radius-box)]">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="tw:font-mono">{{ dark.width }}x{{ dark.height }}</td>
+                                    <td>{{ dark.bitdepth }}</td>
+                                    <td class="tw:font-mono">{{ "%0.2f"|format(dark.gain | float) }}</td>
+                                    <td class="tw:font-mono">{{ dark.exposure }}s</td>
+                                    <td>{{ dark.binmode }}</td>
+                                    <td class="tw:font-mono tw:text-info">{{ "%0.2f"|format(dark.temp | float) }}°C</td>
+                                    <td class="tw:font-mono">{{ "%0.1f"|format(dark.adu | float) }}</td>
+                                    <td class="tw:font-mono tw:text-warning">{{ dark.hot_pixels }}</td>
+                                    <td>
+                                        <a href="{{ url_for('indi_allsky.image_processing_view', type='dark', id=dark.id) }}" class="tw:btn tw:btn-xs tw:btn-success tw:btn-outline tw:gap-1 tw:no-underline">
+                                            <i class="tw:icon-[lucide--play] tw:w-3 tw:h-3"></i> Process
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="{{ dark.url }}" class="tw:btn tw:btn-xs tw:btn-info tw:btn-outline tw:gap-1 tw:no-underline">
+                                            <i class="tw:icon-[lucide--download] tw:w-3 tw:h-3"></i> Download
+                                        </a>
+                                    </td>
+                                    <td class="tw:font-mono">{{ "%0.1f"|format(dark.size_mb | float) }}</td>
+                                    <td class="tw:pr-4 tw:text-base-content/70">{{ dark.method }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bad Pixel Maps Tab Panel -->
+        <div id="tab-bpm" class="dark-tab-pane" style="display: none;">
+            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+                <div class="tw:card-body tw:p-6">
+                    <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:mb-6">
+                        Bad Pixel Maps Library
+                    </h4>
+                    
+                    <div class="tw:overflow-x-auto tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
+                        <table id="bpm-table" class="tw:table tw:table-zebra tw:table-xs tw:w-full tw:m-0">
+                            <thead>
+                                <tr class="tw:bg-base-300/60 tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
+                                    <th class="tw:pl-4 tw:py-3">ID</th>
+                                    <th class="tw:py-3">Date</th>
+                                    <th class="tw:py-3">Active</th>
+                                    <th class="tw:py-3">Resolution</th>
+                                    <th class="tw:py-3">Bits</th>
+                                    <th class="tw:py-3">Gain</th>
+                                    <th class="tw:py-3">Exposure</th>
+                                    <th class="tw:py-3">Bin</th>
+                                    <th class="tw:py-3">Temp</th>
+                                    <th class="tw:py-3">ADU</th>
+                                    <th class="tw:py-3">Hot Pixels</th>
+                                    <th class="tw:py-3">View</th>
+                                    <th class="tw:py-3">File</th>
+                                    <th class="tw:pr-4 tw:py-3">Size (MB)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="tw:divide-y tw:divide-base-content/5">
+                                {% for bpm in bpm_list %}
+                                <tr class="hover:tw:bg-base-content/5 tw:transition-colors tw:text-xs">
+                                    <td class="tw:pl-4 tw:font-mono tw:text-base-content/70">{{ bpm.id }}</td>
+                                    <td class="tw:whitespace-nowrap tw:text-base-content/90">{{ bpm.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                    <td>
+                                        {% if bpm.active %}
+                                            <span class="tw:badge tw:badge-success tw:badge-sm tw:font-semibold tw:rounded-[var(--radius-box)]">Active</span>
+                                        {% else %}
+                                            <span class="tw:badge tw:badge-ghost tw:badge-sm tw:text-base-content/40 tw:font-semibold tw:rounded-[var(--radius-box)]">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="tw:font-mono">{{ bpm.width }}x{{ bpm.height }}</td>
+                                    <td>{{ bpm.bitdepth }}</td>
+                                    <td class="tw:font-mono">{{ "%0.2f"|format(bpm.gain | float) }}</td>
+                                    <td class="tw:font-mono">{{ bpm.exposure }}s</td>
+                                    <td>{{ bpm.binmode }}</td>
+                                    <td class="tw:font-mono tw:text-info">{{ "%0.2f"|format(bpm.temp | float) }}°C</td>
+                                    <td class="tw:font-mono">{{ "%0.1f"|format(bpm.adu | float) }}</td>
+                                    <td class="tw:font-mono tw:text-warning">{{ bpm.hot_pixels }}</td>
+                                    <td>
+                                        <a href="{{ url_for('indi_allsky.image_processing_view', type='bpm', id=bpm.id) }}" class="tw:btn tw:btn-xs tw:btn-success tw:btn-outline tw:gap-1 tw:no-underline">
+                                            <i class="tw:icon-[lucide--play] tw:w-3 tw:h-3"></i> Process
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="{{ bpm.url }}" class="tw:btn tw:btn-xs tw:btn-info tw:btn-outline tw:gap-1 tw:no-underline">
+                                            <i class="tw:icon-[lucide--download] tw:w-3 tw:h-3"></i> Download
+                                        </a>
+                                    </td>
+                                    <td class="tw:pr-4 tw:font-mono">{{ "%0.1f"|format(bpm.size_mb | float) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
 
 <script>
 function init() {
@@ -112,7 +169,8 @@ function init() {
         searching: true,
         order: [[5, 'desc'], [6, 'desc'], [1, 'desc']],
         layout: {
-            topEnd: ['buttons', 'search'],
+            topStart: ['pageLength', 'buttons'],
+            topEnd: 'search',
         },
         buttons: [
             'copy',
@@ -125,7 +183,8 @@ function init() {
         searching: true,
         order: [[5, 'desc'], [6, 'desc'], [1, 'desc']],
         layout: {
-            topEnd: ['buttons', 'search'],
+            topStart: ['pageLength', 'buttons'],
+            topEnd: 'search',
         },
         buttons: [
             'copy',
@@ -137,6 +196,16 @@ function init() {
 
 
 $( document ).ready(function() {
+    $('.dark-tab-btn').on('click', function() {
+        var target = $(this).data('target');
+        
+        $('.dark-tab-btn').removeClass('tw:btn-primary').addClass('tw:btn-ghost tw:text-base-content/60 hover:tw:text-base-content');
+        $(this).removeClass('tw:btn-ghost tw:text-base-content/60 hover:tw:text-base-content').addClass('tw:btn-primary');
+
+        $('.dark-tab-pane').hide();
+        $('#' + target).show();
+    });
+
     init();
 });
 </script>

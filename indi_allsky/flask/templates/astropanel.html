@@ -24,22 +24,6 @@
 
 {% block head %}
 <meta charset="UTF-8">
-<style>
-.loader {
-  display: block;
-  border: 3px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-</style>
 <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='astropanel/css/style.css') }}">
 
 <script type="text/javascript">
@@ -162,16 +146,16 @@ function populateData() {
     $("#neptune_az").html(json_data.neptune_az + '&deg;');
     $("#neptune_alt").html(json_data.neptune_alt + '&deg;');
 
-    <!-- Set polaris marker -->
+    // Set polaris marker
     var pha = json_data.polaris_hour_angle;
-    pha_angle = 360 + pha * -1; <!-- reverse revolution for charting -->
-    pha_angle -= 180; <!-- set view as in polar finder scope -->
+    pha_angle = 360 + pha * -1; // reverse revolution for charting
+    pha_angle -= 180; // set view as in polar finder scope
     var rotation = "rotate(" + pha_angle + "deg)";
     $("#polaris_marker").css("-ms-transform", rotation);
     $("#polaris_marker").css("-webkit-transform", rotation);
     $("#polaris_marker").css("transform", rotation);
 
-    <!-- Format polaris hour angle for display -->
+    // Format polaris hour angle for display
     var pha = json_data.polaris_hour_angle;
     var phaH = String(parseInt(pha/15));
     var phaMtmp = (pha/15 - phaH) * 60;
@@ -179,7 +163,7 @@ function populateData() {
     var phaS = String(parseInt((phaMtmp - phaM) * 60));
     $("#pha").html(phaH.padStart(2,'0') + ":" + phaM.padStart(2,'0') + ":" + phaS.padStart(2,'0'));
 
-    <!-- Compute polaris cardinal positions -->
+    // Compute polaris cardinal positions
     var pnt = json_data.polaris_next_transit.split(':');
     var p9h = (parseInt(pnt[0]) - 6);
     var p12h = (parseInt(pnt[0]) - 12);
@@ -188,64 +172,29 @@ function populateData() {
     $("#polaris_next_12").html(p12h + ':' + pnt[1] + ':' + pnt[2]);
     $("#polaris_next_9").html(p9h + ':' + pnt[1] + ':' + pnt[2]);
 
-    <!-- Indicate planets above horizon -->
-    if ( json_data.mercury_alt > 25 ) {
-        $("#mercury").css("color", "#99cc00");
-    } else if ( json_data.mercury_alt > 0 ) {
-        $("#mercury").css("color", "#ff9900");
-    } else {
-        $("#mercury").css("color", "#fff");
-    }
+    // Indicate planets above horizon using semantic CSS classes
+    var planets = ['mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
+    planets.forEach(function(p) {
+        var alt = json_data[p + '_alt'];
+        var $el = $('#' + p);
+        $el.removeClass('tw:text-success tw:text-warning tw:text-base-content/40');
+        if (alt > 25) {
+            $el.addClass('tw:text-success');
+        } else if (alt > 0) {
+            $el.addClass('tw:text-warning');
+        } else {
+            $el.addClass('tw:text-base-content/40');
+        }
+    });
 
-    if ( json_data.venus_alt > 25 ) {
-        $("#venus").css("color", "#99cc00");
-    } else if ( json_data.venus_alt > 0 ) {
-        $("#venus").css("color", "#ff9900");
+    // Set Equinox and Solstice in order
+    if (json_data.sun_solstice_season == 'summer') {
+        $("#solstice_1_label").html('Summer Solstice');
+        $("#solstice_2_label").html('Winter Solstice');
     } else {
-        $("#venus").css("color", "#fff");
+        $("#solstice_1_label").html('Winter Solstice');
+        $("#solstice_2_label").html('Summer Solstice');
     }
-
-    if ( json_data.mars_alt > 25 ) {
-        $("#mars").css("color", "#99cc00");
-    } else if ( json_data.mars_alt > 0 ) {
-        $("#mars").css("color", "#ff9900");
-    } else {
-        $("#mars").css("color", "#fff");
-    }
-
-    if ( json_data.jupiter_alt > 25 ) {
-        $("#jupiter").css("color", "#99cc00");
-    } else if ( json_data.jupiter_alt > 0 ) {
-        $("#jupiter").css("color", "#ff9900");
-    } else {
-        $("#jupiter").css("color", "#fff");
-    }
-
-    if ( json_data.saturn_alt > 25 ) {
-        $("#saturn").css("color", "#99cc00");
-    } else if ( json_data.saturn_alt > 0 ) {
-        $("#saturn").css("color", "#ff9900");
-    } else {
-        $("#saturn").css("color", "#fff");
-    }
-
-    if ( json_data.uranus_alt > 25 ) {
-        $("#uranus").css("color", "#99cc00");
-    } else if ( json_data.uranus_alt > 0 ) {
-        $("#uranus").css("color", "#ff9900");
-    } else {
-        $("#uranus").css("color", "#fff");
-    }
-
-    if ( json_data.neptune_alt > 25 ) {
-        $("#neptune").css("color", "#99cc00");
-    } else if ( json_data.neptune_alt > 0 ) {
-        $("#neptune").css("color", "#ff9900");
-    } else {
-        $("#neptune").css("color", "#fff");
-    }
-
-    <!-- Set  Equinox and Solstice in order-->
     var ss = new Date(json_data.sun_solstice);
     var se = new Date(json_data.sun_equinox);
     if (ss < se) { 
@@ -256,7 +205,7 @@ function populateData() {
         $("#sun_solstice_second").css("display", "");
     };
 
-    <!-- Set  New Moon and Full Moon in order-->
+    // Set New Moon and Full Moon in order
     var nm = new Date(json_data.moon_new);
     var fm = new Date(json_data.moon_full);
     if (nm < fm) { 
@@ -285,18 +234,14 @@ function populateData() {
     json_data['satellite_list'].forEach(sat => {
         var tr_sat = $('<tr />');
 
-        if ( sat.name == 'ISS (ZARYA)' ) {
-            tr_sat.css({'color' : "#00cccc"});
-        } else if ( sat.name == 'HST' ) {
-            tr_sat.css({'color' : "#00cccc"});
-        } else if ( sat.name == 'CSS (TIANHE)' ) {
-            tr_sat.css({'color' : "#00cccc"});
+        if ( sat.name == 'ISS (ZARYA)' || sat.name == 'HST' || sat.name == 'CSS (TIANHE)' ) {
+            tr_sat.addClass('tw:text-info');
         } else if ( sat.alt > 25 ) {
-            tr_sat.css({'color' : "#99cc00"});
+            tr_sat.addClass('tw:text-success');
         } else if ( sat.alt > 0 ) {
-            tr_sat.css({'color' : "#ff9900"});
+            tr_sat.addClass('tw:text-warning');
         } else {
-            tr_sat.css({'color' : "#888888"});
+            tr_sat.addClass('tw:text-base-content/40');
         }
 
 
@@ -325,113 +270,286 @@ function populateData() {
 
 $( document ).ready(function() {
     init();
+
+    // Handle hash-based tab activation for DaisyUI radio tabs
+    function activateTabFromHash() {
+        const hash = window.location.hash;
+        if (hash) {
+            const tabId = hash.replace('#', '');
+            const $tab = $(`#nav-${tabId}-tab`);
+            if ($tab.length) {
+                $tab.prop('checked', true);
+            }
+        }
+    }
+
+    activateTabFromHash();
+    window.addEventListener('hashchange', activateTabFromHash);
+
+    // Update hash when switching tabs
+    $('input[name="astro_tabs"]').on('change', function() {
+        const tabId = $(this).attr('id').replace('nav-', '').replace('-tab', '');
+        history.replaceState(null, '', '#' + tabId);
+    });
 });
 
 </script>
 {% endblock %}
 
 {% block content %}
+<style>
+    /* Clean text-only tabs with a custom cute indicator dot */
+    .astropanel-text-tab {
+        position: relative;
+        transition: color 0.2s ease-in-out, opacity 0.2s ease-in-out;
+        background: transparent !important;
+        border: none !important;
+        padding-left: 1.25rem !important;
+        white-space: nowrap;
+    }
+    
+    /* The cute indicator dot base styling */
+    .astropanel-text-tab::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 8px;
+        height: 8px;
+        border-radius: 9999px;
+        opacity: 0.4;
+        transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+        background-color: oklch(var(--bc)); /* Default fallback color */
+    }
 
-    <div class="panel_container">
-        <h1>Astropanel</h1>
+    /* Custom color assignments for each specific target dot */
+    #nav-polaris-tab::before { background-color: oklch(var(--p)); }
+    #nav-moon-tab::before { background-color: oklch(var(--in)); }
+    #nav-sun-tab::before { background-color: oklch(var(--wa)); }
+    #nav-planets-tab::before { background-color: oklch(var(--p)); }
+    #nav-satellites-tab::before { background-color: oklch(var(--su)); }
 
-<nav>
-  <div class="nav nav-tabs" id="nav-tab" role="tablist">
-    <button class="nav-link link-danger bg-dark active" id="nav-polaris-tab" data-bs-toggle="tab" data-bs-target="#nav-polaris" type="button" role="tab" aria-controls="nav-polaris" aria-selected="true">Polar Finder</button>
-    <button class="nav-link link-light bg-dark" id="nav-moon-tab" data-bs-toggle="tab" data-bs-target="#nav-moon" type="button" role="tab" aria-controls="nav-moon" aria-selected="false">Moon</button>
-    <button class="nav-link link-warning bg-dark" id="nav-sun-tab" data-bs-toggle="tab" data-bs-target="#nav-sun" type="button" role="tab" aria-controls="nav-sun" aria-selected="false">Sun</button>
-    <button class="nav-link link-primary bg-dark" id="nav-planets-tab" data-bs-toggle="tab" data-bs-target="#nav-planets" type="button" role="tab" aria-controls="nav-planets" aria-selected="false">Solar System</button>
-    <button class="nav-link link-success bg-dark" id="nav-satellites-tab" data-bs-toggle="tab" data-bs-target="#nav-satellites" type="button" role="tab" aria-controls="nav-satellites" aria-selected="false">Satellites</button>
-  </div>
-</nav>
+    /* Hover micro-interactions */
+    .astropanel-text-tab:hover {
+        color: oklch(var(--bc)) !important;
+        opacity: 0.9;
+    }
+    .astropanel-text-tab:hover::before {
+        opacity: 0.8;
+        transform: translateY(-50%) scale(1.2);
+    }
 
-<div class="tab-content" id="nav-tabContent">
-    <div class="tab-pane fade show active" id="nav-polaris" role="tabpanel" aria-labelledby="nav-polaris-tab">
-        <div id="polaris">
-            <div id="reticle">
-                <img id="polaris_marker" src="{{ url_for('indi_allsky.static', filename='astropanel/img/polaris.png') }}" alt="Polar Finder">
-                <p id="legend" >View as in polar finder scope</p>
+    /* DaisyUI Radio Tab checked state handling */
+    .astropanel-text-tab:checked {
+        color: oklch(var(--bc)) !important;
+        opacity: 1 !important;
+        font-weight: 800;
+        --tab-border-color: oklch(var(--bc) / 0.2);
+    }
+    .astropanel-text-tab:checked::before {
+        opacity: 1 !important;
+        transform: translateY(-50%) scale(1.2);
+    }
+
+    /* Optical finder containment box */
+    .reticle-container {
+        position: relative;
+        width: 240px;
+        height: 240px;
+        background: radial-gradient(circle, rgba(25,29,36,1) 0%, rgba(30,35,42,1) 100%);
+        border: 2px solid oklch(var(--bc) / 0.1);
+        border-radius: 9999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+    }
+</style>
+
+<div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-6 astropanel-wrapper">
+
+    <div class="tw:w-full tw:bg-base-200 tw:p-3 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm tw:flex tw:items-center tw:gap-3">
+        <span class="tw:text-[0.625rem] tw:font-mono tw:text-base-content/30 tw:uppercase">Live Telemetry</span>
+        <span id="loader_data" class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary" style="display: none;"></span>
+    </div>
+
+    <!-- Main Navigation Tabs -->
+    <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm">
+        <button type="button" class="astropanel-tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:gap-2" data-target="tab-polaris">
+            <i class="tw:icon-[lucide--compass] tw:w-4 tw:h-4"></i> Polar Finder
+        </button>
+        <button type="button" class="astropanel-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:gap-2" data-target="tab-moon">
+            <i class="tw:icon-[lucide--moon] tw:w-4 tw:h-4"></i> Moon
+        </button>
+        <button type="button" class="astropanel-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:gap-2" data-target="tab-sun">
+            <i class="tw:icon-[lucide--sun] tw:w-4 tw:h-4"></i> Sun
+        </button>
+        <button type="button" class="astropanel-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:gap-2" data-target="tab-planets">
+            <i class="tw:icon-[lucide--orbit] tw:w-4 tw:h-4"></i> Solar System
+        </button>
+        <button type="button" class="astropanel-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:gap-2" data-target="tab-satellites">
+            <i class="tw:icon-[lucide--satellite] tw:w-4 tw:h-4"></i> Visual Satellites
+        </button>
+    </div>
+
+    <!-- Tab Content Panels -->
+    <div class="tw:w-full">
+        
+        <!-- Polar Finder Tab -->
+        <div id="tab-polaris" class="astropanel-tab-pane">
+            <div class="allsky-workspace-grid">
+                <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-6 tw:flex tw:flex-col tw:items-center tw:justify-center tw:gap-4 shadow-sm">
+                    <div class="reticle-container">
+                        <img id="polaris_marker" src="{{ url_for('indi_allsky.static', filename='astropanel/img/polaris.png') }}" alt="Polar Finder" class="tw:w-full tw:h-full">
+                    </div>
+                    <p class="tw:text-[0.625rem] tw:text-base-content/40 tw:font-mono tw:uppercase tw:tracking-[0.2em] tw:m-0">View: Polaris Scope Reticle</p>
+                </div>
+                <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:overflow-hidden shadow-sm">
+                    <div class="tw:bg-base-300/40 tw:px-5 tw:py-4 tw:border-b tw:border-base-300">
+                        <h2 class="tw:text-xs tw:font-black tw:uppercase tw:tracking-widest tw:text-primary m-0">Alignment Vectors</h2>
+                    </div>
+                    <table class="tw:table tw:table-xs tw:w-full tw:m-0">
+                        <tbody class="tw:divide-y tw:divide-base-300/20">
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-4 tw:text-xs tw:font-bold tw:text-base-content/50 tw:uppercase">Hour Angle</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-sm tw:font-bold tw:text-base-content"><span id="pha"></span></td></tr>
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-3 tw:text-xs tw:font-semibold tw:text-base-content/40">Next Transit</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs"><span id="polaris_next_transit"></span></td></tr>
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-3 tw:text-xs tw:font-semibold tw:text-base-content/40">At 3 o'clock</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs"><span id="polaris_next_3"></span></td></tr>
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-3 tw:text-xs tw:font-semibold tw:text-base-content/40">At 12 o'clock</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs"><span id="polaris_next_12"></span></td></tr>
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-3 tw:text-xs tw:font-semibold tw:text-base-content/40">At 9 o'clock</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs"><span id="polaris_next_9"></span></td></tr>
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-4 tw:text-xs tw:font-bold tw:text-base-content/50 tw:uppercase">Altitude</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-sm tw:font-bold tw:text-info"><span id="polaris_alt"></span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <h2>Polaris</h2>
-            <table id="polaris-table">
-                <tr><td class="polarishdr">Hour Angle</td><td class="polarisdata"><span id="pha"></span></td></tr>
-                <tr><td class="polarishdr">Next Transit</td><td class="polarisdata"><span id="polaris_next_transit"></span></td></tr>
-                <tr><td class="polarishdr">At 3 o'clock</td><td class="polarisdata"><span id="polaris_next_3"></span></td></tr>
-                <tr><td class="polarishdr">At 12 o'clock</td><td class="polarisdata"><span id="polaris_next_12"></span></td></tr>
-                <tr><td class="polarishdr">At 9 o'clock</td><td class="polarisdata"><span id="polaris_next_9"></span></td></tr>
-                <tr><td class="polarishdr">Altitude</td><td class="polarisdata"><span id="polaris_alt"></span></td></tr>
-                <tr><td><span class="loader" id="loader_data"></span></td></tr>
-            </table>
         </div>
-    </div>
-    <div class="tab-pane fade" id="nav-moon" role="tabpanel" aria-labelledby="nav-moon-tab">
-        <div id="moon">
-            <img src="{{ url_for('indi_allsky.static', filename='astropanel/img/moon_rot.png') }}" alt="Moon">
-            <h2>Moon</h2>
-            <p><span id="moon_phase">&nbsp;</span></p>
-            <table id="moon-table">
-                <tr><td class="moonhdr">Rise</td><td class="moondata"><span id="moon_rise"></span></td></tr>
-                <tr><td class="moonhdr">Transit</td><td class="moondata"><span id="moon_transit"></span></td></tr>
-                <tr><td class="moonhdr">Set</td><td class="moondata"><span id="moon_set"></span></td></tr>
-                <tr><td class="moonhdr">Azimuth</td><td class="moondata"><span id="moon_az"></span></td></tr>
-                <tr><td class="moonhdr">Altitude</td><td class="moondata"><span id="moon_alt"></span></td></tr>
-                <tr><td class="moonhdr">Right ascension</td><td class="moondata"><span id="moon_ra"></span></td></tr>
-                <tr><td class="moonhdr">Declination</td><td class="moondata"><span id="moon_dec"></span></td></tr>
-                <tr id="new_moon_first"><td class="moonhdr">Next new moon</td><td class="moondata"><span class="moon_new"></span></td></tr>
-                <tr><td class="moonhdr">Next full moon</td><td class="moondata"><span id="moon_full"></span></td></tr>
-                <tr id="new_moon_second" style="display:none;"><td class="moonhdr">Next new moon</td><td class="moondata"><span class="moon_new"></span></td></tr>
-            </table>
-        </div>
-    </div>
-    <div class="tab-pane fade" id="nav-sun" role="tabpanel" aria-labelledby="nav-sun-tab">
-        <div id="sun">
-            <img src="{{ url_for('indi_allsky.static', filename='astropanel/img/sun.png') }}" alt="Sun">
-            <h2>Sun</h2>
-            <table id="sun-table">
-                <tr><td class="sunhdr">Start astronomical twilight</td><td class="sundata"><span id="sun_at_start"></span></td></tr>
-                <tr><td class="sunhdr">Start civil twilight</td><td class="sundata"><span id="sun_ct_start"></span></td></tr>
-                <tr><td class="sunhdr">Sunrise</td><td class="sundata"><span id="sun_rise"></span></td></tr>
-                <tr><td class="sunhdr">Transit</td><td class="sundata"><span id="sun_transit"></span></td></tr>
-                <tr><td class="sunhdr">Sunset</td><td class="sundata"><span id="sun_set"></span></td></tr>
-                <tr><td class="sunhdr">End civil twilight</td><td class="sundata"><span id="sun_ct_end"></span></td></tr>
-                <tr><td class="sunhdr">End astronomical twilight</td><td class="sundata"><span id="sun_at_end"></span></td></tr>
-                <tr><td class="sunhdr">Azimuth</td><td class="sundata"><span id="sun_az"></span></td></tr>
-                <tr><td class="sunhdr">Altitude</td><td class="sundata"><span id="sun_alt"></span></td></tr>
-                <tr><td class="sunhdr">Right ascension</td><td class="sundata"><span id="sun_ra"></span></td></tr>
-                <tr><td class="sunhdr">Declination</td><td class="sundata"><span id="sun_dec"></span></td></tr>
-                <tr id="sun_solstice_first"><td class="sunhdr">Solstice</td><td class="sundata"><span class="sun_solstice"></span></td></tr>
-                <tr><td class="sunhdr">Equinox</td><td class="sundata"><span id="sun_equinox"></span></td></tr>
-                <tr id="sun_solstice_second" style="display:none;"><td class="sunhdr">Solstice</td><td class="sundata"><span class="sun_solstice"></span></td></tr>
-            </table>
-        </div>
-    </div>
-    <div class="tab-pane fade" id="nav-planets" role="tabpanel" aria-labelledby="nav-planets-tab">
-        <div id="planets">
-            <h2>Solar System</h2>
-            <table id="planets-table">
-                <tr><td class="planetshdr">&nbsp;</td><td class="planetshdrdata">Rise</td><td class="planetshdrdata">Transit</td><td class="planetshdrdata">Set</td><td class="planetshdrdata">Azimuth</td><td class="planetshdrdata">Altitude</td></tr>
-                <tr id="mercury"><td class="planetshdr">Mercury</td><td class="planetsdata"><span id="mercury_rise"></span></td><td class="planetsdata"><span id="mercury_transit"></span></td><td class="planetsdata"><span id="mercury_set"></span></td><td class="planetsdata"><span id="mercury_az"></span></td><td class="planetsdata"><span id="mercury_alt"></span></td></tr>
-                <tr id="venus"><td class="planetshdr">Venus</td><td class="planetsdata"><span id="venus_rise"></span></td><td class="planetsdata"><span id="venus_transit"></span></td><td class="planetsdata"><span id="venus_set"></span></td><td class="planetsdata"><span id="venus_az"></span></td><td class="planetsdata"><span id="venus_alt"></span></td></tr>
-                <tr id="mars"><td class="planetshdr">Mars</td><td class="planetsdata"><span id="mars_rise"></span></td><td class="planetsdata"><span id="mars_transit"></span></td><td class="planetsdata"><span id="mars_set"></span></td><td class="planetsdata"><span id="mars_az"></span></td><td class="planetsdata"><span id="mars_alt"></span></td></tr>
-                <tr id="jupiter"><td class="planetshdr">Jupiter</td><td class="planetsdata"><span id="jupiter_rise"></span></td><td class="planetsdata"><span id="jupiter_transit"></span></td><td class="planetsdata"><span id="jupiter_set"></span></td><td class="planetsdata"><span id="jupiter_az"></span></td><td class="planetsdata"><span id="jupiter_alt"></span></td></tr>
-                <tr id="saturn"><td class="planetshdr">Saturn</td><td class="planetsdata"><span id="saturn_rise"></span></td><td class="planetsdata"><span id="saturn_transit"></span></td><td class="planetsdata"><span id="saturn_set"></span></td><td class="planetsdata"><span id="saturn_az"></span></td><td class="planetsdata"><span id="saturn_alt"></span></td></tr>
-                <tr id="uranus"><td class="planetshdr">Uranus</td><td class="planetsdata"><span id="uranus_rise"></span></td><td class="planetsdata"><span id="uranus_transit"></span></td><td class="planetsdata"><span id="uranus_set"></span></td><td class="planetsdata"><span id="uranus_az"></span></td><td class="planetsdata"><span id="uranus_alt"></span></td></tr>
-                <tr id="neptune"><td class="planetshdr">Neptune</td><td class="planetsdata"><span id="neptune_rise"></span></td><td class="planetsdata"><span id="neptune_transit"></span></td><td class="planetsdata"><span id="neptune_set"></span></td><td class="planetsdata"><span id="neptune_az"></span></td><td class="planetsdata"><span id="neptune_alt"></span></td></tr>
-            </table>
-        <img src="{{ url_for('indi_allsky.static', filename='astropanel/img/solar_system.png') }}" alt="Solar System">
-        </div>
-    </div>
-    <div class="tab-pane fade" id="nav-satellites" role="tabpanel" aria-labelledby="nav-satellites-tab">
-        <div id="planets">
-            <h2>Visual Satellites</h2>
-            <table id="satellites-table">
-            </table>
-        </div>
-    </div>
-</div>
-</div>
 
-<div>&#169; Radek Kaczorek</div>
+        <!-- Moon Tab -->
+        <div id="tab-moon" class="astropanel-tab-pane" style="display: none;">
+            <div class="allsky-workspace-grid">
+                <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-6 tw:flex tw:flex-col tw:items-center tw:justify-center tw:gap-4 shadow-sm">
+                    <img src="{{ url_for('indi_allsky.static', filename='astropanel/img/moon_rot.png') }}" alt="Moon" class="tw:w-44 tw:h-44 tw:opacity-95 tw:drop-shadow-2xl">
+                    <div class="tw:text-center tw:mt-2">
+                        <span id="moon_phase" class="tw:badge tw:badge-outline tw:badge-primary tw:font-black tw:tracking-widest tw:uppercase tw:px-5 tw:text-xs">&nbsp;</span>
+                    </div>
+                </div>
+                <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:overflow-hidden shadow-sm">
+                    <div class="tw:bg-base-300/40 tw:px-5 tw:py-4 tw:border-b tw:border-base-300">
+                        <h4 class="tw:text-xs tw:font-black tw:uppercase tw:tracking-widest tw:text-info m-0">Lunar Ephemeris</h4>
+                    </div>
+                    <table class="tw:table tw:table-xs tw:w-full tw:m-0">
+                        <tbody class="tw:divide-y tw:divide-base-300/20">
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-3 tw:text-xs tw:font-bold tw:text-base-content/40 tw:uppercase">Horizon</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs tw:font-bold"><span id="moon_rise" class="tw:text-success">↑ Rise</span>&nbsp;&nbsp;&nbsp;<span id="moon_set" class="tw:text-error">↓ Set</span></td></tr>
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-3 tw:text-xs tw:font-semibold tw:text-base-content/40">Transit</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs"><span id="moon_transit"></span></td></tr>
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-3 tw:text-xs tw:font-semibold tw:text-base-content/40">Azimuth</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs"><span id="moon_az"></span></td></tr>
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-3 tw:text-xs tw:font-bold tw:text-base-content/40 tw:uppercase">Altitude</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs tw:font-bold tw:text-info"><span id="moon_alt"></span></td></tr>
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-3 tw:text-xs tw:font-semibold tw:text-base-content/40">Coordinates</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-[0.6875rem] tw:text-base-content/70"><span id="moon_ra"></span> RA / <span id="moon_dec"></span> DEC</td></tr>
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-3 tw:text-xs tw:font-bold tw:text-base-content/40 tw:uppercase">Next New Moon</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs tw:text-warning"><span class="moon_new"></span></td></tr>
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-3 tw:text-xs tw:font-bold tw:text-base-content/40 tw:uppercase">Next Full Moon</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs tw:text-warning"><span id="moon_full"></span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sun Tab -->
+        <div id="tab-sun" class="astropanel-tab-pane" style="display: none;">
+            <div class="allsky-workspace-grid">
+                <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-6 tw:flex tw:flex-col tw:items-center tw:justify-center shadow-sm">
+                    <img src="{{ url_for('indi_allsky.static', filename='astropanel/img/sun.png') }}" alt="Sun" class="tw:w-44 tw:h-44 tw:animate-[spin_240s_linear_infinite] tw:drop-shadow-[0_0_35px_rgba(255,165,0,0.15)]">
+                    <div class="tw:text-center tw:mt-4">
+                        <h2 class="tw:text-sm tw:font-black tw:text-base-content tw:uppercase tw:tracking-[0.3em] tw:m-0">Solar Core</h2>
+                    </div>
+                </div>
+                <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:overflow-hidden shadow-sm">
+                    <div class="tw:bg-base-300/40 tw:px-5 tw:py-4 tw:border-b tw:border-base-300">
+                        <h4 class="tw:text-xs tw:font-black tw:uppercase tw:tracking-widest tw:text-warning m-0">Twilight Horizons</h4>
+                    </div>
+                    <table class="tw:table tw:table-xs tw:w-full tw:m-0">
+                        <tbody class="tw:divide-y tw:divide-base-300/20">
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-2 tw:text-xs tw:font-semibold tw:text-base-content/40">Astro Twilight Start</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs tw:text-info"><span id="sun_at_start"></span></td></tr>
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-2 tw:text-xs tw:font-bold tw:text-base-content/40 tw:uppercase">Sunrise</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs tw:text-success tw:font-black"><span id="sun_rise"></span></td></tr>
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-2 tw:text-xs tw:font-bold tw:text-base-content/40 tw:uppercase">Sunset</td><td class="tw:text-end tw:pr-4 tw:font-mono tw:text-xs tw:text-error tw:font-black"><span id="sun_set"></span></td></tr>
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-2 tw:text-xs tw:font-semibold tw:text-base-content/40">Astro Twilight End</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs tw:text-info"><span id="sun_at_end"></span></td></tr>
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-2 tw:text-xs tw:font-bold tw:text-base-content/40 tw:uppercase">Alt / Az Coordinates</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs tw:font-bold"><span id="sun_az"></span> / <span id="sun_alt" class="tw:text-info"></span></td></tr>
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-2 tw:text-xs tw:font-bold tw:text-base-content/40 tw:uppercase">Solstice Target</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs tw:text-warning"><span class="sun_solstice"></span></td></tr>
+                            <tr class="hover:tw:bg-base-300/20 tw:transition-colors"><td class="tw:pl-5 tw:py-2 tw:text-xs tw:font-bold tw:text-base-content/40 tw:uppercase">Equinox Target</td><td class="tw:text-end tw:pr-5 tw:font-mono tw:text-xs tw:text-warning"><span id="sun_equinox"></span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Solar System Tab -->
+        <div id="tab-planets" class="astropanel-tab-pane" style="display: none;">
+            <div class="tw:flex tw:flex-col tw:gap-6 tw:w-full">
+                <div class="tw:w-full tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-6 tw:flex tw:flex-col tw:items-center tw:justify-center shadow-sm">
+                    <img src="{{ url_for('indi_allsky.static', filename='astropanel/img/solar_system.png') }}" alt="Solar System" class="tw:h-44 tw:opacity-85 tw:drop-shadow-2xl">
+                </div>
+
+                <div class="tw:w-full tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:overflow-hidden shadow-sm">
+                    <div class="tw:bg-base-300/40 tw:px-5 tw:py-4 tw:border-b tw:border-base-300">
+                        <h2 class="tw:text-xs tw:font-black tw:uppercase tw:tracking-widest tw:text-info m-0">Planetary Ephemeris Matrix</h2>
+                    </div>
+                    <table class="tw:table tw:table-xs tw:w-full tw:m-0">
+                        <thead>
+                            <tr class="tw:border-b tw:border-base-300 tw:bg-base-300/20 tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/40">
+                                <th class="tw:pl-5 tw:py-4">Target Body</th>
+                                <th>Rise Target</th>
+                                <th>Transit Axis</th>
+                                <th>Set Meridian</th>
+                                <th>Azimuth Vector</th>
+                                <th class="tw:pr-5 tw:text-end">Altitude Limit</th>
+                            </tr>
+                        </thead>
+                        <tbody class="tw:divide-y tw:divide-base-300/10">
+                            {% for planet in ['mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'] %}
+                            <tr id="{{ planet }}" class="hover:tw:bg-base-300/20 tw:transition-colors tw:text-xs">
+                                <td class="tw:pl-5 tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/70">{{ planet }}</td>
+                                <td class="tw:font-mono tw:text-success"><span id="{{ planet }}_rise"></span></td>
+                                <td class="tw:font-mono tw:text-base-content/40"><span id="{{ planet }}_transit"></span></td>
+                                <td class="tw:font-mono tw:text-error"><span id="{{ planet }}_set"></span></td>
+                                <td class="tw:font-mono"><span id="{{ planet }}_az"></span></td>
+                                <td class="tw:pr-5 tw:text-end tw:font-mono tw:font-bold tw:text-info"><span id="{{ planet }}_alt"></span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Satellites Tab -->
+        <div id="tab-satellites" class="astropanel-tab-pane" style="display: none;">
+            <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:overflow-hidden shadow-sm">
+                <div class="tw:bg-base-300/40 tw:px-5 tw:py-4 tw:border-b tw:border-base-300">
+                    <h2 class="tw:text-xs tw:font-black tw:uppercase tw:tracking-widest tw:text-success m-0">Low Earth Satellites</h2>
+                </div>
+                <table id="satellites-table" class="tw:table tw:table-xs tw:w-full tw:m-0"></table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+    $(document).ready(function() {
+        $('.astropanel-tab-btn').on('click', function() {
+            var target = $(this).data('target');
+            
+            $('.astropanel-tab-btn').removeClass('tw:btn-primary').addClass('tw:btn-ghost');
+            $(this).removeClass('tw:btn-ghost').addClass('tw:btn-primary');
+
+            $('.astropanel-tab-pane').hide();
+            $('#' + target).show();
+        });
+    });
+    </script>
+
+    <!-- Footer Copyright -->
+    <div class="tw:w-full tw:text-center tw:mt-4 tw:opacity-15">
+        <span class="tw:text-[0.5625rem] tw:font-mono tw:uppercase tw:tracking-[0.5em]">&#169; Radek Kaczorek</span>
+    </div>
+
+</div>
 
 {% endblock %}
-

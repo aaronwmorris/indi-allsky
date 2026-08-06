@@ -3,43 +3,61 @@
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
 {% block head %}
-<style>
-</style>
 <link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
 <script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
-
 {% endblock %}
 
 {% block content %}
-<div class="container">
-<div class="row">
-  <table id="tasks-table" class="table table-striped compact" data-bs-theme="dark">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Date</th>
-        <th>Queue</th>
-        <th>Action</th>
-        <th>State</th>
-        <th>Result</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for task in task_list %}
-      <tr>
-        <td>{{ task.id }}</td>
-        <td>{{ task.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-        <td>{{ task.queue }}</td>
-        <td>{{ task.action }}</td>
-        <td>{{ task.state }}</td>
-        <td>{{ task.result }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6 tw:w-full">
+
+    <!-- Task Table Card -->
+    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+        <div class="tw:card-body tw:p-6">
+            <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:mb-6">
+                System Tasks Queue
+            </h4>
+            <div class="tw:overflow-x-auto tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
+                <table id="tasks-table" class="tw:table tw:table-zebra tw:table-xs tw:w-full tw:m-0">
+                    <thead>
+                        <tr class="tw:bg-base-300/60 tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
+                            <th class="tw:pl-4 tw:py-3">ID</th>
+                            <th class="tw:py-3">Date</th>
+                            <th class="tw:py-3">Queue</th>
+                            <th class="tw:py-3">Action</th>
+                            <th class="tw:py-3">State</th>
+                            <th class="tw:pr-4 tw:py-3">Result</th>
+                        </tr>
+                    </thead>
+                    <tbody class="tw:divide-y tw:divide-base-content/5">
+                        {% for task in task_list %}
+                        <tr class="hover:tw:bg-base-content/5 tw:transition-colors tw:text-xs">
+                            <td class="tw:pl-4 tw:font-mono tw:font-bold tw:text-base-content/70">{{ task.id }}</td>
+                            <td class="tw:whitespace-nowrap tw:font-mono tw:text-base-content/80">{{ task.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td><span class="tw:badge tw:badge-xs tw:badge-ghost tw:font-mono tw:uppercase">{{ task.queue }}</span></td>
+                            <td class="tw:font-semibold tw:text-base-content">{{ task.action }}</td>
+                            <td>
+                                {% if task.state == 'COMPLETED' or task.state == 'SUCCESS' %}
+                                <span class="tw:badge tw:badge-sm tw:badge-success tw:font-semibold tw:rounded-[var(--radius-box)]">{{ task.state }}</span>
+                                {% elif task.state == 'RUNNING' or task.state == 'PROCESSING' %}
+                                <span class="tw:badge tw:badge-sm tw:badge-info tw:font-semibold tw:rounded-[var(--radius-box)]">{{ task.state }}</span>
+                                {% elif task.state == 'FAILED' or task.state == 'ERROR' %}
+                                <span class="tw:badge tw:badge-sm tw:badge-error tw:font-semibold tw:rounded-[var(--radius-box)]">{{ task.state }}</span>
+                                {% else %}
+                                <span class="tw:badge tw:badge-sm tw:badge-neutral tw:font-semibold tw:rounded-[var(--radius-box)]">{{ task.state }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="tw:pr-4 tw:text-base-content/80 tw:max-w-xs tw:truncate">{{ task.result }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -49,7 +67,8 @@ function init() {
         order: [[1, 'desc']],
         lengthMenu: [20, 50, 100, -1],
         layout: {
-            topEnd: ['buttons', 'search'],
+            topStart: ['pageLength', 'buttons'],
+            topEnd: 'search',
         },
         buttons: [
             'copy',
@@ -59,8 +78,7 @@ function init() {
     });
 }
 
-
-$( document ).ready(function() {
+$(document).ready(function() {
     init();
 });
 </script>

@@ -1,0 +1,116 @@
+<div class="tab-pane fade" id="nav-sat_track" role="tabpanel" aria-labelledby="nav-sat_track-tab">
+    <div class="tw:flex tw:flex-col tw:gap-6">
+
+        <!-- Satellite Tracking Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <div class="tw:flex tw:items-center tw:justify-between">
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Satellite Tracking Options</span>
+                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Satellite-Tracking" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Satellite Tracking Wiki</a>
+                </div>
+
+                <!-- Enable Satellite Tracking -->
+                <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SATELLITE_TRACK__ENABLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Enable satellite tracking calculation overlay</span>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
+                        {{ form_config.SATELLITE_TRACK__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="SATELLITE_TRACK__ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Daytime Tracking -->
+                <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SATELLITE_TRACK__DAYTIME_TRACK.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Track satellites during daytime captures</span>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
+                        {{ form_config.SATELLITE_TRACK__DAYTIME_TRACK(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="SATELLITE_TRACK__DAYTIME_TRACK-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Minimum Altitude -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SATELLITE_TRACK__ALT_DEG_MIN.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Min visual altitude in degrees</span>
+                    </div>
+                    <div class="md:tw:col-span-3 tw:flex tw:flex-col">
+                        {{ form_config.SATELLITE_TRACK__ALT_DEG_MIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="SATELLITE_TRACK__ALT_DEG_MIN-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Label Enable -->
+                <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SATELLITE_TRACK__LABEL_ENABLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Show satellite labels on captured images</span>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
+                        {{ form_config.SATELLITE_TRACK__LABEL_ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="SATELLITE_TRACK__LABEL_ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Label Limit -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SATELLITE_TRACK__LABEL_LIMIT.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Limit max satellites labeled per image</span>
+                    </div>
+                    <div class="md:tw:col-span-3 tw:flex tw:flex-col">
+                        {{ form_config.SATELLITE_TRACK__LABEL_LIMIT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="SATELLITE_TRACK__LABEL_LIMIT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Label Prefix Template -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Prefix text template</span>
+                    </div>
+                    <div class="md:tw:col-span-3 tw:flex tw:flex-col">
+                        {{ form_config.SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX(class='tw:textarea tw:textarea-bordered tw:bg-base-100 tw:text-base-content tw:w-full tw:font-mono tw:text-xs', rows='4') }}
+                        <div id="SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Sat Label Template -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3">
+                    <div class="tw:flex tw:flex-col">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SATELLITE_TRACK__SAT_LABEL_TEMPLATE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Individual satellite label template</span>
+                    </div>
+                    <div class="md:tw:col-span-3 tw:flex tw:flex-col">
+                        {{ form_config.SATELLITE_TRACK__SAT_LABEL_TEMPLATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="SATELLITE_TRACK__SAT_LABEL_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- System Reload Note Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.RELOAD_ON_SAVE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Automatically restart capture processes upon saving configuration (takes 1-3 minutes)</span>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
+                        {{ form_config.RELOAD_ON_SAVE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="RELOAD_ON_SAVE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div><!-- end sat_track tab -->
