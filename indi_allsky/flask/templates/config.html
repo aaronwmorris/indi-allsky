@@ -2696,6 +2696,7 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             Log the detection result for every ASI676MC frame. Successful repairs and validation failures are always logged.
+            Skipped handling and failed post-repair validation also create rate-limited Camera notifications.
         </div>
     </div>
 
@@ -2710,7 +2711,9 @@ var camera_id = {{ camera_id }};
             </div>
         </div>
         <div class="col-sm-8">
-            Show repair badges, colored outlines, and the repaired-only filter in the gallery.
+            Show repair badges, colored outlines, and filters for repaired, automatically excluded,
+            and validation-failed purple frames in the gallery. The excluded filter uses only
+            ASI676MC handling status, not frames excluded manually or by another feature.
             Repair metadata continues to be recorded when this display option is disabled.
         </div>
     </div>

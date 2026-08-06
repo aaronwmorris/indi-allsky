@@ -998,7 +998,49 @@ class ImageProcessor(object):
             timing=timing,
         )
 
+        # Skips and failed validation are safe but require attention: the
+        # original frame continues without repair.  Reuse indi-allsky's
+        # notification de-duplication so an incompatible capture stream does
+        # not generate a notice for every exposure.
+        if status in ('skipped', 'validation_failed'):
+            self._notify_asi676mc_issue(status, reason)
+
         return status == 'repaired'
+
+
+    def _notify_asi676mc_issue(self, status, reason=None):
+        """Create a rate-limited notification for an actionable outcome."""
+        if status == 'validation_failed':
+            item = 'Asi676mcRepairFailed'
+            notification = (
+                'ASI676MC purple-frame repair validation failed. The original '
+                'frame was retained and will be excluded from standard '
+                'timelapses. Collect diagnostic FITS and recalibrate.'
+            )
+        elif status == 'skipped':
+            item = 'Asi676mcRepairSkipped'
+            notification = (
+                'ASI676MC purple-frame handling was skipped: {0}. The frame '
+                'continued without purple-frame handling; review the capture '
+                'format and repair settings.'
+            ).format(str(reason or 'no reason was recorded'))
+        else:
+            return
+
+        try:
+            self._miscDb.addNotification(
+                NotificationCategory.CAMERA,
+                item,
+                notification,
+                expire=timedelta(hours=2),
+            )
+        except Exception:
+            # A monitoring convenience must never stop the image worker or
+            # change the conservative retain/exclude behavior above.
+            logger.exception(
+                'Unable to create ASI676MC %s notification',
+                status,
+            )
 
 
     def correct_asi676mc_frame(self, i_ref):

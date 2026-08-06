@@ -59,11 +59,18 @@ The status stored under `asi676mc_repair_status` is one of:
 | `normal` | The frame did not match the purple-frame signature. |
 | `excluded` | A purple frame was detected in Exclude Only mode; pixels were retained and the frame was excluded from standard timelapses. |
 | `repaired` | A purple frame was repaired and passed post-repair validation. |
-| `validation_failed` | Repair output still matched the failure; the original frame was retained. |
+| `validation_failed` | Repair output still matched the failure; the original frame was retained and excluded from standard timelapses. |
 | `skipped` | The camera or RAW layout did not meet the safety boundary, or the configuration was invalid. |
 
 The metadata also retains the available before/after ratios, timing, and reason
 text. Gallery decoration is optional and does not affect processing.
+
+A skipped check or failed post-repair validation also creates a Camera
+notification. The first occurrence appears immediately; identical notification
+types are suppressed for two hours so an incompatible capture stream cannot
+flood the notification list. Normal frames, expected Exclude Only detections,
+and successful repairs remain visible through their usual logs and gallery
+metadata without generating notifications.
 
 ## Detection and repair model
 
@@ -135,7 +142,7 @@ All keys live below `IMAGE_ASI676MC_REPAIR`.
 | `ENABLE` | `False` | Master safety switch. Leave off for unaffected cameras. |
 | `EXCLUDE_ONLY` | `True` | Detect, flag, and exclude purple frames without changing pixels. Disable only after reviewing calibration. |
 | `LOG_EVERY_FRAME` | `False` | Log normal-frame checks at info level instead of debug level. Purple frames and failures are always logged prominently. |
-| `GALLERY_ENABLE` | `True` | Show repair/exclusion status in the gallery and enable the repaired-frame filter. |
+| `GALLERY_ENABLE` | `True` | Show repair/exclusion status in the gallery and enable repaired, purple-frame-excluded, and validation-failed filters. |
 | `SAVE_DIAGNOSTIC_FITS` | `False` | Save the untouched purple frame and its following frame as the preferred low-disk calibration evidence. |
 | `SAVE_PRECEDING_FITS` | `False` | Also cache the immediately preceding normal FITS and save it when the next compatible frame is purple. Requires the parent diagnostic option. |
 | `PURPLE_RATIO_THRESHOLD` | `1.5` | Combined purple signature threshold. |
@@ -236,6 +243,21 @@ enforce the same three conditions. With normal authentication that means an
 administrator. With `LOGIN_DISABLED`, the same anonymous browser access
 allowed by Config is used; private calibration ownership is still separated
 by a browser-specific token.
+
+### Multiple ASI676MC units
+
+The camera selector binds uploaded or discovered evidence, session ownership,
+and save-time identity checks to one physical camera record. It does not create
+a per-camera repair profile. `IMAGE_ASI676MC_REPAIR` is one installation-wide
+configuration block, so applied thresholds and repair constants are used by
+every ASI676MC processed with that configuration.
+
+This is appropriate for the usual one-camera installation. An installation
+that regularly swaps between, or processes data from, multiple physical
+ASI676MC units must currently keep one shared profile or recalibrate when the
+active unit changes. Per-camera calibration profiles are possible future work
+and would require a configuration and runtime design change rather than a
+calibration-page-only change.
 
 The page supports two input paths.
 
@@ -519,7 +541,7 @@ recalibrate; do not loosen detection thresholds merely to suppress the warning.
 | --- | --- |
 | `indi_allsky/config.py` | Conservative new-install defaults, including disabled handling and Exclude Only mode. |
 | `indi_allsky/asi676mc.py` | Authoritative settings normalization, signature detection, repair, validation, metadata, and diagnostic-role helpers. |
-| `indi_allsky/processing.py` | Runtime eligibility checks, Exclude Only behavior, repair invocation, and logging. |
+| `indi_allsky/processing.py` | Runtime eligibility checks, Exclude Only behavior, repair invocation, logging, and actionable notifications. |
 | `indi_allsky/image.py` | Untouched diagnostic FITS capture, optional preceding-frame cache, database records, and rendered-image metadata. |
 | `indi_allsky/asi676mc_calibration_engine.py` | FITS inspection, matching, evidence policy, numerical fitting, and validation through the live repair path. |
 | `indi_allsky/asi676mc_calibration.py` | Private sessions, uploads, database discovery/staging, cleanup, user guidance, result comparison, and text reports. |
@@ -529,7 +551,7 @@ recalibrate; do not loosen detection thresholds merely to suppress the warning.
 | `indi_allsky/flask/base_views.py` and `templates/base.html` | Context-aware Tools-menu visibility. |
 | `indi_allsky/flask/templates/config.html` | Settings UI and contextual guidance. |
 | `indi_allsky/flask/templates/asi676mc_calibration.html` | Calibration setup/progress/result transitions, cancellation, reports, reset, and browser capability checks. |
-| `indi_allsky/flask/templates/gallery.html` | Optional repair/exclusion badges, outlines, and repaired-frame filtering. |
+| `indi_allsky/flask/templates/gallery.html` | Optional repair/exclusion badges, outlines, and status-specific filtering. |
 | `indi_allsky/flask/templates/imageviewer.html` | Diagnostic preceding/purple/following FITS downloads. |
 | `testing/image/test_asi676mc_repair.py` | Detection, repair, validation, metadata, and diagnostic helper coverage. |
 | `testing/image/test_asi676mc_calibration_engine.py` | FITS inspection, matching, fitting, evidence policy, and shared-runtime coverage. |

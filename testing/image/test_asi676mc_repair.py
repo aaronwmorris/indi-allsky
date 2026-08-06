@@ -1,5 +1,6 @@
 import ast
 import json
+from datetime import timedelta
 from pathlib import Path
 import unittest
 from unittest import mock
@@ -11,6 +12,155 @@ from indi_allsky import asi676mc
 
 
 class TestAsi676mcFrameRepair(unittest.TestCase):
+
+    def test_runtime_issues_create_rate_limited_camera_notifications(self):
+        processing_path = (
+            Path(__file__).resolve().parents[2]
+            / 'indi_allsky'
+            / 'processing.py'
+        )
+        processing_source = processing_path.read_text(encoding='utf-8')
+        processing_tree = ast.parse(
+            processing_source,
+            filename=str(processing_path),
+        )
+        image_processor = next(
+            node
+            for node in processing_tree.body
+            if isinstance(node, ast.ClassDef) and node.name == 'ImageProcessor'
+        )
+        methods = {
+            node.name: ast.get_source_segment(processing_source, node)
+            for node in image_processor.body
+            if isinstance(node, ast.FunctionDef)
+        }
+        method_nodes = {
+            node.name: node
+            for node in image_processor.body
+            if isinstance(node, ast.FunctionDef)
+        }
+
+        result_method = methods['_set_asi676mc_repair_result']
+        notification_method = methods['_notify_asi676mc_issue']
+        self.assertIn("('skipped', 'validation_failed')", result_method)
+        self.assertIn('self._notify_asi676mc_issue(status, reason)', result_method)
+        self.assertIn('NotificationCategory.CAMERA', notification_method)
+        self.assertIn("'Asi676mcRepairSkipped'", notification_method)
+        self.assertIn("'Asi676mcRepairFailed'", notification_method)
+        self.assertIn('expire=timedelta(hours=2)', notification_method)
+        self.assertIn('except Exception:', notification_method)
+
+        # Execute the isolated helper without importing the full OpenCV-backed
+        # processing module, which is intentionally outside this test suite's
+        # dependency surface.
+        camera_category = object()
+        logger_mock = mock.Mock()
+        namespace = {
+            'NotificationCategory': SimpleNamespace(CAMERA=camera_category),
+            'timedelta': timedelta,
+            'logger': logger_mock,
+        }
+        helper_module = ast.Module(
+            body=[method_nodes['_notify_asi676mc_issue']],
+            type_ignores=[],
+        )
+        exec(
+            compile(
+                ast.fix_missing_locations(helper_module),
+                filename=str(processing_path),
+                mode='exec',
+            ),
+            namespace,
+        )
+        notify = namespace['_notify_asi676mc_issue']
+        processor = SimpleNamespace(_miscDb=mock.Mock())
+
+        notify(processor, 'skipped', 'binning 2 is not supported')
+        args, kwargs = processor._miscDb.addNotification.call_args
+        self.assertEqual(args[0], camera_category)
+        self.assertEqual(args[1], 'Asi676mcRepairSkipped')
+        self.assertIn('binning 2 is not supported', args[2])
+        self.assertEqual(kwargs['expire'], timedelta(hours=2))
+
+        processor._miscDb.addNotification.reset_mock()
+        notify(processor, 'validation_failed', 'post-repair check failed')
+        args, kwargs = processor._miscDb.addNotification.call_args
+        self.assertEqual(args[0], camera_category)
+        self.assertEqual(args[1], 'Asi676mcRepairFailed')
+        self.assertIn('original frame was retained', args[2])
+        self.assertEqual(kwargs['expire'], timedelta(hours=2))
+
+        processor._miscDb.addNotification.side_effect = RuntimeError('db down')
+        notify(processor, 'skipped', 'test')
+        logger_mock.exception.assert_called_once()
+
+    def test_gallery_filters_only_use_purple_frame_audit_status(self):
+        project_root = Path(__file__).resolve().parents[2]
+        forms_path = project_root / 'indi_allsky' / 'flask' / 'forms.py'
+        views_path = project_root / 'indi_allsky' / 'flask' / 'views.py'
+        template_path = (
+            project_root / 'indi_allsky' / 'flask' / 'templates' / 'gallery.html'
+        )
+        forms_source = forms_path.read_text(encoding='utf-8')
+        views_source = views_path.read_text(encoding='utf-8')
+        template = template_path.read_text(encoding='utf-8')
+
+        for field_name in (
+            'FILTER_ASI676MC_REPAIRED',
+            'FILTER_ASI676MC_EXCLUDED',
+            'FILTER_ASI676MC_FAILED',
+        ):
+            self.assertIn(field_name, forms_source)
+            self.assertIn(field_name, views_source)
+            self.assertIn(field_name, template)
+
+        forms_tree = ast.parse(forms_source, filename=str(forms_path))
+        gallery_class = next(
+            node
+            for node in forms_tree.body
+            if (
+                isinstance(node, ast.ClassDef)
+                and node.name == 'IndiAllskyGalleryViewer'
+            )
+        )
+        status_filter = next(
+            node
+            for node in gallery_class.body
+            if (
+                isinstance(node, ast.FunctionDef)
+                and node.name == '_apply_asi676mc_status_filter'
+            )
+        )
+        status_filter_source = ast.get_source_segment(forms_source, status_filter)
+        self.assertIn("data['asi676mc_repair_status']", status_filter_source)
+        self.assertIn('.in_(self.asi676mc_statuses)', status_filter_source)
+        self.assertNotIn("data['exclude']", status_filter_source)
+
+        for status in ('repaired', 'excluded', 'validation_failed'):
+            self.assertIn(
+                "form_filter_asi676mc_statuses.append('{0}')".format(status),
+                views_source,
+            )
+        self.assertIn('id="asi676mc-gallery-filters"', template)
+        self.assertIn(
+            '{% if not asi676mc_repair_gallery_enabled %} d-none{% endif %}',
+            template,
+        )
+        self.assertIn(
+            ".prop('disabled', !asi676mc_repair_gallery_enabled)",
+            template,
+        )
+
+    def test_documentation_records_shared_multi_camera_profile_limit(self):
+        docs = (
+            Path(__file__).resolve().parents[2]
+            / 'docs'
+            / 'asi676mc-frame-repair.md'
+        ).read_text(encoding='utf-8')
+
+        self.assertIn('### Multiple ASI676MC units', docs)
+        self.assertIn('per-camera repair profile', docs)
+        self.assertIn('one installation-wide', docs)
 
     def test_image_viewer_initializes_diagnostic_download_flag(self):
         forms_path = (

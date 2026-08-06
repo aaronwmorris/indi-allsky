@@ -4860,6 +4860,8 @@ class GalleryViewerView(FormView):
             'HOUR_SELECT'  : None,
             'FILTER_DETECTIONS' : None,
             'FILTER_ASI676MC_REPAIRED' : None,
+            'FILTER_ASI676MC_EXCLUDED' : None,
+            'FILTER_ASI676MC_FAILED' : None,
         }
 
 
@@ -4897,6 +4899,8 @@ class AjaxGalleryViewerView(BaseView):
         form_hour  = int(request.json.get('HOUR_SELECT', -1))  # 0 is a real hour
         form_filter_detections = bool(request.json.get('FILTER_DETECTIONS'))
         form_filter_asi676mc_repaired_requested = bool(request.json.get('FILTER_ASI676MC_REPAIRED'))
+        form_filter_asi676mc_excluded_requested = bool(request.json.get('FILTER_ASI676MC_EXCLUDED'))
+        form_filter_asi676mc_failed_requested = bool(request.json.get('FILTER_ASI676MC_FAILED'))
 
         self.cameraSetup(camera_id=camera_id)
 
@@ -4905,10 +4909,17 @@ class AjaxGalleryViewerView(BaseView):
             and self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('GALLERY_ENABLE', True)
             and asi676mc.camera_record_matches(self.camera)
         )
-        form_filter_asi676mc_repaired = bool(
-            form_filter_asi676mc_repaired_requested
-            and asi676mc_repair_gallery_enabled
-        )
+        # Gallery switches map only to model-specific audit statuses.  In
+        # particular, the excluded filter never consults the generic exclude
+        # flag, which users and unrelated processing paths may also set.
+        form_filter_asi676mc_statuses = []
+        if asi676mc_repair_gallery_enabled:
+            if form_filter_asi676mc_repaired_requested:
+                form_filter_asi676mc_statuses.append('repaired')
+            if form_filter_asi676mc_excluded_requested:
+                form_filter_asi676mc_statuses.append('excluded')
+            if form_filter_asi676mc_failed_requested:
+                form_filter_asi676mc_statuses.append('validation_failed')
 
         local = True  # default to local assets
         if self.web_nonlocal_images:
@@ -4924,7 +4935,7 @@ class AjaxGalleryViewerView(BaseView):
                 data=request.json,
                 camera_id=camera_id,
                 detections_count=1,
-                asi676mc_repaired_only=form_filter_asi676mc_repaired,
+                asi676mc_statuses=form_filter_asi676mc_statuses,
                 s3_prefix=self.s3_prefix,
                 local=local,
             )
@@ -4933,7 +4944,7 @@ class AjaxGalleryViewerView(BaseView):
                 data=request.json,
                 camera_id=camera_id,
                 detections_count=0,
-                asi676mc_repaired_only=form_filter_asi676mc_repaired,
+                asi676mc_statuses=form_filter_asi676mc_statuses,
                 s3_prefix=self.s3_prefix,
                 local=local,
             )

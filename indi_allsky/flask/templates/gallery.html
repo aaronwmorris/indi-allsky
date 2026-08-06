@@ -114,27 +114,35 @@ var newest_entry_default = true;
     </div>
 
     <div class="form-group row">
-        <div class="col-sm-6"></div>
+        <div class="col-sm-2"></div>
 
-        <div class="col-sm-1">
-            {{ form_viewer.FILTER_DETECTIONS.label }}
-        </div>
-
-        <div class="col-sm-1">
-            <div class="form-switch">
+        <div class="col-sm-2">
+            <div class="form-check form-switch">
                 {{ form_viewer.FILTER_DETECTIONS(class='form-check-input') }}
+                {{ form_viewer.FILTER_DETECTIONS.label(class='form-check-label') }}
                 <div id="FILTER_DETECTIONS-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
 
-        <div class="col-sm-2{% if not asi676mc_repair_gallery_enabled %} d-none{% endif %}">
-            {{ form_viewer.FILTER_ASI676MC_REPAIRED.label }}
-        </div>
-
-        <div class="col-sm-1{% if not asi676mc_repair_gallery_enabled %} d-none{% endif %}">
-            <div class="form-switch">
-                {{ form_viewer.FILTER_ASI676MC_REPAIRED(class='form-check-input') }}
-                <div id="FILTER_ASI676MC_REPAIRED-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        <!-- These switches are shown only with the ASI676MC gallery feature.
+             They filter its audit status, never the generic manual exclude flag. -->
+        <div id="asi676mc-gallery-filters" class="col-sm-7{% if not asi676mc_repair_gallery_enabled %} d-none{% endif %}">
+            <div class="d-flex flex-wrap gap-3">
+                <div class="form-check form-switch">
+                    {{ form_viewer.FILTER_ASI676MC_REPAIRED(class='form-check-input') }}
+                    {{ form_viewer.FILTER_ASI676MC_REPAIRED.label(class='form-check-label') }}
+                    <div id="FILTER_ASI676MC_REPAIRED-error" class="invalid-feedback text-danger" style="display: none;"></div>
+                </div>
+                <div class="form-check form-switch" title="Only frames excluded automatically by ASI676MC purple-frame handling">
+                    {{ form_viewer.FILTER_ASI676MC_EXCLUDED(class='form-check-input') }}
+                    {{ form_viewer.FILTER_ASI676MC_EXCLUDED.label(class='form-check-label') }}
+                    <div id="FILTER_ASI676MC_EXCLUDED-error" class="invalid-feedback text-danger" style="display: none;"></div>
+                </div>
+                <div class="form-check form-switch">
+                    {{ form_viewer.FILTER_ASI676MC_FAILED(class='form-check-input') }}
+                    {{ form_viewer.FILTER_ASI676MC_FAILED.label(class='form-check-label') }}
+                    <div id="FILTER_ASI676MC_FAILED-error" class="invalid-feedback text-danger" style="display: none;"></div>
+                </div>
             </div>
         </div>
 
@@ -182,6 +190,8 @@ const field_names = [
 const checkbox_field_names = [
     'FILTER_DETECTIONS',
     'FILTER_ASI676MC_REPAIRED',
+    'FILTER_ASI676MC_EXCLUDED',
+    'FILTER_ASI676MC_FAILED',
 ];
 
 var fields = {};
@@ -622,6 +632,8 @@ $("#HOUR_SELECT").on("change", function() {
         'HOUR_SELECT'       : fields["HOUR_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
         'FILTER_ASI676MC_REPAIRED' : fields["FILTER_ASI676MC_REPAIRED"].input.prop("checked"),
+        'FILTER_ASI676MC_EXCLUDED' : fields["FILTER_ASI676MC_EXCLUDED"].input.prop("checked"),
+        'FILTER_ASI676MC_FAILED' : fields["FILTER_ASI676MC_FAILED"].input.prop("checked"),
     };
 
     hour_change(json_data);
@@ -689,6 +701,8 @@ $("#DAY_SELECT").on("change", function() {
         'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
         'FILTER_ASI676MC_REPAIRED' : fields["FILTER_ASI676MC_REPAIRED"].input.prop("checked"),
+        'FILTER_ASI676MC_EXCLUDED' : fields["FILTER_ASI676MC_EXCLUDED"].input.prop("checked"),
+        'FILTER_ASI676MC_FAILED' : fields["FILTER_ASI676MC_FAILED"].input.prop("checked"),
     };
 
     day_change(json_data);
@@ -762,6 +776,8 @@ $("#MONTH_SELECT").on("change", function() {
         'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
         'FILTER_ASI676MC_REPAIRED' : fields["FILTER_ASI676MC_REPAIRED"].input.prop("checked"),
+        'FILTER_ASI676MC_EXCLUDED' : fields["FILTER_ASI676MC_EXCLUDED"].input.prop("checked"),
+        'FILTER_ASI676MC_FAILED' : fields["FILTER_ASI676MC_FAILED"].input.prop("checked"),
     };
 
     month_change(json_data);
@@ -831,13 +847,15 @@ $("#YEAR_SELECT").on("change", function() {
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
         'FILTER_ASI676MC_REPAIRED' : fields["FILTER_ASI676MC_REPAIRED"].input.prop("checked"),
+        'FILTER_ASI676MC_EXCLUDED' : fields["FILTER_ASI676MC_EXCLUDED"].input.prop("checked"),
+        'FILTER_ASI676MC_FAILED' : fields["FILTER_ASI676MC_FAILED"].input.prop("checked"),
     };
 
     year_change(json_data);
 });
 
 
-$("#FILTER_DETECTIONS, #FILTER_ASI676MC_REPAIRED").on("change", function() {
+$("#FILTER_DETECTIONS, #FILTER_ASI676MC_REPAIRED, #FILTER_ASI676MC_EXCLUDED, #FILTER_ASI676MC_FAILED").on("change", function() {
     // hide all errors
     successMessage.css({'display' : 'none'});
     Object.keys(fields).forEach((key) => {
@@ -850,6 +868,8 @@ $("#FILTER_DETECTIONS, #FILTER_ASI676MC_REPAIRED").on("change", function() {
         'CAMERA_ID'          : fields["CAMERA_ID"].input.val(),
         'FILTER_DETECTIONS'  : fields["FILTER_DETECTIONS"].input.prop("checked"),
         'FILTER_ASI676MC_REPAIRED' : fields["FILTER_ASI676MC_REPAIRED"].input.prop("checked"),
+        'FILTER_ASI676MC_EXCLUDED' : fields["FILTER_ASI676MC_EXCLUDED"].input.prop("checked"),
+        'FILTER_ASI676MC_FAILED' : fields["FILTER_ASI676MC_FAILED"].input.prop("checked"),
     };
 
     $.ajax({
@@ -899,6 +919,8 @@ function init() {
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
         'FILTER_ASI676MC_REPAIRED' : fields["FILTER_ASI676MC_REPAIRED"].input.prop("checked"),
+        'FILTER_ASI676MC_EXCLUDED' : fields["FILTER_ASI676MC_EXCLUDED"].input.prop("checked"),
+        'FILTER_ASI676MC_FAILED' : fields["FILTER_ASI676MC_FAILED"].input.prop("checked"),
     };
 
     year_change(json_data);
@@ -1059,7 +1081,10 @@ $( document ).ready(function() {
     // Uncheck checkboxes
     $("#FILTER_DETECTIONS").prop('checked', false);
     $("#FILTER_ASI676MC_REPAIRED").prop('checked', false);
-    $("#FILTER_ASI676MC_REPAIRED").prop('disabled', !asi676mc_repair_gallery_enabled);
+    $("#FILTER_ASI676MC_EXCLUDED").prop('checked', false);
+    $("#FILTER_ASI676MC_FAILED").prop('checked', false);
+    $("#FILTER_ASI676MC_REPAIRED, #FILTER_ASI676MC_EXCLUDED, #FILTER_ASI676MC_FAILED")
+        .prop('disabled', !asi676mc_repair_gallery_enabled);
 
     init();
 

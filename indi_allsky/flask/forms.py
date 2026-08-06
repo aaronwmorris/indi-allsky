@@ -7569,6 +7569,8 @@ class IndiAllskyGalleryViewer(FlaskForm):
     HOUR_SELECT          = SelectField('Hour', choices=[], validators=[])
     FILTER_DETECTIONS    = BooleanField('Detections')
     FILTER_ASI676MC_REPAIRED = BooleanField('Purple frame repaired')
+    FILTER_ASI676MC_EXCLUDED = BooleanField('Purple frame excluded')
+    FILTER_ASI676MC_FAILED = BooleanField('Repair validation failed')
 
 
     def __init__(self, *args, **kwargs):
@@ -7578,16 +7580,23 @@ class IndiAllskyGalleryViewer(FlaskForm):
         self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
         self.local = kwargs.get('local')
-        self.asi676mc_repaired_only = kwargs.get('asi676mc_repaired_only', False)
+        requested_statuses = kwargs.get('asi676mc_statuses', ())
+        self.asi676mc_statuses = tuple(
+            status
+            for status in requested_statuses
+            if status in asi676mc.DIAGNOSTIC_BAD_STATUSES
+        )
 
 
-    def _apply_asi676mc_repaired_filter(self, query):
-        """Limit one gallery query to successfully repaired image rows."""
-        if not self.asi676mc_repaired_only:
+    def _apply_asi676mc_status_filter(self, query):
+        """Limit one gallery query to selected purple-frame outcomes."""
+        if not self.asi676mc_statuses:
             return query
 
         return query.filter(
-            IndiAllSkyDbImageTable.data['asi676mc_repair_status'].as_string() == 'repaired'
+            IndiAllSkyDbImageTable.data['asi676mc_repair_status']
+            .as_string()
+            .in_(self.asi676mc_statuses)
         )
 
 
@@ -7603,7 +7612,7 @@ class IndiAllskyGalleryViewer(FlaskForm):
                 )
         )
 
-        years_query = self._apply_asi676mc_repaired_filter(years_query)
+        years_query = self._apply_asi676mc_status_filter(years_query)
 
 
         ### Disable this join to make things faster
@@ -7649,7 +7658,7 @@ class IndiAllskyGalleryViewer(FlaskForm):
                 )
         )
 
-        months_query = self._apply_asi676mc_repaired_filter(months_query)
+        months_query = self._apply_asi676mc_status_filter(months_query)
 
         ### Disable this join to make things faster
         #    .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
@@ -7698,7 +7707,7 @@ class IndiAllskyGalleryViewer(FlaskForm):
                 )
         )
 
-        days_query = self._apply_asi676mc_repaired_filter(days_query)
+        days_query = self._apply_asi676mc_status_filter(days_query)
 
 
         ### Disable this join to make things faster
@@ -7748,7 +7757,7 @@ class IndiAllskyGalleryViewer(FlaskForm):
                 )
         )
 
-        hours_query = self._apply_asi676mc_repaired_filter(hours_query)
+        hours_query = self._apply_asi676mc_status_filter(hours_query)
 
 
         ### Disable this join to make things faster
@@ -7798,7 +7807,7 @@ class IndiAllskyGalleryViewer(FlaskForm):
                 )
         )
 
-        images_query = self._apply_asi676mc_repaired_filter(images_query)
+        images_query = self._apply_asi676mc_status_filter(images_query)
 
 
         if not self.local:
