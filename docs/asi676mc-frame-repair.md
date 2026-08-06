@@ -139,8 +139,8 @@ All keys live below `IMAGE_ASI676MC_REPAIR`.
 | `SAVE_DIAGNOSTIC_FITS` | `False` | Save the untouched purple frame and its following frame as the preferred low-disk calibration evidence. |
 | `SAVE_PRECEDING_FITS` | `False` | Also cache the immediately preceding normal FITS and save it when the next compatible frame is purple. Requires the parent diagnostic option. |
 | `PURPLE_RATIO_THRESHOLD` | `1.5` | Combined purple signature threshold. |
-| `RED_SIDE_RATIO_THRESHOLD` | `1.25` | Red-side signature threshold. |
-| `BLUE_SIDE_RATIO_THRESHOLD` | `1.5` | Blue-side signature threshold. |
+| `RED_SIDE_RATIO_THRESHOLD` | `1.15` | Red-side signature threshold. |
+| `BLUE_SIDE_RATIO_THRESHOLD` | `1.75` | Blue-side signature threshold. |
 | `SAMPLE_STEP` | `32` | Even Bayer-preserving interval used by live detection. |
 | `SOURCE_SATURATION_THRESHOLD` | `65000` | Faulty-stream level treated as clipped for green reconstruction. |
 | `GAIN_R` | `0.91004` | Repair gain for the red parity. |

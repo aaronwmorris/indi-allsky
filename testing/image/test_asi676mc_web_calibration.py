@@ -83,8 +83,8 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 'blue_side_ratio': {
                     'good_min': 0.9,
                     'good_max': 1.1,
-                    'bad_min': 1.7,
-                    'bad_max': 2.0,
+                    'bad_min': 2.0,
+                    'bad_max': 2.3,
                 },
             },
             'rejected_files': [{
@@ -877,6 +877,8 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('FITS retention cutoff: 2026-07-23 (10 days)', report)
         self.assertIn('Entries whose files were missing: 2', report)
         self.assertIn('configured threshold 1.500', report)
+        self.assertIn('configured threshold 1.150', report)
+        self.assertIn('configured threshold 1.750', report)
         self.assertIn('The ranges shown below do not overlap', report)
         self.assertIn('complete database-marked groups', report)
         self.assertIn('compact evidence set', report)
@@ -1321,8 +1323,8 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('different detection thresholds', no_detection)
 
         threshold_failure = (
-            'Configured Blue-side ratio threshold is 1.500, but a frame '
-            'currently classified as normal reaches 1.600.'
+            'Configured Blue-side ratio threshold is 1.750, but a frame '
+            'currently classified as normal reaches 1.800.'
         )
         self.assertEqual(
             asi676mc_calibration._friendly_failure_message(
@@ -2076,8 +2078,24 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
 
         self.assertIn('"EXCLUDE_ONLY"                : True', config_source)
         self.assertIn('"SAVE_PRECEDING_FITS"          : False', config_source)
+        self.assertIn(
+            '"RED_SIDE_RATIO_THRESHOLD"    : 1.15',
+            config_source,
+        )
+        self.assertIn(
+            '"BLUE_SIDE_RATIO_THRESHOLD"   : 1.75',
+            config_source,
+        )
         self.assertIn("get('EXCLUDE_ONLY', True)", processing_source)
         self.assertIn("get('EXCLUDE_ONLY', True)", views_source)
+        self.assertIn(
+            "get('RED_SIDE_RATIO_THRESHOLD', 1.15)",
+            views_source,
+        )
+        self.assertIn(
+            "get('BLUE_SIDE_RATIO_THRESHOLD', 1.75)",
+            views_source,
+        )
         self.assertIn('asi676mc_repair_was_enabled', settings_template)
         self.assertIn(
             'form_config.IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS.label',
@@ -2109,6 +2127,14 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         )
         self.assertIn(
             'If diagnostic saving does not catch the purple frame',
+            settings_template,
+        )
+        self.assertIn(
+            'red to first-green detection ratio [default: 1.15]',
+            settings_template,
+        )
+        self.assertIn(
+            'blue to second-green detection ratio [default: 1.75]',
             settings_template,
         )
         self.assertNotIn('Safe calibration workflow:', settings_template)

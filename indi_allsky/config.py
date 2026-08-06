@@ -272,8 +272,8 @@ class IndiAllSkyConfigBase(object):
             # option remains the default low-memory bad/following workflow.
             "SAVE_PRECEDING_FITS"          : False,
             "PURPLE_RATIO_THRESHOLD"      : 1.5,
-            "RED_SIDE_RATIO_THRESHOLD"    : 1.25,
-            "BLUE_SIDE_RATIO_THRESHOLD"   : 1.5,
+            "RED_SIDE_RATIO_THRESHOLD"    : 1.15,
+            "BLUE_SIDE_RATIO_THRESHOLD"   : 1.75,
             "SAMPLE_STEP"                 : 32,
             "SOURCE_SATURATION_THRESHOLD" : 65000,
             "GAIN_R"                      : 0.91004,

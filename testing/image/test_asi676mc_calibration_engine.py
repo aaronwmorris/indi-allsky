@@ -66,6 +66,14 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
             calibration_engine.DEFAULT_SETTINGS,
             asi676mc.DEFAULT_SETTINGS,
         )
+        self.assertEqual(
+            calibration_engine.DEFAULT_SETTINGS['RED_SIDE_RATIO_THRESHOLD'],
+            1.15,
+        )
+        self.assertEqual(
+            calibration_engine.DEFAULT_SETTINGS['BLUE_SIDE_RATIO_THRESHOLD'],
+            1.75,
+        )
 
     def test_pairing_prefers_before_and_after(self):
         def record(name, timestamp, is_bad):
@@ -155,10 +163,10 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
             metric: dict(values)
             for metric, values in ranges.items()
         }
-        normal_crosses_blue['blue_side_ratio']['good_max'] = 1.600
+        normal_crosses_blue['blue_side_ratio']['good_max'] = 1.800
         with self.assertRaisesRegex(
             calibration_engine.CalibrationError,
-            'Configured Blue-side ratio threshold is 1.500.*midpoint 2.111',
+            'Configured Blue-side ratio threshold is 1.750.*midpoint 2.211',
         ):
             calibration_engine.validate_signature_separation(
                 normal_crosses_blue,
@@ -169,10 +177,10 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
             metric: dict(values)
             for metric, values in ranges.items()
         }
-        purple_misses_red['red_side_ratio']['bad_min'] = 1.200
+        purple_misses_red['red_side_ratio']['bad_min'] = 1.093
         with self.assertRaisesRegex(
             calibration_engine.CalibrationError,
-            'Configured Red-side ratio threshold is 1.250.*midpoint 0.954',
+            'Configured Red-side ratio threshold is 1.150.*midpoint 0.900',
         ):
             calibration_engine.validate_signature_separation(
                 purple_misses_red,
@@ -190,7 +198,7 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
                 'bad_min': 1.52, 'bad_max': 1.84,
             },
             'blue_side_ratio': {
-                'good_min': 1.00, 'good_max': 1.45,
+                'good_min': 1.00, 'good_max': 1.71,
                 'bad_min': 2.00, 'bad_max': 2.60,
             },
         }
@@ -206,7 +214,7 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
         self.assertTrue(by_key['BLUE_SIDE_RATIO_THRESHOLD']['marginal'])
         self.assertEqual(
             by_key['BLUE_SIDE_RATIO_THRESHOLD']['suggested'],
-            1.725,
+            1.855,
         )
 
     def test_saved_signature_metadata_avoids_fits_decode(self):
@@ -325,9 +333,9 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
             if record.path.name.startswith('likely_purple_'):
                 record.signature['is_bad'] = True
             elif record.path.name.startswith('normal_before_'):
-                record.signature['blue_side_ratio'] = 1.60
+                record.signature['blue_side_ratio'] = 1.85
             else:
-                record.signature['blue_side_ratio'] = 1.62
+                record.signature['blue_side_ratio'] = 1.87
 
         with mock.patch.object(
             calibration_engine,
@@ -346,7 +354,7 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
         )
         self.assertEqual(
             suggestions['BLUE_SIDE_RATIO_THRESHOLD']['suggested'],
-            2.06,
+            2.185,
         )
         self.assertNotIn('derived_settings', payload)
 
@@ -608,10 +616,19 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
         self.assertEqual(quality['good_bad_ratio'], 2.0)
         self.assertEqual(payload['rejected_files'], [])
         self.assertEqual(len(payload['threshold_assessment']), 3)
-        self.assertFalse(any(
-            item['marginal']
+        threshold_assessment = {
+            item['key']: item
             for item in payload['threshold_assessment']
-        ))
+        }
+        self.assertFalse(
+            threshold_assessment['PURPLE_RATIO_THRESHOLD']['marginal']
+        )
+        self.assertFalse(
+            threshold_assessment['RED_SIDE_RATIO_THRESHOLD']['marginal']
+        )
+        self.assertTrue(
+            threshold_assessment['BLUE_SIDE_RATIO_THRESHOLD']['marginal']
+        )
         for key in ('GAIN_R', 'GAIN_G1', 'GAIN_G2', 'GAIN_B'):
             self.assertAlmostEqual(
                 settings[key],
