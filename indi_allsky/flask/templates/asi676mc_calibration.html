@@ -136,7 +136,7 @@
 
 <div id="calibration-setup-panel">
 <!-- Keep the two universal requirements visually equal before asking the
-     operator to choose an evidence source. -->
+     user to choose an evidence source. -->
 <div class="row g-3 mb-4">
     <div class="col-12 col-lg-6">
         <div class="calibration-callout calibration-callout-info h-100">
@@ -412,8 +412,9 @@
         </div>
 
         <!-- A detector miss produces a deliberately separate preliminary
-             result. A Config-authorized operator may save only the suggested
-             detector thresholds; repair constants still require a second run. -->
+             result. A user who can save settings on the Config page may save
+             only the suggested detector thresholds; repair constants still
+             require a second run. -->
         <div id="calibration-threshold-result" class="table-responsive" style="display: none;">
             <table class="calibration-values-table table table-dark table-striped align-middle mb-0">
                 <thead>
@@ -596,7 +597,7 @@ function recoverCalibrationSession() {
 }
 
 // Shared URL, JSON-response, and message helpers keep every request consistent
-// about CSRF handling and about errors safe to show to the operator.
+// about CSRF handling and about errors safe to show to the user.
 function calibrationUrl(template, sessionId) {
     return template.replace('SESSION_ID', sessionId);
 }
@@ -925,8 +926,8 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
             {% else %}
             comparisonMessage = (
                 'The result differs from the current configuration. Review '
-                + 'both value columns; an authorized Config operator can '
-                + 'apply it.'
+                + 'both value columns; a user who can save settings on the '
+                + 'Config page can apply it.'
             );
             {% endif %}
         }

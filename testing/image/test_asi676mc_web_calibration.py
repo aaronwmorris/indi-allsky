@@ -854,10 +854,17 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'indi-allsky ASI676MC purple-frame calibration report\n'
         ))
         self.assertIn('Status: Successful', report)
+        self.assertIn('Final validation repaired all', report)
         self.assertIn('Recommended calibration values', report)
         self.assertIn('Configured when started', report)
         self.assertIn('Meaningful change', report)
         self.assertIn('Tools > ASI676MC Calibration', report)
+        self.assertIn('can save settings on', report)
+        self.assertIn('Config page', report)
+        self.assertIn(
+            'At the start of calibration, one or more derived values differed',
+            report,
+        )
         self.assertIn('Method: Saved FITS search', report)
         self.assertIn('Target purple-frame groups: 25', report)
         self.assertIn('Selection path: progressive ratio search', report)
@@ -870,12 +877,17 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('FITS retention cutoff: 2026-07-23 (10 days)', report)
         self.assertIn('Entries whose files were missing: 2', report)
         self.assertIn('configured threshold 1.500', report)
+        self.assertIn('The ranges shown below do not overlap', report)
+        self.assertIn('complete database-marked groups', report)
+        self.assertIn('compact evidence set', report)
         self.assertIn('already_fixed.fit:', report)
         self.assertIn('Rejected-file details are listed later', report)
         self.assertNotIn('DATABASE FITS SELECTION', report)
         self.assertNotIn('REVIEW THESE CALIBRATION VALUES', report)
         self.assertNotIn('Source:', report)
         self.assertNotIn('/private/calibration/session/uploads', report)
+        self.assertNotIn('operator', report.lower())
+        self.assertNotIn('They repaired', report)
 
     def test_report_timestamp_uses_explicit_local_timezone(self):
         local_timezone = timezone(timedelta(hours=2), name='CEST')
@@ -891,6 +903,77 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertEqual(
             formatted,
             '2026-08-02 14:34:56 CEST (UTC+02:00)',
+        )
+
+    def test_report_configuration_comparison_uses_historical_reference_time(
+        self,
+    ):
+        payload = self._successful_payload()
+        manifest = {
+            'settings': dict(calibration_engine.DEFAULT_SETTINGS),
+            'max_pair_seconds': 90.0,
+            'files': [],
+            'source': {'kind': 'upload', 'selected_file_count': 21},
+        }
+        exact_report = ' '.join(
+            asi676mc_calibration.format_integrated_report(
+                payload,
+                manifest,
+            ).split()
+        )
+        self.assertIn(
+            'At the start of calibration, the derived values matched all '
+            'seven configured values, so no update was necessary.',
+            exact_report,
+        )
+
+        equivalent_settings = dict(calibration_engine.DEFAULT_SETTINGS)
+        equivalent_settings['GAIN_R'] *= 1.004
+        manifest['settings'] = equivalent_settings
+        equivalent_report = ' '.join(
+            asi676mc_calibration.format_integrated_report(
+                payload,
+                manifest,
+            ).split()
+        )
+        self.assertIn(
+            'At the start of calibration, the differences between the derived '
+            'and configured values were too small to produce a visible change.',
+            equivalent_report,
+        )
+        self.assertNotIn('Applying it was unlikely', equivalent_report)
+
+    def test_report_download_name_uses_local_completion_time(self):
+        local_timezone = timezone(timedelta(hours=2), name='CEST')
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            manifest = asi676mc_calibration.create_session('alice', root)
+            session_dir = root.joinpath(manifest['session_id'])
+            manifest['status'] = 'success'
+            manifest['completed_utc'] = '2026-08-02T12:34:56+00:00'
+            asi676mc_calibration._write_manifest(session_dir, manifest)
+            expected_path = session_dir.joinpath(
+                'asi676mc_calibration_report.txt'
+            )
+            expected_path.write_text('report\n', encoding='utf-8')
+
+            with mock.patch.object(
+                asi676mc_calibration,
+                '_local_timezone',
+                return_value=local_timezone,
+            ):
+                report_path, download_name = (
+                    asi676mc_calibration.get_report_download(
+                        manifest['session_id'],
+                        'alice',
+                        root,
+                    )
+                )
+
+        self.assertEqual(report_path, expected_path)
+        self.assertEqual(
+            download_name,
+            '2026-08-02_14-34-56_asi676mc_calibration_report.txt',
         )
 
     def test_threshold_suggestion_is_preliminary_and_applies_only_changes(self):
@@ -915,10 +998,15 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         })
         self.assertIn('Status: Preliminary threshold suggestion', report)
         self.assertIn('No repair constants were derived', report)
+        self.assertIn('each of the three measured ratios separated', report)
+        self.assertIn('Each reported range has a clean gap', report)
+        self.assertIn('can save settings on', report)
+        self.assertIn('Config page', report)
         self.assertIn('Change recommended', report)
         self.assertIn('Current value is already safe', report)
         self.assertIn('Post-repair standard FITS excluded: 2', report)
         self.assertNotIn('Recommended calibration values', report)
+        self.assertNotIn('operator', report.lower())
 
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -1544,7 +1632,65 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         message = guidance['guidance']['text']
         self.assertIn('Exclude Only leaves purple frames unchanged', message)
         self.assertIn('immediately following frame', message)
-        self.assertIn('standard FITS can remain off', message)
+        self.assertIn('leaving standard FITS off is recommended', message)
+        self.assertIn('preferred calibration source', message)
+
+    def test_capture_guidance_prefers_diagnostics_when_both_paths_are_enabled(
+        self,
+    ):
+        periodic = asi676mc_calibration.capture_configuration_guidance({
+            'IMAGE_ASI676MC_REPAIR': {
+                'ENABLE': True,
+                'EXCLUDE_ONLY': True,
+                'SAVE_DIAGNOSTIC_FITS': True,
+            },
+            'IMAGE_SAVE_FITS': True,
+            'IMAGE_SAVE_FITS_PERIOD': 1800,
+            'IMAGE_FITS_EXPIRE_DAYS': 10,
+        })
+        periodic_message = periodic['guidance']['text']
+        self.assertIn(
+            'Diagnostic FITS are the preferred calibration source',
+            periodic_message,
+        )
+        self.assertIn(
+            'only when you want them for another purpose',
+            periodic_message,
+        )
+        self.assertIn(
+            'occasionally duplicate a diagnostic exposure',
+            periodic_message,
+        )
+        self.assertIn(
+            'temporarily use standard FITS set to Every Image',
+            periodic_message,
+        )
+        self.assertIn(
+            'periodic interval cannot reliably gather',
+            periodic_message,
+        )
+
+        every_image = asi676mc_calibration.capture_configuration_guidance({
+            'IMAGE_ASI676MC_REPAIR': {
+                'ENABLE': True,
+                'EXCLUDE_ONLY': False,
+                'SAVE_DIAGNOSTIC_FITS': True,
+            },
+            'IMAGE_SAVE_FITS': True,
+            'IMAGE_SAVE_FITS_PERIOD': 0,
+            'IMAGE_FITS_EXPIRE_DAYS': 10,
+        })
+        every_image_message = every_image['guidance']['text']
+        self.assertIn('both files are retained', every_image_message)
+        self.assertIn(
+            'only when you explicitly want the standard files too',
+            every_image_message,
+        )
+        self.assertIn(
+            'diagnostic saving does not catch the purple frame',
+            every_image_message,
+        )
+        self.assertIn('uses the most disk space', every_image_message)
 
     def test_capture_guidance_explains_opt_in_preceding_cache(self):
         guidance = asi676mc_calibration.capture_configuration_guidance({
@@ -1955,6 +2101,14 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         )
         self.assertIn(
             'Cameras without this failure should leave the feature disabled.',
+            settings_template,
+        )
+        self.assertIn(
+            'Prefer this diagnostic source and leave standard FITS off',
+            settings_template,
+        )
+        self.assertIn(
+            'If diagnostic saving does not catch the purple frame',
             settings_template,
         )
         self.assertNotIn('Safe calibration workflow:', settings_template)

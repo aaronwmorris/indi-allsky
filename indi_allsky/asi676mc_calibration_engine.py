@@ -458,7 +458,7 @@ def scan_folder(
             and detected_bad_count < CALIBRATION_OPTIONS['MIN_BAD_PAIRS']
         ):
             # Uploads are always scanned in full, while database searches may
-            # stop early. Both surfaces should still tell the operator when
+            # stop early. Both surfaces should still tell the user when
             # the current detector has failed to find the minimum and the
             # analysis has moved on to population discovery.
             threshold_search_started = True
@@ -1293,7 +1293,7 @@ def validate_signature_separation(ranges, settings):
     Live detection requires all three ratios at once, but calibration is more
     conservative: each measured ratio must independently separate the supplied
     normal and purple populations. A successful fit should not conceal a weak
-    detector margin or silently change an operator's detection settings.
+    detector margin or silently change a user's detection settings.
     """
     for metric, (threshold_name, threshold_label) in (
         DETECTION_THRESHOLD_DETAILS.items()

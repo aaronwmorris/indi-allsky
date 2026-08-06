@@ -7733,7 +7733,7 @@ class Asi676mcCalibrationView(TemplateView):
 
 
 class AjaxAsi676mcCalibrationSessionView(BaseView):
-    """Create one private upload session for the authorized operator."""
+    """Create one private upload session for the authorized user."""
 
     methods = ['POST']
     decorators = [asi676mc_calibration_required, login_required]
@@ -7792,7 +7792,7 @@ class AjaxAsi676mcCalibrationUploadView(BaseView):
             )
         except asi676mc_calibration.CalibrationUploadError as error:
             # Upload validation errors describe a file/count/size choice that
-            # the operator can correct, so keep the useful detail while making
+            # the user can correct, so keep the useful detail while making
             # it read as a complete UI sentence.
             error_message = str(error)
             error_message = error_message[:1].upper() + error_message[1:]
@@ -8444,9 +8444,11 @@ class Asi676mcCalibrationReportView(BaseView):
     def dispatch_request(self, session_id):
         """Download the human-readable report for an owned result."""
         try:
-            report_path = asi676mc_calibration.get_report_path(
-                session_id,
-                _calibration_owner(),
+            report_path, download_name = (
+                asi676mc_calibration.get_report_download(
+                    session_id,
+                    _calibration_owner(),
+                )
             )
         except asi676mc_calibration.CalibrationSessionError as error:
             app.logger.info(
@@ -8462,7 +8464,7 @@ class Asi676mcCalibrationReportView(BaseView):
         return send_file(
             report_path,
             mimetype='text/plain',
-            download_name='asi676mc_calibration_report.txt',
+            download_name=download_name,
             as_attachment=True,
         )
 
@@ -8474,7 +8476,7 @@ class AjaxAsi676mcCalibrationDiscardView(BaseView):
     decorators = [asi676mc_calibration_required, login_required]
 
     def dispatch_request(self, session_id):
-        """Delete an owned finished result when the operator resets."""
+        """Delete an owned finished result when the user resets."""
         try:
             asi676mc_calibration.discard_session(
                 session_id,

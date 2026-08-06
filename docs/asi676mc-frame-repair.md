@@ -22,8 +22,8 @@ and written to the log.
 
 New configurations default to **Exclude Only**. This mode detects and flags a
 purple frame, preserves its original pixels, and excludes it from standard
-timelapses. Pixel repair begins only after an operator explicitly disables
-Exclude Only.
+timelapses. Pixel repair begins only after the user explicitly disables Exclude
+Only.
 
 The existing indi-allsky `exclude` flag is not honored by every derived
 timelapse-style output. This feature deliberately uses that standard flag
@@ -92,9 +92,9 @@ references, and at least two exposure settings are represented. Database flags
 and filenames do not decide inferred populations.
 
 Threshold discovery is a preliminary outcome, not calibration. It derives no
-repair constants and changes no settings during analysis. The operator must
-confirm that the higher-ratio population represents the expected purple-frame
-failure. A user who can save the standard Config can then use **Apply
+repair constants and changes no settings during analysis. The user must confirm
+that the higher-ratio population represents the expected purple-frame failure.
+A user who can save settings on the Config page can then select **Apply
 thresholds and reload**, or enter only the recommended thresholds in Image
 Settings, and rerun calibration. Saving is blocked until the user confirms,
 after reviewing listed filenames and capture times, that the higher-ratio
@@ -136,7 +136,7 @@ All keys live below `IMAGE_ASI676MC_REPAIR`.
 | `EXCLUDE_ONLY` | `True` | Detect, flag, and exclude purple frames without changing pixels. Disable only after reviewing calibration. |
 | `LOG_EVERY_FRAME` | `False` | Log normal-frame checks at info level instead of debug level. Purple frames and failures are always logged prominently. |
 | `GALLERY_ENABLE` | `True` | Show repair/exclusion status in the gallery and enable the repaired-frame filter. |
-| `SAVE_DIAGNOSTIC_FITS` | `False` | Save the untouched purple frame and its following frame as low-disk calibration evidence. |
+| `SAVE_DIAGNOSTIC_FITS` | `False` | Save the untouched purple frame and its following frame as the preferred low-disk calibration evidence. |
 | `SAVE_PRECEDING_FITS` | `False` | Also cache the immediately preceding normal FITS and save it when the next compatible frame is purple. Requires the parent diagnostic option. |
 | `PURPLE_RATIO_THRESHOLD` | `1.5` | Combined purple signature threshold. |
 | `RED_SIDE_RATIO_THRESHOLD` | `1.25` | Red-side signature threshold. |
@@ -153,9 +153,9 @@ All keys live below `IMAGE_ASI676MC_REPAIR`.
 
 After detection is established, the web calibration tool derives only the four
 parity gains, saturation threshold, and two highlight blend ratios. Detection
-thresholds remain deliberate operator settings even when preliminary analysis
-suggests them; sample step, chunk size, and operational switches are never
-derived.
+thresholds remain deliberate user-controlled settings even when preliminary
+analysis suggests them; sample step, chunk size, and operational switches are
+never derived.
 
 ## Collecting calibration evidence
 
@@ -163,7 +163,10 @@ Calibration needs the untouched purple mosaic and at least one compatible
 normal reference. A normal/purple/normal triplet is preferable because the two
 normal frames can be averaged, but a normal/purple pair is valid.
 
-There are two supported collection strategies.
+Diagnostic capture is the preferred strategy. Standard FITS should be used as
+calibration evidence only when diagnostic saving does not catch the purple
+frame, or retained independently when the user explicitly wants standard FITS
+for another purpose.
 
 ### Low-disk diagnostic capture
 
@@ -193,11 +196,21 @@ frame. Diagnostic files use the normal FITS upload destinations, retention
 setting, and expiration task. They can be downloaded from the standard Image
 Viewer when the relevant download controls are available.
 
-### Standard FITS capture
+Standard and diagnostic saving remain independent when both are enabled. If
+both paths select the same exposure, both files are retained because the
+diagnostic asset preserves the untouched input while the standard asset follows
+the normal processing settings. Leave standard FITS off for the lowest disk
+use unless those standard files are wanted for another purpose.
 
-In **Exclude Only** mode, standard FITS still contain the original mosaic. Set
-standard FITS saving to **Every Image** temporarily to collect complete
-normal/purple/normal sequences.
+### Standard FITS fallback capture
+
+If diagnostic saving does not catch the purple frame, temporarily set standard
+FITS saving to **Every Image** to collect complete normal/purple/normal
+sequences. A periodic interval cannot reliably capture a randomly occurring
+failure.
+
+In **Exclude Only** mode, standard FITS still contain the original mosaic and
+can therefore provide this fallback evidence.
 
 When repair is active, standard FITS are written from the already repaired
 image and may no longer contain the original failure. Use the diagnostic FITS
@@ -218,8 +231,8 @@ availability.
 
 The tool appears in the Tools menu only when the ASI676MC master switch is
 enabled, a visible local camera is positively identified as an ASI676MC, and
-the current user can save the standard Config. Direct calibration URLs enforce
-the same three conditions. With normal authentication that means an
+the current user can save settings on the Config page. Direct calibration URLs
+enforce the same three conditions. With normal authentication that means an
 administrator. With `LOGIN_DISABLED`, the same anonymous browser access
 allowed by Config is used; private calibration ownership is still separated
 by a browser-specific token.
@@ -356,10 +369,11 @@ A successful results page shows:
 A preliminary threshold result instead shows current and suggested detection
 values, each observed safe interval, population and adjacency evidence, and a
 prominent instruction to review and rerun. The repair-value table is hidden.
-For a user who can save Config, **Apply thresholds and reload** saves only
-fields marked Change recommended; it never saves repair constants from a
-preliminary result. The result lists population filenames, capture times, and
-ratios, and requires explicit higher-population confirmation.
+For a user who can save settings on the Config page, **Apply thresholds and
+reload** saves only fields marked Change recommended; it never saves repair
+constants from a preliminary result. The result lists population filenames,
+capture times, and ratios, and requires explicit higher-population
+confirmation.
 
 A normal calibration whose detector margin is narrow remains successful. Its
 status area and a dedicated table identify the affected threshold, current
@@ -369,17 +383,21 @@ without being confused with a failed calibration.
 The downloadable text report is generated for the integrated workflow. It
 records the evidence source, quality assessment, values, comparison with the
 configuration at the start of calibration, warnings, cleanup outcome, and
-recommended next actions. It never exposes private staging paths.
+recommended next actions. It never exposes private staging paths. Its download
+name begins with the local completion time in
+`YYYY-MM-DD_HH-MM-SS_asi676mc_calibration_report.txt` format so reports sort in
+chronological order by filename.
 
-A user who can save the standard Config can select **Apply values and reload**.
-The server writes only the seven derived keys, using the same configuration-save
-mechanism as the settings page, then queues an application reload. It refuses
-the update if the configuration or bound ASI676MC identity changed after the
-run began. Operational switches such as Enable and Exclude Only are never
-changed. Detection thresholds also remain unchanged after a successful
-seven-value calibration; a narrow-margin notice directs the user to change
-them manually if later evidence supports that choice. The preliminary apply
-action permits only threshold keys explicitly marked for change.
+A user who can save settings on the Config page can select **Apply values and
+reload**. The server writes only the seven derived keys, using the same
+configuration-save mechanism as the settings page, then queues an application
+reload. It refuses the update if the configuration or bound ASI676MC identity
+changed after the run began. Operational switches such as Enable and Exclude
+Only are never changed. Detection thresholds also remain unchanged after a
+successful seven-value calibration; a narrow-margin notice directs the user
+to change them manually if later evidence supports that choice. The
+preliminary apply action permits only threshold keys explicitly marked for
+change.
 
 Results are retained in the browser by unguessable session IDs so a user can
 visit another page and return. Per-tab state plus a shared list prevents tabs
@@ -417,15 +435,17 @@ than seven days. This fixed session retention is independent of database FITS
 retention. Database FITS and diagnostic role links continue to use the normal
 indi-allsky FITS expiration behavior.
 
-## Operator workflow
+## User workflow
 
 1. Confirm that the ASI676MC actually produces the purple-frame failure.
 2. Enable purple-frame handling and leave Exclude Only enabled.
-3. Choose either low-disk diagnostic FITS or temporary standard FITS saving for
-   every image. Enable preceding-frame caching only when the additional memory
-   and disk use are acceptable.
+3. Prefer low-disk diagnostic FITS. Leave standard FITS off unless they are
+   independently wanted; use temporary standard FITS saving for every image
+   only when diagnostics do not catch the purple frame. Enable preceding-frame
+   caching only when the additional memory and disk use are acceptable.
 4. Collect several purple events across at least two exposure levels.
-5. Open **Tools > ASI676MC Calibration** as a user who can save Config.
+5. Open **Tools > ASI676MC Calibration** as a user who can save settings on the
+   Config page.
 6. Discover saved FITS or select a multi-file upload.
 7. If preliminary threshold suggestions appear, verify the populations, apply
    or manually edit only the recommended detection fields, reset the tool, and
@@ -442,15 +462,15 @@ indi-allsky FITS expiration behavior.
 **The tool is absent from the menu**
 
 Connect a visible local ASI676MC, enable the ASI676MC master switch in Config,
-and use an account that can save Config. When login is disabled, the tool
-follows the same open access policy as Config.
+and use an account that can save settings on the Config page. When login is
+disabled, the tool follows the same open access policy as Config.
 
 **Fewer than 14 eligible saved FITS are found**
 
 The current settings describe future evidence only. Existing purple frames may
-have expired or may never have been saved as untouched FITS. Enable either
-diagnostic FITS or Exclude Only plus standard FITS for every image, collect new
-events, and try again.
+have expired or may never have been saved as untouched FITS. Prefer diagnostic
+FITS, collect new events, and try again. If diagnostics do not catch the purple
+frame, use Exclude Only plus standard FITS for every image temporarily.
 
 **Files upload but calibration rejects the collection**
 

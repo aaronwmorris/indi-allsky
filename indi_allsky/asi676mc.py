@@ -64,7 +64,7 @@ HIGHLIGHT_BLEND_WEIGHT_MAX = 255
 DIAGNOSTIC_METADATA_KEY = 'asi676mc_diagnostic'
 SIGNATURE_METADATA_KEY = 'asi676mc_signature'
 DIAGNOSTIC_BAD_STATUSES = ('repaired', 'validation_failed', 'excluded')
-# Architecture and operator guide: docs/asi676mc-frame-repair.md
+# Architecture and user guide: docs/asi676mc-frame-repair.md
 
 
 _CAMERA_NAME_RE = re.compile(r'(?<![A-Z0-9])ASI[\s_-]*676MC(?![A-Z0-9])', re.IGNORECASE)
@@ -362,7 +362,7 @@ def saved_fits_signature_metadata(repair_result):
     Detection already measures these ratios for every eligible ASI676MC frame.
     Retaining them on the FITS database row makes later threshold discovery a
     metadata query instead of a full-image read. The boolean classification is
-    intentionally omitted because operators may change thresholds later.
+    intentionally omitted because users may change thresholds later.
     """
     if not isinstance(repair_result, dict):
         return None

@@ -75,7 +75,7 @@ _PROCESS_FILE_LOCKS = {}
 _PROCESS_FILE_LOCKS_GUARD = threading.Lock()
 
 # Comparison tolerances are deliberately much smaller than the calibration
-# engine's useful fitting resolution.  They are only used to tell an operator
+# engine's useful fitting resolution.  They are only used to tell a user
 # that saving the result is unlikely to change repaired pixels noticeably; the
 # derived values themselves are never rounded or altered by this comparison.
 CONFIGURATION_EQUIVALENCE_TOLERANCES = {
@@ -240,7 +240,7 @@ def capture_configuration_guidance(config):
         },
     ]
 
-    # Resolve the full switch combination into one operator-facing outcome.
+    # Resolve the full switch combination into one user-facing outcome.
     # Lead with whether future evidence will be usable, then give the shortest
     # concrete settings change. Implementation details matter only when they
     # explain why an apparently enabled saving mode is insufficient.
@@ -334,10 +334,9 @@ def capture_configuration_guidance(config):
                     'Exclude Only leaves purple frames unchanged. Save Bad and '
                     'Following RAW FITS saves each detected purple frame '
                     'unchanged and also saves the immediately following frame. '
-                    'Standard FITS saving set to Every Image can add normal '
-                    'references on either side for stronger good/purple/good '
-                    'groups. Incompatible following frames are ignored. This '
-                    'combination uses the most disk space.'
+                    'Standard FITS saving set to Every Image independently '
+                    'records the complete sequence. When both paths select the '
+                    'same exposure, both files are retained.'
                 )
             elif standard_fits and not fits_period_valid:
                 guidance_level = 'warning'
@@ -354,8 +353,8 @@ def capture_configuration_guidance(config):
                     'and Following RAW FITS saves each detected purple frame '
                     'unchanged and also saves the immediately following frame. '
                     'The tool uses only compatible normal references. Periodic '
-                    'standard FITS may add another compatible reference but is '
-                    'not required.'
+                    'standard FITS saving remains independent and is not '
+                    'required for calibration.'
                 )
             else:
                 guidance_title = 'Ready for low-disk FITS collection'
@@ -364,8 +363,7 @@ def capture_configuration_guidance(config):
                     'and Following RAW FITS saves each detected purple frame '
                     'unchanged and also saves the immediately following frame. '
                     'Once all evidence requirements above are met, this '
-                    'provides calibration data without saving every image; '
-                    'standard FITS can remain off.'
+                    'provides calibration data without saving every image.'
                 )
         elif standard_fits and fits_period == 0:
             guidance_level = 'success'
@@ -409,9 +407,10 @@ def capture_configuration_guidance(config):
                     'Repair is active, but Save Bad and Following RAW FITS preserves '
                     'the original purple frame before repair and also saves '
                     'the immediately following frame. Standard FITS saving set '
-                    'to Every Image can add normal references on either side. '
-                    'Incompatible following frames and repaired purple-frame '
-                    'copies are not used. This uses more disk space.'
+                    'to Every Image independently records the standard output. '
+                    'When both paths select the same exposure, both files are '
+                    'retained; repaired purple-frame copies are not used as '
+                    'calibration evidence.'
                 )
             elif standard_fits and not fits_period_valid:
                 guidance_level = 'warning'
@@ -428,8 +427,9 @@ def capture_configuration_guidance(config):
                     'Repair is active, but Save Bad and Following RAW FITS preserves '
                     'the original purple frame before repair and also saves '
                     'the immediately following frame. The tool uses only '
-                    'compatible normal references. Periodic standard FITS may '
-                    'add another compatible reference but is not required.'
+                    'compatible normal references. Periodic standard FITS '
+                    'saving remains independent and is not required for '
+                    'calibration.'
                 )
             else:
                 guidance_title = 'Ready for low-disk FITS collection'
@@ -438,8 +438,7 @@ def capture_configuration_guidance(config):
                     'the original purple frame before repair and also saves '
                     'the immediately following frame. Once all evidence '
                     'requirements above are met, this provides calibration '
-                    'data without saving every image; standard FITS can '
-                    'remain off.'
+                    'data without saving every image.'
                 )
         else:
             guidance_title = 'No untouched purple-frame FITS will be saved'
@@ -475,6 +474,33 @@ def capture_configuration_guidance(config):
                     'Only and set standard FITS to Every Image to collect '
                     'calibration data.'
                 )
+
+    if repair_enabled and diagnostic_fits:
+        if standard_fits and fits_period == 0:
+            guidance_sentences.append(
+                'Diagnostic FITS are the preferred calibration source. Keep '
+                'standard FITS set to Every Image only when you explicitly '
+                'want the standard files too, or temporarily when diagnostic '
+                'saving does not catch the purple frame. This combination '
+                'uses the most disk space.'
+            )
+        elif standard_fits and fits_period_valid:
+            guidance_sentences.append(
+                'Diagnostic FITS are the preferred calibration source. Keep '
+                'periodic standard FITS enabled only when you want them for '
+                'another purpose; they may occasionally duplicate a diagnostic '
+                'exposure. If diagnostic saving misses purple frames, '
+                'temporarily use standard FITS set to Every Image because a '
+                'periodic interval cannot reliably gather the evidence.'
+            )
+        elif not standard_fits:
+            guidance_sentences.append(
+                'Diagnostic FITS are the preferred calibration source, so '
+                'leaving standard FITS off is recommended unless you want '
+                'those files for another purpose. If diagnostic saving misses '
+                'purple frames, temporarily set standard FITS to Every Image '
+                'to gather complete evidence.'
+            )
 
     if preceding_fits:
         guidance_sentences.append(
@@ -2110,6 +2136,14 @@ def _format_report_timestamp(value):
         return str(value or 'Unknown')
 
 
+def _format_report_filename_timestamp(value):
+    """Format an internal timestamp for a sortable local report filename."""
+    parsed = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(_local_timezone()).strftime('%Y-%m-%d_%H-%M-%S')
+
+
 def _original_report_filename(staged_name, manifest_files):
     """Map a private staged basename back to its user-facing source name."""
     for file_entry in manifest_files or ():
@@ -2227,18 +2261,19 @@ def format_threshold_suggestion_report(payload, manifest):
         )
     _append_report_paragraph(
         lines,
-        detector_summary + ' All three measured ratios nevertheless formed '
-        'two clean, consistently ordered populations. The higher-ratio '
+        detector_summary + ' Even so, each of the three measured ratios '
+        'separated into two clean, consistently ordered populations. The '
+        'higher-ratio '
         'population also had compatible adjacent normal references.',
     )
     _append_report_paragraph(
         lines,
         'No repair constants were derived and no settings were changed during '
         'analysis. If the evidence matches the expected purple-frame failure, '
-        'a user who can save the standard Config may use Apply thresholds and '
-        'reload on the result '
-        'page, or enter only the fields marked Change recommended in Image '
-        'Settings. Reset the tool and run calibration again afterwards.',
+        'a user who can save settings on the Config page may select Apply '
+        'thresholds and reload on the result page. Alternatively, enter only '
+        'the fields marked Change recommended in Image Settings. Then reset '
+        'the tool and run calibration again.',
     )
 
     _append_report_section(lines, 'Detection threshold suggestions')
@@ -2284,7 +2319,7 @@ def format_threshold_suggestion_report(payload, manifest):
 
     _append_report_section(lines, 'Evidence used')
     evidence_lines = (
-        ('FITS recognised by configured detector',
+        ('FITS identified by the configured detector',
          quality.get('detected_bad_count', 0)),
         ('FITS in likely purple population', quality['likely_purple_count']),
         ('FITS in likely normal population', quality['likely_normal_count']),
@@ -2312,8 +2347,9 @@ def format_threshold_suggestion_report(payload, manifest):
     _append_report_paragraph(
         lines,
         'A safe threshold is greater than the likely-normal maximum and no '
-        'greater than the likely-purple minimum. Every range below had a '
-        'clean gap; the tool makes no suggestion when populations overlap.',
+        'greater than the likely-purple minimum. Each reported range has a '
+        'clean gap. The tool does not suggest a threshold when the populations '
+        'overlap.',
     )
     for item in payload['threshold_suggestions']:
         values = payload['signature_ranges'][item['metric']]
@@ -2405,11 +2441,12 @@ def format_threshold_suggestion_report(payload, manifest):
         ))
         _append_report_paragraph(
             lines,
-            'Database marks were used for the compact path only when at least '
-            'seven complete groups existed. Otherwise population analysis '
-            'used measured FITS ratios and could continue past the initial '
-            'search target. Temporary staging links were removed after '
-            'analysis; original saved FITS were left unchanged.',
+            'When at least seven complete database-marked groups are '
+            'available, the tool uses them as a compact evidence set. '
+            'Otherwise, population analysis uses measured FITS ratios and may '
+            'continue beyond the initial search target. This analysis removed '
+            'only temporary staging links; the original saved FITS remain '
+            'unchanged.',
         )
     elif source_kind == 'upload':
         lines.extend((
@@ -2493,27 +2530,27 @@ def format_integrated_report(payload, manifest):
     _append_report_section(lines, 'Calibration result')
     _append_report_paragraph(
         lines,
-        'The derived values passed the final safety checks. They repaired all '
-        '{0} purple frames used for validation, while all {1} distinct normal '
-        'reference frames remained unchanged.'.format(
+        'The derived values passed the final safety checks. Final validation '
+        'repaired all {0} purple frames and left all {1} distinct normal '
+        'reference frames unchanged.'.format(
             quality.get('validated_bad_repairs', 0),
             quality.get('validated_normal_frames', 0),
         ),
     )
     _append_report_paragraph(
         lines,
-        'Running the calibration did not change the indi-allsky configuration. '
-        'An operator who can save the standard Config can apply the result '
-        'from the calibration page.',
+        'The calibration did not change the indi-allsky configuration. A user '
+        'who can save settings on the Config page can apply the result from '
+        'the calibration page.',
     )
 
     _append_report_section(lines, 'Recommended calibration values')
     _append_report_paragraph(
         lines,
-        'Review these values under Tools > ASI676MC Calibration. An operator '
-        'who can save Config can use Apply values and reload, or the values '
-        'can be entered manually under Config > Image > ASI676MC RAW16 '
-        'Purple-frame Handling.',
+        'Review these values under Tools > ASI676MC Calibration. A user who '
+        'can save settings on the Config page can select Apply values and '
+        'reload. Alternatively, enter the values manually under Config > '
+        'Image > ASI676MC RAW16 Purple-frame Handling.',
     )
 
     configured_values = comparison.get('configured_values', {})
@@ -2570,17 +2607,17 @@ def format_integrated_report(payload, manifest):
 
     comparison_text = {
         'exact': (
-            'All seven values matched the configuration when calibration '
-            'started. No update was needed at that time.'
+            'At the start of calibration, the derived values matched all seven '
+            'configured values, so no update was necessary.'
         ),
         'equivalent': (
-            'The result effectively matched the configuration when '
-            'calibration started. Applying it was unlikely to produce a '
-            'visible change.'
+            'At the start of calibration, the differences between the derived '
+            'and configured values were too small to produce a visible change.'
         ),
         'different': (
-            'One or more values differed enough to make a meaningful change '
-            'to repaired images.'
+            'At the start of calibration, one or more derived values differed '
+            'enough from the configured values to meaningfully change repaired '
+            'images.'
         ),
         'unavailable': (
             'The configuration snapshot could not be compared. Review the '
@@ -2657,12 +2694,13 @@ def format_integrated_report(payload, manifest):
         ))
         _append_report_paragraph(
             lines,
-            'Database marks were used for the compact path only when at least '
-            'seven complete groups existed. Otherwise the tool classified '
-            'retained FITS by their measured ratios and could continue past '
-            'the initial search target. Only temporary staging links were '
-            'removed after calibration. Original saved FITS were left '
-            'unchanged and remain subject to normal FITS retention.',
+            'When at least seven complete database-marked groups are '
+            'available, the tool uses them as a compact evidence set. '
+            'Otherwise, it classifies retained FITS by their measured ratios '
+            'and may continue beyond the initial search target. This '
+            'calibration removed only temporary staging links. The original '
+            'saved FITS remain unchanged and continue to follow normal FITS '
+            'retention.',
         )
     elif source_kind == 'upload':
         lines.extend((
@@ -2816,8 +2854,9 @@ def format_integrated_report(payload, manifest):
         _append_report_section(lines, 'Purple-frame signature separation')
         _append_report_paragraph(
             lines,
-            'The normal and purple ranges below did not overlap and remained '
-            'on the correct side of the configured detection thresholds.',
+            'The ranges shown below do not overlap. Each detection threshold '
+            'recorded for this run lies within the clean gap between its '
+            'normal and purple ranges.',
         )
         signature_labels = {
             'purple_ratio': 'Combined purple/green ratio',
@@ -2870,7 +2909,7 @@ def format_integrated_report(payload, manifest):
         lines,
         'Only the seven calibration values above were derived. Repair mode, '
         'FITS saving, logging, gallery, and other feature switches remain '
-        'operator choices and are never changed by calibration itself.',
+        'user-controlled and are never changed by calibration itself.',
     )
     return '\n'.join(lines).rstrip() + '\n'
 
@@ -3144,7 +3183,7 @@ def get_status(session_id, owner, storage_root=None):
 
 
 def get_completed_result(session_id, owner, storage_root=None):
-    """Return the safe subset an authorized operator may save to configuration.
+    """Return the safe subset an authorized user may save to configuration.
 
     A complete calibration supplies all seven repair constants. Preliminary
     threshold discovery supplies only detector fields explicitly marked for a
@@ -3192,12 +3231,48 @@ def get_completed_result(session_id, owner, storage_root=None):
     return manifest, result, values
 
 
-def get_report_path(session_id, owner, storage_root=None):
-    """Resolve an owned completed report for the authenticated download view."""
+def _get_report_details(session_id, owner, storage_root=None):
+    """Resolve an owned completed report and its retained session metadata."""
     session_dir, manifest = get_session(session_id, owner, storage_root)
     if manifest.get('status') != 'success':
         raise CalibrationSessionError('the calibration report is not ready')
     report_path = session_dir.joinpath('asi676mc_calibration_report.txt')
     if not report_path.is_file():
         raise CalibrationSessionError('the calibration report is missing')
+    return report_path, manifest
+
+
+def get_report_path(session_id, owner, storage_root=None):
+    """Resolve an owned completed report for the authenticated download view."""
+    report_path, _manifest = _get_report_details(
+        session_id,
+        owner,
+        storage_root,
+    )
     return report_path
+
+
+def get_report_download(session_id, owner, storage_root=None):
+    """Return an owned report and its stable, sortable download filename."""
+    report_path, manifest = _get_report_details(
+        session_id,
+        owner,
+        storage_root,
+    )
+    timestamp = manifest.get('completed_utc') or manifest.get('created_utc')
+    try:
+        timestamp_text = _format_report_filename_timestamp(timestamp)
+    except (TypeError, ValueError):
+        # A retained legacy manifest may lack a usable completion time. The
+        # report mtime is stable across downloads and still sorts sensibly.
+        modified = datetime.fromtimestamp(
+            report_path.stat().st_mtime,
+            tz=timezone.utc,
+        )
+        timestamp_text = modified.astimezone(_local_timezone()).strftime(
+            '%Y-%m-%d_%H-%M-%S'
+        )
+    return (
+        report_path,
+        '{0}_asi676mc_calibration_report.txt'.format(timestamp_text),
+    )
