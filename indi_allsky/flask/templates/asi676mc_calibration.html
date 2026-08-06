@@ -626,6 +626,9 @@ async function calibrationJson(response) {
 }
 
 function showCalibrationError(message) {
+    // A failed start is no longer an active run. Restore the source controls
+    // before showing the error so the user can correct the input and retry.
+    showCalibrationSetupView();
     $('#calibration-notice').hide();
     $('#calibration-error').text(message).show();
     $('#start-calibration').prop('disabled', false);
@@ -637,6 +640,27 @@ function showCalibrationError(message) {
 function showCalibrationNotice(message) {
     $('#calibration-error').hide();
     $('#calibration-notice').text(message).show();
+}
+
+// Setup, progress, and results are mutually exclusive page states. Keeping
+// the long source form out of the document flow during a run leaves the live
+// progress and cancellation controls visible without a persistent overlay.
+function showCalibrationSetupView() {
+    $('#calibration-progress-panel, #calibration-results').hide();
+    $('#calibration-setup-panel').show();
+}
+
+function showCalibrationProgressView() {
+    const progressPanel = $('#calibration-progress-panel');
+    const enteringProgressView = !progressPanel.is(':visible');
+    $('#calibration-setup-panel, #calibration-results').hide();
+    progressPanel.show();
+
+    // Scroll only on the state transition; polling updates must never pull the
+    // page away from a user who deliberately moved elsewhere.
+    if (enteringProgressView && progressPanel[0]) {
+        progressPanel[0].scrollIntoView({behavior: 'smooth', block: 'nearest'});
+    }
 }
 
 // Validate the shared matching control before either a database search or a
@@ -669,10 +693,8 @@ function resetCalibrationInterface() {
     calibrationCancellationRequested = false;
     activeCalibrationSourceKind = null;
 
-    $('#calibration-results').hide();
-    $('#calibration-progress-panel').hide();
+    showCalibrationSetupView();
     $('#calibration-error').hide();
-    $('#calibration-setup-panel').show();
     $('#start-calibration').prop('disabled', false);
     $('#start-database-calibration').prop('disabled', false);
     $('#cancel-calibration').hide().prop('disabled', false).text('Cancel calibration');
@@ -693,7 +715,7 @@ function resetCalibrationInterface() {
 
 function setCalibrationProgress(percent, stage, status) {
     const rounded = Math.max(0, Math.min(100, Math.round(percent)));
-    $('#calibration-progress-panel').show();
+    showCalibrationProgressView();
     $('#calibration-stage').text(stage);
     $('#calibration-status').text(status || '');
     $('#calibration-progress').css('width', rounded + '%').text(rounded + '%');
@@ -1548,6 +1570,11 @@ async function submitCalibration() {
     $('#start-calibration').prop('disabled', true);
     $('#start-database-calibration').prop('disabled', true);
     $('#calibration-progress').addClass('progress-bar-animated');
+    setCalibrationProgress(
+        0,
+        'Preparing upload',
+        'Creating a private calibration session.'
+    );
 
     try {
         const session = await createCalibrationSession();
@@ -1738,6 +1765,11 @@ $(document).ready(async function() {
     }
     $('#start-calibration').prop('disabled', true);
     pollingCalibrationSessionId = savedSession;
+    setCalibrationProgress(
+        0,
+        'Restoring calibration',
+        'Checking the retained calibration session.'
+    );
     $('#cancel-calibration')
         .show()
         .prop('disabled', false)

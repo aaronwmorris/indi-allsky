@@ -1545,6 +1545,42 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             '#calibration-setup-panel, #calibration-progress-panel',
             template,
         )
+        self.assertIn('function showCalibrationSetupView()', template)
+        self.assertIn('function showCalibrationProgressView()', template)
+        self.assertIn(
+            "$('#calibration-setup-panel, #calibration-results').hide();",
+            template,
+        )
+        self.assertIn('showCalibrationProgressView();', template)
+        self.assertIn("'Preparing upload'", template)
+        self.assertIn("'Restoring calibration'", template)
+        self.assertIn(
+            "progressPanel[0].scrollIntoView({behavior: 'smooth', block: 'nearest'});",
+            template,
+        )
+        show_error_body = template.split(
+            'function showCalibrationError(message) {',
+            1,
+        )[1].split('function showCalibrationNotice(message) {', 1)[0]
+        reset_body = template.split(
+            'function resetCalibrationInterface() {',
+            1,
+        )[1].split('function setCalibrationProgress(', 1)[0]
+        progress_body = template.split(
+            'function setCalibrationProgress(',
+            1,
+        )[1].split('function renderSelectedFiles()', 1)[0]
+        upload_body = template.split(
+            'async function submitCalibration() {',
+            1,
+        )[1].split('async function submitDatabaseCalibration()', 1)[0]
+        self.assertIn('showCalibrationSetupView();', show_error_body)
+        self.assertIn('showCalibrationSetupView();', reset_body)
+        self.assertIn('showCalibrationProgressView();', progress_body)
+        self.assertLess(
+            upload_body.index("'Preparing upload'"),
+            upload_body.index('const session = await createCalibrationSession();'),
+        )
         self.assertIn('rememberCalibrationSession', template)
         self.assertIn('sessionStorage', template)
         self.assertIn('Reconnecting', template)

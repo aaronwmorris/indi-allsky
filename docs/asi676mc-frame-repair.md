@@ -239,6 +239,16 @@ by a browser-specific token.
 
 The page supports two input paths.
 
+After either path passes its input checks and starts, the long setup area is
+replaced by a compact progress view containing the current stage, progress bar,
+status detail, and cancel action. The page scrolls to that view once, but later
+polling updates do not move the page again. Successful completion replaces the
+progress view with the result. Cancellation, or a run that fails before a
+result exists, restores the original input controls so the collection or
+search settings can be corrected and tried again. Reloading the page while a
+retained calibration is still queued or running opens directly in the progress
+view and resumes status polling.
+
 ### Manual multi-file upload
 
 The file picker accepts all selected FITS at once. The browser uploads them
@@ -518,7 +528,7 @@ recalibrate; do not loosen detection thresholds merely to suppress the warning.
 | `indi_allsky/flask/views.py` | Authenticated endpoints, task queueing, result/report access, and configuration apply/reload. |
 | `indi_allsky/flask/base_views.py` and `templates/base.html` | Context-aware Tools-menu visibility. |
 | `indi_allsky/flask/templates/config.html` | Settings UI and contextual guidance. |
-| `indi_allsky/flask/templates/asi676mc_calibration.html` | Calibration input, progress, cancellation, results, report, reset, and browser capability checks. |
+| `indi_allsky/flask/templates/asi676mc_calibration.html` | Calibration setup/progress/result transitions, cancellation, reports, reset, and browser capability checks. |
 | `indi_allsky/flask/templates/gallery.html` | Optional repair/exclusion badges, outlines, and repaired-frame filtering. |
 | `indi_allsky/flask/templates/imageviewer.html` | Diagnostic preceding/purple/following FITS downloads. |
 | `testing/image/test_asi676mc_repair.py` | Detection, repair, validation, metadata, and diagnostic helper coverage. |
