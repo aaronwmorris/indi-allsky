@@ -150,6 +150,8 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
             ".prop('disabled', !asi676mc_repair_gallery_enabled)",
             template,
         )
+        self.assertIn('Repair validation failed', template)
+        self.assertNotIn("? 'repair failed'", template)
 
     def test_documentation_records_shared_multi_camera_profile_limit(self):
         docs = (

@@ -265,11 +265,12 @@ After either path passes its input checks and starts, the long setup area is
 replaced by a compact progress view containing the current stage, progress bar,
 status detail, and cancel action. The page scrolls to that view once, but later
 polling updates do not move the page again. Successful completion replaces the
-progress view with the result. Cancellation, or a run that fails before a
-result exists, restores the original input controls so the collection or
-search settings can be corrected and tried again. Reloading the page while a
-retained calibration is still queued or running opens directly in the progress
-view and resumes status polling.
+progress view with the result. Cancellation restores the original input
+controls. A failed analysis remains on the compact progress view, where the
+complete error is visible and the cancel action is replaced by **Reset / try
+again**. Reset removes the finished failed session and restores the inputs.
+Reloading the page while a retained calibration is queued, running, or waiting
+to be reset opens directly in its current compact view.
 
 ### Manual multi-file upload
 
@@ -292,6 +293,20 @@ The page requires modern JavaScript features used for multi-file selection,
 streamed requests, cancellation, progress, polling, and result restoration. It
 checks these capabilities on load and displays a blocking explanation if the
 browser cannot provide them.
+
+Manual uploads are bound to the selected, currently available ASI676MC by its
+database ID, UUID, and detected device name. This also provides a narrow legacy
+compatibility path for standard FITS written with indi-allsky's default
+`INSTRUME=indi-allsky` header. When all camera-bearing headers are absent or
+generic, the tool may use the bound ASI676MC identity after every RAW-layout
+check passes. A file that explicitly names another camera is always rejected;
+the session identity never overrides conflicting FITS metadata. Standalone and
+non-camera-bound uses remain strict. The result and text report disclose how
+many uploaded files used this legacy identity path. This fallback changes only
+the source of the camera name: RAW16 structure, `BAYERPAT=RGGB`, 1x1 binning,
+zero Bayer offsets, valid exposure, gain and timestamp metadata, decoded-size
+limits, and exact frame-shape matching within each purple/reference group
+remain strict.
 
 The cancel action aborts an active upload, stops saved-FITS discovery or
 private staging at its next safe checkpoint, cancels a queued job, or asks a
@@ -331,9 +346,10 @@ Newly saved FITS database rows retain the three measured detector ratios as
 small, threshold-independent metadata. A progressive search can reclassify
 those captures against current settings without decoding every full image.
 Older FITS without those stored ratios remain eligible for direct inspection;
-as with uploads, a file is rejected if its own headers lack the required
-camera identity or RAW layout metadata. Only the purple and adjacent normal
-FITS selected for numerical fitting are necessarily decoded after discovery.
+database discovery rejects one if its own headers lack the required camera
+identity or RAW layout metadata. Manual upload has the camera-bound legacy
+fallback described above. Only the purple and adjacent normal FITS selected for
+numerical fitting are necessarily decoded after discovery.
 
 Database discovery queries at most 600 newest candidate rows, then bounds
 grouping and staging to 200 FITS and 2 GiB. This prevents a large retained
@@ -350,11 +366,12 @@ or partial copy; database rows and their source FITS are never changed.
 
 Before fitting, the engine opens FITS through the Astropy support already used
 by indi-allsky. Primary and image-extension headers are merged. It requires an
-explicit ASI676MC identity, `BAYERPAT=RGGB`, RAW16 even dimensions, 1x1
-binning, zero Bayer offsets, and finite positive exposure plus finite
-non-negative gain. Repaired FITS marked `ASI676FX` and conflicting camera
-identities are rejected. Decoded image size is bounded independently of the
-compressed upload size. Every usable frame is classified with the same
+explicit ASI676MC identity or, for a camera-bound manual upload only, generic
+legacy indi-allsky identity. It also requires `BAYERPAT=RGGB`, RAW16 even
+dimensions, 1x1 binning, zero Bayer offsets, and finite positive exposure plus
+finite non-negative gain. Repaired FITS marked `ASI676FX` and conflicting
+camera identities are rejected. Decoded image size is bounded independently of
+the compressed upload size. Every usable frame is classified with the same
 signature implementation used by live processing.
 
 A successful calibration requires:
@@ -418,7 +435,14 @@ configuration at the start of calibration, warnings, cleanup outcome, and
 recommended next actions. It never exposes private staging paths. Its download
 name begins with the local completion time in
 `YYYY-MM-DD_HH-MM-SS_asi676mc_calibration_report.txt` format so reports sort in
-chronological order by filename.
+chronological order by filename. Known file-rejection and safety-check reasons
+are translated into short explanations with a corrective action. If every
+selected file is rejected, the failure view groups the reasons and shows how
+many files each reason affected instead of replacing them with a generic
+incompatibility message. Unknown exceptions remain private and direct the user
+to the indi-allsky log. The background task list uses the same safe wording;
+when its short status field cannot hold every grouped reason, it directs the
+user back to the retained calibration failure view.
 
 A user who can save settings on the Config page can select **Apply values and
 reload**. The server writes only the seven derived keys, using the same
@@ -509,13 +533,19 @@ frame, use Exclude Only plus standard FITS for every image temporarily.
 Check that the collection contains uncompressed ASI676MC RAW16 RGGB files,
 seven purple frames, a compatible adjacent normal frame for each, two exposure
 levels, and visible clipped highlights. Extra unmatched files do not compensate
-for a missing minimum. If the error names a detection ratio, compare the
-reported likely-normal and likely-purple populations. When all three ratios
-have strong gaps, the tool may show preliminary threshold suggestions instead
-of failing. Change a recommended threshold only after confirming that the
-higher-ratio files are the expected camera failure, then rerun calibration;
-the tool never changes detection thresholds during analysis. A user who can
-save Config may save the recommended subset after reviewing it.
+for a missing minimum. Default indi-allsky standard FITS with only the generic
+`INSTRUME=indi-allsky` camera header are accepted when uploaded through a
+session bound to the selected ASI676MC; an explicit different-camera header is
+not. The failure remains beside the completed progress bar until **Reset / try
+again** is selected. The message states the known reason and what to check; if
+several requirements failed, it groups the affected file counts. If the error
+names a detection ratio, compare the reported likely-normal and likely-purple
+populations. When all three ratios have strong gaps, the tool may show
+preliminary threshold suggestions instead of failing. Change a recommended
+threshold only after confirming that the higher-ratio files are the expected
+camera failure, then rerun calibration; the tool never changes detection
+thresholds during analysis. A user who can save Config may save the
+recommended subset after reviewing it.
 
 **The report time differs from UTC**
 

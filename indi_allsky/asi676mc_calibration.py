@@ -1685,6 +1685,10 @@ def _result_summary(payload):
         'scanned_file_count': quality.get('scanned_file_count', 0),
         'available_file_count': quality.get('available_file_count', 0),
         'search_stopped_early': quality.get('search_stopped_early', False),
+        'bound_session_camera_count': quality.get(
+            'bound_session_camera_count',
+            0,
+        ),
     }
 
     return {
@@ -1713,6 +1717,10 @@ def _threshold_suggestion_summary(payload):
         'scanned_file_count': quality.get('scanned_file_count', 0),
         'available_file_count': quality.get('available_file_count', 0),
         'search_stopped_early': quality.get('search_stopped_early', False),
+        'bound_session_camera_count': quality.get(
+            'bound_session_camera_count',
+            0,
+        ),
     }
     return {
         'outcome': 'threshold_suggestion',
@@ -1747,6 +1755,19 @@ def _result_warnings(
     the download points to its own detail section.
     """
     warnings = []
+    bound_identity_count = int(
+        quality.get('bound_session_camera_count', 0)
+    )
+    if bound_identity_count:
+        warnings.append(
+            '{0} used the selected, currently available ASI676MC identity '
+            'because {1} contained only generic legacy indi-allsky camera '
+            'headers. Explicit camera conflicts would still have been '
+            'rejected.'.format(
+                _counted_item(bound_identity_count, 'uploaded FITS file'),
+                'it' if bound_identity_count == 1 else 'they',
+            )
+        )
     source_details = source_details or {}
     preliminary = bool(quality.get('preliminary'))
 
@@ -1939,6 +1960,260 @@ def _result_warnings(
     return warnings
 
 
+def _friendly_rejected_file_reason(reason):
+    """Translate one rejected-FITS reason into safe, actionable report text."""
+    reason_text = str(reason or '')
+    lowered = reason_text.lower()
+    if 'contains no image data' in lowered:
+        return (
+            'The FITS contains no image array. Use the original camera FITS, '
+            'not a metadata-only or damaged file.'
+        )
+    if 'decoded fits image exceeds' in lowered:
+        limit = re.search(r'exceeds the (\d+) mib', lowered)
+        limit_text = limit.group(1) if limit else '256'
+        return (
+            'The decoded image exceeds the {0} MiB safety limit. Use the '
+            'original single-frame camera FITS.'.format(limit_text)
+        )
+    if 'two-dimensional raw16 frame' in lowered:
+        return (
+            'The image is not a two-dimensional RAW16 mosaic. Use an original '
+            'unprocessed camera FITS rather than an RGB or stacked image.'
+        )
+    if 'unsigned 16-bit raw data' in lowered:
+        return (
+            'The image is not unsigned 16-bit RAW data. Capture or export the '
+            'original ASI676MC frame as RAW16.'
+        )
+    if (
+        'at least four rows and four columns' in lowered
+        or 'even raw frame dimensions' in lowered
+    ):
+        return (
+            'The RAW mosaic dimensions are not compatible. Use the complete '
+            'original camera frame with even width and height.'
+        )
+    if 'missing explicit bayerpat=rggb' in lowered:
+        return (
+            'The FITS header does not state BAYERPAT=RGGB. Use an original '
+            'ASI676MC FITS that retains its Bayer-pattern metadata.'
+        )
+    if 'expected rggb bayer data' in lowered:
+        match = re.search(r'got\s+([^;]+)', reason_text, re.IGNORECASE)
+        observed = match.group(1).strip() if match else 'another pattern'
+        return (
+            'The FITS is marked as {0}, not RGGB. Use unmodified ASI676MC '
+            'RGGB data.'.format(observed)
+        )
+    if 'already repaired by asi676mc frame handling' in lowered:
+        return (
+            'The FITS is already marked as repaired. Use the untouched '
+            'diagnostic FITS captured before repair.'
+        )
+    if 'exposure' in lowered and (
+        'finite value greater than zero' in lowered
+        or 'exposure is invalid' in lowered
+    ):
+        return (
+            'The exposure value is missing or invalid. Use an original FITS '
+            'whose header contains a positive EXPTIME or EXPOSURE value.'
+        )
+    if 'gain' in lowered and (
+        'finite non-negative value' in lowered
+        or 'gain is invalid' in lowered
+    ):
+        return (
+            'The camera gain is missing or invalid. Use an original FITS '
+            'whose header contains a non-negative GAIN value.'
+        )
+    if (
+        'xbinning=1 and ybinning=1' in lowered
+        or 'requires unbinned database fits' in lowered
+    ):
+        return (
+            'The FITS is binned or lacks valid binning metadata. Calibration '
+            'requires an original 1x1-binned frame.'
+        )
+    if 'requires zero bayer offsets' in lowered:
+        return (
+            'The FITS has a non-zero Bayer offset. Calibration requires an '
+            'uncropped RGGB frame with zero Bayer offsets.'
+        )
+    if (
+        'different or conflicting asi camera identity' in lowered
+        or 'non-asi676mc camera' in lowered
+    ):
+        return (
+            'The metadata identifies a different camera. Use FITS from the '
+            'selected ASI676MC only.'
+        )
+    if 'bound calibration camera is not positively identified' in lowered:
+        return (
+            'The selected camera is not identified as an ASI676MC. Select an '
+            'available ASI676MC and start a new manual upload.'
+        )
+    if (
+        'does not explicitly identify an asi676mc camera' in lowered
+        or 'not positively identified as asi676mc' in lowered
+    ):
+        return (
+            'The FITS metadata does not identify an ASI676MC. If these are '
+            'legacy standard FITS from that camera, upload them manually while '
+            'the ASI676MC is available and selected.'
+        )
+    if 'missing usable date-obs/date and filename timestamp' in lowered:
+        return (
+            'No usable capture time was found in the FITS header or filename. '
+            'Use the original timestamped FITS so nearby frames can be paired.'
+        )
+    if 'incomplete saved detector signature metadata' in lowered:
+        return (
+            'The saved database entry lacks complete detector metadata. Try '
+            'manual upload of the original FITS instead.'
+        )
+    if 'sampled frame has no usable green signal' in lowered:
+        return (
+            'The sampled image has no usable green signal. Use a normally '
+            'exposed daylight frame rather than an empty or fully dark frame.'
+        )
+    if 'sampled frame produced a non-finite detector ratio' in lowered:
+        return (
+            'The image could not produce valid detector ratios. Use a '
+            'normally exposed, unmodified camera FITS.'
+        )
+    return (
+        'The FITS could not be read or did not meet the calibration evidence '
+        'requirements. Try the original unprocessed camera FITS.'
+    )
+
+
+def _rejection_summary(message_text):
+    """Return validated grouped rejection counts carried by the engine."""
+    marker = 'rejection summary:'
+    marker_index = message_text.lower().find(marker)
+    if marker_index < 0:
+        return {}
+    encoded = message_text[marker_index + len(marker):].strip()
+    try:
+        # Cleanup failures may append a second internal clause after the JSON.
+        # Decode only the leading object; the browser reports cleanup state
+        # separately and should not lose the evidence-rejection explanation.
+        raw_counts, _end_index = json.JSONDecoder().raw_decode(encoded)
+    except (TypeError, ValueError):
+        return {}
+    if not isinstance(raw_counts, dict):
+        return {}
+    counts = {}
+    for reason, count in raw_counts.items():
+        try:
+            count = int(count)
+        except (TypeError, ValueError):
+            continue
+        if count > 0:
+            counts[str(reason)] = count
+    return counts
+
+
+def _friendly_all_rejected_message(message_text):
+    """Explain an all-rejected collection, retaining every known cause."""
+    raw_counts = _rejection_summary(message_text)
+    if not raw_counts:
+        return (
+            'No compatible unprocessed ASI676MC RAW16 RGGB FITS were found. '
+            'Check that the files are original, unbinned RAW16 RGGB camera '
+            'FITS with valid exposure, gain, timestamp, and camera metadata.'
+        )
+    grouped = {}
+    for reason, count in raw_counts.items():
+        friendly = _friendly_rejected_file_reason(reason)
+        grouped[friendly] = grouped.get(friendly, 0) + count
+    total = sum(grouped.values())
+    opening = (
+        'The selected FITS could not be used.'
+        if total == 1
+        else 'None of the {0} selected FITS could be used.'.format(total)
+    )
+    if len(grouped) == 1:
+        detail = next(iter(grouped))
+        label = 'Reason' if total == 1 else 'Reason for all {0}'.format(total)
+        return '{0} {1}: {2}'.format(opening, label, detail)
+    details = []
+    for friendly, count in sorted(grouped.items(), key=lambda item: -item[1]):
+        details.append('{0}: {1}'.format(
+            _counted_item(count, 'file'),
+            friendly,
+        ))
+    return '{0} Reasons: {1}'.format(opening, ' '.join(details))
+
+
+def _friendly_threshold_analysis_failure(message_text):
+    """Explain why detector-ratio population discovery was unsafe."""
+    lowered = message_text.lower()
+    minimum = re.search(r'at least (\d+) compatible fits', lowered)
+    if minimum:
+        return (
+            'Fewer than {0} compatible files remained. Include at least seven '
+            'normal and seven purple frames.'.format(minimum.group(1))
+        )
+    if 'non-finite or non-positive values' in lowered:
+        return (
+            'Some files did not produce valid detector ratios. Use normally '
+            'exposed, unmodified FITS.'
+        )
+    if 'do not vary in all three detector ratios' in lowered:
+        return (
+            'The files do not show two distinguishable groups across all '
+            'three detector measurements. Include genuine purple and normal '
+            'frames from the same camera.'
+        )
+    if (
+        'do not form two stable populations' in lowered
+        or 'possible populations contain' in lowered
+        or 'higher-ratio population is not higher' in lowered
+        or 'fall in the lower-ratio population' in lowered
+    ):
+        return (
+            'The measured ratios do not form two clean normal and purple '
+            'groups. Check the selected files and add clearer examples of both.'
+        )
+    if 'does not have the required clean gap' in lowered:
+        label = message_text.split(' does not ', 1)[0].strip()
+        return (
+            'The {0} measurements do not cleanly separate the two possible '
+            'groups. Add clearer normal and purple examples.'.format(
+                label or 'detector',
+            )
+        )
+    if 'configured thresholds already lie inside every observed gap' in lowered:
+        return (
+            'The current thresholds already separate the two measured groups, '
+            'so threshold changes do not explain the detector result. Confirm '
+            'that the higher-ratio files show the actual purple-frame fault.'
+        )
+    if 'matched purple frames found' in lowered:
+        return _friendly_failure_message(message_text)
+    if 'no compatible nearby normal' in lowered:
+        return (
+            'Some likely purple frames have no compatible normal frame nearby. '
+            'Include complete good/purple/good sequences.'
+        )
+    if 'normal/purple ratio' in lowered:
+        return (
+            'There are too few distinct normal reference frames. Include at '
+            'least one different nearby normal frame per purple frame.'
+        )
+    if 'cover only one exposure' in lowered:
+        return (
+            'The evidence covers only one exposure. Include frames from at '
+            'least two exposure settings.'
+        )
+    return (
+        'The measured ratios did not support a safe threshold suggestion. '
+        'Include clearer normal and purple examples with adjacent references.'
+    )
+
+
 def _friendly_failure_message(message):
     """Translate calibration-engine failures into safe, actionable UI copy."""
     message_text = str(message or '')
@@ -1951,10 +2226,7 @@ def _friendly_failure_message(message):
         lowered,
     )
     if 'no compatible raw16 rggb fits files found' in lowered:
-        return (
-            'No compatible unprocessed ASI676MC RAW16 RGGB FITS were found. '
-            'Choose a collection containing the original camera FITS.'
-        )
+        return _friendly_all_rejected_message(message_text)
     if matched_count:
         return (
             'Only {0} purple frames had a compatible nearby normal FITS; at '
@@ -1976,6 +2248,12 @@ def _friendly_failure_message(message):
             'There were not enough different normal reference frames. Provide '
             'at least one distinct compatible normal frame for each purple frame.'
         )
+    if 'detected purple frames have no compatible nearby normal' in lowered:
+        return (
+            'Some detected purple frames have no compatible normal FITS '
+            'nearby. Include complete good/purple/good sequences or increase '
+            'the maximum separation only if those frames belong together.'
+        )
     if 'cover only one exposure' in lowered:
         return (
             'The matched purple frames use only one exposure. Include data from '
@@ -1984,10 +2262,17 @@ def _friendly_failure_message(message):
     if (
         'more than one explicit camera identity' in lowered
         or 'different explicit asi camera' in lowered
+        or 'all evidence must explicitly identify asi676mc' in lowered
     ):
         return (
             'Files from more than one camera were detected. Use FITS from this '
             'ASI676MC only.'
+        )
+    if 'lack the required asi676mc raw16 rggb' in lowered:
+        return (
+            'Some evidence failed the final compatibility check. Use original '
+            'ASI676MC RAW16 RGGB FITS with 1x1 binning, zero Bayer offsets, and '
+            'valid exposure and gain metadata.'
         )
     if 'no fits matched the configured purple-frame detector' in lowered:
         return (
@@ -2003,13 +2288,12 @@ def _friendly_failure_message(message):
             'collection and review the detection thresholds in Image Settings.'
         )
     if 'automatic threshold analysis could not make a safe suggestion' in lowered:
+        detail = message_text.split(':', 1)[-1].strip()
         return (
             'The configured detector did not find enough usable purple and '
-            'normal frames, and the three measured ratios did not support one '
-            'safe threshold suggestion. Confirm that the collection contains '
-            'untouched purple frames with adjacent normal FITS, include at '
-            'least seven of each across two exposure settings, and try again. '
-            'No settings were changed.'
+            'normal frames. {0} No settings were changed.'.format(
+                _friendly_threshold_analysis_failure(detail)
+            )
         )
     # These engine messages contain only measured ratios and setting names, so
     # they are safe and more useful to show verbatim than a generic summary.
@@ -2046,6 +2330,48 @@ def _friendly_failure_message(message):
             'Too few stable pixels could be compared across the matched '
             'frames. Try clearer daylight data with less cloud or scene change.'
         )
+    if 'estimate' in lowered and 'outside the plausible asi676mc range' in lowered:
+        return (
+            'The fitted colour gain is outside the safe ASI676MC range. Check '
+            'that the files show the purple row-shift fault and use cleaner '
+            'good/purple/good daylight sequences.'
+        )
+    if 'varies too much between pairs' in lowered:
+        return (
+            'The fitted colour gain changes too much between frame groups. '
+            'Use one ASI676MC and collect cleaner sequences with less cloud, '
+            'motion, or exposure change inside each group.'
+        )
+    if 'best clipped-highlight fit score' in lowered:
+        return (
+            'The bright-highlight fit was not consistent enough to use safely. '
+            'Collect more stable daylight good/purple/good sequences with '
+            'visible highlights.'
+        )
+    if (
+        'too few stable samples to compare' in lowered
+        or 'too few samples for the gain-only phase countercheck' in lowered
+        or 'invalid gain-only phase countercheck' in lowered
+    ):
+        return (
+            'Too few stable scene pixels remained for the final comparison. '
+            'Use clearer daylight sequences with less cloud or movement.'
+        )
+    if (
+        'repaired frame remains too different' in lowered
+        or 'repair does not materially improve agreement' in lowered
+        or 'evidence does not confirm the asi676mc one-row phase shift' in lowered
+    ):
+        return (
+            'The selected high-ratio frames do not behave like the ASI676MC '
+            'one-row purple-frame fault after repair. Check the evidence and '
+            'use untouched purple frames with close normal references.'
+        )
+    if 'astropy could not be imported' in lowered:
+        return (
+            'FITS support is unavailable on this installation. Install the '
+            'indi-allsky FITS dependencies, restart the services, and try again.'
+        )
     if (
         'calibrated repair validation failed' in lowered
         or 'calibrated detector rejects normal frame' in lowered
@@ -2075,6 +2401,18 @@ def _friendly_failure_message(message):
         'use a different FITS collection; if the problem repeats, check the '
         'indi-allsky log.'
     )
+
+
+def task_failure_message(message, limit=255):
+    """Return useful calibration failure text for the short task-status field."""
+    friendly = _friendly_failure_message(message)
+    if len(friendly) <= limit:
+        return friendly
+    fallback = (
+        'Calibration could not use the selected evidence. Open Tools > '
+        'ASI676MC Calibration for the complete grouped reasons and next steps.'
+    )
+    return fallback[:limit]
 
 
 REPORT_LINE_WIDTH = 88
@@ -2482,7 +2820,7 @@ def format_threshold_suggestion_report(payload, manifest):
                         rejected.get('name'),
                         manifest.get('files'),
                     ),
-                    rejected.get('reason') or 'Unreadable or unusable FITS',
+                    _friendly_rejected_file_reason(rejected.get('reason')),
                 ),
                 prefix='- ',
             )
@@ -2786,7 +3124,7 @@ def format_integrated_report(payload, manifest):
                 lines,
                 '{0}: {1}'.format(
                     original_name,
-                    rejected.get('reason') or 'Unreadable or unusable FITS',
+                    _friendly_rejected_file_reason(rejected.get('reason')),
                 ),
                 prefix='- ',
             )
@@ -2963,6 +3301,11 @@ def run_calibration_session(session_id, storage_root=None):
             if entry.get('database_id') is not None
         }
         source_details = manifest.get('source') or {}
+        trusted_camera_name = None
+        if source_details.get('kind') == 'upload':
+            trusted_camera_name = str(
+                (manifest.get('camera') or {}).get('name') or ''
+            ).strip() or None
         last_progress = dict(manifest.get('progress') or {})
 
         def record_progress(progress):
@@ -2999,6 +3342,7 @@ def run_calibration_session(session_id, storage_root=None):
                     'initial_scan_file_count',
                     14,
                 ),
+                trusted_camera_name=trusted_camera_name,
             )
 
         with _file_lock(_session_lock_path(session_dir)):

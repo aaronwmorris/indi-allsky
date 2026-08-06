@@ -784,7 +784,15 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
     def test_worker_claim_is_single_use(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
-            manifest = asi676mc_calibration.create_session('alice', root)
+            manifest = asi676mc_calibration.create_session(
+                'alice',
+                root,
+                camera_identity={
+                    'id': 7,
+                    'uuid': 'camera-uuid',
+                    'name': 'ZWO CCD ASI676MC',
+                },
+            )
             session_id = manifest['session_id']
             for index in range(14):
                 asi676mc_calibration.store_upload(
@@ -805,7 +813,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 calibration_engine,
                 'calibrate_folder',
                 return_value=self._successful_payload(),
-            ):
+            ) as calibrate_folder:
                 asi676mc_calibration.run_calibration_session(
                     session_id,
                     storage_root=root,
@@ -818,6 +826,10 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                         session_id,
                         storage_root=root,
                     )
+            self.assertEqual(
+                calibrate_folder.call_args.kwargs['trusted_camera_name'],
+                'ZWO CCD ASI676MC',
+            )
 
     def test_integrated_database_report_is_actionable_and_auditable(self):
         payload = self._successful_payload()
@@ -883,6 +895,13 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('complete database-marked groups', report)
         self.assertIn('compact evidence set', report)
         self.assertIn('already_fixed.fit:', report)
+        self.assertIn('already marked as repaired', report)
+        self.assertIn('untouched', report)
+        self.assertIn('diagnostic FITS captured before repair', report)
+        self.assertNotIn(
+            'already repaired by ASI676MC frame handling',
+            report,
+        )
         self.assertIn('Rejected-file details are listed later', report)
         self.assertNotIn('DATABASE FITS SELECTION', report)
         self.assertNotIn('REVIEW THESE CALIBRATION VALUES', report)
@@ -1061,6 +1080,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         payload = self._successful_payload()
         payload['quality']['rejected_file_count'] = 0
         payload['quality']['unmatched_bad_count'] = 0
+        payload['quality']['bound_session_camera_count'] = 21
         payload['rejected_files'] = []
         report = asi676mc_calibration.format_integrated_report(payload, {
             'settings': calibration_engine.DEFAULT_SETTINGS,
@@ -1074,7 +1094,13 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('Method: Manual FITS upload', report)
         self.assertIn('FITS selected: 21', report)
         self.assertIn('private uploaded copies were removed', report)
-        self.assertIn('No additional warnings.', report)
+        self.assertIn(
+            '21 uploaded FITS files used the selected, currently available '
+            'ASI676MC identity',
+            report,
+        )
+
+        payload['quality'].pop('bound_session_camera_count')
 
         database_report = asi676mc_calibration.format_integrated_report(
             payload,
@@ -1310,6 +1336,47 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         )
         self.assertIn('Too few stable pixels', weak_samples)
 
+        rejection_summary = asi676mc_calibration._friendly_failure_message(
+            'no compatible RAW16 RGGB FITS files found; rejection summary: '
+            '{"missing explicit BAYERPAT=RGGB metadata":2,'
+            '"calibration requires XBINNING=1 and YBINNING=1":1}'
+        )
+        self.assertIn('None of the 3 selected FITS', rejection_summary)
+        self.assertIn('2 files:', rejection_summary)
+        self.assertIn('does not state BAYERPAT=RGGB', rejection_summary)
+        self.assertIn('1x1-binned', rejection_summary)
+        self.assertNotIn('rejection summary', rejection_summary)
+
+        cleanup_failure = asi676mc_calibration._friendly_failure_message(
+            'no compatible RAW16 RGGB FITS files found; rejection summary: '
+            '{"missing explicit BAYERPAT=RGGB metadata":3}; private '
+            'calibration input cleanup also failed: access denied'
+        )
+        self.assertIn('Reason for all 3', cleanup_failure)
+        self.assertIn('BAYERPAT=RGGB', cleanup_failure)
+        self.assertNotIn('access denied', cleanup_failure)
+
+        threshold_population = asi676mc_calibration._friendly_failure_message(
+            'configured detection produced 0 purple and 9 normal FITS. '
+            'Automatic threshold analysis could not make a safe suggestion: '
+            'at least 14 compatible FITS are required for automatic threshold '
+            'analysis'
+        )
+        self.assertIn('Fewer than 14 compatible files', threshold_population)
+        self.assertIn('No settings were changed', threshold_population)
+
+        unstable_gain = asi676mc_calibration._friendly_failure_message(
+            'GAIN_R varies too much between pairs (relative MAD 0.300)'
+        )
+        self.assertIn('changes too much between frame groups', unstable_gain)
+
+        wrong_failure_type = asi676mc_calibration._friendly_failure_message(
+            'evidence does not confirm the ASI676MC one-row phase shift: '
+            'C:\\private\\purple.fit'
+        )
+        self.assertIn('do not behave like', wrong_failure_type)
+        self.assertNotIn('purple.fit', wrong_failure_type)
+
         safety_failure = asi676mc_calibration._friendly_failure_message(
             'normal-frame validation mutated C:\\private\\normal.fit'
         )
@@ -1338,6 +1405,51 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         )
         self.assertIn('unexpected error', unexpected)
         self.assertNotIn('secret.fit', unexpected)
+
+    def test_rejected_fits_reasons_are_plain_and_actionable(self):
+        cases = (
+            (
+                'expected RGGB Bayer data, got BGGR',
+                ('marked as BGGR', 'Use unmodified'),
+            ),
+            (
+                'repair requires unsigned 16-bit RAW data',
+                ('not unsigned 16-bit RAW data', 'RAW16'),
+            ),
+            (
+                'FITS does not explicitly identify an ASI676MC camera',
+                ('does not identify an ASI676MC', 'upload them manually'),
+            ),
+            (
+                'missing usable DATE-OBS/DATE and filename timestamp',
+                ('No usable capture time', 'original timestamped FITS'),
+            ),
+        )
+        for internal_reason, expected_parts in cases:
+            with self.subTest(reason=internal_reason):
+                friendly = (
+                    asi676mc_calibration._friendly_rejected_file_reason(
+                        internal_reason
+                    )
+                )
+                for expected in expected_parts:
+                    self.assertIn(expected, friendly)
+
+    def test_task_failure_text_is_actionable_and_bounded(self):
+        short = asi676mc_calibration.task_failure_message(
+            'matched failures cover only one exposure; collect more varied data'
+        )
+        self.assertIn('at least two exposure settings', short)
+
+        long_failure = (
+            'no compatible RAW16 RGGB FITS files found; rejection summary: '
+            '{"missing explicit BAYERPAT=RGGB metadata":120,'
+            '"calibration requires XBINNING=1 and YBINNING=1":80}'
+        )
+        bounded = asi676mc_calibration.task_failure_message(long_failure)
+        self.assertLessEqual(len(bounded), 255)
+        self.assertIn('Open Tools > ASI676MC Calibration', bounded)
+        self.assertNotIn('rejection summary', bounded)
 
     def test_expired_abandoned_upload_is_removed_without_page_revisit(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -1468,6 +1580,9 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('Download text report', template)
         self.assertIn('Apply values and reload', template)
         self.assertIn('Current FITS capture settings', template)
+        self.assertIn('generic camera name', template)
+        self.assertIn('RAW16, RGGB, 1x1 binning', template)
+        self.assertIn('message explains what to check', template)
         self.assertIn('id="calibration-capture-facts"', template)
         self.assertIn('class="calibration-fact-grid mb-3"', template)
         self.assertIn('id="calibration-settings"', template)
@@ -1506,6 +1621,9 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             template,
         )
         self.assertIn('Reset / recalibrate', template)
+        self.assertIn('id="calibration-failure-reset"', template)
+        self.assertIn('Reset / try again', template)
+        self.assertIn('id="calibration-progress-error"', template)
         self.assertLess(
             template.index('id="calibration-reset"'),
             template.index('id="calibration-report-download"'),
@@ -1575,6 +1693,10 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('function showCalibrationSetupView()', template)
         self.assertIn('function showCalibrationProgressView()', template)
         self.assertIn(
+            'function showCalibrationFailure(sessionId, message)',
+            template,
+        )
+        self.assertIn(
             "$('#calibration-setup-panel, #calibration-results').hide();",
             template,
         )
@@ -1613,12 +1735,32 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('Reconnecting', template)
         self.assertIn("camera_id: $('#CAMERA_ID').val()", template)
         self.assertIn('Cancel calibration', template)
+        self.assertIn(
+            "$('#calibration-failure-reset').on('click', discardCalibrationResult);",
+            template,
+        )
+        failed_status_body = template.split(
+            "if (status.status === 'failed') {",
+            1,
+        )[1].split("if (status.status === 'cancelled') {", 1)[0]
+        self.assertIn('showCalibrationFailure(', failed_status_body)
+        self.assertNotIn('showCalibrationSetupView()', failed_status_body)
+
+        docs = project_root.joinpath(
+            'docs', 'asi676mc-frame-repair.md'
+        ).read_text(encoding='utf-8')
+        self.assertIn('camera-bound legacy', docs)
+        self.assertIn('Reset / try', docs)
 
         video_source = project_root.joinpath(
             'indi_allsky', 'video.py'
         ).read_text(encoding='utf-8')
         self.assertIn(
             'asi676mc_calibration.cleanup_expired_sessions()',
+            video_source,
+        )
+        self.assertIn(
+            'asi676mc_calibration.task_failure_message(error)',
             video_source,
         )
 

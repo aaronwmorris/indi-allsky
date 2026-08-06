@@ -176,7 +176,8 @@
             Use daylight data with visible highlights and at least two exposure
             levels. Calibration needs at least seven purple frames and seven
             different compatible normal frames; before-and-after references are
-            better. Unusable files are skipped and explained in the result.
+            better. If files are skipped or the run stops, the result or failure
+            message explains what to check.
         </div>
     </div>
 </div>
@@ -189,6 +190,10 @@
             These settings affect future captures only. Existing data can still
             be used: saved FITS search works with previously flagged purple
             frames, while manual upload identifies them from the selected files.
+            A camera-bound manual upload can use legacy standard FITS with a
+            generic camera name, but RAW16, RGGB, 1x1 binning, zero Bayer
+            offsets, valid capture metadata, and matching frame dimensions
+            within each evidence group are still required.
         </p>
         <div id="calibration-capture-facts" class="calibration-fact-grid mb-3">
             {% for fact in capture_guidance.facts %}
@@ -334,11 +339,21 @@
             >0%</div>
         </div>
         <div id="calibration-status" class="calibration-help mt-2"></div>
+        <div
+            id="calibration-progress-error"
+            class="calibration-callout calibration-callout-danger mt-3"
+            role="alert"
+            style="display: none;"
+        ></div>
         <!-- One cancellation control serves upload, database discovery/staging,
-             and the common queued/running calibration states. -->
+             and the common queued/running calibration states. A completed
+             failure replaces it with a reset action on this same surface. -->
         <div class="mt-3">
             <button id="cancel-calibration" type="button" class="btn btn-danger" style="display: none;">
                 Cancel calibration
+            </button>
+            <button id="calibration-failure-reset" type="button" class="btn btn-secondary" style="display: none;">
+                Reset / try again
             </button>
         </div>
     </div>
@@ -672,6 +687,31 @@ function showCalibrationProgressView() {
     }
 }
 
+function showCalibrationFailure(sessionId, message) {
+    // A worker failure is a completed, discardable session. Keep its message
+    // beside the final progress state so a long setup form cannot hide the
+    // reason below the fold, and offer the same deliberate reset as results.
+    completedCalibrationSessionId = sessionId;
+    completedCalibrationOutcome = 'failed';
+    activeCalibrationSessionId = null;
+    pollingCalibrationSessionId = null;
+    activeRequestController = null;
+    activeCalibrationSourceKind = null;
+    rememberCalibrationSession(sessionId);
+    showCalibrationProgressView();
+    $('#calibration-notice, #calibration-error').hide();
+    $('#calibration-stage').text('Calibration failed');
+    $('#calibration-status').text('No settings were changed.');
+    $('#calibration-progress')
+        .css('width', '100%')
+        .text('Failed')
+        .removeClass('progress-bar-animated')
+        .addClass('bg-danger');
+    $('#calibration-progress-error').text(message).show();
+    $('#cancel-calibration').hide().prop('disabled', false).text('Cancel calibration');
+    $('#calibration-failure-reset').show().prop('disabled', false);
+}
+
 // Validate the shared matching control before either a database search or a
 // potentially very large upload starts. Server-side validation still repeats
 // the check because browser input can never be trusted on its own.
@@ -707,6 +747,8 @@ function resetCalibrationInterface() {
     $('#start-calibration').prop('disabled', false);
     $('#start-database-calibration').prop('disabled', false);
     $('#cancel-calibration').hide().prop('disabled', false).text('Cancel calibration');
+    $('#calibration-failure-reset').hide().prop('disabled', false);
+    $('#calibration-progress-error').hide().empty();
     $('#calibration-files').val('');
     $('#calibration-values, #calibration-threshold-values, #calibration-threshold-advisory-values, #calibration-population-evidence, #calibration-quality, #calibration-warning-list').empty();
     $('#confirm-higher-population').prop('checked', false);
@@ -718,6 +760,7 @@ function resetCalibrationInterface() {
     $('#calibration-progress')
         .css('width', '0%')
         .text('0%')
+        .removeClass('bg-danger')
         .addClass('progress-bar-animated');
     renderSelectedFiles();
 }
@@ -898,6 +941,7 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
     activeCalibrationSessionId = null;
     pollingCalibrationSessionId = null;
     $('#cancel-calibration').hide();
+    $('#calibration-failure-reset, #calibration-progress-error').hide();
     activeRequestController = null;
     activeCalibrationSourceKind = null;
     $('#calibration-progress').removeClass('progress-bar-animated');
@@ -1057,6 +1101,7 @@ function renderThresholdSuggestion(sessionId, result) {
     activeCalibrationSessionId = null;
     pollingCalibrationSessionId = null;
     $('#cancel-calibration').hide();
+    $('#calibration-failure-reset, #calibration-progress-error').hide();
     activeRequestController = null;
     activeCalibrationSourceKind = null;
     $('#calibration-progress').removeClass('progress-bar-animated');
@@ -1233,7 +1278,10 @@ async function discardCalibrationResult() {
         return;
     }
 
-    const resetButton = $('#calibration-reset').prop('disabled', true);
+    const failedResult = completedCalibrationOutcome === 'failed';
+    const resetButton = $(
+        failedResult ? '#calibration-failure-reset' : '#calibration-reset'
+    ).prop('disabled', true);
     try {
         const response = await fetch(
             calibrationUrl(calibrationDiscardUrlTemplate, completedCalibrationSessionId),
@@ -1249,6 +1297,18 @@ async function discardCalibrationResult() {
             + 'collection to calibrate again.'
         );
     } catch (error) {
+        if (failedResult) {
+            $('#calibration-progress-error').text(
+                error.serverRejected
+                    ? 'The failed calibration was not cleared. Try Reset / '
+                        + 'try again once more; otherwise it will be removed '
+                        + 'automatically after seven days.'
+                    : 'The browser could not confirm whether the failed '
+                        + 'calibration was cleared. Reload this page to check '
+                        + 'it before trying again.'
+            ).show();
+            return;
+        }
         if (error.serverRejected) {
             setResultStatus(
                 'danger',
@@ -1434,7 +1494,6 @@ async function pollCalibration(sessionId) {
             return;
         }
         if (status.status === 'failed') {
-            forgetCalibrationSession(sessionId);
             let cleanupMessage;
             if (!status.sources_deleted_utc) {
                 cleanupMessage = (
@@ -1449,11 +1508,13 @@ async function pollCalibration(sessionId) {
             } else {
                 cleanupMessage = 'Uploaded FITS were deleted.';
             }
-            throw new Error(
+            showCalibrationFailure(
+                sessionId,
                 'Calibration failed. '
                 + (status.error || 'The selected data did not pass validation.')
                 + ' No settings were changed. ' + cleanupMessage
             );
+            return;
         }
         if (status.status === 'cancelled') {
             forgetCalibrationSession(sessionId);
@@ -1760,6 +1821,7 @@ $('#form-asi676mc-calibration').on('submit', submitCalibration);
 $('#start-database-calibration').on('click', submitDatabaseCalibration);
 $('#cancel-calibration').on('click', cancelCalibration);
 $('#calibration-reset').on('click', discardCalibrationResult);
+$('#calibration-failure-reset').on('click', discardCalibrationResult);
 
 // localStorage contains only an unguessable session ID, never FITS data or
 // calibration values. Ownership is rechecked by every server endpoint.

@@ -245,7 +245,12 @@ class VideoWorker(Process):
                 'ASI676MC web calibration failed for session %s',
                 session_id,
             )
-            task.setFailed(str(error)[:255])
+            # The task list is user-visible. Keep the full technical exception
+            # in the log, but show the same actionable wording as the
+            # calibration page instead of a path or internal engine phrase.
+            task.setFailed(
+                asi676mc_calibration.task_failure_message(error)
+            )
             return
 
         quality = result['quality']

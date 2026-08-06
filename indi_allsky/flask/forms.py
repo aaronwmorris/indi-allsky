@@ -477,7 +477,7 @@ def IMAGE_CALIBRATE_HOLE_THOLD_validator(form, field):
 def IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator(form, field):
     """Keep detector ratios finite, positive, and operationally bounded."""
     if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
-        raise ValidationError('Please enter valid number')
+        raise ValidationError('Enter a finite number')
 
     if field.data <= 0:
         raise ValidationError('Ratio must be greater than 0')
@@ -493,7 +493,7 @@ def IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator(form, field):
 def IMAGE_ASI676MC_REPAIR__SAMPLE_STEP_validator(form, field):
     """Preserve Bayer parity while bounding detector sampling work."""
     if not isinstance(field.data, int):
-        raise ValidationError('Please enter valid number')
+        raise ValidationError('Enter a whole number')
 
     if field.data < 2 or field.data > asi676mc.SAMPLE_STEP_MAX or field.data % 2:
         raise ValidationError(
@@ -506,7 +506,7 @@ def IMAGE_ASI676MC_REPAIR__SAMPLE_STEP_validator(form, field):
 def IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD_validator(form, field):
     """Restrict the clipping plateau to the unsigned RAW16 range."""
     if not isinstance(field.data, int):
-        raise ValidationError('Please enter valid number')
+        raise ValidationError('Enter a whole number')
 
     if field.data < 1 or field.data > 65535:
         raise ValidationError('Threshold must be between 1 and 65535')
@@ -515,7 +515,7 @@ def IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD_validator(form, field):
 def IMAGE_ASI676MC_REPAIR__GAIN_validator(form, field):
     """Reject non-finite or destructive per-parity repair gains."""
     if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
-        raise ValidationError('Please enter valid number')
+        raise ValidationError('Enter a finite number')
 
     if field.data < asi676mc.GAIN_MIN or field.data > asi676mc.GAIN_MAX:
         raise ValidationError(
@@ -529,7 +529,7 @@ def IMAGE_ASI676MC_REPAIR__GAIN_validator(form, field):
 def IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_RATIO_validator(form, field):
     """Require one finite normalized highlight transition ratio."""
     if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
-        raise ValidationError('Please enter valid number')
+        raise ValidationError('Enter a finite number')
 
     if field.data <= 0 or field.data > 1:
         raise ValidationError('Ratio must be greater than 0 and no more than 1')
@@ -555,7 +555,7 @@ def IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO_validator(form, field):
 def IMAGE_ASI676MC_REPAIR__CHUNK_ROWS_validator(form, field):
     """Preserve Bayer parity while bounding repair working memory."""
     if not isinstance(field.data, int):
-        raise ValidationError('Please enter valid number')
+        raise ValidationError('Enter a whole number')
 
     if field.data < 2 or field.data > asi676mc.CHUNK_ROWS_MAX or field.data % 2:
         raise ValidationError(

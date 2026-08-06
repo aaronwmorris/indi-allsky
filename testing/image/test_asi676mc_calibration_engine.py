@@ -327,6 +327,30 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
             1.26,
         )
 
+    def test_all_rejected_failure_preserves_grouped_reasons_without_paths(self):
+        rejected = [
+            (Path('private_one.fit'), 'missing explicit BAYERPAT=RGGB metadata'),
+            (Path('private_two.fit'), 'missing explicit BAYERPAT=RGGB metadata'),
+            (
+                Path('private_three.fit'),
+                'calibration requires XBINNING=1 and YBINNING=1',
+            ),
+        ]
+        with mock.patch.object(
+            calibration_engine,
+            'scan_folder',
+            return_value=([], rejected),
+        ):
+            with self.assertRaises(calibration_engine.CalibrationError) as raised:
+                calibration_engine.calibrate_folder(Path('private_folder'))
+
+        message = str(raised.exception)
+        self.assertIn('rejection summary:', message)
+        self.assertIn('missing explicit BAYERPAT=RGGB metadata\":2', message)
+        self.assertIn('XBINNING=1 and YBINNING=1\":1', message)
+        self.assertNotIn('private_one.fit', message)
+        self.assertNotIn('private_folder', message)
+
     def test_single_ratio_threshold_mismatch_uses_same_preliminary_result(self):
         records = self._threshold_population_records(purple_blue_ratio=2.5)
         for record in records:
@@ -482,6 +506,65 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
         self.assertEqual(record.xbin, 1)
         self.assertEqual(record.bayer, 'RGGB')
 
+    def test_camera_bound_upload_accepts_only_generic_legacy_identity(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            folder = Path(temp_dir)
+
+            def write_fits(name, instrume=None):
+                header = fits.Header()
+                header['DATE-OBS'] = '2026-07-01T00:00:00'
+                header['EXPTIME'] = 0.001
+                header['GAIN'] = 0.0
+                header['BAYERPAT'] = 'RGGB'
+                header['XBINNING'] = 1
+                header['YBINNING'] = 1
+                header['XBAYROFF'] = 0
+                header['YBAYROFF'] = 0
+                if instrume is not None:
+                    header['INSTRUME'] = instrume
+                path = folder / name
+                fits.PrimaryHDU(
+                    data=self._normal_frame(64, 64),
+                    header=header,
+                ).writeto(path)
+                return path
+
+            generic_path = write_fits('generic.fit', 'indi-allsky')
+            missing_path = write_fits('missing.fit')
+            conflicting_path = write_fits('conflicting.fit', 'QHY268C')
+            other_asi_path = write_fits(
+                'other_asi.fit',
+                'ZWO CCD ASI678MC',
+            )
+
+            with self.assertRaisesRegex(ValueError, 'explicitly identify'):
+                calibration_engine.inspect_fits(
+                    generic_path,
+                    calibration_engine.DEFAULT_SETTINGS,
+                )
+
+            for path in (generic_path, missing_path):
+                record = calibration_engine.inspect_fits(
+                    path,
+                    calibration_engine.DEFAULT_SETTINGS,
+                    trusted_camera_name='ZWO CCD ASI676MC',
+                )
+                self.assertEqual(record.camera_name, 'ZWO CCD ASI676MC')
+                self.assertEqual(record.camera_identity_source, 'bound_session')
+
+            with self.assertRaisesRegex(ValueError, 'explicitly identify'):
+                calibration_engine.inspect_fits(
+                    conflicting_path,
+                    calibration_engine.DEFAULT_SETTINGS,
+                    trusted_camera_name='ZWO CCD ASI676MC',
+                )
+            with self.assertRaisesRegex(ValueError, 'ASI camera identity'):
+                calibration_engine.inspect_fits(
+                    other_asi_path,
+                    calibration_engine.DEFAULT_SETTINGS,
+                    trusted_camera_name='ZWO CCD ASI676MC',
+                )
+
     def test_fits_inspection_rejects_runtime_incompatible_metadata(self):
         cases = (
             ({'BAYERPAT': None}, 'BAYERPAT'),
@@ -507,7 +590,10 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
                     header['YBINNING'] = 1
                     header['XBAYROFF'] = 0
                     header['YBAYROFF'] = 0
-                    header['INSTRUME'] = 'ZWO CCD ASI676MC'
+                    # Exercise every compatibility rejection through the same
+                    # camera-bound legacy path used by standard FITS uploads.
+                    # The trusted name must relax only camera provenance.
+                    header['INSTRUME'] = 'indi-allsky'
                     for key, value in changes.items():
                         if value is None:
                             del header[key]
@@ -521,6 +607,7 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
                         calibration_engine.inspect_fits(
                             path,
                             calibration_engine.DEFAULT_SETTINGS,
+                            trusted_camera_name='ZWO CCD ASI676MC',
                         )
 
     @staticmethod
@@ -591,7 +678,10 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
                     header['XBINNING'] = 1
                     header['YBINNING'] = 1
                     header['BAYERPAT'] = 'RGGB'
-                    header['INSTRUME'] = 'ZWO CCD ASI676MC'
+                    # Reproduce indi-allsky's standard FITS default. The
+                    # camera-bound manual upload supplies the missing model
+                    # identity without altering these legacy files.
+                    header['INSTRUME'] = 'indi-allsky'
                     fits.PrimaryHDU(data=data, header=header).writeto(
                         folder / f'{index:02d}_{role}.fit'
                     )
@@ -607,13 +697,18 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
                 calibration_engine.CALIBRATION_OPTIONS,
                 overrides,
             ):
-                payload = calibration_engine.calibrate_folder(folder)
+                payload = calibration_engine.calibrate_folder(
+                    folder,
+                    trusted_camera_name='ZWO CCD ASI676MC',
+                )
 
         quality = payload['quality']
         settings = payload['derived_settings']
         self.assertEqual(quality['pair_count'], 7)
         self.assertEqual(quality['two_sided_count'], 7)
         self.assertEqual(quality['good_bad_ratio'], 2.0)
+        self.assertEqual(quality['bound_session_camera_count'], 21)
+        self.assertEqual(quality['explicit_camera_names'], [])
         self.assertEqual(payload['rejected_files'], [])
         self.assertEqual(len(payload['threshold_assessment']), 3)
         threshold_assessment = {

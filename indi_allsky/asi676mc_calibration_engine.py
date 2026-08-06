@@ -13,8 +13,10 @@ from approving values against an algorithm that differs from the image worker.
 
 from dataclasses import dataclass
 from dataclasses import replace
+from collections import Counter
 from datetime import datetime
 from datetime import timezone
+import json
 from pathlib import Path
 import re
 import statistics
@@ -262,6 +264,7 @@ class FrameRecord:
     signature: dict
     x_bayer_offset: int = 0
     y_bayer_offset: int = 0
+    camera_identity_source: str = 'fits_header'
 
     @property
     def is_bad(self):
@@ -299,8 +302,14 @@ class MatchedPair:
         )
 
 
-def inspect_fits(path, settings):
-    """Build a lightweight calibration record for one FITS file."""
+def inspect_fits(path, settings, trusted_camera_name=None):
+    """Build a lightweight calibration record for one FITS file.
+
+    A camera-bound web upload may supply the detected ASI676MC name for legacy
+    indi-allsky FITS whose default headers contain only generic application
+    labels. Explicit camera metadata remains authoritative and can never be
+    overridden by this compatibility path.
+    """
     data, header, _index = _read_fits(path)
     if bool(header.get('ASI676FX', False)):
         raise ValueError('already repaired by ASI676MC frame handling')
@@ -332,8 +341,31 @@ def inspect_fits(path, settings):
             )
         )
     camera_name = _camera_name(header)
+    camera_identity_source = 'fits_header'
     if not asi676mc.camera_name_matches(camera_name):
-        raise ValueError('FITS does not explicitly identify an ASI676MC camera')
+        trusted_camera_name = str(trusted_camera_name or '').strip()
+        if trusted_camera_name and not asi676mc.camera_name_matches(
+            trusted_camera_name
+        ):
+            raise ValueError(
+                'bound calibration camera is not positively identified as '
+                'ASI676MC'
+            )
+
+        # CAMERA/CAMMODEL/CCDNAME/INSTRUME are camera-bearing fields. A
+        # specific value in one of them must not be replaced merely because a
+        # different ASI676MC happens to be connected to the web session.
+        specific_camera_names = [
+            str(header.get(key, '')).strip()
+            for key in ('CAMERA', 'CAMMODEL', 'CCDNAME', 'INSTRUME')
+            if _specific_camera_name(str(header.get(key, '')).strip())
+        ]
+        if not trusted_camera_name or specific_camera_names:
+            raise ValueError(
+                'FITS does not explicitly identify an ASI676MC camera'
+            )
+        camera_name = trusted_camera_name
+        camera_identity_source = 'bound_session'
     return FrameRecord(
         path=path,
         timestamp=_parse_timestamp(header, path),
@@ -347,6 +379,7 @@ def inspect_fits(path, settings):
         bayer=str(header['BAYERPAT']).strip().upper(),
         camera_name=camera_name,
         signature=signature,
+        camera_identity_source=camera_identity_source,
     )
 
 
@@ -411,6 +444,7 @@ def scan_folder(
     progress_callback=None,
     progressive_check=None,
     initial_scan_count=14,
+    trusted_camera_name=None,
 ):
     """Inspect compatible FITS files and return records plus rejected files."""
     iterator = folder.rglob('*') if recursive else folder.glob('*')
@@ -445,9 +479,17 @@ def scan_folder(
                 try:
                     record = inspect_fits_metadata(path, metadata, settings)
                 except (KeyError, TypeError, ValueError):
-                    record = inspect_fits(path, settings)
+                    record = inspect_fits(
+                        path,
+                        settings,
+                        trusted_camera_name=trusted_camera_name,
+                    )
             else:
-                record = inspect_fits(path, settings)
+                record = inspect_fits(
+                    path,
+                    settings,
+                    trusted_camera_name=trusted_camera_name,
+                )
             records.append(record)
             if record.is_bad:
                 detected_bad_count += 1
@@ -1412,16 +1454,24 @@ def validate_evidence(records, pairs, unmatched, allow_unmatched=False):
             'matched failures cover only one exposure; collect more varied data'
         )
 
-    explicit_names = {
+    accepted_names = {
         _specific_camera_name(record.camera_name)
         for record in records
         if _specific_camera_name(record.camera_name)
     }
-    if explicit_names != {'asi676mc'}:
+    if accepted_names != {'asi676mc'}:
         raise CalibrationError(
             'all evidence must explicitly identify ASI676MC; found: '
-            + ', '.join(sorted(explicit_names))
+            + ', '.join(sorted(accepted_names))
         )
+    explicit_names = {
+        _specific_camera_name(record.camera_name)
+        for record in records
+        if (
+            record.camera_identity_source == 'fits_header'
+            and _specific_camera_name(record.camera_name)
+        )
+    }
 
     return {
         'bad_count': len(bad_records),
@@ -1433,6 +1483,10 @@ def validate_evidence(records, pairs, unmatched, allow_unmatched=False):
         'two_sided_count': sum(pair.two_sided for pair in pairs),
         'exposure_levels': exposures,
         'explicit_camera_names': sorted(explicit_names),
+        'bound_session_camera_count': sum(
+            record.camera_identity_source == 'bound_session'
+            for record in records
+        ),
     }
 
 
@@ -1712,6 +1766,7 @@ def calibrate_folder(
     progress_callback=None,
     progressive=False,
     initial_scan_count=14,
+    trusted_camera_name=None,
 ):
     """Run complete calibration for one staged evidence directory.
 
@@ -1739,6 +1794,7 @@ def calibrate_folder(
         progress_callback=progress_callback,
         progressive_check=progressive_check,
         initial_scan_count=max(14, int(initial_scan_count)),
+        trusted_camera_name=trusted_camera_name,
     )
     scanned_file_count = len(records) + len(rejected)
     available_file_count = (
@@ -1757,7 +1813,17 @@ def calibrate_folder(
         return payload
 
     if not records:
-        raise CalibrationError('no compatible RAW16 RGGB FITS files found')
+        # Preserve grouped rejection reasons for the web layer.  File paths
+        # are deliberately excluded so a browser-safe explanation can say
+        # what the user needs to fix without exposing private staging paths.
+        rejection_counts = Counter(str(reason) for _path, reason in rejected)
+        raise CalibrationError(
+            'no compatible RAW16 RGGB FITS files found; rejection summary: '
+            + json.dumps(
+                dict(sorted(rejection_counts.items())),
+                separators=(',', ':'),
+            )
+        )
     bad_count = sum(record.is_bad for record in records)
     normal_count = len(records) - bad_count
     minimum = CALIBRATION_OPTIONS['MIN_BAD_PAIRS']
