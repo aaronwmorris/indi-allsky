@@ -433,6 +433,7 @@ def inspect_fits_metadata(path, metadata, settings):
         bayer='RGGB',
         camera_name=camera_name,
         signature=signature,
+        camera_identity_source='database_metadata',
     )
 
 
@@ -479,11 +480,27 @@ def scan_folder(
                 try:
                     record = inspect_fits_metadata(path, metadata, settings)
                 except (KeyError, TypeError, ValueError):
+                    # A staged database row is already bound to the selected
+                    # camera by ID and UUID.  Its validated ASI676MC name may
+                    # therefore supply only the missing legacy header identity
+                    # when full-pixel inspection is required.  inspect_fits()
+                    # still rejects every explicit conflicting camera name and
+                    # applies all RAW16/RGGB/binning/offset checks unchanged.
                     record = inspect_fits(
                         path,
                         settings,
-                        trusted_camera_name=trusted_camera_name,
+                        trusted_camera_name=(
+                            metadata_camera_name or trusted_camera_name
+                        ),
                     )
+                    if (
+                        metadata_camera_name
+                        and record.camera_identity_source == 'bound_session'
+                    ):
+                        record = replace(
+                            record,
+                            camera_identity_source='bound_database',
+                        )
             else:
                 record = inspect_fits(
                     path,
@@ -1485,6 +1502,14 @@ def validate_evidence(records, pairs, unmatched, allow_unmatched=False):
         'explicit_camera_names': sorted(explicit_names),
         'bound_session_camera_count': sum(
             record.camera_identity_source == 'bound_session'
+            for record in records
+        ),
+        'bound_database_camera_count': sum(
+            record.camera_identity_source == 'bound_database'
+            for record in records
+        ),
+        'database_metadata_camera_count': sum(
+            record.camera_identity_source == 'database_metadata'
             for record in records
         ),
     }

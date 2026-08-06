@@ -242,6 +242,7 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
         self.assertTrue(record.is_bad)
         self.assertEqual(record.shape, (3552, 3552))
         self.assertEqual(record.timestamp, 1000.0)
+        self.assertEqual(record.camera_identity_source, 'database_metadata')
 
     def test_progressive_scan_stops_after_actionable_outliers(self):
         source_records = self._threshold_population_records()
@@ -564,6 +565,87 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
                     calibration_engine.DEFAULT_SETTINGS,
                     trusted_camera_name='ZWO CCD ASI676MC',
                 )
+
+    def test_camera_bound_database_accepts_only_generic_legacy_identity(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            folder = Path(temp_dir)
+
+            def write_fits(name, instrume=None, bayer='RGGB'):
+                header = fits.Header()
+                header['DATE-OBS'] = '2026-07-01T00:00:00'
+                header['EXPTIME'] = 0.001
+                header['GAIN'] = 0.0
+                header['BAYERPAT'] = bayer
+                header['XBINNING'] = 1
+                header['YBINNING'] = 1
+                header['XBAYROFF'] = 0
+                header['YBAYROFF'] = 0
+                if instrume is not None:
+                    header['INSTRUME'] = instrume
+                path = folder / name
+                fits.PrimaryHDU(
+                    data=self._normal_frame(64, 64),
+                    header=header,
+                ).writeto(path)
+                return path
+
+            generic_path = write_fits('generic.fit', 'indi-allsky')
+            missing_path = write_fits('missing.fit')
+            conflicting_path = write_fits('conflicting.fit', 'QHY268C')
+            other_asi_path = write_fits(
+                'other_asi.fit',
+                'ZWO CCD ASI678MC',
+            )
+            wrong_bayer_path = write_fits(
+                'wrong_bayer.fit',
+                'indi-allsky',
+                bayer='BGGR',
+            )
+            metadata_by_name = {
+                path.name: {
+                    # No saved signature reproduces a legacy standard FITS
+                    # row and forces automatic discovery to inspect pixels.
+                    'signature': None,
+                    'timestamp': 1782864000.0,
+                    'exposure': 0.001,
+                    'gain': 0.0,
+                    'binmode': 1,
+                    'width': 64,
+                    'height': 64,
+                    'camera_name': 'ZWO CCD ASI676MC',
+                }
+                for path in (
+                    generic_path,
+                    missing_path,
+                    conflicting_path,
+                    other_asi_path,
+                    wrong_bayer_path,
+                )
+            }
+
+            records, rejected = calibration_engine.scan_folder(
+                folder,
+                calibration_engine.DEFAULT_SETTINGS,
+                recursive=False,
+                metadata_by_name=metadata_by_name,
+            )
+
+        self.assertEqual(
+            {record.path.name for record in records},
+            {'generic.fit', 'missing.fit'},
+        )
+        self.assertTrue(all(
+            record.camera_name == 'ZWO CCD ASI676MC'
+            and record.camera_identity_source == 'bound_database'
+            for record in records
+        ))
+        rejected_by_name = {
+            path.name: reason
+            for path, reason in rejected
+        }
+        self.assertIn('explicitly identify', rejected_by_name['conflicting.fit'])
+        self.assertIn('ASI camera identity', rejected_by_name['other_asi.fit'])
+        self.assertIn('expected RGGB', rejected_by_name['wrong_bayer.fit'])
 
     def test_fits_inspection_rejects_runtime_incompatible_metadata(self):
         cases = (

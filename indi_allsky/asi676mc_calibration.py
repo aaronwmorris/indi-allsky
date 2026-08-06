@@ -1689,6 +1689,14 @@ def _result_summary(payload):
             'bound_session_camera_count',
             0,
         ),
+        'bound_database_camera_count': quality.get(
+            'bound_database_camera_count',
+            0,
+        ),
+        'database_metadata_camera_count': quality.get(
+            'database_metadata_camera_count',
+            0,
+        ),
     }
 
     return {
@@ -1719,6 +1727,14 @@ def _threshold_suggestion_summary(payload):
         'search_stopped_early': quality.get('search_stopped_early', False),
         'bound_session_camera_count': quality.get(
             'bound_session_camera_count',
+            0,
+        ),
+        'bound_database_camera_count': quality.get(
+            'bound_database_camera_count',
+            0,
+        ),
+        'database_metadata_camera_count': quality.get(
+            'database_metadata_camera_count',
             0,
         ),
     }
@@ -1766,6 +1782,21 @@ def _result_warnings(
             'rejected.'.format(
                 _counted_item(bound_identity_count, 'uploaded FITS file'),
                 'it' if bound_identity_count == 1 else 'they',
+            )
+        )
+    bound_database_count = int(
+        quality.get('bound_database_camera_count', 0)
+    )
+    if bound_database_count:
+        warnings.append(
+            '{0} used the ASI676MC identity from {1} camera-bound database '
+            '{2} because {3} contained only generic legacy indi-allsky camera '
+            'headers. Explicit camera conflicts would still have been '
+            'rejected.'.format(
+                _counted_item(bound_database_count, 'saved FITS file'),
+                'its' if bound_database_count == 1 else 'their',
+                'entry' if bound_database_count == 1 else 'entries',
+                'it' if bound_database_count == 1 else 'they',
             )
         )
     source_details = source_details or {}
@@ -2058,9 +2089,9 @@ def _friendly_rejected_file_reason(reason):
         or 'not positively identified as asi676mc' in lowered
     ):
         return (
-            'The FITS metadata does not identify an ASI676MC. If these are '
-            'legacy standard FITS from that camera, upload them manually while '
-            'the ASI676MC is available and selected.'
+            'The FITS metadata does not identify an ASI676MC. Use the '
+            'camera-bound manual upload or saved-FITS search while that '
+            'ASI676MC is available and selected.'
         )
     if 'missing usable date-obs/date and filename timestamp' in lowered:
         return (
@@ -3085,10 +3116,33 @@ def format_integrated_report(payload, manifest):
         for label, value in evidence_lines
     )
     camera_names = quality.get('explicit_camera_names', ())
-    lines.append('Camera identity in FITS headers: {0}'.format(
-        ', '.join(camera_names)
-        if camera_names
-        else 'No explicit name (compatible legacy headers)'
+    camera_identity_parts = []
+    if camera_names:
+        camera_identity_parts.append(
+            'explicit FITS headers ({0})'.format(', '.join(camera_names))
+        )
+    bound_upload_count = int(
+        quality.get('bound_session_camera_count', 0)
+    )
+    if bound_upload_count:
+        camera_identity_parts.append(
+            'selected camera binding for {0}'.format(
+                _counted_item(bound_upload_count, 'uploaded file')
+            )
+        )
+    database_identity_count = int(
+        quality.get('bound_database_camera_count', 0)
+    ) + int(quality.get('database_metadata_camera_count', 0))
+    if database_identity_count:
+        camera_identity_parts.append(
+            'camera-bound database records for {0}'.format(
+                _counted_item(database_identity_count, 'saved file')
+            )
+        )
+    lines.append('Camera identity evidence: {0}'.format(
+        _readable_join(camera_identity_parts)
+        if camera_identity_parts
+        else 'Not recorded'
     ))
     lines.append('Maximum matching separation: {0:g} seconds'.format(
         float(manifest.get('max_pair_seconds', 0))

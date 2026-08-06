@@ -295,18 +295,15 @@ checks these capabilities on load and displays a blocking explanation if the
 browser cannot provide them.
 
 Manual uploads are bound to the selected, currently available ASI676MC by its
-database ID, UUID, and detected device name. This also provides a narrow legacy
-compatibility path for standard FITS written with indi-allsky's default
-`INSTRUME=indi-allsky` header. When all camera-bearing headers are absent or
-generic, the tool may use the bound ASI676MC identity after every RAW-layout
-check passes. A file that explicitly names another camera is always rejected;
-the session identity never overrides conflicting FITS metadata. Standalone and
-non-camera-bound uses remain strict. The result and text report disclose how
-many uploaded files used this legacy identity path. This fallback changes only
-the source of the camera name: RAW16 structure, `BAYERPAT=RGGB`, 1x1 binning,
-zero Bayer offsets, valid exposure, gain and timestamp metadata, decoded-size
-limits, and exact frame-shape matching within each purple/reference group
-remain strict.
+database ID, UUID, and detected device name. This also provides a narrow
+camera-bound legacy compatibility path for standard FITS written with
+indi-allsky's default `INSTRUME=indi-allsky` header. When all camera-bearing
+headers are absent or generic, the tool may use the bound ASI676MC identity
+after every RAW-layout check passes. A file that explicitly names another
+camera is always rejected; the session identity never overrides conflicting
+FITS metadata. Standalone and non-camera-bound uses remain strict. The result
+and text report disclose how many uploaded files used this legacy identity
+path.
 
 The cancel action aborts an active upload, stops saved-FITS discovery or
 private staging at its next safe checkpoint, cancels a queued job, or asks a
@@ -346,10 +343,12 @@ Newly saved FITS database rows retain the three measured detector ratios as
 small, threshold-independent metadata. A progressive search can reclassify
 those captures against current settings without decoding every full image.
 Older FITS without those stored ratios remain eligible for direct inspection;
-database discovery rejects one if its own headers lack the required camera
-identity or RAW layout metadata. Manual upload has the camera-bound legacy
-fallback described above. Only the purple and adjacent normal FITS selected for
-numerical fitting are necessarily decoded after discovery.
+when their camera headers are absent or generic, the selected database row's
+already validated camera binding supplies the ASI676MC identity. A header that
+explicitly identifies another camera remains authoritative and is rejected.
+The result and report disclose how many saved FITS required this legacy
+fallback. Only the purple and adjacent normal FITS selected for numerical
+fitting are necessarily decoded after discovery.
 
 Database discovery queries at most 600 newest candidate rows, then bounds
 grouping and staging to 200 FITS and 2 GiB. This prevents a large retained
@@ -366,12 +365,14 @@ or partial copy; database rows and their source FITS are never changed.
 
 Before fitting, the engine opens FITS through the Astropy support already used
 by indi-allsky. Primary and image-extension headers are merged. It requires an
-explicit ASI676MC identity or, for a camera-bound manual upload only, generic
-legacy indi-allsky identity. It also requires `BAYERPAT=RGGB`, RAW16 even
-dimensions, 1x1 binning, zero Bayer offsets, and finite positive exposure plus
-finite non-negative gain. Repaired FITS marked `ASI676FX` and conflicting
-camera identities are rejected. Decoded image size is bounded independently of
-the compressed upload size. Every usable frame is classified with the same
+explicit ASI676MC identity or, for camera-bound manual upload and saved-FITS
+discovery, the selected ASI676MC identity when legacy headers are absent or
+generic. This fallback changes only the source of the camera name. It still
+requires `BAYERPAT=RGGB`, RAW16 even dimensions, 1x1 binning, zero Bayer
+offsets, finite positive exposure, finite non-negative gain, valid timestamps,
+decoded-size limits, and exact frame-shape matching within each
+purple/reference group. Repaired FITS marked `ASI676FX` and conflicting camera
+identities are rejected. Every usable frame is classified with the same
 signature implementation used by live processing.
 
 A successful calibration requires:
@@ -534,18 +535,19 @@ Check that the collection contains uncompressed ASI676MC RAW16 RGGB files,
 seven purple frames, a compatible adjacent normal frame for each, two exposure
 levels, and visible clipped highlights. Extra unmatched files do not compensate
 for a missing minimum. Default indi-allsky standard FITS with only the generic
-`INSTRUME=indi-allsky` camera header are accepted when uploaded through a
-session bound to the selected ASI676MC; an explicit different-camera header is
-not. The failure remains beside the completed progress bar until **Reset / try
-again** is selected. The message states the known reason and what to check; if
-several requirements failed, it groups the affected file counts. If the error
-names a detection ratio, compare the reported likely-normal and likely-purple
-populations. When all three ratios have strong gaps, the tool may show
-preliminary threshold suggestions instead of failing. Change a recommended
-threshold only after confirming that the higher-ratio files are the expected
-camera failure, then rerun calibration; the tool never changes detection
-thresholds during analysis. A user who can save Config may save the
-recommended subset after reviewing it.
+`INSTRUME=indi-allsky` camera header are accepted through either manual upload
+or automatic saved-FITS discovery when that path is bound to the selected
+ASI676MC; an explicit different-camera header is not. The failure remains
+beside the completed progress bar until **Reset / try again** is selected. The
+message states the known reason and what to check; if several requirements
+failed, it groups the affected file counts. If the error names a detection
+ratio, compare the reported likely-normal and likely-purple populations. When
+all three ratios have strong gaps, the tool may show preliminary threshold
+suggestions instead of failing. Change a recommended threshold only after
+confirming that the higher-ratio files are the expected camera failure, then
+rerun calibration; the tool never changes detection thresholds during
+analysis. A user who can save Config may save the recommended subset after
+reviewing it.
 
 **The report time differs from UTC**
 

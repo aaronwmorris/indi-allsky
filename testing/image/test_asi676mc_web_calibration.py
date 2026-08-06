@@ -1101,6 +1101,9 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         )
 
         payload['quality'].pop('bound_session_camera_count')
+        payload['quality']['bound_database_camera_count'] = 21
+        payload['quality']['database_metadata_camera_count'] = 0
+        payload['quality']['explicit_camera_names'] = []
 
         database_report = asi676mc_calibration.format_integrated_report(
             payload,
@@ -1119,6 +1122,16 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'FITS retention cutoff: 2026-08-01 (1 day)',
             database_report,
         )
+        self.assertIn(
+            '21 saved FITS files used the ASI676MC identity from their',
+            database_report,
+        )
+        self.assertIn('camera-bound database', database_report)
+        self.assertIn(
+            'camera-bound database records for 21 saved files',
+            database_report,
+        )
+        self.assertNotIn('21 uploaded FITS files', database_report)
         self.assertNotIn('1 days', database_report)
 
     def test_background_run_allows_unmatched_and_removes_uploaded_fits(self):
@@ -1418,7 +1431,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             ),
             (
                 'FITS does not explicitly identify an ASI676MC camera',
-                ('does not identify an ASI676MC', 'upload them manually'),
+                ('does not identify an ASI676MC', 'saved-FITS search'),
             ),
             (
                 'missing usable DATE-OBS/DATE and filename timestamp',
@@ -1580,7 +1593,8 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('Download text report', template)
         self.assertIn('Apply values and reload', template)
         self.assertIn('Current FITS capture settings', template)
-        self.assertIn('generic camera name', template)
+        self.assertIn('Both camera-bound paths', template)
+        self.assertIn('camera name', template)
         self.assertIn('RAW16, RGGB, 1x1 binning', template)
         self.assertIn('message explains what to check', template)
         self.assertIn('id="calibration-capture-facts"', template)
