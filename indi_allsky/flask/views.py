@@ -1842,6 +1842,14 @@ class JsonChartView(JsonView):
 
         _sqm_mask = self._load_detection_mask(latest_image.binmode)
 
+        if not isinstance(_sqm_mask, type(None)) and _sqm_mask.shape != image_data.shape[:2]:
+            app.logger.error(
+                'Detection mask shape %s does not match image shape %s, ignoring mask',
+                _sqm_mask.shape,
+                image_data.shape[:2],
+            )
+            _sqm_mask = None
+
 
         if isinstance(_sqm_mask, type(None)):
             sqm_roi = self.indi_allsky_config.get('SQM_ROI', [])
