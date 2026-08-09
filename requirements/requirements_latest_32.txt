@@ -48,7 +48,7 @@ simple-websocket >= 1.0.0
 is-safe-url
 certifi >= 2024.7.4
 # https://www.wheelodex.org/projects/cryptography/
-cryptography >= 48.0.1
+cryptography >= 50.0.0
 dbus-python
 paho-mqtt >= 2.0.0
 setuptools-rust
