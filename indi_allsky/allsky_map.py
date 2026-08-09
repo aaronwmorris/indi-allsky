@@ -4,6 +4,52 @@ import base64
 import json
 import os
 
+def request_allsky_map_api_key(api_url, logger=None):
+    """
+    Requests a new API key from the central Allsky Map server (/api/register).
+    Returns: (bool, str) - (Success Status, API key string or error description)
+    """
+    if not api_url:
+        return False, "API URL is required."
+
+    api_url = api_url.rstrip('/')
+    if api_url.endswith('/api/ping'):
+        api_url = api_url[:-9]
+    if not api_url.endswith('/api/register'):
+        api_url = f"{api_url}/api/register"
+
+    headers = {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 indi-allsky/1.0',
+    }
+    req = urllib.request.Request(api_url, data=b'{}', headers=headers, method='POST')
+
+    try:
+        with urllib.request.urlopen(req, timeout=10) as response:
+            res_body = response.read().decode('utf-8')
+            res_json = json.loads(res_body)
+            api_key = res_json.get('api_key')
+            if api_key:
+                if logger:
+                    logger.info('Allsky Map key registration successful')
+                return True, api_key
+            else:
+                return False, f"Unexpected response structure: {res_body}"
+    except urllib.error.HTTPError as e:
+        err_msg = e.read().decode('utf-8', errors='replace')
+        if logger:
+            logger.error('Allsky Map Key Request HTTP Error %d: %s', e.code, err_msg)
+        return False, f"HTTP Error {e.code}: {err_msg}"
+    except urllib.error.URLError as e:
+        if logger:
+            logger.warning('Allsky Map Key Request Network Error: %s', e.reason)
+        return False, f"Network unreachable: {e.reason}"
+    except Exception as e:
+        if logger:
+            logger.error('Allsky Map Key Request Error: %s', e)
+        return False, f"Error: {str(e)}"
+
+
 def send_allsky_map_ping(config, logger, db_notification_helper=None):
     """
     Sends the Allsky Map status ping.
@@ -64,6 +110,7 @@ def send_allsky_map_ping(config, logger, db_notification_helper=None):
     headers = {
         'Content-Type': 'application/json',
         'X-API-Key': api_key,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 indi-allsky/1.0',
     }
 
     req = urllib.request.Request(api_url, data=data, headers=headers, method='POST')

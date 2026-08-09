@@ -30,9 +30,19 @@
                         <div id="ALLSKYMAP__API_URL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ALLSKYMAP__API_KEY.label.text }}</span>
-                        {{ form_config.ALLSKYMAP__API_KEY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Unique UUID API Key generated via your Allsky Map account</span>
+                        <div class="tw:flex tw:items-center tw:justify-between">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ALLSKYMAP__API_KEY.label.text }}</span>
+                            <button type="button" id="btn-request-allskymap-key" class="tw:btn tw:btn-xs tw:btn-outline tw:btn-primary tw:gap-1 tw:no-underline">
+                                <i class="tw:icon-[lucide--key] tw:w-3 tw:h-3"></i> Request Key
+                            </button>
+                        </div>
+                        <div class="tw:relative tw:flex tw:items-center">
+                            {{ form_config.ALLSKYMAP__API_KEY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full tw:pr-10', type='password') }}
+                            <button type="button" id="btn-toggle-allskymap-key-visibility" class="tw:absolute tw:right-2 tw:btn tw:btn-ghost tw:btn-xs tw:btn-square tw:text-base-content/60 hover:tw:text-base-content" title="Toggle visibility">
+                                <i id="icon-toggle-allskymap-key" class="tw:icon-[lucide--eye] tw:w-4 tw:h-4"></i>
+                            </button>
+                        </div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Unique API Key generated via your Allsky Map account</span>
                         <div id="ALLSKYMAP__API_KEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -86,3 +96,62 @@
 
     </div>
 </div><!-- end allskymap tab -->
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $('#btn-toggle-allskymap-key-visibility').on('click', function(e) {
+        e.preventDefault();
+        var $input = $('#ALLSKYMAP__API_KEY');
+        var $icon = $('#icon-toggle-allskymap-key');
+        if ($input.attr('type') === 'password') {
+            $input.attr('type', 'text');
+            $icon.removeClass('tw:icon-[lucide--eye]').addClass('tw:icon-[lucide--eye-off]');
+        } else {
+            $input.attr('type', 'password');
+            $icon.removeClass('tw:icon-[lucide--eye-off]').addClass('tw:icon-[lucide--eye]');
+        }
+    });
+
+    $('#btn-request-allskymap-key').on('click', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var originalHtml = $btn.html();
+
+        var currentKey = $('#ALLSKYMAP__API_KEY').val();
+        if (currentKey && currentKey.trim() !== '') {
+            if (!confirm('An API Key is already configured. Do you want to request a new key and overwrite it?')) {
+                return;
+            }
+        }
+
+        $btn.prop('disabled', true).html('<span class="tw:loading tw:loading-spinner tw:loading-xs"></span> Requesting...');
+
+        var apiUrl = $('#ALLSKYMAP__API_URL').val();
+
+        $.ajax({
+            url: "{{ url_for('indi_allsky.ajax_allskymap_request_key_view') }}",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ "API_URL": apiUrl }),
+            success: function(data) {
+                $btn.prop('disabled', false).html(originalHtml);
+                if (data.success && data.api_key) {
+                    $('#ALLSKYMAP__API_KEY').val(data.api_key);
+                    $('#ALLSKYMAP__API_KEY-error').hide().text('');
+                    alert('Successfully generated new API Key: ' + data.api_key);
+                } else {
+                    alert('Failed to generate key: ' + (data.error || 'Unknown error'));
+                }
+            },
+            error: function(xhr) {
+                $btn.prop('disabled', false).html(originalHtml);
+                var err = 'Failed to generate key.';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    err = xhr.responseJSON.error;
+                }
+                alert(err);
+            }
+        });
+    });
+});
+</script>

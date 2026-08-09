@@ -4132,6 +4132,28 @@ class AjaxConfigView(BaseView):
         return jsonify(message)
 
 
+class AjaxAllskyMapRequestKeyView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def dispatch_request(self):
+        if not app.config['LOGIN_DISABLED']:
+            if not current_user.is_admin:
+                return jsonify({'error': 'You do not have permission to make configuration changes'}), 400
+
+        api_url = request.json.get('API_URL') if request.json else None
+        if not api_url:
+            api_url = self.indi_allsky_config.get('ALLSKYMAP', {}).get('API_URL', 'https://allsky-map.com')
+
+        from ..allsky_map import request_allsky_map_api_key
+        success, res = request_allsky_map_api_key(api_url, app.logger)
+
+        if success:
+            return jsonify({'success': True, 'api_key': res})
+        else:
+            return jsonify({'error': res}), 400
+
+
 class AjaxSetTimeView(BaseView):
     methods = ['POST']
     decorators = [login_required]
@@ -12365,6 +12387,7 @@ bp_allsky.add_url_rule('/config/list', view_func=ConfigListView.as_view('config_
 bp_allsky.add_url_rule('/config/download', view_func=ConfigDownloadView.as_view('config_download_view'))
 bp_allsky.add_url_rule('/config/restore', view_func=ConfigRestoreView.as_view('config_restore_view', template_name='config_restore.html'))
 bp_allsky.add_url_rule('/ajax/config/restore', view_func=AjaxConfigRestoreView.as_view('ajax_config_restore_view'))
+bp_allsky.add_url_rule('/ajax/allskymap/request_key', view_func=AjaxAllskyMapRequestKeyView.as_view('ajax_allskymap_request_key_view'))
 
 bp_allsky.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
 bp_allsky.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
