@@ -3,43 +3,54 @@
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
 {% block head %}
-<style>
-</style>
 <link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
 <script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
-
 {% endblock %}
 
 {% block content %}
-<div class="container">
-<div class="row">
-  <table id="notifications-table" class="table table-striped compact" data-bs-theme="dark">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Category</th>
-        <th>Create</th>
-        <th>Expire</th>
-        <th>Acked</th>
-        <th>Notification</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for notice in notice_list %}
-      <tr>
-        <td>{{ notice.id }}</td>
-        <td>{{ notice.category }}</td>
-        <td>{{ notice.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-        <td>{{ notice.expireDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-        <td>{{ notice.ack }}</td>
-        <td>{{ notice.notification }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6 tw:w-full">
+
+    <!-- Table Container -->
+    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+        <div class="tw:card-body tw:p-6">
+            <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:mb-6">System Notifications</h4>
+            <div class="tw:overflow-x-auto tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
+                <table id="notifications-table" class="tw:table tw:table-zebra tw:table-xs tw:w-full tw:m-0">
+                    <thead>
+                        <tr class="tw:bg-base-300/60 tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
+                            <th class="tw:pl-4 tw:py-3">ID</th>
+                            <th class="tw:py-3">Category</th>
+                            <th class="tw:py-3">Created</th>
+                            <th class="tw:py-3">Expires</th>
+                            <th class="tw:py-3">Acknowledged</th>
+                            <th class="tw:pr-4 tw:py-3">Notification Message</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for notice in notice_list %}
+                        <tr>
+                            <td class="tw:font-mono tw:font-bold">{{ notice.id }}</td>
+                            <td><span class="tw:badge tw:badge-sm tw:badge-info tw:badge-outline">{{ notice.category }}</span></td>
+                            <td>{{ notice.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>{{ notice.expireDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>
+                                {% if notice.ack %}
+                                <span class="tw:badge tw:badge-sm tw:badge-success">Yes</span>
+                                {% else %}
+                                <span class="tw:badge tw:badge-sm tw:badge-warning">No</span>
+                                {% endif %}
+                            </td>
+                            <td class="tw:text-base-content/90">{{ notice.notification }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -49,7 +60,8 @@ function init() {
         order: [[2, 'desc']],
         lengthMenu: [20, 50, 100, -1],
         layout: {
-            topEnd: ['buttons', 'search'],
+            topStart: ['pageLength', 'buttons'],
+            topEnd: 'search',
         },
         buttons: [
             'copy',
@@ -59,10 +71,8 @@ function init() {
     });
 }
 
-
-$( document ).ready(function() {
+$(document).ready(function() {
     init();
 });
 </script>
-
 {% endblock %}

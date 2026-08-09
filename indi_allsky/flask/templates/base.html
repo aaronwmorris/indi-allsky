@@ -1,429 +1,436 @@
 <!doctype html>
-<html>
-  <head>
-<title>{% block title %}{% endblock %}</title>
-<link rel="icon" type="image/png" href="{{ url_for('indi_allsky.static', filename='images/favicon_32.png') }}" sizes="32x32">
-<link rel="icon" type="image/png" href="{{ url_for('indi_allsky.static', filename='images/favicon_128.png') }}" sizes="128x128">
-<link href="{{ url_for('indi_allsky.static', filename='bootstrap/bootstrap.min.css') }}" rel="stylesheet">
-<link href="{{ url_for('indi_allsky.static', filename='css/style.css') }}" rel="stylesheet">
-<script src="{{ url_for('indi_allsky.static', filename='js/jquery-3.7.1.min.js') }}"></script>
-<script src="{{ url_for('indi_allsky.static', filename='bootstrap/bootstrap.bundle.min.js') }}"></script>
-<script src="{{ url_for('indi_allsky.static', filename='js/indi-allsky-tabs.js') }}"></script>
-<style>
-.container{
-    max-width: 2000px;
-}
-</style>
+<html lang="en" data-theme="dark">
 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ website_title }}: {{ page_title }}{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{{ url_for('indi_allsky.static', filename='images/favicon_32.png') }}"
+        sizes="32x32">
+    <link rel="icon" type="image/png" href="{{ url_for('indi_allsky.static', filename='images/favicon_128.png') }}"
+        sizes="128x128">
+
+    <!-- PWA Meta & Manifest -->
+    <link rel="manifest" href="{{ url_for('indi_allsky.manifest') }}">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="{{ url_for('indi_allsky.static', filename='images/icon-192.png') }}">
+
+    <script>
+        (function() {
+            var preferredMode = localStorage.getItem('allsky-theme-mode') || 'dark';
+            var lightTheme = localStorage.getItem('allsky-light-theme') || 'fantasy';
+            var darkTheme = localStorage.getItem('allsky-dark-theme') || 'forest';
+            var activeTheme = (preferredMode === 'light') ? lightTheme : darkTheme;
+            document.documentElement.setAttribute('data-theme', activeTheme);
+            
+            var savedFontSize = localStorage.getItem('allsky-font-size') || '100%';
+            document.documentElement.style.fontSize = savedFontSize;
+        })();
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register("{{ url_for('indi_allsky.service_worker') }}")
+                    .then(function(reg) {
+                        console.log('ServiceWorker registered:', reg.scope);
+                    })
+                    .catch(function(err) {
+                        console.error('ServiceWorker registration failed:', err);
+                    });
+            });
+        }
+    </script>
+
+    <link href="{{ url_for('indi_allsky.static', filename='css/dist.css') }}" rel="stylesheet">
+    <script src="{{ url_for('indi_allsky.static', filename='js/jquery-3.7.1.min.js') }}"></script>
+
+    <style>
+        #sidebar a, #sidebar a:hover, #sidebar a:focus {
+            color: inherit;
+            text-decoration: none;
+        }
+        #sidebar ul {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 0;
+        }
+
+        #sidebar {
+            transition: width 0.25s ease, opacity 0.25s ease, transform 0.25s ease;
+            width: 320px;
+            min-width: 320px;
+        }
+
+        #sidebar.collapsed {
+            width: 0;
+            min-width: 0;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-10px);
+            overflow: hidden;
+        }
+
+        @media (max-width: 1000px) {
+            #sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                z-index: 50;
+                height: 100dvh;
+                transform: translateX(0);
+            }
+
+            #sidebar.collapsed {
+                transform: translateX(-100%);
+                width: 320px;
+                min-width: 320px;
+                opacity: 1;
+            }
+
+            #sidebar-overlay {
+                display: none;
+            }
+
+            #sidebar:not(.collapsed)~#sidebar-overlay {
+                display: block;
+            }
+        }
+    </style>
     {% block head %}{% endblock %}
-  </head>
-  <body class="bg-dark bg-opacity-75">
-<div class="container-fluid overflow-hidden">
-    <div class="row vh-100 overflow-auto">
-        <div class="col-12 col-sm-3 col-xl-2 px-sm-2 px-0 bg-dark d-flex sticky-top">
-            <div class="d-flex flex-sm-column flex-row flex-grow-1 align-items-center align-items-sm-start px-3 pt-2 text-white">
-                <div>
-                    <a id="indi_allsky_anchor" class="d-flex align-items-center pb-sm-3 mb-md-0 me-md-auto text-white text-decoration-none" href="https://github.com/aaronwmorris/indi-allsky" target="_blank">
-                        <div class="fs-5 d-none d-sm-inline">
-                            <img src="{{ url_for('indi_allsky.static', filename='images/logo_outline_full.png') }}" height="100" alt="indi-allsky">
-                        </div>
-                    </a>
-                </div>
+</head>
 
-                <div class="d-none d-sm-inline" style="width:100%">
-                </div>
+<body class="tw:bg-base-300 tw:min-h-screen tw:flex tw:text-base-content tw:font-sans">
+    <!-- Trick Tailwind into including the sidebar icons generated dynamically -->
+    <div class="tw:hidden tw:icon-[lucide--library] tw:icon-[lucide--info] tw:icon-[lucide--wrench] tw:icon-[lucide--settings]"></div>
 
-                <div class="flex-shrink-1 d-sm-inline">
-                    <div>
-                        <form id="form_camera_select" onSubmit="return false;">
-                            <div class="form-group row">
-                                <div class="col-sm-12">
-                                    {{ form_camera_select.CAMERA_SELECT(class='text-warning fw-bold form-select bg-secondary', style='font-size: 12px;') }}
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="text-secondary d-none d-sm-inline" style="font-size:10px">Cameras Available: {{ camera_count }}</div>
-                </div>
+    <!-- Mobile overlay -->
+    <div id="sidebar-overlay" class="tw:fixed tw:inset-0 tw:z-40 tw:bg-black/30 tw:backdrop-blur-sm tw:hidden"></div>
 
-                <ul class="nav nav-pills flex-sm-column flex-row flex-nowrap flex-shrink-1 flex-sm-grow-0 flex-grow-1 mb-sm-auto mb-0 justify-content-center align-items-center align-items-sm-start" id="menu">
-                    <li class="nav-item">
-                        <a href="{{ url_for('indi_allsky.index_view') }}" class="nav-link link-info px-sm-0 px-2">
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/house-fill.svg') }}" width="16" height="16" alt="Latest"><span class="ms-1 d-none d-sm-inline">Latest</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('indi_allsky.image_loop_view') }}" class="nav-link link-info px-sm-0 px-2">
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/repeat.svg') }}" width="16" height="16" alt="Loop"><span class="ms-1 d-none d-sm-inline">Loop</span></a>
-                    </li>
+    <aside id="sidebar"
+        class="tw:h-screen tw:sticky tw:top-0 tw:bg-base-200 tw:text-base-content tw:border-r tw:border-base-content/5 tw:flex tw:flex-col tw:overflow-hidden">
 
-                    <li class="dropdown">
-                        <a href="#" class="nav-link link-info dropdown-toggle px-sm-0 px-1" id="dropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fs-5 bi-bootstrap"></i>
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/collection-play-fill.svg') }}" width="16" height="16" alt="Media">
-                            <span class="ms-1 d-none d-sm-inline">Media</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdown">
-                            <li>
-                                <a href="{{ url_for('indi_allsky.gallery_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/grid-3x2-gap-fill.svg') }}" width="16" height="16" alt="Image Viewer"><span class="ms-1 d-none d-sm-inline">Gallery</span></a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.imageviewer_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/image-fill.svg') }}" width="16" height="16" alt="Image Viewer"><span class="ms-1 d-none d-sm-inline">Images</span></a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.videoviewer_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/film.svg') }}" width="16" height="16" alt="Timelapse Viewer"><span class="ms-1 d-none d-sm-inline">Timelapses</span></a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.mini_videoviewer_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/film.svg') }}" width="16" height="16" alt="Mini Timelapse Viewer"><span class="ms-1 d-none d-sm-inline">Mini-Timelapses</span></a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.latest_panorama_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/aspect-ratio.svg') }}" width="16" height="16" alt="Panorama"><span class="ms-1 d-none d-sm-inline">Panorama</span></a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.panorama_loop_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/repeat.svg') }}" width="16" height="16" alt="Panorama Loop"><span class="ms-1 d-none d-sm-inline">Panorama Loop</span></a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.realtime_keogram_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/input-cursor.svg') }}" width="16" height="16" alt="Realtime Keogram"><span class="ms-1 d-none d-sm-inline">Realtime Keogram</span></a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.longterm_keogram_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/distribute-horizontal.svg') }}" width="16" height="16" alt="Long Term Keogram"><span class="ms-1 d-none d-sm-inline">Long Term Keogram</span></a>
-                            </li>
-                            {% if current_user.is_authenticated or login_disabled %}
-                            <li>
-                                <a href="{{ url_for('indi_allsky.fitsimageviewer_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/image-fill.svg') }}" width="16" height="16" alt="FITS Viewer"><span class="ms-1 d-none d-sm-inline">FITS Viewer</span></a>
-                            </li>
-                            {% endif %}
-                        </ul>
-                    </li>
+        <div class="tw:flex-shrink-0">
+            <div class="tw:px-6 tw:py-6 tw:flex tw:items-center tw:justify-center">
+                <a href="{{ url_for('indi_allsky.index_view') }}" class="tw:no-underline">
+                    <img src="{{ url_for('indi_allsky.static', filename='images/logo_outline_full.png') }}"
+                        class="tw:w-44 tw:h-auto tw:transition-transform hover:tw:scale-105" alt="indi-allsky">
+                </a>
+            </div>
 
-                    <li class="dropdown">
-                        <a href="#" class="nav-link link-info dropdown-toggle px-sm-0 px-1" id="dropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fs-5 bi-bootstrap"></i>
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/info-square-fill.svg') }}" width="16" height="16" alt="Info">
-                            <span class="ms-1 d-none d-sm-inline">Info</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdown">
-                            <li>
-                                <a href="{{ url_for('indi_allsky.sqm_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/cloud-moon-fill.svg') }}" width="16" height="16" alt="SQM"><span class="ms-1 d-none d-sm-inline">SQM</span></a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.chart_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/graph-up.svg') }}" width="16" height="16" alt="Charts"><span class="ms-1 d-none d-sm-inline">Charts</span></a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.sensor_panel_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/journal-medical.svg') }}" width="16" height="16" alt="Sensor Panel"><span class="ms-1 d-none d-sm-inline">Sensor Panel</span></a>
-                            </li>
-                            {% if current_user.is_authenticated or login_disabled %}
-                            <li>
-                                <a href="{{ url_for('indi_allsky.darks_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/subtract.svg') }}" width="16" height="16" alt="Dark Library"><span class="ms-1 d-none d-sm-inline">Dark Library</span></a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.rolling_adu_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/info-square.svg') }}" width="16" height="16" alt="ADU History"><span class="ms-1 d-none d-sm-inline">ADU History</span></a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.image_lag_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/stopwatch.svg') }}" width="16" height="16" alt="Image Lag"><span class="ms-1 d-none d-sm-inline">Image Lag</span></a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.filespaceusage_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/flag.svg') }}" width="16" height="16" alt="File Space Usage"><span class="ms-1 d-none d-sm-inline">File Space Usage</span></a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.camera_lens_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/camera-fill.svg') }}" width="16" height="16" alt="Camera Info"><span class="ms-1 d-none d-sm-inline">Camera Info</span></a>
-                            </li>
-                            {% endif %}
-                        </ul>
-                    </li>
-
-                    <li class="dropdown">
-                        <a href="#" class="nav-link link-info dropdown-toggle px-sm-0 px-1" id="dropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fs-5 bi-bootstrap"></i>
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/tools.svg') }}" width="16" height="16" alt="Tools">
-                            <span class="ms-1 d-none d-sm-inline">Tools</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdown">
-                            <li>
-                                <a href="{{ url_for('indi_allsky.virtualsky_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/globe2.svg') }}" width="16" height="16" alt="VirtualSky"><span class="ms-1 d-none d-sm-inline">VirtualSky</span></a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.camera_simulator_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/circle.svg') }}" width="16" height="16" alt="Camera Simulator"><span class="ms-1 d-none d-sm-inline">Camera Simulator</span></a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.astropanel_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/newspaper.svg') }}" width="16" height="16" alt="Astropanel"><span class="ms-1 d-none d-sm-inline">Astropanel</span></a>
-                            </li>
-                            {% if current_user.is_authenticated or login_disabled %}
-                            <li>
-                                <a href="{{ url_for('indi_allsky.generate_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/plus-square-dotted.svg') }}" width="16" height="16" alt="Generate"><span class="ms-1 d-none d-sm-inline">Generate</span></a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.focus_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/stars.svg') }}" width="16" height="16" alt="Focus"><span class="ms-1 d-none d-sm-inline">Focus</span></a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.image_processing_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/magic.svg') }}" width="16" height="16" alt="FITS Processing"><span class="ms-1 d-none d-sm-inline">Process FITS</span> </a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.image_circle_helper_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/circle.svg') }}" width="16" height="16" alt="Image Circle Helper"><span class="ms-1 d-none d-sm-inline">Image Circle Helper</span> </a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.mask_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/layers.svg') }}" width="16" height="16" alt="Mask"><span class="ms-1 d-none d-sm-inline">Mask Base</span> </a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.log_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/terminal.svg') }}" width="16" height="16" alt="Log"><span class="ms-1 d-none d-sm-inline">Capture Log</span> </a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.log_indiserver_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/terminal.svg') }}" width="16" height="16" alt="Log"><span class="ms-1 d-none d-sm-inline">indiserver Log</span> </a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.support_info_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/info-circle.svg') }}" width="16" height="16" alt="Log"><span class="ms-1 d-none d-sm-inline">Support Info</span> </a>
-                            </li>
-                            {% endif %}
-                        </ul>
-                    </li>
-
-
-                    {% if current_user.is_authenticated or login_disabled %}
-                    <li class="dropdown">
-                        <a href="#" class="nav-link link-info dropdown-toggle px-sm-0 px-1" id="dropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fs-5 bi-bootstrap"></i>
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/gear-fill.svg') }}" width="16" height="16" alt="System">
-                            <span class="ms-1 d-none d-sm-inline">System</span>
-                        </a>
-
-                        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdown">
-                            <li>
-                                <a href="{{ url_for('indi_allsky.config_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/toggles.svg') }}" width="16" height="16" alt="Config"><span class="ms-1 d-none d-sm-inline">Config</span> </a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.network_manager_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/wifi.svg') }}" width="16" height="16" alt="Log"><span class="ms-1 d-none d-sm-inline">Network</span> </a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.drive_manager_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/hdd-fill.svg') }}" width="16" height="16" alt="Log"><span class="ms-1 d-none d-sm-inline">Drives</span> </a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.manual_gpio_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/lightning-charge-fill.svg') }}" width="16" height="16" alt="Log"><span class="ms-1 d-none d-sm-inline">GPIO Control</span> </a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.system_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/gear-fill.svg') }}" width="16" height="16" alt="System Info"><span class="ms-1 d-none d-sm-inline">System Info</span> </a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('indi_allsky.shell_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/terminal-fill.svg') }}" width="16" height="16" alt="Shell"><span class="ms-1 d-none d-sm-inline">Shell</span> </a>
-                            </li>
-                        </ul>
-                    </li>
-                    {% endif %}
-
-                </ul>
-
-                <div class="py-sm-4 mt-sm-auto ms-auto ms-sm-0 flex-shrink-1 d-none d-sm-inline">
-                    <hr>
-                    <div id="status_text">{{ status_text|safe }}</div>
-                    <hr>
-                    <div>{{ username_text|safe }}</div>
+            <div class="tw:px-6 tw:py-2 tw:mb-2">
+                <form id="form_camera_select" onSubmit="return false;">
+                    {{ form_camera_select.CAMERA_SELECT(class='tw:select tw:select-sm tw:w-full tw:font-semibold tw:text-xs tw:bg-base-300 tw:border tw:border-base-content/10 tw:focus:outline-none tw:focus:border-base-content/20 tw:transition-all') }}
+                </form>
+                <div class="tw:text-[0.625rem] tw:uppercase tw:tracking-wider tw:opacity-40 tw:mt-2 tw:px-1 tw:font-semibold tw:whitespace-nowrap">
+                    Cameras Available: {{ camera_count }}
                 </div>
             </div>
         </div>
-        <div class="col-xl col-9 d-flex flex-column h-sm-100">
-            <main class="row vh-100 overflow-auto">
-                <div class="col pt-4">
-                  {% block content %}{% endblock %}
-                </div>
-            </main>
-            <!---
-            <footer class="row bg-light py-4 mt-auto">
-                <div class="col"> Footer content here... </div>
-            </footer>
-            -->
+
+        <div class="tw:grow tw:overflow-y-auto tw:px-4 tw:pb-4">
+            <ul class="tw:menu tw:w-full tw:p-0 tw:flex-nowrap tw:gap-1">
+
+                <li class="tw:w-full">
+                    <a href="{{ url_for('indi_allsky.index_view') }}"
+                        class="tw:flex tw:items-center tw:w-full tw:px-4 tw:py-2 tw:bg-base-200/50 hover:tw:bg-base-300/80 tw:rounded-[var(--radius-selector)] tw:border tw:border-base-content/10 tw:text-base-content/70 hover:tw:text-base-content tw:transition-all tw:duration-200">
+                        <div class="tw:flex tw:items-center tw:gap-3">
+                            <i class="tw:icon-[lucide--home] tw:w-4 tw:h-4 tw:opacity-50"></i>
+                            <span class="tw:font-medium tw:text-[0.875rem]">Latest</span>
+                        </div>
+                    </a>
+                </li>
+
+                <li class="tw:w-full">
+                    <a href="{{ url_for('indi_allsky.image_loop_view') }}"
+                        class="tw:flex tw:items-center tw:w-full tw:px-4 tw:py-2 tw:bg-base-200/50 hover:tw:bg-base-300/80 tw:rounded-[var(--radius-selector)] tw:border tw:border-base-content/10 tw:text-base-content/70 hover:tw:text-base-content tw:transition-all tw:duration-200">
+                        <div class="tw:flex tw:items-center tw:gap-3">
+                            <i class="tw:icon-[lucide--infinity] tw:w-4 tw:h-4 tw:opacity-50"></i>
+                            <span class="tw:font-medium tw:text-[0.875rem]">Loop</span>
+                        </div>
+                    </a>
+                </li>
+
+                {% for group_id, group_label, group_icon, group_items in [
+                ('media', 'Media', 'library', [
+                ('indi_allsky.gallery_view', 'Gallery', false),
+                ('indi_allsky.imageviewer_view', 'Images', false),
+                ('indi_allsky.videoviewer_view', 'Timelapses', false),
+                ('indi_allsky.mini_videoviewer_view', 'Mini Timelapses', false),
+                ('indi_allsky.latest_panorama_view', 'Panorama', false),
+                ('indi_allsky.panorama_loop_view', 'Panorama Loop', false),
+                ('indi_allsky.realtime_keogram_view', 'Realtime Keogram', false),
+                ('indi_allsky.longterm_keogram_view', 'Long Term Keogram', false),
+                ('indi_allsky.fitsimageviewer_view', 'FITS Viewer', true)
+                ]),
+                ('info', 'Info', 'info', [
+                ('indi_allsky.sqm_view', 'SQM', false),
+                ('indi_allsky.chart_view', 'Charts', false),
+                ('indi_allsky.sensor_panel_view', 'Sensor Panel', false),
+                ('indi_allsky.darks_view', 'Dark Library', true),
+                ('indi_allsky.rolling_adu_view', 'ADU History', true),
+                ('indi_allsky.image_lag_view', 'Image Lag', true),
+                ('indi_allsky.filespaceusage_view', 'File Space Usage', true),
+                ('indi_allsky.camera_lens_view', 'Camera Info', true)
+                ]),
+                ('tools', 'Tools', 'wrench', [
+                ('indi_allsky.virtualsky_view', 'VirtualSky', false),
+                ('indi_allsky.camera_simulator_view', 'Camera Simulator', false),
+                ('indi_allsky.astropanel_view', 'Astropanel', false),
+                ('indi_allsky.generate_view', 'Generate', true),
+                ('indi_allsky.focus_view', 'Focus', true),
+                ('indi_allsky.image_processing_view', 'Process FITS', true),
+                ('indi_allsky.image_circle_helper_view', 'Image Circle Helper', true),
+                ('indi_allsky.mask_view', 'Mask Base', true),
+                ('indi_allsky.log_view', 'Capture Log', true),
+                ('indi_allsky.log_indiserver_view', 'indiserver Log', true),
+                ('indi_allsky.support_info_view', 'Support Info', true)
+                ]),
+                ('system', 'System', 'settings', [
+                ('indi_allsky.config_view', 'Config', true),
+                ('indi_allsky.network_manager_view', 'Network', true),
+                ('indi_allsky.drive_manager_view', 'Drives', true),
+                ('indi_allsky.manual_gpio_view', 'GPIO Control', true),
+                ('indi_allsky.system_view', 'System Info', true),
+                ('indi_allsky.shell_view', 'Shell', true)
+                ])
+                ] %}
+                <li class="tw:w-full">
+                    <details class="tw:w-full tw:group [&_summary::-webkit-details-marker]:tw:hidden"
+                        id="menu-group-{{ group_id }}">
+                        <summary
+                            class="tw:flex tw:items-center tw:justify-between tw:w-full tw:px-4 tw:py-2 tw:bg-base-200/50 hover:tw:bg-base-300/80 tw:rounded-[var(--radius-selector)] tw:cursor-pointer tw:list-none tw:border tw:border-base-content/10 tw:text-base-content/70 hover:tw:text-base-content tw:transition-all">
+                            <div class="tw:flex tw:items-center tw:gap-3">
+                                <i class="tw:icon-[lucide--{{ group_icon }}] tw:w-4 tw:h-4 tw:opacity-50"></i>
+                                <span class="tw:font-medium tw:text-[0.875rem]">{{ group_label }}</span>
+                            </div>
+                        </summary>
+                        <ul
+                            class="tw:mt-1.5 tw:pl-4 tw:ml-4 tw:border-l tw:border-base-content/15 tw:flex tw:flex-col tw:gap-1">
+                            {% for endpoint, label, needs_auth in group_items %}
+                            {% if not needs_auth or (current_user.is_authenticated or login_disabled) %}
+                            <li>
+                                <a href="{{ url_for(endpoint) }}"
+                                    class="tw:block tw:py-1.5 tw:px-3 tw:text-sm tw:text-base-content/70 hover:tw:text-base-content hover:tw:bg-base-content/5 tw:rounded-[var(--radius-selector)] tw:transition-all">
+                                    {{ label }}
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </details>
+                </li>
+                {% endfor %}
+            </ul>
         </div>
-    </div>
+        <div class="tw:p-4 tw:bg-base-200/60 tw:border-t tw:border-base-content/10 tw:flex-shrink-0">
+            <div id="status_text"
+                class="tw:text-[0.781rem] tw:opacity-85 tw:grid tw:grid-cols-[auto_1fr] tw:gap-x-3 tw:mb-3 [&_br]:tw:hidden [&_b]:tw:font-semibold [&_b]:tw:text-base-content/70 [&_b]:after:tw:content-[':']">
+                {{ status_text|safe }}
+            </div>
+            <div class="tw:divider tw:my-2.5 tw:opacity-20"></div>
+            <div class="tw:flex tw:gap-2 tw:w-full tw:items-center">
+                <a href="{{ url_for('auth_indi_allsky.login_view') if not current_user.is_authenticated else url_for('indi_allsky.user_view') }}"
+                    class="tw:btn tw:btn-sm tw:flex-1 tw:font-semibold tw:text-xs tw:border tw:border-base-content/20 tw:bg-transparent hover:tw:bg-base-content/5 tw:no-underline tw:flex tw:items-center tw:justify-center">
+                    {{ current_user.username if current_user.is_authenticated else 'Login' }}
+                </a>
+                <label class="tw:flex tw:cursor-pointer tw:gap-2 tw:items-center">
+                    <i class="tw:icon-[lucide--moon] tw:w-4 tw:h-4 tw:opacity-40"></i>
+                    <input type="checkbox" value="light" class="tw:toggle tw:toggle-sm tw:theme-controller"
+                        id="theme-toggle" />
+                    <i class="tw:icon-[lucide--sun] tw:w-4 tw:h-4 tw:opacity-40"></i>
+                </label>
+            </div>
+        </div>
+    </aside>
 
-<div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h1 class="modal-title fs-5" id="notificationLabel"></h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div id="notification_date"></div>
-        <br>
-        <div id="notification_body"></div>
-      </div>
-      <div class="modal-footer">
-        <button id="ack_button" type="button" class="btn btn-primary" data-bs-dismiss="modal">Acknowledge</button>
-      </div>
-    </div>
-  </div>
-</div>
+    <main class="tw:flex-1 tw:h-screen tw:flex tw:flex-col tw:bg-base-100 tw:min-w-0">
+        <!-- Sticky page header -->
+        <div
+            class="tw:flex-shrink-0 tw:bg-base-100 tw:border-b tw:border-base-content/10 tw:px-8 tw:py-4 tw:flex tw:items-center tw:gap-3 tw:sticky tw:top-0 tw:z-30">
+            <button id="toggle-btn" onclick="toggleSidebar()" aria-label="Toggle sidebar"
+                class="tw:btn tw:btn-sm tw:btn-ghost tw:border tw:border-base-content/10 tw:p-2 tw:flex-shrink-0 hover:tw:bg-base-content/5 tw:cursor-pointer active:tw:scale-95 tw:transition-all">
+                <i class="tw:icon-[lucide--menu] tw:w-[18px] tw:h-[18px]"></i>
+            </button>
+            <h1 class="tw:text-3xl tw:font-black tw:tracking-tight">{% block header_title %}{{ page_title }}{% endblock %}</h1>
+        </div>
 
-</div>
+        <!-- Scrollable content -->
+        <div class="tw:flex-1 tw:overflow-y-auto tw:p-8 tw:flex tw:flex-col tw:gap-6">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
 
-<script>
-var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-  return new bootstrap.Tooltip(tooltipTriggerEl)
-})
+    <!-- System Notification Component -->
+    <dialog id="notificationModal" class="tw:modal">
+        <div class="tw:modal-box tw:border tw:border-base-content/10 tw:shadow-2xl tw:bg-base-200">
+            <div class="tw:flex tw:items-center tw:gap-3 tw:mb-4">
+                <div class="tw:p-2 tw:bg-primary/10 tw:text-primary tw:rounded-[var(--radius-box)]">
+                    <i class="tw:icon-[lucide--bell] tw:w-5 tw:h-5"></i>
+                </div>
+                <div>
+                    <h3 class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-widest tw:m-0" id="notificationLabel">
+                    </h3>
+                    <div id="notification_date" class="tw:text-[0.625rem] tw:opacity-40 tw:font-mono tw:mt-0.5"></div>
+                </div>
+            </div>
 
-$.ajaxSetup({
-    beforeSend: function(xhr, settings) {
-        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
-    }
-});
+            <p id="notification_body"
+                class="tw:text-sm tw:leading-relaxed tw:bg-base-300 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/5">
+            </p>
 
-function ackNotification(notice_id, onDone, onError) {
-    postData = {
-        'camera_id' : camera_id,
-        'ack_id'    : notice_id,
-    };
+            <div class="tw:modal-action">
+                <form method="dialog" class="tw:w-full">
+                    <button id="ack_button"
+                        class="tw:btn tw:btn-primary tw:btn-sm tw:btn-block  tw:font-bold tw:uppercase tw:text-xs">Acknowledge</button>
+                </form>
+            </div>
+        </div>
+    </dialog>
 
-    if(!onDone)onDone=function(){};
-    if(!onError)onError=function(){};
+    <script>
+        const MOBILE_BREAKPOINT = 1000;
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        let isMobile = window.innerWidth < MOBILE_BREAKPOINT;
+        var camera_id = {{ camera_id|default(0) }};
 
-    $.ajax({
-        type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_notification_view') }}",
-        contentType: "application/json",
-        data: JSON.stringify(postData),
-        success: function(rdata){
-            onDone(rdata);
-        },
-        error: function(rdata){
-            onError(rdata);
-        },
-    });
-}
+        function setSidebarCollapsed(collapsed) {
+            sidebar.classList.toggle('collapsed', collapsed);
+            overlay.style.display = (!collapsed && isMobile) ? 'block' : 'none';
+        }
 
+        function toggleSidebar() {
+            const willCollapse = !sidebar.classList.contains('collapsed');
+            setSidebarCollapsed(willCollapse);
+        }
 
-function loadNotification() {
-    var getData={'camera_id' : camera_id};
+        const resizeObserver = new ResizeObserver(() => {
+            const wasDesktop = !isMobile;
+            isMobile = window.innerWidth < MOBILE_BREAKPOINT;
+            if (!wasDesktop && !isMobile) setSidebarCollapsed(false);
+            else if (wasDesktop && isMobile) setSidebarCollapsed(true);
+            if (!sidebar.classList.contains('collapsed')) overlay.style.display = isMobile ? 'block' : 'none';
+        });
 
-    $.ajax({
-        type: "GET",
-        url: "{{ url_for('indi_allsky.ajax_notification_view') }}",
-        contentType: "application/json",
-        data: getData,
-        success: function(rdata){
-            showNotification(rdata);
-        },
-        error: function(rdata){
-        },
-    });
-}
+        resizeObserver.observe(document.body);
+        overlay.addEventListener('click', () => setSidebarCollapsed(true));
+        setSidebarCollapsed(isMobile);
 
-function showNotification(data) {
-    if ( data.id == 0 ) {
-        return;
-    };
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
+            }
+        });
 
-    $("#ack_button").off();
-    $("#ack_button").on("click", function() {
-        // show next notification (not working)
-        ackNotification(data.id, showNotification);
-    });
+        function ackNotification(notice_id, onDone, onError) {
+            var postData = {
+                'camera_id': camera_id,
+                'ack_id': notice_id
+            };
+            if(!onDone)onDone=function(){};
+            if(!onError)onError=function(){};
 
-    notification_modal = $("#notificationModal");
-    notificationTitle = notificationModal.querySelector('.modal-title');
-    notificationDate = notificationModal.querySelector('#notification_date');
-    notificationBody = notificationModal.querySelector('#notification_body');
+            $.ajax({
+                type: "POST",
+                url: "{{ url_for('indi_allsky.ajax_notification_view') }}",
+                contentType: "application/json",
+                data: JSON.stringify(postData),
+                success: function (rdata) { onDone(rdata); },
+                error: function (rdata) { onError(rdata); },
+            });
+        }
 
-    notificationTitle.textContent = "Notification: " + data.category;
-    notificationDate.textContent = "Date: " + data.createDate;
-    notificationBody.textContent = data.notification;
+        function loadNotification() {
+            var getData = { 'camera_id': camera_id };
+            $.ajax({
+                type: "GET",
+                url: "{{ url_for('indi_allsky.ajax_notification_view') }}",
+                contentType: "application/json",
+                data: getData,
+                success: function (rdata) { showNotification(rdata); },
+            });
+        }
 
-    notification_modal.modal('show');
-}
+        function showNotification(data) {
+            if (!data || data.id == 0) return;
+            $("#ack_button").off().on("click", function () { ackNotification(data.id, showNotification); });
+            const modal = document.getElementById("notificationModal");
+            document.getElementById('notificationLabel').textContent = data.category;
+            document.getElementById('notification_date').textContent = data.createDate;
+            document.getElementById('notification_body').textContent = data.notification;
+            modal.showModal();
+        }
 
+        function changeCamera() {
+            var postData = { 'camera_id': $("#CAMERA_SELECT").val() };
+            $.ajax({
+                type: "POST",
+                url: "{{ url_for('indi_allsky.ajax_select_camera_view') }}",
+                contentType: "application/json",
+                data: JSON.stringify(postData),
+                success: function () { location.reload(); },
+            });
+        }
 
-function changeCamera() {
-    postData = {
-        'camera_id' : $("#CAMERA_SELECT").val()
-    };
+        function getStatusText() {
+            $.ajax({
+                type: "GET",
+                url: "{{ url_for('indi_allsky.ajax_status_update_view') }}",
+                data: { 'camera_id': camera_id },
+                success: function(rdata) { updateStatus(rdata); },
+            });
+        }
 
-    var onDone=function(){
-        location.reload();
-    };
+        function updateStatus(data) {
+            let html = data['status_text'];
+            if (html) {
+                html = html.replace(/class="text-success"/g, 'class="tw:text-success"');
+                html = html.replace(/class="text-danger"/g, 'class="tw:text-error"');
+                html = html.replace(/class="text-error"/g, 'class="tw:text-error"');
+                $("#status_text").html(html);
+            }
+            setTimeout(getStatusText, 60000);
+        }
 
+        window.applyAllskyTheme = function() {
+            var mode = localStorage.getItem('allsky-theme-mode') || 'dark';
+            var lightT = localStorage.getItem('allsky-light-theme') || 'fantasy';
+            var darkT = localStorage.getItem('allsky-dark-theme') || 'forest';
 
-    $.ajax({
-        type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_select_camera_view') }}",
-        contentType: "application/json",
-        data: JSON.stringify(postData),
-        success: function(rdata){
-            onDone(rdata);
-        },
-        error: function(rdata){
-            onError(rdata);
-        },
-    });
-}
+            var activeTheme = (mode === 'light') ? lightT : darkT;
+            $('html').attr('data-theme', activeTheme);
 
+            // Sidebar toggle (#theme-toggle): checked = light mode
+            $('#theme-toggle').prop('checked', mode === 'light');
+        };
 
-function getStatusText() {
-    var getData={'camera_id' : camera_id};
+        $(document).ready(function () {
+            window.applyAllskyTheme();
 
-    $.ajax({
-        type: "GET",
-        url: "{{ url_for('indi_allsky.ajax_status_update_view') }}",
-        contentType: "application/json",
-        data: getData,
-        success: function(rdata){
-            updateStatus(rdata);
-        },
-        error: function(rdata){
-        },
-    });
-}
+            $('#theme-toggle').on('change', function () {
+                var newMode = $(this).is(':checked') ? 'light' : 'dark';
+                localStorage.setItem('allsky-theme-mode', newMode);
+                window.applyAllskyTheme();
+            });
 
+            // Dismiss details dropdown dialogs when clicking outside
+            $(document).on("click", function(e) {
+                var details = $("details[id$='details']");
+                details.each(function() {
+                    var el = $(this);
+                    if (el.prop("open") && !el.is(e.target) && el.has(e.target).length === 0) {
+                        el.removeAttr("open");
+                    }
+                });
+            });
 
-function updateStatus(data) {
-    console.log('Update status');
-    $("#status_text").html(data['status_text']);
-    setTimeout(getStatusText, 101000);
-}
+            loadNotification();
+            getStatusText();
+            $("#CAMERA_SELECT").on("change", changeCamera);
+        });
+    </script>
+</body>
 
-$( document ).ready(function() {
-    // Load notifications when ready
-    loadNotification({'camera_id' : camera_id});
-
-    setTimeout(getStatusText, 101000);  // prime number
-
-    $("#CAMERA_SELECT").on("change", function() {
-        changeCamera();
-    });
-
-});
-
-</script>
-  </body>
 </html>

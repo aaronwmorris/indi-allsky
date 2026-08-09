@@ -3,152 +3,64 @@
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
 {% block head %}
-<style>
-</style>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
-
 {% endblock %}
 
 {% block content %}
+<div class="tw:w-full tw:p-4 tw:space-y-6">
 
-    <hr>
-
-    <div class="row">
-        <div class="col-2">Name</div>
-        <div class="col-4">{{ camera.name }}</div>
+    <div class="tw:alert tw:alert-info tw:py-3 tw:text-xs tw:rounded-[var(--radius-box)] shadow-sm">
+        <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
+        <span>The indi-allsky service requires a reload after parameter changes. Ensure the camera database entry is updated.</span>
     </div>
 
-    <div class="row">
-        <div class="col-2">Name Alt 1</div>
-        <div class="col-4">{{ camera.name_alt1 }}</div>
+    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-6">
+        
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-5">
+                <h2 class="tw:card-title tw:text-xs tw:uppercase tw:tracking-widest tw:mb-4">Camera Specs</h2>
+                <div class="tw:space-y-3">
+                    {% for label, val in [("Name", camera.name), ("Driver", camera.driver), ("Resolution", camera.width ~ " x " ~ camera.height), ("Pixels", ("%0.2f"|format(camera.pixelSize | float)) ~ "µm"), ("CFA", camera_cfa), ("Bits", camera.bits | int)] %}
+                    <div class="tw:flex tw:justify-between tw:border-b tw:border-base-300/50 tw:pb-1">
+                        <span class="tw:text-[0.625rem] tw:text-base-content/60">{{ label }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-mono tw:font-bold">{{ val }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-5">
+                <h2 class="tw:card-title tw:text-xs tw:uppercase tw:tracking-widest tw:mb-4">Lens Configuration</h2>
+                <div class="tw:space-y-3">
+                    {% for label, val in [("Owner", owner), ("Lens", camera.lensName), ("Focal Length", ("%0.2f"|format(camera.lensFocalLength | float)) ~ "mm"), ("Aperture", ("%0.2f"|format(lensAperture | float)) ~ "mm"), ("Focal Ratio", "ƒ/" ~ ("%0.2f"|format(camera.lensFocalRatio | float)))] %}
+                    <div class="tw:flex tw:justify-between tw:border-b tw:border-base-300/50 tw:pb-1">
+                        <span class="tw:text-[0.625rem] tw:text-base-content/60">{{ label }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-mono tw:font-bold">{{ val }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-5">
+                <h2 class="tw:card-title tw:text-xs tw:uppercase tw:tracking-widest tw:mb-4">Optical Math</h2>
+                <div class="tw:space-y-3">
+                    {% for label, val in [("Arcsec/px", ("%0.2f"|format(arcsec_pixel | float))), ("FoV", ("%0.1f"|format(deg_fov_width | float)) ~ "° x " ~ ("%0.1f"|format(deg_fov_height | float)) ~ "°"), ("Arcsec/µm", ("%0.2f"|format(arcsec_um | float))), ("Deg²/px", ("%0.5f"|format(deg2_px | float)))] %}
+                    <div class="tw:flex tw:justify-between tw:border-b tw:border-base-300/50 tw:pb-1">
+                        <span class="tw:text-[0.625rem] tw:text-base-content/60">{{ label }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-mono tw:font-bold">{{ val }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
     </div>
-
-    <div class="row">
-        <div class="col-2">Name Alt 2</div>
-        <div class="col-4">{{ camera.name_alt2 }}</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">Friendly Name</div>
-        <div class="col-4">{{ camera.friendlyName }}</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">UUID</div>
-        <div class="col-4">{{ camera.uuid }}</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">Driver</div>
-        <div class="col-4">{{ camera.driver }}</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">Resolution</div>
-        <div class="col-4">{{ camera.width }} x {{ camera.height }}</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">Dimensions</div>
-        <div class="col-4">{{ "%0.1f"|format(camera_width_mm | float) }}mm x {{ "%0.1f"|format(camera_height_mm | float) }}mm ({{ "%0.1f"|format(camera_diagonal_mm | float) }}mm diag)</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">Pixels</div>
-        <div class="col-4">{{ "%0.2f"|format(camera.pixelSize | float) }}&micro;m</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">CFA</div>
-        <div class="col-4">{{ camera_cfa }}</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">Bits</div>
-        <div class="col-4">{{ camera.bits | int }}</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">Gain</div>
-        <div class="col-4">{{ "%0.2f"|format(camera.minGain | float) }} - {{ "%0.2f"|format(camera.maxGain | float) }}</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">Binning</div>
-        <div class="col-4">{{ camera.minBinning }} - {{ camera.maxBinning }}</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">Exposure</div>
-        <div class="col-4">{{ "%0.6f"|format(camera.minExposure | float) }} - {{ camera.maxExposure | int }}s</div>
-    </div>
-
-    <hr>
-
-    <div class="row">
-        <div class="col-2">Owner</div>
-        <div class="col-4">{{ owner}}</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">Lens</div>
-        <div class="col-4">{{ camera.lensName }}</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">Focal Length</div>
-        <div class="col-4">{{ "%0.2f"|format(camera.lensFocalLength | float) }}mm</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">Aperture</div>
-        <div class="col-4">{{ "%0.2f"|format(lensAperture | float) }}mm</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">Focal Ratio</div>
-        <div class="col-4">&#402;/{{ "%0.2f"|format(camera.lensFocalRatio | float) }}</div>
-    </div>
-
-    <hr>
-
-    <div class="row">
-        <div class="col-2">Image circle</div>
-        <div class="col-4">{{ image_circle_diameter }}px ({{ "%0.3f"|format(image_circle_diameter_mm | float) }}mm)</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">Arcsec/px</div>
-        <div class="col-4">{{ "%0.2f"|format(arcsec_pixel | float) }}</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">Deg/px</div>
-        <div class="col-4">{{ dms_pixel[0] | int }}&deg; {{ dms_pixel[1] | int }}' {{ dms_pixel[2] | int }}"</div>
-        <div class="col-6">This is only true at the center of the image.  The image becomes more distorted/compressed at the edge of the view.</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">FoV</div>
-        <div class="col-4">{{ "%0.1f"|format(deg_fov_width | float) }}&deg; x {{ "%0.1f"|format(deg_fov_height | float) }}&deg; ({{ "%0.1f"|format(deg_fov_diagonal | float) }}&deg; diag)</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">Arcsec/&micro;m</div>
-        <div class="col-4">{{ "%0.2f"|format(arcsec_um | float) }}</div>
-    </div>
-
-    <div class="row">
-        <div class="col-2">Deg&sup2;/px</div>
-        <div class="col-4">{{ "%0.5f"|format(deg2_px | float) }}</div>
-    </div>
-
-    <hr>
-
-    <div class="row">
-        <div><span class="badge rounded-pill bg-info">Note</span> The indi-allsky service will need to be reloaded if any changes are made to these parameters.  The camera database entry must be updated.</div>
-    <div class="row">
+</div>
 
 {% endblock %}

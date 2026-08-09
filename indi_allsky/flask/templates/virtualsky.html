@@ -4,37 +4,10 @@
 
 {% block head %}
 <meta charset="UTF-8">
-<style>
-#wrapper {
-    position: relative;
-    display: inline-block;
-}
-
-#latest-image {
-    max-width: 100%;
-    max-height: 75vh;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-}
-
-#starmap_container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    overflow: hidden;
-    /* Debugging */
-    /* border: 3px solid red; */
-    /* box-sizing: border-box; */
-}
-
-#starmap {
-    position: relative;
-}
-</style>
 <script src="{{ url_for('indi_allsky.static', filename='virtualsky/stuquery.min.js') }}"></script>
 <script src="{{ url_for('indi_allsky.static', filename='virtualsky/virtualsky.min.js') }}" type="text/javascript"></script>
 <script src="{{ url_for('indi_allsky.static', filename='html2canvas/html2canvas.min.js') }}" type="text/javascript"></script>
+
 <script type="text/javascript">
 var img;
 var json_data = {
@@ -300,143 +273,76 @@ function loadJS(url, data, onDone, onError) {
 {% endblock %}
 
 {% block content %}
-<div class="container h-100">
-<form id="form_virtualsky" onSubmit="return false;">
-    <div class="form-group row" style="font-size:12px">
-        <div class="col-sm-1"></div>
-        <div class="col-sm-1">
-            {{ form_virtualsky.AZIMUTH_ANGLE.label(class='col-form-label') }}
-        </div>
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6 tw:w-full">
 
-        <div class="col-sm-1">
-            {{ form_virtualsky.LATITUDE_OFFSET.label(class='col-form-label') }}
+    <!-- Settings Accordion Drawer -->
+    <div class="tw:collapse tw:collapse-arrow tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-sm tw:rounded-[var(--radius-box)]">
+        <input type="checkbox" id="settings-toggle" class="tw:peer">
+        <div class="tw:collapse-title tw:flex tw:items-center tw:gap-2.5 tw:p-4 tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/70">
+            <i class="tw:icon-[lucide--settings] tw:w-4 tw:h-4"></i>
+            <span>VirtualSky Overlay Controls</span>
         </div>
+        <div class="tw:collapse-content tw:px-6 tw:pb-6">
+            <form id="form_virtualsky" onSubmit="return false;">
+                <div class="tw:space-y-6 tw:pt-2">
+                    
+                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
+                        {% for field in [form_virtualsky.AZIMUTH_ANGLE, form_virtualsky.LATITUDE_OFFSET, form_virtualsky.LONGITUDE_OFFSET] %}
+                        <div class="tw:form-control">
+                            <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ field.label.text }}</span></label>
+                            {{ field(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:text-sm tw:w-full') }}
+                        </div>
+                        {% endfor %}
+                    </div>
 
-        <div class="col-sm-1">
-            {{ form_virtualsky.LONGITUDE_OFFSET.label(class='col-form-label') }}
-        </div>
+                    <div class="tw:grid tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4">
+                        {% for field in [form_virtualsky.IMAGE_CIRCLE_DIAMETER, form_virtualsky.OFFSET_X, form_virtualsky.OFFSET_Y, form_virtualsky.MAGNITUDE] %}
+                        <div class="tw:form-control">
+                            <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ field.label.text }}</span></label>
+                            {{ field(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:text-sm tw:w-full') }}
+                        </div>
+                        {% endfor %}
+                    </div>
 
-        <div class="col-sm-1">
-            {{ form_virtualsky.IMAGE_CIRCLE_DIAMETER.label(class='col-form-label') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_virtualsky.OFFSET_X.label(class='col-form-label') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_virtualsky.OFFSET_Y.label(class='col-form-label') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_virtualsky.MAGNITUDE.label(class='col-form-label') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_virtualsky.CONSTELLATIONS.label(class='col-form-label') }}
-            <div class="form-switch">
-                {{ form_virtualsky.CONSTELLATIONS(class='form-check-input') }}
-            </div>
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_virtualsky.SHOWSTARS.label(class='col-form-label') }}
-            <div class="form-switch">
-                {{ form_virtualsky.SHOWSTARS(class='form-check-input') }}
-            </div>
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_virtualsky.SHOWPLANETS.label(class='col-form-label') }}
-            <div class="form-switch">
-                {{ form_virtualsky.SHOWPLANETS(class='form-check-input') }}
-            </div>
-        </div>
-
-        <div class="col-sm-1">
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/VirtualSky" class="text-decoration-none link-info" target="_blank">VirtualSky Wiki</a></div>
+                    <div class="tw:flex tw:flex-wrap tw:gap-6 tw:items-center tw:pt-2">
+                        {% for field in [form_virtualsky.CONSTELLATIONS, form_virtualsky.SHOWSTARS, form_virtualsky.SHOWPLANETS, form_virtualsky.CONSTELLATIONLABELS, form_virtualsky.SHOWSTARLABELS, form_virtualsky.SHOWPLANETLABELS] %}
+                        <div class="tw:flex tw:items-center tw:gap-2.5">
+                            <input type="checkbox" class="tw:toggle tw:toggle-primary tw:toggle-sm" {{ 'checked' if field.data else '' }} id="{{ field.id }}" name="{{ field.name }}">
+                            <label for="{{ field.id }}" class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/85 tw:cursor-pointer">{{ field.label.text }}</label>
+                        </div>
+                        {% endfor %}
+                        
+                        <a href="https://github.com/aaronwmorris/indi-allsky/wiki/VirtualSky" target="_blank" 
+                           class="tw:btn tw:btn-xs tw:btn-neutral tw:btn-accent-hover tw:gap-1.5 tw:rounded-full tw:no-underline tw:ml-auto">
+                            <i class="tw:icon-[lucide--external-link] tw:w-3 tw:h-3 tw:block"></i> VirtualSky Wiki
+                        </a>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
-    <div class="form-group row">
-        <div class="col-sm-1"></div>
-        <div class="col-sm-1">
-            {{ form_virtualsky.AZIMUTH_ANGLE(class='form-control bg-secondary') }}
+    <!-- Planetarium Map Canvas and Download Row -->
+    <div class="tw:text-center tw:space-y-4">
+        <div id="message" class="tw:flex tw:items-center tw:justify-center tw:gap-2.5 tw:text-xs tw:text-base-content/50">
+            <span class="tw:loading tw:loading-spinner tw:loading-xs tw:text-info"></span> Loading Sky Map...
+        </div>
+        
+        <div class="tw:w-full tw:alert tw:alert-info tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm tw:max-w-xl tw:mx-auto">
+            <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
+            <span>Calibration settings must be configured under <code class="tw:bg-neutral-content/10 tw:font-mono tw:px-1.5 tw:py-0.5 tw:rounded">Config -> Location</code></span>
         </div>
 
-        <div class="col-sm-1">
-            {{ form_virtualsky.LATITUDE_OFFSET(class='form-control bg-secondary') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_virtualsky.LONGITUDE_OFFSET(class='form-control bg-secondary') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_virtualsky.IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_virtualsky.OFFSET_X(class='form-control bg-secondary') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_virtualsky.OFFSET_Y(class='form-control bg-secondary') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_virtualsky.MAGNITUDE(class='form-control bg-secondary') }}
-        </div>
-
-        <div class="col-sm-1" style="font-size:12px">
-            {{ form_virtualsky.CONSTELLATIONLABELS.label(class='col-form-label') }}
-            <div class="form-switch">
-                {{ form_virtualsky.CONSTELLATIONLABELS(class='form-check-input') }}
-            </div>
-        </div>
-
-        <div class="col-sm-1" style="font-size:12px">
-            {{ form_virtualsky.SHOWSTARLABELS.label(class='col-form-label') }}
-            <div class="form-switch">
-                {{ form_virtualsky.SHOWSTARLABELS(class='form-check-input') }}
-            </div>
-        </div>
-
-        <div class="col-sm-1" style="font-size:12px">
-            {{ form_virtualsky.SHOWPLANETLABELS.label(class='col-form-label') }}
-            <div class="form-switch">
-                {{ form_virtualsky.SHOWPLANETLABELS(class='form-check-input') }}
-            </div>
-        </div>
-    </div>
-</form>
-
-    <hr>
-
-    <div class="row">
-        <div class="text-muted text-center" id="message">Loading...</div>
-    </div>
-    <div class="row align-items-center">
-        <div class="col-12 text-center" style="font-size:10px">
-            Latitude / Longitude / Azimuth / Image Circle / Offsets must be correctly configured under Config -> Location [tab]
-        </div>
-    </div>
-    <div class="row align-items-center">
-        <div class="col-12 text-center">
-          <div id="wrapper">
-            <img id="latest-image">
-            <div id="starmap_container">
+        <div id="wrapper" class="tw:relative tw:bg-neutral-950 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300/40 tw:overflow-hidden tw:shadow-2xl">
+            <img id="latest-image" class="tw:w-full tw:h-auto tw:object-contain" alt="Live Allsky View">
+            <div id="starmap_container" class="tw:absolute tw:inset-0">
                 <div id="starmap"></div>
             </div>
-          </div>
         </div>
-    </div>
-    <div class="row align-items-center">
-        <div class="col-12 text-center">
-          <div style="margin-top: 20px;">
-            <span id="download" class="badge pill bg-info text-dark" style="cursor: pointer;">Download</span>
-          </div>
-        </div>
+
+        <button id="download" class="tw:btn tw:btn-sm tw:btn-info tw:btn-outline tw:h-11 tw:px-8 tw:mt-4 tw:rounded-[var(--radius-box)] shadow-sm tw:gap-2">
+            <i class="tw:icon-[lucide--download] tw:w-4 tw:h-4 tw:block"></i> Download Map Data
+        </button>
     </div>
 </div>
 

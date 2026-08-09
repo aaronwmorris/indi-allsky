@@ -4,15 +4,6 @@
 
 {% block head %}
 <meta charset="UTF-8">
-<style>
-.fit {
-    max-width: 100%;
-    max-height: 80vh;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-}
-</style>
 <script>
 var camera_id = {{ camera_id }};
 var url = '{{ mask_image_uri }}';
@@ -20,47 +11,61 @@ var url = '{{ mask_image_uri }}';
 {% endblock %}
 
 {% block content %}
-<div class="container h-100">
-    <div class="row h-100">
-        <div class="col-12 text-center">
-            <div style="font-size:10px">
-                This image is the original camera output.  It is not rotated, flipped, or cropped.
-            </div>
+<div class="tw:w-full tw:min-h-[70vh] tw:flex tw:items-center tw:justify-center tw:p-4 sm:tw:p-6">
+    <div class="tw:w-full tw:max-w-4xl tw:mx-auto tw:text-center">
+        
+        <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50 tw:mb-4">
+            This image is the original camera output. It is not rotated, flipped, or cropped.
+        </div>
 
-            <img id="mask_img" class="fit">
+        <div class="tw:card tw:bg-base-300 tw:border tw:border-base-300 tw:shadow-2xl tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:mb-4">
+            <div class="tw:card-body tw:p-3 tw:flex tw:justify-center tw:items-center tw:bg-neutral-950/40 min-tw:h-[300px]">
+                
+                <img id="mask_img" 
+                     class="tw:max-w-full tw:h-auto tw:max-h-[75vh] tw:rounded-[var(--radius-box)] tw:shadow-md tw:object-contain"
+                     onerror="this.style.display='none'; document.getElementById('image-fallback-placeholder').classList.remove('tw:hidden');"
+                     alt="Allsky Mask Source Viewport">
 
-            <div style="font-size:10px">
-                <span>Generated: {{ mask_date }}</span>
-            </div>
+                <div id="image-fallback-placeholder" class="tw:hidden tw:flex tw:flex-col tw:items-center tw:gap-2 tw:py-12 tw:text-base-content/40">
+                    <span class="tw:loading tw:loading-spinner tw:loading-md tw:text-primary/60"></span>
+                    <span class="tw:text-xs tw:font-semibold tw:uppercase tw:tracking-widest">Awaiting Active Stream Capture...</span>
+                </div>
 
-            <div>
-                <span id="mask_download"></span>
             </div>
         </div>
+
+        <div class="tw:flex tw:flex-col sm:tw:flex-row tw:justify-between tw:items-center tw:gap-3 tw:px-2">
+            
+            <div class="tw:text-[0.6875rem] tw:font-medium tw:text-base-content/60">
+                <span class="tw:badge tw:badge-neutral tw:border-base-300 tw:px-2.5 tw:py-2 tw:font-mono tw:text-[0.625rem] tw:tracking-tight">
+                    Generated: {{ mask_date }}
+                </span>
+            </div>
+
+            <div id="mask_download" class="tw:inline-flex tw:items-center">
+                </div>
+
+        </div>
+
     </div>
 </div>
+
 <script>
 function init() {
     $('#mask_img').attr('src', url + '?' + new Date().getTime());
 
     $('#mask_download').html(
         $('<a />', {
-            'href'   : $('#mask_img').attr('src'),
-            'rel'    : 'noopener noreferrer',
+            'href'     : $('#mask_img').attr('src'),
+            'rel'      : 'noopener noreferrer',
             'download' : 'mask_base.png',
-        }).html(
-            $('<span />', {
-                'text'  : 'Download Mask Base',
-                'class' : "badge pill bg-info text-dark",
-            })
-        )
+            'class'    : 'tw:btn tw:btn-sm tw:btn-info tw:gap-2 tw:no-underline',
+        }).html('<i class="tw:icon-[lucide--download] tw:w-4 tw:h-4"></i> Download Mask Base')
     );
 }
 
 $( document ).ready(function() {
     init();
 });
-
 </script>
-
 {% endblock %}

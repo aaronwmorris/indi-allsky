@@ -1,0 +1,402 @@
+<div class="tab-pane fade" id="nav-devices" role="tabpanel" aria-labelledby="nav-devices-tab">
+    <div class="tw:flex tw:flex-col tw:gap-6">
+
+        <div class="tw:alert tw:alert-info tw:py-2.5 tw:text-xs tw:rounded-[var(--radius-box)] shadow-sm">
+            <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
+            <span>Hardware Device support requires Python GPIO modules. Sensor units follow the <a href="#camera-TEMP_DISPLAY" class="tw:link tw:link-info tw:no-underline">Temperature Display</a> setting.</span>
+        </div>
+
+        <!-- Manual & Generic GPIO Controls Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <div class="tw:flex tw:items-center tw:justify-between">
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Manual & Generic GPIO Relays</span>
+                    <a href="{{ url_for('indi_allsky.manual_gpio_view') }}" class="tw:link tw:link-info tw:text-xs tw:no-underline">Manual GPIO View</a>
+                </div>
+
+                <!-- Manual GPIO Class & Pins -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MANUAL_GPIO__A_CLASSNAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Manual GPIO Driver</span>
+                    </div>
+                    <div class="md:tw:col-span-3 tw:flex tw:flex-col">
+                        {{ form_config.MANUAL_GPIO__A_CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="MANUAL_GPIO__A_CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MANUAL_GPIO__A_PIN_1.label.text }}</span>
+                        {{ form_config.MANUAL_GPIO__A_PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="MANUAL_GPIO__A_PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MANUAL_GPIO__A_PIN_2.label.text }}</span>
+                        {{ form_config.MANUAL_GPIO__A_PIN_2(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="MANUAL_GPIO__A_PIN_2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MANUAL_GPIO__A_PIN_3.label.text }}</span>
+                        {{ form_config.MANUAL_GPIO__A_PIN_3(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="MANUAL_GPIO__A_PIN_3-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Generic Day/Night GPIO -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.GENERIC_GPIO__A_CLASSNAME.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Automatic Night/Day Driver</span>
+                    </div>
+                    <div class="md:tw:col-span-3 tw:flex tw:flex-col">
+                        {{ form_config.GENERIC_GPIO__A_CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="GENERIC_GPIO__A_CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:pt-2">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.GENERIC_GPIO__A_I2C_ADDRESS.label.text }}</span>
+                        {{ form_config.GENERIC_GPIO__A_I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="GENERIC_GPIO__A_I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.GENERIC_GPIO__A_PIN_1.label.text }}</span>
+                        {{ form_config.GENERIC_GPIO__A_PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="GENERIC_GPIO__A_PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.GENERIC_GPIO__A_INVERT_OUTPUT.label.text }}</span>
+                        {{ form_config.GENERIC_GPIO__A_INVERT_OUTPUT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="GENERIC_GPIO__A_INVERT_OUTPUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Dew Heater Device Controls Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <div class="tw:flex tw:items-center tw:justify-between">
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Dew Heater Controller</span>
+                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Dew-Heater-Support" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Dew Heater Wiki</a>
+                </div>
+
+                <!-- Driver & Pin Setup -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__CLASSNAME.label.text }}</span>
+                        {{ form_config.DEW_HEATER__CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DEW_HEATER__CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__I2C_ADDRESS.label.text }}</span>
+                        {{ form_config.DEW_HEATER__I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DEW_HEATER__I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__PIN_1.label.text }}</span>
+                        {{ form_config.DEW_HEATER__PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DEW_HEATER__PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Toggles & Duty Cycle -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__INVERT_OUTPUT.label.text }}</span>
+                        {{ form_config.DEW_HEATER__INVERT_OUTPUT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="DEW_HEATER__INVERT_OUTPUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__ENABLE_DAY.label.text }}</span>
+                        {{ form_config.DEW_HEATER__ENABLE_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="DEW_HEATER__ENABLE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__THOLD_ENABLE.label.text }}</span>
+                        {{ form_config.DEW_HEATER__THOLD_ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="DEW_HEATER__THOLD_ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__LEVEL_DEF.label.text }}</span>
+                        {{ form_config.DEW_HEATER__LEVEL_DEF(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DEW_HEATER__LEVEL_DEF-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Variable Slots & Manual Targets -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__TEMP_USER_VAR_SLOT.label.text }}</span>
+                        {{ form_config.DEW_HEATER__TEMP_USER_VAR_SLOT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Last temp: {{ dh_temp_str }}</span>
+                        <div id="DEW_HEATER__TEMP_USER_VAR_SLOT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__DEWPOINT_USER_VAR_SLOT.label.text }}</span>
+                        {{ form_config.DEW_HEATER__DEWPOINT_USER_VAR_SLOT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Last dewpoint: {{ dh_dewpoint_str }} | Delta: {{ dh_temp_delta_str }} | Status: {{ dh_status_str }}</span>
+                        <div id="DEW_HEATER__DEWPOINT_USER_VAR_SLOT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__MANUAL_TARGET.label.text }}</span>
+                        {{ form_config.DEW_HEATER__MANUAL_TARGET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DEW_HEATER__MANUAL_TARGET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__HOLD_SECONDS.label.text }}</span>
+                        {{ form_config.DEW_HEATER__HOLD_SECONDS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DEW_HEATER__HOLD_SECONDS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Levels & Thresholds -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-4 tw:gap-4 tw:pt-2">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__PWM_FREQUENCY.label.text }}</span>
+                        {{ form_config.DEW_HEATER__PWM_FREQUENCY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DEW_HEATER__PWM_FREQUENCY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__LEVEL_LOW.label.text }}</span>
+                        {{ form_config.DEW_HEATER__LEVEL_LOW(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DEW_HEATER__LEVEL_LOW-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Diff: {{ dh_target_low_str }}</span>
+                        {{ form_config.DEW_HEATER__THOLD_DIFF_LOW(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1') }}
+                        <div id="DEW_HEATER__THOLD_DIFF_LOW-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__LEVEL_MED.label.text }}</span>
+                        {{ form_config.DEW_HEATER__LEVEL_MED(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DEW_HEATER__LEVEL_MED-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Diff: {{ dh_target_med_str }}</span>
+                        {{ form_config.DEW_HEATER__THOLD_DIFF_MED(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1') }}
+                        <div id="DEW_HEATER__THOLD_DIFF_MED-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__LEVEL_HIGH.label.text }}</span>
+                        {{ form_config.DEW_HEATER__LEVEL_HIGH(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DEW_HEATER__LEVEL_HIGH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Diff: {{ dh_target_high_str }}</span>
+                        {{ form_config.DEW_HEATER__THOLD_DIFF_HIGH(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1') }}
+                        <div id="DEW_HEATER__THOLD_DIFF_HIGH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Fan Device Controls Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <div class="tw:flex tw:items-center tw:justify-between">
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Cooling Fan Controller</span>
+                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Fan-Control" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Fan Wiki</a>
+                </div>
+
+                <!-- Driver & Pin Setup -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__CLASSNAME.label.text }}</span>
+                        {{ form_config.FAN__CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="FAN__CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__I2C_ADDRESS.label.text }}</span>
+                        {{ form_config.FAN__I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="FAN__I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__PIN_1.label.text }}</span>
+                        {{ form_config.FAN__PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="FAN__PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Toggles & Duty Cycle -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__INVERT_OUTPUT.label.text }}</span>
+                        {{ form_config.FAN__INVERT_OUTPUT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="FAN__INVERT_OUTPUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__ENABLE_NIGHT.label.text }}</span>
+                        {{ form_config.FAN__ENABLE_NIGHT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="FAN__ENABLE_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__THOLD_ENABLE.label.text }}</span>
+                        {{ form_config.FAN__THOLD_ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="FAN__THOLD_ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__LEVEL_DEF.label.text }}</span>
+                        {{ form_config.FAN__LEVEL_DEF(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="FAN__LEVEL_DEF-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Target Temp & Variables -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__TEMP_USER_VAR_SLOT.label.text }}</span>
+                        {{ form_config.FAN__TEMP_USER_VAR_SLOT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Last temp: {{ fan_temp_str }}</span>
+                        <div id="FAN__TEMP_USER_VAR_SLOT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__TARGET.label.text }}</span>
+                        {{ form_config.FAN__TARGET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Delta: {{ fan_temp_delta_str }} | Status: {{ fan_status_str }}</span>
+                        <div id="FAN__TARGET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__HOLD_SECONDS.label.text }}</span>
+                        {{ form_config.FAN__HOLD_SECONDS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="FAN__HOLD_SECONDS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Levels & Thresholds -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-4 tw:gap-4 tw:pt-2">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__PWM_FREQUENCY.label.text }}</span>
+                        {{ form_config.FAN__PWM_FREQUENCY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="FAN__PWM_FREQUENCY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__LEVEL_LOW.label.text }}</span>
+                        {{ form_config.FAN__LEVEL_LOW(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="FAN__LEVEL_LOW-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Diff: {{ fan_target_low_str }}</span>
+                        {{ form_config.FAN__THOLD_DIFF_LOW(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1') }}
+                        <div id="FAN__THOLD_DIFF_LOW-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__LEVEL_MED.label.text }}</span>
+                        {{ form_config.FAN__LEVEL_MED(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="FAN__LEVEL_MED-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Diff: {{ fan_target_med_str }}</span>
+                        {{ form_config.FAN__THOLD_DIFF_MED(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1') }}
+                        <div id="FAN__THOLD_DIFF_MED-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__LEVEL_HIGH.label.text }}</span>
+                        {{ form_config.FAN__LEVEL_HIGH(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="FAN__LEVEL_HIGH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Diff: {{ fan_target_high_str }}</span>
+                        {{ form_config.FAN__THOLD_DIFF_HIGH(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1') }}
+                        <div id="FAN__THOLD_DIFF_HIGH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Focuser & Hardware Device MQTT Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <div class="tw:flex tw:items-center tw:justify-between">
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Focuser Driver & Device MQTT Telemetry</span>
+                    <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Focuser-Device" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Focuser Wiki</a>
+                </div>
+
+                <!-- Focuser Driver & GPIO Pins -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FOCUSER__CLASSNAME.label.text }}</span>
+                        {{ form_config.FOCUSER__CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="FOCUSER__CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FOCUSER__I2C_ADDRESS.label.text }}</span>
+                        {{ form_config.FOCUSER__I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="FOCUSER__I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">Focuser GPIO Pins</span>
+                        <div class="tw:grid tw:grid-cols-2 tw:gap-2">
+                            {{ form_config.FOCUSER__GPIO_PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content') }}
+                        <div id="FOCUSER__GPIO_PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            {{ form_config.FOCUSER__GPIO_PIN_2(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content') }}
+                        <div id="FOCUSER__GPIO_PIN_2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            {{ form_config.FOCUSER__GPIO_PIN_3(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content') }}
+                        <div id="FOCUSER__GPIO_PIN_3-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            {{ form_config.FOCUSER__GPIO_PIN_4(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content') }}
+                        <div id="FOCUSER__GPIO_PIN_4-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Device MQTT Broker Settings -->
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Device MQTT Connection</span>
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.DEVICE__MQTT_HOST.label.text }}</span>
+                        {{ form_config.DEVICE__MQTT_HOST(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DEVICE__MQTT_HOST-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.DEVICE__MQTT_PORT.label.text }}</span>
+                        {{ form_config.DEVICE__MQTT_PORT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DEVICE__MQTT_PORT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.DEVICE__MQTT_QOS.label.text }}</span>
+                        {{ form_config.DEVICE__MQTT_QOS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DEVICE__MQTT_QOS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.DEVICE__MQTT_TRANSPORT.label.text }}</span>
+                        {{ form_config.DEVICE__MQTT_TRANSPORT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DEVICE__MQTT_TRANSPORT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.DEVICE__MQTT_PROTOCOL.label.text }}</span>
+                        {{ form_config.DEVICE__MQTT_PROTOCOL(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DEVICE__MQTT_PROTOCOL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.DEVICE__MQTT_USERNAME.label.text }}</span>
+                        {{ form_config.DEVICE__MQTT_USERNAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DEVICE__MQTT_USERNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.DEVICE__MQTT_PASSWORD.label.text }}</span>
+                        {{ form_config.DEVICE__MQTT_PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DEVICE__MQTT_PASSWORD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.DEVICE__MQTT_TLS.label.text }}</span>
+                        {{ form_config.DEVICE__MQTT_TLS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="DEVICE__MQTT_TLS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.DEVICE__MQTT_CERT_BYPASS.label.text }}</span>
+                        {{ form_config.DEVICE__MQTT_CERT_BYPASS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="DEVICE__MQTT_CERT_BYPASS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div><!-- end devices tab -->

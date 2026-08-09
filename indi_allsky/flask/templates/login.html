@@ -1,173 +1,230 @@
 <!doctype html>
-<html>
-  <head>
-<title>Login</title>
-<link rel="icon" type="image/png" href="{{ url_for('indi_allsky.static', filename='images/favicon_32.png') }}" sizes="32x32">
-<link rel="icon" type="image/png" href="{{ url_for('indi_allsky.static', filename='images/favicon_128.png') }}" sizes="128x128">
-<link href="{{ url_for('indi_allsky.static', filename='bootstrap/bootstrap.min.css') }}" rel="stylesheet">
-<link href="{{ url_for('indi_allsky.static', filename='css/style.css') }}" rel="stylesheet">
-<script src="{{ url_for('indi_allsky.static', filename='js/jquery-3.7.1.min.js') }}"></script>
-<script src="{{ url_for('indi_allsky.static', filename='bootstrap/bootstrap.bundle.min.js') }}"></script>
-<style>
-html, body {
-    height: 100%;
-};
-</style>
-  </head>
-  <body class="bg-dark bg-opacity-75">
+<html lang="en" class="tw:h-full">
 
-<div class="row h-100 justify-content-center">
-  <div class="col-4 align-self-center">
-  <div class="card card-block bg-dark bg-opacity-25">
-    <div class="text-center text-white pt-2 fs-5">
-        <img src="{{ url_for('indi_allsky.static', filename='images/logo_outline_full.png') }}" height="200" alt="indi-allsky">
+<head>
+    <title>Login</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ url_for('indi_allsky.static', filename='images/favicon_32.png') }}"
+        sizes="32x32">
+    <link rel="icon" type="image/png" href="{{ url_for('indi_allsky.static', filename='images/favicon_128.png') }}"
+        sizes="128x128">
+
+    <link href="{{ url_for('indi_allsky.static', filename='css/style.css') }}" rel="stylesheet">
+    <link href="{{ url_for('indi_allsky.static', filename='css/dist.css') }}" rel="stylesheet">
+
+    <script src="{{ url_for('indi_allsky.static', filename='js/jquery-3.7.1.min.js') }}"></script>
+</head>
+
+<body class="tw:bg-neutral-950 tw:min-h-full tw:flex tw:items-center tw:justify-center tw:px-4 tw:m-0">
+
+    <div
+        class="tw:w-full tw:max-w-[400px] md:tw:max-w-[680px] tw:mx-auto tw:flex tw:flex-col md:tw:flex-row tw:items-center tw:justify-center tw:gap-8 md:tw:gap-10 tw:py-8">
+
+        <div class="tw:flex tw:flex-col tw:items-center tw:text-center tw:w-auto tw:shrink-0">
+            <img src="{{ url_for('indi_allsky.static', filename='images/logo_outline_full.png') }}"
+                class="tw:w-32 md:tw:w-40 tw:h-auto tw:object-contain tw:opacity-95" alt="indi-allsky">
+            <div class="tw:hidden md:tw:block tw:mt-3">
+                <h1 class="tw:text-base tw:font-bold tw:text-base-content/90 tw:tracking-wider tw:uppercase">INDI AllSky
+                </h1>
+                <p class="tw:text-[0.6875rem] tw:text-base-content/40 tw:mt-0.5">Control Console</p>
+            </div>
+        </div>
+
+        <div class="tw:hidden md:tw:block tw:h-36 tw:w-[1px] tw:bg-base-content/10 tw:shrink-0"></div>
+
+        <div
+            class="tw:card tw:w-full tw:bg-base-200/35 tw:backdrop-blur-2xl tw:border tw:border-white/15 tw:shadow-[0_25px_60px_rgba(0,0,0,0.5)] tw:p-6 md:tw:p-8 tw:rounded-[var(--radius-box)]">
+
+            <div class="tw:text-center tw:mb-6">
+                <h2 class="tw:text-xl tw:font-black tw:tracking-tight">Login</h2>
+                <p id="greeting-subtitle" class="tw:text-xs tw:opacity-40 tw:mt-1 tw:tracking-wide tw:capitalize"></p>
+            </div>
+
+            <form id="form_login" onsubmit="return false;" novalidate class="tw:flex tw:flex-col tw:gap-4">
+                {{ form_login.csrf_token }}
+                <div class="tw:text-error tw:text-xs tw:font-semibold tw:text-center" id="csrf_token-error"></div>
+
+                {% if local_auth_enable %}
+                    <div class="tw:form-control tw:w-full">
+                        <label class="tw:label tw:py-1">
+                            <span
+                                class="tw:label-text tw:text-xs tw:font-bold tw:tracking-wider tw:text-base-content/60 tw:uppercase">Username</span>
+                        </label>
+
+                        <div class="tw:hidden">
+                            {{ form_login.NEXT(class='tw:input') }}
+                        </div>
+
+                        <div class="tw:relative tw:flex tw:items-center tw:group login-input-aura">
+                            <i class="tw:icon-[lucide--user] tw:w-4 tw:h-4 tw:absolute tw:left-3.5 tw:opacity-50 group-focus-within:tw:opacity-100 group-focus-within:tw:text-primary tw:transition-all tw:z-10"></i>
+                            {{ form_login.USERNAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:pl-10 tw:bg-base-100/50 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-transparent tw:transition-all') }}
+                        </div>
+                        <div id="USERNAME-error" class="tw:text-error tw:text-xs tw:mt-1.5 tw:font-medium"
+                            style="display: none;"></div>
+                    </div>
+
+                    <div class="tw:form-control tw:w-full">
+                        <label class="tw:label tw:py-1">
+                            <span
+                                class="tw:label-text tw:text-xs tw:font-bold tw:tracking-wider tw:text-base-content/60 tw:uppercase">Password</span>
+                        </label>
+                        <div class="tw:relative tw:flex tw:items-center tw:group login-input-aura">
+                            <i class="tw:icon-[lucide--lock] tw:w-4 tw:h-4 tw:absolute tw:left-3.5 tw:opacity-50 group-focus-within:tw:opacity-100 group-focus-within:tw:text-primary tw:transition-all tw:z-10"></i>
+                            {{ form_login.PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:pl-10 tw:pr-10 tw:bg-base-100/50 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-transparent tw:transition-all') }}
+                            <button type="button" id="toggle_password_btn" aria-label="Toggle password visibility"
+                                class="tw:absolute tw:right-3 tw:text-base-content/40 hover:tw:text-base-content tw:z-10 tw:p-1 tw:rounded hover:tw:bg-base-content/5 tw:transition-colors">
+                                <i class="tw:icon-[lucide--eye] tw:w-4 tw:h-4" id="toggle_password_icon"></i>
+                            </button>
+                        </div>
+                        <div id="PASSWORD-error" class="tw:text-error tw:text-xs tw:mt-1.5 tw:font-medium"
+                            style="display: none;"></div>
+                    </div>
+
+                    <div class="tw:form-control tw:mt-4">
+                        <button type="submit"
+                            class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:w-full tw:text-sm tw:font-bold tw:uppercase tw:tracking-wider tw:gap-2 tw:shadow-[0_0_20px_rgba(59,130,246,0.35)] hover:tw:shadow-[0_0_28px_rgba(59,130,246,0.55)] active:tw:scale-[0.98] tw:transition-all">
+                            <i class="tw:icon-[lucide--key] tw:w-4 tw:h-4"></i> Sign In
+                        </button>
+                    </div>
+                {% endif %}
+
+                {% if oidc_enabled %}
+                    {% if local_auth_enable %}
+                        <div class="tw:divider tw:my-2 tw:text-xs tw:opacity-50">OR</div>
+                    {% endif %}
+                    
+                    <div class="tw:form-control">
+                        <a href="{{ url_for('auth_indi_allsky.oidc_login_view', next=request.args.get('next', '')) }}"
+                            class="tw:btn tw:btn-outline tw:btn-sm tw:h-11 tw:w-full tw:text-sm tw:font-bold tw:uppercase tw:tracking-wider tw:gap-2">
+                            {% if oidc_logo_url %}
+                                <img src="{{ oidc_logo_url }}" class="tw:h-6 tw:w-auto tw:object-contain" alt="OIDC Logo">
+                            {% else %}
+                                <i class="tw:icon-[lucide--shield-check] tw:w-4 tw:h-4 tw:text-primary"></i>
+                            {% endif %}
+                            Sign In with {{ oidc_provider_name }}
+                        </a>
+                    </div>
+                {% endif %}
+
+                <div class="tw:w-full tw:text-center">
+                    <div id="success-message" class="tw:text-success tw:text-xs tw:font-medium" style="display: none;">
+                    </div>
+                    <div id="failure-message" class="tw:text-error tw:text-xs tw:font-medium" style="display: none;">
+                    </div>
+                </div>
+            </form>
+
+        </div>
     </div>
 
-    <form id="form_login" onSubmit="return false;">
-        {{ form_login.csrf_token }}
-        <div class="text-danger my-2" id="csrf_token-error"></div>
+    <script>
+        const successMessage = $('#success-message');
+        const failureMessage = $('#failure-message');
+        const field_names = ['csrf_token', 'USERNAME', 'PASSWORD', 'NEXT'];
+        const checkbox_field_names = [];
 
-        {% if local_auth_enable %}
-        <div class="form-group row">
-            <div class="col-2 offset-1">
-                {{ form_login.USERNAME.label(class='col-form-label') }}
-            </div>
-            <div class="col-8">
-                {{ form_login.NEXT(class='form-control bg-secondary') }}
-                {{ form_login.USERNAME(class='form-control bg-secondary') }}
-                <div id="USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
+        var fields = {};
+        field_names.forEach(item => {
+            fields[item] = {
+                'input': $('#' + item),
+                'error': $('#' + item + '-error'),
+            };
+        });
 
-        <div class="form-group row">
-            <div class="col-sm-2 offset-1">
-                {{ form_login.PASSWORD.label(class='col-form-label') }}
-            </div>
-            <div class="col-sm-8">
-                {{ form_login.PASSWORD(class='form-control bg-secondary') }}
-                <div id="PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
+        fields['form_global'] = {
+            'input': failureMessage,
+            'error': failureMessage,
+        };
 
-        <div class="form-group">
-            <div class="text-center">
-                <button class="btn btn-primary">Submit</button>
-            </div>
-        </div>
-        {% else %}
-        {{ form_login.NEXT(class='form-control bg-secondary', style='display: none;') }}
-        {% endif %}
+        const greetings = [
+            "Hello", "Hej", "Hi", "Bonjour", "Hola", "Ciao", "Aloha", "Hallo",
+            "Konnichiwa", "Namaste", "Szia", "Hei", "Ahoj", "Nǐ hǎo", "Annyeong",
+            "Olá", "Shalom", "Sawubona", "Jambo", "Hala", "Merhaba", "Gdag",
+            "Dia dhuit", "Kumusta", "Xin chào", "Sawatdee", "Sveiki", "Yassas", "Moïn"
+        ];
+        
+        function generateGreetings() {
+            const shuffled = [...greetings].sort(() => 0.5 - Math.random());
+            const count = Math.floor(Math.random() * 3) + 3; // 3 to 5
+            const selected = shuffled.slice(0, count);
+            $("#greeting-subtitle").text(selected.join(" • "));
+        }
 
-        {% if oidc_enabled %}
-        <div class="form-group mt-3">
-            <div class="text-center">
-                <hr class="text-white mx-5">
-                <a href="{{ url_for('auth_indi_allsky.oidc_login_view', next=request.args.get('next', '')) }}" class="btn btn-info text-dark">
-                    {% if oidc_logo_url %}
-                    <img src="{{ oidc_logo_url }}" height="24" class="me-2" alt="OIDC Logo">
-                    {% endif %}
-                    Login with {{oidc_provider_name}} OIDC
-                </a>
-            </div>
-        </div>
-        {% endif %}
+        function generateNebulaBackground() {
+            const gradients = [
+                ['#030712', '#0d182e', '#1a103c'], // Cosmic Indigo
+                ['#04030f', '#1b082e', '#090514'], // Deep Nebula Violet
+                ['#01040f', '#033b2e', '#021c16'], // Auroral Green
+                ['#030712', '#1e1a4a', '#330f3f'], // Stellar Purple
+                ['#020617', '#172554', '#1e1b4b']  // Midnight Blue
+            ];
+            const randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
+            const angle = Math.floor(Math.random() * 360);
+            document.body.style.background = `linear-gradient(${angle}deg, ${randomGradient[0]} 0%, ${randomGradient[1]} 50%, ${randomGradient[2]} 100%)`;
+        }
 
-        <div class="form-group">
-            <div class="text-center">
-                <div id="success-message" class="text-success" style="display: none;"></div>
-                <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-    </form>
-  </div>
-  </div>
-</div>
+        // Initialize greetings and dynamic nebula background
+        generateGreetings();
+        generateNebulaBackground();
 
-<script>
-const successMessage = $('#success-message');
-const failureMessage = $('#failure-message');
-const field_names = [
-    'csrf_token',
-    'USERNAME',
-    'PASSWORD',
-    'NEXT',
-];
-const checkbox_field_names = [];
+        $('#toggle_password_btn').on('click', function () {
+            const passwordInput = $('#PASSWORD');
+            const icon = $('#toggle_password_icon');
+            const isPassword = passwordInput.attr('type') === 'password';
+            passwordInput.attr('type', isPassword ? 'text' : 'password');
+            icon.toggleClass('tw:icon-[lucide--eye]', !isPassword);
+            icon.toggleClass('tw:icon-[lucide--eye-off]', isPassword);
+        });
 
-var fields = {};
-// Populate fields object
-field_names.forEach(item => {
-    fields[item] = {
-        'input' : $('#' + item),
-        'error' : $('#' + item + '-error'),
-    };
-});
-
-// Checkboxes
-checkbox_field_names.forEach(item => {
-    fields[item] = {
-        'input' : $('#' + item),
-        'error' : $('#' + item + '-error'),
-    };
-});
-
-fields['form_global'] = {
-    'input' : failureMessage,
-    'error' : failureMessage,
-};
-
-
-$.ajaxSetup({
-    beforeSend: function(xhr, settings) {
-        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
-    }
-});
-
-
-$('#form_login').on('submit', function() {
-
-    // hide all errors
-    successMessage.css({'display' : 'none'});
-    Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
-    });
-
-
-    // Populate fields object
-    var json_data = {};
-    field_names.forEach(item => {
-        json_data[item] = fields[item].input.val();
-    });
-
-    // checkboxes
-    checkbox_field_names.forEach(item => {
-        json_data[item] = fields[item].input.prop('checked');
-    });
-
-
-    $.ajax({
-        type: "POST",
-        url: "{{ url_for('auth_indi_allsky.login_view') }}",
-        contentType: "application/json",
-        data: JSON.stringify(json_data),
-        success: function(data){
-            if (data.redirect) {
-                window.location.replace(data.redirect);
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
             }
-        },
-        error: function(data){
-            var errors = JSON.parse(data.responseText);
-            Object.keys(errors).forEach((key) => {
-                fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key][0]);
-                fields[key].error.css({'display' : 'block'});
+        });
+
+        $('#form_login').on('submit', function (e) {
+            e.preventDefault();
+
+            successMessage.css({ 'display': 'none' });
+            Object.keys(fields).forEach((key) => {
+                fields[key].error.css({ 'display': 'none' });
+                if (fields[key].input) {
+                    fields[key].input.removeClass('tw:border-error focus:tw:border-error tw:input-error');
+                }
             });
-        },
-    });
 
-});
+            var json_data = {};
+            field_names.forEach(item => {
+                json_data[item] = fields[item].input.val();
+            });
 
-</script>
+            $.ajax({
+                type: "POST",
+                url: "{{ url_for('auth_indi_allsky.login_view') }}",
+                contentType: "application/json",
+                data: JSON.stringify(json_data),
+                success: function (data) {
+                    if (data.redirect) {
+                        window.location.replace(data.redirect);
+                    }
+                },
+                error: function (data) {
+                    var errors = JSON.parse(data.responseText);
+                    Object.keys(errors).forEach((key) => {
+                        if (fields[key]) {
+                            if (fields[key].input) {
+                                fields[key].input.addClass('tw:border-error focus:tw:border-error tw:input-error');
+                            }
+                            fields[key].error.html(errors[key][0]);
+                            fields[key].error.css({ 'display': 'block' });
+                        }
+                    });
+                },
+            });
+        });
+    </script>
 
-  </body>
+</body>
+
 </html>

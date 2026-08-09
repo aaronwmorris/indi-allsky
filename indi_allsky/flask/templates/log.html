@@ -2,47 +2,72 @@
 
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
+{% block header_title %}{{ page_title }}{% endblock %}
+
 {% block head %}
 <meta charset="UTF-8">
-<style>
-</style>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
 {% endblock %}
 
 {% block content %}
+<div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-4">
 
-{% if docker %}
-<hr>
-<div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Containerized environment detected. Direct log access is not available.</div>
-<hr>
-{% endif %}
+    {% if docker %}
+    <div class="tw:alert tw:alert-warning tw:shadow-md tw:rounded-[var(--radius-box)]">
+        <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
+        <span class="tw:font-bold">Containerized environment detected. Direct log access is limited.</span>
+    </div>
+    {% endif %}
 
+    <!-- Toolbar: Auto-scroll & Log Downloads -->
+    <div class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4">
+        
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <span id="drive-loader" class="tw:loading tw:loading-spinner tw:loading-sm tw:text-primary"></span>
+            <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/70 tw:flex tw:items-center tw:gap-2">
+                <i class="tw:icon-[lucide--file-text] tw:w-4 tw:h-4 tw:text-primary"></i> Streaming Real-time Log
+            </span>
+        </div>
 
-<div class="row">
-    <div class="col-sm-12 text-center">
-      <span id="drive-loader" class="spinner-border" aria-hidden="false"></span><span> Streaming Log...</span>
-      <pre>
-        <textarea id="log_data" rows="35" style="width:95%;background-color:#888888;"></textarea>
-      </pre>
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <label class="tw:label tw:cursor-pointer tw:gap-2">
+                <input type="checkbox" id="AUTO_SCROLL" name="AUTO_SCROLL" value="y" checked="checked" class="tw:toggle tw:toggle-primary tw:toggle-sm">
+                <span class="tw:label-text tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider">Auto-Scroll</span>
+            </label>
+        </div>
+
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-2">
+            <a href="{{ url_for('indi_allsky.log_download_view') }}" class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-accent-hover tw:font-bold tw:no-underline tw:gap-1.5">
+                <i class="tw:icon-[lucide--camera] tw:w-3.5 tw:h-3.5 tw:text-success"></i> Capture
+            </a>
+            <a href="{{ url_for('indi_allsky.log_webapp_download_view') }}" class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-accent-hover tw:font-bold tw:no-underline tw:gap-1.5">
+                <i class="tw:icon-[lucide--globe] tw:w-3.5 tw:h-3.5 tw:text-info"></i> Webapp
+            </a>
+            <a href="{{ url_for('indi_allsky.log_indiserver_download_view') }}" class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-accent-hover tw:font-bold tw:no-underline tw:gap-1.5">
+                <i class="tw:icon-[lucide--server] tw:w-3.5 tw:h-3.5 tw:text-primary"></i> indiserver
+            </a>
+            <a href="{{ url_for('indi_allsky.log_upgrade_download_view') }}" class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-accent-hover tw:font-bold tw:no-underline tw:gap-1.5">
+                <i class="tw:icon-[lucide--arrow-up-circle] tw:w-3.5 tw:h-3.5 tw:text-accent"></i> Upgrade
+            </a>
+            <a href="{{ url_for('indi_allsky.log_syslog_download_view') }}" class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-accent-hover tw:font-bold tw:no-underline tw:gap-1.5">
+                <i class="tw:icon-[lucide--cpu] tw:w-3.5 tw:h-3.5 tw:text-warning"></i> OS System
+            </a>
+            <a href="{{ url_for('indi_allsky.log_kern_download_view') }}" class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-accent-hover tw:font-bold tw:no-underline tw:gap-1.5">
+                <i class="tw:icon-[lucide--terminal] tw:w-3.5 tw:h-3.5 tw:text-error"></i> Kernel
+            </a>
+        </div>
+
     </div>
 
-    <div class="col-12 text-center">
+    <!-- Main Log Streaming Terminal Container -->
+    <div class="tw:w-full tw:bg-base-200 tw:p-2 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-inner">
+        <textarea id="log_data" 
+                  readonly 
+                  class="tw:w-full tw:h-[650px] tw:bg-neutral-900 tw:text-neutral-200 tw:font-mono tw:text-xs tw:p-4 tw:rounded-[var(--radius-box)] tw:border-none tw:focus:outline-none tw:resize-none tw:leading-relaxed"></textarea>
     </div>
 
-    <div class="col-12 text-center">
-        <span>
-            <input type="checkbox" id="AUTO_SCROLL" name="AUTO_SCROLL" value="y" checked="checked">
-            <label for="AUTO_SCROLL">Auto-Scroll</label>
-        </span>
-        <a href="{{ url_for('indi_allsky.log_download_view') }}"><span class="badge pill bg-success">Capture Log<br>Download</span></a>
-        <a href="{{ url_for('indi_allsky.log_webapp_download_view') }}"><span class="badge pill bg-secondary">Webapp Log<br>Download</span></a>
-        <a href="{{ url_for('indi_allsky.log_indiserver_download_view') }}"><span class="badge pill bg-info text-dark">indiserver Log<br>Download</span></a>
-        <a href="{{ url_for('indi_allsky.log_upgrade_download_view') }}"><span class="badge pill bg-dark">Upgrade Log<br>Download</span></a>
-        <a href="{{ url_for('indi_allsky.log_syslog_download_view') }}"><span class="badge pill bg-primary">OS System Log<br>Download</span></a>
-        <a href="{{ url_for('indi_allsky.log_kern_download_view') }}"><span class="badge pill bg-warning text-dark">Kernel Log<br>Download</span></a>
-    </div>
 </div>
 
 <script>
@@ -52,14 +77,13 @@ function init() {
     const eventSource = new EventSource("{{ url_for(log_stream_view) }}");
     const logDiv = document.getElementById("log_data");
 
-    logDiv.append("\n");  // Messages on new line
+    logDiv.append("\n");
 
     // Listen for message events
     eventSource.onmessage = function(event) {
         logDiv.append(event.data + "\n");
 
         if ($('#AUTO_SCROLL').prop('checked')) {
-            //logDiv.scrollTop = logDiv.scrollHeight; // Auto-scroll
             logDiv.scrollTo({
               top: logDiv.scrollHeight,
               behavior: 'smooth'
@@ -73,7 +97,6 @@ function init() {
         logDiv.append("Connection lost. Reconnecting...\n");
 
         if ($('#AUTO_SCROLL').prop('checked')) {
-            //logDiv.scrollTop = logDiv.scrollHeight; // Auto-scroll
             logDiv.scrollTo({
               top: logDiv.scrollHeight,
               behavior: 'smooth'
@@ -82,11 +105,8 @@ function init() {
     };
 }
 
-
-$( document ).ready(function() {
+$(document).ready(function() {
     init();
 });
 </script>
-
-
 {% endblock %}

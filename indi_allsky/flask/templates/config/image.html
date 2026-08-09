@@ -1,0 +1,679 @@
+<div class="tab-pane fade" id="nav-image" role="tabpanel" aria-labelledby="nav-image-tab">
+    <div class="tw:flex tw:flex-col tw:gap-6">
+
+        <!-- Daytime & Capture Control Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Capture Execution & Modes</span>
+
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DAYTIME_CAPTURE.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Capture during day</span>
+                        </div>
+                        {{ form_config.DAYTIME_CAPTURE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="DAYTIME_CAPTURE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DAYTIME_CAPTURE_SAVE.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Save daytime images</span>
+                        </div>
+                        {{ form_config.DAYTIME_CAPTURE_SAVE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="DAYTIME_CAPTURE_SAVE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAPTURE_PAUSE.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Pause image capture</span>
+                        </div>
+                        {{ form_config.CAPTURE_PAUSE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="CAPTURE_PAUSE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Image Calibration & Dark Frames Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Dark Calibration & Bad Pixel Map</span>
+
+                <!-- Dark, BPM & Fix Holes Toggles -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CALIBRATE_DARK.label.text }}</span>
+                        {{ form_config.IMAGE_CALIBRATE_DARK(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="IMAGE_CALIBRATE_DARK-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CALIBRATE_BPM.label.text }}</span>
+                        {{ form_config.IMAGE_CALIBRATE_BPM(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="IMAGE_CALIBRATE_BPM-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CALIBRATE_FIX_HOLES.label.text }}</span>
+                        {{ form_config.IMAGE_CALIBRATE_FIX_HOLES(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="IMAGE_CALIBRATE_FIX_HOLES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Manual Offset & Hole Threshold -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:pt-2">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CALIBRATE_MANUAL_OFFSET.label.text }}</span>
+                        {{ form_config.IMAGE_CALIBRATE_MANUAL_OFFSET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Manual offset for dark subtraction</span>
+                        <div id="IMAGE_CALIBRATE_MANUAL_OFFSET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CALIBRATE_HOLE_THOLD.label.text }}</span>
+                        {{ form_config.IMAGE_CALIBRATE_HOLE_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Percentage threshold for fixing holes</span>
+                        <div id="IMAGE_CALIBRATE_HOLE_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Target ADU Brightness Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Target ADU Brightness & Region of Interest</span>
+
+                <!-- Night/Day ADU & Deviation -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TARGET_ADU.label.text }}</span>
+                        {{ form_config.TARGET_ADU(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TARGET_ADU-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TARGET_ADU_DEV.label.text }}</span>
+                        {{ form_config.TARGET_ADU_DEV(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TARGET_ADU_DEV-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TARGET_ADU_DAY.label.text }}</span>
+                        {{ form_config.TARGET_ADU_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TARGET_ADU_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TARGET_ADU_DEV_DAY.label.text }}</span>
+                        {{ form_config.TARGET_ADU_DEV_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TARGET_ADU_DEV_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- ADU FOV Div & ROI Coordinates -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:pt-2">
+                    <div class="tw:flex tw:flex-col">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ADU_FOV_DIV.label.text }}</span>
+                        {{ form_config.ADU_FOV_DIV(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="ADU_FOV_DIV-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="md:tw:col-span-3 tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">ADU Region of Interest (ROI Coordinates x1, y1, x2, y2)</span>
+                        <div class="tw:grid tw:grid-cols-2 sm:tw:grid-cols-4 tw:gap-2">
+                            {{ form_config.ADU_ROI_X1(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='x1') }}
+                        <div id="ADU_ROI_X1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            {{ form_config.ADU_ROI_Y1(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='y1') }}
+                        <div id="ADU_ROI_Y1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            {{ form_config.ADU_ROI_X2(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='x2') }}
+                        <div id="ADU_ROI_X2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            {{ form_config.ADU_ROI_Y2(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='y2') }}
+                        <div id="ADU_ROI_Y2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- CLAHE Contrast & Histogram Stretch Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Contrast Enhancement (CLAHE) & Histogram Stretching</span>
+
+                <!-- CLAHE Toggles & Parameters -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DAYTIME_CONTRAST_ENHANCE.label.text }}</span>
+                        {{ form_config.DAYTIME_CONTRAST_ENHANCE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="DAYTIME_CONTRAST_ENHANCE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.NIGHT_CONTRAST_ENHANCE.label.text }}</span>
+                        {{ form_config.NIGHT_CONTRAST_ENHANCE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="NIGHT_CONTRAST_ENHANCE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CONTRAST_ENHANCE_16BIT.label.text }}</span>
+                        {{ form_config.CONTRAST_ENHANCE_16BIT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="CONTRAST_ENHANCE_16BIT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CLAHE_CLIPLIMIT.label.text }}</span>
+                        {{ form_config.CLAHE_CLIPLIMIT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="CLAHE_CLIPLIMIT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CLAHE_GRIDSIZE.label.text }}</span>
+                        {{ form_config.CLAHE_GRIDSIZE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="CLAHE_GRIDSIZE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STRETCH__CLASSNAME.label.text }}</span>
+                        {{ form_config.IMAGE_STRETCH__CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="IMAGE_STRETCH__CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Stretch Modes (Mode 1, Mode 2, Mode 3 Parameters) -->
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Histogram Stretch Parameters & Flags</span>
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <!-- Mode 1 -->
+                    <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/70">Stretch Mode 1</span>
+                        {{ form_config.IMAGE_STRETCH__MODE1_STDDEVS(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-200 tw:text-base-content', placeholder='StdDevs') }}
+                        <div id="IMAGE_STRETCH__MODE1_STDDEVS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.IMAGE_STRETCH__MODE1_GAMMA(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-200 tw:text-base-content', placeholder='Gamma') }}
+                        <div id="IMAGE_STRETCH__MODE1_GAMMA-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <!-- Mode 2 -->
+                    <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/70">Stretch Mode 2</span>
+                        {{ form_config.IMAGE_STRETCH__MODE2_SHADOWS(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-200 tw:text-base-content', placeholder='Shadows') }}
+                        <div id="IMAGE_STRETCH__MODE2_SHADOWS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.IMAGE_STRETCH__MODE2_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-200 tw:text-base-content', placeholder='Midtones') }}
+                        <div id="IMAGE_STRETCH__MODE2_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.IMAGE_STRETCH__MODE2_HIGHLIGHTS(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-200 tw:text-base-content', placeholder='Highlights') }}
+                        <div id="IMAGE_STRETCH__MODE2_HIGHLIGHTS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <!-- Mode 3 -->
+                    <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/70">Stretch Mode 3</span>
+                        {{ form_config.IMAGE_STRETCH__MODE3_BLACK_CLIP(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-200 tw:text-base-content', placeholder='Black Clip') }}
+                        <div id="IMAGE_STRETCH__MODE3_BLACK_CLIP-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.IMAGE_STRETCH__MODE3_SHADOWS(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-200 tw:text-base-content', placeholder='Shadows') }}
+                        <div id="IMAGE_STRETCH__MODE3_SHADOWS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.IMAGE_STRETCH__MODE3_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-200 tw:text-base-content', placeholder='Midtones') }}
+                        <div id="IMAGE_STRETCH__MODE3_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.IMAGE_STRETCH__MODE3_HIGHLIGHTS(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-200 tw:text-base-content', placeholder='Highlights') }}
+                        <div id="IMAGE_STRETCH__MODE3_HIGHLIGHTS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Stretch Toggles -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:pt-2">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STRETCH__MOONMODE.label.text }}</span>
+                        {{ form_config.IMAGE_STRETCH__MOONMODE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="IMAGE_STRETCH__MOONMODE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STRETCH__DAYTIME.label.text }}</span>
+                        {{ form_config.IMAGE_STRETCH__DAYTIME(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="IMAGE_STRETCH__DAYTIME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STRETCH__SPLIT.label.text }}</span>
+                        {{ form_config.IMAGE_STRETCH__SPLIT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="IMAGE_STRETCH__SPLIT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SCNR, Noise Reduction & Color Balance Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Noise Reduction (Denoise) & SCNR Color Tuning</span>
+
+                <!-- Bayer Pattern & Use Night Color -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CFA_PATTERN.label.text }}</span>
+                        {{ form_config.CFA_PATTERN(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="CFA_PATTERN-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.USE_NIGHT_COLOR.label.text }}</span>
+                        {{ form_config.USE_NIGHT_COLOR(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="USE_NIGHT_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Night SCNR & Denoise Grid -->
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Night SCNR & Denoise Options</span>
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.SCNR_ALGORITHM.label.text }}</span>
+                        {{ form_config.SCNR_ALGORITHM(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="SCNR_ALGORITHM-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.SCNR_MTF_MIDTONES.label.text }}</span>
+                        {{ form_config.SCNR_MTF_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="SCNR_MTF_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_DENOISE.label.text }}</span>
+                        {{ form_config.IMAGE_DENOISE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="IMAGE_DENOISE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_DENOISE_STRENGTH.label.text }}</span>
+                        {{ form_config.IMAGE_DENOISE_STRENGTH(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="IMAGE_DENOISE_STRENGTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.BILATERAL_SIGMA_COLOR.label.text }}</span>
+                        {{ form_config.BILATERAL_SIGMA_COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="BILATERAL_SIGMA_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.BILATERAL_SIGMA_SPACE.label.text }}</span>
+                        {{ form_config.BILATERAL_SIGMA_SPACE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="BILATERAL_SIGMA_SPACE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Day SCNR & Denoise Grid -->
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Daytime SCNR & Denoise Options</span>
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.SCNR_ALGORITHM_DAY.label.text }}</span>
+                        {{ form_config.SCNR_ALGORITHM_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="SCNR_ALGORITHM_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.SCNR_MTF_MIDTONES_DAY.label.text }}</span>
+                        {{ form_config.SCNR_MTF_MIDTONES_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="SCNR_MTF_MIDTONES_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_DENOISE_DAY.label.text }}</span>
+                        {{ form_config.IMAGE_DENOISE_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="IMAGE_DENOISE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_DENOISE_STRENGTH_DAY.label.text }}</span>
+                        {{ form_config.IMAGE_DENOISE_STRENGTH_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="IMAGE_DENOISE_STRENGTH_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:pt-2">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.BILATERAL_SIGMA_COLOR_DAY.label.text }}</span>
+                        {{ form_config.BILATERAL_SIGMA_COLOR_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="BILATERAL_SIGMA_COLOR_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.BILATERAL_SIGMA_SPACE_DAY.label.text }}</span>
+                        {{ form_config.BILATERAL_SIGMA_SPACE_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="BILATERAL_SIGMA_SPACE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- White Balance & Color Adjustments Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">White Balance, Saturation & Gamma</span>
+
+                <!-- Night WB Factors & MTF -->
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">Night White Balance Controls</span>
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.WBR_FACTOR.label.text }}</span>
+                        {{ form_config.WBR_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="WBR_FACTOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.WBR_MTF_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1', placeholder='MTF') }}
+                        <div id="WBR_MTF_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.WBG_FACTOR.label.text }}</span>
+                        {{ form_config.WBG_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="WBG_FACTOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.WBG_MTF_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1', placeholder='MTF') }}
+                        <div id="WBG_MTF_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.WBB_FACTOR.label.text }}</span>
+                        {{ form_config.WBB_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="WBB_FACTOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.WBB_MTF_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1', placeholder='MTF') }}
+                        <div id="WBB_MTF_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Night Auto WB, Saturation, Gamma & Sharpen -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.AUTO_WB.label.text }}</span>
+                        {{ form_config.AUTO_WB(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="AUTO_WB-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.SATURATION_FACTOR.label.text }}</span>
+                        {{ form_config.SATURATION_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="SATURATION_FACTOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.GAMMA_CORRECTION.label.text }}</span>
+                        {{ form_config.GAMMA_CORRECTION(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="GAMMA_CORRECTION-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.SHARPEN_AMOUNT.label.text }}</span>
+                        {{ form_config.SHARPEN_AMOUNT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="SHARPEN_AMOUNT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Day WB Factors & MTF -->
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Daytime White Balance Controls</span>
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.WBR_FACTOR_DAY.label.text }}</span>
+                        {{ form_config.WBR_FACTOR_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="WBR_FACTOR_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.WBR_MTF_MIDTONES_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1', placeholder='MTF Day') }}
+                        <div id="WBR_MTF_MIDTONES_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.WBG_FACTOR_DAY.label.text }}</span>
+                        {{ form_config.WBG_FACTOR_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="WBG_FACTOR_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.WBG_MTF_MIDTONES_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1', placeholder='MTF Day') }}
+                        <div id="WBG_MTF_MIDTONES_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.WBB_FACTOR_DAY.label.text }}</span>
+                        {{ form_config.WBB_FACTOR_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="WBB_FACTOR_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.WBB_MTF_MIDTONES_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1', placeholder='MTF Day') }}
+                        <div id="WBB_MTF_MIDTONES_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Day Auto WB, Saturation, Gamma & Sharpen -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:pt-2">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.AUTO_WB_DAY.label.text }}</span>
+                        {{ form_config.AUTO_WB_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="AUTO_WB_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.SATURATION_FACTOR_DAY.label.text }}</span>
+                        {{ form_config.SATURATION_FACTOR_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="SATURATION_FACTOR_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.GAMMA_CORRECTION_DAY.label.text }}</span>
+                        {{ form_config.GAMMA_CORRECTION_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="GAMMA_CORRECTION_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.SHARPEN_AMOUNT_DAY.label.text }}</span>
+                        {{ form_config.SHARPEN_AMOUNT_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="SHARPEN_AMOUNT_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Output Format & Compression Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">File Format & Compression Quality</span>
+
+                <!-- File Type Selection -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_FILE_TYPE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Primary image format</span>
+                    </div>
+                    <div class="md:tw:col-span-3 tw:flex tw:flex-col">
+                        {{ form_config.IMAGE_FILE_TYPE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="IMAGE_FILE_TYPE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Compression Factors (JPG, PNG, TIF) -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:pt-2">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_FILE_COMPRESSION__JPG.label.text }}</span>
+                        {{ form_config.IMAGE_FILE_COMPRESSION__JPG(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="IMAGE_FILE_COMPRESSION__JPG-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">JPEG quality (1-100)</span>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_FILE_COMPRESSION__PNG.label.text }}</span>
+                        {{ form_config.IMAGE_FILE_COMPRESSION__PNG(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="IMAGE_FILE_COMPRESSION__PNG-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">PNG compression (1-9)</span>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_FILE_COMPRESSION__TIF.label.text }}</span>
+                        {{ form_config.IMAGE_FILE_COMPRESSION__TIF(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="IMAGE_FILE_COMPRESSION__TIF-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Geometry, Rotation, Crop & Border Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Geometry, Rotation & Cropping</span>
+
+                <!-- Rotation & Flip Controls -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ROTATE.label.text }}</span>
+                        {{ form_config.IMAGE_ROTATE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="IMAGE_ROTATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ROTATE_ANGLE.label.text }}</span>
+                        {{ form_config.IMAGE_ROTATE_ANGLE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="IMAGE_ROTATE_ANGLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ROTATE_KEEP_SIZE.label.text }}</span>
+                        {{ form_config.IMAGE_ROTATE_KEEP_SIZE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="IMAGE_ROTATE_KEEP_SIZE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SCALE.label.text }}</span>
+                        {{ form_config.IMAGE_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="IMAGE_SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Vertical/Horizontal Flip, Grayscale & Colormap -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_FLIP_V.label.text }}</span>
+                        {{ form_config.IMAGE_FLIP_V(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="IMAGE_FLIP_V-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_FLIP_H.label.text }}</span>
+                        {{ form_config.IMAGE_FLIP_H(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="IMAGE_FLIP_H-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.NIGHT_GRAYSCALE.label.text }}</span>
+                        {{ form_config.NIGHT_GRAYSCALE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="NIGHT_GRAYSCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DAYTIME_GRAYSCALE.label.text }}</span>
+                        {{ form_config.DAYTIME_GRAYSCALE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="DAYTIME_GRAYSCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Crop ROI & Image Circle Crop -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">Crop ROI Coordinates</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">x1, y1, x2, y2</span>
+                    </div>
+                    <div class="md:tw:col-span-2 tw:flex tw:flex-col tw:gap-1">
+                        <div class="tw:grid tw:grid-cols-2 sm:tw:grid-cols-4 tw:gap-2">
+                            {{ form_config.IMAGE_CROP_ROI_X1(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='x1') }}
+                        <div id="IMAGE_CROP_ROI_X1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            {{ form_config.IMAGE_CROP_ROI_Y1(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='y1') }}
+                        <div id="IMAGE_CROP_ROI_Y1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            {{ form_config.IMAGE_CROP_ROI_X2(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='x2') }}
+                        <div id="IMAGE_CROP_ROI_X2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            {{ form_config.IMAGE_CROP_ROI_Y2(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='y2') }}
+                        <div id="IMAGE_CROP_ROI_Y2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CROP_IMAGE_CIRCLE.label.text }}</span>
+                        {{ form_config.IMAGE_CROP_IMAGE_CIRCLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="IMAGE_CROP_IMAGE_CIRCLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Colormap & Border Paddings -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4 tw:pt-2">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_COLORMAP.label.text }}</span>
+                        {{ form_config.IMAGE_COLORMAP(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="IMAGE_COLORMAP-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="md:tw:col-span-3 tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">Image Borders (Top, Left, Right, Bottom & Color)</span>
+                        <div class="tw:grid tw:grid-cols-2 sm:tw:grid-cols-5 tw:gap-2">
+                            {{ form_config.IMAGE_BORDER__TOP(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Top') }}
+                        <div id="IMAGE_BORDER__TOP-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            {{ form_config.IMAGE_BORDER__LEFT(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Left') }}
+                        <div id="IMAGE_BORDER__LEFT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            {{ form_config.IMAGE_BORDER__RIGHT(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Right') }}
+                        <div id="IMAGE_BORDER__RIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            {{ form_config.IMAGE_BORDER__BOTTOM(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Bottom') }}
+                        <div id="IMAGE_BORDER__BOTTOM-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            {{ form_config.IMAGE_BORDER__COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='R,G,B') }}
+                        <div id="IMAGE_BORDER__COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RAW Export & FITS Storage Options Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">RAW Data & FITS Export Settings</span>
+
+                <!-- RAW Export Controls -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_EXPORT_RAW.label.text }}</span>
+                        {{ form_config.IMAGE_EXPORT_RAW(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="IMAGE_EXPORT_RAW-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_EXPORT_FOLDER.label.text }}</span>
+                        {{ form_config.IMAGE_EXPORT_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="IMAGE_EXPORT_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_EXPORT_FLIP_V.label.text }}</span>
+                        {{ form_config.IMAGE_EXPORT_FLIP_V(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="IMAGE_EXPORT_FLIP_V-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_EXPORT_FLIP_H.label.text }}</span>
+                        {{ form_config.IMAGE_EXPORT_FLIP_H(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="IMAGE_EXPORT_FLIP_H-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- FITS Storage Toggles & Period -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_FITS.label.text }}</span>
+                        {{ form_config.IMAGE_SAVE_FITS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="IMAGE_SAVE_FITS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_FITS_COMPRESSED.label.text }}</span>
+                        {{ form_config.IMAGE_SAVE_FITS_COMPRESSED(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="IMAGE_SAVE_FITS_COMPRESSED-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_FITS_PRE_DARK.label.text }}</span>
+                        {{ form_config.IMAGE_SAVE_FITS_PRE_DARK(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="IMAGE_SAVE_FITS_PRE_DARK-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_FITS_PERIOD.label.text }}</span>
+                        {{ form_config.IMAGE_SAVE_FITS_PERIOD(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="IMAGE_SAVE_FITS_PERIOD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Custom FITS Headers (0 to 4) -->
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Custom FITS Headers (Keys & Values 0 to 4)</span>
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-5 tw:gap-3 tw:pt-2">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        {{ form_config.FITSHEADERS__0__KEY(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Key 0') }}
+                        <div id="FITSHEADERS__0__KEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.FITSHEADERS__0__VAL(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Val 0') }}
+                        <div id="FITSHEADERS__0__VAL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        {{ form_config.FITSHEADERS__1__KEY(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Key 1') }}
+                        <div id="FITSHEADERS__1__KEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.FITSHEADERS__1__VAL(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Val 1') }}
+                        <div id="FITSHEADERS__1__VAL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        {{ form_config.FITSHEADERS__2__KEY(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Key 2') }}
+                        <div id="FITSHEADERS__2__KEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.FITSHEADERS__2__VAL(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Val 2') }}
+                        <div id="FITSHEADERS__2__VAL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        {{ form_config.FITSHEADERS__3__KEY(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Key 3') }}
+                        <div id="FITSHEADERS__3__KEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.FITSHEADERS__3__VAL(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Val 3') }}
+                        <div id="FITSHEADERS__3__VAL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        {{ form_config.FITSHEADERS__4__KEY(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Key 4') }}
+                        <div id="FITSHEADERS__4__KEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        {{ form_config.FITSHEADERS__4__VAL(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Val 4') }}
+                        <div id="FITSHEADERS__4__VAL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div><!-- end image tab -->
