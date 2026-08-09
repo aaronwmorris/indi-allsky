@@ -1,15 +1,15 @@
 const CACHE_NAME = 'indi-allsky-v2';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/static/css/dist.css',
-  '/static/js/jquery-3.7.1.min.js',
-  '/static/images/favicon_32.png',
-  '/static/images/favicon_128.png',
-  '/static/images/icon-192.png',
-  '/static/images/icon-512.png',
-  '/static/images/screenshot-desktop.png',
-  '/static/images/screenshot-mobile.png',
-  '/static/images/logo_outline_full.png'
+  '/indi-allsky/',
+  '/indi-allsky/static/css/dist.css',
+  '/indi-allsky/static/js/jquery-3.7.1.min.js',
+  '/indi-allsky/static/images/favicon_32.png',
+  '/indi-allsky/static/images/favicon_128.png',
+  '/indi-allsky/static/images/icon-192.png',
+  '/indi-allsky/static/images/icon-512.png',
+  '/indi-allsky/static/images/screenshot-desktop.png',
+  '/indi-allsky/static/images/screenshot-mobile.png',
+  '/indi-allsky/static/images/logo_outline_full.png'
 ];
 
 // Install Event
