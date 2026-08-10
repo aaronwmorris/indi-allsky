@@ -211,7 +211,7 @@
 <div id="calibration-setup-panel">
 <!-- Keep the two universal requirements visually equal before asking the
      user to choose an evidence source. -->
-<div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-4 tw:mb-6">
+<div class="tw:grid tw:grid-cols-1 tw:lg:grid-cols-2 tw:gap-4 tw:mb-6">
     <div>
         <div class="calibration-callout calibration-callout-info tw:h-full">
             <div class="tw:font-semibold tw:mb-1">How it works</div>
@@ -271,7 +271,7 @@
     <div id="calibration-settings" class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:mb-6 tw:shadow-sm">
         <div class="tw:px-6 tw:pt-5 tw:font-semibold">Calibration settings</div>
         <div class="tw:card-body tw:p-6 tw:pt-3">
-            <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-[minmax(0,1.4fr)_minmax(12rem,0.6fr)] tw:gap-4">
+            <div class="tw:grid tw:grid-cols-1 tw:lg:grid-cols-[minmax(0,1.4fr)_minmax(12rem,0.6fr)] tw:gap-4">
                 <div>
                     {{ form_calibration.CAMERA_ID.label(class='tw:label-text tw:font-semibold') }}
                     {{ form_calibration.CAMERA_ID(class='tw:select tw:select-bordered tw:bg-base-100 tw:text-base-content tw:w-full calibration-camera-control') }}
@@ -296,7 +296,7 @@
 
     <!-- Automatic discovery and manual upload are equivalent entry points;
          matching cards make that relationship clear and stack responsively. -->
-    <div class="tw:grid tw:grid-cols-1 xl:tw:grid-cols-2 tw:gap-5 tw:mb-6">
+    <div class="tw:grid tw:grid-cols-1 tw:lg:grid-cols-2 tw:gap-5 tw:mb-6">
         <div class="tw:flex">
             <div class="tw:card calibration-source-card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:w-full tw:shadow-sm">
                 <div class="tw:flex tw:items-center tw:justify-between tw:gap-3 tw:px-6 tw:pt-5 tw:font-semibold">
@@ -314,7 +314,7 @@
                     </p>
                     <div class="tw:mb-4">
                         {{ form_calibration.DATABASE_GROUP_LIMIT.label(class='tw:label-text tw:font-semibold') }}
-                        <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-[10rem_1fr] tw:gap-3 tw:items-center tw:mt-1">
+                        <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-[10rem_1fr] tw:gap-3 tw:items-center tw:mt-1">
                             <div>
                                 {{ form_calibration.DATABASE_GROUP_LIMIT(class='tw:input tw:input-bordered tw:bg-base-100 tw:text-base-content tw:w-full') }}
                             </div>
@@ -415,12 +415,12 @@
 
 <!-- Completed sessions restore this results-only card until reset or expiry. -->
 <div id="calibration-results" class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:mt-6 tw:shadow-sm" style="display: none;">
-    <div class="tw:flex tw:flex-col xl:tw:flex-row xl:tw:items-center tw:justify-between tw:gap-3 tw:px-6 tw:pt-5">
+    <div class="tw:flex tw:flex-col tw:xl:flex-row tw:xl:items-center tw:justify-between tw:gap-3 tw:px-6 tw:pt-5">
         <div>
             <h2 id="calibration-result-title" class="tw:text-xl tw:font-bold">Calibration result</h2>
             <span id="calibration-completed" class="tw:text-xs calibration-help"></span>
         </div>
-        <div class="calibration-action-bar tw:flex tw:flex-wrap xl:tw:justify-end">
+        <div class="calibration-action-bar tw:flex tw:flex-wrap tw:xl:justify-end">
             <!-- Keep reset before report download so the action row reads and
                  wraps cleanly on narrow displays. -->
             <button id="calibration-reset" type="button" class="tw:btn tw:btn-neutral">

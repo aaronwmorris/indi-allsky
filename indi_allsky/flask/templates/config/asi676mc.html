@@ -28,7 +28,7 @@
             <span class="tw:badge tw:badge-warning tw:badge-outline">Purple-frame cameras only</span>
         </div>
 
-        <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:p-4 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+        <div class="tw:flex tw:flex-col tw:sm:flex-row tw:sm:items-center tw:justify-between tw:gap-4 tw:p-4 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
             <div class="tw:flex tw:flex-col tw:gap-1">
                 <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ASI676MC_REPAIR__ENABLE.label.text }}</span>
                 {% if asi676mc_repair_supported %}
@@ -52,7 +52,7 @@
 
         <div>
             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Operation and evidence</span>
-            <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-3 tw:mt-3">
+            <div class="tw:grid tw:grid-cols-1 tw:lg:grid-cols-2 tw:gap-3 tw:mt-3">
                 {{ repair_toggle(
                     form_config.IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY,
                     'Detect without repairing. The rendered faulty image is retained, flagged as excluded, and omitted from standard timelapses. This is selected automatically when the feature is first enabled; disable it after calibrated repair values have been applied. For stronger good/purple/good triplets, also save the preceding RAW FITS.'
@@ -79,18 +79,17 @@
 
         <div class="tw:border-t tw:border-base-300 tw:pt-5">
             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Detection thresholds</span>
-            <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 xl:tw:grid-cols-5 tw:gap-4 tw:mt-3">
+            <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-4 tw:gap-4 tw:mt-3">
                 {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD, 'Combined red/blue-to-green ratio. Default: 1.50.') }}
                 {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD, 'Apparent red-to-first-green ratio. Default: 1.15.') }}
                 {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD, 'Apparent blue-to-second-green ratio. Default: 1.75.') }}
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__SAMPLE_STEP, 'Even Bayer-aware signature sampling step. Default: 32.') }}
                 {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD, 'RAW16 level treated as source-camera clipping. Default: 65000.') }}
             </div>
         </div>
 
         <div class="tw:border-t tw:border-base-300 tw:pt-5">
             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Repair gains</span>
-            <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 xl:tw:grid-cols-4 tw:gap-4 tw:mt-3">
+            <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-4 tw:gap-4 tw:mt-3">
                 {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_R, 'Multiplier at the R Bayer position. Default: 0.91004.') }}
                 {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_G1, 'Multiplier at the G1 Bayer position. Default: 1.68652.') }}
                 {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_G2, 'Multiplier at the G2 Bayer position. Default: 1.09238.') }}
@@ -99,10 +98,11 @@
         </div>
 
         <div class="tw:border-t tw:border-base-300 tw:pt-5">
-            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Highlight transition and memory</span>
-            <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:mt-3">
+            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Sampling, highlight transition, and memory</span>
+            <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-4 tw:gap-4 tw:mt-3">
                 {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO, 'Low-to-high ratio where clipped-highlight blending begins. Default: 0.55.') }}
                 {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO, 'Ratio where blending reaches the stronger channel. Default: 0.75; must exceed the start.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__SAMPLE_STEP, 'Even Bayer-aware signature sampling step. Default: 32.') }}
                 {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__CHUNK_ROWS, 'Even RAW row count processed per repair chunk. Default: 128.') }}
             </div>
         </div>

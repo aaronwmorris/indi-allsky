@@ -1332,6 +1332,23 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         })
         self.assertEqual(fully_independent, [])
 
+        nearly_complete = asi676mc_calibration._result_warnings({
+            'matched_bad_count': 25,
+            'two_sided_count': 24,
+            'matched_normal_count': 49,
+            'unmatched_bad_count': 0,
+            'rejected_file_count': 0,
+        })
+        self.assertEqual(len(nearly_complete), 1)
+        self.assertIn('24 of 25 purple frames', nearly_complete[0])
+        self.assertIn('Two-sided coverage is 96%', nearly_complete[0])
+        self.assertIn('90% completeness guideline', nearly_complete[0])
+        self.assertIn(
+            'another complete triplet is unlikely to change the result',
+            nearly_complete[0],
+        )
+        self.assertNotIn('would improve confidence', nearly_complete[0])
+
     def test_engine_failures_are_translated_to_actionable_browser_text(self):
         too_few = asi676mc_calibration._friendly_failure_message(
             '4 matched purple frames found; need at least 7'
@@ -1644,6 +1661,10 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         )
         self.assertIn(
             'calibration-source-card tw:bg-base-200 tw:border',
+            template,
+        )
+        self.assertIn(
+            'tw:grid tw:grid-cols-1 tw:lg:grid-cols-2 tw:gap-5',
             template,
         )
         self.assertIn('Upload a FITS collection', template)
@@ -2414,9 +2435,9 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         chunk_rows_position = settings_template.index(
             'form_config.IMAGE_ASI676MC_REPAIR__CHUNK_ROWS'
         )
-        self.assertLess(sample_step_position, highlight_start_position)
         self.assertLess(highlight_start_position, highlight_end_position)
-        self.assertLess(highlight_end_position, chunk_rows_position)
+        self.assertLess(highlight_end_position, sample_step_position)
+        self.assertLess(sample_step_position, chunk_rows_position)
 
 
 if __name__ == '__main__':

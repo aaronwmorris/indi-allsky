@@ -420,6 +420,13 @@ A successful results page shows:
 - whether the result effectively matches the current configuration within a
   deliberately small tolerance.
 
+Two-sided evidence is considered complete enough when at least 90 percent of
+the matched purple frames belong to good/purple/good triplets. The result note
+still reports the exact coverage, but it does not ask for another complete
+triplet above that guideline because the remaining one-sided evidence is
+unlikely to change the calibration. Reused normal references remain a separate
+confidence warning.
+
 A preliminary threshold result instead shows current and suggested detection
 values, each observed safe interval, population and adjacency evidence, and a
 prominent instruction to review and rerun. The repair-value table is hidden.

@@ -59,6 +59,11 @@ DATABASE_CAPTURE_TIME_TOLERANCE = 1.0
 DATABASE_MAX_FILES = MAX_FILE_COUNT
 DATABASE_MAX_BYTES = MAX_SESSION_BYTES
 DATABASE_QUERY_MAX_FILES = DATABASE_MAX_FILES * 3
+# A collection does not need every purple frame to have two normal references.
+# Once nine out of ten matched frames form complete good/purple/good triplets,
+# the remaining one-sided evidence is too small a share to justify asking the
+# user for another capture solely to improve triplet completeness.
+TRIPLET_COVERAGE_COMPLETE_PERCENT = 90.0
 ACTIVE_SESSION_STATUSES = (
     'uploading',
     'queued',
@@ -1875,6 +1880,10 @@ def _result_warnings(
     normal_count = int(quality.get('matched_normal_count', 0))
     if matched_count:
         one_sided_count = matched_count - two_sided_count
+        two_sided_percent = 100.0 * two_sided_count / matched_count
+        triplet_coverage_complete = (
+            two_sided_percent >= TRIPLET_COVERAGE_COMPLETE_PERCENT
+        )
         # Each one-sided group uses one reference and each two-sided group uses
         # two. Fewer distinct files than that total means at least one normal
         # reference was reused; comparing only against the purple-frame count
@@ -1903,34 +1912,60 @@ def _result_warnings(
                 'some normal references were reused for more than one group'
             )
         if coverage_parts:
-            if one_sided_count and references_reused:
-                improvement = (
-                    'more complete, independent good/purple/good groups would '
-                    'improve confidence'
-                )
-            elif one_sided_count:
-                improvement = (
-                    'more complete good/purple/good groups would improve confidence'
-                )
-            else:
-                improvement = (
-                    'more independent normal references would improve confidence'
-                )
             coverage_text = '. '.join(
                 part[:1].upper() + part[1:]
                 for part in coverage_parts
             )
-            warnings.append(
-                '{0}. {1}, but {2}.'.format(
-                    coverage_text,
-                    (
-                        'Threshold evidence is usable'
-                        if preliminary
-                        else 'Calibration is valid'
-                    ),
-                    improvement,
-                )
+            result_status = (
+                'Threshold evidence is usable'
+                if preliminary
+                else 'Calibration is valid'
             )
+            if (
+                one_sided_count
+                and triplet_coverage_complete
+                and not references_reused
+            ):
+                percent_text = '{0:.1f}'.format(two_sided_percent).rstrip(
+                    '0'
+                ).rstrip('.')
+                warnings.append(
+                    '{0}. {1}. Two-sided coverage is {2}%, meeting the '
+                    '{3:.0f}% completeness guideline; another complete '
+                    'triplet is unlikely to change the result.'.format(
+                        coverage_text,
+                        result_status,
+                        percent_text,
+                        TRIPLET_COVERAGE_COMPLETE_PERCENT,
+                    )
+                )
+            else:
+                if (
+                    one_sided_count
+                    and references_reused
+                    and not triplet_coverage_complete
+                ):
+                    improvement = (
+                        'more complete, independent good/purple/good groups '
+                        'would improve confidence'
+                    )
+                elif one_sided_count and not triplet_coverage_complete:
+                    improvement = (
+                        'more complete good/purple/good groups would improve '
+                        'confidence'
+                    )
+                else:
+                    improvement = (
+                        'more independent normal references would improve '
+                        'confidence'
+                    )
+                warnings.append(
+                    '{0}. {1}, but {2}.'.format(
+                        coverage_text,
+                        result_status,
+                        improvement,
+                    )
+                )
 
     skipped_parts = []
     unmatched_count = int(quality.get('unmatched_bad_count', 0))
