@@ -2224,8 +2224,9 @@ class VideoWorker(Process):
         for binning in mask_dict.keys():
             mask_processor = MaskProcessor(
                 self.config,
-                binning,
             )
+
+            mask_processor.binning = binning
 
 
             # masks need to be rotated, flipped, cropped for post-processed images
@@ -2258,7 +2259,9 @@ class VideoWorker(Process):
 
 
             # crop
-            if self.config.get('IMAGE_CROP_ROI'):
+            if self.config.get('IMAGE_CROP_IMAGE_CIRCLE'):
+                mask_processor.crop_image()
+            elif self.config.get('IMAGE_CROP_ROI'):
                 mask_processor.crop_image()
 
 
