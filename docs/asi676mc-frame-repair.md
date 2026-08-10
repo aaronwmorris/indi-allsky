@@ -320,54 +320,41 @@ late request from reviving a cancelled session.
 
 Automatic discovery searches database-managed FITS for the selected ASI676MC.
 The user chooses a target of 7 to 100 purple-frame groups rather than a raw file
-limit. Discovery starts with the newest evidence inside the configured FITS
-retention period:
+limit. The browser queues one background job immediately. That job enumerates
+the complete configured FITS retention period, checks every eligible row, and
+then stages up to the requested number of usable groups. If fewer than seven
+exist, it reports that the retained archive was exhausted. The live progress
+display reports catalog
+enumeration, current-detector checks, missed-purple population discovery,
+fitting, and validation. The whole search is cancellable.
 
-- when at least seven database-marked purple frames have compatible adjacent
-  normal FITS, it stages the newest complete groups up to the target; or
-- with zero to six usable marked groups, three FITS per requested group form
-  the initial search target. The worker checks for an actionable result as it
-  progresses, so it may stop earlier; otherwise it continues newest-first
-  through the bounded newest retained evidence set.
-
-The second path intentionally ignores the target as a stopping limit. That is
-necessary when the current detector missed every purple frame and their random
-positions are unknown. The live progress display reports whether the worker is
-checking the current detector, searching for missed high-ratio frames, fitting,
-or validating.
-
-Existing diagnostic roles and purple-frame database flags select the compact
-path only when they supply at least seven complete groups. Otherwise they are
-context rather than admission requirements. This is important when a camera's
-failure ratios fall outside the configured detector thresholds. The only data
-deliberately excluded before inspection is a standard FITS associated with a
-successfully repaired frame, because it contains the corrected mosaic.
-Untouched diagnostic RAW FITS and standard FITS from Exclude Only remain
-eligible. Pairs and triplets can be mixed in one run.
+Existing diagnostic roles and purple-frame database flags provide context but
+are not admission requirements or a reason to ignore older retained rows. This
+is important when a camera's failure ratios fall outside the configured
+detector thresholds. The only data deliberately excluded before inspection is
+a standard FITS associated with a successfully repaired frame, because it
+contains the corrected mosaic. Untouched diagnostic RAW FITS and standard FITS
+from Exclude Only remain eligible. Pairs and triplets can be mixed in one run.
 
 Newly saved FITS database rows retain the three measured detector ratios as
-small, threshold-independent metadata. A progressive search can reclassify
-those captures against current settings without decoding every full image.
-Older FITS without those stored ratios remain eligible for direct inspection;
-when their camera headers are absent or generic, the selected database row's
-already validated camera binding supplies the ASI676MC identity. A header that
-explicitly identifies another camera remains authoritative and is rejected.
-The result and report disclose how many saved FITS required this legacy
-fallback. Only the purple and adjacent normal FITS selected for numerical
-fitting are necessarily decoded after discovery.
+small, threshold-independent metadata. The background search can reclassify
+every such capture without decoding its full image. Older FITS without stored
+ratios remain part of the same one-click search and are inspected directly.
+When their camera headers are absent or generic, the database row's validated
+camera binding supplies the ASI676MC identity; an explicit conflicting camera
+identity remains authoritative and is rejected. Missing, corrupt, repaired, or
+incompatible files are skipped and summarized rather than narrowing the search
+horizon silently.
 
-Database discovery queries at most 600 newest candidate rows, then bounds
-grouping and staging to 200 FITS and 2 GiB. This prevents a large retained
-archive with no bad frames, or only bad frames, from creating unbounded or
-quadratic work. Marked bad/preceding/following diagnostic FITS inside that
-bounded query are prioritized before unmarked standard FITS. Results disclose
-when the staging limit was reached and explain that older retained evidence may
-require manual upload. A hard link keeps the selected content stable without a
-second copy. If hard links are unavailable, the tool makes a private copy; it
-never uses a symbolic-link fallback whose target could change after selection.
-The browser reserves a camera-bound private session before discovery begins,
-so **Cancel saved-FITS search** is available throughout database inspection and
-staging. Cancellation removes only the session's private hard links, copies,
+The 200-FITS and 2-GiB limits apply only to the final purple/reference evidence
+set, not to catalog discovery. Once enough compatible groups are known, only
+those files are placed in the private session. A hard link keeps selected
+content stable without a second copy. If hard links are unavailable, the tool
+makes a private copy; it never uses a symbolic-link fallback whose target could
+change after selection. The browser reserves a camera-bound private session
+before discovery begins, so **Cancel saved-FITS search** remains available
+throughout database inspection and staging. Cancellation removes only the
+session's private hard links, copies,
 or partial copy; database rows and their source FITS are never changed.
 
 ## Evidence validation and fitting

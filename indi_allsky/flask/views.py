@@ -7947,20 +7947,13 @@ class AjaxAsi676mcCalibrationUploadView(BaseView):
 
 
 class AjaxAsi676mcCalibrationDatabaseView(BaseView):
-    """Discover local database FITS and queue newest-first analysis.
-
-    Seven complete marked groups use a compact path. Otherwise the selector
-    stages all eligible retained files so the worker can search past its
-    initial budget when current thresholds missed the failure. A standard FITS
-    written after successful repair is excluded because it no longer contains
-    the original mosaic; repair-specific diagnostic RAW FITS remain eligible.
-    """
+    """Queue one background search across the complete retained FITS archive."""
 
     methods = ['POST']
     decorators = [asi676mc_calibration_required, login_required]
 
     def dispatch_request(self):
-        """Select saved FITS, stage them privately, and queue analysis."""
+        """Validate the request and queue cancellable database discovery."""
         request_data = request.get_json(silent=True) or {}
         session_id = str(request_data.get('session_id') or '')
         owner = _calibration_owner()
@@ -8035,17 +8028,6 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
                 ),
             }), 409
 
-        def database_checkpoint():
-            """Return an HTTP cancellation response at safe search boundaries."""
-            try:
-                asi676mc_calibration.database_search_checkpoint(
-                    session_id,
-                    owner,
-                )
-            except asi676mc_calibration.CalibrationSessionError as error:
-                return jsonify({'error': str(error)}), 409
-            return None
-
         try:
             retention_days = int(
                 self.indi_allsky_config.get('IMAGE_FITS_EXPIRE_DAYS', 10)
@@ -8071,237 +8053,34 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
         retention_cutoff = (
             datetime.now() - timedelta(days=retention_days)
         ).date()
-        fits_entries = IndiAllSkyDbFitsImageTable.query\
-            .filter(IndiAllSkyDbFitsImageTable.camera_id == camera.id)\
-            .filter(IndiAllSkyDbFitsImageTable.dayDate >= retention_cutoff)\
-            .order_by(IndiAllSkyDbFitsImageTable.createDate.desc())\
-            .limit(asi676mc_calibration.DATABASE_QUERY_MAX_FILES)\
-            .all()
-
-        checkpoint_response = database_checkpoint()
-        if checkpoint_response:
-            return checkpoint_response
-
-        fits_records = []
-        missing_local_count = 0
-        unsupported_count = 0
-        for entry_index, fits_entry in enumerate(fits_entries):
-            if entry_index % 25 == 0:
-                checkpoint_response = database_checkpoint()
-                if checkpoint_response:
-                    return checkpoint_response
-            try:
-                source_path = fits_entry.getFilesystemPath()
-                if not source_path.is_file():
-                    missing_local_count += 1
-                    continue
-                source_size = source_path.stat().st_size
-            except OSError:
-                missing_local_count += 1
-                continue
-            if not asi676mc_calibration.is_database_fits_path(source_path):
-                unsupported_count += 1
-                continue
-            fits_data = (
-                fits_entry.data
-                if isinstance(fits_entry.data, dict)
-                else {}
-            )
-            diagnostic = fits_data.get(
-                asi676mc.DIAGNOSTIC_METADATA_KEY,
-                {},
-            )
-            roles = (
-                diagnostic.get('roles', ())
-                if isinstance(diagnostic, dict)
-                else ()
-            )
-            signature = fits_data.get(
-                asi676mc.SIGNATURE_METADATA_KEY,
-            )
-            fits_records.append({
-                'id': fits_entry.id,
-                'path': source_path,
-                'size': source_size,
-                'timestamp': fits_entry.createDate.timestamp(),
-                'exposure': fits_entry.exposure,
-                'gain': fits_entry.gain,
-                'binmode': fits_entry.binmode,
-                'width': fits_entry.width,
-                'height': fits_entry.height,
-                # New captures persist only three detector ratios. They are
-                # independent of configured thresholds, so discovery can use
-                # them safely without opening every large FITS file. Older
-                # rows simply fall back to normal FITS inspection.
-                'signature': (
-                    dict(signature)
-                    if isinstance(signature, dict)
-                    else None
-                ),
-                'camera_name': _camera_identity(camera)['name'],
-                'roles': [
-                    dict(role)
-                    for role in roles
-                    if isinstance(role, dict)
-                ],
-            })
-
-        checkpoint_response = database_checkpoint()
-        if checkpoint_response:
-            return checkpoint_response
-        if not fits_records:
-            return jsonify({
-                'error': (
-                    'No saved FITS are available on disk for this camera within '
-                    'the {0}-day retention period (since {1}). Check FITS '
-                    'saving, wait for new captures, or upload an existing '
-                    'collection.'
-                ).format(retention_days, retention_cutoff.isoformat()),
-            }), 400
-
-        repair_status = (
-            IndiAllSkyDbImageTable.data['asi676mc_repair_status'].as_string()
-        )
-        bad_images = IndiAllSkyDbImageTable.query\
-            .filter(IndiAllSkyDbImageTable.camera_id == camera.id)\
-            .filter(IndiAllSkyDbImageTable.dayDate >= retention_cutoff)\
-            .filter(repair_status.in_(asi676mc.DIAGNOSTIC_BAD_STATUSES))\
-            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
-            .limit(asi676mc_calibration.DATABASE_QUERY_MAX_FILES)\
-            .all()
-        checkpoint_response = database_checkpoint()
-        if checkpoint_response:
-            return checkpoint_response
-        bad_frames = []
-        for image_index, image in enumerate(bad_images):
-            if image_index % 25 == 0:
-                checkpoint_response = database_checkpoint()
-                if checkpoint_response:
-                    return checkpoint_response
-            bad_frames.append({
-                'timestamp': image.createDate.timestamp(),
-                'exposure': image.exposure,
-                'gain': image.gain,
-                # A failed validation and Exclude Only both retain the
-                # untouched source mosaic. Only successful repair makes the
-                # standard FITS unsuitable as original calibration evidence.
-                'allow_standard': (
-                    (
-                        image.data
-                        if isinstance(image.data, dict)
-                        else {}
-                    ).get('asi676mc_repair_status')
-                    != 'repaired'
-                ),
-            })
-
-        try:
-            asi676mc_calibration.database_search_checkpoint(
-                session_id,
-                owner,
-            )
-            selected_records, discovery = (
-                asi676mc_calibration.select_database_evidence(
-                    fits_records,
-                    bad_frames,
-                    target_groups,
-                    max_pair_seconds,
-                )
-            )
-            asi676mc_calibration.database_search_checkpoint(
-                session_id,
-                owner,
-            )
-        except asi676mc_calibration.CalibrationSessionError as error:
-            return jsonify({'error': str(error)}), 409
-
-        minimum = 14
-        if discovery['selected_file_count'] < minimum:
-            if discovery.get('selection_limit_reached'):
-                availability_detail = (
-                    'The bounded search reached its {0}-file or 2-GiB staging '
-                    'limit, so older retained FITS may also exist. Marked '
-                    'diagnostic FITS inside the bounded query were prioritized. '
-                ).format(discovery['selection_limit_file_count'])
-            else:
-                availability_detail = ''
-            return jsonify({
-                'error': (
-                    'Only {0} eligible saved FITS were selected from the '
-                    'bounded search within the {1}-day retention period; at '
-                    'least {2} are required to start analysis. {3}Collect more '
-                    'data or upload an existing collection.'
-                ).format(
-                    discovery['selected_file_count'],
-                    retention_days,
-                    minimum,
-                    availability_detail,
-                ),
-                'discovery': discovery,
-            }), 400
-
-        source_details = dict(discovery)
-        source_details.update({
+        # The browser request only binds the full-retention search. Database
+        # enumeration, legacy FITS inspection, population discovery, and final
+        # evidence staging all run in the cancellable background worker.
+        source_details = {
             'kind': 'database',
+            'selection_mode': 'background_full_retention',
             'camera_id': camera.id,
-            'camera_name': camera.friendlyName or camera.name,
+            'camera_uuid': str(camera.uuid),
+            'camera_name': _camera_identity(camera)['name'],
             'retention_days': retention_days,
             'retention_cutoff': retention_cutoff.isoformat(),
-            'database_fits_count': len(fits_entries),
-            'local_fits_count': len(fits_records),
-            'missing_local_count': missing_local_count,
-            'unsupported_count': unsupported_count,
-        })
-
+            'requested_group_count': target_groups,
+            'initial_scan_file_count': 0,
+            'selected_file_count': 0,
+            'available_file_count': 0,
+            'full_retention_exhaustive': True,
+        }
         try:
             settings = asi676mc.normalize_settings(
                 self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {})
             )
-            asi676mc_calibration.stage_database_files(
-                session_id,
-                owner,
-                selected_records,
-            )
-        except (
-            OSError,
-            KeyError,
-            TypeError,
-            ValueError,
-            asi676mc_calibration.CalibrationSessionError,
-        ) as error:
-            app.logger.exception('Unable to stage database FITS for calibration')
-            if 'session_id' in locals():
-                try:
-                    asi676mc_calibration.cancel_session(
-                        session_id,
-                        owner,
-                    )
-                except (OSError, asi676mc_calibration.CalibrationSessionError):
-                    app.logger.exception(
-                        'Unable to clean failed database calibration session'
-                    )
-            if isinstance(error, (KeyError, TypeError, ValueError)):
-                error_message = (
+        except (OverflowError, TypeError, ValueError):
+            return jsonify({
+                'error': (
                     'The current ASI676MC repair settings are invalid. Correct '
                     'them in Image Settings, then try again.'
-                )
-            elif isinstance(
-                error,
-                asi676mc_calibration.CalibrationSessionError,
-            ):
-                error_message = str(error)
-                error_message = (
-                    error_message[:1].upper() + error_message[1:]
-                )
-                if not error_message.endswith(('.', '!', '?')):
-                    error_message += '.'
-            else:
-                error_message = (
-                    'The selected saved FITS could not be prepared. Check '
-                    'available disk space and the indi-allsky log, then try '
-                    'again.'
-                )
-            return jsonify({'error': error_message}), 400
+                ),
+            }), 400
 
         task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.VIDEO,

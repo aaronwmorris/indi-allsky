@@ -20,6 +20,7 @@ Deployments may override the location with ``ASI676MC_CALIBRATION_FOLDER``.
 
 from contextlib import contextmanager
 from contextlib import redirect_stdout
+from collections import Counter
 from datetime import datetime
 from datetime import timezone
 import io
@@ -55,11 +56,9 @@ QUEUED_STALE_SECONDS = 30 * 60
 RUNNING_STALE_SECONDS = 2 * 60 * 60
 DATABASE_GROUP_MIN = 7
 DATABASE_GROUP_MAX = 100
-DATABASE_INITIAL_FILES_PER_GROUP = 3
 DATABASE_CAPTURE_TIME_TOLERANCE = 1.0
 DATABASE_MAX_FILES = MAX_FILE_COUNT
 DATABASE_MAX_BYTES = MAX_SESSION_BYTES
-DATABASE_QUERY_MAX_FILES = DATABASE_MAX_FILES * 3
 # A collection does not need every purple frame to have two normal references.
 # Once nine out of ten matched frames form complete good/purple/good triplets,
 # the remaining one-sided evidence is too small a share to justify asking the
@@ -137,6 +136,8 @@ def _initial_database_search_text(source_details):
     selection_mode = source_details.get('selection_mode')
     if selection_mode == 'marked_groups':
         return 'Not used; marked evidence was sufficient'
+    if str(selection_mode or '').startswith('full_retention_'):
+        return 'Complete retained archive'
     if selection_mode != 'progressive_search':
         return 'Not recorded by this result version'
     try:
@@ -144,6 +145,30 @@ def _initial_database_search_text(source_details):
     except (KeyError, TypeError, ValueError):
         return 'Not recorded by this result version'
     return _counted_item(count, 'FITS file')
+
+
+def _database_selection_text(selection_mode):
+    """Return report wording for retained and current database workflows."""
+    if selection_mode == 'marked_groups':
+        return 'marked groups with adjacent normal FITS'
+    if selection_mode == 'full_retention_detector_groups':
+        return 'complete-retention detector search'
+    if selection_mode == 'full_retention_population_groups':
+        return 'complete-retention missed-purple population search'
+    if selection_mode == 'background_full_retention':
+        return 'queued complete-retention search'
+    return 'progressive ratio search through retained FITS'
+
+
+def _database_search_coverage_line(source_details):
+    """Describe either exhaustive coverage or the legacy initial scan budget."""
+    if str(source_details.get('selection_mode') or '').startswith(
+        'full_retention_'
+    ):
+        return 'Database search coverage: Complete retained archive'
+    return 'Initial fallback search target: {0}'.format(
+        _initial_database_search_text(source_details)
+    )
 
 
 def capture_configuration_guidance(config):
@@ -976,21 +1001,25 @@ def _database_compatibility_key(record):
     )
 
 
-def select_database_evidence(
+def discover_full_retention_database_evidence(
     fits_records,
     bad_frames,
     target_groups,
     max_pair_seconds,
+    settings,
+    progress_callback=None,
 ):
-    """Use marked groups when sufficient, otherwise stage retained evidence.
+    """Inspect the complete retained database catalog and stage only evidence.
 
-    Seven database-marked groups provide a fast, compact path. With zero to
-    six marked groups the current thresholds may be wrong, so the requested
-    group target becomes only the initial scan budget (three FITS per group)
-    and every eligible FITS in the bounded evidence set is made available to
-    the background worker. It then searches newest-first until a safe
-    determination is made or that evidence set is exhausted.
+    Unlike browser uploads, database discovery owns the search horizon.  Every
+    eligible retained row is therefore considered.  Saved detector signatures
+    avoid reopening modern FITS; legacy rows are inspected directly.  Only the
+    final matched purple/reference groups are returned for bounded private
+    staging.
     """
+    from . import asi676mc
+    from . import asi676mc_calibration_engine as engine
+
     target_groups = int(target_groups)
     if target_groups < DATABASE_GROUP_MIN or target_groups > DATABASE_GROUP_MAX:
         raise CalibrationSessionError(
@@ -1010,284 +1039,333 @@ def select_database_evidence(
             '3600 seconds'
         )
 
-    from . import asi676mc
-
-    candidate_records = []
+    normalized_settings = asi676mc.normalize_settings(settings)
+    candidates = []
     for source_record in fits_records:
-        record = dict(source_record)
-        if not asi676mc.camera_name_matches(record.get('camera_name')):
-            continue
         try:
-            file_size = int(record.get('size') or Path(record['path']).stat().st_size)
-            timestamp = float(record['timestamp'])
-            exposure = float(record.get('exposure', -1.0))
-            gain = float(record.get('gain', -1.0))
-            binmode = int(record.get('binmode', -1))
-            width = int(record.get('width', -1))
-            height = int(record.get('height', -1))
-            int(record['id'])
+            record = dict(source_record)
+            path = Path(record['path'])
+            file_size = int(record.get('size') or path.stat().st_size)
+            record.update({
+                'path': path,
+                'size': file_size,
+                'timestamp': float(record['timestamp']),
+                'exposure': float(record.get('exposure', -1.0)),
+                'gain': float(record.get('gain', -1.0)),
+                'binmode': int(record.get('binmode', -1)),
+                'width': int(record.get('width', -1)),
+                'height': int(record.get('height', -1)),
+                'id': int(record['id']),
+            })
         except (KeyError, OSError, OverflowError, TypeError, ValueError):
             continue
         if (
-            file_size <= 0
+            not asi676mc.camera_name_matches(record.get('camera_name'))
+            or file_size <= 0
             or file_size > MAX_FILE_BYTES
-            or not math.isfinite(timestamp)
-            or not math.isfinite(exposure)
-            or exposure <= 0.0
-            or not math.isfinite(gain)
-            or gain < 0.0
-            or binmode != 1
-            or width <= 0
-            or height <= 0
-            or width % 2
-            or height % 2
+            or not math.isfinite(record['timestamp'])
+            or not math.isfinite(record['exposure'])
+            or record['exposure'] <= 0.0
+            or not math.isfinite(record['gain'])
+            or record['gain'] < 0.0
+            or record['binmode'] != 1
+            or record['width'] <= 0
+            or record['height'] <= 0
+            or record['width'] % 2
+            or record['height'] % 2
         ):
             continue
-        record.update({
-            'size': file_size,
-            'timestamp': timestamp,
-            'exposure': exposure,
-            'gain': gain,
-            'binmode': binmode,
-            'width': width,
-            'height': height,
-        })
-        candidate_records.append(record)
+        candidates.append(record)
 
-    # Bound the expensive grouping work before its nested comparisons. Retain
-    # marked diagnostic records first so a compact good/purple/good group is
-    # not hidden merely because frequent standard FITS filled the newest-file
-    # budget. Newest unmarked evidence fills the remaining capacity. Both the
-    # logical bytes and record count use the same limits later enforced by
-    # private staging.
-    candidate_records.sort(
-        key=lambda record: float(record['timestamp']),
-        reverse=True,
-    )
-    retained_candidate_count = len(candidate_records)
-    prioritized_ids = {
-        record['id']
-        for record in candidate_records
-        if any(
-            _database_record_has_role(record, role_name)
-            for role_name in ('bad', 'preceding', 'following')
+    candidates.sort(key=lambda item: item['timestamp'], reverse=True)
+    if not candidates:
+        raise engine.CalibrationError(
+            'the complete retained database archive contains no eligible '
+            'ASI676MC FITS files'
         )
-    }
-    prioritized_records = [
-        record for record in candidate_records
-        if record['id'] in prioritized_ids
-    ]
-    prioritized_records.extend(
-        record for record in candidate_records
-        if record['id'] not in prioritized_ids
-    )
-    bounded_records = []
-    bounded_bytes = 0
-    for record in prioritized_records:
-        if len(bounded_records) >= DATABASE_MAX_FILES:
-            break
-        if bounded_bytes + record['size'] > DATABASE_MAX_BYTES:
-            continue
-        bounded_records.append(record)
-        bounded_bytes += record['size']
-    records = sorted(
-        bounded_records,
-        key=lambda record: float(record['timestamp']),
-    )
-    records_by_id = {record['id']: record for record in records}
 
-    diagnostic_candidates = []
-    diagnostic_capture_ids = set()
-    for record in records:
-        for role in record.get('roles', ()):
-            if not isinstance(role, dict) or role.get('role') != 'bad':
-                continue
-            capture_id = str(role.get('capture_id') or '')
-            if not capture_id or capture_id in diagnostic_capture_ids:
-                continue
-            diagnostic_capture_ids.add(capture_id)
-            diagnostic_candidates.append(record)
-
-    candidates = list(diagnostic_candidates)
-    known_bad_ids = {
-        record['id']
-        for record in records
-        if _database_record_has_role(record, 'bad')
-    }
+    # Successfully repaired standard FITS contain corrected pixels and must
+    # not re-enter calibration as untouched evidence.  Exclude their matching
+    # database rows before any legacy full-image read.
     repaired_standard_ids = set()
-    duplicate_standard_ids = set()
-    diagnostic_times = [
-        float(record['timestamp'])
-        for record in diagnostic_candidates
-    ]
-    for diagnostic_bad in diagnostic_candidates:
-        diagnostic_time = float(diagnostic_bad['timestamp'])
-        diagnostic_key = _database_compatibility_key(diagnostic_bad)
-        duplicate_standard_ids.update(
-            record['id']
-            for record in records
-            if not record.get('roles')
-            and _database_compatibility_key(record) == diagnostic_key
-            and abs(float(record['timestamp']) - diagnostic_time)
-            <= DATABASE_CAPTURE_TIME_TOLERANCE
-        )
-
-    valid_bad_frames = []
     for source_bad_frame in bad_frames:
         try:
-            bad_frame = dict(source_bad_frame)
-            bad_time = float(bad_frame['timestamp'])
-            bad_exposure = float(bad_frame.get('exposure', -1.0))
-            bad_gain = float(bad_frame.get('gain', -1.0))
+            bad_time = float(source_bad_frame['timestamp'])
+            bad_exposure = float(source_bad_frame.get('exposure', -1.0))
+            bad_gain = float(source_bad_frame.get('gain', -1.0))
         except (KeyError, OverflowError, TypeError, ValueError):
             continue
-        if (
-            not math.isfinite(bad_time)
-            or not math.isfinite(bad_exposure)
-            or bad_exposure <= 0.0
-            or not math.isfinite(bad_gain)
-            or bad_gain < 0.0
-        ):
+        if source_bad_frame.get('allow_standard', True):
             continue
-        bad_frame.update({
-            'timestamp': bad_time,
-            'exposure': bad_exposure,
-            'gain': bad_gain,
-        })
-        valid_bad_frames.append(bad_frame)
-
-    for bad_frame in sorted(
-        valid_bad_frames,
-        key=lambda frame: frame['timestamp'],
-        reverse=True,
-    ):
-        bad_time = bad_frame['timestamp']
-        standard_matches = [
-            record for record in records
+        repaired_standard_ids.update(
+            record['id']
+            for record in candidates
             if not record.get('roles')
-            and abs(float(record['timestamp']) - bad_time)
+            and abs(record['timestamp'] - bad_time)
             <= DATABASE_CAPTURE_TIME_TOLERANCE
-            and round(float(record.get('exposure', -1.0)), 12)
-            == round(float(bad_frame.get('exposure', -1.0)), 12)
-            and round(float(record.get('gain', -1.0)), 6)
-            == round(float(bad_frame.get('gain', -1.0)), 6)
-        ]
-        known_bad_ids.update(record['id'] for record in standard_matches)
-        if not bad_frame.get('allow_standard', True):
-            repaired_standard_ids.update(
-                record['id'] for record in standard_matches
-            )
-            continue
-        if any(
-            abs(diagnostic_time - bad_time)
-            <= DATABASE_CAPTURE_TIME_TOLERANCE
-            for diagnostic_time in diagnostic_times
-        ):
-            continue
-        if standard_matches:
-            candidates.append(min(
-                standard_matches,
-                key=lambda record: abs(float(record['timestamp']) - bad_time),
-            ))
+            and round(record['exposure'], 12) == round(bad_exposure, 12)
+            and round(record['gain'], 6) == round(bad_gain, 6)
+        )
 
-    groups = []
-    selected_ids = set()
-    reference_ids = set()
-    seen_bad_ids = set()
-    for bad_record in sorted(
-        candidates,
-        key=lambda record: float(record['timestamp']),
-        reverse=True,
-    ):
-        if bad_record['id'] in seen_bad_ids:
-            continue
-        seen_bad_ids.add(bad_record['id'])
-        bad_time = float(bad_record['timestamp'])
+    diagnostic_bad_records = [
+        record
+        for record in candidates
+        if _database_record_has_role(record, 'bad')
+    ]
+    duplicate_standard_ids = set()
+    for bad_record in diagnostic_bad_records:
         compatibility_key = _database_compatibility_key(bad_record)
-        normal_candidates = [
-            record for record in records
-            if record['id'] not in known_bad_ids
-            and record['id'] not in repaired_standard_ids
-            and record['id'] not in duplicate_standard_ids
-            and not _database_record_has_role(record, 'bad')
+        duplicate_standard_ids.update(
+            record['id']
+            for record in candidates
+            if not record.get('roles')
             and _database_compatibility_key(record) == compatibility_key
-            and 0 < abs(float(record['timestamp']) - bad_time)
-            <= max_pair_seconds
-        ]
-        before = [
-            record for record in normal_candidates
-            if float(record['timestamp']) < bad_time
-        ]
-        after = [
-            record for record in normal_candidates
-            if float(record['timestamp']) > bad_time
-        ]
-        references = []
-        if before:
-            references.append(max(
-                before,
-                key=lambda record: float(record['timestamp']),
-            ))
-        if after:
-            references.append(min(
-                after,
-                key=lambda record: float(record['timestamp']),
-            ))
-        if not references:
-            continue
-        groups.append({'bad': bad_record, 'references': references})
-        selected_ids.add(bad_record['id'])
-        selected_ids.update(record['id'] for record in references)
-        reference_ids.update(record['id'] for record in references)
-        if len(groups) >= target_groups:
-            break
+            and abs(record['timestamp'] - bad_record['timestamp'])
+            <= DATABASE_CAPTURE_TIME_TOLERANCE
+        )
 
     excluded_ids = repaired_standard_ids | duplicate_standard_ids
-    eligible_records = [
-        record for record in records
+    searchable = [
+        record for record in candidates
         if record['id'] not in excluded_ids
     ]
-    if len(groups) >= DATABASE_GROUP_MIN:
-        selected_records = [records_by_id[record_id] for record_id in selected_ids]
-        selected_records.sort(
-            key=lambda record: float(record['timestamp']),
-            reverse=True,
+    inspected = []
+    raw_by_path = {}
+    rejected = Counter()
+    metadata_signature_count = 0
+    legacy_inspected_count = 0
+    detected_during_scan = 0
+    threshold_search_started = False
+    total = len(searchable)
+    for index, record in enumerate(searchable, start=1):
+        path = record['path']
+        try:
+            if record.get('signature'):
+                try:
+                    frame = engine.inspect_fits_metadata(
+                        path,
+                        record,
+                        normalized_settings,
+                    )
+                    metadata_signature_count += 1
+                except (KeyError, TypeError, ValueError):
+                    # A malformed or incomplete saved signature must not make
+                    # an otherwise valid retained FITS invisible. Treat it as
+                    # legacy evidence and inspect the source image directly.
+                    frame = engine.inspect_fits(
+                        path,
+                        normalized_settings,
+                        trusted_camera_name=record.get('camera_name'),
+                    )
+                    legacy_inspected_count += 1
+            else:
+                frame = engine.inspect_fits(
+                    path,
+                    normalized_settings,
+                    trusted_camera_name=record.get('camera_name'),
+                )
+                legacy_inspected_count += 1
+            inspected.append(frame)
+            if frame.is_bad:
+                detected_during_scan += 1
+            raw_by_path[str(path)] = record
+        except (OSError, OverflowError, TypeError, ValueError) as error:
+            rejected[str(error)] += 1
+        if index >= 14 and detected_during_scan < 7:
+            threshold_search_started = True
+        if progress_callback:
+            progress_callback({
+                'phase': (
+                    'threshold_search'
+                    if threshold_search_started
+                    else 'detector_scan'
+                ),
+                'processed_files': index,
+                'total_files': total,
+                'initial_target_files': total,
+                'detected_bad_count': detected_during_scan,
+            })
+
+    minimum = engine.CALIBRATION_OPTIONS['MIN_BAD_PAIRS']
+    if len(inspected) < minimum * 2:
+        raise engine.CalibrationError(
+            'the complete retained database archive was exhausted: only {0} '
+            'compatible FITS could be inspected; at least {1} are required'
+            .format(len(inspected), minimum * 2)
         )
-        selection_mode = 'marked_groups'
-        initial_scan_file_count = len(selected_records)
+
+    detected_bad_count = sum(record.is_bad for record in inspected)
+    if detected_bad_count >= minimum:
+        classified = inspected
+        selection_mode = 'full_retention_detector_groups'
     else:
-        selected_records = sorted(
-            eligible_records,
-            key=lambda record: float(record['timestamp']),
-            reverse=True,
+        try:
+            classified = engine.infer_detection_populations(inspected)
+        except engine.CalibrationError as error:
+            raise engine.CalibrationError(
+                'the complete retained database archive was exhausted after '
+                'inspecting {0} compatible FITS, but no safe purple/normal '
+                'population could be identified: {1}'.format(
+                    len(inspected),
+                    error,
+                )
+            ) from error
+        selection_mode = 'full_retention_population_groups'
+
+    pairs, unmatched = engine.match_pairs(classified, max_pair_seconds)
+    pairs.sort(key=lambda pair: pair.bad.timestamp, reverse=True)
+    exposure_seeds = []
+    seeded_exposures = set()
+    for pair in pairs:
+        exposure = round(pair.bad.exposure, 12)
+        if exposure in seeded_exposures:
+            continue
+        exposure_seeds.append(pair)
+        seeded_exposures.add(exposure)
+        if len(exposure_seeds) >= engine.CALIBRATION_OPTIONS[
+            'MIN_EXPOSURE_LEVELS'
+        ]:
+            break
+    seeded_ids = {id(pair) for pair in exposure_seeds}
+    ordered_pairs = exposure_seeds + [
+        pair for pair in pairs
+        if id(pair) not in seeded_ids
+    ]
+    selected_records = []
+    selected_ids = set()
+    selected_pairs = []
+    selected_bytes = 0
+    selected_group_count = 0
+    two_sided_group_count = 0
+
+    def add_group(pair, references):
+        nonlocal selected_bytes
+        group_frames = (pair.bad,) + tuple(references)
+        group_records = []
+        for frame in group_frames:
+            raw_record = raw_by_path.get(str(frame.path))
+            if raw_record is None or raw_record['id'] in selected_ids:
+                continue
+            group_records.append(raw_record)
+        group_bytes = sum(record['size'] for record in group_records)
+        if (
+            len(selected_records) + len(group_records) > DATABASE_MAX_FILES
+            or selected_bytes + group_bytes > DATABASE_MAX_BYTES
+        ):
+            return False
+        for raw_record in group_records:
+            selected_records.append(raw_record)
+            selected_ids.add(raw_record['id'])
+            selected_bytes += raw_record['size']
+        return True
+
+    for pair in ordered_pairs:
+        references = tuple(pair.references)
+        added = add_group(pair, references)
+        used_two_sided = pair.two_sided
+        if not added and len(references) > 1:
+            nearest = min(
+                references,
+                key=lambda item: abs(item.timestamp - pair.bad.timestamp),
+            )
+            added = add_group(pair, (nearest,))
+            used_two_sided = False
+        if not added:
+            continue
+        selected_group_count += 1
+        selected_pairs.append(engine.MatchedPair(
+            bad=pair.bad,
+            references=(
+                references
+                if used_two_sided
+                else (
+                    min(
+                        references,
+                        key=lambda item: abs(
+                            item.timestamp - pair.bad.timestamp
+                        ),
+                    ),
+                )
+            ),
+        ))
+        if used_two_sided:
+            two_sided_group_count += 1
+        if selected_group_count >= target_groups:
+            break
+
+    if selected_group_count < minimum:
+        limit_detail = ''
+        if pairs and (
+            len(selected_records) >= DATABASE_MAX_FILES
+            or selected_bytes >= DATABASE_MAX_BYTES
+        ):
+            limit_detail = ' within the 200-file/2-GiB evidence staging limit'
+        raise engine.CalibrationError(
+            'the complete retained database archive was exhausted: {0} '
+            'purple frames had compatible adjacent normal evidence{1}; at '
+            'least {2} are required'.format(
+                selected_group_count,
+                limit_detail,
+                minimum,
+            )
         )
-        selection_mode = 'progressive_search'
-        initial_scan_file_count = min(
-            len(selected_records),
-            target_groups * DATABASE_INITIAL_FILES_PER_GROUP,
+
+    selected_frames = [
+        frame for frame in classified
+        if raw_by_path[str(frame.path)]['id'] in selected_ids
+    ]
+    try:
+        engine.validate_evidence(
+            selected_frames,
+            selected_pairs,
+            unmatched=[],
+            allow_unmatched=True,
         )
+    except engine.CalibrationError as error:
+        raise engine.CalibrationError(
+            'the complete retained database archive was exhausted, but the '
+            'selected purple/reference groups could not satisfy calibration '
+            'requirements: {0}'.format(error)
+        ) from error
+
+    if progress_callback:
+        progress_callback({
+            'phase': 'evidence_ready',
+            'processed_files': total,
+            'total_files': total,
+            'initial_target_files': total,
+            'detected_bad_count': detected_bad_count,
+        })
 
     return selected_records, {
         'requested_group_count': target_groups,
         'selection_mode': selection_mode,
-        'marked_candidate_count': len(seen_bad_ids),
-        'selected_marked_group_count': len(groups),
-        'selected_marked_normal_count': len(reference_ids),
         'selected_file_count': len(selected_records),
-        'initial_scan_file_count': initial_scan_file_count,
-        'available_file_count': len(eligible_records),
-        'retained_candidate_count': retained_candidate_count,
-        'selection_limit_reached': len(records) < retained_candidate_count,
+        'initial_scan_file_count': len(selected_records),
+        'available_file_count': len(inspected),
+        'retained_candidate_count': len(candidates),
+        'archive_scanned_file_count': len(searchable),
+        'compatible_scanned_file_count': len(inspected),
+        'metadata_signature_count': metadata_signature_count,
+        'legacy_fits_inspected_count': legacy_inspected_count,
+        'selected_group_count': selected_group_count,
+        'selected_marked_group_count': sum(
+            _database_record_has_role(record, 'bad')
+            for record in selected_records
+        ),
+        'two_sided_group_count': two_sided_group_count,
+        'selection_limit_reached': (
+            selected_group_count < min(target_groups, len(pairs))
+        ),
         'selection_limit_file_count': DATABASE_MAX_FILES,
         'selection_limit_bytes': DATABASE_MAX_BYTES,
-        'selected_logical_bytes': sum(
-            int(record.get('size', 0)) for record in selected_records
-        ),
-        'metadata_signature_count': sum(
-            bool(record.get('signature')) for record in selected_records
-        ),
+        'selected_logical_bytes': selected_bytes,
         'excluded_repaired_standard_count': len(repaired_standard_ids),
         'excluded_duplicate_standard_count': len(duplicate_standard_ids),
+        'rejected_file_count': sum(rejected.values()),
+        'rejection_counts': dict(sorted(rejected.items())),
+        'unmatched_purple_count': len(unmatched),
+        'full_retention_exhaustive': True,
     }
 
 
@@ -1324,6 +1402,8 @@ def _stage_database_files_unlocked(
     owner,
     records,
     storage_root=None,
+    expected_status='uploading',
+    worker_token=None,
 ):
     """Link selected local DB assets into a private calibration session.
 
@@ -1333,8 +1413,13 @@ def _stage_database_files_unlocked(
     change the evidence after selection.
     """
     session_dir, manifest = get_session(session_id, owner, storage_root)
-    if manifest.get('status') != 'uploading':
+    if manifest.get('status') != expected_status:
         raise CalibrationSessionError('this calibration session is not staging')
+    if (
+        worker_token is not None
+        and manifest.get('worker_token') != str(worker_token)
+    ):
+        raise CalibrationSessionError('calibration worker claim was lost')
     if manifest.get('files') or manifest.get('total_bytes'):
         raise CalibrationSessionError(
             'database discovery requires a new empty calibration session'
@@ -1427,6 +1512,26 @@ def stage_database_files(session_id, owner, records, storage_root=None):
             owner,
             records,
             storage_root=storage_root,
+        )
+
+
+def stage_database_files_for_worker(
+    session_id,
+    worker_token,
+    records,
+    storage_root=None,
+):
+    """Stage selected database evidence for the worker that owns the session."""
+    session_dir = _session_dir(session_id, storage_root)
+    with _file_lock(_session_lock_path(session_dir)):
+        manifest = _read_manifest(session_dir)
+        return _stage_database_files_unlocked(
+            session_id,
+            manifest.get('owner'),
+            records,
+            storage_root=storage_root,
+            expected_status='running',
+            worker_token=worker_token,
         )
 
 
@@ -1617,7 +1722,12 @@ def _mark_queued_unlocked(
         raise CalibrationSessionError('this calibration was cancelled')
     if manifest.get('status') != 'uploading':
         raise CalibrationSessionError('this calibration session has already started')
-    if len(manifest.get('files', [])) < 14:
+    source_details = dict(source_details or {})
+    database_search = (
+        source_details.get('kind') == 'database'
+        and source_details.get('selection_mode') == 'background_full_retention'
+    )
+    if not database_search and len(manifest.get('files', [])) < 14:
         raise CalibrationSessionError(
             'select at least 14 FITS files: seven purple frames and at least '
             'seven distinct normal references'
@@ -1653,7 +1763,7 @@ def _mark_queued_unlocked(
         'selected_file_count': len(manifest.get('files', [])),
     })
     manifest['progress'] = {
-        'phase': 'queued',
+        'phase': 'database_search_queued' if database_search else 'queued',
         'processed_files': 0,
         'total_files': len(manifest.get('files', [])),
         'detected_bad_count': 0,
@@ -1886,18 +1996,31 @@ def _result_warnings(
             source_details.get('selected_marked_group_count', 0)
         )
         if source_details.get('selection_limit_reached'):
-            warnings.append(
-                'The saved FITS search reached its {0}-file or 2-GiB staging '
-                'limit. Marked diagnostic FITS inside the bounded query were '
-                'prioritized, but older retained FITS may not have been '
-                'inspected; upload them manually if this result needs more '
-                'evidence.'.format(
-                    source_details.get(
-                        'selection_limit_file_count',
-                        DATABASE_MAX_FILES,
+            if str(selection_mode or '').startswith('full_retention_'):
+                warnings.append(
+                    'The complete retained FITS archive was searched. The '
+                    'final private evidence set reached its {0}-file or 2-GiB '
+                    'staging limit, so calibration used the newest compatible, '
+                    'exposure-diverse groups that fit safely.'.format(
+                        source_details.get(
+                            'selection_limit_file_count',
+                            DATABASE_MAX_FILES,
+                        )
                     )
                 )
-            )
+            else:
+                warnings.append(
+                    'The saved FITS search reached its {0}-file or 2-GiB '
+                    'staging limit. Marked diagnostic FITS inside the bounded '
+                    'query were prioritized, but older retained FITS may not '
+                    'have been inspected; upload them manually if this result '
+                    'needs more evidence.'.format(
+                        source_details.get(
+                            'selection_limit_file_count',
+                            DATABASE_MAX_FILES,
+                        )
+                    )
+                )
         if selection_mode == 'marked_groups' and marked_groups < target_groups:
             warnings.append(
                 'The saved FITS search found {0} usable marked purple-frame '
@@ -1929,6 +2052,19 @@ def _result_warnings(
                         scanned or available
                     )
                 )
+        elif selection_mode == 'full_retention_population_groups':
+            warnings.append(
+                'The configured detector did not identify enough purple '
+                'frames. The background search checked the complete retained '
+                'archive, found a safe higher-ratio population with adjacent '
+                'normal evidence, and staged only the selected groups.'
+            )
+        elif selection_mode == 'full_retention_detector_groups':
+            warnings.append(
+                'The background search checked the complete retained archive '
+                'and staged only the selected detector-recognised purple '
+                'frames and their adjacent normal evidence.'
+            )
 
     matched_count = int(quality.get('matched_bad_count', 0))
     two_sided_count = int(quality.get('two_sided_count', 0))
@@ -2332,6 +2468,33 @@ def _friendly_failure_message(message):
         r'(\d+) matched (?:purple|bad) frames found',
         lowered,
     )
+    if 'complete retained database archive' in lowered:
+        if 'no eligible asi676mc fits' in lowered:
+            return (
+                'Saved-FITS discovery checked the complete retention period '
+                'but found no eligible local ASI676MC FITS. Check FITS saving '
+                'and retention, then try again.'
+            )
+        if 'no safe purple/normal population' in lowered:
+            return (
+                'Saved-FITS discovery checked the complete retention period '
+                'but the detector ratios did not form a safe purple/normal '
+                'population. No settings were changed.'
+            )
+        return (
+            'Saved-FITS discovery checked the complete retention period but '
+            'did not find seven purple frames with compatible nearby normal '
+            'evidence. No settings were changed.'
+        )
+    if (
+        'selected for this database search has changed' in lowered
+        or 'selected database camera is no longer an asi676mc' in lowered
+    ):
+        return (
+            'The camera selected for saved-FITS discovery changed before the '
+            'background search started. Select the ASI676MC again and start a '
+            'new search.'
+        )
     if 'no compatible raw16 rggb fits files found' in lowered:
         return _friendly_all_rejected_message(message_text)
     if matched_count:
@@ -2843,21 +3006,20 @@ def format_threshold_suggestion_report(payload, manifest):
         lines.extend((
             'Method: Saved FITS search on the ASI676MC Calibration page',
             'Camera: {0}'.format(source_details.get('camera_name', 'Unknown')),
-            'Search order: Newest retained eligible FITS first',
+            'Selection preference: Newest compatible FITS with required '
+            'exposure diversity',
             'Target purple-frame groups: {0}'.format(
                 source_details.get('requested_group_count', 0)
             ),
             'Selection path: {0}'.format(
-                'marked groups with adjacent normal FITS'
-                if source_details.get('selection_mode') == 'marked_groups'
-                else 'progressive ratio search through retained FITS'
+                _database_selection_text(
+                    source_details.get('selection_mode')
+                )
             ),
             'Usable marked groups found: {0}'.format(
                 source_details.get('selected_marked_group_count', 0)
             ),
-            'Initial fallback search target: {0}'.format(
-                _initial_database_search_text(source_details)
-            ),
+            _database_search_coverage_line(source_details),
             'FITS inspected: {0} of {1}'.format(
                 payload.get('quality', {}).get(
                     'scanned_file_count',
@@ -2867,6 +3029,15 @@ def format_threshold_suggestion_report(payload, manifest):
             ),
             'Eligible retained FITS available: {0}'.format(
                 source_details.get('available_file_count', selected_count)
+            ),
+            'Retained FITS searched: {0}'.format(
+                source_details.get(
+                    'archive_scanned_file_count',
+                    source_details.get('available_file_count', selected_count),
+                )
+            ),
+            'Legacy FITS directly inspected: {0}'.format(
+                source_details.get('legacy_fits_inspected_count', 0)
             ),
             'Saved ratio metadata available: {0}'.format(
                 source_details.get('metadata_signature_count', 0)
@@ -2884,15 +3055,27 @@ def format_threshold_suggestion_report(payload, manifest):
                 else 'Unknown retention',
             ),
         ))
-        _append_report_paragraph(
-            lines,
-            'When at least seven complete database-marked groups are '
-            'available, the tool uses them as a compact evidence set. '
-            'Otherwise, population analysis uses measured FITS ratios and may '
-            'continue beyond the initial search target. This analysis removed '
-            'only temporary staging links; the original saved FITS remain '
-            'unchanged.',
-        )
+        if str(source_details.get('selection_mode') or '').startswith(
+            'full_retention_'
+        ):
+            source_explanation = (
+                'The background search inspected the complete retained '
+                'archive. Saved ratio metadata avoided unnecessary image '
+                'decoding; legacy FITS were inspected directly. Only the '
+                'final purple/reference groups were staged. This analysis '
+                'removed only temporary staging links; the original saved '
+                'FITS remain unchanged.'
+            )
+        else:
+            source_explanation = (
+                'When at least seven complete database-marked groups are '
+                'available, the tool uses them as a compact evidence set. '
+                'Otherwise, population analysis uses measured FITS ratios and '
+                'may continue beyond the initial search target. This analysis '
+                'removed only temporary staging links; the original saved '
+                'FITS remain unchanged.'
+            )
+        _append_report_paragraph(lines, source_explanation)
     elif source_kind == 'upload':
         lines.extend((
             'Method: Manual FITS upload on the ASI676MC Calibration page',
@@ -3087,21 +3270,20 @@ def format_integrated_report(payload, manifest):
         lines.extend((
             'Method: Saved FITS search on the ASI676MC Calibration page',
             'Camera: {0}'.format(source_details.get('camera_name', 'Unknown')),
-            'Search order: Newest retained eligible FITS first',
+            'Selection preference: Newest compatible FITS with required '
+            'exposure diversity',
             'Target purple-frame groups: {0}'.format(
                 source_details.get('requested_group_count', 0)
             ),
             'Selection path: {0}'.format(
-                'marked groups with adjacent normal FITS'
-                if source_details.get('selection_mode') == 'marked_groups'
-                else 'progressive ratio search through retained FITS'
+                _database_selection_text(
+                    source_details.get('selection_mode')
+                )
             ),
             'Usable marked groups found: {0}'.format(
                 source_details.get('selected_marked_group_count', 0)
             ),
-            'Initial fallback search target: {0}'.format(
-                _initial_database_search_text(source_details)
-            ),
+            _database_search_coverage_line(source_details),
             'FITS inspected: {0} of {1}'.format(
                 quality.get('scanned_file_count', selected_file_count),
                 selected_file_count,
@@ -3111,6 +3293,18 @@ def format_integrated_report(payload, manifest):
                     'available_file_count',
                     selected_file_count,
                 )
+            ),
+            'Retained FITS searched: {0}'.format(
+                source_details.get(
+                    'archive_scanned_file_count',
+                    source_details.get(
+                        'available_file_count',
+                        selected_file_count,
+                    ),
+                )
+            ),
+            'Legacy FITS directly inspected: {0}'.format(
+                source_details.get('legacy_fits_inspected_count', 0)
             ),
             'Saved ratio metadata available: {0}'.format(
                 source_details.get('metadata_signature_count', 0)
@@ -3137,16 +3331,29 @@ def format_integrated_report(payload, manifest):
                 source_details.get('unsupported_count', 0)
             ),
         ))
-        _append_report_paragraph(
-            lines,
-            'When at least seven complete database-marked groups are '
-            'available, the tool uses them as a compact evidence set. '
-            'Otherwise, it classifies retained FITS by their measured ratios '
-            'and may continue beyond the initial search target. This '
-            'calibration removed only temporary staging links. The original '
-            'saved FITS remain unchanged and continue to follow normal FITS '
-            'retention.',
-        )
+        if str(source_details.get('selection_mode') or '').startswith(
+            'full_retention_'
+        ):
+            source_explanation = (
+                'The background search inspected the complete retained '
+                'archive. Saved ratio metadata avoided unnecessary image '
+                'decoding; legacy FITS were inspected directly. Only the '
+                'final purple/reference groups were staged. This calibration '
+                'removed only temporary staging links. The original saved '
+                'FITS remain unchanged and continue to follow normal FITS '
+                'retention.'
+            )
+        else:
+            source_explanation = (
+                'When at least seven complete database-marked groups are '
+                'available, the tool uses them as a compact evidence set. '
+                'Otherwise, it classifies retained FITS by their measured '
+                'ratios and may continue beyond the initial search target. '
+                'This calibration removed only temporary staging links. The '
+                'original saved FITS remain unchanged and continue to follow '
+                'normal FITS retention.'
+            )
+        _append_report_paragraph(lines, source_explanation)
     elif source_kind == 'upload':
         lines.extend((
             'Method: Manual FITS upload on the ASI676MC Calibration page',
@@ -3382,7 +3589,11 @@ def format_integrated_report(payload, manifest):
     return '\n'.join(lines).rstrip() + '\n'
 
 
-def run_calibration_session(session_id, storage_root=None):
+def run_calibration_session(
+    session_id,
+    storage_root=None,
+    database_loader=None,
+):
     """Run the calibration engine for one queued web session."""
     session_dir = _session_dir(session_id, storage_root)
     worker_token = uuid.uuid4().hex
@@ -3425,11 +3636,6 @@ def run_calibration_session(session_id, storage_root=None):
         # can manage uploads and status without loading NumPy or FITS support.
         from . import asi676mc_calibration_engine
 
-        metadata_by_name = {
-            entry['name']: entry
-            for entry in manifest.get('files', ())
-            if entry.get('database_id') is not None
-        }
         source_details = manifest.get('source') or {}
         trusted_camera_name = None
         if source_details.get('kind') == 'upload':
@@ -3454,6 +3660,49 @@ def run_calibration_session(session_id, storage_root=None):
                 current['heartbeat_utc'] = _utc_now_text()
                 _write_manifest(session_dir, current)
             last_progress = progress
+
+        if (
+            source_details.get('kind') == 'database'
+            and source_details.get('selection_mode')
+            == 'background_full_retention'
+            and not manifest.get('files')
+        ):
+            if database_loader is None:
+                raise CalibrationSessionError(
+                    'database calibration requires a retained-FITS loader'
+                )
+            catalog = database_loader(source_details, record_progress)
+            selected_records, discovery = (
+                discover_full_retention_database_evidence(
+                    catalog.get('fits_records', ()),
+                    catalog.get('bad_frames', ()),
+                    source_details.get('requested_group_count', 25),
+                    manifest['max_pair_seconds'],
+                    manifest.get('settings'),
+                    progress_callback=record_progress,
+                )
+            )
+            stage_database_files_for_worker(
+                session_id,
+                worker_token,
+                selected_records,
+                storage_root=storage_root,
+            )
+            with _file_lock(_session_lock_path(session_dir)):
+                manifest = active_manifest()
+                updated_source = dict(source_details)
+                updated_source.update(catalog.get('source_details') or {})
+                updated_source.update(discovery)
+                manifest['source'] = updated_source
+                manifest['heartbeat_utc'] = _utc_now_text()
+                _write_manifest(session_dir, manifest)
+            source_details = manifest.get('source') or {}
+
+        metadata_by_name = {
+            entry['name']: entry
+            for entry in manifest.get('files', ())
+            if entry.get('database_id') is not None
+        }
 
         with redirect_stdout(captured_output):
             payload = asi676mc_calibration_engine.calibrate_folder(

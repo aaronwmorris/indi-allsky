@@ -261,8 +261,8 @@
     <div class="tw:card-body tw:p-6 tw:pt-3">
         <p class="calibration-help tw:text-sm tw:mb-3">
             These settings affect future captures only. Existing data can still
-            be used: saved FITS search works with previously flagged purple
-            frames, while manual upload identifies them from the selected files.
+            be used: saved FITS search checks the complete retained archive,
+            while manual upload identifies purple frames in the selected files.
             Both camera-bound paths can use legacy standard FITS with a generic
             camera name, but RAW16, RGGB, 1x1 binning, zero Bayer offsets, valid
             capture metadata, and matching frame dimensions within each
@@ -327,14 +327,12 @@
                 </div>
                 <div class="calibration-card-body tw:card-body tw:p-6 tw:pt-3">
                     <p class="calibration-help">
-                        Search this camera's saved FITS from newest to oldest.
-                        If at least seven marked purple frames have adjacent
-                        normal FITS, the tool uses those groups immediately.
-                        Otherwise it checks the bounded recent evidence set
-                        until it finds seven convincing high-ratio groups or
-                        reaches the search limit. Marked diagnostic groups are
-                        prioritized. The search considers up to 600 recent
-                        database entries and stages at most 200 FITS or 2 GiB.
+                        Queue a background search across this camera's complete
+                        FITS retention period. Saved detector ratios make modern
+                        entries quick to classify; legacy FITS are inspected
+                        directly. Only the final purple/normal groups are staged,
+                        up to 200 FITS or 2 GiB. Missing, incompatible, repaired,
+                        and corrupt files are skipped and summarized.
                     </p>
                     <div class="tw:mb-4">
                         {{ form_calibration.DATABASE_GROUP_LIMIT.label(class='tw:label-text tw:font-semibold') }}
@@ -345,10 +343,9 @@
                             <div class="calibration-help tw:text-sm">
                                 Choose {{ calibration_database_limits.minimum }}
                                 to {{ calibration_database_limits.maximum }}
-                                groups. The newest marked groups are preferred.
-                                When fewer exist, this target sets only the
-                                initial search size; the tool may inspect older
-                                retained FITS automatically.
+                                groups. After checking the full retained archive,
+                                the newest compatible, exposure-diverse groups
+                                are selected up to this target.
                             </div>
                         </div>
                     </div>
@@ -1608,7 +1605,8 @@ async function pollCalibration(sessionId) {
             setCalibrationProgress(
                 72,
                 'Waiting to start',
-                'The background worker will begin calibration when available.'
+                'The background worker will begin discovery and calibration '
+                    + 'when available.'
             );
         } else if (
             status.status === 'running'
@@ -1617,29 +1615,31 @@ async function pollCalibration(sessionId) {
             const progress = status.progress || {};
             const processed = Number(progress.processed_files || 0);
             const available = Number(progress.total_files || 0);
-            const initialTarget = Number(
-                progress.initial_target_files || 0
-            );
             const ratio = available > 0
                 ? Math.min(1, processed / available)
                 : 0;
-            const scanPercent = 73 + (ratio * 12);
+            const catalogPercent = 73 + (ratio * 5);
+            const scanPercent = 78 + (ratio * 8);
             if (status.status === 'cancel_requested') {
                 setCalibrationProgress(
                     96,
                     'Stopping calibration',
                     'Waiting for the current safe validation checkpoint.'
                 );
+            } else if (progress.phase === 'database_catalog') {
+                setCalibrationProgress(
+                    catalogPercent,
+                    'Reading the retained FITS catalog',
+                    'Checked ' + processed + ' of ' + available
+                        + ' database rows. The complete configured retention '
+                        + 'period is included.'
+                );
             } else if (progress.phase === 'threshold_search') {
                 setCalibrationProgress(
                     scanPercent,
                     'Searching for missed purple frames',
                     (
-                        initialTarget > 0 && processed > initialTarget
-                            ? 'The initial target of ' + initialTarget
-                                + ' FITS did not settle the result, so the '
-                                + 'search expanded into older retained data. '
-                            : ''
+                        'The complete retained archive remains in scope. '
                     )
                     + 'The current detector found only '
                     + Number(progress.detected_bad_count || 0)

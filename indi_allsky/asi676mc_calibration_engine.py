@@ -1262,15 +1262,13 @@ def threshold_suggestion_payload(
     }
 
 
-def suggest_detection_thresholds(records, settings, max_pair_seconds):
-    """Return a preliminary threshold result for two clean populations.
+def infer_detection_populations(records):
+    """Classify two clean ratio populations without trusting current thresholds.
 
-    This path is used only when the configured detector cannot identify the
-    seven purple frames required for normal calibration. It clusters the three
-    detector ratios without using database flags or filenames, then applies
-    the same adjacency, compatibility, exposure, and camera-identity checks as
-    calibration. A result is advisory: repair constants are not fitted and the
-    web layer never applies these thresholds automatically.
+    Database discovery uses this independently of final calibration so a
+    purple event can be found anywhere in retained history even when the live
+    detector missed it.  The returned records preserve every capture field and
+    change only the derived ``is_bad`` signature flag.
     """
     minimum = CALIBRATION_OPTIONS['MIN_THRESHOLD_CLUSTER_SIZE']
     if len(records) < minimum * 2:
@@ -1378,6 +1376,20 @@ def suggest_detection_thresholds(records, settings, max_pair_seconds):
         )
         for index, record in enumerate(records)
     ]
+    return inferred_records
+
+
+def suggest_detection_thresholds(records, settings, max_pair_seconds):
+    """Return a preliminary threshold result for two clean populations.
+
+    This path is used only when the configured detector cannot identify the
+    seven purple frames required for normal calibration. It clusters the three
+    detector ratios without using database flags or filenames, then applies
+    the same adjacency, compatibility, exposure, and camera-identity checks as
+    calibration. A result is advisory: repair constants are not fitted and the
+    web layer never applies these thresholds automatically.
+    """
+    inferred_records = infer_detection_populations(records)
     ranges = signature_ranges(inferred_records)
     pairs, unmatched = match_pairs(inferred_records, max_pair_seconds)
     evidence = validate_evidence(

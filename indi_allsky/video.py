@@ -18,6 +18,7 @@ import logging
 import ephem
 
 from . import constants
+from . import asi676mc
 from . import asi676mc_calibration
 
 from .timelapse import TimelapseGenerator
@@ -227,6 +228,133 @@ class VideoWorker(Process):
         action_method(task, **kwargs)
 
 
+    def _loadAsi676mcCalibrationDatabase(self, source_details, progress_callback):
+        """Return every retained FITS row for one bound ASI676MC camera."""
+        camera_id = int(source_details['camera_id'])
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .first()
+        expected_uuid = str(source_details.get('camera_uuid') or '')
+        if (
+            camera is None
+            or not expected_uuid
+            or not camera.uuid
+            or str(camera.uuid) != expected_uuid
+        ):
+            raise RuntimeError(
+                'the ASI676MC selected for this database search has changed'
+            )
+        camera_name = asi676mc.camera_record_identity_name(camera)
+        if not asi676mc.camera_name_matches(camera_name):
+            raise RuntimeError(
+                'the selected database camera is no longer an ASI676MC'
+            )
+        retention_cutoff = datetime.strptime(
+            str(source_details['retention_cutoff']),
+            '%Y-%m-%d',
+        ).date()
+
+        fits_query = IndiAllSkyDbFitsImageTable.query\
+            .filter(IndiAllSkyDbFitsImageTable.camera_id == camera_id)\
+            .filter(IndiAllSkyDbFitsImageTable.dayDate >= retention_cutoff)\
+            .order_by(IndiAllSkyDbFitsImageTable.createDate.desc())
+        database_fits_count = fits_query.count()
+        fits_records = []
+        missing_local_count = 0
+        unsupported_count = 0
+        for index, fits_entry in enumerate(
+            fits_query.yield_per(250),
+            start=1,
+        ):
+            if index % 25 == 0 or index == database_fits_count:
+                progress_callback({
+                    'phase': 'database_catalog',
+                    'processed_files': index,
+                    'total_files': database_fits_count,
+                    'initial_target_files': database_fits_count,
+                    'detected_bad_count': 0,
+                })
+            try:
+                source_path = fits_entry.getFilesystemPath()
+                if not source_path.is_file():
+                    missing_local_count += 1
+                    continue
+                source_size = source_path.stat().st_size
+            except OSError:
+                missing_local_count += 1
+                continue
+            if not asi676mc_calibration.is_database_fits_path(source_path):
+                unsupported_count += 1
+                continue
+            fits_data = (
+                fits_entry.data
+                if isinstance(fits_entry.data, dict)
+                else {}
+            )
+            diagnostic = fits_data.get(
+                asi676mc.DIAGNOSTIC_METADATA_KEY,
+                {},
+            )
+            roles = (
+                diagnostic.get('roles', ())
+                if isinstance(diagnostic, dict)
+                else ()
+            )
+            signature = fits_data.get(asi676mc.SIGNATURE_METADATA_KEY)
+            fits_records.append({
+                'id': fits_entry.id,
+                'path': source_path,
+                'size': source_size,
+                'timestamp': fits_entry.createDate.timestamp(),
+                'exposure': fits_entry.exposure,
+                'gain': fits_entry.gain,
+                'binmode': fits_entry.binmode,
+                'width': fits_entry.width,
+                'height': fits_entry.height,
+                'signature': (
+                    dict(signature)
+                    if isinstance(signature, dict)
+                    else None
+                ),
+                'camera_name': camera_name,
+                'roles': [
+                    dict(role)
+                    for role in roles
+                    if isinstance(role, dict)
+                ],
+            })
+        repair_status = (
+            IndiAllSkyDbImageTable.data['asi676mc_repair_status'].as_string()
+        )
+        bad_images = IndiAllSkyDbImageTable.query\
+            .filter(IndiAllSkyDbImageTable.camera_id == camera_id)\
+            .filter(IndiAllSkyDbImageTable.dayDate >= retention_cutoff)\
+            .filter(repair_status.in_(asi676mc.DIAGNOSTIC_BAD_STATUSES))\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .yield_per(250)
+        bad_frames = []
+        for image in bad_images:
+            image_data = image.data if isinstance(image.data, dict) else {}
+            bad_frames.append({
+                'timestamp': image.createDate.timestamp(),
+                'exposure': image.exposure,
+                'gain': image.gain,
+                'allow_standard': (
+                    image_data.get('asi676mc_repair_status') != 'repaired'
+                ),
+            })
+
+        return {
+            'fits_records': fits_records,
+            'bad_frames': bad_frames,
+            'source_details': {
+                'database_fits_count': database_fits_count,
+                'local_fits_count': len(fits_records),
+                'missing_local_count': missing_local_count,
+                'unsupported_count': unsupported_count,
+            },
+        }
+
     def generateAsi676mcCalibration(self, task, **kwargs):
         """Run a staged ASI676MC calibration outside the web request.
 
@@ -239,7 +367,10 @@ class VideoWorker(Process):
         """
         session_id = str(kwargs['session_id'])
         try:
-            result = asi676mc_calibration.run_calibration_session(session_id)
+            result = asi676mc_calibration.run_calibration_session(
+                session_id,
+                database_loader=self._loadAsi676mcCalibrationDatabase,
+            )
         except Exception as error:
             logger.exception(
                 'ASI676MC web calibration failed for session %s',

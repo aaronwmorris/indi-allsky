@@ -301,255 +301,101 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'roles': list(roles),
         }
 
-    def test_database_fallback_is_newest_first_and_uses_full_retention(self):
-        records = [
-            self._database_record(index, 1000 + index)
-            for index in range(1, 21)
-        ]
-
-        selected, summary = asi676mc_calibration.select_database_evidence(
-            records,
-            bad_frames=[],
-            target_groups=7,
-            max_pair_seconds=90.0,
-        )
-        self.assertEqual([record['id'] for record in selected], list(
-            range(20, 0, -1)
-        ))
-        self.assertEqual(summary['requested_group_count'], 7)
-        self.assertEqual(summary['selection_mode'], 'progressive_search')
-        self.assertEqual(summary['selected_file_count'], 20)
-        self.assertEqual(summary['initial_scan_file_count'], 20)
-
-        selected, summary = asi676mc_calibration.select_database_evidence(
-            records,
-            bad_frames=[],
-            target_groups=10,
-            max_pair_seconds=90.0,
-        )
-        self.assertEqual(summary['requested_group_count'], 10)
-        self.assertEqual(summary['selected_file_count'], 20)
-        self.assertEqual(len(selected), 20)
-
-    def test_database_search_is_bounded_before_population_grouping(self):
-        records = [
-            self._database_record(index, 1000 + index)
-            for index in range(1, 251)
-        ]
-        selected, summary = asi676mc_calibration.select_database_evidence(
-            records,
-            bad_frames=[],
-            target_groups=100,
-            max_pair_seconds=90.0,
-        )
-
-        self.assertEqual(len(selected), asi676mc_calibration.DATABASE_MAX_FILES)
-        self.assertTrue(summary['selection_limit_reached'])
-        self.assertEqual(summary['retained_candidate_count'], 250)
-        self.assertEqual(selected[0]['id'], 250)
-
-    def test_database_search_prioritizes_older_marked_groups_before_bound(self):
-        records = [
-            self._database_record(index, 10000 + index)
-            for index in range(1, 221)
-        ]
-        marked_ids = set()
-        next_id = 1000
-        for group_index in range(7):
-            capture_id = 'older-capture-{0}'.format(group_index)
-            base_time = 1000 + (group_index * 300)
-            for role, offset in (
-                ('preceding', -10),
-                ('bad', 0),
-                ('following', 10),
-            ):
-                record = self._database_record(
-                    next_id,
-                    base_time + offset,
-                    roles=({
-                        'capture_id': capture_id,
-                        'role': role,
-                    },),
-                )
-                marked_ids.add(next_id)
-                records.append(record)
-                next_id += 1
-
-        selected, summary = asi676mc_calibration.select_database_evidence(
-            records,
-            bad_frames=[],
-            target_groups=7,
-            max_pair_seconds=90.0,
-        )
-
-        self.assertEqual(summary['selection_mode'], 'marked_groups')
-        self.assertEqual(summary['selected_marked_group_count'], 7)
-        self.assertEqual({record['id'] for record in selected}, marked_ids)
-        self.assertTrue(summary['selection_limit_reached'])
-
-    def test_database_search_rejects_non_asi676mc_records(self):
-        records = [self._database_record(index, 1000 + index) for index in range(20)]
-        for record in records:
-            record['camera_name'] = 'ZWO CCD ASI678MC'
-
-        selected, summary = asi676mc_calibration.select_database_evidence(
-            records,
-            bad_frames=[],
-            target_groups=7,
-            max_pair_seconds=90.0,
-        )
-        self.assertFalse(selected)
-        self.assertEqual(summary['retained_candidate_count'], 0)
-
-    def test_database_search_ignores_malformed_capture_metadata(self):
-        records = [
-            self._database_record(index, 1000 + index)
-            for index in range(1, 15)
-        ]
-        invalid_timestamp = self._database_record(101, 2001)
-        invalid_timestamp['timestamp'] = float('nan')
-        invalid_exposure = self._database_record(102, 2002)
-        invalid_exposure['exposure'] = float('inf')
-        invalid_binning = self._database_record(103, 2003)
-        invalid_binning['binmode'] = 2
-        invalid_shape = self._database_record(104, 2004)
-        invalid_shape['width'] = 3551
-        records.extend([
-            invalid_timestamp,
-            invalid_exposure,
-            invalid_binning,
-            invalid_shape,
-        ])
-
-        selected, summary = asi676mc_calibration.select_database_evidence(
-            records,
-            bad_frames=[{'timestamp': float('nan')}],
-            target_groups=7,
-            max_pair_seconds=90.0,
-        )
-
-        self.assertEqual(len(selected), 14)
-        self.assertEqual(summary['retained_candidate_count'], 14)
-
-    def test_database_selection_uses_saved_preceding_and_following_triplet(self):
-        records = [
-            self._database_record(
-                1,
-                990,
-                roles=({'capture_id': 'capture-1', 'role': 'preceding'},),
-            ),
-            self._database_record(
-                2,
-                1000,
-                roles=({'capture_id': 'capture-1', 'role': 'bad'},),
-            ),
-            self._database_record(
-                3,
-                1010,
-                roles=({'capture_id': 'capture-1', 'role': 'following'},),
-            ),
-        ]
-
-        selected, summary = asi676mc_calibration.select_database_evidence(
-            records,
-            bad_frames=[],
-            target_groups=7,
-            max_pair_seconds=90.0,
-        )
-
-        self.assertEqual({record['id'] for record in selected}, {1, 2, 3})
-        self.assertEqual(summary['marked_candidate_count'], 1)
-        self.assertEqual(summary['selected_marked_group_count'], 1)
-        self.assertEqual(summary['selection_mode'], 'progressive_search')
-
-    def test_database_selection_uses_compact_path_for_seven_marked_groups(self):
+    def test_full_retention_discovery_finds_unmarked_bad_frames_5000_files_back(self):
         records = []
-        record_id = 1
-        for index in range(7):
-            base_time = 1000 + (index * 300)
-            capture_id = 'capture-{0}'.format(index)
-            for offset, role in ((0, 'preceding'), (10, 'bad'), (20, 'following')):
-                records.append(self._database_record(
-                    record_id,
-                    base_time + offset,
-                    roles=({
-                        'capture_id': capture_id,
-                        'role': role,
-                    },),
-                ))
-                record_id += 1
+        bad_ids = {50, 150, 250, 350, 450, 550, 650}
+        for record_id in range(1, 5201):
+            record = self._database_record(record_id, record_id * 20)
+            if 649 <= record_id <= 651:
+                record['exposure'] = 0.002
+            ratio = 3.0 if record_id in bad_ids else 1.0
+            record['signature'] = {
+                'version': 1,
+                'purple_ratio': ratio,
+                'red_side_ratio': ratio,
+                'blue_side_ratio': ratio,
+            }
+            records.append(record)
 
-        selected, summary = asi676mc_calibration.select_database_evidence(
-            records,
-            bad_frames=[],
-            target_groups=7,
-            max_pair_seconds=90.0,
+        settings = calibration_engine.asi676mc.normalize_settings({
+            'PURPLE_RATIO_THRESHOLD': 10.0,
+            'RED_SIDE_RATIO_THRESHOLD': 10.0,
+            'BLUE_SIDE_RATIO_THRESHOLD': 10.0,
+        })
+        selected, summary = (
+            asi676mc_calibration.discover_full_retention_database_evidence(
+                records,
+                bad_frames=[],
+                target_groups=7,
+                max_pair_seconds=30.0,
+                settings=settings,
+            )
         )
 
-        self.assertEqual(summary['selection_mode'], 'marked_groups')
-        self.assertEqual(summary['selected_marked_group_count'], 7)
-        self.assertEqual(summary['selected_marked_normal_count'], 14)
-        self.assertEqual(len(selected), 21)
-        self.assertEqual(selected[0]['id'], 21)
-
-    def test_database_selection_rejects_invalid_group_targets(self):
-        records = [
-            self._database_record(
-                1,
-                1000,
-                roles=({'capture_id': 'capture-1', 'role': 'bad'},),
-            ),
-            self._database_record(
-                2,
-                1010,
-                roles=({'capture_id': 'capture-1', 'role': 'following'},),
-            ),
-        ]
-        for group_target in (0, 6, 101):
-            with self.subTest(group_target=group_target):
-                with self.assertRaises(
-                    asi676mc_calibration.CalibrationSessionError
-                ):
-                    asi676mc_calibration.select_database_evidence(
-                        records,
-                        bad_frames=[],
-                        target_groups=group_target,
-                        max_pair_seconds=90.0,
-                    )
-
-    def test_database_selection_uses_flags_as_hints_and_excludes_repaired_standard(self):
-        records = [
-            self._database_record(index, 1000 + (index * 10))
-            for index in range(1, 17)
-        ]
-        bad_frames = [
-            {
-                'timestamp': 1010,
-                'exposure': 0.001,
-                'gain': 100.0,
-                'allow_standard': False,
-            },
-            {
-                'timestamp': 1020,
-                'exposure': 0.001,
-                'gain': 100.0,
-                'allow_standard': True,
-            },
-        ]
-
-        selected, summary = asi676mc_calibration.select_database_evidence(
-            records,
-            bad_frames=bad_frames,
-            target_groups=7,
-            max_pair_seconds=90.0,
-        )
         selected_ids = {record['id'] for record in selected}
-        self.assertNotIn(1, selected_ids)
-        self.assertIn(2, selected_ids)
-        self.assertEqual(summary['excluded_repaired_standard_count'], 1)
-        self.assertEqual(summary['marked_candidate_count'], 1)
-        self.assertEqual(summary['selection_mode'], 'progressive_search')
-        self.assertEqual(summary['selected_file_count'], 15)
+        self.assertTrue(bad_ids.issubset(selected_ids))
+        self.assertEqual(summary['archive_scanned_file_count'], 5200)
+        self.assertEqual(summary['metadata_signature_count'], 5200)
+        self.assertEqual(summary['selected_group_count'], 7)
+        self.assertEqual(
+            summary['selection_mode'],
+            'full_retention_population_groups',
+        )
+        self.assertTrue(summary['full_retention_exhaustive'])
+
+    def test_full_retention_discovery_inspects_every_legacy_fits(self):
+        records = [
+            self._database_record(record_id, record_id * 20)
+            for record_id in range(1, 31)
+        ]
+        records[0]['signature'] = {'version': 1}
+        for record in records:
+            if 20 <= record['id'] <= 22:
+                record['exposure'] = 0.002
+        bad_ids = {3, 6, 9, 12, 15, 18, 21}
+
+        def inspect_legacy(path, _settings, trusted_camera_name=None):
+            del trusted_camera_name
+            record_id = int(path.stem.split('_')[-1])
+            ratio = 3.0 if record_id in bad_ids else 1.0
+            return calibration_engine.FrameRecord(
+                path=path,
+                timestamp=record_id * 20.0,
+                exposure=0.002 if 20 <= record_id <= 22 else 0.001,
+                gain=100.0,
+                xbin=1,
+                ybin=1,
+                shape=(3552, 3552),
+                bayer='RGGB',
+                camera_name='ZWO CCD ASI676MC',
+                signature={
+                    'purple_ratio': ratio,
+                    'red_side_ratio': ratio,
+                    'blue_side_ratio': ratio,
+                    'is_bad': record_id in bad_ids,
+                },
+            )
+
+        with mock.patch.object(
+            calibration_engine,
+            'inspect_fits',
+            side_effect=inspect_legacy,
+        ) as inspect_mock:
+            selected, summary = (
+                asi676mc_calibration.discover_full_retention_database_evidence(
+                    records,
+                    bad_frames=[],
+                    target_groups=7,
+                    max_pair_seconds=30.0,
+                    settings={},
+                )
+            )
+
+        self.assertEqual(inspect_mock.call_count, 30)
+        self.assertEqual(summary['legacy_fits_inspected_count'], 30)
+        self.assertEqual(summary['archive_scanned_file_count'], 30)
+        self.assertEqual(summary['selected_group_count'], 7)
+        self.assertTrue(bad_ids.issubset({record['id'] for record in selected}))
 
     def test_database_staging_links_sources_without_deleting_them(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -894,6 +740,124 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 calibrate_folder.call_args.kwargs['trusted_camera_name'],
                 'ZWO CCD ASI676MC',
             )
+
+    def test_background_database_session_discovers_then_stages_evidence(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            source_root = root.joinpath('database')
+            source_root.mkdir()
+            manifest = asi676mc_calibration.create_session(
+                'alice',
+                root,
+                camera_identity={
+                    'id': 7,
+                    'uuid': 'camera-uuid',
+                    'name': 'ZWO CCD ASI676MC',
+                },
+            )
+            records = []
+            bad_ids = {2, 5, 8, 11, 14, 17, 20}
+            for record_id in range(1, 22):
+                path = source_root.joinpath('{0}.fit'.format(record_id))
+                path.write_bytes(b'SIMPLE database evidence')
+                ratio = 3.0 if record_id in bad_ids else 1.0
+                record = self._database_record(record_id, record_id * 20)
+                record.update({
+                    'path': path,
+                    'size': path.stat().st_size,
+                    'signature': {
+                        'version': 1,
+                        'purple_ratio': ratio,
+                        'red_side_ratio': ratio,
+                        'blue_side_ratio': ratio,
+                    },
+                })
+                if 19 <= record_id <= 21:
+                    record['exposure'] = 0.002
+                records.append(record)
+
+            source_details = {
+                'kind': 'database',
+                'selection_mode': 'background_full_retention',
+                'camera_id': 7,
+                'camera_uuid': 'camera-uuid',
+                'camera_name': 'ZWO CCD ASI676MC',
+                'retention_days': 4,
+                'retention_cutoff': '2026-08-06',
+                'requested_group_count': 7,
+            }
+            asi676mc_calibration.mark_queued(
+                manifest['session_id'],
+                'alice',
+                task_id=2,
+                max_pair_seconds=30.0,
+                settings=calibration_engine.DEFAULT_SETTINGS,
+                source_details=source_details,
+                storage_root=root,
+            )
+            loader = mock.Mock(return_value={
+                'fits_records': records,
+                'bad_frames': [],
+                'source_details': {
+                    'database_fits_count': len(records),
+                    'local_fits_count': len(records),
+                    'missing_local_count': 0,
+                    'unsupported_count': 0,
+                },
+            })
+            with mock.patch.object(
+                calibration_engine,
+                'calibrate_folder',
+                return_value=self._successful_payload(),
+            ) as calibrate_folder:
+                result = asi676mc_calibration.run_calibration_session(
+                    manifest['session_id'],
+                    storage_root=root,
+                    database_loader=loader,
+                )
+
+            loader.assert_called_once()
+            self.assertEqual(result['source']['archive_scanned_file_count'], 21)
+            self.assertEqual(result['source']['selected_group_count'], 7)
+            self.assertEqual(
+                result['source']['selection_mode'],
+                'full_retention_detector_groups',
+            )
+            self.assertTrue(calibrate_folder.call_args.kwargs['metadata_by_name'])
+            completed = asi676mc_calibration._read_manifest(
+                root.joinpath(manifest['session_id'])
+            )
+            self.assertEqual(completed['status'], 'success')
+            self.assertFalse(
+                root.joinpath(manifest['session_id'], 'uploads').exists()
+            )
+            self.assertTrue(completed.get('sources_deleted_utc'))
+            report = root.joinpath(
+                manifest['session_id'],
+                'asi676mc_calibration_report.txt',
+            ).read_text(encoding='utf-8')
+            self.assertIn(
+                'Database search coverage: Complete retained archive',
+                report,
+            )
+            self.assertIn('Retained FITS searched: 21', report)
+
+    def test_empty_manual_session_still_cannot_be_queued(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            manifest = asi676mc_calibration.create_session('alice', root)
+            with self.assertRaisesRegex(
+                asi676mc_calibration.CalibrationSessionError,
+                'select at least 14 FITS',
+            ):
+                asi676mc_calibration.mark_queued(
+                    manifest['session_id'],
+                    'alice',
+                    task_id=3,
+                    max_pair_seconds=90.0,
+                    settings=calibration_engine.DEFAULT_SETTINGS,
+                    storage_root=root,
+                )
 
     def test_integrated_database_report_is_actionable_and_auditable(self):
         payload = self._successful_payload()
@@ -1944,8 +1908,13 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         )
         self.assertIn(
             'IndiAllSkyDbFitsImageTable.dayDate >= retention_cutoff',
-            views_source,
+            video_source,
         )
+        self.assertIn(
+            'def _loadAsi676mcCalibrationDatabase',
+            video_source,
+        )
+        self.assertIn("'background_full_retention'", views_source)
         self.assertIn(
             "request_data.get('session_id')",
             views_source,
