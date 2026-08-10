@@ -82,10 +82,9 @@
 }
 
 /* A one-pixel grid divider keeps capture and result-evidence summaries
- * readable without separately padded cards. Items wrap as the viewport narrows. */
+ * readable. Their HTML classes set balanced 3/2/1 and 4/2/1 column layouts. */
 .calibration-fact-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
     gap: 1px;
     overflow: hidden;
     background-color: var(--color-base-300);
@@ -95,7 +94,7 @@
 
 .calibration-fact {
     min-width: 0;
-    padding: 0.55rem 0.75rem;
+    padding: 1rem;
     background-color: var(--color-base-100);
 }
 
@@ -259,7 +258,7 @@
             capture metadata, and matching frame dimensions within each
             evidence group are still required.
         </p>
-        <div id="calibration-capture-facts" class="calibration-fact-grid tw:mb-4">
+        <div id="calibration-capture-facts" class="calibration-fact-grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:lg:grid-cols-3 tw:mb-4">
             {% for fact in capture_guidance.facts %}
             <div class="calibration-fact">
                 <div class="calibration-help tw:text-xs">{{ fact.label }}</div>
@@ -546,7 +545,7 @@
         </div>
 
         <h3 class="tw:text-lg tw:font-bold tw:mt-5">Evidence used</h3>
-        <div id="calibration-quality" class="calibration-fact-grid"></div>
+        <div id="calibration-quality" class="calibration-fact-grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:lg:grid-cols-4"></div>
         <!-- All non-fatal evidence observations share one dynamically populated
              box instead of appearing as a stack of near-identical alerts. -->
         <div id="calibration-warnings" class="calibration-callout calibration-callout-warning tw:mt-4" style="display: none;">

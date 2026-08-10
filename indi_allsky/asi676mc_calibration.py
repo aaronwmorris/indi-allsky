@@ -1921,25 +1921,11 @@ def _result_warnings(
                 if preliminary
                 else 'Calibration is valid'
             )
-            if (
+            if not (
                 one_sided_count
                 and triplet_coverage_complete
                 and not references_reused
             ):
-                percent_text = '{0:.1f}'.format(two_sided_percent).rstrip(
-                    '0'
-                ).rstrip('.')
-                warnings.append(
-                    '{0}. {1}. Two-sided coverage is {2}%, meeting the '
-                    '{3:.0f}% completeness guideline; another complete '
-                    'triplet is unlikely to change the result.'.format(
-                        coverage_text,
-                        result_status,
-                        percent_text,
-                        TRIPLET_COVERAGE_COMPLETE_PERCENT,
-                    )
-                )
-            else:
                 if (
                     one_sided_count
                     and references_reused

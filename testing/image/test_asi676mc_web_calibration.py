@@ -1339,15 +1339,26 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'unmatched_bad_count': 0,
             'rejected_file_count': 0,
         })
-        self.assertEqual(len(nearly_complete), 1)
-        self.assertIn('24 of 25 purple frames', nearly_complete[0])
-        self.assertIn('Two-sided coverage is 96%', nearly_complete[0])
-        self.assertIn('90% completeness guideline', nearly_complete[0])
-        self.assertIn(
-            'another complete triplet is unlikely to change the result',
-            nearly_complete[0],
+        self.assertEqual(nearly_complete, [])
+
+        nearly_complete_with_rejected_file = (
+            asi676mc_calibration._result_warnings({
+                'matched_bad_count': 25,
+                'two_sided_count': 24,
+                'matched_normal_count': 49,
+                'unmatched_bad_count': 0,
+                'rejected_file_count': 1,
+            })
         )
-        self.assertNotIn('would improve confidence', nearly_complete[0])
+        self.assertEqual(len(nearly_complete_with_rejected_file), 1)
+        self.assertIn(
+            '1 FITS file that could not be read or used',
+            nearly_complete_with_rejected_file[0],
+        )
+        self.assertNotIn(
+            '24 of 25 purple frames',
+            nearly_complete_with_rejected_file[0],
+        )
 
     def test_engine_failures_are_translated_to_actionable_browser_text(self):
         too_few = asi676mc_calibration._friendly_failure_message(
@@ -1615,13 +1626,23 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('RAW16, RGGB, 1x1 binning', template)
         self.assertIn('message explains what to check', template)
         self.assertIn('id="calibration-capture-facts"', template)
-        self.assertIn('class="calibration-fact-grid tw:mb-4"', template)
+        self.assertIn(
+            'class="calibration-fact-grid tw:grid-cols-1 '
+            'tw:sm:grid-cols-2 tw:lg:grid-cols-3 tw:mb-4"',
+            template,
+        )
         self.assertIn('id="calibration-settings"', template)
         self.assertIn('>Calibration settings</div>', template)
         self.assertIn('calibration-camera-control', template)
         self.assertIn('calibration-reference-control', template)
         self.assertIn(
-            'id="calibration-quality" class="calibration-fact-grid"',
+            'id="calibration-quality" class="calibration-fact-grid '
+            'tw:grid-cols-1 tw:sm:grid-cols-2 tw:lg:grid-cols-4"',
+            template,
+        )
+        self.assertIn('padding: 1rem;', template)
+        self.assertNotIn(
+            'grid-template-columns: repeat(auto-fit',
             template,
         )
         quality_card_body = template.split(
