@@ -607,13 +607,40 @@ class ImageWorker(Process):
         #logger.info('Wrote Numpy data: /tmp/indi_allsky_numpy.npy')
 
 
-        # adu calculate (before processing)
-        adu, adu_average = self.exposure_o.compare_exposure(adu, exposure, gain)
+        # A retained purple/failed frame is diagnostic evidence, not a valid
+        # brightness sample. Do not let it alter exposure history or the next
+        # capture settings.
+        repair_result = i_ref.asi676mc_repair_result
+        exclude_from_exposure = (
+            asi676mc.excluded_from_downstream_measurements(repair_result)
+        )
+        if exclude_from_exposure:
+            exposure_history = list(
+                getattr(self.exposure_o, 'hist_adu', ())
+            )
+            adu_average = (
+                sum(exposure_history) / len(exposure_history)
+                if exposure_history
+                else 0.0
+            )
+            logger.warning(
+                'Ignoring excluded ASI676MC frame for exposure control'
+            )
+        else:
+            adu, adu_average = self.exposure_o.compare_exposure(
+                adu,
+                exposure,
+                gain,
+            )
 
 
         # generate a new mask base once the target ADU is found
         # this should only only fire once per restart
-        if self.generate_mask_base and self.exposure_o.target_adu_found:
+        if (
+            self.generate_mask_base
+            and self.exposure_o.target_adu_found
+            and not exclude_from_exposure
+        ):
             self.generate_mask_base = False
             self.write_mask_base_img(self.image_processor.image)
 
@@ -1854,6 +1881,11 @@ class ImageWorker(Process):
             fits_metadata['data'][asi676mc.SIGNATURE_METADATA_KEY] = (
                 signature_metadata
             )
+        repair_result = i_ref.asi676mc_repair_result
+        if isinstance(repair_result, dict) and repair_result.get('status'):
+            fits_metadata['data'][
+                asi676mc.FITS_REPAIR_STATUS_METADATA_KEY
+            ] = str(repair_result['status'])
 
         fits_entry = self._miscDb.addFitsImage(
             filename.relative_to(self.image_dir),

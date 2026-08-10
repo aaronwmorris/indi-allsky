@@ -298,6 +298,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'width': 3552,
             'height': 3552,
             'camera_name': 'ZWO CCD ASI676MC',
+            'repair_status': 'normal',
             'roles': list(roles),
         }
 
@@ -397,6 +398,105 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertEqual(summary['selected_group_count'], 7)
         self.assertTrue(bad_ids.issubset({record['id'] for record in selected}))
 
+    def test_unusable_all_purple_detector_falls_back_to_populations(self):
+        records = []
+        bad_ids = {2, 5, 8, 11, 14, 17, 20}
+        for record_id in range(1, 22):
+            record = self._database_record(record_id, record_id * 20)
+            if 19 <= record_id <= 21:
+                record['exposure'] = 0.002
+            ratio = 3.0 if record_id in bad_ids else 1.0
+            record['signature'] = {
+                'purple_ratio': ratio,
+                'red_side_ratio': ratio,
+                'blue_side_ratio': ratio,
+            }
+            records.append(record)
+        settings = calibration_engine.asi676mc.normalize_settings({
+            'PURPLE_RATIO_THRESHOLD': 0.1,
+            'RED_SIDE_RATIO_THRESHOLD': 0.1,
+            'BLUE_SIDE_RATIO_THRESHOLD': 0.1,
+        })
+
+        selected, summary = (
+            asi676mc_calibration.discover_full_retention_database_evidence(
+                records,
+                bad_frames=[],
+                target_groups=7,
+                max_pair_seconds=30.0,
+                settings=settings,
+            )
+        )
+
+        self.assertEqual(summary['detected_bad_count'], 21)
+        self.assertEqual(
+            summary['selection_mode'],
+            'full_retention_population_groups',
+        )
+        self.assertTrue(bad_ids.issubset({record['id'] for record in selected}))
+
+    def test_legacy_fits_header_overrides_stale_database_layout(self):
+        records = [
+            dict(
+                self._database_record(record_id, record_id * 20),
+                binmode=0,
+                width=0,
+                height=0,
+                exposure=None,
+                gain=None,
+            )
+            for record_id in range(1, 22)
+        ]
+        bad_ids = {2, 5, 8, 11, 14, 17, 20}
+
+        def inspect_legacy(path, _settings, trusted_camera_name=None):
+            del trusted_camera_name
+            record_id = int(path.stem.split('_')[-1])
+            exposure = 0.002 if 19 <= record_id <= 21 else 0.001
+            ratio = 3.0 if record_id in bad_ids else 1.0
+            return calibration_engine.FrameRecord(
+                path=path,
+                timestamp=record_id * 20.0,
+                exposure=exposure,
+                gain=100.0,
+                xbin=1,
+                ybin=1,
+                shape=(3552, 3552),
+                bayer='RGGB',
+                camera_name='ZWO CCD ASI676MC',
+                signature={
+                    'purple_ratio': ratio,
+                    'red_side_ratio': ratio,
+                    'blue_side_ratio': ratio,
+                    'is_bad': record_id in bad_ids,
+                },
+            )
+
+        cached = {}
+        with mock.patch.object(
+            calibration_engine,
+            'inspect_fits',
+            side_effect=inspect_legacy,
+        ) as inspect_mock:
+            selected, summary = (
+                asi676mc_calibration.discover_full_retention_database_evidence(
+                    records,
+                    bad_frames=[],
+                    target_groups=7,
+                    max_pair_seconds=30.0,
+                    settings=calibration_engine.DEFAULT_SETTINGS,
+                    signature_callback=(
+                        lambda record_id, signature:
+                        cached.__setitem__(record_id, signature)
+                    ),
+                )
+            )
+
+        self.assertEqual(inspect_mock.call_count, 21)
+        self.assertEqual(len(cached), 21)
+        self.assertEqual(summary['selected_group_count'], 7)
+        self.assertTrue(bad_ids.issubset({record['id'] for record in selected}))
+
     def test_database_staging_links_sources_without_deleting_them(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -433,6 +533,76 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 session_root,
             )
             self.assertTrue(all(record['path'].is_file() for record in records))
+
+    def test_database_staging_skips_a_selected_file_that_disappeared(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            session_root = root.joinpath('sessions')
+            available = root.joinpath('available.fit')
+            available.write_bytes(b'database fits placeholder')
+            missing = root.joinpath('missing.fit')
+            records = [
+                {
+                    'id': 1,
+                    'path': missing,
+                    'camera_name': 'ZWO CCD ASI676MC',
+                },
+                {
+                    'id': 2,
+                    'path': available,
+                    'camera_name': 'ZWO CCD ASI676MC',
+                },
+            ]
+            session_id = asi676mc_calibration.create_session(
+                'alice', session_root
+            )['session_id']
+
+            manifest = asi676mc_calibration.stage_database_files(
+                session_id,
+                'alice',
+                records,
+                session_root,
+            )
+
+        self.assertEqual(len(manifest['files']), 1)
+        self.assertEqual(manifest['files'][0]['database_id'], 2)
+        self.assertEqual(
+            manifest['source']['staging_skipped_file_count'],
+            1,
+        )
+
+    def test_staging_limit_failure_names_the_actual_limit(self):
+        records = []
+        bad_ids = {2, 5, 8, 11, 14, 17, 20}
+        for record_id in range(1, 22):
+            record = self._database_record(record_id, record_id * 20)
+            record['size'] = 1024
+            if 19 <= record_id <= 21:
+                record['exposure'] = 0.002
+            ratio = 3.0 if record_id in bad_ids else 1.0
+            record['signature'] = {
+                'purple_ratio': ratio,
+                'red_side_ratio': ratio,
+                'blue_side_ratio': ratio,
+            }
+            records.append(record)
+
+        with mock.patch.object(
+            asi676mc_calibration,
+            'DATABASE_MAX_BYTES',
+            6500,
+        ):
+            with self.assertRaisesRegex(
+                calibration_engine.CalibrationError,
+                'within the 200-file/2-GiB evidence staging limit',
+            ):
+                asi676mc_calibration.discover_full_retention_database_evidence(
+                    records,
+                    bad_frames=[],
+                    target_groups=7,
+                    max_pair_seconds=30.0,
+                    settings=calibration_engine.DEFAULT_SETTINGS,
+                )
 
     def test_database_staging_copies_when_hardlinks_are_unavailable(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -2567,6 +2737,138 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
 
         for key, value in calibration_engine.DEFAULT_SETTINGS.items():
             self.assertEqual(repair_config[key], value, key)
+
+    def test_video_worker_cancellation_expires_task_without_dereference(self):
+        video_path = (
+            Path(__file__).resolve().parents[2]
+            / 'indi_allsky'
+            / 'video.py'
+        )
+        source = video_path.read_text(encoding='utf-8')
+        tree = ast.parse(source, filename=str(video_path))
+        worker = next(
+            node for node in tree.body
+            if isinstance(node, ast.ClassDef) and node.name == 'VideoWorker'
+        )
+        method = next(
+            node for node in worker.body
+            if isinstance(node, ast.FunctionDef)
+            and node.name == '_runAsi676mcCalibration'
+        )
+        namespace = {
+            'asi676mc_calibration': mock.Mock(
+                run_calibration_session=mock.Mock(return_value=None),
+            ),
+            'logger': mock.Mock(),
+        }
+        exec(
+            compile(
+                ast.fix_missing_locations(
+                    ast.Module(body=[method], type_ignores=[])
+                ),
+                str(video_path),
+                'exec',
+            ),
+            namespace,
+        )
+        task = mock.Mock()
+        processor = mock.Mock()
+
+        namespace['_runAsi676mcCalibration'](
+            processor,
+            task,
+            'cancelled-session',
+        )
+
+        task.setExpired.assert_called_once_with()
+        task.setSuccess.assert_not_called()
+        task.setFailed.assert_not_called()
+
+    def test_video_task_only_enqueues_dedicated_calibration_work(self):
+        project_root = Path(__file__).resolve().parents[2]
+        video_source = project_root.joinpath(
+            'indi_allsky', 'video.py'
+        ).read_text(encoding='utf-8')
+        self.assertIn('target=self._asi676mcCalibrationWorker', video_source)
+        self.assertIn(
+            'self._asi676mc_calibration_q.put((int(task.id), session_id))',
+            video_source,
+        )
+        generate_body = video_source.split(
+            'def generateAsi676mcCalibration',
+            1,
+        )[1].split('def _runAsi676mcCalibration', 1)[0]
+        self.assertNotIn('run_calibration_session(', generate_body)
+
+    def test_video_worker_backfills_legacy_signatures_in_batches(self):
+        video_path = (
+            Path(__file__).resolve().parents[2]
+            / 'indi_allsky'
+            / 'video.py'
+        )
+        source = video_path.read_text(encoding='utf-8')
+        tree = ast.parse(source, filename=str(video_path))
+        worker = next(
+            node for node in tree.body
+            if isinstance(node, ast.ClassDef) and node.name == 'VideoWorker'
+        )
+        method = next(
+            node for node in worker.body
+            if isinstance(node, ast.FunctionDef)
+            and node.name == '_saveAsi676mcCalibrationSignatures'
+        )
+        entries = [
+            mock.Mock(id=record_id, data={'preserved': True})
+            for record_id in range(1, 502)
+        ]
+        query = mock.Mock()
+        query.filter.return_value = query
+        query.all.side_effect = (
+            entries[:250],
+            entries[250:500],
+            entries[500:],
+        )
+        fits_model = mock.Mock()
+        fits_model.query = query
+        database = mock.Mock()
+        namespace = {
+            'IndiAllSkyDbFitsImageTable': fits_model,
+            'asi676mc': mock.Mock(
+                SIGNATURE_METADATA_KEY='asi676mc_signature'
+            ),
+            'db': database,
+        }
+        exec(
+            compile(
+                ast.fix_missing_locations(
+                    ast.Module(body=[method], type_ignores=[])
+                ),
+                str(video_path),
+                'exec',
+            ),
+            namespace,
+        )
+        updates = {
+            record_id: {
+                'purple_ratio': float(record_id),
+                'red_side_ratio': 1.0,
+                'blue_side_ratio': 1.0,
+            }
+            for record_id in range(1, 502)
+        }
+
+        namespace['_saveAsi676mcCalibrationSignatures'](
+            mock.Mock(),
+            {'camera_id': 7},
+            updates,
+        )
+
+        self.assertEqual(database.session.commit.call_count, 3)
+        self.assertTrue(entries[0].data['preserved'])
+        self.assertEqual(
+            entries[-1].data['asi676mc_signature']['purple_ratio'],
+            501.0,
+        )
 
 
 if __name__ == '__main__':

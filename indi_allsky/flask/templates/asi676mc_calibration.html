@@ -330,7 +330,8 @@
                         Queue a background search across this camera's complete
                         FITS retention period. Saved detector ratios make modern
                         entries quick to classify; legacy FITS are inspected
-                        directly. Only the final purple/normal groups are staged,
+                        directly and their ratios are cached for faster later
+                        searches. Only the final purple/normal groups are staged,
                         up to 200 FITS or 2 GiB. Missing, incompatible, repaired,
                         and corrupt files are skipped and summarized.
                     </p>
@@ -1598,7 +1599,11 @@ async function pollCalibration(sessionId) {
         if (status.status === 'cancelled') {
             forgetCalibrationSession(sessionId);
             resetCalibrationInterface();
-            showCalibrationNotice('The incomplete upload was cancelled and removed.');
+            showCalibrationNotice(
+                status.source_kind === 'database'
+                    ? 'The saved-FITS search was cancelled. Database FITS were not changed.'
+                    : 'The incomplete upload was cancelled and removed.'
+            );
             return;
         }
         if (status.status === 'queued') {

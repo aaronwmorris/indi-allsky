@@ -17,6 +17,7 @@ from collections import Counter
 from datetime import datetime
 from datetime import timezone
 import json
+import math
 from pathlib import Path
 import re
 import statistics
@@ -94,6 +95,8 @@ CALIBRATION_OPTIONS = {
 }
 
 MAX_DECODED_FITS_BYTES = 256 * 1024 * 1024
+EXPOSURE_LEVEL_REL_TOLERANCE = 0.01
+EXPOSURE_LEVEL_ABS_TOLERANCE = 1e-6
 
 
 _FITS_SUFFIXES = ('.fit', '.fits', '.fts')
@@ -125,6 +128,10 @@ DETECTION_THRESHOLD_DETAILS = {
         'Blue-side ratio threshold',
     ),
 }
+
+
+class RepairedFitsError(ValueError):
+    """Raised when calibration evidence already contains corrected pixels."""
 
 
 # ---------------------------------------------------------------------------
@@ -173,6 +180,35 @@ def _read_fits(path, copy=False):
                 raise ValueError(f'expected RGGB Bayer data, got {bayer}')
             return data, header, index
     raise ValueError('FITS file contains no image data')
+
+
+def _reject_repaired_fits_header(path):
+    """Reject corrected FITS without decoding their full image arrays."""
+    fits = _fits_module()
+    with fits.open(
+        path,
+        memmap=True,
+        uint=True,
+        lazy_load_hdus=True,
+    ) as hdulist:
+        if any(
+            _header_boolean(hdu.header.get('ASI676FX', False))
+            for hdu in hdulist
+        ):
+            raise RepairedFitsError(
+                'already repaired by ASI676MC frame handling'
+            )
+
+
+def is_recoverable_fits_error(error):
+    """Return whether one malformed FITS should be rejected, not abort a run."""
+    if isinstance(error, (OSError, OverflowError, TypeError, ValueError)):
+        return True
+    try:
+        from astropy.io.fits.verify import VerifyError
+    except ModuleNotFoundError:
+        return False
+    return isinstance(error, VerifyError)
 
 
 
@@ -354,7 +390,7 @@ def inspect_fits(path, settings, trusted_camera_name=None):
     """
     data, header, _index = _read_fits(path)
     if _header_boolean(header.get('ASI676FX', False)):
-        raise ValueError('already repaired by ASI676MC frame handling')
+        raise RepairedFitsError('already repaired by ASI676MC frame handling')
     signature = asi676mc.frame_signature(data, settings)
     exposure = _header_float(header, 'EXPTIME', 'EXPOSURE', default=-1.0)
     gain = _header_float(header, 'GAIN', 'CCD-GAIN', default=-1.0)
@@ -434,7 +470,7 @@ def inspect_fits(path, settings, trusted_camera_name=None):
     )
 
 
-def inspect_fits_metadata(path, metadata, settings):
+def inspect_fits_metadata(path, metadata, settings, verify_header=False):
     """Build a record from ratios captured when a database FITS was saved.
 
     The ratios are independent of detector thresholds, so the current settings
@@ -442,6 +478,16 @@ def inspect_fits_metadata(path, metadata, settings):
     malformed legacy metadata falls back to normal FITS inspection in
     :func:`scan_folder`.
     """
+    repair_status = metadata.get('repair_status')
+    if repair_status == 'repaired':
+        raise RepairedFitsError('already repaired by ASI676MC frame handling')
+    if verify_header and repair_status not in (
+        'normal',
+        'excluded',
+        'validation_failed',
+    ):
+        _reject_repaired_fits_header(path)
+
     signature_data = metadata.get('signature') or {}
     signature = {
         name: float(signature_data[name])
@@ -494,6 +540,7 @@ def scan_folder(
     recursive=True,
     metadata_by_name=None,
     progress_callback=None,
+    checkpoint_callback=None,
     progressive_check=None,
     initial_scan_count=14,
     trusted_camera_name=None,
@@ -515,6 +562,8 @@ def scan_folder(
     initial_target = min(total, max(14, int(initial_scan_count)))
     threshold_search_started = False
     for index, path in enumerate(paths, start=1):
+        if checkpoint_callback and (index == 1 or index % 5 == 0):
+            checkpoint_callback()
         try:
             metadata = metadata_by_name.get(path.name)
             if metadata:
@@ -529,7 +578,14 @@ def scan_folder(
                         'database metadata identifies a non-ASI676MC camera'
                     )
                 try:
-                    record = inspect_fits_metadata(path, metadata, settings)
+                    record = inspect_fits_metadata(
+                        path,
+                        metadata,
+                        settings,
+                        verify_header=True,
+                    )
+                except RepairedFitsError:
+                    raise
                 except (KeyError, TypeError, ValueError):
                     # A staged database row is already bound to the selected
                     # camera by ID and UUID.  Its validated ASI676MC name may
@@ -561,7 +617,9 @@ def scan_folder(
             records.append(record)
             if record.is_bad:
                 detected_bad_count += 1
-        except (OSError, OverflowError, TypeError, ValueError) as error:
+        except Exception as error:
+            if not is_recoverable_fits_error(error):
+                raise
             rejected.append((path, str(error)))
         if (
             index >= 14
@@ -613,12 +671,17 @@ def _compatible(left, right):
     return left.compatibility_key == right.compatibility_key
 
 
-def match_pairs(records, max_pair_seconds):
+def match_pairs(records, max_pair_seconds, checkpoint_callback=None):
     """Match each failure to its nearest compatible normal on either side."""
     normal = [record for record in records if not record.is_bad]
     pairs = []
     unmatched = []
-    for bad in (record for record in records if record.is_bad):
+    for index, bad in enumerate(
+        (record for record in records if record.is_bad),
+        start=1,
+    ):
+        if checkpoint_callback and (index == 1 or index % 100 == 0):
+            checkpoint_callback()
         candidates = [
             record for record in normal
             if _compatible(bad, record)
@@ -764,7 +827,7 @@ class PairSamples:
     stable_masks: tuple
 
 
-def collect_pair_samples(pairs):
+def collect_pair_samples(pairs, checkpoint_callback=None):
     """Load only the central sparse samples needed by calibration.
 
     Holding these small arrays instead of complete 3552x3552 frames keeps the
@@ -773,6 +836,8 @@ def collect_pair_samples(pairs):
     step = CALIBRATION_OPTIONS['SAMPLE_STEP']
     samples = []
     for index, pair in enumerate(pairs, start=1):
+        if checkpoint_callback:
+            checkpoint_callback()
         print(
             f'  Sampling pair {index}/{len(pairs)}: {pair.bad.path.name}',
             flush=True,
@@ -1027,11 +1092,18 @@ def _highlight_score(datasets, start_ratio, end_ratio):
     return float(statistics.mean(pair_errors))
 
 
-def estimate_highlight_ratios(samples, gains, saturation_threshold):
+def estimate_highlight_ratios(
+    samples,
+    gains,
+    saturation_threshold,
+    checkpoint_callback=None,
+):
     """Grid-search bounded Method-5 highlight ratios against normal frames."""
     datasets = []
     counts = []
     for pair_sample in samples:
+        if checkpoint_callback:
+            checkpoint_callback()
         arrays = _highlight_arrays(
             pair_sample,
             gains,
@@ -1055,6 +1127,8 @@ def estimate_highlight_ratios(samples, gains, saturation_threshold):
     # precision closely enough that finer candidates would not be meaningful.
     candidates = []
     for start in CALIBRATION_OPTIONS['BLEND_START_VALUES']:
+        if checkpoint_callback:
+            checkpoint_callback()
         for end in CALIBRATION_OPTIONS['BLEND_END_VALUES']:
             if end - start < CALIBRATION_OPTIONS['MIN_BLEND_WIDTH']:
                 continue
@@ -1262,7 +1336,11 @@ def threshold_suggestion_payload(
     }
 
 
-def infer_detection_populations(records):
+def infer_detection_populations(
+    records,
+    checkpoint_callback=None,
+    allow_detected_conflicts=False,
+):
     """Classify two clean ratio populations without trusting current thresholds.
 
     Database discovery uses this independently of final calibration so a
@@ -1270,6 +1348,8 @@ def infer_detection_populations(records):
     detector missed it.  The returned records preserve every capture field and
     change only the derived ``is_bad`` signature flag.
     """
+    if checkpoint_callback:
+        checkpoint_callback()
     minimum = CALIBRATION_OPTIONS['MIN_THRESHOLD_CLUSTER_SIZE']
     if len(records) < minimum * 2:
         raise CalibrationError(
@@ -1310,6 +1390,8 @@ def infer_detection_populations(records):
     ))
     labels = numpy.zeros(len(records), dtype=numpy.int8)
     for _iteration in range(50):
+        if checkpoint_callback:
+            checkpoint_callback()
         distances = numpy.sum(
             (standardized[:, numpy.newaxis, :] - centroids) ** 2,
             axis=2,
@@ -1353,14 +1435,16 @@ def infer_detection_populations(records):
         )
     normal_label = 1 - purple_label
 
-    # A frame already recognised by the live detector must never land in the
-    # inferred normal group. Such disagreement means the collection cannot
-    # safely explain the detector miss with one set of thresholds.
+    # Normally, a frame already recognised by the live detector must not land
+    # in the inferred normal group. The explicit override is reserved for the
+    # recovery path where the current thresholds made the detector unusable
+    # (for example, classifying every frame as purple); the UI still requires
+    # confirmation before applying the resulting threshold suggestions.
     conflicting_detected = sum(
         record.is_bad and labels[index] == normal_label
         for index, record in enumerate(records)
     )
-    if conflicting_detected:
+    if conflicting_detected and not allow_detected_conflicts:
         raise CalibrationError(
             '{0} currently detected purple frame(s) fall in the lower-ratio '
             'population'.format(conflicting_detected)
@@ -1379,7 +1463,12 @@ def infer_detection_populations(records):
     return inferred_records
 
 
-def suggest_detection_thresholds(records, settings, max_pair_seconds):
+def suggest_detection_thresholds(
+    records,
+    settings,
+    max_pair_seconds,
+    checkpoint_callback=None,
+):
     """Return a preliminary threshold result for two clean populations.
 
     This path is used only when the configured detector cannot identify the
@@ -1389,9 +1478,17 @@ def suggest_detection_thresholds(records, settings, max_pair_seconds):
     calibration. A result is advisory: repair constants are not fitted and the
     web layer never applies these thresholds automatically.
     """
-    inferred_records = infer_detection_populations(records)
+    inferred_records = infer_detection_populations(
+        records,
+        checkpoint_callback=checkpoint_callback,
+        allow_detected_conflicts=True,
+    )
     ranges = signature_ranges(inferred_records)
-    pairs, unmatched = match_pairs(inferred_records, max_pair_seconds)
+    pairs, unmatched = match_pairs(
+        inferred_records,
+        max_pair_seconds,
+        checkpoint_callback=checkpoint_callback,
+    )
     evidence = validate_evidence(
         inferred_records,
         pairs,
@@ -1466,8 +1563,18 @@ def validate_signature_separation(ranges, settings):
 
 
 def _exposure_levels(pairs):
-    """Return distinct exposures represented by matched failures."""
-    return sorted({round(pair.bad.exposure, 12) for pair in pairs})
+    """Return physically distinct, tolerance-clustered exposure settings."""
+    levels = []
+    for exposure in sorted(float(pair.bad.exposure) for pair in pairs):
+        if levels and math.isclose(
+            exposure,
+            levels[-1],
+            rel_tol=EXPOSURE_LEVEL_REL_TOLERANCE,
+            abs_tol=EXPOSURE_LEVEL_ABS_TOLERANCE,
+        ):
+            continue
+        levels.append(exposure)
+    return levels
 
 
 class CalibrationError(RuntimeError):
@@ -1638,7 +1745,11 @@ def _best_gain_only_planes(observed_planes, reference_planes, stable_masks):
     return tuple(corrected)
 
 
-def validate_calibrated_frames(pairs, settings):
+def validate_calibrated_frames(
+    pairs,
+    settings,
+    checkpoint_callback=None,
+):
     """Apply final rounded settings to every pair without writing outputs."""
     repaired_count = 0
     normal_count = 0
@@ -1652,6 +1763,8 @@ def validate_calibrated_frames(pairs, settings):
     # can estimate constants, but only the real runtime algorithm can prove
     # that every failure clears detection after repair.
     for pair in pairs:
+        if checkpoint_callback:
+            checkpoint_callback()
         data, _header, _index = _read_fits(pair.bad.path, copy=True)
         original = data.copy()
         reference_planes, stable_masks = _reference_planes(
@@ -1725,6 +1838,8 @@ def validate_calibrated_frames(pairs, settings):
     # A normal frame must take the fast no-op path.  The array comparison also
     # guards against future changes accidentally touching normal input.
     for record in unique_normal.values():
+        if checkpoint_callback:
+            checkpoint_callback()
         data, _header, _index = _read_fits(record.path, copy=True)
         original = data.copy()
         result = asi676mc.repair_if_needed(data, settings)
@@ -1852,6 +1967,7 @@ def calibrate_folder(
     allow_unmatched=False,
     metadata_by_name=None,
     progress_callback=None,
+    checkpoint_callback=None,
     progressive=False,
     initial_scan_count=14,
     trusted_camera_name=None,
@@ -1880,6 +1996,7 @@ def calibrate_folder(
         recursive=recursive,
         metadata_by_name=metadata_by_name,
         progress_callback=progress_callback,
+        checkpoint_callback=checkpoint_callback,
         progressive_check=progressive_check,
         initial_scan_count=max(14, int(initial_scan_count)),
         trusted_camera_name=trusted_camera_name,
@@ -1928,6 +2045,7 @@ def calibrate_folder(
                 records,
                 config,
                 max_pair_seconds,
+                checkpoint_callback=checkpoint_callback,
             )
         except CalibrationError as error:
             raise CalibrationError(
@@ -2017,7 +2135,10 @@ def calibrate_folder(
             'total_files': available_file_count,
             'detected_bad_count': bad_count,
         })
-    samples = collect_pair_samples(pairs)
+    samples = collect_pair_samples(
+        pairs,
+        checkpoint_callback=checkpoint_callback,
+    )
     gains_detail = estimate_gains(samples)
     gain_values = {
         name: result['value']
@@ -2029,6 +2150,7 @@ def calibrate_folder(
         samples,
         gain_values,
         saturation_threshold,
+        checkpoint_callback=checkpoint_callback,
     )
     payload = calibration_payload(
         config,
@@ -2058,6 +2180,7 @@ def calibrate_folder(
     ) = validate_calibrated_frames(
         pairs,
         validation_settings,
+        checkpoint_callback=checkpoint_callback,
     )
     payload['quality']['validated_bad_repairs'] = repaired_count
     payload['quality']['validated_normal_frames'] = normal_validation_count

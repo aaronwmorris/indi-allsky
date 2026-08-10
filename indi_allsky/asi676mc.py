@@ -63,6 +63,18 @@ HIGHLIGHT_BLEND_WEIGHT_MAX = 255
 
 DIAGNOSTIC_METADATA_KEY = 'asi676mc_diagnostic'
 SIGNATURE_METADATA_KEY = 'asi676mc_signature'
+FITS_REPAIR_STATUS_METADATA_KEY = 'asi676mc_fits_repair_status'
+DOWNSTREAM_EXCLUDED_STATUSES = ('excluded', 'validation_failed')
+
+
+def excluded_from_downstream_measurements(repair_result):
+    """Return whether a retained faulty frame must not affect good frames."""
+    return (
+        isinstance(repair_result, dict)
+        and repair_result.get('status') in DOWNSTREAM_EXCLUDED_STATUSES
+    )
+
+
 DIAGNOSTIC_BAD_STATUSES = ('repaired', 'validation_failed', 'excluded')
 # Architecture and user guide: docs/asi676mc-frame-repair.md
 

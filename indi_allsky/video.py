@@ -12,6 +12,7 @@ from pathlib import Path
 import psutil
 import tempfile
 import signal
+import threading
 import traceback
 import logging
 
@@ -162,6 +163,16 @@ class VideoWorker(Process):
         signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
 
 
+        # Calibration has its own serial thread so a long retained-FITS scan
+        # does not prevent the video worker from accepting timelapse jobs.
+        self._asi676mc_calibration_q = queue.Queue()
+        calibration_thread = threading.Thread(
+            target=self._asi676mcCalibrationWorker,
+            name='{0:s}-ASI676MC-calibration'.format(self.name),
+            daemon=True,
+        )
+        calibration_thread.start()
+
         ### use this as a method to log uncaught exceptions
         try:
             self.saferun()
@@ -169,6 +180,8 @@ class VideoWorker(Process):
             tb = traceback.format_exc()
             self.error_q.put((str(e), tb))
             raise e
+        finally:
+            self._asi676mc_calibration_q.put(None)
 
 
     def saferun(self):
@@ -316,6 +329,9 @@ class VideoWorker(Process):
                     if isinstance(signature, dict)
                     else None
                 ),
+                'repair_status': fits_data.get(
+                    asi676mc.FITS_REPAIR_STATUS_METADATA_KEY
+                ),
                 'camera_name': camera_name,
                 'roles': [
                     dict(role)
@@ -355,21 +371,84 @@ class VideoWorker(Process):
             },
         }
 
-    def generateAsi676mcCalibration(self, task, **kwargs):
-        """Run a staged ASI676MC calibration outside the web request.
+    def _saveAsi676mcCalibrationSignatures(
+        self,
+        source_details,
+        signature_updates,
+    ):
+        """Backfill threshold-independent ratios on inspected legacy rows."""
+        camera_id = int(source_details['camera_id'])
+        update_ids = sorted(int(record_id) for record_id in signature_updates)
+        batch_size = 250
+        for offset in range(0, len(update_ids), batch_size):
+            batch_ids = update_ids[offset:offset + batch_size]
+            entries = IndiAllSkyDbFitsImageTable.query\
+                .filter(IndiAllSkyDbFitsImageTable.camera_id == camera_id)\
+                .filter(IndiAllSkyDbFitsImageTable.id.in_(batch_ids))\
+                .all()
+            for entry in entries:
+                entry_data = (
+                    dict(entry.data)
+                    if isinstance(entry.data, dict)
+                    else {}
+                )
+                entry_data[asi676mc.SIGNATURE_METADATA_KEY] = dict(
+                    signature_updates[entry.id]
+                )
+                entry.data = entry_data
+            db.session.commit()
 
-        Calibration performs several full-resolution validation passes and may
-        take long enough to exceed a gunicorn request timeout on a Raspberry
-        Pi.  The existing video worker is already the project's general home
-        for manually queued, CPU-heavy work. This low-priority action therefore
-        handles both browser-uploaded and database-discovered evidence without
-        blocking the capture process or a web worker.
+    def _asi676mcCalibrationWorker(self):
+        """Run one calibration at a time without occupying the video queue."""
+        while True:
+            work_item = self._asi676mc_calibration_q.get()
+            if work_item is None:
+                return
+            task_id, session_id = work_item
+            with app.app_context():
+                try:
+                    task = IndiAllSkyDbTaskQueueTable.query\
+                        .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
+                        .filter(
+                            IndiAllSkyDbTaskQueueTable.state
+                            == TaskQueueState.RUNNING
+                        )\
+                        .one()
+                except NoResultFound:
+                    logger.error(
+                        'ASI676MC calibration task %d is no longer running',
+                        task_id,
+                    )
+                    continue
+                try:
+                    self._runAsi676mcCalibration(task, session_id)
+                except Exception:
+                    # A database/task update failure must not permanently
+                    # terminate the dedicated calibration consumer.
+                    logger.exception(
+                        'Unexpected ASI676MC calibration worker failure'
+                    )
+                finally:
+                    db.session.remove()
+
+    def generateAsi676mcCalibration(self, task, **kwargs):
+        """Queue staged calibration on the worker's dedicated serial thread.
+
+        The task remains RUNNING while the calibration thread works, but the
+        main video loop can immediately accept normal timelapse tasks.
         """
         session_id = str(kwargs['session_id'])
+        self._asi676mc_calibration_q.put((int(task.id), session_id))
+
+    def _runAsi676mcCalibration(self, task, session_id):
+        """Complete one queued calibration and publish its task outcome."""
         try:
             result = asi676mc_calibration.run_calibration_session(
                 session_id,
                 database_loader=self._loadAsi676mcCalibrationDatabase,
+                database_signature_saver=(
+                    self._saveAsi676mcCalibrationSignatures
+                ),
             )
         except Exception as error:
             logger.exception(
@@ -382,6 +461,13 @@ class VideoWorker(Process):
             task.setFailed(
                 asi676mc_calibration.task_failure_message(error)
             )
+            return
+
+        if result is None:
+            # Session cancellation is already recorded by the calibration
+            # layer. Expire the queue row instead of dereferencing None or
+            # presenting cancellation as either success or failure.
+            task.setExpired()
             return
 
         quality = result['quality']

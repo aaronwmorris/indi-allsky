@@ -1683,9 +1683,16 @@ class ImageProcessor(object):
 
         i_ref = self.getLatestImage()
 
-
         if self.focus_mode:
             # disable processing in focus mode
+            self.image = i_ref.opencv_data
+            return
+
+        if asi676mc.excluded_from_downstream_measurements(
+            i_ref.asi676mc_repair_result
+        ):
+            # Preserve the faulty rendered frame for diagnostics, but never
+            # blend it into this or a later otherwise-normal timelapse frame.
             self.image = i_ref.opencv_data
             return
 
@@ -1693,6 +1700,10 @@ class ImageProcessor(object):
         stack_i_ref_list = list()
         for i in self.image_list:
             if isinstance(i, type(None)):
+                continue
+            if asi676mc.excluded_from_downstream_measurements(
+                i.asi676mc_repair_result
+            ):
                 continue
 
             stack_i_ref_list.append(i)

@@ -980,6 +980,81 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
             self.assertEqual(result['status'], 'skipped')
             self.assertEqual(result['reason'], 'invalid Bayer-offset metadata')
 
+    def test_excluded_frames_do_not_enter_current_or_future_stacks(self):
+        processing_path = (
+            Path(__file__).resolve().parents[2]
+            / 'indi_allsky'
+            / 'processing.py'
+        )
+        source = processing_path.read_text(encoding='utf-8')
+        tree = ast.parse(source, filename=str(processing_path))
+        image_processor = next(
+            node for node in tree.body
+            if isinstance(node, ast.ClassDef) and node.name == 'ImageProcessor'
+        )
+        method = next(
+            node for node in image_processor.body
+            if isinstance(node, ast.FunctionDef) and node.name == 'stack'
+        )
+        namespace = {
+            'asi676mc': asi676mc,
+            'logger': mock.Mock(),
+        }
+        exec(
+            compile(
+                ast.fix_missing_locations(
+                    ast.Module(body=[method], type_ignores=[])
+                ),
+                str(processing_path),
+                'exec',
+            ),
+            namespace,
+        )
+        stack = namespace['stack']
+        excluded = SimpleNamespace(
+            asi676mc_repair_result={'status': 'excluded'},
+            opencv_data=numpy.full((2, 2), 99),
+        )
+        processor = SimpleNamespace(
+            getLatestImage=lambda: excluded,
+            focus_mode=False,
+            image_list=[excluded],
+            image=None,
+        )
+
+        stack(processor)
+
+        numpy.testing.assert_array_equal(processor.image, excluded.opencv_data)
+
+        normal = SimpleNamespace(
+            asi676mc_repair_result={'status': 'normal'},
+            opencv_data=numpy.full((2, 2), 10),
+        )
+        processor = SimpleNamespace(
+            getLatestImage=lambda: normal,
+            focus_mode=False,
+            image_list=[normal, excluded],
+            image=None,
+        )
+
+        stack(processor)
+
+        numpy.testing.assert_array_equal(processor.image, normal.opencv_data)
+
+    def test_downstream_exclusion_statuses_are_narrow(self):
+        for status in ('excluded', 'validation_failed'):
+            self.assertTrue(
+                asi676mc.excluded_from_downstream_measurements({
+                    'status': status,
+                })
+            )
+        for status in ('normal', 'repaired', 'skipped', None):
+            self.assertFalse(
+                asi676mc.excluded_from_downstream_measurements({
+                    'status': status,
+                })
+            )
+
 
 if __name__ == '__main__':
     unittest.main()

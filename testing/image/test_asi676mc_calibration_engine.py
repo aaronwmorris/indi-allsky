@@ -265,6 +265,7 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
                     'width': 64,
                     'height': 64,
                     'camera_name': source.camera_name,
+                    'repair_status': 'normal',
                 }
 
             records, rejected = calibration_engine.scan_folder(
@@ -969,6 +970,119 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
             )
 
         self.assertEqual(record.camera_name, 'ZWO CCD ASI676MC')
+
+    def test_corrupt_verify_error_is_rejected_without_aborting_scan(self):
+        from astropy.io.fits.verify import VerifyError
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / 'corrupt.fit'
+            path.touch()
+            with mock.patch.object(
+                calibration_engine,
+                'inspect_fits',
+                side_effect=VerifyError('invalid FITS verification'),
+            ):
+                records, rejected = calibration_engine.scan_folder(
+                    Path(temp_dir),
+                    calibration_engine.DEFAULT_SETTINGS,
+                )
+
+        self.assertFalse(records)
+        self.assertEqual(len(rejected), 1)
+        self.assertIn('invalid FITS verification', rejected[0][1])
+
+    def test_metadata_fast_path_rejects_repaired_fits_header(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / 'repaired.fit'
+            header = fits.Header()
+            header['ASI676FX'] = True
+            fits.PrimaryHDU(
+                data=self._normal_frame(64, 64),
+                header=header,
+            ).writeto(path)
+            metadata = {
+                'signature': {
+                    'purple_ratio': 1.0,
+                    'red_side_ratio': 1.0,
+                    'blue_side_ratio': 1.0,
+                },
+                'timestamp': 1000.0,
+                'exposure': 0.001,
+                'gain': 0.0,
+                'binmode': 1,
+                'width': 64,
+                'height': 64,
+                'camera_name': 'ZWO CCD ASI676MC',
+            }
+
+            with self.assertRaisesRegex(ValueError, 'already repaired'):
+                calibration_engine.inspect_fits_metadata(
+                    path,
+                    metadata,
+                    calibration_engine.DEFAULT_SETTINGS,
+                    verify_header=True,
+                )
+
+    def test_exposure_levels_ignore_numerically_insignificant_jitter(self):
+        reference = self._threshold_record(
+            'normal.fit',
+            900,
+            0.001,
+            (1.0, 1.0, 1.0),
+        )
+        pairs = []
+        for index, exposure in enumerate((0.001, 0.001000000001)):
+            bad = self._threshold_record(
+                'bad_{0}.fit'.format(index),
+                1000 + index,
+                exposure,
+                (3.0, 3.0, 3.0),
+            )
+            pairs.append(calibration_engine.MatchedPair(bad, (reference,)))
+
+        self.assertEqual(len(calibration_engine._exposure_levels(pairs)), 1)
+
+        distinct_bad = self._threshold_record(
+            'bad_distinct.fit',
+            1100,
+            0.002,
+            (3.0, 3.0, 3.0),
+        )
+        pairs.append(
+            calibration_engine.MatchedPair(distinct_bad, (reference,))
+        )
+        self.assertEqual(len(calibration_engine._exposure_levels(pairs)), 2)
+
+    def test_population_and_pairing_publish_cancellation_checkpoints(self):
+        records = self._threshold_population_records()
+        checkpoints = mock.Mock()
+        inferred = calibration_engine.infer_detection_populations(
+            records,
+            checkpoint_callback=checkpoints,
+        )
+        calibration_engine.match_pairs(
+            inferred,
+            90.0,
+            checkpoint_callback=checkpoints,
+        )
+
+        self.assertGreaterEqual(checkpoints.call_count, 3)
+
+    def test_all_purple_detector_returns_population_threshold_suggestion(self):
+        records = self._threshold_population_records()
+        for record in records:
+            record.signature['is_bad'] = True
+        with mock.patch.object(
+            calibration_engine,
+            'scan_folder',
+            return_value=(records, []),
+        ):
+            payload = calibration_engine.calibrate_folder(Path('unused'))
+
+        self.assertEqual(payload['outcome'], 'threshold_suggestion')
+        self.assertEqual(payload['quality']['detected_bad_count'], 21)
+        self.assertEqual(payload['quality']['likely_purple_count'], 7)
+        self.assertEqual(payload['quality']['likely_normal_count'], 14)
 
 
 if __name__ == '__main__':

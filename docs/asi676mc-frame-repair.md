@@ -30,7 +30,9 @@ Only.
 The existing indi-allsky `exclude` flag is not honored by every derived
 timelapse-style output. This feature deliberately uses that standard flag
 without changing its wider propagation; non-standard outputs may still include
-an Exclude Only frame.
+an Exclude Only frame. Within the standard image path, excluded and
+validation-failed frames are also removed from stacking history and ignored by
+automatic exposure control, so they cannot contaminate the next normal image.
 
 ## Runtime processing
 
@@ -338,8 +340,12 @@ from Exclude Only remain eligible. Pairs and triplets can be mixed in one run.
 
 Newly saved FITS database rows retain the three measured detector ratios as
 small, threshold-independent metadata. The background search can reclassify
-every such capture without decoding its full image. Older FITS without stored
-ratios remain part of the same one-click search and are inspected directly.
+every such capture without decoding its full image. A lightweight header check
+still rejects a repaired `ASI676FX` FITS. Older FITS without stored ratios
+remain part of the same one-click search and are inspected directly; ratios
+measured successfully during that first search are cached on their database
+rows in batches. Later runs can therefore use the same fast metadata path
+instead of decoding those legacy image arrays again.
 When their camera headers are absent or generic, the database row's validated
 camera binding supplies the ASI676MC identity; an explicit conflicting camera
 identity remains authoritative and is rejected. Missing, corrupt, repaired, or
@@ -351,11 +357,16 @@ set, not to catalog discovery. Once enough compatible groups are known, only
 those files are placed in the private session. A hard link keeps selected
 content stable without a second copy. If hard links are unavailable, the tool
 makes a private copy; it never uses a symbolic-link fallback whose target could
-change after selection. The browser reserves a camera-bound private session
+change after selection. If cleanup or deletion removes an individual selected
+FITS between discovery and staging, that file is skipped and the remaining
+evidence is still evaluated instead of discarding the whole staged set. The
+browser reserves a camera-bound private session
 before discovery begins, so **Cancel saved-FITS search** remains available
 throughout database inspection and staging. Cancellation removes only the
-session's private hard links, copies,
-or partial copy; database rows and their source FITS are never changed.
+session's private hard links, copies, or partial copy. Source FITS pixels and
+headers are never changed. The only durable discovery update is the small
+threshold-independent ratio cache added to successfully inspected legacy FITS
+database rows.
 
 ## Evidence validation and fitting
 
@@ -376,7 +387,8 @@ A successful calibration requires:
 - at least seven purple frames;
 - at least seven distinct compatible normal references;
 - at least one normal reference for every used purple frame;
-- at least two exposure levels;
+- at least two meaningfully distinct exposure levels (sub-percent floating
+  point jitter is treated as the same setting);
 - clean separation between normal and purple signature ranges;
 - sufficient unsaturated samples for each Bayer parity;
 - sufficient clipped-highlight evidence to fit both blend boundaries;
@@ -474,11 +486,14 @@ below `ASI676MC_CALIBRATION_FOLDER` when explicitly configured. Manifest and
 result files are written atomically because web workers and the video worker
 may read them concurrently.
 
-The CPU-heavy fit and full-resolution validation run as a low-priority video
-queue task rather than inside a web request. Session changes are protected by
+The CPU-heavy fit and full-resolution validation run on a dedicated serial
+calibration thread inside the low-priority video-worker process rather than
+inside a web request. The normal video queue remains free to accept timelapse
+and keogram work while calibration runs. Session changes are protected by
 cross-process locks, and a queued job can be claimed only once. Each owner may
 have two active sessions and the installation may have four. Saved-FITS
-searches, queued jobs, and running jobs can be cancelled at safe checkpoints;
+searches, queued jobs, population analysis, pairing, and numerical fitting can be
+cancelled at bounded checkpoints;
 an upload left inactive for 30 minutes, stale queued jobs, and workers with an
 old heartbeat are failed or cancelled so the browser cannot poll forever or
 leave the active-session quota occupied indefinitely.
@@ -582,7 +597,7 @@ recalibrate; do not loosen detection thresholds merely to suppress the warning.
 | `indi_allsky/image.py` | Untouched diagnostic FITS capture, optional preceding-frame cache, database records, and rendered-image metadata. |
 | `indi_allsky/asi676mc_calibration_engine.py` | FITS inspection, matching, evidence policy, numerical fitting, and validation through the live repair path. |
 | `indi_allsky/asi676mc_calibration.py` | Private sessions, uploads, database discovery/staging, cleanup, user guidance, result comparison, and text reports. |
-| `indi_allsky/video.py` | Background calibration task and seven-day session cleanup fallback. |
+| `indi_allsky/video.py` | Dedicated serial calibration consumer, retained-FITS database access and ratio-cache backfill, plus seven-day session cleanup fallback. |
 | `indi_allsky/flask/forms.py` | Settings validators, calibration controls, saved-FITS lookup, viewer assets, and gallery filtering. |
 | `indi_allsky/flask/views.py` | Authenticated endpoints, task queueing, result/report access, and configuration apply/reload. |
 | `indi_allsky/flask/base_views.py` and `templates/base.html` | Context-aware Tools-menu visibility in the current navigation. |

@@ -25,6 +25,7 @@ from datetime import datetime
 from datetime import timezone
 import io
 import json
+import logging
 import math
 import os
 from pathlib import Path
@@ -37,6 +38,8 @@ import time
 import unicodedata
 import uuid
 
+
+logger = logging.getLogger('indi_allsky')
 
 SESSION_ID_RE = re.compile(r'^[0-9a-f]{32}$')
 FITS_SUFFIXES = ('.fit', '.fits', '.fts')
@@ -59,6 +62,7 @@ DATABASE_GROUP_MAX = 100
 DATABASE_CAPTURE_TIME_TOLERANCE = 1.0
 DATABASE_MAX_FILES = MAX_FILE_COUNT
 DATABASE_MAX_BYTES = MAX_SESSION_BYTES
+PROGRESS_MANIFEST_INTERVAL_FILES = 50
 # A collection does not need every purple frame to have two normal references.
 # Once nine out of ten matched frames form complete good/purple/good triplets,
 # the remaining one-sided evidence is too small a share to justify asking the
@@ -992,12 +996,18 @@ def _database_record_has_role(record, role_name):
 
 def _database_compatibility_key(record):
     """Mirror the engine's inexpensive database-visible pairing fields."""
+    try:
+        exposure = round(float(record.get('exposure', -1.0)), 12)
+        gain = round(float(record.get('gain', -1.0)), 6)
+        binmode = int(record.get('binmode', -1))
+    except (OverflowError, TypeError, ValueError):
+        return None
     return (
         record.get('width'),
         record.get('height'),
-        round(float(record.get('exposure', -1.0)), 12),
-        round(float(record.get('gain', -1.0)), 6),
-        int(record.get('binmode', 1)),
+        exposure,
+        gain,
+        binmode,
     )
 
 
@@ -1008,6 +1018,8 @@ def discover_full_retention_database_evidence(
     max_pair_seconds,
     settings,
     progress_callback=None,
+    cancel_callback=None,
+    signature_callback=None,
 ):
     """Inspect the complete retained database catalog and stage only evidence.
 
@@ -1050,21 +1062,38 @@ def discover_full_retention_database_evidence(
                 'path': path,
                 'size': file_size,
                 'timestamp': float(record['timestamp']),
+                'id': int(record['id']),
+            })
+        except (KeyError, OSError, OverflowError, TypeError, ValueError):
+            continue
+        has_signature = bool(record.get('signature'))
+        try:
+            record.update({
                 'exposure': float(record.get('exposure', -1.0)),
                 'gain': float(record.get('gain', -1.0)),
                 'binmode': int(record.get('binmode', -1)),
                 'width': int(record.get('width', -1)),
                 'height': int(record.get('height', -1)),
-                'id': int(record['id']),
             })
-        except (KeyError, OSError, OverflowError, TypeError, ValueError):
-            continue
+        except (OverflowError, TypeError, ValueError):
+            # Legacy FITS are inspected from their authoritative headers, so
+            # incomplete database-side capture metadata must not hide them.
+            record.update({
+                'exposure': -1.0,
+                'gain': -1.0,
+                'binmode': -1,
+                'width': -1,
+                'height': -1,
+            })
         if (
             not asi676mc.camera_name_matches(record.get('camera_name'))
             or file_size <= 0
             or file_size > MAX_FILE_BYTES
             or not math.isfinite(record['timestamp'])
-            or not math.isfinite(record['exposure'])
+        ):
+            continue
+        signature_metadata_usable = has_signature and not (
+            not math.isfinite(record['exposure'])
             or record['exposure'] <= 0.0
             or not math.isfinite(record['gain'])
             or record['gain'] < 0.0
@@ -1073,8 +1102,8 @@ def discover_full_retention_database_evidence(
             or record['height'] <= 0
             or record['width'] % 2
             or record['height'] % 2
-        ):
-            continue
+        )
+        record['_signature_metadata_usable'] = signature_metadata_usable
         candidates.append(record)
 
     candidates.sort(key=lambda item: item['timestamp'], reverse=True)
@@ -1115,6 +1144,8 @@ def discover_full_retention_database_evidence(
     duplicate_standard_ids = set()
     for bad_record in diagnostic_bad_records:
         compatibility_key = _database_compatibility_key(bad_record)
+        if compatibility_key is None:
+            continue
         duplicate_standard_ids.update(
             record['id']
             for record in candidates
@@ -1138,16 +1169,22 @@ def discover_full_retention_database_evidence(
     threshold_search_started = False
     total = len(searchable)
     for index, record in enumerate(searchable, start=1):
+        if cancel_callback and (index == 1 or index % 5 == 0):
+            cancel_callback()
         path = record['path']
+        inspected_legacy = False
         try:
-            if record.get('signature'):
+            if record.get('_signature_metadata_usable'):
                 try:
                     frame = engine.inspect_fits_metadata(
                         path,
                         record,
                         normalized_settings,
+                        verify_header=True,
                     )
                     metadata_signature_count += 1
+                except engine.RepairedFitsError:
+                    raise
                 except (KeyError, TypeError, ValueError):
                     # A malformed or incomplete saved signature must not make
                     # an otherwise valid retained FITS invisible. Treat it as
@@ -1158,6 +1195,7 @@ def discover_full_retention_database_evidence(
                         trusted_camera_name=record.get('camera_name'),
                     )
                     legacy_inspected_count += 1
+                    inspected_legacy = True
             else:
                 frame = engine.inspect_fits(
                     path,
@@ -1165,12 +1203,24 @@ def discover_full_retention_database_evidence(
                     trusted_camera_name=record.get('camera_name'),
                 )
                 legacy_inspected_count += 1
+                inspected_legacy = True
+        except Exception as error:
+            if not engine.is_recoverable_fits_error(error):
+                raise
+            rejected[str(error)] += 1
+        else:
             inspected.append(frame)
             if frame.is_bad:
                 detected_during_scan += 1
             raw_by_path[str(path)] = record
-        except (OSError, OverflowError, TypeError, ValueError) as error:
-            rejected[str(error)] += 1
+            if inspected_legacy:
+                saved_signature = {
+                    name: float(frame.signature[name])
+                    for name in engine.DETECTION_THRESHOLD_DETAILS
+                }
+                record['signature'] = saved_signature
+                if signature_callback:
+                    signature_callback(record['id'], saved_signature)
         if index >= 14 and detected_during_scan < 7:
             threshold_search_started = True
         if progress_callback:
@@ -1195,33 +1245,69 @@ def discover_full_retention_database_evidence(
         )
 
     detected_bad_count = sum(record.is_bad for record in inspected)
+    detector_pairs = []
+    detector_usable = False
     if detected_bad_count >= minimum:
+        detector_pairs, detector_unmatched = engine.match_pairs(
+            inspected,
+            max_pair_seconds,
+            checkpoint_callback=cancel_callback,
+        )
+        try:
+            engine.validate_evidence(
+                inspected,
+                detector_pairs,
+                detector_unmatched,
+                allow_unmatched=True,
+            )
+            detector_usable = True
+        except engine.CalibrationError:
+            detector_usable = False
+    if detector_usable:
         classified = inspected
         selection_mode = 'full_retention_detector_groups'
+        pairs = detector_pairs
+        unmatched = detector_unmatched
     else:
         try:
-            classified = engine.infer_detection_populations(inspected)
+            classified = engine.infer_detection_populations(
+                inspected,
+                checkpoint_callback=cancel_callback,
+                allow_detected_conflicts=True,
+            )
         except engine.CalibrationError as error:
             raise engine.CalibrationError(
                 'the complete retained database archive was exhausted after '
-                'inspecting {0} compatible FITS, but no safe purple/normal '
-                'population could be identified: {1}'.format(
+                'inspecting {0} compatible FITS, but neither the configured '
+                'detector nor population analysis identified usable '
+                'purple/normal evidence: {1}'.format(
                     len(inspected),
                     error,
                 )
             ) from error
         selection_mode = 'full_retention_population_groups'
-
-    pairs, unmatched = engine.match_pairs(classified, max_pair_seconds)
+        pairs, unmatched = engine.match_pairs(
+            classified,
+            max_pair_seconds,
+            checkpoint_callback=cancel_callback,
+        )
     pairs.sort(key=lambda pair: pair.bad.timestamp, reverse=True)
     exposure_seeds = []
-    seeded_exposures = set()
+    seeded_exposures = []
     for pair in pairs:
-        exposure = round(pair.bad.exposure, 12)
-        if exposure in seeded_exposures:
+        exposure = float(pair.bad.exposure)
+        if any(
+            math.isclose(
+                exposure,
+                seeded,
+                rel_tol=engine.EXPOSURE_LEVEL_REL_TOLERANCE,
+                abs_tol=engine.EXPOSURE_LEVEL_ABS_TOLERANCE,
+            )
+            for seeded in seeded_exposures
+        ):
             continue
         exposure_seeds.append(pair)
-        seeded_exposures.add(exposure)
+        seeded_exposures.append(exposure)
         if len(exposure_seeds) >= engine.CALIBRATION_OPTIONS[
             'MIN_EXPOSURE_LEVELS'
         ]:
@@ -1237,9 +1323,10 @@ def discover_full_retention_database_evidence(
     selected_bytes = 0
     selected_group_count = 0
     two_sided_group_count = 0
+    selection_limit_blocked = False
 
     def add_group(pair, references):
-        nonlocal selected_bytes
+        nonlocal selected_bytes, selection_limit_blocked
         group_frames = (pair.bad,) + tuple(references)
         group_records = []
         for frame in group_frames:
@@ -1252,6 +1339,7 @@ def discover_full_retention_database_evidence(
             len(selected_records) + len(group_records) > DATABASE_MAX_FILES
             or selected_bytes + group_bytes > DATABASE_MAX_BYTES
         ):
+            selection_limit_blocked = True
             return False
         for raw_record in group_records:
             selected_records.append(raw_record)
@@ -1260,6 +1348,8 @@ def discover_full_retention_database_evidence(
         return True
 
     for pair in ordered_pairs:
+        if cancel_callback:
+            cancel_callback()
         references = tuple(pair.references)
         added = add_group(pair, references)
         used_two_sided = pair.two_sided
@@ -1295,10 +1385,7 @@ def discover_full_retention_database_evidence(
 
     if selected_group_count < minimum:
         limit_detail = ''
-        if pairs and (
-            len(selected_records) >= DATABASE_MAX_FILES
-            or selected_bytes >= DATABASE_MAX_BYTES
-        ):
+        if pairs and selection_limit_blocked:
             limit_detail = ' within the 200-file/2-GiB evidence staging limit'
         raise engine.CalibrationError(
             'the complete retained database archive was exhausted: {0} '
@@ -1348,6 +1435,7 @@ def discover_full_retention_database_evidence(
         'compatible_scanned_file_count': len(inspected),
         'metadata_signature_count': metadata_signature_count,
         'legacy_fits_inspected_count': legacy_inspected_count,
+        'detected_bad_count': detected_bad_count,
         'selected_group_count': selected_group_count,
         'selected_marked_group_count': sum(
             _database_record_has_role(record, 'bad')
@@ -1355,7 +1443,8 @@ def discover_full_retention_database_evidence(
         ),
         'two_sided_group_count': two_sided_group_count,
         'selection_limit_reached': (
-            selected_group_count < min(target_groups, len(pairs))
+            selection_limit_blocked
+            or selected_group_count < min(target_groups, len(pairs))
         ),
         'selection_limit_file_count': DATABASE_MAX_FILES,
         'selection_limit_bytes': DATABASE_MAX_BYTES,
@@ -1432,6 +1521,7 @@ def _stage_database_files_unlocked(
 
     upload_dir = session_dir.joinpath('uploads')
     cancel_marker = _cancel_marker_path(session_dir)
+    staging_rejections = Counter()
     from . import asi676mc
     try:
         for sequence, record in enumerate(records):
@@ -1441,11 +1531,8 @@ def _stage_database_files_unlocked(
                 )
             source = Path(record['path']).resolve()
             if not source.is_file():
-                raise CalibrationSessionError(
-                    'a selected database FITS is no longer available: {0}'.format(
-                        source.name
-                    )
-                )
+                staging_rejections['selected FITS no longer available'] += 1
+                continue
             if not is_database_fits_path(source):
                 raise CalibrationSessionError(
                     'unsupported database FITS format: {0}'.format(source.name)
@@ -1454,15 +1541,17 @@ def _stage_database_files_unlocked(
                 raise CalibrationSessionError(
                     'database evidence is not positively identified as ASI676MC'
                 )
-            file_size = source.stat().st_size
+            try:
+                file_size = source.stat().st_size
+            except OSError:
+                staging_rejections['selected FITS became unavailable'] += 1
+                continue
             if file_size <= 0 or file_size > MAX_FILE_BYTES:
-                raise CalibrationSessionError(
-                    'database FITS exceeds the per-file calibration limit'
-                )
+                staging_rejections['selected FITS size changed'] += 1
+                continue
             if manifest['total_bytes'] + file_size > MAX_SESSION_BYTES:
-                raise CalibrationSessionError(
-                    'database evidence exceeds the calibration-session size limit'
-                )
+                staging_rejections['selected FITS no longer fits staging limit'] += 1
+                continue
             destination = upload_dir.joinpath(
                 '{0:06d}_{1}_{2}'.format(sequence, record['id'], source.name)
             )
@@ -1470,8 +1559,12 @@ def _stage_database_files_unlocked(
                 os.link(str(source), str(destination))
                 link_type = 'hardlink'
             except OSError:
-                _copy_database_file(source, destination, cancel_marker)
-                link_type = 'copy'
+                try:
+                    _copy_database_file(source, destination, cancel_marker)
+                    link_type = 'copy'
+                except OSError:
+                    staging_rejections['selected FITS became unreadable'] += 1
+                    continue
 
             manifest['files'].append({
                 'name': destination.name,
@@ -1492,8 +1585,22 @@ def _stage_database_files_unlocked(
                 'width': record.get('width'),
                 'height': record.get('height'),
                 'camera_name': record.get('camera_name'),
+                'repair_status': record.get('repair_status'),
             })
             manifest['total_bytes'] += file_size
+        if not manifest['files']:
+            raise CalibrationSessionError(
+                'all selected database FITS became unavailable during staging'
+            )
+        if staging_rejections:
+            source_details = dict(manifest.get('source') or {})
+            source_details['staging_skipped_file_count'] = sum(
+                staging_rejections.values()
+            )
+            source_details['staging_rejection_counts'] = dict(
+                sorted(staging_rejections.items())
+            )
+            manifest['source'] = source_details
     except Exception:
         _remove_upload_dir(session_dir)
         upload_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -1995,6 +2102,15 @@ def _result_warnings(
         marked_groups = int(
             source_details.get('selected_marked_group_count', 0)
         )
+        staging_skipped = int(
+            source_details.get('staging_skipped_file_count', 0)
+        )
+        if staging_skipped:
+            warnings.append(
+                '{0} selected FITS became unavailable or changed during '
+                'private staging. The tool skipped them and calibrated with '
+                'the remaining compatible evidence.'.format(staging_skipped)
+            )
         if source_details.get('selection_limit_reached'):
             if str(selection_mode or '').startswith('full_retention_'):
                 warnings.append(
@@ -3039,8 +3155,14 @@ def format_threshold_suggestion_report(payload, manifest):
             'Legacy FITS directly inspected: {0}'.format(
                 source_details.get('legacy_fits_inspected_count', 0)
             ),
+            'Legacy FITS ratio caches written: {0}'.format(
+                source_details.get('legacy_signature_cached_count', 0)
+            ),
             'Saved ratio metadata available: {0}'.format(
                 source_details.get('metadata_signature_count', 0)
+            ),
+            'Selected FITS skipped during staging: {0}'.format(
+                source_details.get('staging_skipped_file_count', 0)
             ),
             'Post-repair standard FITS excluded: {0}'.format(
                 source_details.get('excluded_repaired_standard_count', 0)
@@ -3062,7 +3184,9 @@ def format_threshold_suggestion_report(payload, manifest):
                 'The background search inspected the complete retained '
                 'archive. Saved ratio metadata avoided unnecessary image '
                 'decoding; legacy FITS were inspected directly. Only the '
-                'final purple/reference groups were staged. This analysis '
+                'final purple/reference groups were staged, and newly '
+                'measured legacy ratios were cached on their database rows. '
+                'This analysis '
                 'removed only temporary staging links; the original saved '
                 'FITS remain unchanged.'
             )
@@ -3306,8 +3430,14 @@ def format_integrated_report(payload, manifest):
             'Legacy FITS directly inspected: {0}'.format(
                 source_details.get('legacy_fits_inspected_count', 0)
             ),
+            'Legacy FITS ratio caches written: {0}'.format(
+                source_details.get('legacy_signature_cached_count', 0)
+            ),
             'Saved ratio metadata available: {0}'.format(
                 source_details.get('metadata_signature_count', 0)
+            ),
+            'Selected FITS skipped during staging: {0}'.format(
+                source_details.get('staging_skipped_file_count', 0)
             ),
             'Post-repair standard FITS excluded: {0}'.format(
                 source_details.get('excluded_repaired_standard_count', 0)
@@ -3338,7 +3468,9 @@ def format_integrated_report(payload, manifest):
                 'The background search inspected the complete retained '
                 'archive. Saved ratio metadata avoided unnecessary image '
                 'decoding; legacy FITS were inspected directly. Only the '
-                'final purple/reference groups were staged. This calibration '
+                'final purple/reference groups were staged, and newly '
+                'measured legacy ratios were cached on their database rows. '
+                'This calibration '
                 'removed only temporary staging links. The original saved '
                 'FITS remain unchanged and continue to follow normal FITS '
                 'retention.'
@@ -3593,6 +3725,7 @@ def run_calibration_session(
     session_id,
     storage_root=None,
     database_loader=None,
+    database_signature_saver=None,
 ):
     """Run the calibration engine for one queued web session."""
     session_dir = _session_dir(session_id, storage_root)
@@ -3650,8 +3783,12 @@ def run_calibration_session(
             progress = dict(progress)
             processed = int(progress.get('processed_files', 0))
             phase_changed = progress.get('phase') != last_progress.get('phase')
-            if not phase_changed and processed % 5 and (
-                processed != int(progress.get('total_files', 0))
+            if (
+                not phase_changed
+                and processed % PROGRESS_MANIFEST_INTERVAL_FILES
+                and (
+                    processed != int(progress.get('total_files', 0))
+                )
             ):
                 return
             with _file_lock(_session_lock_path(session_dir)):
@@ -3660,6 +3797,11 @@ def run_calibration_session(
                 current['heartbeat_utc'] = _utc_now_text()
                 _write_manifest(session_dir, current)
             last_progress = progress
+
+        def cancellation_checkpoint():
+            """Check cancellation during non-file-loop analysis phases."""
+            with _file_lock(_session_lock_path(session_dir)):
+                active_manifest()
 
         if (
             source_details.get('kind') == 'database'
@@ -3672,6 +3814,7 @@ def run_calibration_session(
                     'database calibration requires a retained-FITS loader'
                 )
             catalog = database_loader(source_details, record_progress)
+            legacy_signature_updates = {}
             selected_records, discovery = (
                 discover_full_retention_database_evidence(
                     catalog.get('fits_records', ()),
@@ -3680,8 +3823,32 @@ def run_calibration_session(
                     manifest['max_pair_seconds'],
                     manifest.get('settings'),
                     progress_callback=record_progress,
+                    cancel_callback=cancellation_checkpoint,
+                    signature_callback=(
+                        lambda record_id, signature:
+                        legacy_signature_updates.__setitem__(
+                            int(record_id),
+                            dict(signature),
+                        )
+                    ),
                 )
             )
+            if database_signature_saver and legacy_signature_updates:
+                try:
+                    database_signature_saver(
+                        source_details,
+                        legacy_signature_updates,
+                    )
+                    discovery['legacy_signature_cached_count'] = len(
+                        legacy_signature_updates
+                    )
+                except Exception:
+                    # Caching makes later searches faster but must never turn
+                    # otherwise valid evidence into a failed calibration.
+                    logger.exception(
+                        'Unable to cache ASI676MC legacy FITS signatures'
+                    )
+                    discovery['legacy_signature_cache_failed'] = True
             stage_database_files_for_worker(
                 session_id,
                 worker_token,
@@ -3690,7 +3857,7 @@ def run_calibration_session(
             )
             with _file_lock(_session_lock_path(session_dir)):
                 manifest = active_manifest()
-                updated_source = dict(source_details)
+                updated_source = dict(manifest.get('source') or source_details)
                 updated_source.update(catalog.get('source_details') or {})
                 updated_source.update(discovery)
                 manifest['source'] = updated_source
@@ -3713,6 +3880,7 @@ def run_calibration_session(
                 allow_unmatched=True,
                 metadata_by_name=metadata_by_name,
                 progress_callback=record_progress,
+                checkpoint_callback=cancellation_checkpoint,
                 progressive=(
                     source_details.get('selection_mode')
                     == 'progressive_search'
