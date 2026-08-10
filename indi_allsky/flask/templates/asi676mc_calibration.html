@@ -330,9 +330,11 @@
                         Search this camera's saved FITS from newest to oldest.
                         If at least seven marked purple frames have adjacent
                         normal FITS, the tool uses those groups immediately.
-                        Otherwise it checks all retained FITS until it finds
-                        seven convincing high-ratio groups or reaches the end
-                        of the retention window.
+                        Otherwise it checks the bounded recent evidence set
+                        until it finds seven convincing high-ratio groups or
+                        reaches the search limit. Marked diagnostic groups are
+                        prioritized. The search considers up to 600 recent
+                        database entries and stages at most 200 FITS or 2 GiB.
                     </p>
                     <div class="tw:mb-4">
                         {{ form_calibration.DATABASE_GROUP_LIMIT.label(class='tw:label-text tw:font-semibold') }}
@@ -805,6 +807,7 @@ function calibrationPairSeparation() {
 function resetCalibrationInterface() {
     const sessionToForget = completedCalibrationSessionId
         || activeCalibrationSessionId
+        || pollingCalibrationSessionId
         || sessionStorage.getItem(calibrationTabStorageKey);
     forgetCalibrationSession(sessionToForget);
     completedCalibrationSessionId = null;
@@ -836,6 +839,12 @@ function resetCalibrationInterface() {
         .removeClass('calibration-progress-error')
         .addClass('progress-bar-animated');
     renderSelectedFiles();
+    if (storedCalibrationSessions().length) {
+        // A different tab may have created another retained run. Surface the
+        // next remembered session automatically instead of leaving it hidden
+        // while it continues to consume the owner's active-session quota.
+        window.setTimeout(restoreRememberedCalibrationSession, 0);
+    }
 }
 
 function setCalibrationProgress(percent, stage, status) {
@@ -1896,12 +1905,14 @@ $('#cancel-calibration').on('click', cancelCalibration);
 $('#calibration-reset').on('click', discardCalibrationResult);
 $('#calibration-failure-reset').on('click', discardCalibrationResult);
 
-// localStorage contains only an unguessable session ID, never FITS data or
-// calibration values. Ownership is rechecked by every server endpoint.
-$(document).ready(async function() {
+// localStorage contains only unguessable session IDs, never FITS data or
+// calibration values. Ownership is rechecked by every server endpoint. This
+// helper is also called after one retained run is cleared so an older run from
+// another tab cannot remain hidden.
+async function restoreRememberedCalibrationSession() {
     const savedSession = recoverCalibrationSession();
     if (!savedSession) {
-        return;
+        return false;
     }
     $('#start-calibration').prop('disabled', true);
     pollingCalibrationSessionId = savedSession;
@@ -1919,9 +1930,18 @@ $(document).ready(async function() {
     } catch (error) {
         if (error.serverRejected) {
             forgetCalibrationSession(savedSession);
+            if (storedCalibrationSessions().length) {
+                window.setTimeout(restoreRememberedCalibrationSession, 0);
+                return true;
+            }
         }
         showCalibrationError(error.message);
     }
+    return true;
+}
+
+$(document).ready(async function() {
+    await restoreRememberedCalibrationSession();
 });
 }
 </script>

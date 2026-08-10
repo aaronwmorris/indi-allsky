@@ -348,6 +348,45 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertEqual(summary['retained_candidate_count'], 250)
         self.assertEqual(selected[0]['id'], 250)
 
+    def test_database_search_prioritizes_older_marked_groups_before_bound(self):
+        records = [
+            self._database_record(index, 10000 + index)
+            for index in range(1, 221)
+        ]
+        marked_ids = set()
+        next_id = 1000
+        for group_index in range(7):
+            capture_id = 'older-capture-{0}'.format(group_index)
+            base_time = 1000 + (group_index * 300)
+            for role, offset in (
+                ('preceding', -10),
+                ('bad', 0),
+                ('following', 10),
+            ):
+                record = self._database_record(
+                    next_id,
+                    base_time + offset,
+                    roles=({
+                        'capture_id': capture_id,
+                        'role': role,
+                    },),
+                )
+                marked_ids.add(next_id)
+                records.append(record)
+                next_id += 1
+
+        selected, summary = asi676mc_calibration.select_database_evidence(
+            records,
+            bad_frames=[],
+            target_groups=7,
+            max_pair_seconds=90.0,
+        )
+
+        self.assertEqual(summary['selection_mode'], 'marked_groups')
+        self.assertEqual(summary['selected_marked_group_count'], 7)
+        self.assertEqual({record['id'] for record in selected}, marked_ids)
+        self.assertTrue(summary['selection_limit_reached'])
+
     def test_database_search_rejects_non_asi676mc_records(self):
         records = [self._database_record(index, 1000 + index) for index in range(20)]
         for record in records:
@@ -768,6 +807,31 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             recovered = asi676mc_calibration._read_manifest(stale_dir)
             self.assertEqual(recovered['status'], 'failed')
             self.assertIn('stopped responding', recovered['error'])
+            self.assertFalse(stale_dir.joinpath('uploads').exists())
+
+    def test_stale_uploading_session_is_recovered_before_quota(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            sessions = [
+                asi676mc_calibration.create_session('alice', root)
+                for _index in range(
+                    asi676mc_calibration.MAX_ACTIVE_SESSIONS_PER_OWNER
+                )
+            ]
+            stale_dir = root.joinpath(sessions[0]['session_id'])
+            stale_manifest = asi676mc_calibration._read_manifest(stale_dir)
+            stale_manifest['updated_utc'] = '2000-01-01T00:00:00+00:00'
+            asi676mc_calibration._atomic_write_json(
+                stale_dir.joinpath('manifest.json'),
+                stale_manifest,
+            )
+
+            replacement = asi676mc_calibration.create_session('alice', root)
+
+            self.assertEqual(replacement['status'], 'uploading')
+            recovered = asi676mc_calibration._read_manifest(stale_dir)
+            self.assertEqual(recovered['status'], 'failed')
+            self.assertIn('upload stopped responding', recovered['error'])
             self.assertFalse(stale_dir.joinpath('uploads').exists())
 
     def test_manifest_json_never_serializes_nan_or_infinity(self):
@@ -1219,7 +1283,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             self.assertEqual(status['result']['source']['kind'], 'database')
             warnings = ' '.join(status['result']['warnings'])
             self.assertIn('Fewer than seven usable marked groups', warnings)
-            self.assertIn('checked all 14 eligible retained FITS', warnings)
+            self.assertIn('checked all 14 eligible selected FITS', warnings)
             self.assertIn('whose file was no longer on disk', warnings)
             self.assertIn('with an unsupported filename', warnings)
             self.assertEqual(len(status['result']['warnings']), 2)
@@ -1821,6 +1885,9 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         )
         self.assertIn('rememberCalibrationSession', template)
         self.assertIn('sessionStorage', template)
+        self.assertIn('restoreRememberedCalibrationSession', template)
+        self.assertIn('|| pollingCalibrationSessionId', template)
+        self.assertIn('storedCalibrationSessions().length', template)
         self.assertIn('Reconnecting', template)
         self.assertIn("camera_id: $('#CAMERA_ID').val()", template)
         self.assertIn('Cancel calibration', template)
@@ -2393,11 +2460,11 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn("get('EXCLUDE_ONLY', True)", processing_source)
         self.assertIn("get('EXCLUDE_ONLY', True)", views_source)
         self.assertIn(
-            "get('RED_SIDE_RATIO_THRESHOLD', 1.15)",
+            "asi676mc_repair_defaults['RED_SIDE_RATIO_THRESHOLD']",
             views_source,
         )
         self.assertIn(
-            "get('BLUE_SIDE_RATIO_THRESHOLD', 1.75)",
+            "asi676mc_repair_defaults['BLUE_SIDE_RATIO_THRESHOLD']",
             views_source,
         )
         self.assertIn('asi676mc_repair_was_enabled', settings_script)
@@ -2434,19 +2501,24 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             settings_template,
         )
         self.assertIn(
-            'Apparent red-to-first-green ratio. Default: 1.15.',
+            "asi676mc_repair_defaults['RED_SIDE_RATIO_THRESHOLD']",
             settings_template,
         )
         self.assertIn(
-            'Apparent blue-to-second-green ratio. Default: 1.75.',
+            "asi676mc_repair_defaults['BLUE_SIDE_RATIO_THRESHOLD']",
             settings_template,
         )
         self.assertIn(
-            'Even Bayer-aware signature sampling step. Default: 32.',
+            "asi676mc_repair_defaults['SAMPLE_STEP']",
             settings_template,
         )
         self.assertIn(
-            'Even RAW row count processed per repair chunk. Default: 128.',
+            "asi676mc_repair_defaults['CHUNK_ROWS']",
+            settings_template,
+        )
+        self.assertIn(
+            'Repair-only RAW16 clipping level; this does not affect '
+            'purple-frame detection.',
             settings_template,
         )
         self.assertNotIn('Safe calibration workflow:', settings_template)
@@ -2484,16 +2556,48 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'form_config.IMAGE_ASI676MC_REPAIR__CHUNK_ROWS'
         )
         highlight_section_position = settings_template.index(
-            '>Highlight transition<'
+            '>Clipping and highlight reconstruction<'
+        )
+        saturation_position = settings_template.index(
+            'form_config.IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD'
         )
         sampling_section_position = settings_template.index(
             '>Sampling and memory<'
         )
         self.assertLess(highlight_section_position, highlight_start_position)
+        self.assertLess(highlight_section_position, saturation_position)
+        self.assertLess(saturation_position, highlight_start_position)
         self.assertLess(highlight_start_position, highlight_end_position)
         self.assertLess(highlight_end_position, sampling_section_position)
         self.assertLess(sampling_section_position, sample_step_position)
         self.assertLess(sample_step_position, chunk_rows_position)
+
+    def test_base_config_numerical_defaults_match_runtime_defaults(self):
+        project_root = Path(__file__).resolve().parents[2]
+        config_source = project_root.joinpath(
+            'indi_allsky',
+            'config.py',
+        ).read_text(encoding='utf-8')
+        config_tree = ast.parse(config_source)
+        config_class = next(
+            node for node in config_tree.body
+            if isinstance(node, ast.ClassDef)
+            and node.name == 'IndiAllSkyConfigBase'
+        )
+        base_assignment = next(
+            node for node in config_class.body
+            if isinstance(node, ast.Assign)
+            and any(
+                isinstance(target, ast.Name)
+                and target.id == '_base_config'
+                for target in node.targets
+            )
+        )
+        base_config = ast.literal_eval(base_assignment.value.args[0])
+        repair_config = base_config['IMAGE_ASI676MC_REPAIR']
+
+        for key, value in calibration_engine.DEFAULT_SETTINGS.items():
+            self.assertEqual(repair_config[key], value, key)
 
 
 if __name__ == '__main__':

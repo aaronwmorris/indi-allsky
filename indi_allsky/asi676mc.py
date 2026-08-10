@@ -104,6 +104,21 @@ def camera_record_matches(camera):
     )
 
 
+def camera_record_identity_name(camera):
+    """Return the positive ASI676MC name used to bind an older camera row."""
+    camera_data = getattr(camera, 'data', None)
+    if isinstance(camera_data, dict) and camera_data.get('detected_name'):
+        return str(camera_data['detected_name'])
+    return str(next(
+        (
+            getattr(camera, attr, None)
+            for attr in ('name', 'name_alt1', 'name_alt2')
+            if camera_name_matches(getattr(camera, attr, None))
+        ),
+        getattr(camera, 'name', '') or '',
+    ))
+
+
 def diagnostic_capture_plan(pending_capture_id, status, new_capture_id=None):
     """Assign bad/following roles while allowing consecutive failures.
 
@@ -158,10 +173,25 @@ def diagnostic_reference_compatible(previous_context, current_context):
             int(current_context['binning']),
             str(current_context['bayer_pattern'] or '').upper(),
         )
-    except (KeyError, TypeError, ValueError):
+    except (KeyError, OverflowError, TypeError, ValueError):
         return False
 
     return previous_key == current_key
+
+
+def diagnostic_pending_capture_id(pending_state, current_context):
+    """Return a pending group only when its immediate successor is compatible."""
+    if not isinstance(pending_state, dict):
+        # Compatibility with state held across a live code reload.
+        return pending_state
+    capture_id = pending_state.get('capture_id')
+    pending_context = pending_state.get('context')
+    if pending_context and not diagnostic_reference_compatible(
+        pending_context,
+        current_context,
+    ):
+        return None
+    return capture_id
 
 
 def append_diagnostic_role(roles, role):
@@ -556,8 +586,13 @@ def _reconstruct_clipped_green(
         row_stop = min(row_start + plane_chunk_rows, plane_height)
         rows = numpy.arange(row_start, row_stop)
 
-        upper = green2[numpy.maximum(rows - 1, 0)].astype(numpy.uint32)
-        lower = green2[rows].astype(numpy.uint32)
+        # The later fixed-point highlight weight multiplies a RAW16 value by
+        # both HIGHLIGHT_BLEND_BASE_SCALE and HIGHLIGHT_BLEND_WEIGHT_MAX.
+        # That can exceed uint32 for otherwise valid configured boundaries,
+        # so keep the two chunk-local work buffers in uint64.  The final
+        # reconstructed values are still bounded to RAW16 before assignment.
+        upper = green2[numpy.maximum(rows - 1, 0)].astype(numpy.uint64)
+        lower = green2[rows].astype(numpy.uint64)
         estimate = numpy.empty((row_stop - row_start, plane_width), dtype=numpy.uint16)
 
         estimate[:, :-1] = numpy.rint(
@@ -602,7 +637,7 @@ def _reconstruct_clipped_green(
         # end ratio.  This bounds the transition instead of changing all
         # clipped highlights.
         #
-        # Reuse the existing uint32 buffers and an 8-bit fixed-point weight so
+        # Reuse the existing uint64 buffers and an 8-bit fixed-point weight so
         # the refinement does not allocate another image-sized plane.
         upper[:] = red[row_start:row_stop]
         numpy.maximum(upper, blue[row_start:row_stop], out=upper)
@@ -637,7 +672,7 @@ def _reconstruct_clipped_green(
         #
         # At this point ``upper`` is base and ``lower`` is high - base, so
         # their sum reconstructs high without rereading the Bayer planes.  All
-        # intermediates fit safely in uint32.  ``mask`` is no longer needed
+        # intermediates fit safely in uint64.  ``mask`` is no longer needed
         # for the earlier G1 interpolation and becomes the positive-weight
         # mask.
         lower += upper
@@ -673,6 +708,10 @@ def _reconstruct_clipped_green(
             highlight_blend_base_end
             - highlight_blend_base_start
         )
+        # The denominator's earlier half-step can round the reconstructed
+        # strongest channel down by one. Clamp before unsigned subtraction so
+        # that harmless rounding cannot wrap to the uint64 ceiling.
+        numpy.maximum(lower, estimate, out=lower)
         lower -= estimate
         lower *= upper
         lower += HIGHLIGHT_BLEND_WEIGHT_MAX // 2

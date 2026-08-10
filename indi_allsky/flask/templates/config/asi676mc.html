@@ -67,7 +67,7 @@
                 ) }}
                 {{ repair_toggle(
                     form_config.IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS,
-                    'Save the untouched faulty RAW FITS and the immediately following same-camera FITS. Prefer this diagnostic source and leave standard FITS off unless you need them for another purpose. If diagnostic saving does not catch the purple frame, temporarily save every standard FITS to gather evidence.'
+                    'Save the untouched faulty RAW FITS and its immediately following compatible same-camera FITS. A successor with different dimensions, exposure, gain, binning, or Bayer layout is not saved as a reference. Prefer this diagnostic source and leave standard FITS off unless you need them for another purpose. If diagnostic saving does not catch the purple frame, temporarily save every standard FITS to gather evidence.'
                 ) }}
                 {{ repair_toggle(
                     form_config.IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS,
@@ -79,37 +79,37 @@
 
         <div class="tw:border-t tw:border-base-300 tw:pt-5">
             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Detection thresholds</span>
-            <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-4 tw:gap-4 tw:mt-3">
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD, 'Combined red/blue-to-green ratio. Default: 1.50.') }}
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD, 'Apparent red-to-first-green ratio. Default: 1.15.') }}
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD, 'Apparent blue-to-second-green ratio. Default: 1.75.') }}
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD, 'RAW16 level treated as source-camera clipping. Default: 65000.') }}
+            <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-3 tw:gap-4 tw:mt-3">
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD, 'Combined red/blue-to-green ratio. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['PURPLE_RATIO_THRESHOLD'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD, 'Apparent red-to-first-green ratio. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['RED_SIDE_RATIO_THRESHOLD'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD, 'Apparent blue-to-second-green ratio. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['BLUE_SIDE_RATIO_THRESHOLD'])) ~ '.') }}
             </div>
         </div>
 
         <div class="tw:border-t tw:border-base-300 tw:pt-5">
             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Repair gains</span>
             <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-4 tw:gap-4 tw:mt-3">
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_R, 'Multiplier at the R Bayer position. Default: 0.91004.') }}
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_G1, 'Multiplier at the G1 Bayer position. Default: 1.68652.') }}
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_G2, 'Multiplier at the G2 Bayer position. Default: 1.09238.') }}
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_B, 'Multiplier at the B Bayer position. Default: 0.59537.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_R, 'Multiplier at the R Bayer position. Default: ' ~ ('%0.5f'|format(asi676mc_repair_defaults['GAIN_R'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_G1, 'Multiplier at the G1 Bayer position. Default: ' ~ ('%0.5f'|format(asi676mc_repair_defaults['GAIN_G1'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_G2, 'Multiplier at the G2 Bayer position. Default: ' ~ ('%0.5f'|format(asi676mc_repair_defaults['GAIN_G2'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_B, 'Multiplier at the B Bayer position. Default: ' ~ ('%0.5f'|format(asi676mc_repair_defaults['GAIN_B'])) ~ '.') }}
             </div>
         </div>
 
         <div class="tw:border-t tw:border-base-300 tw:pt-5">
-            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Highlight transition</span>
-            <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-4 tw:mt-3">
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO, 'Low-to-high ratio where clipped-highlight blending begins. Default: 0.55.') }}
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO, 'Ratio where blending reaches the stronger channel. Default: 0.75; must exceed the start.') }}
+            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Clipping and highlight reconstruction</span>
+            <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-3 tw:gap-4 tw:mt-3">
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD, 'Repair-only RAW16 clipping level; this does not affect purple-frame detection. Default: ' ~ ('%d'|format(asi676mc_repair_defaults['SOURCE_SATURATION_THRESHOLD'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO, 'Low-to-high ratio where clipped-highlight blending begins. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['HIGHLIGHT_BLEND_START_RATIO'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO, 'Ratio where blending reaches the stronger channel. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['HIGHLIGHT_BLEND_END_RATIO'])) ~ '; must exceed the start.') }}
             </div>
         </div>
 
         <div class="tw:border-t tw:border-base-300 tw:pt-5">
             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Sampling and memory</span>
             <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-4 tw:mt-3">
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__SAMPLE_STEP, 'Even Bayer-aware signature sampling step. Default: 32.') }}
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__CHUNK_ROWS, 'Even RAW row count processed per repair chunk. Default: 128.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__SAMPLE_STEP, 'Even Bayer-aware signature sampling step. Default: ' ~ ('%d'|format(asi676mc_repair_defaults['SAMPLE_STEP'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__CHUNK_ROWS, 'Even RAW row count processed per repair chunk. Default: ' ~ ('%d'|format(asi676mc_repair_defaults['CHUNK_ROWS'])) ~ '.') }}
             </div>
         </div>
     </div>

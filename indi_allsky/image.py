@@ -1313,8 +1313,10 @@ class ImageWorker(Process):
     def capture_asi676mc_diagnostic_fits(self, source_filename_p, i_ref, camera):
         """Save bad/following evidence and optionally a cached preceding FITS.
 
-        The default path copies only a detected
-        purple frame and the next ingested frame, with no persistent RAW cache.
+        The default path copies only a detected purple frame and the next
+        compatible ingested frame, with no persistent RAW cache. An
+        incompatible immediate successor breaks the evidence group rather than
+        saving a reference the calibration engine would reject.
         ``SAVE_PRECEDING_FITS`` opts into one in-memory FITS per camera. A
         cached normal frame is written only when the immediately following
         compatible frame is purple, then the cache advances or is discarded.
@@ -1351,7 +1353,20 @@ class ImageWorker(Process):
 
         repair_result = i_ref.asi676mc_repair_result or {}
         repair_status = repair_result.get('status')
-        pending_capture_id = self.asi676mc_diagnostic_pending.pop(camera_id, None)
+        current_context = self._asi676mc_diagnostic_frame_context(i_ref)
+        pending_state = self.asi676mc_diagnostic_pending.pop(camera_id, None)
+        pending_capture_id = asi676mc.diagnostic_pending_capture_id(
+            pending_state,
+            current_context,
+        )
+        if pending_state and not pending_capture_id:
+            logger.warning(
+                'Discarding incompatible following ASI676MC diagnostic frame '
+                'for capture %s',
+                pending_state.get('capture_id', 'unknown')
+                if isinstance(pending_state, dict)
+                else pending_state,
+            )
         new_capture_id = (
             uuid.uuid4().hex
             if repair_status in asi676mc.DIAGNOSTIC_BAD_STATUSES
@@ -1367,7 +1382,6 @@ class ImageWorker(Process):
         # to a pending older group.  Save it independently so a failure here
         # never prevents the current bad FITS from being captured.
         if previous_context and new_capture_id:
-            current_context = self._asi676mc_diagnostic_frame_context(i_ref)
             if asi676mc.diagnostic_reference_compatible(
                 previous_context,
                 current_context,
@@ -1457,7 +1471,10 @@ class ImageWorker(Process):
             i_ref.asi676mc_repair_result = repair_result
 
             if next_capture_id:
-                self.asi676mc_diagnostic_pending[camera_id] = next_capture_id
+                self.asi676mc_diagnostic_pending[camera_id] = {
+                    'capture_id': next_capture_id,
+                    'context': current_context,
+                }
 
             role_names = ', '.join(role['role'] for role in roles)
             logger.warning(

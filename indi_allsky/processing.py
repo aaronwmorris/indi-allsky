@@ -1073,8 +1073,33 @@ class ImageProcessor(object):
             )
             return self._set_asi676mc_repair_result(i_ref, 'skipped', reason=reason)
 
-        x_bayer_offset = int(i_ref.hdulist[0].header.get('XBAYROFF', 0))
-        y_bayer_offset = int(i_ref.hdulist[0].header.get('YBAYROFF', 0))
+        try:
+            x_bayer_offset_raw = float(
+                i_ref.hdulist[0].header.get('XBAYROFF', 0)
+            )
+            y_bayer_offset_raw = float(
+                i_ref.hdulist[0].header.get('YBAYROFF', 0)
+            )
+            if (
+                not math.isfinite(x_bayer_offset_raw)
+                or not math.isfinite(y_bayer_offset_raw)
+                or not x_bayer_offset_raw.is_integer()
+                or not y_bayer_offset_raw.is_integer()
+            ):
+                raise ValueError
+            x_bayer_offset = int(x_bayer_offset_raw)
+            y_bayer_offset = int(y_bayer_offset_raw)
+        except (TypeError, ValueError, OverflowError):
+            reason = 'invalid Bayer-offset metadata'
+            logger.warning(
+                'ASI676MC frame repair skipped: %s',
+                reason,
+            )
+            return self._set_asi676mc_repair_result(
+                i_ref,
+                'skipped',
+                reason=reason,
+            )
         if x_bayer_offset or y_bayer_offset:
             reason = 'unsupported Bayer offsets X {0:d}, Y {1:d}'.format(
                 x_bayer_offset,

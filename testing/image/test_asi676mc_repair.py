@@ -864,6 +864,122 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
         self.assertNotIn('is_bad', saved_signature)
         json.dumps(saved_signature)
 
+    def test_low_valid_highlight_boundaries_do_not_overflow(self):
+        data = numpy.array(
+            [[65535, 100], [100, 65535]],
+            dtype=numpy.uint16,
+        )
+        clipped = numpy.packbits(
+            numpy.array([[True]], dtype=numpy.bool_),
+            axis=1,
+        )
+
+        asi676mc._reconstruct_clipped_green(
+            data,
+            clipped,
+            clipped,
+            chunk_rows=2,
+            highlight_blend_start_ratio=0.05,
+            highlight_blend_end_ratio=0.10,
+        )
+
+        self.assertEqual(int(data[0, 1]), 65535)
+        self.assertEqual(int(data[1, 0]), 65535)
+
+    def test_legacy_alias_is_used_as_bound_camera_identity(self):
+        camera = SimpleNamespace(
+            name='Backyard camera',
+            name_alt1='ZWO CCD ASI676MC',
+            name_alt2='',
+            data={},
+        )
+
+        self.assertTrue(asi676mc.camera_record_matches(camera))
+        self.assertEqual(
+            asi676mc.camera_record_identity_name(camera),
+            'ZWO CCD ASI676MC',
+        )
+
+    def test_incompatible_immediate_following_frame_breaks_diagnostic_group(self):
+        pending_context = {
+            'camera_id': 1,
+            'image_shape': (3552, 3552),
+            'exposure': 0.001,
+            'gain': 100.0,
+            'binning': 1,
+            'bayer_pattern': 'RGGB',
+        }
+        pending_state = {
+            'capture_id': 'capture-1',
+            'context': pending_context,
+        }
+        compatible = dict(pending_context)
+        incompatible = dict(pending_context, exposure=0.002)
+
+        self.assertEqual(
+            asi676mc.diagnostic_pending_capture_id(
+                pending_state,
+                compatible,
+            ),
+            'capture-1',
+        )
+        self.assertIsNone(asi676mc.diagnostic_pending_capture_id(
+            pending_state,
+            incompatible,
+        ))
+
+    def test_runtime_invalid_bayer_offsets_are_safely_skipped(self):
+        processing_path = (
+            Path(__file__).resolve().parents[2]
+            / 'indi_allsky'
+            / 'processing.py'
+        )
+        source = processing_path.read_text(encoding='utf-8')
+        tree = ast.parse(source, filename=str(processing_path))
+        image_processor = next(
+            node for node in tree.body
+            if isinstance(node, ast.ClassDef) and node.name == 'ImageProcessor'
+        )
+        method_node = next(
+            node for node in image_processor.body
+            if isinstance(node, ast.FunctionDef)
+            and node.name == 'correct_asi676mc_frame'
+        )
+        method_module = ast.Module(body=[method_node], type_ignores=[])
+        ast.fix_missing_locations(method_module)
+        namespace = {
+            'asi676mc': SimpleNamespace(camera_name_matches=lambda _name: True),
+            'logger': mock.Mock(),
+            'math': __import__('math'),
+        }
+        exec(compile(method_module, str(processing_path), 'exec'), namespace)
+        correct_frame = namespace['correct_asi676mc_frame']
+
+        for offset in ('not-a-number', 0.5, float('nan')):
+            processor = SimpleNamespace(
+                config={'IMAGE_ASI676MC_REPAIR': {'ENABLE': True}},
+                _set_asi676mc_repair_result=(
+                    lambda _i_ref, status, reason=None: {
+                        'status': status,
+                        'reason': reason,
+                    }
+                ),
+            )
+            i_ref = SimpleNamespace(
+                detected_camera_name='ZWO CCD ASI676MC',
+                binning=1,
+                image_bayerpat='RGGB',
+                hdulist=[SimpleNamespace(header={
+                    'XBAYROFF': offset,
+                    'YBAYROFF': 0,
+                })],
+            )
+
+            result = correct_frame(processor, i_ref)
+
+            self.assertEqual(result['status'], 'skipped')
+            self.assertEqual(result['reason'], 'invalid Bayer-offset metadata')
+
 
 if __name__ == '__main__':
     unittest.main()

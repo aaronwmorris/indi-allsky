@@ -17,8 +17,10 @@ produces this failure. The implementation is deliberately narrow:
 - binning must be 1x1; and
 - `XBAYROFF` and `YBAYROFF` must both be zero.
 
-Unsupported input is not changed. A reason is recorded in the image metadata
-and written to the log.
+For a positively identified ASI676MC, unsupported RAW layout is not changed. A
+reason is recorded in the image metadata and written to the log. Other camera
+models remain outside this feature and are mentioned only at debug log level;
+they do not receive ASI676MC repair metadata.
 
 New configurations default to **Exclude Only**. This mode detects and flags a
 purple frame, preserves its original pixels, and excludes it from standard
@@ -147,7 +149,7 @@ rest of the current configuration interface.
 | `EXCLUDE_ONLY` | `True` | Detect, flag, and exclude purple frames without changing pixels. Disable only after reviewing calibration. |
 | `LOG_EVERY_FRAME` | `False` | Log normal-frame checks at info level instead of debug level. Purple frames and failures are always logged prominently. |
 | `GALLERY_ENABLE` | `True` | Show repair/exclusion status in the gallery and enable repaired, purple-frame-excluded, and validation-failed filters. |
-| `SAVE_DIAGNOSTIC_FITS` | `False` | Save the untouched purple frame and its following frame as the preferred low-disk calibration evidence. |
+| `SAVE_DIAGNOSTIC_FITS` | `False` | Save the untouched purple frame and its immediately following compatible frame as the preferred low-disk calibration evidence. A successor with different capture/layout metadata breaks the group and is not retained as its reference. |
 | `SAVE_PRECEDING_FITS` | `False` | Also cache the immediately preceding normal FITS and save it when the next compatible frame is purple. Requires the parent diagnostic option. |
 | `PURPLE_RATIO_THRESHOLD` | `1.5` | Combined purple signature threshold. |
 | `RED_SIDE_RATIO_THRESHOLD` | `1.15` | Red-side signature threshold. |
@@ -357,9 +359,12 @@ fitting are necessarily decoded after discovery.
 Database discovery queries at most 600 newest candidate rows, then bounds
 grouping and staging to 200 FITS and 2 GiB. This prevents a large retained
 archive with no bad frames, or only bad frames, from creating unbounded or
-quadratic work. A hard link keeps the selected content stable without a second
-copy. If hard links are unavailable, the tool makes a private copy; it never
-uses a symbolic-link fallback whose target could change after selection.
+quadratic work. Marked bad/preceding/following diagnostic FITS inside that
+bounded query are prioritized before unmarked standard FITS. Results disclose
+when the staging limit was reached and explain that older retained evidence may
+require manual upload. A hard link keeps the selected content stable without a
+second copy. If hard links are unavailable, the tool makes a private copy; it
+never uses a symbolic-link fallback whose target could change after selection.
 The browser reserves a camera-bound private session before discovery begins,
 so **Cancel saved-FITS search** is available throughout database inspection and
 staging. Cancellation removes only the session's private hard links, copies,
@@ -469,7 +474,8 @@ change.
 
 Results are retained in the browser by unguessable session IDs so a user can
 visit another page and return. Per-tab state plus a shared list prevents tabs
-from overwriting each other's run. Transient polling failures retry without
+from overwriting each other's run. After one run is cleared, the next retained
+run is restored automatically. Transient polling failures retry without
 discarding the handle. The browser stores no FITS data or calibration values.
 Every result, report, discard, and apply request rechecks ownership and camera
 binding. **Reset / recalibrate** discards the retained result.
@@ -486,8 +492,9 @@ queue task rather than inside a web request. Session changes are protected by
 cross-process locks, and a queued job can be claimed only once. Each owner may
 have two active sessions and the installation may have four. Saved-FITS
 searches, queued jobs, and running jobs can be cancelled at safe checkpoints;
-stale queued jobs and workers with an old heartbeat are failed or cancelled so
-the browser cannot poll forever.
+an upload left inactive for 30 minutes, stale queued jobs, and workers with an
+old heartbeat are failed or cancelled so the browser cannot poll forever or
+leave the active-session quota occupied indefinitely.
 
 Input cleanup is source-aware:
 

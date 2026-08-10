@@ -871,5 +871,105 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
                     calibration_engine.calibrate_folder(folder)
 
 
+    def test_conflicting_camera_fields_are_rejected(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            folder = Path(temp_dir)
+
+            def write_case(name, updates):
+                header = fits.Header()
+                header['DATE-OBS'] = '2026-08-10T00:00:00'
+                header['EXPTIME'] = 0.001
+                header['GAIN'] = 0.0
+                header['BAYERPAT'] = 'RGGB'
+                header['XBINNING'] = 1
+                header['YBINNING'] = 1
+                header['XBAYROFF'] = 0
+                header['YBAYROFF'] = 0
+                for key, value in updates.items():
+                    header[key] = value
+                path = folder / name
+                fits.PrimaryHDU(
+                    data=self._normal_frame(64, 64),
+                    header=header,
+                ).writeto(path)
+                return path
+
+            mixed_path = write_case('mixed.fit', {
+                'CAMERA': 'ZWO CCD ASI676MC',
+                'INSTRUME': 'QHY268C',
+            })
+            telescope_path = write_case('telescope.fit', {
+                'TELESCOP': 'QHY268C',
+            })
+
+            with self.assertRaisesRegex(ValueError, 'conflicting camera identity'):
+                calibration_engine.inspect_fits(
+                    mixed_path,
+                    calibration_engine.DEFAULT_SETTINGS,
+                )
+            with self.assertRaisesRegex(ValueError, 'explicitly identify'):
+                calibration_engine.inspect_fits(
+                    telescope_path,
+                    calibration_engine.DEFAULT_SETTINGS,
+                    trusted_camera_name='ZWO CCD ASI676MC',
+                )
+
+    def test_fractional_integer_layout_fields_are_rejected(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            folder = Path(temp_dir)
+            for name, key in (
+                ('fractional_binning.fit', 'XBINNING'),
+                ('fractional_offset.fit', 'XBAYROFF'),
+            ):
+                header = fits.Header()
+                header['DATE-OBS'] = '2026-08-10T00:00:00'
+                header['EXPTIME'] = 0.001
+                header['GAIN'] = 0.0
+                header['BAYERPAT'] = 'RGGB'
+                header['XBINNING'] = 1
+                header['YBINNING'] = 1
+                header['XBAYROFF'] = 0
+                header['YBAYROFF'] = 0
+                header['INSTRUME'] = 'ZWO CCD ASI676MC'
+                header[key] = 0.5 if key == 'XBAYROFF' else 1.5
+                path = folder / name
+                fits.PrimaryHDU(
+                    data=self._normal_frame(64, 64),
+                    header=header,
+                ).writeto(path)
+
+                with self.assertRaisesRegex(ValueError, 'must be an integer'):
+                    calibration_engine.inspect_fits(
+                        path,
+                        calibration_engine.DEFAULT_SETTINGS,
+                    )
+
+    def test_string_false_repair_marker_is_not_truthy(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / 'string_false.fit'
+            header = fits.Header()
+            header['DATE-OBS'] = '2026-08-10T00:00:00'
+            header['EXPTIME'] = 0.001
+            header['GAIN'] = 0.0
+            header['BAYERPAT'] = 'RGGB'
+            header['XBINNING'] = 1
+            header['YBINNING'] = 1
+            header['XBAYROFF'] = 0
+            header['YBAYROFF'] = 0
+            header['INSTRUME'] = 'ZWO CCD ASI676MC'
+            header['ASI676FX'] = 'False'
+            fits.PrimaryHDU(
+                data=self._normal_frame(64, 64),
+                header=header,
+            ).writeto(path)
+
+            record = calibration_engine.inspect_fits(
+                path,
+                calibration_engine.DEFAULT_SETTINGS,
+            )
+
+        self.assertEqual(record.camera_name, 'ZWO CCD ASI676MC')
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -105,6 +105,10 @@ _OTHER_ASI_CAMERA_RE = re.compile(
     r'(?<![A-Z0-9])ASI[\s_-]*(?!676MC)[0-9]+[A-Z]*',
     re.IGNORECASE,
 )
+_CAMERA_MODEL_RE = re.compile(
+    r'(?<![A-Z0-9])(?:ASI[\s_-]*[0-9]+[A-Z]*|QHY[\s_-]*[0-9]+[A-Z]*)',
+    re.IGNORECASE,
+)
 _FILENAME_TIME_RE = re.compile(r'(\d{8})[_-](\d{6})')
 
 DETECTION_THRESHOLD_DETAILS = {
@@ -249,6 +253,44 @@ def _specific_camera_name(name):
     return lowered
 
 
+def _telescope_camera_name(name):
+    """Return a TELESCOP value only when it explicitly looks like a camera."""
+    name = str(name or '').strip()
+    return name if _CAMERA_MODEL_RE.search(name) else ''
+
+
+def _explicit_camera_names(header):
+    """Return non-generic camera-bearing identities that a binding cannot override."""
+    values = [
+        str(header.get(key, '')).strip()
+        for key in ('CAMERA', 'CAMMODEL', 'CCDNAME', 'INSTRUME')
+        if _specific_camera_name(str(header.get(key, '')).strip())
+    ]
+    telescope_camera_name = _telescope_camera_name(header.get('TELESCOP', ''))
+    if telescope_camera_name:
+        values.append(telescope_camera_name)
+    return values
+
+
+def _header_boolean(value):
+    """Interpret normal FITS logical values without treating 'False' as true."""
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in ('', '0', 'f', 'false', 'n', 'no', 'off'):
+            return False
+        if normalized in ('1', 't', 'true', 'y', 'yes', 'on'):
+            return True
+    return bool(value)
+
+
+def _header_integer(header, key, default):
+    """Return one exact finite integer from a numeric FITS header card."""
+    value = _header_float(header, key, default=default)
+    if not float(value).is_integer():
+        raise ValueError('{0} must be an integer'.format(key))
+    return int(value)
+
+
 @dataclass(frozen=True)
 class FrameRecord:
     """Immutable index entry for one inspected FITS capture."""
@@ -311,7 +353,7 @@ def inspect_fits(path, settings, trusted_camera_name=None):
     overridden by this compatibility path.
     """
     data, header, _index = _read_fits(path)
-    if bool(header.get('ASI676FX', False)):
+    if _header_boolean(header.get('ASI676FX', False)):
         raise ValueError('already repaired by ASI676MC frame handling')
     signature = asi676mc.frame_signature(data, settings)
     exposure = _header_float(header, 'EXPTIME', 'EXPOSURE', default=-1.0)
@@ -320,12 +362,12 @@ def inspect_fits(path, settings, trusted_camera_name=None):
         raise ValueError('exposure must be a finite value greater than zero')
     if not numpy.isfinite(gain) or gain < 0.0:
         raise ValueError('gain must be a finite non-negative value')
-    xbin = int(_header_float(header, 'XBINNING', default=-1))
-    ybin = int(_header_float(header, 'YBINNING', default=-1))
+    xbin = _header_integer(header, 'XBINNING', default=-1)
+    ybin = _header_integer(header, 'YBINNING', default=-1)
     if xbin != 1 or ybin != 1:
         raise ValueError('calibration requires XBINNING=1 and YBINNING=1')
-    x_bayer_offset = int(_header_float(header, 'XBAYROFF', default=0))
-    y_bayer_offset = int(_header_float(header, 'YBAYROFF', default=0))
+    x_bayer_offset = _header_integer(header, 'XBAYROFF', default=0)
+    y_bayer_offset = _header_integer(header, 'YBAYROFF', default=0)
     if x_bayer_offset or y_bayer_offset:
         raise ValueError('calibration requires zero Bayer offsets')
     camera_names = _camera_names(header)
@@ -338,6 +380,20 @@ def inspect_fits(path, settings, trusted_camera_name=None):
         raise ValueError(
             'FITS contains a different or conflicting ASI camera identity: {0}'.format(
                 ', '.join(conflicting_asi),
+            )
+        )
+    explicit_camera_names = _explicit_camera_names(header)
+    conflicting_camera_names = [
+        name for name in explicit_camera_names
+        if not asi676mc.camera_name_matches(name)
+    ]
+    if any(
+        asi676mc.camera_name_matches(name)
+        for name in camera_names
+    ) and conflicting_camera_names:
+        raise ValueError(
+            'FITS contains a different or conflicting camera identity: {0}'.format(
+                ', '.join(conflicting_camera_names),
             )
         )
     camera_name = _camera_name(header)
@@ -355,12 +411,7 @@ def inspect_fits(path, settings, trusted_camera_name=None):
         # CAMERA/CAMMODEL/CCDNAME/INSTRUME are camera-bearing fields. A
         # specific value in one of them must not be replaced merely because a
         # different ASI676MC happens to be connected to the web session.
-        specific_camera_names = [
-            str(header.get(key, '')).strip()
-            for key in ('CAMERA', 'CAMMODEL', 'CCDNAME', 'INSTRUME')
-            if _specific_camera_name(str(header.get(key, '')).strip())
-        ]
-        if not trusted_camera_name or specific_camera_names:
+        if not trusted_camera_name or explicit_camera_names:
             raise ValueError(
                 'FITS does not explicitly identify an ASI676MC camera'
             )

@@ -50,6 +50,7 @@ TRANSFER_CHUNK_BYTES = 1024 * 1024
 MAX_ACTIVE_SESSIONS_PER_OWNER = 2
 MAX_ACTIVE_SESSIONS_GLOBAL = 4
 SESSION_RETENTION_SECONDS = 7 * 24 * 60 * 60
+UPLOADING_STALE_SECONDS = 30 * 60
 QUEUED_STALE_SECONDS = 30 * 60
 RUNNING_STALE_SECONDS = 2 * 60 * 60
 DATABASE_GROUP_MIN = 7
@@ -730,12 +731,17 @@ def _remove_upload_dir(session_dir):
 def _recover_stale_session_unlocked(session_dir, manifest):
     """Fail or cancel an abandoned worker session while its lock is held."""
     status = manifest.get('status')
-    if status not in ('queued', 'running', 'cancel_requested'):
+    if status not in ('uploading', 'queued', 'running', 'cancel_requested'):
         return manifest
 
     running = status in ('running', 'cancel_requested')
     timestamp_key = 'heartbeat_utc' if running else 'updated_utc'
-    stale_limit = RUNNING_STALE_SECONDS if running else QUEUED_STALE_SECONDS
+    if running:
+        stale_limit = RUNNING_STALE_SECONDS
+    elif status == 'uploading':
+        stale_limit = UPLOADING_STALE_SECONDS
+    else:
+        stale_limit = QUEUED_STALE_SECONDS
     try:
         last_update = datetime.fromisoformat(
             str(manifest.get(timestamp_key) or '')
@@ -758,7 +764,11 @@ def _recover_stale_session_unlocked(session_dir, manifest):
     manifest['error'] = (
         None
         if status == 'cancel_requested'
-        else 'calibration worker stopped responding; start a new run'
+        else (
+            'calibration upload stopped responding; start a new run'
+            if status == 'uploading'
+            else 'calibration worker stopped responding; start a new run'
+        )
     )
     manifest.pop('worker_token', None)
     _write_manifest(session_dir, manifest)
@@ -814,11 +824,24 @@ def create_session(owner, storage_root=None, camera_identity=None):
                 continue
             try:
                 candidate_manifest = _read_manifest(candidate)
-                if candidate_manifest.get('status') in (
+                candidate_status = candidate_manifest.get('status')
+                recover_candidate = candidate_status in (
                     'queued',
                     'running',
                     'cancel_requested',
-                ):
+                )
+                if candidate_status == 'uploading':
+                    try:
+                        upload_age = (
+                            datetime.now(timezone.utc)
+                            - datetime.fromisoformat(
+                                str(candidate_manifest.get('updated_utc') or '')
+                            )
+                        ).total_seconds()
+                    except (TypeError, ValueError):
+                        upload_age = UPLOADING_STALE_SECONDS + 1
+                    recover_candidate = upload_age > UPLOADING_STALE_SECONDS
+                if recover_candidate:
                     with _file_lock(_session_lock_path(candidate)):
                         candidate_manifest = _recover_stale_session_unlocked(
                             candidate,
@@ -964,9 +987,9 @@ def select_database_evidence(
     Seven database-marked groups provide a fast, compact path. With zero to
     six marked groups the current thresholds may be wrong, so the requested
     group target becomes only the initial scan budget (three FITS per group)
-    and every eligible retained FITS is made available to the background
-    worker. It then searches newest-first until a safe determination is made or
-    the retention window is exhausted.
+    and every eligible FITS in the bounded evidence set is made available to
+    the background worker. It then searches newest-first until a safe
+    determination is made or that evidence set is exhausted.
     """
     target_groups = int(target_groups)
     if target_groups < DATABASE_GROUP_MIN or target_groups > DATABASE_GROUP_MAX:
@@ -1031,17 +1054,36 @@ def select_database_evidence(
         })
         candidate_records.append(record)
 
-    # Bound the expensive grouping work before its nested comparisons. Newest
-    # evidence is preferred, and both the logical bytes and record count use
-    # the same limits later enforced by private staging.
+    # Bound the expensive grouping work before its nested comparisons. Retain
+    # marked diagnostic records first so a compact good/purple/good group is
+    # not hidden merely because frequent standard FITS filled the newest-file
+    # budget. Newest unmarked evidence fills the remaining capacity. Both the
+    # logical bytes and record count use the same limits later enforced by
+    # private staging.
     candidate_records.sort(
         key=lambda record: float(record['timestamp']),
         reverse=True,
     )
     retained_candidate_count = len(candidate_records)
+    prioritized_ids = {
+        record['id']
+        for record in candidate_records
+        if any(
+            _database_record_has_role(record, role_name)
+            for role_name in ('bad', 'preceding', 'following')
+        )
+    }
+    prioritized_records = [
+        record for record in candidate_records
+        if record['id'] in prioritized_ids
+    ]
+    prioritized_records.extend(
+        record for record in candidate_records
+        if record['id'] not in prioritized_ids
+    )
     bounded_records = []
     bounded_bytes = 0
-    for record in candidate_records:
+    for record in prioritized_records:
         if len(bounded_records) >= DATABASE_MAX_FILES:
             break
         if bounded_bytes + record['size'] > DATABASE_MAX_BYTES:
@@ -1843,6 +1885,19 @@ def _result_warnings(
         marked_groups = int(
             source_details.get('selected_marked_group_count', 0)
         )
+        if source_details.get('selection_limit_reached'):
+            warnings.append(
+                'The saved FITS search reached its {0}-file or 2-GiB staging '
+                'limit. Marked diagnostic FITS inside the bounded query were '
+                'prioritized, but older retained FITS may not have been '
+                'inspected; upload them manually if this result needs more '
+                'evidence.'.format(
+                    source_details.get(
+                        'selection_limit_file_count',
+                        DATABASE_MAX_FILES,
+                    )
+                )
+            )
         if selection_mode == 'marked_groups' and marked_groups < target_groups:
             warnings.append(
                 'The saved FITS search found {0} usable marked purple-frame '
@@ -1869,7 +1924,7 @@ def _result_warnings(
             else:
                 warnings.append(
                     'Fewer than seven usable marked groups were available, so '
-                    'the tool checked all {0} eligible retained FITS by their '
+                    'the tool checked all {0} eligible selected FITS by their '
                     'measured ratios before producing this result.'.format(
                         scanned or available
                     )

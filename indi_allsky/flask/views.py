@@ -195,11 +195,10 @@ def _calibration_save_actor():
 
 def _camera_identity(camera):
     """Freeze the camera record identity bound to one calibration result."""
-    camera_data = camera.data if isinstance(camera.data, dict) else {}
     return {
         'id': int(camera.id),
         'uuid': str(camera.uuid),
-        'name': str(camera_data.get('detected_name') or camera.name),
+        'name': asi676mc.camera_record_identity_name(camera),
     }
 
 
@@ -2118,7 +2117,13 @@ class ConfigView(FormView):
 
         asi676mc_cameras = _visible_asi676mc_cameras()
         asi676mc_repair_supported = bool(asi676mc_cameras)
+        asi676mc_repair_config = self.indi_allsky_config.get(
+            'IMAGE_ASI676MC_REPAIR',
+            {},
+        )
+        asi676mc_repair_defaults = asi676mc.DEFAULT_SETTINGS
         context['asi676mc_repair_supported'] = asi676mc_repair_supported
+        context['asi676mc_repair_defaults'] = asi676mc_repair_defaults
         context['asi676mc_camera_names'] = [
             camera.friendlyName or camera.name
             for camera in asi676mc_cameras
@@ -2509,18 +2514,18 @@ class ConfigView(FormView):
             'IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE'              : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('GALLERY_ENABLE', True),
             'IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS'         : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('SAVE_DIAGNOSTIC_FITS', False),
             'IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS'          : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('SAVE_PRECEDING_FITS', False),
-            'IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD'      : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('PURPLE_RATIO_THRESHOLD', 1.5),
-            'IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD'    : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('RED_SIDE_RATIO_THRESHOLD', 1.15),
-            'IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD'   : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('BLUE_SIDE_RATIO_THRESHOLD', 1.75),
-            'IMAGE_ASI676MC_REPAIR__SAMPLE_STEP'                 : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('SAMPLE_STEP', 32),
-            'IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD' : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('SOURCE_SATURATION_THRESHOLD', 65000),
-            'IMAGE_ASI676MC_REPAIR__GAIN_R'                      : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('GAIN_R', 0.91004),
-            'IMAGE_ASI676MC_REPAIR__GAIN_G1'                     : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('GAIN_G1', 1.68652),
-            'IMAGE_ASI676MC_REPAIR__GAIN_G2'                     : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('GAIN_G2', 1.09238),
-            'IMAGE_ASI676MC_REPAIR__GAIN_B'                      : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('GAIN_B', 0.59537),
-            'IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO' : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('HIGHLIGHT_BLEND_START_RATIO', 0.55),
-            'IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO'   : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('HIGHLIGHT_BLEND_END_RATIO', 0.75),
-            'IMAGE_ASI676MC_REPAIR__CHUNK_ROWS'                  : self.indi_allsky_config.get('IMAGE_ASI676MC_REPAIR', {}).get('CHUNK_ROWS', 128),
+            'IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD'      : asi676mc_repair_config.get('PURPLE_RATIO_THRESHOLD', asi676mc_repair_defaults['PURPLE_RATIO_THRESHOLD']),
+            'IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD'    : asi676mc_repair_config.get('RED_SIDE_RATIO_THRESHOLD', asi676mc_repair_defaults['RED_SIDE_RATIO_THRESHOLD']),
+            'IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD'   : asi676mc_repair_config.get('BLUE_SIDE_RATIO_THRESHOLD', asi676mc_repair_defaults['BLUE_SIDE_RATIO_THRESHOLD']),
+            'IMAGE_ASI676MC_REPAIR__SAMPLE_STEP'                 : asi676mc_repair_config.get('SAMPLE_STEP', asi676mc_repair_defaults['SAMPLE_STEP']),
+            'IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD' : asi676mc_repair_config.get('SOURCE_SATURATION_THRESHOLD', asi676mc_repair_defaults['SOURCE_SATURATION_THRESHOLD']),
+            'IMAGE_ASI676MC_REPAIR__GAIN_R'                      : asi676mc_repair_config.get('GAIN_R', asi676mc_repair_defaults['GAIN_R']),
+            'IMAGE_ASI676MC_REPAIR__GAIN_G1'                     : asi676mc_repair_config.get('GAIN_G1', asi676mc_repair_defaults['GAIN_G1']),
+            'IMAGE_ASI676MC_REPAIR__GAIN_G2'                     : asi676mc_repair_config.get('GAIN_G2', asi676mc_repair_defaults['GAIN_G2']),
+            'IMAGE_ASI676MC_REPAIR__GAIN_B'                      : asi676mc_repair_config.get('GAIN_B', asi676mc_repair_defaults['GAIN_B']),
+            'IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO' : asi676mc_repair_config.get('HIGHLIGHT_BLEND_START_RATIO', asi676mc_repair_defaults['HIGHLIGHT_BLEND_START_RATIO']),
+            'IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO'   : asi676mc_repair_config.get('HIGHLIGHT_BLEND_END_RATIO', asi676mc_repair_defaults['HIGHLIGHT_BLEND_END_RATIO']),
+            'IMAGE_ASI676MC_REPAIR__CHUNK_ROWS'                  : asi676mc_repair_config.get('CHUNK_ROWS', asi676mc_repair_defaults['CHUNK_ROWS']),
             'IMAGE_CALIBRATE_DARK'           : self.indi_allsky_config.get('IMAGE_CALIBRATE_DARK', True),
             'IMAGE_CALIBRATE_BPM'            : self.indi_allsky_config.get('IMAGE_CALIBRATE_BPM', False),
             'IMAGE_CALIBRATE_FIX_HOLES'      : self.indi_allsky_config.get('IMAGE_CALIBRATE_FIX_HOLES', False),
@@ -8212,16 +8217,25 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
 
         minimum = 14
         if discovery['selected_file_count'] < minimum:
+            if discovery.get('selection_limit_reached'):
+                availability_detail = (
+                    'The bounded search reached its {0}-file or 2-GiB staging '
+                    'limit, so older retained FITS may also exist. Marked '
+                    'diagnostic FITS inside the bounded query were prioritized. '
+                ).format(discovery['selection_limit_file_count'])
+            else:
+                availability_detail = ''
             return jsonify({
                 'error': (
-                    'Only {0} eligible saved FITS are available within the '
-                    '{1}-day retention period; at least {2} are required to '
-                    'start analysis. Collect more data or upload an existing '
-                    'collection.'
+                    'Only {0} eligible saved FITS were selected from the '
+                    'bounded search within the {1}-day retention period; at '
+                    'least {2} are required to start analysis. {3}Collect more '
+                    'data or upload an existing collection.'
                 ).format(
                     discovery['selected_file_count'],
                     retention_days,
                     minimum,
+                    availability_detail,
                 ),
                 'discovery': discovery,
             }), 400
