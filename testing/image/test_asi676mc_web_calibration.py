@@ -1635,6 +1635,27 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('>Calibration settings</div>', template)
         self.assertIn('calibration-camera-control', template)
         self.assertIn('calibration-reference-control', template)
+        self.assertIn('.calibration-setting-panel', template)
+        self.assertIn(
+            'tw:grid tw:grid-cols-1 tw:lg:grid-cols-2 '
+            'tw:items-stretch tw:gap-4',
+            template,
+        )
+        self.assertEqual(
+            template.count('class="calibration-setting-panel"'),
+            2,
+        )
+        self.assertIn(
+            "CAMERA_ID.label(class='tw:label-text tw:font-semibold "
+            "tw:block tw:mb-2')",
+            template,
+        )
+        self.assertIn(
+            "MAX_PAIR_SECONDS.label(class='tw:label-text tw:font-semibold "
+            "tw:block tw:mb-2')",
+            template,
+        )
+        self.assertNotIn('max-width: 14rem;', template)
         self.assertIn(
             'id="calibration-quality" class="calibration-fact-grid '
             'tw:grid-cols-1 tw:sm:grid-cols-2 tw:lg:grid-cols-4"',

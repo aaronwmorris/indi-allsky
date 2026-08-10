@@ -98,14 +98,24 @@
     background-color: var(--color-base-100);
 }
 
-/* The page may now use an ultrawide content column, but form controls remain
- * comfortably sized instead of stretching across their entire grid cells. */
-.calibration-camera-control {
+/* Equal control widths keep the two calibration settings balanced on an
+ * ultrawide page without turning either field into a full-column strip. */
+.calibration-camera-control,
+.calibration-reference-control {
     max-width: 36rem;
 }
 
-.calibration-reference-control {
-    max-width: 14rem;
+/* Each setting is one coherent label/control/help unit. The containing grid
+ * gives both units equal height and stacks them when the viewport narrows. */
+.calibration-setting-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100%;
+    padding: 1rem;
+    background-color: var(--color-base-100);
+    border: 1px solid var(--color-base-300);
+    border-radius: 0.375rem;
 }
 
 .calibration-source-card .calibration-card-body {
@@ -283,20 +293,20 @@
     <div id="calibration-settings" class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:mb-6 tw:shadow-sm">
         <div class="tw:px-6 tw:pt-5 tw:font-semibold">Calibration settings</div>
         <div class="tw:card-body tw:p-6 tw:pt-3">
-            <div class="tw:grid tw:grid-cols-1 tw:lg:grid-cols-[minmax(0,1.4fr)_minmax(12rem,0.6fr)] tw:gap-4">
-                <div>
-                    {{ form_calibration.CAMERA_ID.label(class='tw:label-text tw:font-semibold') }}
+            <div class="tw:grid tw:grid-cols-1 tw:lg:grid-cols-2 tw:items-stretch tw:gap-4">
+                <div class="calibration-setting-panel">
+                    {{ form_calibration.CAMERA_ID.label(class='tw:label-text tw:font-semibold tw:block tw:mb-2') }}
                     {{ form_calibration.CAMERA_ID(class='tw:select tw:select-bordered tw:bg-base-100 tw:text-base-content tw:w-full calibration-camera-control') }}
-                    <div class="calibration-help tw:text-xs tw:mt-1">
+                    <div class="calibration-help tw:text-xs tw:mt-2">
                         Evidence and results are bound to this local ASI676MC and
                         rechecked before saving. Saved repair settings apply to
                         every ASI676MC using this configuration.
                     </div>
                 </div>
-                <div>
-                    {{ form_calibration.MAX_PAIR_SECONDS.label(class='tw:label-text tw:font-semibold') }}
+                <div class="calibration-setting-panel">
+                    {{ form_calibration.MAX_PAIR_SECONDS.label(class='tw:label-text tw:font-semibold tw:block tw:mb-2') }}
                     {{ form_calibration.MAX_PAIR_SECONDS(class='tw:input tw:input-bordered tw:bg-base-100 tw:text-base-content tw:w-full calibration-reference-control') }}
-                    <div class="calibration-help tw:text-xs tw:mt-1">
+                    <div class="calibration-help tw:text-xs tw:mt-2">
                         Normal references farther from a purple frame than this
                         are not paired. The 90-second default applies to both
                         input methods.
