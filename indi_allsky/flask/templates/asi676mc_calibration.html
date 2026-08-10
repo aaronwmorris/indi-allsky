@@ -39,6 +39,19 @@
     border-left-color: var(--color-info);
 }
 
+/* Match method labels to the stable information accent used by the
+ * "How it works" callout. A light tint keeps the text and border visible in
+ * themes where neutral outline badges blend into the surrounding card. */
+.calibration-method-badge {
+    color: var(--color-info);
+    border-color: var(--color-info);
+    background-color: color-mix(
+        in oklab,
+        var(--color-info) 12%,
+        transparent
+    );
+}
+
 .calibration-callout-success {
     border-left-color: var(--color-success);
 }
@@ -301,7 +314,7 @@
             <div class="tw:card calibration-source-card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:w-full tw:shadow-sm">
                 <div class="tw:flex tw:items-center tw:justify-between tw:gap-3 tw:px-6 tw:pt-5 tw:font-semibold">
                     <span>Use saved FITS</span>
-                    <span class="tw:badge tw:badge-neutral tw:badge-outline">Automatic</span>
+                    <span class="tw:badge tw:badge-outline calibration-method-badge">Automatic</span>
                 </div>
                 <div class="calibration-card-body tw:card-body tw:p-6 tw:pt-3">
                     <p class="calibration-help">
@@ -340,7 +353,7 @@
             <div class="tw:card calibration-source-card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:w-full tw:shadow-sm">
                 <div class="tw:flex tw:items-center tw:justify-between tw:gap-3 tw:px-6 tw:pt-5 tw:font-semibold">
                     <span>Upload a FITS collection</span>
-                    <span class="tw:badge tw:badge-neutral tw:badge-outline">Manual</span>
+                    <span class="tw:badge tw:badge-outline calibration-method-badge">Manual</span>
                 </div>
                 <div class="calibration-card-body tw:card-body tw:p-6 tw:pt-3">
                     <p class="calibration-help">

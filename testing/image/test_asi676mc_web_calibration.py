@@ -1674,6 +1674,12 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         )
         self.assertIn('calibration-callout calibration-callout-info', template)
         self.assertIn('.calibration-callout-success', template)
+        self.assertIn('.calibration-method-badge', template)
+        self.assertIn('border-color: var(--color-info);', template)
+        self.assertIn(
+            'tw:badge tw:badge-outline calibration-method-badge',
+            template,
+        )
         self.assertNotIn("? 'text-success' : 'text-info'", template)
         self.assertIn('id="calibration-browser-warning"', template)
         self.assertIn('window.asi676mcCalibrationBrowserSupported', template)
@@ -2435,8 +2441,16 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         chunk_rows_position = settings_template.index(
             'form_config.IMAGE_ASI676MC_REPAIR__CHUNK_ROWS'
         )
+        highlight_section_position = settings_template.index(
+            '>Highlight transition<'
+        )
+        sampling_section_position = settings_template.index(
+            '>Sampling and memory<'
+        )
+        self.assertLess(highlight_section_position, highlight_start_position)
         self.assertLess(highlight_start_position, highlight_end_position)
-        self.assertLess(highlight_end_position, sample_step_position)
+        self.assertLess(highlight_end_position, sampling_section_position)
+        self.assertLess(sampling_section_position, sample_step_position)
         self.assertLess(sample_step_position, chunk_rows_position)
 
 
