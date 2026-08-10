@@ -113,7 +113,6 @@ class MaskProcessor(object):
 
     def crop_image(self):
         if self.config.get('IMAGE_CROP_IMAGE_CIRCLE'):
-            logger.info('Cropping to image circle')
             image_height, image_width = self.image.shape[:2]
 
             lens_offset_x = self.config.get('LENS_OFFSET_X', 0)
@@ -121,6 +120,9 @@ class MaskProcessor(object):
             image_center_x = int(image_width / 2)
             image_center_y = int(image_height / 2)
             radius = int(self.config.get('LENS_IMAGE_CIRCLE', 3000) / 2)
+
+            logger.info('Cropping to image circle (%d px)', radius * 2)
+
 
             # need to maintain same offset of image circle
             # offsets have to be doubled since they are added to the radius
@@ -142,6 +144,9 @@ class MaskProcessor(object):
                 y1:y2,
                 x1:x2,
             ]
+
+            #new_height, new_width = self.image.shape[:2]
+            #logger.info('New cropped size: %d x %d', new_width, new_height)
 
 
         elif self.config.get('IMAGE_CROP_ROI'):
