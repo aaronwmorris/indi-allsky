@@ -16,7 +16,7 @@
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/clipboard.min.js') }}"></script>
 <script type="text/javascript">
 var img;
-var fullscreen = false;  //initial state
+var fullscreen = false;
 var camera_id = {{ camera_id }};
 var image_id = {{ image_id }};
 var file_view = "{{ file_view }}";
@@ -25,38 +25,41 @@ var image_url = "{{ image_url }}";
 {% endblock %}
 
 {% block content %}
-<div class="container h-100">
+<div class="tw:container tw:mx-auto tw:px-4 tw:py-6">
+    <div class="tw:max-w-5xl tw:mx-auto tw:flex tw:flex-col tw:gap-6">
 
-<h3>{{ createDate_full }} - {{ timeofday }}</h3>
-
-<hr>
-
-<div class="row h-75 align-items-center">
-    <div class="col-sm-12 text-center">
-        <img id="image" class="fit">
-
-        <div style="margin-top: 20px;">
-            <span id="permalink"></span>
-            <span id="download"></span>
+        <!-- Top Header & Meta Controls -->
+        <div class="tw:flex tw:flex-col sm:tw:flex-row tw:items-center tw:justify-between tw:p-4 tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm tw:gap-4">
+            <div class="tw:flex tw:items-center tw:gap-3">
+                <i class="tw:icon-[lucide--image] tw:w-6 tw:h-6 tw:text-primary"></i>
+                <div>
+                    <h1 class="tw:text-lg tw:font-bold tw:text-base-content">{{ createDate_full }}</h1>
+                    <p class="tw:text-xs tw:text-base-content/60 tw:capitalize">{{ timeofday }} Still Image</p>
+                </div>
+            </div>
+            <div class="tw:flex tw:items-center tw:gap-2">
+                <span id="permalink"></span>
+                <span id="download"></span>
+            </div>
         </div>
+
+        <!-- Image Display Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-md tw:p-4 tw:flex tw:items-center tw:justify-center">
+            <img id="image" class="fit tw:rounded-[var(--radius-field)] tw:cursor-pointer tw:shadow-lg" title="Click to view full screen">
+        </div>
+
     </div>
 </div>
 
-</div>
-
 <script>
-
 function showImage(url) {
     console.log('Showing image ' + url);
-
     img = new Image();
     img.onload = function() {
         $('#image').attr({
             'src': this.src,
         });
     };
-
-
     img.src = url;
 }
 
@@ -79,7 +82,6 @@ function resize_callback() {
 }
 setResizeHandler(resize_callback, 200);
 
-
 function goFullscreen(elem) {
     if(fullscreen) {
         closeFullscreen();
@@ -91,41 +93,33 @@ function goFullscreen(elem) {
 function openFullscreen(elem) {
     if (elem.requestFullscreen) {
         elem.requestFullscreen();
-    } else if (elem.webkitRequestFullscreen) { /* Safari */
+    } else if (elem.webkitRequestFullscreen) {
         elem.webkitRequestFullscreen();
-    } else if (elem.msRequestFullscreen) { /* IE11 */
+    } else if (elem.msRequestFullscreen) {
         elem.msRequestFullscreen();
     }
-
     fullscreen = true;
 }
 
 function closeFullscreen() {
     if (document.exitFullscreen) {
         document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) { /* Safari */
+    } else if (document.webkitExitFullscreen) {
         document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) { /* IE11 */
+    } else if (document.msExitFullscreen) {
         document.msExitFullscreen();
     }
-
     fullscreen = false;
 }
 
-
-
 function init() {
     new ClipboardJS('.copy-clipboard');
-
-
     showImage(image_url);
 
-
     $('#permalink').html(
-        $('<span />', {
-            'text'  : "Copy Link to Clipboard",
-            'class' : "badge pill bg-primary copy-clipboard",
-            'style' : "cursor: pointer;",
+        $('<button />', {
+            'html' : '<i class="tw:icon-[lucide--copy] tw:w-4 tw:h-4"></i> Copy Link to Clipboard',
+            'class' : "tw:btn tw:btn-sm tw:btn-primary tw:gap-2 copy-clipboard shadow-sm",
             'data-clipboard-text' : "{{ url_for(file_view, _external=True) }}?id=" + image_id,
         })
     );
@@ -134,23 +128,16 @@ function init() {
             'href' : "{{ image_url }}",
             'rel' : "noopener noreferrer",
             'download' : '',
-        }).html(
-            $('<span />', {
-                'text'  : 'Download',
-                'class' : "badge pill bg-danger",
-            })
-        )
+            'class' : "tw:btn tw:btn-sm tw:btn-error tw:gap-2 tw:no-underline shadow-sm",
+        }).html('<i class="tw:icon-[lucide--download] tw:w-4 tw:h-4"></i> Download Image')
     );
 }
 
-$( document ).ready(function() {
+$(document).ready(function() {
     $('#image').on("click", function() {
         goFullscreen(this);
     });
-
     init();
 });
 </script>
-
-
 {% endblock %}

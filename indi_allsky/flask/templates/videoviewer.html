@@ -4,81 +4,116 @@
 
 {% block head %}
 <meta charset="UTF-8">
-<style>
-.loader {
-  display: block;
-  border: 3px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-</style>
+<script type="module" src="{{ url_for('indi_allsky.static', filename='js/cally.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 var youtube__enable = {{ youtube__enable }};
 </script>
-
+<style>
+/* Make the vertical timeline divider sit 1/3 of the way across on medium screens and up */
+@media (min-width: 768px) {
+    .tw\:timeline-vertical > li {
+        grid-template-columns: 1fr auto 2.5fr !important;
+    }
+    .tw\:timeline-vertical > li > .tw\:timeline-end {
+        justify-self: stretch !important;
+    }
+    .timeline-day-item .tw\:timeline-box {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        gap: 2rem !important;
+        align-items: flex-start !important;
+        width: auto !important;
+    }
+    .thumbnail-container {
+        width: auto !important;
+    }
+    .thumbnail-card {
+        width: 24rem !important;
+    }
+    .thumbnail-actions {
+        max-width: 24rem !important;
+    }
+}
+@media (max-width: 767px) {
+    .timeline-day-item .tw\:timeline-box {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 1.5rem !important;
+        align-items: stretch !important;
+        width: 100% !important;
+    }
+    .thumbnail-container {
+        width: 100% !important;
+    }
+    .thumbnail-card {
+        width: 100% !important;
+    }
+    .thumbnail-actions {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+</style>
 {% endblock %}
 
 {% block content %}
-<form id="form_video_viewer" onSubmit="return false;">
-    {{ form_video_viewer.csrf_token }}
-    <div class="text-danger my-2" id="csrf_token-error"></div>
+<div class="tw:container tw:h-full tw:mx-auto tw:flex tw:flex-col tw:gap-4">
 
-    <div class="form-group row">
-        <div class="col-sm-1">
-            {{ form_video_viewer.YEAR_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_video_viewer.YEAR_SELECT(class='form-select bg-secondary') }}
-            <div id="YEAR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+    <form id="form_video_viewer" onsubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:relative">
+        {{ form_video_viewer.csrf_token }}
+        <div class="tw:text-error tw:text-sm tw:my-1 tw:font-semibold" id="csrf_token-error"></div>
 
-            {{ form_video_viewer.CAMERA_ID(class='form-control bg-secondary') }}
-            <div id="CAMERA_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-center tw:gap-6">
+            
+            <div class="tw:hidden">
+                {{ form_video_viewer.YEAR_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
+                {{ form_video_viewer.YEAR_SELECT(class='tw:select') }}
+                <div id="YEAR_SELECT-error"></div>
+                
+                {{ form_video_viewer.CAMERA_ID(class='tw:input') }}
+                <div id="CAMERA_ID-error"></div>
 
-        <div class="col-sm-1">
-            {{ form_video_viewer.MONTH_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_video_viewer.MONTH_SELECT(class='form-select bg-secondary') }}
-            <div id="MONTH_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
+                {{ form_video_viewer.MONTH_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
+                {{ form_video_viewer.MONTH_SELECT(class='tw:select') }}
+                <div id="MONTH_SELECT-error"></div>
+            </div>
 
-        <div class="col-sm-2">
-            {{ form_video_viewer.TIMEOFDAY_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_video_viewer.TIMEOFDAY_SELECT(class='form-select bg-secondary') }}
-            <div id="TIMEOFDAY_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-1">
+            {% include 'calendar_picker.html' %}
+
+            <div class="tw:flex tw:items-center tw:gap-2">
+                {{ form_video_viewer.TIMEOFDAY_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
+                <div class="tw:flex tw:flex-col">
+                    {{ form_video_viewer.TIMEOFDAY_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content') }}
+                    <div id="TIMEOFDAY_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                </div>
+            </div>
+
             {% if current_user.is_authenticated or login_disabled %}
-            <a href="{{ url_for('indi_allsky.generate_view') }}" class="text-decoration-none link-info">
-                <span class="badge pill bg-success">Generate</span>
-            </a>
+            <div class="tw:flex tw:items-center">
+                <a href="{{ url_for('indi_allsky.generate_view') }}" class="tw:btn tw:btn-success tw:btn-sm tw:text-xs tw:font-bold tw:gap-1 tw:no-underline">
+                    <i class="tw:icon-[lucide--video] tw:w-3.5 tw:h-3.5"></i>
+                    Generate
+                </a>
+            </div>
             {% endif %}
+
+            <div class="tw:absolute tw:right-6 tw:top-1/2 tw:-translate-y-1/2 tw:flex tw:items-center">
+                <span id="loader_filter" class="tw:loading tw:loading-spinner tw:loading-sm tw:text-primary" style="display: none;"></span>
+            </div>
+
         </div>
-        <div class="col-sm-1">
-            <div class="loader" id="loader_filter"></div>
-        </div>
+
+        <div id="success-message" class="tw:text-success tw:text-sm tw:font-medium tw:text-center tw:mt-3" style="display: none;"></div>
+        <div id="failure-message" class="tw:text-error tw:text-sm tw:font-medium tw:text-center tw:mt-3" style="display: none;"></div>
+    </form>
+
+
+
+    <div id="videos_div" class="tw:w-full tw:grow tw:flex tw:flex-col tw:gap-4">
     </div>
 
-    <div id="success-message" class="text-success" style="display: none;"></div>
-    <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
-
-</form>
-
-<hr>
-
-<div id="videos_div">
 </div>
 
 <script>
@@ -120,406 +155,473 @@ fields['form_global'] = {
 
 function populate_videos(video_list) {
     $("#videos_div").empty();
-    var h_row_div = $('<div />', {
-        'class' : "row",
-        'style' : "height:100;",
+
+
+    if (!video_list || video_list.length === 0) {
+        $('<div />', {
+            'class': 'tw:text-center tw:py-12 tw:text-base-content/40 tw:font-semibold',
+            'text': 'No videos found for the selected period.'
+        }).appendTo($("#videos_div"));
+        return;
+    }
+
+    var timeline_ul = $('<ul />', {
+        'class': 'tw:timeline tw:timeline-vertical max-md:tw:flex max-md:tw:flex-col max-md:tw:gap-6 tw:w-full'
     });
-
-    var h_datetime_div = $('<div />', {
-        'class' : "col-sm-2",
-    }).appendTo(h_row_div);
-
-    //$('<div />', {
-    //    'text'  : 'Date',
-    //    'style' : "font-size:14px;font-weight:bold"
-    //}).appendTo(h_datetime_div);
-
-
-    var h_startrail_div = $('<div />', {
-        'class' : "col-sm-2",
-    }).appendTo(h_row_div);
-
-    $('<div />', {
-        'text'  : 'Star Trail Timelapse',
-        'class' : "text-center",
-        'style' : "font-size:14px;font-weight:bold"
-    }).appendTo(h_startrail_div);
-
-
-    var h_keogram_div = $('<div />', {
-        'class' : "col-sm-8",
-    }).appendTo(h_row_div);
-
-    $('<div />', {
-        'text'  : 'Timelapse Video',
-        'class' : "text-center",
-        'style' : "font-size:14px;font-weight:bold"
-    }).appendTo(h_keogram_div);
-
-
-    h_row_div.appendTo($("#videos_div"));
-    $('<hr>').appendTo($("#videos_div"));
-
 
     video_list.forEach(item => {
-        var row_div = $('<div />', {
-            'class' : "row",
-            'style' : "height:100;",
+        var dayNum = parseInt(item['dayDate'].substring(6, 8));
+        var li = $('<li />', {
+            'id': 'timeline-day-' + dayNum,
+            'class': 'timeline-day-item max-md:tw:flex max-md:tw:flex-col max-md:tw:w-full'
         });
-
-
-        var datetime_div = $('<div />', {
-            'class' : "col-sm-2",
-        }).appendTo(row_div);
-
-        if (item['night']) {
-            $('<div />', {
-                'text'  : item['dayDate_long'] + " (Night)",
-                'style' : "font-size:12px;font-weight:bold",
-            }).appendTo(datetime_div);
-
-
-            // Link to keogram image
-            var kl_a = $('<a />', {
-                'href'   : "{{ url_for('indi_allsky.keogram_image_view')}}?id=" + item['keogram_id'],
-                'target' : "_blank",
-                'rel'    : "noopener noreferrer",
-                'class'  : "text-decoration-none link-warning",
-            }).appendTo(datetime_div);
-            $('<div />', {}).html(
-                $('<span />', {
-                    'text'  : "Keogram",
-                    'class' : "badge pill bg-warning text-dark",
-                })
-            ).appendTo(kl_a);
-
-
-            // Link to star trail image
-            if (item['startrail'] != 'None') {
-                var st_a = $('<a />', {
-                    'href'   : "{{ url_for('indi_allsky.startrail_image_view')}}?id=" + item['startrail_id'],
-                    'target' : "_blank",
-                    'rel'    : "noopener noreferrer",
-                    'class'  : "text-decoration-none link-warning",
-                }).appendTo(datetime_div);
-
-                $('<div />', {}).html(
-                    $('<span />', {
-                        'text'  : "Star Trail",
-                        'class' : "badge pill bg-primary text-dark",
-                    })
-                ).appendTo(st_a);
-            }
-
-
-            // Link to panorama timelapse
-            if (item['panorama_timelapse'] != 'None') {
-                var p_a = $('<a />', {
-                    'href'   : "{{ url_for('indi_allsky.panorama_video_view')}}?id=" + item['panorama_timelapse_id'],
-                    'target' : "_blank",
-                    'rel'    : "noopener noreferrer",
-                    'class'  : "text-decoration-none link-warning",
-                }).appendTo(datetime_div);
-
-                $('<div />', {}).html(
-                    $('<span />', {
-                        'text'  : "Panorama",
-                        'class' : "badge pill bg-success",
-                    })
-                ).appendTo(p_a);
-            }
-
-
-            $('<hr>').appendTo(datetime_div);
-
-
-            $('<div />', {
-                'text' : 'Max Stars: ' + item['max_stars'],
-                'style' : "font-size:12px",
-            }).appendTo(datetime_div);
-
-            $('<div />', {
-                'text' : 'Avg Stars: ' + item['avg_stars'],
-                'style' : "font-size:12px",
-            }).appendTo(datetime_div);
-
-            $('<div />', {
-                'text' : 'Kpindex: ' + item['max_kpindex'],
-                'style' : "font-size:12px",
-            }).appendTo(datetime_div);
-
-            $('<div />', {
-                'text' : 'Aurora: ' + item['max_ovation_max'] + '%',
-                'style' : "font-size:12px",
-            }).appendTo(datetime_div);
-
-            $('<div />', {
-                'text' : 'Smoke: ' + item['max_smoke_rating'],
-                'style' : "font-size:12px",
-            }).appendTo(datetime_div);
-
-        } else {
-            $('<div />', {
-                'text'  : item['dayDate_long'] + " (Day)",
-                'style' : "font-size:12px;font-weight:bold",
-            }).appendTo(datetime_div);
-
-
-            // Link to keogram image
-            var kl_a = $('<a />', {
-                'href'   : "{{ url_for('indi_allsky.keogram_image_view')}}?id=" + item['keogram_id'],
-                'target' : "_blank",
-                'rel'    : "noopener noreferrer",
-                'class'  : "text-decoration-none link-warning",
-            }).appendTo(datetime_div);
-            $('<div />', {}).html(
-                $('<span />', {
-                    'text'  : "Keogram",
-                    'class' : "badge pill bg-warning text-dark",
-                })
-            ).appendTo(kl_a);
-
-
-            // Link to panorama timelapse
-            if (item['panorama_timelapse'] != 'None') {
-                var p_a = $('<a />', {
-                    'href'   : "{{ url_for('indi_allsky.panorama_video_view')}}?id=" + item['panorama_timelapse_id'],
-                    'target' : "_blank",
-                    'rel'    : "noopener noreferrer",
-                    'class'  : "text-decoration-none link-warning",
-                }).appendTo(datetime_div);
-
-                $('<div />', {}).html(
-                    $('<span />', {
-                        'text'  : "Panorama",
-                        'class' : "badge pill bg-success",
-                    })
-                ).appendTo(p_a);
-            }
-
-
-            $('<hr>').appendTo(datetime_div);
-
-
-            $('<div />', {
-                'text' : 'Smoke: ' + item['max_smoke_rating'],
-                'style' : "font-size:12px",
-            }).appendTo(datetime_div);
-        }
-
-
-        // star trail
-        var startrail_div = $('<div />', {
-            'class' : "col-sm-2",
-        }).appendTo(row_div);
-
-        // star trails only valid for night
-        if (item['night']) {
-            if (item['startrail'] != 'None') {
-                if (item['startrail_timelapse'] != 'None') {
-                    // Link to Star trail timelapse
-                    var st_tl_a = $('<a />', {
-                        'href'   : "{{ url_for('indi_allsky.startrail_video_view')}}?id=" + item['startrail_timelapse_id'],
-                        'target' : "_blank",
-                        'rel'    : "noopener noreferrer",
-                    }).appendTo(startrail_div);
-
-
-                    if (item['startrail_thumbnail'] != "None") {
-                        var startrail_thumbnail = item['startrail_thumbnail']
-                    } else {
-                        var startrail_thumbnail = item['startrail']
-                    }
-
-                    $('<img />', {
-                        'src'   : startrail_thumbnail,
-                        'style' : "height:auto;max-width:100%;object-fit:scale-down;",
-                        'alt'   : "Startrail",
-                    }).appendTo(st_tl_a);
-
-
-                    {% if current_user.is_authenticated or login_disabled %}
-                    // Youtube link
-                    if (youtube__enable) {
-                        if (item['startrail_timelapse_youtube_uploaded']) {
-                            $('<div />', {}).html(
-                                $('<span />', {
-                                    'text'  : "YouTube Uploaded",
-                                    'class' : "badge pill bg-success",
-                                })
-                            ).appendTo(startrail_div);
-                        } else {
-                            var youtube_st_a = $('<a />', {
-                                'rel'     : "noopener noreferrer",
-                                'class'   : "text-decoration-none link-warning",
-                                'style'   : "cursor: pointer;",
-                                'onclick' : "upload_youtube_video(" + item['startrail_timelapse_id'] + ", 6)",  // 6 == STARTRAIL_VIDEO constant
-                            }).appendTo(startrail_div);
-                            $('<div />', {}).html(
-                                $('<span />', {
-                                    'text'  : "Upload to YouTube",
-                                    'class' : "badge pill bg-danger text-dark",
-                                })
-                            ).appendTo(youtube_st_a);
-                        }
-                    }
-                    {% endif %}
-
-                } else {
-                    // No link
-                    if (item['startrail_thumbnail'] != "None") {
-                        var startrail_thumbnail = item['startrail_thumbnail']
-                    } else {
-                        var startrail_thumbnail = item['startrail']
-                    }
-
-                    $('<img />', {
-                        'src'   : startrail_thumbnail,
-                        'style' : "height:auto;max-width:100%;object-fit:scale-down;",
-                        'alt'   : "Startrail",
-                    }).appendTo(startrail_div);
-                }
-            } else {
-                startrail_div.append('None');
-            }
-        }
         
-
-        // keogram
-        var keogram_div = $('<div />', {
-            'class' : "col-sm-8",
-        }).appendTo(row_div);
-
-
-        var k_a = $('<a />', {
-            'href'   : "{{ url_for('indi_allsky.timelapse_video_view')}}?id=" + item['id'],
-            'target' : "_blank",
-            'rel'    : "noopener noreferrer",
-        }).appendTo(keogram_div);
-
-
-        {% if current_user.is_authenticated or login_disabled %}
-        // Youtube link
-        if (youtube__enable) {
-            if (item['youtube_uploaded']) {
-                $('<div />', {}).html(
-                    $('<span />', {
-                        'text'  : "YouTube Uploaded",
-                        'class' : "badge pill bg-success",
-                    })
-                ).appendTo(keogram_div);
-            } else {
-                var youtube_video_a = $('<a />', {
-                    'target'  : "_blank",
-                    'rel'     : "noopener noreferrer",
-                    'class'   : "text-decoration-none link-warning",
-                    'onclick' : "upload_youtube_video(" + item['id'] + ", 3)", // 3 == VIDEO constant
-                }).appendTo(keogram_div);
-                $('<div />', {}).html(
-                    $('<span />', {
-                        'text'  : "Upload to YouTube",
-                        'class' : "badge pill bg-danger text-dark",
-                        'style' : "cursor: pointer;",
-                    })
-                ).appendTo(youtube_video_a);
-            }
+        $('<hr />', { 'class': 'tw:bg-base-content/10 max-md:tw:hidden' }).appendTo(li);
+        
+        // 1. Timeline Start (Metadata & Stats)
+        var start_div = $('<div />', {
+            'class': 'tw:timeline-start tw:flex tw:flex-col tw:gap-2 max-md:tw:w-full max-md:tw:text-left max-md:tw:items-start max-md:tw:pr-0 tw:pr-6 tw:py-2 tw:w-48 tw:text-right tw:items-end'
+        }).appendTo(li);
+        
+        $('<span />', {
+            'text': item['dayDate_long'],
+            'class': 'tw:text-sm tw:font-bold tw:text-primary'
+        }).appendTo(start_div);
+        
+        $('<span />', {
+            'text': item['night'] ? 'Night' : 'Day',
+            'class': 'tw:badge tw:badge-sm ' + (item['night'] ? 'tw:badge-neutral' : 'tw:badge-primary tw:badge-outline')
+        }).appendTo(start_div);
+        
+        $('<div />', { 'class': 'tw:divider tw:my-1 tw:opacity-20 tw:w-full' }).appendTo(start_div);
+        
+        var stats_grid = $('<div />', {
+            'class': 'tw:grid tw:grid-cols-1 tw:gap-0.5 tw:text-[0.625rem] tw:font-mono tw:text-base-content/50 max-md:tw:text-left tw:text-right'
+        }).appendTo(start_div);
+        
+        if (item['night']) {
+            $('<div />', { 'text': 'MAX STARS: ' + item['max_stars'] }).appendTo(stats_grid);
+            $('<div />', { 'text': 'AVG STARS: ' + item['avg_stars'] }).appendTo(stats_grid);
+            $('<div />', { 'text': 'KPINDEX: ' + item['max_kpindex'] }).appendTo(stats_grid);
+            $('<div />', { 'text': 'AURORA: ' + item['max_ovation_max'] + '%' }).appendTo(stats_grid);
         }
-        {% endif %}
-
-
-        if (item['keogram'] != 'None') {
-            if (item['keogram_thumbnail'] != "None") {
-                var keogram_thumbnail = item['keogram_thumbnail']
-            } else {
-                var keogram_thumbnail = item['keogram']
-            }
-
+        $('<div />', { 'text': 'SMOKE: ' + item['max_smoke_rating'] }).appendTo(stats_grid);
+        
+        // 2. Timeline Middle (Moon / Sun Icon)
+        var middle_div = $('<div />', {
+            'class': 'tw:timeline-middle max-md:tw:hidden'
+        }).appendTo(li);
+        
+        var icon_span = $('<span />', {
+            'class': 'tw:w-9 tw:h-9 tw:flex tw:items-center tw:justify-center tw:rounded-full tw:bg-base-300 tw:border tw:border-base-content/10 tw:text-primary shadow-sm'
+        }).appendTo(middle_div);
+        
+        $('<i />', {
+            'class': 'tw:icon-[lucide--' + (item['night'] ? 'moon' : 'sun') + '] tw:w-4 tw:h-4'
+        }).appendTo(icon_span);
+        
+        // 3. Timeline End (Cards: Keogram & Star Trail thumbnails + Actions)
+        var end_div = $('<div />', {
+            'class': 'tw:timeline-end tw:timeline-box tw:max-w-none tw:bg-base-200/50 tw:border tw:border-base-content/5 tw:p-4 sm:tw:p-6 tw:rounded-[var(--radius-box)] tw:shadow-md tw:flex tw:grow tw:mb-4'
+        }).appendTo(li);
+        
+        // A. Left Column - Keogram (Main Timelapse Video link)
+        var keogram_container = $('<div />', {
+            'class': 'tw:flex tw:flex-col tw:gap-2 thumbnail-container'
+        }).appendTo(end_div);
+        
+        $('<span />', {
+            'text': 'Keogram',
+            'class': 'tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/40'
+        }).appendTo(keogram_container);
+        
+        var k_content_div = $('<div />', {
+            'class': 'tw:relative tw:group tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:border tw:border-base-300 tw:bg-neutral-950 tw:aspect-video tw:shadow-sm thumbnail-card'
+        }).appendTo(keogram_container);
+        
+        var k_a = $('<a />', {
+            'href': "/indi-allsky/view_keogram?id=" + item['keogram_id'],
+            'target': '_blank',
+            'rel': 'noopener noreferrer'
+        }).appendTo(k_content_div);
+        
+        if (item['keogram'] !== 'None') {
+            var keogram_thumbnail = item['keogram_thumbnail'] !== 'None' ? item['keogram_thumbnail'] : item['keogram'];
             $('<img />', {
-                'src'   : keogram_thumbnail,
-                'style' : "height:auto;max-width:100%;object-fit:scale-down;",
-                'alt'   : "Keogram",
+                'src': keogram_thumbnail,
+                'class': 'tw:w-full tw:h-full tw:object-cover group-hover:tw:scale-105 tw:transition-transform',
+                'alt': 'Keogram'
             }).appendTo(k_a);
         } else {
-            k_a.text('No Thumbnail');
+            $('<div />', {
+                'class': 'tw:w-full tw:h-full tw:flex tw:items-center tw:justify-center tw:text-[0.625rem] tw:font-black tw:uppercase tw:text-base-content/20',
+                'text': 'No Thumbnail'
+            }).appendTo(k_a);
         }
         
-        row_div.appendTo($("#videos_div"));
+        $('<div />', {
+            'class': 'tw:absolute tw:inset-0 tw:flex tw:items-center tw:justify-center tw:bg-black/20 group-hover:tw:bg-black/0 tw:transition-colors'
+        }).html('<i class="tw:icon-[lucide--zoom-in] tw:w-10 tw:h-10 tw:text-white/85"></i>').appendTo(k_a);
+        
+        // Actions for Keogram / main video
+        var keogram_actions = $('<div />', {
+            'class': 'tw:flex tw:flex-col tw:gap-1.5 tw:w-full thumbnail-actions'
+        }).appendTo(keogram_container);
+        
+        $('<a />', {
+            'href': "/indi-allsky/watch_timelapse?id=" + item['id'],
+            'target': '_blank',
+            'rel': 'noopener noreferrer',
+            'class': 'tw:btn tw:btn-xs tw:btn-primary tw:btn-outline tw:w-full tw:text-[0.563rem] tw:font-black tw:uppercase',
+            'text': 'View Timelapse'
+        }).appendTo(keogram_actions);
+        
+        if (item['panorama_timelapse'] !== 'None') {
+            $('<a />', {
+                'href': "/indi-allsky/watch_panorama?id=" + item['panorama_timelapse_id'],
+                'target': '_blank',
+                'rel': 'noopener noreferrer',
+                'class': 'tw:btn tw:btn-xs tw:btn-success tw:btn-outline tw:w-full tw:text-[0.563rem] tw:font-black tw:uppercase',
+                'text': 'View Panorama'
+            }).appendTo(keogram_actions);
+        }
+        
+        if (youtube__enable) {
+            var yt_container = $('<div />', { 'class': 'tw:w-full' }).appendTo(keogram_actions);
+            if (item['youtube_uploaded']) {
+                $('<span />', {
+                    'text': 'YouTube Uploaded',
+                    'class': 'tw:badge tw:badge-success tw:badge-sm tw:font-bold tw:w-full'
+                }).appendTo(yt_container);
+            } else {
+                var youtube_video_a = $('<a />', {
+                    'class': 'tw:btn tw:btn-xs tw:btn-error tw:btn-outline tw:w-full tw:gap-1.5',
+                    'onclick': 'upload_youtube_video(' + item['id'] + ', 3)'
+                }).appendTo(yt_container);
+                youtube_video_a.html('<i class="tw:icon-[lucide--youtube] tw:w-3.5 tw:h-3.5"></i> Upload');
+            }
+        }
 
-        $('<hr>').appendTo($("#videos_div"));
+        // B. Right Column - Star Trail Timelapse (if Night)
+        if (item['night']) {
+            var startrail_container = $('<div />', {
+                'class': 'tw:flex tw:flex-col tw:gap-2 thumbnail-container'
+            }).appendTo(end_div);
+            
+            $('<span />', {
+                'text': 'Star Trail',
+                'class': 'tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/40'
+            }).appendTo(startrail_container);
+
+            if (item['startrail'] !== 'None') {
+                var st_content_div = $('<div />', {
+                    'class': 'tw:relative tw:group tw:rounded-[var(--radius-box)] tw:overflow-hidden tw:border tw:border-base-300 tw:bg-neutral-950 tw:aspect-video tw:shadow-sm thumbnail-card'
+                }).appendTo(startrail_container);
+                
+                var st_a = $('<a />', {
+                    'href': "/indi-allsky/view_startrail?id=" + item['startrail_id'],
+                    'target': '_blank',
+                    'rel': 'noopener noreferrer'
+                }).appendTo(st_content_div);
+
+                var st_thumb = item['startrail_thumbnail'] !== 'None' ? item['startrail_thumbnail'] : item['startrail'];
+                $('<img />', {
+                    'src': st_thumb,
+                    'class': 'tw:w-full tw:h-full tw:object-cover group-hover:tw:scale-105 tw:transition-transform',
+                    'alt': 'Startrail'
+                }).appendTo(st_a);
+
+                $('<div />', {
+                    'class': 'tw:absolute tw:inset-0 tw:flex tw:items-center tw:justify-center tw:bg-black/20 group-hover:tw:bg-black/0 tw:transition-colors'
+                }).html('<i class="tw:icon-[lucide--zoom-in] tw:w-10 tw:h-10 tw:text-white/85"></i>').appendTo(st_a);
+                
+                var startrail_actions = $('<div />', {
+                    'class': 'tw:flex tw:flex-col tw:gap-1.5 tw:w-full thumbnail-actions'
+                }).appendTo(startrail_container);
+                
+                if (item['startrail_timelapse'] !== 'None') {
+                    $('<a />', {
+                        'href': "/indi-allsky/watch_startrail?id=" + item['startrail_timelapse_id'],
+                        'target': '_blank',
+                        'rel': 'noopener noreferrer',
+                        'class': 'tw:btn tw:btn-xs tw:btn-primary tw:btn-outline tw:w-full tw:text-[0.563rem] tw:font-black tw:uppercase',
+                        'text': 'View Timelapse'
+                    }).appendTo(startrail_actions);
+                }
+                
+                if (youtube__enable && item['startrail_timelapse'] !== 'None') {
+                    var yt_st_container = $('<div />', { 'class': 'tw:w-full' }).appendTo(startrail_actions);
+                    if (item['startrail_timelapse_youtube_uploaded']) {
+                        $('<span />', {
+                            'text': 'YouTube Uploaded',
+                            'class': 'tw:badge tw:badge-success tw:badge-sm tw:font-bold tw:w-full'
+                        }).appendTo(yt_st_container);
+                    } else {
+                        var youtube_st_a = $('<a />', {
+                            'class': 'tw:btn tw:btn-xs tw:btn-error tw:btn-outline tw:w-full tw:gap-1.5',
+                            'onclick': 'upload_youtube_video(' + item['startrail_timelapse_id'] + ', 6)'
+                        }).appendTo(yt_st_container);
+                        youtube_st_a.html('<i class="tw:icon-[lucide--youtube] tw:w-3.5 tw:h-3.5"></i> Upload');
+                    }
+                }
+            } else {
+                $('<div />', {
+                    'class': 'tw:aspect-video tw:rounded-[var(--radius-box)] tw:border tw:border-dashed tw:border-base-content/20 tw:flex tw:items-center tw:justify-center tw:text-[0.625rem] tw:font-black tw:uppercase tw:text-base-content/20 thumbnail-card',
+                    'text': 'No Startrail Generated'
+                }).appendTo(startrail_container);
+            }
+        }
+
+        $('<hr />', { 'class': 'tw:bg-base-content/10 max-md:tw:hidden' }).appendTo(li);
+        li.appendTo(timeline_ul);
     });
 
-
-    var f_row_div = $('<div />', {
-        'class' : "row",
-        'style' : "height:100;",
-    });
-
-    var f_datetime_div = $('<div />', {
-        'class' : "col-sm-2",
-    }).appendTo(f_row_div);
-
-    //$('<div />', {
-    //    'text'  : 'Date',
-    //    'style' : "font-size:14px;font-weight:bold"
-    //}).appendTo(f_datetime_div);
-
-
-    var f_startrail_div = $('<div />', {
-        'class' : "col-sm-2",
-    }).appendTo(f_row_div);
-
-    $('<div />', {
-        'text'  : 'Star Trail Timelapse',
-        'class' : "text-center",
-        'style' : "font-size:14px;font-weight:bold"
-    }).appendTo(f_startrail_div);
-
-
-    var f_keogram_div = $('<div />', {
-        'class' : "col-sm-8",
-    }).appendTo(f_row_div);
-
-    $('<div />', {
-        'text'  : 'Timelapse Video',
-        'class' : "text-center",
-        'style' : "font-size:14px;font-weight:bold"
-    }).appendTo(f_keogram_div);
-
-
-    f_row_div.appendTo($("#videos_div"));
-
+    timeline_ul.appendTo($("#videos_div"));
 };
 
 
-function month_change(json_data) {
-    $.ajax({
+const picker = document.getElementById("cally-picker");
+
+function sync_calendar_value() {
+    const year = fields["YEAR_SELECT"].input.val();
+    const month = fields["MONTH_SELECT"].input.val();
+    
+    if (picker) {
+        if (year && month) {
+            const formattedMonth = String(month).padStart(2, '0');
+            
+            // Find if we have any valid day in this month
+            const validDays = [];
+            $(".timeline-day-item").each(function() {
+                const idAttr = $(this).attr("id");
+                if (idAttr) {
+                    const dayNum = parseInt(idAttr.replace("timeline-day-", ""));
+                    if (!isNaN(dayNum)) {
+                        validDays.push(dayNum);
+                    }
+                }
+            });
+
+            // Find all valid months for the selected year
+            const validMonths = [];
+            $("#MONTH_SELECT option").each(function() {
+                const val = $(this).val();
+                if (val) {
+                    validMonths.push(parseInt(val));
+                }
+            });
+
+            const yearInt = parseInt(year);
+            const monthInt = parseInt(month) - 1; // 0-indexed for JS Date
+            
+            picker.isDateDisallowed = (date) => {
+                const dYear = date.getUTCFullYear();
+                const dMonth = date.getUTCMonth() + 1; // 1-indexed month
+                
+                // Disallow the date if the year doesn't exist in our choices
+                const years = $("#YEAR_SELECT option").map(function() { 
+                    const val = $(this).val();
+                    return val ? parseInt(val) : null; 
+                }).get().filter(v => v !== null && !isNaN(v));
+                if (years.length > 0 && !years.includes(dYear)) {
+                    return true;
+                }
+
+                // If the year is the currently selected year, check month and day
+                if (dYear === yearInt) {
+                    if (!validMonths.includes(dMonth)) {
+                        return true; // Disallow entire month if it has no data
+                    }
+                    if (dMonth === (monthInt + 1)) {
+                        return !validDays.includes(date.getUTCDate()); // Check day
+                    }
+                }
+                return false;
+            };
+
+            const years = $("#YEAR_SELECT option").map(function() { 
+                const val = $(this).val();
+                return val ? parseInt(val) : null; 
+            }).get().filter(v => v !== null && !isNaN(v));
+
+            if (years.length > 0) {
+                const minYear = Math.min(...years);
+                const maxYear = Math.max(...years);
+                picker.min = `${minYear}-01-01`;
+                picker.max = `${maxYear}-12-31`;
+            } else {
+                picker.min = "1970-01-01";
+                picker.max = "2099-12-31";
+            }
+
+            if (validDays.length > 0) {
+                const currentVal = picker.value;
+                let dayNum = validDays[0]; // Default to first available day
+                if (currentVal && currentVal.startsWith(`${year}-${formattedMonth}-`)) {
+                    const curDay = parseInt(currentVal.split("-")[2]);
+                    if (validDays.includes(curDay)) {
+                        dayNum = curDay;
+                    }
+                }
+                const formattedDay = String(dayNum).padStart(2, '0');
+                picker.value = `${year}-${formattedMonth}-${formattedDay}`;
+                $("#date-picker-label").text(`${year}-${formattedMonth}-${formattedDay}`);
+            } else {
+                picker.value = "";
+                picker.focusedDate = `${year}-${formattedMonth}-01`;
+                $("#date-picker-label").text(`${year}-${formattedMonth}`);
+            }
+        } else {
+            picker.isDateDisallowed = () => true;
+            picker.min = picker.min === "1970-01-01" ? "1970-01-02" : "1970-01-01";
+            picker.value = "";
+            $("#date-picker-label").text("No Data");
+        }
+    }
+}
+
+function highlight_and_scroll_to_day(dayNum) {
+    $(".timeline-day-item .tw\:timeline-box").removeClass("tw:ring-2 tw:ring-primary tw:ring-offset-2");
+    
+    var targetEl = $("#timeline-day-" + dayNum);
+    if (targetEl.length > 0) {
+        targetEl.find(".tw\:timeline-box").addClass("tw:ring-2 tw:ring-primary tw:ring-offset-2");
+        targetEl[0].scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+    }
+}
+
+picker.addEventListener("change", (e) => {
+    if (!e.target.value) return;
+    const [year, month, day] = e.target.value.split("-");
+    const currentYear = fields["YEAR_SELECT"].input.val();
+    const currentMonth = fields["MONTH_SELECT"].input.val();
+    
+    $("#date-picker-label").text(e.target.value);
+    
+    if (currentYear !== year || currentMonth !== parseInt(month).toString()) {
+        if (currentYear !== year) {
+            fields["YEAR_SELECT"].input.val(year);
+            fields["MONTH_SELECT"].input.val(parseInt(month).toString());
+            $("#loader_filter").show();
+            var json_data = {
+                'CAMERA_ID'        : fields["CAMERA_ID"].input.val(),
+                'YEAR_SELECT'      : year,
+                'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.val(),
+            };
+            
+            year_change(json_data, () => {
+                highlight_and_scroll_to_day(parseInt(day));
+            });
+        } else {
+            fields["MONTH_SELECT"].input.val(parseInt(month).toString());
+            var json_data = {
+                'CAMERA_ID'        : fields["CAMERA_ID"].input.val(),
+                'YEAR_SELECT'      : currentYear,
+                'MONTH_SELECT'     : parseInt(month).toString(),
+                'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.val(),
+            };
+            $("#loader_filter").show();
+            month_change(json_data, () => {
+                highlight_and_scroll_to_day(parseInt(day));
+            });
+        }
+    } else {
+        const dayInt = parseInt(day);
+        if ($("#timeline-day-" + dayInt).length === 0) {
+            sync_calendar_value();
+            return;
+        }
+        highlight_and_scroll_to_day(dayInt);
+    }
+});
+
+picker.addEventListener("focusday", (e) => {
+    var newDate = e.detail;
+    if (!newDate) return;
+    var yr = newDate.getUTCFullYear().toString();
+    var mo = (newDate.getUTCMonth() + 1).toString();
+    var currentYear = fields["YEAR_SELECT"].input.val();
+    var currentMonth = fields["MONTH_SELECT"].input.val();
+    if (yr !== currentYear || mo !== currentMonth) {
+        if ($("#YEAR_SELECT option[value='" + yr + "']").length === 0) {
+            const formattedMonth = String(currentMonth).padStart(2, '0');
+            picker.focusedDate = `${currentYear}-${formattedMonth}-01`;
+            return;
+        }
+        if (yr === currentYear && $("#MONTH_SELECT option[value='" + mo + "']").length === 0) {
+            const formattedMonth = String(currentMonth).padStart(2, '0');
+            picker.focusedDate = `${currentYear}-${formattedMonth}-01`;
+            return;
+        }
+
+        var json_data = {
+            'CAMERA_ID'        : fields["CAMERA_ID"].input.val(),
+            'YEAR_SELECT'      : yr,
+            'MONTH_SELECT'     : mo,
+            'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.val(),
+        };
+
+        if (yr !== currentYear) {
+            fields["YEAR_SELECT"].input.val(yr);
+            $("#loader_filter").show();
+            var year_json_data = {
+                'CAMERA_ID'        : fields["CAMERA_ID"].input.val(),
+                'YEAR_SELECT'      : yr,
+                'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.val(),
+            };
+            year_change(year_json_data);
+        } else {
+            fields["MONTH_SELECT"].input.val(mo);
+            $("#loader_filter").show();
+            month_change(json_data);
+        }
+    }
+});
+
+
+var active_ajax_request = null;
+
+function month_change(json_data, callback) {
+    if (active_ajax_request) {
+        active_ajax_request.abort();
+    }
+    active_ajax_request = $.ajax({
         type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_videoviewer_view') }}",
+        url: "/indi-allsky/ajax/videoviewer",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
             populate_videos(rdata['video_list']);
-            $("#loader_filter").css({'display' : 'none'});
+            $("#loader_filter").hide();
+            sync_calendar_value();
+            if (callback) callback();
         },
         error: function(rdata){
-            Object.keys(rdata).forEach((key) => {
-                fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key][0]);
-                fields[key].error.css({'display' : 'block'});
+            if (rdata.statusText === 'abort') return;
+            var errors = JSON.parse(rdata.responseText);
+            Object.keys(errors).forEach((key) => {
+                fields[key].input.addClass('tw:border-error');
+                fields[key].error.html(errors[key][0]).show();
             });
         },
+        complete: function() {
+            active_ajax_request = null;
+        }
     });
 }
 
 
 $("#MONTH_SELECT").on("change", function() {
     // hide all errors
-    successMessage.css({'display' : 'none'});
+    successMessage.hide();
     Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
+        fields[key].error.hide();
     });
 
-    $("#loader_filter").css({'display' : 'block'});
+    $("#loader_filter").show();
 
     var json_data = {
         'CAMERA_ID'        : fields["CAMERA_ID"].input.val(),
@@ -534,12 +636,12 @@ $("#MONTH_SELECT").on("change", function() {
 
 $("#TIMEOFDAY_SELECT").on("change", function() {
     // hide all errors
-    successMessage.css({'display' : 'none'});
+    successMessage.hide();
     Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
+        fields[key].error.hide();
     });
 
-    $("#loader_filter").css({'display' : 'block'});
+    $("#loader_filter").show();
 
     var json_data = {
         'CAMERA_ID'        : fields["CAMERA_ID"].input.val(),
@@ -552,29 +654,56 @@ $("#TIMEOFDAY_SELECT").on("change", function() {
 });
 
 
-function year_change(json_data) {
-    $.ajax({
+function year_change(json_data, callback) {
+    if (active_ajax_request) {
+        active_ajax_request.abort();
+    }
+    const currentMonthVal = fields["MONTH_SELECT"].input.val();
+    active_ajax_request = $.ajax({
         type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_videoviewer_view') }}",
+        url: "/indi-allsky/ajax/videoviewer",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#MONTH_SELECT").empty()
+            $("#MONTH_SELECT").empty();
+            let hasCurrentMonth = false;
             rdata['MONTH_SELECT'].forEach(item => {
                 $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+                if (item[0].toString() === currentMonthVal) {
+                    hasCurrentMonth = true;
+                }
             });
 
-            populate_videos(rdata['video_list']);
-
-            $("#loader_filter").css({'display' : 'none'});
+            if (hasCurrentMonth && currentMonthVal) {
+                fields["MONTH_SELECT"].input.val(currentMonthVal);
+                var next_json_data = {
+                    'CAMERA_ID'        : fields["CAMERA_ID"].input.val(),
+                    'YEAR_SELECT'      : fields["YEAR_SELECT"].input.val(),
+                    'MONTH_SELECT'     : currentMonthVal,
+                    'TIMEOFDAY_SELECT' : fields["TIMEOFDAY_SELECT"].input.val(),
+                };
+                month_change(next_json_data, callback);
+            } else {
+                if (rdata['MONTH_SELECT'].length > 0) {
+                    fields["MONTH_SELECT"].input.val(rdata['MONTH_SELECT'][0][0]);
+                }
+                populate_videos(rdata['video_list']);
+                $("#loader_filter").hide();
+                sync_calendar_value();
+                if (callback) callback();
+            }
         },
         error: function(rdata){
-            Object.keys(rdata).forEach((key) => {
-                fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key][0]);
-                fields[key].error.css({'display' : 'block'});
+            if (rdata.statusText === 'abort') return;
+            var errors = JSON.parse(rdata.responseText);
+            Object.keys(errors).forEach((key) => {
+                fields[key].input.addClass('tw:border-error');
+                fields[key].error.html(errors[key][0]).show();
             });
         },
+        complete: function() {
+            active_ajax_request = null;
+        }
     });
 
 }
@@ -582,12 +711,12 @@ function year_change(json_data) {
 
 $("#YEAR_SELECT").on("change", function() {
     // hide all errors
-    successMessage.css({'display' : 'none'});
+    successMessage.hide();
     Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
+        fields[key].error.hide();
     });
 
-    $("#loader_filter").css({'display' : 'block'});
+    $("#loader_filter").show();
 
     var json_data = {
         'CAMERA_ID'        : fields["CAMERA_ID"].input.val(),
@@ -600,7 +729,7 @@ $("#YEAR_SELECT").on("change", function() {
 
 
 function upload_youtube_video(video_id, asset_type) {
-    $("#loader_filter").css({'display' : 'block'});
+    $("#loader_filter").show();
 
     var json_data = {
         'CAMERA_ID'  : fields["CAMERA_ID"].input.val(),
@@ -610,27 +739,20 @@ function upload_youtube_video(video_id, asset_type) {
 
     $.ajax({
         type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_upload_youtube_view') }}",
+        url: "/indi-allsky/ajax/uploadyoutube",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#loader_filter").css({'display' : 'none'});
+            $("#loader_filter").hide();
 
-            successMessage.html(rdata['success-message']);
-            successMessage.css({'display' : 'block'});
-            setTimeout(function() {
-                successMessage.css({'display' : 'none'});
-            }, 10000);
-
+            successMessage.html(rdata['success-message']).show();
+            setTimeout(function() { successMessage.fadeOut(); }, 10000);
         },
         error: function(rdata){
-            $("#loader_filter").css({'display' : 'none'});
+            $("#loader_filter").hide();
 
-            failureMessage.html('Error submitting upload');
-            failureMessage.css({'display' : 'block'});
-            setTimeout(function() {
-                failureMessage.css({'display' : 'none'});
-            }, 10000);
+            failureMessage.html('Error submitting upload').show();
+            setTimeout(function() { failureMessage.fadeOut(); }, 10000);
         },
     });
 };
@@ -649,8 +771,20 @@ function init() {
 
 $( document ).ready(function() {
     init();
+
+    // jQuery's .on("toggle") doesn't fire on <details> elements (non-bubbling native event).
+    var callyDropdown = document.getElementById("cally-dropdown-details");
+    if (callyDropdown) {
+        callyDropdown.addEventListener("toggle", function() {
+            if (this.open) {
+                sync_calendar_value();
+            }
+        });
+    }
+
+    window.customElements.whenDefined('calendar-date').then(() => {
+        sync_calendar_value();
+    });
 });
-
 </script>
-
 {% endblock %}

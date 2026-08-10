@@ -4,36 +4,33 @@
 
 {% block head %}
 <meta charset="UTF-8">
+<script src="{{ url_for('indi_allsky.static', filename='js/indi-allsky-tabs.js') }}"></script>
 <style>
-#nav-image-tab, #nav-processing-tab, #nav-overlays-tab, #nav-location-tab {
-	width: 150px;
-	margin-top: 10px;
-	margin-right: 5px;
-	height: 50px;
-}
+    /* Mandatory Grid Layout Override */
+    .allsky-top-row-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        width: 100%;
+    }
+    @media (min-width: 1024px) {
+        .allsky-top-row-grid {
+            grid-template-columns: 2fr 1fr !important;
+            align-items: start;
+        }
+    }
 
-.loader {
-  display: none;
-  border: 3px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  animation: spin 2s linear infinite;
-}
+    .fits-viewer-container {
+        width: 100%;
+        background-color: #000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        min-height: 400px;
+    }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.fit {
-    max-width: 100%;
-    max-height: 80vh;
-    width: auto;
-    height: 80vh;
-    object-fit: contain;
-}
 </style>
 <script type="text/javascript">
 var img;
@@ -46,1929 +43,1092 @@ var fullscreen = false;  //initial state
 {% endblock %}
 
 {% block content %}
-<div class="container">
-
-    <div class="row align-items-center">
-        <div class="col-12 text-center">
-            <img id="fits-image" class="fit">
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-12 text-center">
-            <span id="processing_time"></span>
-            <span id="img_download"></span>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-12 text-center">
-            <div id="processing_message"></div>
-        </div>
-    </div>
-
-    <form id="form_image_processing" onSubmit="return false;">
-
-    <div class="form-group row">
-        <div class="col-sm-1">
-            {{ form_image_processing.CAMERA_ID(class='form-control bg-secondary') }}
-            <div id="CAMERA_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
-
-            {{ form_image_processing.FRAME_TYPE(class='form-control bg-secondary') }}
-            <div id="FRAME_TYPE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-
-            {{ form_image_processing.FITS_ID(class='form-control bg-secondary') }}
-            <div id="FITS_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-1">
-            <button class="btn btn-primary">Process</button>
-        </div>
-        <div class="col-sm-1">
-            <div class="loader" id="loader_processing"></div>
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6">
+    <form id="form_image_processing" onSubmit="return false;" class="tw:flex tw:flex-col tw:gap-6">
+        
+        <!-- Hidden/Metadata Fields -->
+        <div class="tw:hidden">
+            {{ form_image_processing.CAMERA_ID() }}
+            <div id="CAMERA_ID-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+            {{ form_image_processing.FRAME_TYPE() }}
+            <div id="FRAME_TYPE-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+            {{ form_image_processing.FITS_ID() }}
+            <div id="FITS_ID-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
         </div>
 
-        <div class="col-sm-2">
-            <div>
-                {{ form_image_processing.DISABLE_PROCESSING.label }}
+        <!-- ROW 1: Image Viewer & Action Bar -->
+        <div class="allsky-top-row-grid">
+            <!-- Left: Image -->
+            <div class="tw:flex tw:flex-col tw:gap-4">
+                <div class="fits-viewer-container">
+                    <img id="fits-image" 
+                         class="tw:mx-auto tw:max-h-full tw:max-w-full tw:object-contain" 
+                         src="" 
+                         alt="FITS Image"
+                         onerror="this.style.display='none';"
+                         onload="this.style.display='block';">
+                </div>
+
+                <div id="processing-info-bar" class="tw:flex tw:flex-col tw:items-center tw:gap-2 tw:bg-base-200/50 tw:p-3 tw:rounded-[var(--radius-box)]" style="display: none;">
+                    <div class="tw:flex tw:gap-4 tw:text-sm tw:font-mono">
+                        <span id="processing_time" class="tw:text-info"></span>
+                        <span id="img_download"></span>
+                    </div>
+                    <div id="processing_message" class="tw:text-xs tw:opacity-70"></div>
+                </div>
             </div>
-            <div class="form-switch">
-                {{ form_image_processing.DISABLE_PROCESSING(class='form-check-input') }}
-            </div>
-        </div>
-        <div class="col-sm-2">
-            <div>
-                {{ form_image_processing.OUTPUT_IMAGE_TYPE.label }}
-            </div>
-            <div>
-                {{ form_image_processing.OUTPUT_IMAGE_TYPE(class='form-control bg-secondary') }}
-            </div>
-        </div>
-    </div>
 
-    <div class="form-group row">
-        <div class="col-sm-8">
-            <div id="success-message" class="text-success" style="display: none;"></div>
-            <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-    </div>
+            <!-- Right: Action Bar -->
+            <div class="tw:flex tw:flex-col tw:gap-4">
+                <div class="tw:card tw:bg-base-200 tw:shadow-sm">
+                    <div class="tw:card-body tw:p-4 tw:flex-row tw:items-center tw:gap-4">
+                        <button type="submit" id="process-btn" class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:px-6">PROCESS</button>
+                        <span id="loader_processing" class="tw:loading tw:loading-spinner tw:loading-sm tw:text-primary" style="display: none;"></span>
+                        
+                        <div class="tw:divider tw:divider-horizontal"></div>
 
-    <hr>
+                        <div class="tw:form-control">
+                            <label class="tw:label tw:cursor-pointer tw:flex-col tw:items-start tw:gap-1">
+                                <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Disable Processing</span>
+                                {{ form_image_processing.DISABLE_PROCESSING(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                            </label>
+                        </div>
 
-<nav>
-  <div class="nav nav-tabs" id="nav-tab" role="tablist">
-    <button class="nav-link link-light bg-dark active" id="nav-image-tab" data-bs-toggle="tab" data-bs-target="#nav-image" type="button" role="tab" aria-controls="nav-image" aria-selected="true">Image</button>
-    <button class="nav-link link-success bg-dark" id="nav-processing-tab" data-bs-toggle="tab" data-bs-target="#nav-processing" type="button" role="tab" aria-controls="nav-processing" aria-selected="false">Processing</button>
-    <button class="nav-link link-secondary bg-dark" id="nav-overlays-tab" data-bs-toggle="tab" data-bs-target="#nav-overlays" type="button" role="tab" aria-controls="nav-overlays" aria-selected="false">Overlays</button>
-    <button class="nav-link link-info bg-dark" id="nav-location-tab" data-bs-toggle="tab" data-bs-target="#nav-location" type="button" role="tab" aria-controls="nav-location" aria-selected="false">Location</button>
-  </div>
-</nav>
+                        <div class="tw:form-control tw:flex-1">
+                            <label class="tw:label tw:py-0">
+                                <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Output Type</span>
+                            </label>
+                            {{ form_image_processing.OUTPUT_IMAGE_TYPE(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
+                            <div id="OUTPUT_IMAGE_TYPE-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Process error hint -->
+                <div id="process-error-msg" class="tw:flex tw:items-center tw:gap-1.5 tw:text-error tw:text-xs tw:font-semibold" style="display: none;">
+                    <i class="tw:icon-[lucide--triangle-alert] tw:w-3.5 tw:h-3.5"></i>
+                    Fix the errors below and try again
+                </div>
 
-<div class="tab-content" id="nav-tabContent">
-  <div class="tab-pane fade show active" id="nav-image" role="tabpanel" aria-labelledby="nav-image-tab">
+                <!-- Feedback Messages -->
+                <div id="success-message" class="tw:alert tw:alert-success tw:py-2 tw:text-sm" style="display: none;">
+                    <i class="tw:icon-[lucide--check-circle] tw:w-4 tw:h-4 tw:shrink-0"></i>
+                    <span id="success-message-text"></span>
+                </div>
 
-    <hr>
-
-    <!--
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.PROCESSING_SPLIT_SCREEN.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.PROCESSING_SPLIT_SCREEN(class='form-check-input') }}
-                <div id="PROCESSING_SPLIT_SCREEN-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
-        <div class="col-sm-8"></div>
-    </div>
 
-    <hr>
-    -->
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CALIBRATE_DARK.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.IMAGE_CALIBRATE_DARK(class='form-check-input') }}
-                <div id="IMAGE_CALIBRATE_DARK-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        <!-- ROW 2: Tabs & Settings Content -->
+        <div class="tw:flex tw:flex-col tw:gap-4">
+            <!-- Settings Tabs - Styled as Pills -->
+            <div role="tablist" class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm" id="nav-tab">
+                <button type="button" class="tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:uppercase tw:tracking-wider" id="nav-image-tab" data-tab-target="nav-image">Image</button>
+                <button type="button" class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" id="nav-processing-tab" data-tab-target="nav-processing">Processing</button>
+                <button type="button" class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" id="nav-overlays-tab" data-tab-target="nav-overlays">Overlays</button>
+                <button type="button" class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" id="nav-location-tab" data-tab-target="nav-location">Location</button>
             </div>
-        </div>
-        <div class="col-sm-8">
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Do not enable unless you know what you are doing.  Dark frame calibration is almost always already complete.</div>
-        </div>
-    </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CALIBRATE_BPM.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.IMAGE_CALIBRATE_BPM(class='form-check-input') }}
-                <div id="IMAGE_CALIBRATE_BPM-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            <div class="tw:card tw:bg-base-200 tw:shadow-sm tw:overflow-hidden">
+                <div class="tw:card-body tw:p-6">
+                    
+                    <!-- TAB: IMAGE -->
+                    <div id="nav-image" class="tab-pane show active">
+                        <div class="tw:flex tw:flex-col tw:gap-6">
+                            
+                            <!-- Calibration Section -->
+                            <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                        {{ form_image_processing.IMAGE_CALIBRATE_DARK(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Calibrate Dark</span>
+                                    </label>
+                                    <div id="IMAGE_CALIBRATE_DARK-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                        {{ form_image_processing.IMAGE_CALIBRATE_BPM(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Calibrate BPM</span>
+                                    </label>
+                                    <div id="IMAGE_CALIBRATE_BPM-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+
+                            <div class="tw:alert tw:alert-warning tw:py-2 tw:text-[0.625rem] tw:rounded-[var(--radius-box)]">
+                                <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
+                                <span>Do not enable dark calibration unless you know what you are doing.</span>
+                            </div>
+
+                            <div class="tw:form-control tw:w-full">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Manual Offset</span>
+                                </label>
+                                {{ form_image_processing.IMAGE_CALIBRATE_MANUAL_OFFSET(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                <div id="IMAGE_CALIBRATE_MANUAL_OFFSET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            </div>
+
+                            <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                        {{ form_image_processing.IMAGE_CALIBRATE_FIX_HOLES(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Fix Holes</span>
+                                    </label>
+                                    <div id="IMAGE_CALIBRATE_FIX_HOLES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Hole Threshold</span>
+                                    </label>
+                                    {{ form_image_processing.IMAGE_CALIBRATE_HOLE_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    <div id="IMAGE_CALIBRATE_HOLE_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+
+                            <div class="tw:divider tw:my-0"></div>
+
+                            <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Bit Depth</span>
+                                    </label>
+                                    {{ form_image_processing.CCD_BIT_DEPTH(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
+                                    <div id="CCD_BIT_DEPTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">SQM Region</span>
+                                    </label>
+                                    {{ form_image_processing.SQM_FOV_DIV(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
+                                    <div id="SQM_FOV_DIV-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+
+                            <div class="tw:form-control">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Detection Mask (PNG)</span>
+                                </label>
+                                {{ form_image_processing.DETECT_MASK(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                <div id="DETECT_MASK-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            </div>
+
+                            <!-- ROI Grid -->
+                            <div class="tw:flex tw:flex-col tw:gap-2">
+                                <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">SQM / Star ROI</span>
+                                <div class="tw:grid tw:grid-cols-2 tw:gap-2">
+                                    {{ form_image_processing.SQM_ROI_X1(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full', placeholder='X1') }}
+                                    {{ form_image_processing.SQM_ROI_Y1(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full', placeholder='Y1') }}
+                                    {{ form_image_processing.SQM_ROI_X2(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full', placeholder='X2') }}
+                                    {{ form_image_processing.SQM_ROI_Y2(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full', placeholder='Y2') }}
+                                </div>
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                    <div id="SQM_ROI_X1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                    <div id="SQM_ROI_Y1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                    <div id="SQM_ROI_X2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                    <div id="SQM_ROI_Y2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+
+                            <div class="tw:divider tw:my-0"></div>
+
+                            <!-- Contrast Section -->
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
+                                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                            {{ form_image_processing.NIGHT_CONTRAST_ENHANCE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">CLAHE (8-bit)</span>
+                                        </label>
+                                        <div id="NIGHT_CONTRAST_ENHANCE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                            {{ form_image_processing.CONTRAST_ENHANCE_16BIT(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">CLAHE (16-bit)</span>
+                                        </label>
+                                        <div id="CONTRAST_ENHANCE_16BIT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                    </div>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Clip Limit</span>
+                                        </label>
+                                        {{ form_image_processing.CLAHE_CLIPLIMIT(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="CLAHE_CLIPLIMIT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Grid Size</span>
+                                        </label>
+                                        {{ form_image_processing.CLAHE_GRIDSIZE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="CLAHE_GRIDSIZE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tw:divider tw:my-0"></div>
+
+                            <!-- Stretch Section -->
+                            <div class="tw:form-control">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Stretch Algorithm</span>
+                                </label>
+                                {{ form_image_processing.IMAGE_STRETCH__CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
+                                <div id="IMAGE_STRETCH__CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            </div>
+
+                            <div class="tw:grid tw:grid-cols-2 tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M1 Gamma</span>
+                                    </label>
+                                    {{ form_image_processing.IMAGE_STRETCH__MODE1_GAMMA(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    <div id="IMAGE_STRETCH__MODE1_GAMMA-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M1 StdDevs</span>
+                                    </label>
+                                    {{ form_image_processing.IMAGE_STRETCH__MODE1_STDDEVS(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    <div id="IMAGE_STRETCH__MODE1_STDDEVS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+
+                            <div class="tw:grid tw:grid-cols-3 tw:gap-2 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M2 Shadows</span>
+                                    </label>
+                                    {{ form_image_processing.IMAGE_STRETCH__MODE2_SHADOWS(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    <div id="IMAGE_STRETCH__MODE2_SHADOWS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M2 Mid</span>
+                                    </label>
+                                    {{ form_image_processing.IMAGE_STRETCH__MODE2_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    <div id="IMAGE_STRETCH__MODE2_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M2 High</span>
+                                    </label>
+                                    {{ form_image_processing.IMAGE_STRETCH__MODE2_HIGHLIGHTS(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    <div id="IMAGE_STRETCH__MODE2_HIGHLIGHTS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+
+                            <div class="tw:grid tw:grid-cols-2 tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M3 Black Clip</span>
+                                    </label>
+                                    {{ form_image_processing.IMAGE_STRETCH__MODE3_BLACK_CLIP(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    <div id="IMAGE_STRETCH__MODE3_BLACK_CLIP-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M3 Shadows</span>
+                                    </label>
+                                    {{ form_image_processing.IMAGE_STRETCH__MODE3_SHADOWS(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    <div id="IMAGE_STRETCH__MODE3_SHADOWS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M3 Mid</span>
+                                    </label>
+                                    {{ form_image_processing.IMAGE_STRETCH__MODE3_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    <div id="IMAGE_STRETCH__MODE3_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">M3 High</span>
+                                    </label>
+                                    {{ form_image_processing.IMAGE_STRETCH__MODE3_HIGHLIGHTS(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    <div id="IMAGE_STRETCH__MODE3_HIGHLIGHTS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+
+                            <div class="tw:divider tw:my-0"></div>
+
+                            <!-- Color/SCNR Section -->
+                            <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">CFA Pattern</span>
+                                    </label>
+                                    {{ form_image_processing.CFA_PATTERN(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
+                                    <div id="CFA_PATTERN-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">SCNR Algo</span>
+                                    </label>
+                                    {{ form_image_processing.SCNR_ALGORITHM(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
+                                    <div id="SCNR_ALGORITHM-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+                            <div class="tw:form-control">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">SCNR Midtones</span>
+                                </label>
+                                {{ form_image_processing.SCNR_MTF_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                <div id="SCNR_MTF_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            </div>
+
+                            <div class="tw:divider tw:my-0"></div>
+
+                            <!-- Denoise Section -->
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Denoise Method</span>
+                                    </label>
+                                    {{ form_image_processing.IMAGE_DENOISE(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
+                                    <div id="IMAGE_DENOISE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Strength (1-5)</span>
+                                    </label>
+                                    {{ form_image_processing.IMAGE_DENOISE_STRENGTH(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    <div id="IMAGE_DENOISE_STRENGTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Bilateral Color</span>
+                                        </label>
+                                        {{ form_image_processing.BILATERAL_SIGMA_COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="BILATERAL_SIGMA_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Bilateral Space</span>
+                                        </label>
+                                        {{ form_image_processing.BILATERAL_SIGMA_SPACE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="BILATERAL_SIGMA_SPACE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tw:divider tw:my-0"></div>
+
+                            <!-- White Balance Section -->
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                        {{ form_image_processing.AUTO_WB(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Auto White Balance</span>
+                                    </label>
+                                    <div id="AUTO_WB-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">R-Factor</span>
+                                        </label>
+                                        {{ form_image_processing.WBR_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="WBR_FACTOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">G-Factor</span>
+                                        </label>
+                                        {{ form_image_processing.WBG_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="WBG_FACTOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">B-Factor</span>
+                                        </label>
+                                        {{ form_image_processing.WBB_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="WBB_FACTOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                    </div>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">R-MTF</span>
+                                        </label>
+                                        {{ form_image_processing.WBR_MTF_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="WBR_MTF_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">G-MTF</span>
+                                        </label>
+                                        {{ form_image_processing.WBG_MTF_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="WBG_MTF_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">B-MTF</span>
+                                        </label>
+                                        {{ form_image_processing.WBB_MTF_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="WBB_MTF_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tw:divider tw:my-0"></div>
+
+                            <!-- Saturation/Gamma/Sharpen Section -->
+                            <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Saturation</span>
+                                    </label>
+                                    {{ form_image_processing.SATURATION_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    <div id="SATURATION_FACTOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Gamma</span>
+                                    </label>
+                                    {{ form_image_processing.GAMMA_CORRECTION(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    <div id="GAMMA_CORRECTION-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Sharpen</span>
+                                    </label>
+                                    {{ form_image_processing.SHARPEN_AMOUNT(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    <div id="SHARPEN_AMOUNT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+
+                            <div class="tw:form-control">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Colormap</span>
+                                </label>
+                                {{ form_image_processing.IMAGE_COLORMAP(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
+                                <div id="IMAGE_COLORMAP-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            </div>
+
+                            <div class="tw:divider tw:my-0"></div>
+
+                            <!-- Border Section -->
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
+                                <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Image Border</span>
+                                <div class="tw:grid tw:grid-cols-4 tw:gap-2">
+                                    {{ form_image_processing.IMAGE_BORDER__TOP(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full', placeholder='Top') }}
+                                    {{ form_image_processing.IMAGE_BORDER__BOTTOM(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full', placeholder='Bottom') }}
+                                    {{ form_image_processing.IMAGE_BORDER__LEFT(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full', placeholder='Left') }}
+                                    {{ form_image_processing.IMAGE_BORDER__RIGHT(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full', placeholder='Right') }}
+                                </div>
+                                <div class="tw:form-control">
+                                    {{ form_image_processing.IMAGE_BORDER__COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full', placeholder='Color R,G,B') }}
+                                    <div id="IMAGE_BORDER__COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                            </div>
+
+                            <div class="tw:form-control">
+                                <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                    {{ form_image_processing.IMAGE_CROP_IMAGE_CIRCLE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Crop to Circle</span>
+                                </label>
+                                <div id="IMAGE_CROP_IMAGE_CIRCLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            </div>
+
+                            <div class="tw:divider tw:my-0"></div>
+
+                            <!-- Geometry Section -->
+                            <div class="tw:flex tw:flex-col tw:gap-4">
+                                <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Geometry Adjustments</span>
+                                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Rotate</span>
+                                        </label>
+                                        {{ form_image_processing.IMAGE_ROTATE(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Angle</span>
+                                        </label>
+                                        {{ form_image_processing.IMAGE_ROTATE_ANGLE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                            {{ form_image_processing.IMAGE_FLIP_V(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Flip V</span>
+                                        </label>
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                            {{ form_image_processing.IMAGE_FLIP_H(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Flip H</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- TAB: PROCESSING -->
+                    <div id="nav-processing" class="tab-pane">
+                        <div class="tw:flex tw:flex-col tw:gap-6">
+                            
+                            <!-- Stacking Section -->
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
+                                <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Stacking</span>
+                                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Count</span>
+                                        </label>
+                                        {{ form_image_processing.IMAGE_STACK_COUNT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Method</span>
+                                        </label>
+                                        {{ form_image_processing.IMAGE_STACK_METHOD(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                </div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                        {{ form_image_processing.IMAGE_STACK_ALIGN(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Align Frames</span>
+                                    </label>
+                                    <div id="IMAGE_STACK_ALIGN-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Sigma</span>
+                                        </label>
+                                        {{ form_image_processing.IMAGE_ALIGN_DETECTSIGMA(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Points</span>
+                                        </label>
+                                        {{ form_image_processing.IMAGE_ALIGN_POINTS(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Min Area</span>
+                                        </label>
+                                        {{ form_image_processing.IMAGE_ALIGN_SOURCEMINAREA(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tw:divider tw:my-0"></div>
+
+                            <!-- Panorama Section -->
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                        {{ form_image_processing.FISH2PANO__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Fisheye to Pano</span>
+                                    </label>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Diameter</span>
+                                        </label>
+                                        {{ form_image_processing.FISH2PANO__DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Rotation</span>
+                                        </label>
+                                        {{ form_image_processing.FISH2PANO__ROTATE_ANGLE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                            {{ form_image_processing.FISH2PANO__FLIP_H(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Flip H</span>
+                                        </label>
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Scale</span>
+                                        </label>
+                                        {{ form_image_processing.FISH2PANO__SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                </div>
+                                <div class="tw:divider tw:my-1"></div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                        {{ form_image_processing.FISH2PANO__ENABLE_CARDINAL_DIRS(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Cardinal Dirs</span>
+                                    </label>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Offset Btm</span>
+                                        </label>
+                                        {{ form_image_processing.FISH2PANO__DIRS_OFFSET_BOTTOM(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Font Scl</span>
+                                        </label>
+                                        {{ form_image_processing.FISH2PANO__OPENCV_FONT_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">PIL Size</span>
+                                        </label>
+                                        {{ form_image_processing.FISH2PANO__PIL_FONT_SIZE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tw:divider tw:my-0"></div>
+
+                            <!-- Circle Mask Section -->
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                        {{ form_image_processing.IMAGE_CIRCLE_MASK__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Circle Mask</span>
+                                    </label>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Diameter</span>
+                                        </label>
+                                        {{ form_image_processing.IMAGE_CIRCLE_MASK__DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Blur</span>
+                                        </label>
+                                        {{ form_image_processing.IMAGE_CIRCLE_MASK__BLUR(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Opacity</span>
+                                        </label>
+                                        {{ form_image_processing.IMAGE_CIRCLE_MASK__OPACITY(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control tw:justify-end">
+                                        <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                            {{ form_image_processing.IMAGE_CIRCLE_MASK__OUTLINE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Outline</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    {# Hidden fields not shown in UI but required for server validation #}
+                    {{ form_image_processing.IMAGE_CIRCLE_MASK__OFFSET_X(type='hidden') }}
+                    {{ form_image_processing.IMAGE_CIRCLE_MASK__OFFSET_Y(type='hidden') }}
+
+                    <!-- TAB: OVERLAYS -->
+                    <div id="nav-overlays" class="tab-pane">
+                        <div class="tw:flex tw:flex-col tw:gap-6">
+                            
+                            <div class="tw:form-control">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Label System</span>
+                                </label>
+                                {{ form_image_processing.IMAGE_LABEL_SYSTEM(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
+                            </div>
+
+                            <div class="tw:form-control">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Label Template</span>
+                                </label>
+                                {{ form_image_processing.IMAGE_LABEL_TEMPLATE(class='tw:textarea tw:textarea-bordered tw:w-full tw:h-32 tw:text-xs tw:font-mono') }}
+                            </div>
+
+                            <div class="tw:form-control">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Extra Text File</span>
+                                </label>
+                                {{ form_image_processing.IMAGE_EXTRA_TEXT(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                            </div>
+
+                            <div class="tw:divider tw:my-0"></div>
+
+                            <!-- Fonts Section -->
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
+                                <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Typography (PIL)</span>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Font File</span>
+                                    </label>
+                                    {{ form_image_processing.TEXT_PROPERTIES__PIL_FONT_FILE(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
+                                </div>
+                                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">PIL Size</span>
+                                        </label>
+                                        {{ form_image_processing.TEXT_PROPERTIES__PIL_FONT_SIZE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Custom Path</span>
+                                        </label>
+                                        {{ form_image_processing.TEXT_PROPERTIES__PIL_FONT_CUSTOM(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                </div>
+                                <div class="tw:divider tw:my-1"></div>
+                                <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Typography (OpenCV)</span>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Face</span>
+                                    </label>
+                                    {{ form_image_processing.TEXT_PROPERTIES__FONT_FACE(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
+                                </div>
+                                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Scale</span>
+                                        </label>
+                                        {{ form_image_processing.TEXT_PROPERTIES__FONT_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Thick</span>
+                                        </label>
+                                        {{ form_image_processing.TEXT_PROPERTIES__FONT_THICKNESS(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Height</span>
+                                        </label>
+                                        {{ form_image_processing.TEXT_PROPERTIES__FONT_HEIGHT(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">X Pos</span>
+                                        </label>
+                                        {{ form_image_processing.TEXT_PROPERTIES__FONT_X(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Y Pos</span>
+                                        </label>
+                                        {{ form_image_processing.TEXT_PROPERTIES__FONT_Y(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Color RGB</span>
+                                        </label>
+                                        {{ form_image_processing.TEXT_PROPERTIES__FONT_COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                </div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                        {{ form_image_processing.TEXT_PROPERTIES__FONT_OUTLINE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Text Outline</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="tw:divider tw:my-0"></div>
+
+                            <!-- Moon Overlay Section -->
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                        {{ form_image_processing.MOON_OVERLAY__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Moon Overlay</span>
+                                    </label>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">X Offset</span>
+                                        </label>
+                                        {{ form_image_processing.MOON_OVERLAY__X(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Y Offset</span>
+                                        </label>
+                                        {{ form_image_processing.MOON_OVERLAY__Y(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                            {{ form_image_processing.MOON_OVERLAY__FLIP_V(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Flip V</span>
+                                        </label>
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                            {{ form_image_processing.MOON_OVERLAY__FLIP_H(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Flip H</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Scale</span>
+                                        </label>
+                                        {{ form_image_processing.MOON_OVERLAY__SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Dark Side</span>
+                                        </label>
+                                        {{ form_image_processing.MOON_OVERLAY__DARK_SIDE_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tw:divider tw:my-0"></div>
+
+                            <!-- Lightgraph Overlay Section -->
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                        {{ form_image_processing.LIGHTGRAPH_OVERLAY__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Lightgraph Overlay</span>
+                                    </label>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Height</span>
+                                        </label>
+                                        {{ form_image_processing.LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Border</span>
+                                        </label>
+                                        {{ form_image_processing.LIGHTGRAPH_OVERLAY__GRAPH_BORDER(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Marker</span>
+                                        </label>
+                                        {{ form_image_processing.LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Y Pos</span>
+                                        </label>
+                                        {{ form_image_processing.LIGHTGRAPH_OVERLAY__Y(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">X Offset</span>
+                                        </label>
+                                        {{ form_image_processing.LIGHTGRAPH_OVERLAY__OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Scale</span>
+                                        </label>
+                                        {{ form_image_processing.LIGHTGRAPH_OVERLAY__SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                    </div>
+                                </div>
+                                <!-- Dense Color List -->
+                                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem;">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Day</span></label>
+                                        {{ form_image_processing.LIGHTGRAPH_OVERLAY__DAY_COLOR(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Dusk</span></label>
+                                        {{ form_image_processing.LIGHTGRAPH_OVERLAY__DUSK_COLOR(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Night</span></label>
+                                        {{ form_image_processing.LIGHTGRAPH_OVERLAY__NIGHT_COLOR(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Moon</span></label>
+                                        {{ form_image_processing.LIGHTGRAPH_OVERLAY__MOONMODE_COLOR(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Hour</span></label>
+                                        {{ form_image_processing.LIGHTGRAPH_OVERLAY__HOUR_COLOR(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Border</span></label>
+                                        {{ form_image_processing.LIGHTGRAPH_OVERLAY__BORDER_COLOR(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Now</span></label>
+                                        {{ form_image_processing.LIGHTGRAPH_OVERLAY__NOW_COLOR(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-0"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Font</span></label>
+                                        {{ form_image_processing.LIGHTGRAPH_OVERLAY__FONT_COLOR(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
+                                    </div>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Opacity</span></label>
+                                        {{ form_image_processing.LIGHTGRAPH_OVERLAY__OPACITY(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">PIL Size</span></label>
+                                        {{ form_image_processing.LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">CV Scale</span></label>
+                                        {{ form_image_processing.LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
+                                    </div>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                            {{ form_image_processing.LIGHTGRAPH_OVERLAY__LABEL(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Labels</span>
+                                        </label>
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                            {{ form_image_processing.LIGHTGRAPH_OVERLAY__HOUR_LINES(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Hour Lines</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tw:divider tw:my-0"></div>
+
+                            <!-- Cardinal Directions Section -->
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                        {{ form_image_processing.CARDINAL_DIRS__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Cardinal Dirs</span>
+                                    </label>
+                                </div>
+                                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                            {{ form_image_processing.CARDINAL_DIRS__SWAP_NS(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Swap N/S</span>
+                                        </label>
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                            {{ form_image_processing.CARDINAL_DIRS__SWAP_EW(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Swap E/W</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem;">
+                                    {{ form_image_processing.CARDINAL_DIRS__CHAR_NORTH(class='tw:input tw:input-bordered tw:input-xs tw:h-7', placeholder='N') }}
+                                    {{ form_image_processing.CARDINAL_DIRS__CHAR_SOUTH(class='tw:input tw:input-bordered tw:input-xs tw:h-7', placeholder='S') }}
+                                    {{ form_image_processing.CARDINAL_DIRS__CHAR_EAST(class='tw:input tw:input-bordered tw:input-xs tw:h-7', placeholder='E') }}
+                                    {{ form_image_processing.CARDINAL_DIRS__CHAR_WEST(class='tw:input tw:input-bordered tw:input-xs tw:h-7', placeholder='W') }}
+                                </div>
+                                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Color RGB</span></label>
+                                        {{ form_image_processing.CARDINAL_DIRS__FONT_COLOR(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1"><span class="tw:label-text tw:text-[0.5625rem] tw:uppercase tw:opacity-60">Diameter</span></label>
+                                        {{ form_image_processing.CARDINAL_DIRS__DIAMETER(class='tw:input tw:input-bordered tw:input-xs tw:h-7 tw:w-full') }}
+                                    </div>
+                                </div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                        {{ form_image_processing.CARDINAL_DIRS__OUTLINE_CIRCLE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Outline Circle</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    {# Hidden fields not shown in UI but required for server validation #}
+                    {{ form_image_processing.CARDINAL_DIRS__OFFSET_X(type='hidden') }}
+                    {{ form_image_processing.CARDINAL_DIRS__OFFSET_Y(type='hidden') }}
+                    {{ form_image_processing.CARDINAL_DIRS__OFFSET_TOP(type='hidden') }}
+                    {{ form_image_processing.CARDINAL_DIRS__OFFSET_LEFT(type='hidden') }}
+                    {{ form_image_processing.CARDINAL_DIRS__OFFSET_RIGHT(type='hidden') }}
+                    {{ form_image_processing.CARDINAL_DIRS__OFFSET_BOTTOM(type='hidden') }}
+                    {{ form_image_processing.CARDINAL_DIRS__OPENCV_FONT_SCALE(type='hidden') }}
+                    {{ form_image_processing.CARDINAL_DIRS__PIL_FONT_SIZE(type='hidden') }}
+
+
+                    <div id="nav-location" class="tab-pane">
+                        <div class="tw:flex tw:flex-col tw:gap-6">
+                            
+                            <div class="tw:form-control">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Lens Image Circle</span>
+                                </label>
+                                {{ form_image_processing.LENS_IMAGE_CIRCLE(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                <div id="LENS_IMAGE_CIRCLE-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                            </div>
+
+                            <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Lens Offset X</span>
+                                    </label>
+                                    {{ form_image_processing.LENS_OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                </div>
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Lens Offset Y</span>
+                                    </label>
+                                    {{ form_image_processing.LENS_OFFSET_Y(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                </div>
+                            </div>
+
+                            <div class="tw:form-control">
+                                <label class="tw:label tw:py-1">
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Lens Azimuth</span>
+                                </label>
+                                {{ form_image_processing.LENS_AZIMUTH(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                <div id="LENS_AZIMUTH-error" class="tw:text-error tw:text-xs tw:mt-1.5" style="display: none;"></div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
             </div>
-        </div>
-        <div class="col-sm-8">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CALIBRATE_MANUAL_OFFSET.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CALIBRATE_MANUAL_OFFSET(class='form-control bg-secondary') }}
-            <div id="IMAGE_CALIBRATE_MANUAL_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Some cameras need a manual offset (libcamera) if darks are not applied.</div>
-            <div>Example: imx477 the offset is 4000 (full 16-bits)</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CALIBRATE_FIX_HOLES.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.IMAGE_CALIBRATE_FIX_HOLES(class='form-check-input') }}
-                <div id="IMAGE_CALIBRATE_FIX_HOLES-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>Fix holes left by dark frame calibration (BETA)</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CALIBRATE_HOLE_THOLD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CALIBRATE_HOLE_THOLD(class='form-control bg-secondary') }}
-            <div id="IMAGE_CALIBRATE_HOLE_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Percentage of max ADU for fixing holes left by dark frames [default: 30%]</div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CCD_BIT_DEPTH.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.CCD_BIT_DEPTH(class='form-select bg-secondary') }}
-            <div id="CCD_BIT_DEPTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div class="col-sm-8">Bit depth of data returned by the camera</div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.DETECT_MASK.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_image_processing.DETECT_MASK(class='form-control bg-secondary') }}
-            <div id="DETECT_MASK-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-5">
-            <div>Image mask file for detection area.  Must be a PNG</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.SQM_FOV_DIV.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.SQM_FOV_DIV(class='form-select bg-secondary') }}
-            <div id="SQM_FOV_DIV-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Central region to use for SQM calculations (not used if ROI defined)</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2 col-form-label">
-            SQM/Star Region of Interest
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.SQM_ROI_X1(class='form-control bg-secondary') }}
-            <div id="SQM_ROI_X1-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-
-        <div class="col-sm-2">
-            {{ form_image_processing.SQM_ROI_Y1(class='form-control bg-secondary') }}
-            <div id="SQM_ROI_Y1-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div>x1, y1</div>
-            <div>* Not used if Detection Mask is defined *</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2 col-form-label"></div>
-        <div class="col-sm-2">
-            {{ form_image_processing.SQM_ROI_X2(class='form-control bg-secondary') }}
-            <div id="SQM_ROI_X2-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-
-        <div class="col-sm-2">
-            {{ form_image_processing.SQM_ROI_Y2(class='form-control bg-secondary') }}
-            <div id="SQM_ROI_Y2-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">x2, y2</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.NIGHT_CONTRAST_ENHANCE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.NIGHT_CONTRAST_ENHANCE(class='form-check-input') }}
-                <div id="NIGHT_CONTRAST_ENHANCE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Apply CLAHE contrast enhancement</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CLAHE_CLIPLIMIT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.CLAHE_CLIPLIMIT(class='form-control bg-secondary') }}
-            <div id="CLAHE_CLIPLIMIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Increase value for more contrast</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CLAHE_GRIDSIZE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.CLAHE_GRIDSIZE(class='form-control bg-secondary') }}
-            <div id="CLAHE_GRIDSIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div><a href="https://docs.opencv.org/4.x/d5/daf/tutorial_py_histogram_equalization.html" target="_blank">OpenCV CLAHE Tutorial</a></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CONTRAST_ENHANCE_16BIT.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.CONTRAST_ENHANCE_16BIT(class='form-check-input') }}
-                <div id="CONTRAST_ENHANCE_16BIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>Perform CLAHE in 16-bit mode (early in order of operations)</div>
-            <div>Increase the clip limit in 16-bit mode by 3-4 times for similiar results</div>
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Requires 2GB of RAM for images over 3000x1500 (for 16-bit mode)</div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__CLASSNAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_image_processing.IMAGE_STRETCH__CLASSNAME(class='form-select bg-secondary') }}
-            <div id="IMAGE_STRETCH__CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6"></div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__MODE1_GAMMA.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__MODE1_GAMMA(class='form-control bg-secondary') }}
-            <div id="IMAGE_STRETCH__MODE1_GAMMA-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__MODE1_STDDEVS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__MODE1_STDDEVS(class='form-control bg-secondary') }}
-            <div id="IMAGE_STRETCH__MODE1_STDDEVS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Black level cutoff in standard deviations.  Lower number results in greater dynamic range.</div>
-    </div>
-
-    <hr>
-    
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__MODE2_SHADOWS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__MODE2_SHADOWS(class='form-control bg-secondary') }}
-            <div id="IMAGE_STRETCH__MODE2_SHADOWS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Default 0.0 - With 0.03 this gives a nice subtle effect</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__MODE2_MIDTONES.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__MODE2_MIDTONES(class='form-control bg-secondary') }}
-            <div id="IMAGE_STRETCH__MODE2_MIDTONES-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Values less than 0.5 enhances midtones, greater than 0.5 darkens midtones (0.5 results in the original image)</div>
-            <div>0.25 - 0.35 are good values to start</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__MODE2_HIGHLIGHTS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__MODE2_HIGHLIGHTS(class='form-control bg-secondary') }}
-            <div id="IMAGE_STRETCH__MODE2_HIGHLIGHTS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Default 1.0 - It is recommended not to adjust this setting</div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__MODE3_BLACK_CLIP.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__MODE3_BLACK_CLIP(class='form-control bg-secondary') }}
-            <div id="IMAGE_STRETCH__MODE3_BLACK_CLIP-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Default -2.8 - It is recommended not to adjust this setting</div>
-        </div>
-    </div>
-    
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__MODE3_SHADOWS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__MODE3_SHADOWS(class='form-control bg-secondary') }}
-            <div id="IMAGE_STRETCH__MODE3_SHADOWS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Default 0.0 - With 0.03 this gives a nice subtle effect</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__MODE3_MIDTONES.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__MODE3_MIDTONES(class='form-control bg-secondary') }}
-            <div id="IMAGE_STRETCH__MODE3_MIDTONES-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Values less than 0.5 enhances midtones, greater than 0.5 darkens midtones (0.5 results in the original image)</div>
-            <div>0.25 - 0.35 are good values to start</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__MODE3_HIGHLIGHTS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__MODE3_HIGHLIGHTS(class='form-control bg-secondary') }}
-            <div id="IMAGE_STRETCH__MODE3_HIGHLIGHTS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Default 1.0 - It is recommended not to adjust this setting</div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CFA_PATTERN.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.CFA_PATTERN(class='form-select bg-secondary') }}
-            <div id="CFA_PATTERN-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Color Filter Array/Bayer Pattern</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.SCNR_ALGORITHM.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_image_processing.SCNR_ALGORITHM(class='form-select bg-secondary') }}
-            <div id="SCNR_ALGORITHM-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7">
-            <div>SCNR algorithm to apply to reduce green bias in image</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.SCNR_MTF_MIDTONES.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.SCNR_MTF_MIDTONES(class='form-control bg-secondary') }}
-            <div id="SCNR_MTF_MIDTONES-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Range 0.5-1.0.  0.5 = no change</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_DENOISE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_image_processing.IMAGE_DENOISE(class='form-select bg-secondary') }}
-            <div id="IMAGE_DENOISE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7">
-            <div>Denoise algorithm to reduce image noise (applied before stretch). Stars are preserved.<br>
-            <small class="text-muted">
-            <b>Gaussian</b> — Fastest - Smooths background glow, stars masked out. High strength can soften faint detail.<br>
-            <b>Median</b> — Fast - Removes salt and pepper noise, everything else untouched. Poorer at backgrounds<br>
-            <b>Bilateral</b> — Medium - Smooths read noise but keeps edges sharp. Could introduce "patchiness"<br>
-            <b>Wavelet</b> — Slow - All-round best quality, handles any noise type.
-            </small></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_DENOISE_STRENGTH.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_DENOISE_STRENGTH(class='form-control bg-secondary') }}
-            <div id="IMAGE_DENOISE_STRENGTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Range: 1-5. Higher = stronger smoothing. High values increase broader effect. Low values preserve fine details.</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.BILATERAL_SIGMA_COLOR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.BILATERAL_SIGMA_COLOR(class='form-control bg-secondary') }}
-            <div id="BILATERAL_SIGMA_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">How much brightness difference to blend across (1-150). Low (10-20) preserves star edges tightly. High (50+) smooths more aggressively. Default: 10 </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.BILATERAL_SIGMA_SPACE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.BILATERAL_SIGMA_SPACE(class='form-control bg-secondary') }}
-            <div id="BILATERAL_SIGMA_SPACE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">How far away pixels can influence each other (1-150). Low (15-35) for fine detail. High (50+) for broad smooth gradients. Default: 15</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.WBR_FACTOR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.WBR_FACTOR(class='form-control bg-secondary') }}
-            <div id="WBR_FACTOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">1.0 is disabled</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.WBG_FACTOR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.WBG_FACTOR(class='form-control bg-secondary') }}
-            <div id="WBG_FACTOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.WBB_FACTOR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.WBB_FACTOR(class='form-control bg-secondary') }}
-            <div id="WBB_FACTOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.WBR_MTF_MIDTONES.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.WBR_MTF_MIDTONES(class='form-control bg-secondary') }}
-            <div id="WBR_MTF_MIDTONES-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Midtone Transfer Function stretch</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.WBG_MTF_MIDTONES.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.WBG_MTF_MIDTONES(class='form-control bg-secondary') }}
-            <div id="WBG_MTF_MIDTONES-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>0.5 means no change.  Less than 0.5 increases the color, greater than 0.5 decreases the color</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.WBB_MTF_MIDTONES.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.WBB_MTF_MIDTONES(class='form-control bg-secondary') }}
-            <div id="WBB_MTF_MIDTONES-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.AUTO_WB.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.AUTO_WB(class='form-check-input') }}
-                <div id="AUTO_WB-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Auto WB is applied after manual WB settings</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.SATURATION_FACTOR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.SATURATION_FACTOR(class='form-control bg-secondary') }}
-            <div id="SATURATION_FACTOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">1.0 is disabled.  1.5 is a good starting point</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.GAMMA_CORRECTION.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.GAMMA_CORRECTION(class='form-control bg-secondary') }}
-            <div id="GAMMA_CORRECTION-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">1.0 is disabled.</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.SHARPEN_AMOUNT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.SHARPEN_AMOUNT(class='form-control bg-secondary') }}
-            <div id="SHARPEN_AMOUNT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">0.0 is disabled.  Unsharp mask highpass filter.  0.5 is a good starting point, max 2.0</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_COLORMAP.label }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_image_processing.IMAGE_COLORMAP(class='form-control bg-secondary') }}
-            <div id="IMAGE_COLORMAP-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">Apply colormap to show image flatness</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_BORDER__TOP.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_BORDER__TOP(class='form-control bg-secondary') }}
-            <div id="IMAGE_BORDER__TOP-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Add additional boarder area to the image</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_BORDER__LEFT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_BORDER__LEFT(class='form-control bg-secondary') }}
-            <div id="IMAGE_BORDER__LEFT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_BORDER__RIGHT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_BORDER__RIGHT(class='form-control bg-secondary') }}
-            <div id="IMAGE_BORDER__RIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_BORDER__BOTTOM.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_BORDER__BOTTOM(class='form-control bg-secondary') }}
-            <div id="IMAGE_BORDER__BOTTOM-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_BORDER__COLOR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_BORDER__COLOR(class='form-control bg-secondary') }}
-            <div id="IMAGE_BORDER__COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Border color in R,G,B</div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CROP_IMAGE_CIRCLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.IMAGE_CROP_IMAGE_CIRCLE(class='form-check-input') }}
-                <div id="IMAGE_CROP_IMAGE_CIRCLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Crop image to image circle boundary</div>
-    </div>
-
-    <hr>
-
-    <div>
-      <h5>These options are applied to the unprocessed image automatically</h5>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_ROTATE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_image_processing.IMAGE_ROTATE(class='form-select bg-secondary') }}
-            <div id="IMAGE_ROTATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7">
-            <div>Image rotation options</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_ROTATE_ANGLE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_ROTATE_ANGLE(class='form-control bg-secondary') }}
-            <div id="IMAGE_ROTATE_ANGLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Rotate by arbitrary angle (0 == disabled)</div>
-            <div>Combine with cropping and image circle mask to clean up image</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_FLIP_V.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.IMAGE_FLIP_V(class='form-check-input') }}
-                <div id="IMAGE_FLIP_V-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Flip timelapse images vertically</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_FLIP_H.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.IMAGE_FLIP_H(class='form-check-input') }}
-                <div id="IMAGE_FLIP_H-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Flip timelapse images horizontally</div>
-    </div>
-
-  </div><!-- end image tab -->
-  <div class="tab-pane fade" id="nav-processing" role="tabpanel" aria-labelledby="nav-processing-tab">
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STACK_COUNT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STACK_COUNT(class='form-select bg-secondary') }}
-            <div id="IMAGE_STACK_COUNT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Number of images to be stacked</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STACK_METHOD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STACK_METHOD(class='form-select bg-secondary') }}
-            <div id="IMAGE_STACK_METHOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Method to use for image stacking</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STACK_ALIGN.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.IMAGE_STACK_ALIGN(class='form-check-input') }}
-                <div id="IMAGE_STACK_ALIGN-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span>Here be dragons</div>
-            <div>Align images before stacking.</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_ALIGN_DETECTSIGMA.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_ALIGN_DETECTSIGMA(class='form-control bg-secondary') }}
-            <div id="IMAGE_ALIGN_DETECTSIGMA-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Factor of background std-dev above which is considered a detection.</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_ALIGN_POINTS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_ALIGN_POINTS(class='form-control bg-secondary') }}
-            <div id="IMAGE_ALIGN_POINTS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">The maximum number of control point-sources to find the transformation.</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_ALIGN_SOURCEMINAREA.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_ALIGN_SOURCEMINAREA(class='form-control bg-secondary') }}
-            <div id="IMAGE_ALIGN_SOURCEMINAREA-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Minimum number of connected pixels to be considered a source.</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__ENABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.FISH2PANO__ENABLE(class='form-check-input') }}
-                <div id="FISH2PANO__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__DIAMETER.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__DIAMETER(class='form-control bg-secondary') }}
-            <div id="FISH2PANO__DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Diameter in pixels</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__ROTATE_ANGLE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__ROTATE_ANGLE(class='form-control bg-secondary') }}
-            <div id="FISH2PANO__ROTATE_ANGLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Min: -180, Max: 180 - Image rotation for panorama</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__FLIP_H.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.FISH2PANO__FLIP_H(class='form-check-input') }}
-                <div id="FISH2PANO__FLIP_H-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__SCALE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__SCALE(class='form-control bg-secondary') }}
-            <div id="FISH2PANO__SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Increasing scale increases processing time</div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__ENABLE_CARDINAL_DIRS.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.FISH2PANO__ENABLE_CARDINAL_DIRS(class='form-check-input') }}
-                <div id="FISH2PANO__ENABLE_CARDINAL_DIRS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Disabling Cardinal Directions (Image Tab) will also disable here</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__DIRS_OFFSET_BOTTOM.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__DIRS_OFFSET_BOTTOM(class='form-control bg-secondary') }}
-            <div id="FISH2PANO__DIRS_OFFSET_BOTTOM-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__OPENCV_FONT_SCALE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__OPENCV_FONT_SCALE(class='form-control bg-secondary') }}
-            <div id="FISH2PANO__OPENCV_FONT_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__PIL_FONT_SIZE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__PIL_FONT_SIZE(class='form-control bg-secondary') }}
-            <div id="FISH2PANO__PIL_FONT_SIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CIRCLE_MASK__ENABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.IMAGE_CIRCLE_MASK__ENABLE(class='form-check-input') }}
-                <div id="IMAGE_CIRCLE_MASK__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CIRCLE_MASK__DIAMETER.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CIRCLE_MASK__DIAMETER(class='form-control bg-secondary') }}
-            <div id="IMAGE_CIRCLE_MASK__DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Diameter in pixels</div>
-            <div><a href="{{ url_for('indi_allsky.image_circle_helper_view') }}" class="text-decoration-none link-info" target="_blank">Image Circle Helper</a></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CIRCLE_MASK__OFFSET_X.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CIRCLE_MASK__OFFSET_X(class='form-control bg-secondary') }}
-            <div id="IMAGE_CIRCLE_MASK__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Not Used - Use Lens offsets on Location Tab</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CIRCLE_MASK__OFFSET_Y.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CIRCLE_MASK__OFFSET_Y(class='form-control bg-secondary') }}
-            <div id="IMAGE_CIRCLE_MASK__OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CIRCLE_MASK__BLUR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CIRCLE_MASK__BLUR(class='form-control bg-secondary') }}
-            <div id="IMAGE_CIRCLE_MASK__BLUR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CIRCLE_MASK__OPACITY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CIRCLE_MASK__OPACITY(class='form-control bg-secondary') }}
-            <div id="IMAGE_CIRCLE_MASK__OPACITY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CIRCLE_MASK__OUTLINE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.IMAGE_CIRCLE_MASK__OUTLINE(class='form-check-input') }}
-                <div id="IMAGE_CIRCLE_MASK__OUTLINE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Outline image circle.  Opacity will be set to 0%.</div>
-    </div>
-
-  </div><!-- end processing tab -->
-  <div class="tab-pane fade" id="nav-overlays" role="tabpanel" aria-labelledby="nav-overlays-tab">
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_LABEL_SYSTEM.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_LABEL_SYSTEM(class='form-select bg-secondary') }}
-            <div id="IMAGE_LABEL_SYSTEM-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Image Label System</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_LABEL_TEMPLATE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_image_processing.IMAGE_LABEL_TEMPLATE(class='form-control bg-secondary', rows='12') }}
-            <div id="IMAGE_LABEL_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div><a href="https://docs.python.org/3/library/string.html#formatspec" class="text-decoration-none link-info" target="_blank">Python format syntax</a></div>
-            <div><a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" class="text-decoration-none link-info" target="_blank">Python datetime format codes</a></div>
-            <div>Available variables:</div>
-            <div><pre>timestamp, ts, day_date, exposure, rational_exp, gain_f, temp, temp_unit,<br>sidereal_time, sqm, stars, detections, stack_method, stack_count, stretch<br>location, owner, latitude, longitude, kpindex, ovation_max,<br>sun_alt, moon_alt, moon_phase, sun_moon_sep, moon_up, sun_moon_sep,<br>mercury_alt, mercury_up, venus_alt, venus_up, venus_phase,<br>mars_alt, mars_up, jupiter_alt, jupiter_up, saturn_alt, saturn_up,<br>iss_alt, iss_up, iss_next_h, iss_next_alt, hst_alt, hst_up, hst_next_h,<br>hst_next_alt, tiangong_alt, tiangong_up, tiangong_next_h, tiangong_next_alt</pre></div>
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Image-Labels" class="text-decoration-none link-info" target="_blank">Image Labels Wiki</a></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_EXTRA_TEXT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_image_processing.IMAGE_EXTRA_TEXT(class='form-control bg-secondary') }}
-            <div id="IMAGE_EXTRA_TEXT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-5">
-            <div>File containing extra text for image</div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.TEXT_PROPERTIES__PIL_FONT_FILE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_image_processing.TEXT_PROPERTIES__PIL_FONT_FILE(class='form-select bg-secondary') }}
-            <div id="TEXT_PROPERTIES__PIL_FONT_FILE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">Pillow supports TrueType and OpenType fonts</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.TEXT_PROPERTIES__PIL_FONT_SIZE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.TEXT_PROPERTIES__PIL_FONT_SIZE(class='form-control bg-secondary') }}
-            <div id="TEXT_PROPERTIES__PIL_FONT_SIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Size may be overridden in template</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.TEXT_PROPERTIES__PIL_FONT_CUSTOM.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_image_processing.TEXT_PROPERTIES__PIL_FONT_CUSTOM(class='form-control bg-secondary') }}
-            <div id="TEXT_PROPERTIES__PIL_FONT_CUSTOM-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-5">Custom TrueType font</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.TEXT_PROPERTIES__FONT_FACE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_image_processing.TEXT_PROPERTIES__FONT_FACE(class='form-select bg-secondary') }}
-            <div id="TEXT_PROPERTIES__FONT_FACE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">Font face for image metadata</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.TEXT_PROPERTIES__FONT_SCALE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.TEXT_PROPERTIES__FONT_SCALE(class='form-control bg-secondary') }}
-            <div id="TEXT_PROPERTIES__FONT_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Font size</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.TEXT_PROPERTIES__FONT_THICKNESS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.TEXT_PROPERTIES__FONT_THICKNESS(class='form-control bg-secondary') }}
-            <div id="TEXT_PROPERTIES__FONT_THICKNESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Font thickness</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.TEXT_PROPERTIES__FONT_HEIGHT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.TEXT_PROPERTIES__FONT_HEIGHT(class='form-control bg-secondary') }}
-            <div id="TEXT_PROPERTIES__FONT_HEIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Font height for row spacing</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.TEXT_PROPERTIES__FONT_X.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.TEXT_PROPERTIES__FONT_X(class='form-control bg-secondary') }}
-            <div id="TEXT_PROPERTIES__FONT_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">X coordinate to start writing metadata - Maybe overriden in template</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.TEXT_PROPERTIES__FONT_Y.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.TEXT_PROPERTIES__FONT_Y(class='form-control bg-secondary') }}
-            <div id="TEXT_PROPERTIES__FONT_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Y coordinate to start writing metadata</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.TEXT_PROPERTIES__FONT_COLOR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.TEXT_PROPERTIES__FONT_COLOR(class='form-control bg-secondary') }}
-            <div id="TEXT_PROPERTIES__FONT_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Font color in R,G,B - May be overriden in template</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.TEXT_PROPERTIES__FONT_OUTLINE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.TEXT_PROPERTIES__FONT_OUTLINE(class='form-check-input') }}
-                <div id="TEXT_PROPERTIES__FONT_OUTLINE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Add black outline to text</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.MOON_OVERLAY__ENABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.MOON_OVERLAY__ENABLE(class='form-check-input') }}
-                <div id="MOON_OVERLAY__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.MOON_OVERLAY__X.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.MOON_OVERLAY__X(class='form-control bg-secondary') }}
-            <div id="MOON_OVERLAY__X-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Negative is offset from the right side of image (Not validated with image size)</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.MOON_OVERLAY__Y.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.MOON_OVERLAY__Y(class='form-control bg-secondary') }}
-            <div id="MOON_OVERLAY__Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Negative is offset from the bottom of image</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.MOON_OVERLAY__FLIP_V.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.MOON_OVERLAY__FLIP_V(class='form-check-input') }}
-                <div id="MOON_OVERLAY__FLIP_V-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>Flipping Vertically and Horizontal should show view from Southern Hemisphere</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.MOON_OVERLAY__FLIP_H.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.MOON_OVERLAY__FLIP_H(class='form-check-input') }}
-                <div id="MOON_OVERLAY__FLIP_H-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.MOON_OVERLAY__SCALE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.MOON_OVERLAY__SCALE(class='form-control bg-secondary') }}
-            <div id="MOON_OVERLAY__SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Original Moon image is 400x400</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.MOON_OVERLAY__DARK_SIDE_SCALE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.MOON_OVERLAY__DARK_SIDE_SCALE(class='form-control bg-secondary') }}
-            <div id="MOON_OVERLAY__DARK_SIDE_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Default: 0.4 - 0.0 would make the shaded area completely black</div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__ENABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.LIGHTGRAPH_OVERLAY__ENABLE(class='form-check-input') }}
-                <div id="LIGHTGRAPH_OVERLAY__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT(class='form-control bg-secondary') }}
-            <div id="LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__GRAPH_BORDER.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__GRAPH_BORDER(class='form-control bg-secondary') }}
-            <div id="LIGHTGRAPH_OVERLAY__GRAPH_BORDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE(class='form-control bg-secondary') }}
-            <div id="LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__Y.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__Y(class='form-control bg-secondary') }}
-            <div id="LIGHTGRAPH_OVERLAY__Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Negative is offset from the bottom of image</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__OFFSET_X.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__OFFSET_X(class='form-control bg-secondary') }}
-            <div id="LIGHTGRAPH_OVERLAY__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Offset from center</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__SCALE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__SCALE(class='form-control bg-secondary') }}
-            <div id="LIGHTGRAPH_OVERLAY__SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Default size: 1446 x 86 (including borders)</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__DAY_COLOR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__DAY_COLOR(class='form-control bg-secondary') }}
-            <div id="LIGHTGRAPH_OVERLAY__DAY_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Color in R,G,B</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__DUSK_COLOR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__DUSK_COLOR(class='form-control bg-secondary') }}
-            <div id="LIGHTGRAPH_OVERLAY__DUSK_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__NIGHT_COLOR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__NIGHT_COLOR(class='form-control bg-secondary') }}
-            <div id="LIGHTGRAPH_OVERLAY__NIGHT_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__MOONMODE_COLOR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__MOONMODE_COLOR(class='form-control bg-secondary') }}
-            <div id="LIGHTGRAPH_OVERLAY__MOONMODE_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__HOUR_COLOR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__HOUR_COLOR(class='form-control bg-secondary') }}
-            <div id="LIGHTGRAPH_OVERLAY__HOUR_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__BORDER_COLOR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__BORDER_COLOR(class='form-control bg-secondary') }}
-            <div id="LIGHTGRAPH_OVERLAY__BORDER_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__NOW_COLOR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__NOW_COLOR(class='form-control bg-secondary') }}
-            <div id="LIGHTGRAPH_OVERLAY__NOW_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__FONT_COLOR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__FONT_COLOR(class='form-control bg-secondary') }}
-            <div id="LIGHTGRAPH_OVERLAY__FONT_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__OPACITY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__OPACITY(class='form-control bg-secondary') }}
-            <div id="LIGHTGRAPH_OVERLAY__OPACITY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE(class='form-control bg-secondary') }}
-            <div id="LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE(class='form-control bg-secondary') }}
-            <div id="LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__LABEL.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.LIGHTGRAPH_OVERLAY__LABEL(class='form-check-input') }}
-                <div id="LIGHTGRAPH_OVERLAY__LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LIGHTGRAPH_OVERLAY__HOUR_LINES.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.LIGHTGRAPH_OVERLAY__HOUR_LINES(class='form-check-input') }}
-                <div id="LIGHTGRAPH_OVERLAY__HOUR_LINES-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__ENABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.CARDINAL_DIRS__ENABLE(class='form-check-input') }}
-                <div id="CARDINAL_DIRS__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Cardinal directions are based on the Azimuth for the Lens/Camera in the Location Tab</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__SWAP_NS.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.CARDINAL_DIRS__SWAP_NS(class='form-check-input') }}
-                <div id="CARDINAL_DIRS__SWAP_NS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__SWAP_EW.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.CARDINAL_DIRS__SWAP_EW(class='form-check-input') }}
-                <div id="CARDINAL_DIRS__SWAP_EW-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__FONT_COLOR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__FONT_COLOR(class='form-control bg-secondary') }}
-            <div id="CARDINAL_DIRS__FONT_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Font color in R,G,B</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__CHAR_NORTH.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_image_processing.CARDINAL_DIRS__CHAR_NORTH(class='form-control bg-secondary') }}
-            <div id="CARDINAL_DIRS__CHAR_NORTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-9">Blank to not show direction</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__CHAR_EAST.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_image_processing.CARDINAL_DIRS__CHAR_EAST(class='form-control bg-secondary') }}
-            <div id="CARDINAL_DIRS__CHAR_EAST-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-9"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__CHAR_WEST.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_image_processing.CARDINAL_DIRS__CHAR_WEST(class='form-control bg-secondary') }}
-            <div id="CARDINAL_DIRS__CHAR_WEST-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-9"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__CHAR_SOUTH.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_image_processing.CARDINAL_DIRS__CHAR_SOUTH(class='form-control bg-secondary') }}
-            <div id="CARDINAL_DIRS__CHAR_SOUTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-9"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__DIAMETER.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__DIAMETER(class='form-control bg-secondary') }}
-            <div id="CARDINAL_DIRS__DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__OFFSET_X.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__OFFSET_X(class='form-control bg-secondary') }}
-            <div id="CARDINAL_DIRS__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Not Used - Use Lens offsets on Image Tab</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__OFFSET_Y.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__OFFSET_Y(class='form-control bg-secondary') }}
-            <div id="CARDINAL_DIRS__OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__OFFSET_TOP.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__OFFSET_TOP(class='form-control bg-secondary') }}
-            <div id="CARDINAL_DIRS__OFFSET_TOP-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__OFFSET_LEFT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__OFFSET_LEFT(class='form-control bg-secondary') }}
-            <div id="CARDINAL_DIRS__OFFSET_LEFT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__OFFSET_RIGHT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__OFFSET_RIGHT(class='form-control bg-secondary') }}
-            <div id="CARDINAL_DIRS__OFFSET_RIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__OFFSET_BOTTOM.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__OFFSET_BOTTOM(class='form-control bg-secondary') }}
-            <div id="CARDINAL_DIRS__OFFSET_BOTTOM-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__OPENCV_FONT_SCALE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__OPENCV_FONT_SCALE(class='form-control bg-secondary') }}
-            <div id="CARDINAL_DIRS__OPENCV_FONT_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__PIL_FONT_SIZE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__PIL_FONT_SIZE(class='form-control bg-secondary') }}
-            <div id="CARDINAL_DIRS__PIL_FONT_SIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.CARDINAL_DIRS__OUTLINE_CIRCLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.CARDINAL_DIRS__OUTLINE_CIRCLE(class='form-check-input') }}
-                <div id="CARDINAL_DIRS__OUTLINE_CIRCLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>Enable for debugging</div>
-        </div>
-    </div>
-
-  </div><!-- end overlays tab -->
-  <div class="tab-pane fade" id="nav-location" role="tabpanel" aria-labelledby="nav-location-tab">
-
-    <hr>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LENS_IMAGE_CIRCLE.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LENS_IMAGE_CIRCLE(class='form-control bg-secondary') }}
-            <div id="LENS_IMAGE_CIRCLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Image circle in pixels.  If you cannot see the edge of the image circle, just ensure this number is larger than the diagonal.</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LENS_OFFSET_X.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LENS_OFFSET_X(class='form-control bg-secondary') }}
-            <div id="LENS_OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>X Offset from center</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LENS_OFFSET_Y.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LENS_OFFSET_Y(class='form-control bg-secondary') }}
-            <div id="LENS_OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Y Offset from center</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LENS_AZIMUTH.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LENS_AZIMUTH(class='form-control bg-secondary') }}
-            <div id="LENS_AZIMUTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> This affects Cardinal directions</div>
-        </div>
-    </div>
-
-  </div><!-- end location tab -->
-</div>
-
     </form>
-
 </div>
 
 <script>
 function showImage(image_b64) {
-    console.log('Showing image');
-
-    if (image_b64 == null) {
-        return;
-    }
-
+    if (image_b64 == null) return;
 
     img = new Image();
     img.onload = function() {
-        $('#fits-image').attr({
-            'src': this.src,
-        });
+        $('#fits-image').attr('src', this.src);
     };
 
-
-    if ($('#OUTPUT_IMAGE_TYPE').val() == 'png') {
-        console.log('PNG');
-        var mime_type = "image/png";
-    } else {
-        console.log('JPEG');
-        var mime_type = "image/jpeg";
-    }
-
+    var mime_type = ($('#OUTPUT_IMAGE_TYPE').val() == 'png') ? "image/png" : "image/jpeg";
     img.src = "data:" + mime_type + ";base64," + image_b64;
 }
-
 
 function setResizeHandler(callback, timeout) {
     var timer_id = undefined;
     $(window).on("resize", function() {
-        if(timer_id != undefined) {
-            clearTimeout(timer_id);
-            timer_id = undefined;
-        }
+        if(timer_id != undefined) clearTimeout(timer_id);
         timer_id = setTimeout(function() {
             timer_id = undefined;
             callback();
@@ -1976,246 +1136,113 @@ function setResizeHandler(callback, timeout) {
     });
 }
 
-function resize_callback() {
-    if (json_data['image_b64']) {
-        showImage(json_data['image_b64']);
-    };
-}
-setResizeHandler(resize_callback, 200);
-
+setResizeHandler(function() {
+    if (json_data['image_b64']) showImage(json_data['image_b64']);
+}, 200);
 
 function goFullscreen(elem) {
-    if(fullscreen) {
-        closeFullscreen();
-    } else {
-        openFullscreen(elem);
-    }
+    if(fullscreen) closeFullscreen();
+    else openFullscreen(elem);
 }
 
 function openFullscreen(elem) {
-    if (elem.requestFullscreen) {
-        elem.requestFullscreen();
-    } else if (elem.webkitRequestFullscreen) { /* Safari */
-        elem.webkitRequestFullscreen();
-    } else if (elem.msRequestFullscreen) { /* IE11 */
-        elem.msRequestFullscreen();
-    }
-
+    if (elem.requestFullscreen) elem.requestFullscreen();
+    else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+    else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
     fullscreen = true;
 }
 
 function closeFullscreen() {
-    if (document.exitFullscreen) {
-        document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) { /* Safari */
-        document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) { /* IE11 */
-        document.msExitFullscreen();
-    }
-
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    else if (document.msExitFullscreen) document.msExitFullscreen();
     fullscreen = false;
 }
 
-
 const successMessage = $('#success-message');
-const failureMessage = $('#failure-message');
+
+// Tab switching handled by indi-allsky-tabs.js
+
 const field_names = [
-    'csrf_token',
-    'CAMERA_ID',
-    'FRAME_TYPE',
-    'OUTPUT_IMAGE_TYPE',
-    'FITS_ID',
-    'LENS_IMAGE_CIRCLE',
-    'LENS_OFFSET_X',
-    'LENS_OFFSET_Y',
-    'LENS_AZIMUTH',
-    'CCD_BIT_DEPTH',
-    'IMAGE_CALIBRATE_MANUAL_OFFSET',
-    'IMAGE_CALIBRATE_HOLE_THOLD',
-    'CLAHE_CLIPLIMIT',
-    'CLAHE_GRIDSIZE',
-    'IMAGE_STRETCH__CLASSNAME',
-    'IMAGE_STRETCH__MODE1_GAMMA',
-    'IMAGE_STRETCH__MODE1_STDDEVS',
-    'IMAGE_STRETCH__MODE2_SHADOWS',
-    'IMAGE_STRETCH__MODE2_MIDTONES',
-    'IMAGE_STRETCH__MODE2_HIGHLIGHTS',
-    'IMAGE_STRETCH__MODE3_BLACK_CLIP',
-    'IMAGE_STRETCH__MODE3_SHADOWS',
-    'IMAGE_STRETCH__MODE3_MIDTONES',
-    'IMAGE_STRETCH__MODE3_HIGHLIGHTS',
-    'CFA_PATTERN',
-    'SCNR_ALGORITHM',
-    'SCNR_MTF_MIDTONES',
-    'IMAGE_DENOISE',
-    'IMAGE_DENOISE_STRENGTH',
-    'BILATERAL_SIGMA_COLOR',
-    'BILATERAL_SIGMA_SPACE',
-    'WBR_FACTOR',
-    'WBG_FACTOR',
-    'WBB_FACTOR',
-    'WBR_MTF_MIDTONES',
-    'WBG_MTF_MIDTONES',
-    'WBB_MTF_MIDTONES',
-    'SATURATION_FACTOR',
-    'GAMMA_CORRECTION',
-    'SHARPEN_AMOUNT',
-    'IMAGE_COLORMAP',
-    'IMAGE_ROTATE',
-    'IMAGE_ROTATE_ANGLE',
-    'DETECT_MASK',
-    'SQM_FOV_DIV',
-    'SQM_ROI_X1',
-    'SQM_ROI_Y1',
-    'SQM_ROI_X2',
-    'SQM_ROI_Y2',
-    'IMAGE_STACK_METHOD',
-    'IMAGE_STACK_COUNT',
-    'IMAGE_ALIGN_DETECTSIGMA',
-    'IMAGE_ALIGN_POINTS',
-    'IMAGE_ALIGN_SOURCEMINAREA',
-    'FISH2PANO__DIAMETER',
-    'FISH2PANO__ROTATE_ANGLE',
-    'FISH2PANO__SCALE',
-    'FISH2PANO__DIRS_OFFSET_BOTTOM',
-    'FISH2PANO__OPENCV_FONT_SCALE',
-    'FISH2PANO__PIL_FONT_SIZE',
-    'IMAGE_LABEL_SYSTEM',
-    'IMAGE_LABEL_TEMPLATE',
-    'IMAGE_EXTRA_TEXT',
-    'TEXT_PROPERTIES__FONT_FACE',
-    'TEXT_PROPERTIES__FONT_SCALE',
-    'TEXT_PROPERTIES__FONT_THICKNESS',
-    'TEXT_PROPERTIES__FONT_HEIGHT',
-    'TEXT_PROPERTIES__FONT_X',
-    'TEXT_PROPERTIES__FONT_Y',
-    'TEXT_PROPERTIES__FONT_COLOR',
-    'TEXT_PROPERTIES__PIL_FONT_FILE',
-    'TEXT_PROPERTIES__PIL_FONT_CUSTOM',
-    'TEXT_PROPERTIES__PIL_FONT_SIZE',
-    'IMAGE_CIRCLE_MASK__DIAMETER',
-    'IMAGE_CIRCLE_MASK__OFFSET_X',
-    'IMAGE_CIRCLE_MASK__OFFSET_Y',
-    'IMAGE_CIRCLE_MASK__BLUR',
-    'IMAGE_CIRCLE_MASK__OPACITY',
-    'MOON_OVERLAY__X',
-    'MOON_OVERLAY__Y',
-    'MOON_OVERLAY__SCALE',
-    'MOON_OVERLAY__DARK_SIDE_SCALE',
-    'LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT',
-    'LIGHTGRAPH_OVERLAY__GRAPH_BORDER',
-    'LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE',
-    'LIGHTGRAPH_OVERLAY__Y',
-    'LIGHTGRAPH_OVERLAY__OFFSET_X',
-    'LIGHTGRAPH_OVERLAY__SCALE',
-    'LIGHTGRAPH_OVERLAY__DAY_COLOR',
-    'LIGHTGRAPH_OVERLAY__DUSK_COLOR',
-    'LIGHTGRAPH_OVERLAY__NIGHT_COLOR',
-    'LIGHTGRAPH_OVERLAY__MOONMODE_COLOR',
-    'LIGHTGRAPH_OVERLAY__HOUR_COLOR',
-    'LIGHTGRAPH_OVERLAY__BORDER_COLOR',
-    'LIGHTGRAPH_OVERLAY__NOW_COLOR',
-    'LIGHTGRAPH_OVERLAY__FONT_COLOR',
-    'LIGHTGRAPH_OVERLAY__OPACITY',
-    'LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE',
+    'csrf_token', 'CAMERA_ID', 'FRAME_TYPE', 'OUTPUT_IMAGE_TYPE', 'FITS_ID',
+    'LENS_IMAGE_CIRCLE', 'LENS_OFFSET_X', 'LENS_OFFSET_Y', 'LENS_AZIMUTH',
+    'CCD_BIT_DEPTH', 'IMAGE_CALIBRATE_MANUAL_OFFSET', 'IMAGE_CALIBRATE_HOLE_THOLD',
+    'CLAHE_CLIPLIMIT', 'CLAHE_GRIDSIZE', 'IMAGE_STRETCH__CLASSNAME',
+    'IMAGE_STRETCH__MODE1_GAMMA', 'IMAGE_STRETCH__MODE1_STDDEVS',
+    'IMAGE_STRETCH__MODE2_SHADOWS', 'IMAGE_STRETCH__MODE2_MIDTONES', 'IMAGE_STRETCH__MODE2_HIGHLIGHTS',
+    'IMAGE_STRETCH__MODE3_BLACK_CLIP', 'IMAGE_STRETCH__MODE3_SHADOWS',
+    'IMAGE_STRETCH__MODE3_MIDTONES', 'IMAGE_STRETCH__MODE3_HIGHLIGHTS',
+    'CFA_PATTERN', 'SCNR_ALGORITHM', 'SCNR_MTF_MIDTONES',
+    'IMAGE_DENOISE', 'IMAGE_DENOISE_STRENGTH', 'BILATERAL_SIGMA_COLOR', 'BILATERAL_SIGMA_SPACE',
+    'WBR_FACTOR', 'WBG_FACTOR', 'WBB_FACTOR', 'WBR_MTF_MIDTONES', 'WBG_MTF_MIDTONES', 'WBB_MTF_MIDTONES',
+    'SATURATION_FACTOR', 'GAMMA_CORRECTION', 'SHARPEN_AMOUNT', 'IMAGE_COLORMAP',
+    'IMAGE_ROTATE', 'IMAGE_ROTATE_ANGLE', 'DETECT_MASK', 'SQM_FOV_DIV',
+    'SQM_ROI_X1', 'SQM_ROI_Y1', 'SQM_ROI_X2', 'SQM_ROI_Y2',
+    'IMAGE_STACK_METHOD', 'IMAGE_STACK_COUNT', 'IMAGE_ALIGN_DETECTSIGMA',
+    'IMAGE_ALIGN_POINTS', 'IMAGE_ALIGN_SOURCEMINAREA',
+    'FISH2PANO__DIAMETER', 'FISH2PANO__ROTATE_ANGLE', 'FISH2PANO__SCALE',
+    'FISH2PANO__DIRS_OFFSET_BOTTOM', 'FISH2PANO__OPENCV_FONT_SCALE', 'FISH2PANO__PIL_FONT_SIZE',
+    'IMAGE_LABEL_SYSTEM', 'IMAGE_LABEL_TEMPLATE', 'IMAGE_EXTRA_TEXT',
+    'TEXT_PROPERTIES__FONT_FACE', 'TEXT_PROPERTIES__FONT_SCALE', 'TEXT_PROPERTIES__FONT_THICKNESS',
+    'TEXT_PROPERTIES__FONT_HEIGHT', 'TEXT_PROPERTIES__FONT_X', 'TEXT_PROPERTIES__FONT_Y',
+    'TEXT_PROPERTIES__FONT_COLOR', 'TEXT_PROPERTIES__PIL_FONT_FILE',
+    'TEXT_PROPERTIES__PIL_FONT_CUSTOM', 'TEXT_PROPERTIES__PIL_FONT_SIZE',
+    'IMAGE_CIRCLE_MASK__DIAMETER', 'IMAGE_CIRCLE_MASK__OFFSET_X', 'IMAGE_CIRCLE_MASK__OFFSET_Y',
+    'IMAGE_CIRCLE_MASK__BLUR', 'IMAGE_CIRCLE_MASK__OPACITY',
+    'MOON_OVERLAY__X', 'MOON_OVERLAY__Y', 'MOON_OVERLAY__SCALE', 'MOON_OVERLAY__DARK_SIDE_SCALE',
+    'LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT', 'LIGHTGRAPH_OVERLAY__GRAPH_BORDER',
+    'LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE', 'LIGHTGRAPH_OVERLAY__Y',
+    'LIGHTGRAPH_OVERLAY__OFFSET_X', 'LIGHTGRAPH_OVERLAY__SCALE',
+    'LIGHTGRAPH_OVERLAY__DAY_COLOR', 'LIGHTGRAPH_OVERLAY__DUSK_COLOR',
+    'LIGHTGRAPH_OVERLAY__NIGHT_COLOR', 'LIGHTGRAPH_OVERLAY__MOONMODE_COLOR',
+    'LIGHTGRAPH_OVERLAY__HOUR_COLOR', 'LIGHTGRAPH_OVERLAY__BORDER_COLOR',
+    'LIGHTGRAPH_OVERLAY__NOW_COLOR', 'LIGHTGRAPH_OVERLAY__FONT_COLOR',
+    'LIGHTGRAPH_OVERLAY__OPACITY', 'LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE',
     'LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE',
-    'CARDINAL_DIRS__FONT_COLOR',
-    'CARDINAL_DIRS__CHAR_NORTH',
-    'CARDINAL_DIRS__CHAR_EAST',
-    'CARDINAL_DIRS__CHAR_WEST',
-    'CARDINAL_DIRS__CHAR_SOUTH',
-    'CARDINAL_DIRS__DIAMETER',
-    'CARDINAL_DIRS__OFFSET_X',
-    'CARDINAL_DIRS__OFFSET_Y',
-    'CARDINAL_DIRS__OFFSET_TOP',
-    'CARDINAL_DIRS__OFFSET_LEFT',
-    'CARDINAL_DIRS__OFFSET_RIGHT',
-    'CARDINAL_DIRS__OFFSET_BOTTOM',
-    'CARDINAL_DIRS__OPENCV_FONT_SCALE',
-    'CARDINAL_DIRS__PIL_FONT_SIZE',
-    'IMAGE_BORDER__TOP',
-    'IMAGE_BORDER__LEFT',
-    'IMAGE_BORDER__RIGHT',
-    'IMAGE_BORDER__BOTTOM',
-    'IMAGE_BORDER__COLOR',
+    'CARDINAL_DIRS__FONT_COLOR', 'CARDINAL_DIRS__CHAR_NORTH', 'CARDINAL_DIRS__CHAR_EAST',
+    'CARDINAL_DIRS__CHAR_WEST', 'CARDINAL_DIRS__CHAR_SOUTH', 'CARDINAL_DIRS__DIAMETER',
+    'CARDINAL_DIRS__OFFSET_X', 'CARDINAL_DIRS__OFFSET_Y', 'CARDINAL_DIRS__OFFSET_TOP',
+    'CARDINAL_DIRS__OFFSET_LEFT', 'CARDINAL_DIRS__OFFSET_RIGHT', 'CARDINAL_DIRS__OFFSET_BOTTOM',
+    'CARDINAL_DIRS__OPENCV_FONT_SCALE', 'CARDINAL_DIRS__PIL_FONT_SIZE',
+    'IMAGE_BORDER__TOP', 'IMAGE_BORDER__LEFT', 'IMAGE_BORDER__RIGHT', 'IMAGE_BORDER__BOTTOM', 'IMAGE_BORDER__COLOR',
 ];
 
 const checkbox_field_names = [
-    'DISABLE_PROCESSING',
-    'IMAGE_CALIBRATE_DARK',
-    'IMAGE_CALIBRATE_BPM',
-    'IMAGE_CALIBRATE_FIX_HOLES',
-    'NIGHT_CONTRAST_ENHANCE',
-    'CONTRAST_ENHANCE_16BIT',
-    'AUTO_WB',
-    'IMAGE_STACK_ALIGN',
-    'IMAGE_FLIP_V',
-    'IMAGE_FLIP_H',
-    //'PROCESSING_SPLIT_SCREEN',
-    'FISH2PANO__ENABLE',
-    'FISH2PANO__FLIP_H',
-    'FISH2PANO__ENABLE_CARDINAL_DIRS',
-    'TEXT_PROPERTIES__FONT_OUTLINE',
-    'MOON_OVERLAY__ENABLE',
-    'MOON_OVERLAY__FLIP_V',
-    'MOON_OVERLAY__FLIP_H',
-    'LIGHTGRAPH_OVERLAY__ENABLE',
-    'LIGHTGRAPH_OVERLAY__LABEL',
-    'LIGHTGRAPH_OVERLAY__HOUR_LINES',
-    'IMAGE_CIRCLE_MASK__ENABLE',
-    'IMAGE_CIRCLE_MASK__OUTLINE',
-    'IMAGE_CROP_IMAGE_CIRCLE',
-    'CARDINAL_DIRS__ENABLE',
-    'CARDINAL_DIRS__SWAP_NS',
-    'CARDINAL_DIRS__SWAP_EW',
-    'CARDINAL_DIRS__OUTLINE_CIRCLE',
+    'DISABLE_PROCESSING', 'IMAGE_CALIBRATE_DARK', 'IMAGE_CALIBRATE_BPM', 'IMAGE_CALIBRATE_FIX_HOLES',
+    'NIGHT_CONTRAST_ENHANCE', 'CONTRAST_ENHANCE_16BIT', 'AUTO_WB', 'IMAGE_STACK_ALIGN',
+    'IMAGE_FLIP_V', 'IMAGE_FLIP_H', 'FISH2PANO__ENABLE', 'FISH2PANO__FLIP_H',
+    'FISH2PANO__ENABLE_CARDINAL_DIRS', 'TEXT_PROPERTIES__FONT_OUTLINE',
+    'MOON_OVERLAY__ENABLE', 'MOON_OVERLAY__FLIP_V', 'MOON_OVERLAY__FLIP_H',
+    'LIGHTGRAPH_OVERLAY__ENABLE', 'LIGHTGRAPH_OVERLAY__LABEL', 'LIGHTGRAPH_OVERLAY__HOUR_LINES',
+    'IMAGE_CIRCLE_MASK__ENABLE', 'IMAGE_CIRCLE_MASK__OUTLINE', 'IMAGE_CROP_IMAGE_CIRCLE',
+    'CARDINAL_DIRS__ENABLE', 'CARDINAL_DIRS__SWAP_NS', 'CARDINAL_DIRS__SWAP_EW', 'CARDINAL_DIRS__OUTLINE_CIRCLE',
 ];
 
 var fields = {};
-// Populate fields object
-field_names.forEach(item => {
-    fields[item] = {
-        'input' : $('#' + item),
-        'error' : $('#' + item + '-error'),
-    };
+field_names.concat(checkbox_field_names).forEach(item => {
+    fields[item] = { 'input': $('#' + item), 'error': $('#' + item + '-error') };
 });
-
-// Checkboxes
-checkbox_field_names.forEach(item => {
-    fields[item] = {
-        'input' : $('#' + item),
-        'error' : $('#' + item + '-error'),
-    };
-});
-
-fields['form_global'] = {
-    'input' : failureMessage,
-    'error' : failureMessage,
-};
-
 
 function submitProcessingData() {
+    // Restore button and hide error hint
+    $('#process-btn').attr('class', 'tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:px-6');
+    $('#process-error-msg').hide();
     $('#processing_time').text('Processing...');
-    $("#loader_processing").css({'display' : 'block'});
-
-    // hide all errors
-    successMessage.css({'display' : 'none'});
-    Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
+    $("#loader_processing").show();
+    successMessage.hide();
+    
+    Object.keys(fields).forEach(key => {
+        fields[key].error.hide();
+        if(fields[key].input) {
+            fields[key].input.removeClass('tw:input-error tw:select-error tw:textarea-error tw:toggle-error');
+            // also clear any inline --input-color left by a previous approach
+            if (fields[key].input[0]) fields[key].input[0].style.removeProperty('--input-color');
+        }
     });
 
-
-    // Populate fields object
     var submit_data = {};
-    field_names.forEach(item => {
-        submit_data[item] = fields[item].input.val();
-    });
-
-    // checkboxes
-    checkbox_field_names.forEach(item => {
-        submit_data[item] = fields[item].input.prop('checked');
-    });
-
+    field_names.forEach(item => { submit_data[item] = fields[item].input.val(); });
+    checkbox_field_names.forEach(item => { submit_data[item] = fields[item].input.prop('checked'); });
 
     $.ajax({
         type: "POST",
@@ -2223,116 +1250,113 @@ function submitProcessingData() {
         contentType: "application/json",
         data: JSON.stringify(submit_data),
         success: function(rdata){
-            successMessage.html(rdata['success-message']);
-            successMessage.css({'display' : 'block'});
-            setTimeout(function() {
-                successMessage.css({'display' : 'none'});
-            }, 10000);
+            if (!_initLoad) {
+                var msg = rdata['success-message'] || ('Image processed in ' + rdata['processing_elapsed_s'] + 's');
+                $('#success-message-text').text(msg);
+                successMessage.show();
+                setTimeout(() => successMessage.fadeOut(), 10000);
+            }
             json_data = rdata;
-
             showImage(json_data['image_b64']);
 
-            if ($('#OUTPUT_IMAGE_TYPE').val() == 'png') {
-                var mime_type = "image/png";
-                var ext = ".png"
-            } else {
-                var mime_type = "image/jpeg";
-                var ext = ".jpg"
-            }
+            var mime_type = ($('#OUTPUT_IMAGE_TYPE').val() == 'png') ? "image/png" : "image/jpeg";
+            var ext = ($('#OUTPUT_IMAGE_TYPE').val() == 'png') ? ".png" : ".jpg";
 
             $("#img_download").html(
                 $('<a />', {
-                    'href'     : "data:" + mime_type + ";base64," + json_data['image_b64'],
-                    'download' : "image_processor_" + Math.floor(Date.now() / 1000) + ext,
-                }).html(
-                    $('<span />', {
-                        'text'  : 'Download',
-                        'class' : "badge pill bg-info text-dark",
-                    })
-                )
+                    'href': "data:" + mime_type + ";base64," + json_data['image_b64'],
+                    'download': "image_processor_" + Math.floor(Date.now() / 1000) + ext,
+                    'class' : "tw:no-underline",
+                }).append($('<span />', {
+                    'text': 'DOWNLOAD',
+                    'class': "tw:badge tw:badge-info tw:font-bold tw:text-[0.625rem]",
+                }))
             );
 
-
-            $("#loader_processing").css({'display' : 'none'});
-            //window.scrollTo(0, 0);
-            //window.scrollTo({ top: 0, behavior: 'smooth' });
-
-            $('#processing_time').text('Processed in ' + json_data['processing_elapsed_s'] + 's');
+            $("#loader_processing").hide();
+            if (_initLoad) {
+                $('#processing_time').text('Unprocessed image');
+                _initLoad = false;
+            } else {
+                $('#processing_time').text('Processed in ' + json_data['processing_elapsed_s'] + 's');
+            }
             $('#processing_message').text(json_data['message']);
+            $('#processing-info-bar').show();
         },
         error: function(rdata){
-            var errors = JSON.parse(rdata.responseText);
-            Object.keys(errors).forEach((key) => {
-                fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key][0]);
-                fields[key].error.css({'display' : 'block'});
-            });
-            $("#loader_processing").css({'display' : 'none'});
+            // Turn button red and show hint
+            $('#process-btn').attr('class', 'tw:btn tw:btn-error tw:btn-sm tw:h-11 tw:px-6');
+            $('#process-error-msg').show();
+            $('#processing_time').text('');
+            try {
+                var errors = JSON.parse(rdata.responseText);
+                var firstErrorTab = null;
+                Object.keys(errors).forEach((key) => {
+                    if (key === 'form_global' || !fields[key]) return;
+                    fields[key].input.addClass('tw:input-error tw:select-error tw:textarea-error tw:toggle-error');
+                    fields[key].error.html(errors[key][0]).show();
+
+                    if (!firstErrorTab) {
+                        var $pane = fields[key].input.closest('.tab-pane');
+                        if ($pane.length) {
+                            firstErrorTab = $pane.attr('id').replace(/^nav-/, '');
+                        }
+                    }
+                });
+
+                if (firstErrorTab) {
+                    var $btn = $('[data-tab-target="nav-' + firstErrorTab + '"]');
+                    if ($btn.length) $btn[0].click();
+                }
+            } catch(e) {
+                console.error('Error parsing validation response', e);
+            }
+            $("#loader_processing").hide();
         },
     });
 }
 
+$('#form_image_processing').on('submit', submitProcessingData);
 
-$('#form_image_processing').on('submit', function() {
-    submitProcessingData();
-});
-
-
+var _initLoad = false;
 function init() {
-    // disable processing for initial image
+    _initLoad = true;
     $('#DISABLE_PROCESSING').prop('checked', true);
-
     submitProcessingData();
-    $('#processing_time').text('Unprocessed image');
-
     $('#DISABLE_PROCESSING').prop('checked', false);
 }
 
-// Denoise dependent fields
 $('#IMAGE_DENOISE').on('change', function() {
     var val = $(this).val();
+    var $str = $('#IMAGE_DENOISE_STRENGTH');
+    var $bCol = $('#BILATERAL_SIGMA_COLOR');
+    var $bSpa = $('#BILATERAL_SIGMA_SPACE');
+
     if (val) {
-        $('#IMAGE_DENOISE_STRENGTH').removeAttr('readonly disabled');
-        $('#IMAGE_DENOISE_STRENGTH').removeClass('bg-dark text-secondary');
+        $str.removeAttr('readonly disabled').removeClass('tw:opacity-50 tw:bg-base-300');
     } else {
-        $('#IMAGE_DENOISE_STRENGTH').attr({'readonly': true, 'disabled': true});
-        $('#IMAGE_DENOISE_STRENGTH').addClass('bg-dark text-secondary');
+        $str.attr({'readonly': true, 'disabled': true}).addClass('tw:opacity-50 tw:bg-base-300');
     }
+
     if (val === 'bilateral') {
-        $('#BILATERAL_SIGMA_COLOR').removeAttr('readonly disabled');
-        $('#BILATERAL_SIGMA_COLOR').removeClass('bg-dark text-secondary');
-        $('#BILATERAL_SIGMA_SPACE').removeAttr('readonly disabled');
-        $('#BILATERAL_SIGMA_SPACE').removeClass('bg-dark text-secondary');
+        $bCol.add($bSpa).removeAttr('readonly disabled').removeClass('tw:opacity-50 tw:bg-base-300');
     } else {
-        $('#BILATERAL_SIGMA_COLOR').attr({'readonly': true, 'disabled': true});
-        $('#BILATERAL_SIGMA_COLOR').addClass('bg-dark text-secondary');
-        $('#BILATERAL_SIGMA_SPACE').attr({'readonly': true, 'disabled': true});
-        $('#BILATERAL_SIGMA_SPACE').addClass('bg-dark text-secondary');
+        $bCol.add($bSpa).attr({'readonly': true, 'disabled': true}).addClass('tw:opacity-50 tw:bg-base-300');
     }
 });
 
-
-$( document ).ready(function() {
-    $('#fits-image').on("click", function() {
-        goFullscreen(this);
-    });
-
-    // Denoise dependent fields - grey out on page load
+$(document).ready(function() {
+    $('#fits-image').on("click", function() { goFullscreen(this); });
+    
+    // Initial denoise state
     if (!$('#IMAGE_DENOISE').val()) {
-        $('#IMAGE_DENOISE_STRENGTH').attr({'readonly': true, 'disabled': true});
-        $('#IMAGE_DENOISE_STRENGTH').addClass('bg-dark text-secondary');
+        $('#IMAGE_DENOISE_STRENGTH').attr({'readonly': true, 'disabled': true}).addClass('tw:opacity-50 tw:bg-base-300');
     }
     if ($('#IMAGE_DENOISE').val() !== 'bilateral') {
-        $('#BILATERAL_SIGMA_COLOR').attr({'readonly': true, 'disabled': true});
-        $('#BILATERAL_SIGMA_COLOR').addClass('bg-dark text-secondary');
-        $('#BILATERAL_SIGMA_SPACE').attr({'readonly': true, 'disabled': true});
-        $('#BILATERAL_SIGMA_SPACE').addClass('bg-dark text-secondary');
+        $('#BILATERAL_SIGMA_COLOR, #BILATERAL_SIGMA_SPACE').attr({'readonly': true, 'disabled': true}).addClass('tw:opacity-50 tw:bg-base-300');
     }
 
     init();
 });
-
 </script>
-
-
 {% endblock %}

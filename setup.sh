@@ -766,7 +766,6 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         libsystemd-dev \
         dbus-user-session
 
-
     if [ "$CPU_BITS" != "32" ]; then
         # not available on 32-bit platforms
         sudo apt-get -y install \
@@ -944,7 +943,6 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         libsystemd-dev \
         dbus-user-session
 
-
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo apt-get -y install \
             mariadb-server
@@ -1098,7 +1096,6 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         policykit-1 \
         dbus-user-session
 
-
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo apt-get -y install \
             mariadb-server
@@ -1239,7 +1236,6 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
         policykit-1 \
         libsystemd-dev \
         dbus-user-session
-
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo apt-get -y install \
@@ -1402,7 +1398,6 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         polkitd \
         libsystemd-dev \
         dbus-user-session
-
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo apt-get -y install \
@@ -1578,7 +1573,6 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         libsystemd-dev \
         dbus-user-session
 
-
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo apt-get -y install \
             mariadb-server
@@ -1739,7 +1733,6 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         policykit-1 \
         libsystemd-dev \
         dbus-user-session
-
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo apt-get -y install \
@@ -2087,6 +2080,7 @@ fi
 
 # pyindi-client setup
 SUPPORTED_INDI_VERSIONS=(
+    "2.2.4"
     "2.2.3"
     "2.2.2"
     "2.2.1"

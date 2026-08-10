@@ -3,63 +3,93 @@
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
 {% block head %}
-<style>
-</style>
 <link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
 <script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
+
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
-
 {% endblock %}
 
 {% block content %}
-<div class="container">
-<div class="row">
-  <table id="users-table" class="table table-striped compact" data-bs-theme="dark">
-    <thead>
-      <tr>
-        <th>Create</th>
-        <th>Login</th>
-        <th>Username</th>
-        <th>Name</th>
-        <th>Active</th>
-        <th>Staff</th>
-        <th>Admin</th>
-        <th>Type</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for user in user_list %}
-      <tr>
-        <td>{{ user.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6 tw:w-full">
 
-        {% if user.loginDate %}
-            <td>{{ user.loginDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-        {% else %}
-            <td>Never</td>
-        {% endif %}
+    <!-- Users Table Card -->
+    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+        <div class="tw:card-body tw:p-6">
+            <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:mb-6 tw:flex tw:items-center tw:gap-2">
+                <i class="tw:icon-[lucide--users] tw:w-4 tw:h-4 tw:text-primary"></i> All Users
+            </h4>
 
-        <td>{{ user.username }}</td>
-        <td>{{ user.name }}</td>
-        <td>{{ user.active }}</td>
-        <td>{{ user.staff }}</td>
-        <td>{{ user.admin }}</td>
+            <div class="tw:overflow-x-auto tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
+                <table id="users-table" class="tw:table tw:table-zebra tw:table-xs tw:w-full tw:m-0">
+                    <thead>
+                        <tr class="tw:bg-base-300/60 tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
+                            <th class="tw:pl-4 tw:py-3">Create Date</th>
+                            <th class="tw:py-3">Username</th>
+                            <th class="tw:py-3">Name</th>
+                            <th class="tw:py-3">Active</th>
+                            <th class="tw:py-3">Staff</th>
+                            <th class="tw:py-3">Admin</th>
+                            <th class="tw:pr-4 tw:py-3 tw:text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="tw:divide-y tw:divide-base-content/5">
+                        {% for user in user_list %}
+                        <tr class="hover:tw:bg-base-300/60 tw:transition-colors tw:text-xs">
+                            <td class="tw:pl-4 tw:whitespace-nowrap tw:font-mono tw:text-base-content/70">
+                                {{ user.createDate.strftime('%Y-%m-%d %H:%M:%S') }}
+                            </td>
+                            <td class="tw:font-semibold tw:text-base-content tw:font-mono">
+                                {{ user.username }}
+                            </td>
+                            <td class="tw:text-base-content/90">
+                                {{ user.name }}
+                            </td>
+                            <td>
+                                {% if user.active %}
+                                    <span class="tw:badge tw:badge-success tw:badge-sm tw:font-semibold tw:rounded-[var(--radius-box)] tw:gap-1">
+                                        <i class="tw:icon-[lucide--check-circle-2] tw:w-3 tw:h-3"></i> Active
+                                    </span>
+                                {% else %}
+                                    <span class="tw:badge tw:badge-ghost tw:badge-sm tw:text-base-content/40 tw:font-semibold tw:rounded-[var(--radius-box)]">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.staff %}
+                                    <span class="tw:badge tw:badge-info tw:badge-outline tw:badge-sm tw:font-semibold tw:rounded-[var(--radius-box)] tw:gap-1">
+                                        <i class="tw:icon-[lucide--user] tw:w-3 tw:h-3"></i> Staff
+                                    </span>
+                                {% else %}
+                                    <span class="tw:badge tw:badge-ghost tw:badge-sm tw:text-base-content/30 tw:rounded-[var(--radius-box)]">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.admin %}
+                                    <span class="tw:badge tw:badge-primary tw:badge-sm tw:font-semibold tw:rounded-[var(--radius-box)] tw:gap-1">
+                                        <i class="tw:icon-[lucide--shield] tw:w-3 tw:h-3"></i> Admin
+                                    </span>
+                                {% else %}
+                                    <span class="tw:badge tw:badge-ghost tw:badge-sm tw:text-base-content/30 tw:rounded-[var(--radius-box)]">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="tw:pr-4 tw:text-right">
+                                {% if user.username == current_user.username %}
+                                <a href="{{ url_for('indi_allsky.user_view') }}" class="tw:btn tw:btn-xs tw:btn-ghost tw:gap-1 tw:no-underline tw:text-primary hover:tw:bg-primary/15 active:tw:scale-95 tw:transition-all">
+                                    <i class="tw:icon-[lucide--pencil] tw:w-3 tw:h-3"></i> Edit
+                                </a>
+                                {% else %}
+                                <span class="tw:text-base-content/20 tw:text-[0.625rem]">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-        {% if not user.data['idp'] %}
-            <td>Local</td>
-        {% elif user.data['idp'] == 'local' %}
-            <td>Local</td>
-        {% elif user.data['idp'] == 'oidc' %}
-            <td>OIDC</td>
-        {% else %}
-            <td>Unknown</td>
-        {% endif %}
-
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
 </div>
 
 <script>
@@ -69,7 +99,8 @@ function init() {
         order: [[0, 'desc']],
         lengthMenu: [20, 50, 100, -1],
         layout: {
-            topEnd: ['buttons', 'search'],
+            topStart: ['pageLength', 'buttons'],
+            topEnd: 'search',
         },
         buttons: [
             'copy',
@@ -84,6 +115,4 @@ $( document ).ready(function() {
     init();
 });
 </script>
-
-
 {% endblock %}

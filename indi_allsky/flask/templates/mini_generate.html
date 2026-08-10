@@ -4,30 +4,6 @@
 
 {% block head %}
 <meta charset="UTF-8">
-<style>
-.loader {
-  display: block;
-  border: 3px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.fit {
-    max-width: 100%;
-    max-height: 80vh;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-}
-</style>
 <script type="text/javascript">
 var img;
 var camera_id = {{ camera_id }};
@@ -106,7 +82,7 @@ function loadJS(url, data, onDone, onError) {
     if(!onDone)onDone=function(){};
     if(!onError)onError=function(){};
 
-    $("#loader_generate").css({'display' : 'block'});
+    $("#loader_generate").show();
 
     $.ajax({
         type: "GET",
@@ -114,7 +90,7 @@ function loadJS(url, data, onDone, onError) {
         contentType: "application/json",
         data: data,
         success: function(rdata){
-            $("#loader_generate").css({'display' : 'none'});
+            $("#loader_generate").hide();
             json_data = rdata
 
             var image_count = rdata['image_list'].length;
@@ -123,7 +99,7 @@ function loadJS(url, data, onDone, onError) {
             $('#message').html(json_data['message']);
         },
         error: function(rdata){
-            $("#loader_generate").css({'display' : 'none'});
+            $("#loader_generate").hide();
             onError(rdata.status);
             $('#message').text('Error loading data.  Please check the logs.');
             $('#video_length').html('');
@@ -183,66 +159,85 @@ $( document ).ready(function() {
 {% endblock %}
 
 {% block content %}
-<div class="container h-100">
+<div class="tw:w-full tw:h-full tw:flex tw:flex-col tw:gap-4">
 
-<form id="form_mini_timelapse" onSubmit="return false; "autocomplete="off">
-    <div class="form-group row">
-        {{ form_mini_timelapse.CAMERA_ID() }}
-        {{ form_mini_timelapse.IMAGE_ID() }}
+    <div class="tw:bg-base-200/50 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+        <form id="form_mini_timelapse" onSubmit="return false;" autocomplete="off" class="tw:flex tw:flex-col tw:gap-4">
+            {{ form_mini_timelapse.CAMERA_ID() }}
+            {{ form_mini_timelapse.IMAGE_ID() }}
 
-        <div class="col-sm-1">
-            {{ form_mini_timelapse.PRE_SECONDS_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_mini_timelapse.PRE_SECONDS_SELECT(class='form-select bg-secondary') }}
+            <div class="tw:flex tw:flex-wrap md:tw:flex-nowrap tw:items-end tw:gap-4">
+                
+                <div class="tw:form-control tw:w-full md:tw:w-1/4">
+                    <label class="tw:label tw:pb-1">
+                        <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
+                            {{ form_mini_timelapse.PRE_SECONDS_SELECT.label.text }}
+                        </span>
+                    </label>
+                    {{ form_mini_timelapse.PRE_SECONDS_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary') }}
+                </div>
+
+                <div class="tw:form-control tw:w-full md:tw:w-1/4">
+                    <label class="tw:label tw:pb-1">
+                        <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
+                            {{ form_mini_timelapse.POST_SECONDS_SELECT.label.text }}
+                        </span>
+                    </label>
+                    {{ form_mini_timelapse.POST_SECONDS_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary') }}
+                </div>
+
+                <div class="tw:form-control tw:w-full md:tw:w-1/4">
+                    <label class="tw:label tw:pb-1">
+                        <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
+                            {{ form_mini_timelapse.FRAMERATE_SELECT.label.text }}
+                        </span>
+                    </label>
+                    {{ form_mini_timelapse.FRAMERATE_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary') }}
+                </div>
+
+                <div class="tw:flex tw:items-center tw:gap-3 tw:w-full md:tw:w-1/4">
+                    <button class="tw:btn tw:btn-success tw:btn-sm tw:h-10 tw:flex-1 tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:gap-2">
+                        <i class="tw:icon-[lucide--video] tw:w-4 tw:h-4"></i>
+                        Create
+                    </button>
+                    
+                    <div id="loader_generate" class="tw:flex tw:items-center tw:justify-center tw:w-10 tw:h-10 tw:bg-base-300/50 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300" style="display: none;">
+                        <span class="tw:loading tw:loading-spinner tw:loading-sm tw:text-success"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-12 tw:gap-3 tw:items-center tw:pt-2 tw:border-t tw:border-base-300">
+                <label class="md:tw:col-span-1 tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
+                    {{ form_mini_timelapse.NOTE.label.text }}
+                </label>
+                <div class="md:tw:col-span-11 tw:w-full">
+                    {{ form_mini_timelapse.NOTE(class='tw:input tw:input-bordered tw:input-sm tw:h-9 allsky-input-dark tw:w-full tw:text-xs tw:font-mono', placeholder='Attach local rendering tags or contextual references...') }}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="tw:bg-black/10 tw:px-4 tw:rounded-[var(--radius-box)] tw:flex tw:flex-col tw:gap-2">
+        <div class="tw:alert tw:alert-error tw:py-2.5 tw:rounded-[var(--radius-box)] tw:text-xs tw:font-medium" id="failure_message" style="display: none;">
+            <i class="tw:icon-[lucide--alert-octagon] tw:w-4 tw:h-4"></i>
+            <span class="tw:text-center tw:w-full"></span>
         </div>
 
-        <div class="col-sm-1">
-            {{ form_mini_timelapse.POST_SECONDS_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_mini_timelapse.POST_SECONDS_SELECT(class='form-select bg-secondary') }}
+        <div class="tw:alert tw:alert-success tw:py-2.5 tw:rounded-[var(--radius-box)] tw:text-xs tw:font-medium" id="success_message" style="display: none;">
+            <i class="tw:icon-[lucide--check-circle] tw:w-4 tw:h-4"></i>
+            <span class="tw:text-center tw:w-full"></span>
         </div>
 
-        <div class="col-sm-1">
-            {{ form_mini_timelapse.FRAMERATE_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_mini_timelapse.FRAMERATE_SELECT(class='form-select bg-secondary') }}
-        </div>
-
-        <div class="col-sm-1">
-            <button class="btn btn-success">Create</button>
-        </div>
-
-        <div class="col-sm-1">
-            <div class="loader" id="loader_generate"></div>
+        <div class="tw:flex tw:flex-col sm:tw:flex-row tw:justify-between tw:items-center tw:gap-2 tw:text-[0.6875rem] tw:font-semibold tw:tracking-wide tw:uppercase tw:text-base-content/40">
+            <div id="message" class="tw:truncate"></div>
+            <div id="video_length" class="tw:font-mono tw:bg-base-200/60 tw:px-2 tw:py-0.5 tw:rounded tw:border tw:border-base-300"></div>
         </div>
     </div>
-    <div class="form-group row">
-        <div class="col-sm-1">
-            {{ form_mini_timelapse.NOTE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-8">
-            {{ form_mini_timelapse.NOTE(class='form-control bg-secondary') }}
-        </div>
+
+    <div class="tw:flex-1 tw:bg-base-300/20 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:p-2 tw:flex tw:items-center tw:justify-center tw:overflow-hidden tw:min-h-[350px]">
+        <img id="loop-image" class="tw:max-w-full tw:max-h-[65vh] tw:object-contain tw:rounded-[var(--radius-box)] tw:shadow-inner" alt="Timelapse rendering array frame preview loop">
     </div>
-</form>
-
-<hr>
-
-<div class="row">
-    <div class="text-success text-center" id="success_message" style="display: none;"></div>
-    <div class="text-danger text-center" id="failure_message" style="display: none;"></div>
-    <div class="text-muted text-center" id="message"></div>
-    <div class="text-muted text-center" id="video_length"></div>
-</div>
-
-<div class="row align-items-center">
-    <div class="col-12 text-center">
-        <img id="loop-image" class="fit">
-    </div>
-</div>
 
 </div>
 
@@ -290,26 +285,19 @@ $('#form_mini_timelapse').on('submit', function() {
         contentType: "application/json",
         data: JSON.stringify(form_data),
         success: function(rdata){
-            $("#loader_generate").css({'display' : 'none'});
+            $("#loader_generate").hide();
             $('#NOTE').val('');
 
-            $('#success_message').html(rdata['success-message']);
-            $('#success_message').css({'display' : 'block'});
-            setTimeout(function() {
-                $('#success_message').css({'display' : 'none'});
-            }, 15000);
+            $('#success_message').html(rdata['success-message']).show();
+            setTimeout(function() { $('#success_message').fadeOut(); }, 15000);
         },
         error: function(rdata){
-            $("#loader_config").css({'display' : 'none'});
+            $("#loader_generate").hide();
 
             var errors = JSON.parse(rdata.responseText);
 
-            $('#failure_message').html(errors['failure-message']);
-            $('#failure_message').css({'display' : 'block'});
-
-            setTimeout(function() {
-                $('#failure_message').css({'display' : 'none'});
-            }, 15000);
+            $('#failure_message').html(errors['failure-message']).show();
+            setTimeout(function() { $('#failure_message').fadeOut(); }, 15000);
         },
     });
 

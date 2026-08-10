@@ -3,59 +3,72 @@
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
 {% block head %}
-<style>
-</style>
 <link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
 <script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
-
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="tw:container tw:mx-auto tw:px-4 tw:py-6">
+    <div class="tw:flex tw:flex-col tw:gap-6">
 
-<div class="row" style="display:block;">
-  <div class="col-sm-12">
-<table id="config-table" class="table table-striped compact" data-bs-theme="dark">
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Create</th>
-      <th>User</th>
-      <th>Level</th>
-      <th>Encrypted<br>Passwords</th>
-      <th>Link</th>
-      <th>Note</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for config in config_list %}
-    <tr>
-      <td>{{ config.id}}</td>
-      <td>{{ config.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-      <td>{{ config.username }}</td>
-      <td>{{ config.level }}</td>
-      <td>{{ config.encrypted }}</td>
-      <td>
-        <a href="{{ url_for('indi_allsky.config_download_view', id=config.id) }}" class="text-decoration-none link-info"><span class="badge bg-primary">Download</span></a>
-        <a href="{{ url_for('indi_allsky.config_download_view', id=config.id, redact=1) }}" class="text-decoration-none link-info"><span class="badge bg-warning text-dark">Redacted</span></a>
-      </td>
-      <td>{{ config.note }}</td>
-    </tr>
-    {% endfor %}
-      </tbody>
-    </table>
-      <hr>
-        <div><a href="{{ url_for('indi_allsky.config_restore_view') }}"><span class="badge bg-danger text-dark">Config Restore</span></a></div>
-      <hr>
+        <!-- Top Header & Navigation -->
+        <div class="tw:flex tw:items-center tw:justify-between tw:p-4 tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:flex tw:items-center tw:gap-3">
+                <i class="tw:icon-[lucide--history] tw:w-6 tw:h-6 tw:text-primary"></i>
+                <div>
+                    <h1 class="tw:text-lg tw:font-bold tw:text-base-content">Configuration History</h1>
+                    <p class="tw:text-xs tw:text-base-content/60">View, download, or audit previous configuration revisions</p>
+                </div>
+            </div>
+            <a href="{{ url_for('indi_allsky.config_restore_view') }}" class="tw:btn tw:btn-sm tw:btn-error tw:gap-2 tw:no-underline shadow-sm">
+                <i class="tw:icon-[lucide--rotate-ccw] tw:w-4 tw:h-4"></i>
+                Config Restore
+            </a>
+        </div>
+
+        <!-- Table Container -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-md tw:p-4">
+            <div class="tw:overflow-x-auto">
+                <table id="config-table" class="tw:table tw:table-zebra tw:w-full tw:text-xs">
+                    <thead>
+                        <tr class="tw:text-base-content/70">
+                            <th>ID</th>
+                            <th>Created</th>
+                            <th>User</th>
+                            <th>Level</th>
+                            <th>Encrypted Passwords</th>
+                            <th>Downloads</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for config in config_list %}
+                        <tr>
+                            <td class="tw:font-mono tw:font-bold">{{ config.id }}</td>
+                            <td>{{ config.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>{{ config.username }}</td>
+                            <td><span class="tw:badge tw:badge-sm tw:badge-outline">{{ config.level }}</span></td>
+                            <td>{{ config.encrypted }}</td>
+                            <td>
+                                <div class="tw:flex tw:items-center tw:gap-1.5">
+                                    <a href="{{ url_for('indi_allsky.config_download_view', id=config.id) }}" class="tw:badge tw:badge-primary tw:badge-sm tw:no-underline hover:tw:opacity-80">Download</a>
+                                    <a href="{{ url_for('indi_allsky.config_download_view', id=config.id, redact=1) }}" class="tw:badge tw:badge-warning tw:badge-sm tw:no-underline hover:tw:opacity-80">Redacted</a>
+                                </div>
+                            </td>
+                            <td class="tw:text-base-content/80">{{ config.note }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="tw:mt-3 tw:text-[0.6875rem] tw:text-base-content/50">
+                * Note: Configs from deleted users will not be displayed here, but are preserved in the system database.
+            </div>
+        </div>
     </div>
-    <div style="height:20px;"></div>
-    <div style="font-size:12px;">Note: Configs from deleted users will not be displayed, but they are still in the database</div>
-  </div>
-
-</div>
 </div>
 
 <script>
@@ -65,7 +78,8 @@ function init() {
         order: [[1, 'desc']],
         lengthMenu: [20, 50, 100, -1],
         layout: {
-            topEnd: ['buttons', 'search'],
+            topStart: ['pageLength', 'buttons'],
+            topEnd: 'search',
         },
         buttons: [
             'copy',
@@ -75,12 +89,8 @@ function init() {
     });
 }
 
-
-$( document ).ready(function() {
+$(document).ready(function() {
     init();
 });
-
 </script>
-
 {% endblock %}
-

@@ -2,135 +2,242 @@
 
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
+{% block header_title %}User Profile & Security{% endblock %}
+
 {% block head %}
-<style>
-</style>
+
 {% endblock %}
 
 {% block content %}
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6">
 
-    <div class="row justify-content-end">
-        <div class="col-sm-1">
-            <a href="{{ url_for('auth_indi_allsky.logout_view') }}" class="text-decoration-none link-danger">
-                <span class="badge pill bg-danger">Logout</span>
-            </a>
+    <!-- Top Action Bar -->
+    <div class="tw:w-full tw:flex tw:items-center tw:justify-between tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm">
+        <div>
+            <h1 class="tw:text-base tw:font-black tw:uppercase tw:tracking-widest tw:text-base-content tw:m-0">User Info</h1>
+            <p class="tw:text-[0.6875rem] tw:text-base-content/50 tw:mt-0.5 tw:font-mono">Account identity, security & UI appearance settings</p>
         </div>
+        <a href="{{ url_for('auth_indi_allsky.logout_view') }}" class="tw:no-underline tw:btn tw:btn-error tw:btn-outline tw:btn-sm tw:h-10 tw:px-4 tw:text-xs tw:font-bold tw:tracking-wide tw:uppercase tw:gap-2">
+            <i class="tw:icon-[lucide--log-out] tw:w-4 tw:h-4"></i>
+            Logout
+        </a>
     </div>
 
-<form id="form_userinfo" onSubmit="return false;" autocomplete="off">
+    <!-- 2-Card Form Layout -->
+    <form id="form_userinfo" onSubmit="return false;" autocomplete="off" class="tw:w-full">
+        <div class="tw:flex tw:flex-col tw:lg:flex-row tw:gap-6 tw:items-stretch tw:w-full">
+            
+            <!-- CARD 1: IDENTITY CONFIGURATION -->
+            <div class="tw:flex-1 tw:min-w-0 tw:bg-base-200 tw:p-6 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 hover:tw:border-base-content/25 tw:transition-all tw:shadow-sm tw:flex tw:flex-col tw:gap-5">
+                <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-300 tw:pb-3 tw:m-0 tw:flex tw:items-center tw:gap-2">
+                    <i class="tw:icon-[lucide--id-card] tw:w-4 tw:h-4 tw:text-primary"></i> Identity Configuration
+                </h4>
 
-    <hr>
+                <div class="tw:form-control tw:flex tw:flex-col tw:gap-1.5">
+                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                        {{ form_userinfo.USERNAME.label.text }}
+                    </label>
+                    {{ form_userinfo.USERNAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                    <div id="USERNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_userinfo.USERNAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_userinfo.USERNAME(class='form-control bg-secondary') }}
-            <div id="USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7"></div>
-    </div>
+                <div class="tw:form-control tw:flex tw:flex-col tw:gap-1.5">
+                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                        {{ form_userinfo.NAME.label.text }}
+                    </label>
+                    {{ form_userinfo.NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                    <div id="NAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                </div>
 
-    <hr>
+                <div class="tw:form-control tw:flex tw:flex-col tw:gap-1.5">
+                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                        {{ form_userinfo.EMAIL.label.text }}
+                    </label>
+                    {{ form_userinfo.EMAIL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-300 tw:text-base-content/70 tw:w-full tw:cursor-not-allowed', readonly=true) }}
+                    <span class="tw:text-[0.625rem] tw:font-semibold tw:text-base-content/40 tw:italic">(read-only)</span>
+                    <div id="EMAIL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_userinfo.NAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_userinfo.NAME(class='form-control bg-secondary') }}
-            <div id="NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7"></div>
-    </div>
+                <div class="tw:form-control tw:flex tw:items-center tw:justify-between tw:pt-2">
+                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                        {{ form_userinfo.ADMIN.label.text }}
+                    </label>
+                    <div class="tw:flex tw:items-center">
+                        {{ form_userinfo.ADMIN(class='tw:toggle tw:toggle-primary') }}
+                    </div>
+                    <div id="ADMIN-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                </div>
+            </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_userinfo.EMAIL.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_userinfo.EMAIL(class='form-control bg-secondary') }}
-            <div id="EMAIL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7">(read-only)</div>
-    </div>
+            <!-- CARD 2: AUTHENTICATION CREDENTIALS -->
+            <div class="tw:flex-1 tw:min-w-0 tw:bg-base-200 tw:p-6 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 hover:tw:border-base-content/25 tw:transition-all tw:shadow-sm tw:flex tw:flex-col tw:gap-5">
+                <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-300 tw:pb-3 tw:m-0 tw:flex tw:items-center tw:gap-2">
+                    <i class="tw:icon-[lucide--key-round] tw:w-4 tw:h-4 tw:text-primary"></i> Authentication Credentials
+                </h4>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_userinfo.ADMIN.label }}
+                <div class="tw:form-control tw:flex tw:flex-col tw:gap-1.5">
+                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                        {{ form_userinfo.CURRENT_PASSWORD.label.text }}
+                    </label>
+                    {{ form_userinfo.CURRENT_PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full', autocomplete='new-password') }}
+                    <div id="CURRENT_PASSWORD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                </div>
+
+                <div class="tw:form-control tw:flex tw:flex-col tw:gap-1.5">
+                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                        {{ form_userinfo.NEW_PASSWORD.label.text }}
+                    </label>
+                    {{ form_userinfo.NEW_PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full', autocomplete='new-password') }}
+                    <div id="NEW_PASSWORD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                </div>
+
+                <div class="tw:form-control tw:flex tw:flex-col tw:gap-1.5">
+                    <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                        Confirm Password
+                    </label>
+                    {{ form_userinfo.NEW_PASSWORD2(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full', autocomplete='new-password') }}
+                    <div id="NEW_PASSWORD2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                </div>
+
+                <div class="tw:flex tw:flex-col tw:gap-4 tw:pt-3 tw:border-t tw:border-base-300">
+                    <button type="submit" class="tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:w-full tw:text-xs tw:font-bold tw:tracking-wide tw:uppercase tw:gap-2 active:tw:scale-95 tw:transition-all">
+                        <i class="tw:icon-[lucide--save] tw:w-4 tw:h-4"></i>
+                        Save Password
+                    </button>
+
+                    <div class="tw:w-full">
+                        <div id="success-message" class="tw:text-success tw:text-sm tw:font-semibold tw:p-3 tw:bg-success/10 tw:rounded-[var(--radius-box)]" style="display: none;"></div>
+                        <div id="failure-message" class="tw:text-error tw:text-sm tw:font-semibold tw:p-3 tw:bg-error/10 tw:rounded-[var(--radius-box)]" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
         </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_userinfo.ADMIN(class='form-check-input') }}
-                <div id="ADMIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+    </form>
+
+    <!-- CARD 3: THEME & APPEARANCE PREFERENCES -->
+    <div class="tw:w-full tw:bg-base-200 tw:p-6 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 hover:tw:border-base-content/25 tw:transition-all tw:shadow-sm tw:flex tw:flex-col tw:gap-6">
+        <div class="tw:border-b tw:border-base-300 tw:pb-3">
+            <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:m-0 tw:flex tw:items-center tw:gap-2">
+                <i class="tw:icon-[lucide--palette] tw:w-4 tw:h-4 tw:text-primary"></i> Theme & Appearance
+            </h4>
+            <p class="tw:text-[0.6875rem] tw:text-base-content/40 tw:m-0 tw:mt-0.5">Customize your DaisyUI color palette. Selecting a theme previews it live and switches to that mode.</p>
+        </div>
+
+        <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-6">
+            <!-- Light Theme Dropdown -->
+            <div class="tw:form-control tw:flex tw:flex-col tw:gap-2">
+                <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                    Light Theme Preset
+                </label>
+                <select id="select_light_theme" class="tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full">
+                    <option value="fantasy">Fantasy (Default Light)</option>
+                    <option value="light">Classic Light</option>
+                    <option value="cupcake">Cupcake</option>
+                    <option value="bumblebee">Bumblebee</option>
+                    <option value="emerald">Emerald</option>
+                    <option value="corporate">Corporate</option>
+                    <option value="garden">Garden</option>
+                    <option value="lofi">Lofi</option>
+                    <option value="pastel">Pastel</option>
+                    <option value="cmyk">CMYK</option>
+                    <option value="autumn">Autumn</option>
+                    <option value="acid">Acid</option>
+                    <option value="lemonade">Lemonade</option>
+                    <option value="winter">Winter</option>
+                    <option value="nord">Nord</option>
+                    {% for ctheme in user_custom_themes %}
+                    <option value="{{ ctheme }}">{{ ctheme }} (Custom Theme)</option>
+                    {% endfor %}
+                </select>
+                <span class="tw:text-[0.625rem] tw:text-base-content/40">Selecting a light preset switches the UI to Light mode.</span>
+            </div>
+
+            <!-- Dark Theme Dropdown -->
+            <div class="tw:form-control tw:flex tw:flex-col tw:gap-2">
+                <label class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">
+                    Dark Theme Preset
+                </label>
+                <select id="select_dark_theme" class="tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full">
+                    <option value="forest">Forest (Default Dark)</option>
+                    <option value="dark">Classic Dark</option>
+                    <option value="synthwave">Synthwave</option>
+                    <option value="halloween">Halloween</option>
+                    <option value="aqua">Aqua</option>
+                    <option value="black">Deep Black</option>
+                    <option value="luxury">Luxury</option>
+                    <option value="dracula">Dracula</option>
+                    <option value="business">Business</option>
+                    <option value="night">Night</option>
+                    <option value="coffee">Coffee</option>
+                    <option value="dim">Dim</option>
+                    <option value="sunset">Sunset</option>
+                    {% for ctheme in user_custom_themes %}
+                    <option value="{{ ctheme }}">{{ ctheme }} (Custom Theme)</option>
+                    {% endfor %}
+                </select>
+                <span class="tw:text-[0.625rem] tw:text-base-content/40">Selecting a dark preset switches the UI to Dark mode.</span>
             </div>
         </div>
-        <div class="col-sm-8"></div>
-    </div>
+        
+        <!-- Text Size Scaling Sub-Section -->
+        <div class="tw:border-t tw:border-base-300 tw:pt-6 tw:flex tw:flex-col tw:gap-4">
+            <div>
+                <h5 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/70 tw:m-0">
+                    Text & Interface Scaling
+                </h5>
+                <p class="tw:text-[0.6875rem] tw:text-base-content/40 tw:m-0 tw:mt-0.5">
+                    Adjust the base font size to scale all text and interface layouts to your liking.
+                </p>
+            </div>
+            
+            <div class="tw:flex tw:flex-col md:tw:flex-row tw:items-center tw:gap-6 tw:bg-base-300/40 tw:p-4 tw:rounded-[var(--radius-box)]">
+                <div class="tw:flex-1 tw:w-full">
+                    <input id="font_size_slider" type="range" min="70" max="130" value="100" class="tw:range tw:range-primary tw:w-full" step="5" />
+                    <div class="tw:w-full tw:flex tw:justify-between tw:text-[0.625rem] tw:px-1 tw:font-mono tw:text-base-content/40 tw:mt-1">
+                        <span>70%</span>
+                        <span>85%</span>
+                        <span>100% (Default)</span>
+                        <span>115%</span>
+                        <span>130%</span>
+                    </div>
+                </div>
+                <div class="tw:flex tw:items-center tw:gap-3 tw:shrink-0 max-md:tw:w-full max-md:tw:justify-between">
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:tracking-wide tw:uppercase tw:text-base-content/60">Current Scale:</span>
+                    <span id="font_size_display" class="tw:badge tw:badge-primary tw:font-mono tw:text-xs tw:py-3 tw:px-4">100%</span>
+                    <button id="btn_reset_font_size" class="tw:btn tw:btn-xs tw:btn-ghost tw:border tw:border-base-content/10 tw:gap-1 shadow-sm">
+                        <i class="tw:icon-[lucide--rotate-ccw] tw:w-3 tw:h-3"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_userinfo.IDP.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_userinfo.IDP(class='form-select bg-secondary') }}
-            <div id="IDP-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7">(read-only)</div>
-    </div>
+        <!-- Custom CSS & DaisyUI Theme Injector Sub-Section -->
+        <div class="tw:border-t tw:border-base-300 tw:pt-6 tw:flex tw:flex-col tw:gap-4">
+            <div class="tw:flex tw:items-center tw:justify-between">
+                <div>
+                    <h5 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/70 tw:m-0">
+                        Custom Theme Injector
+                    </h5>
+                    <p class="tw:text-[0.6875rem] tw:text-base-content/40 tw:m-0 tw:mt-0.5">
+                        Design a custom color scheme using the <a href="https://daisyui.com/theme-generator/" target="_blank" class="tw:link tw:link-info tw:no-underline tw:font-semibold">DaisyUI Theme Generator <i class="tw:icon-[lucide--external-link] tw:w-3 tw:h-3 tw:inline"></i></a> and paste your exported theme below. After saving, compiling, and reloading the page, your custom theme will be available to select in the preset dropdowns above.
+                    </p>
+                </div>
+            </div>
 
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_userinfo.CURRENT_PASSWORD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_userinfo.CURRENT_PASSWORD(class='form-control bg-secondary') }}
-            <div id="CURRENT_PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_userinfo.NEW_PASSWORD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_userinfo.NEW_PASSWORD(class='form-control bg-secondary') }}
-            <div id="NEW_PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_userinfo.NEW_PASSWORD2.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_userinfo.NEW_PASSWORD2(class='form-control bg-secondary') }}
-            <div id="NEW_PASSWORD2-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-7"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-1">
-            <button class="btn btn-primary">Save</button>
-        </div>
-    </div>
-
-    <div class="form-group row" style="height:100px;">
-        <div class="col-sm-8">
-            <div id="success-message" class="text-success" style="display: none;"></div>
-            <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+            <div class="tw:flex tw:flex-col tw:gap-2">
+                <textarea id="user_custom_css" class="tw:textarea tw:textarea-bordered tw:bg-base-100 tw:text-base-content tw:w-full tw:font-mono tw:text-xs" rows="8" placeholder="/* Paste custom DaisyUI theme exported from https://daisyui.com/theme-generator/ here */">{{ user_custom_css }}</textarea>
+                <div class="tw:flex tw:items-center tw:justify-between tw:gap-4">
+                    <button id="btn_save_custom_css" type="button" class="tw:btn tw:btn-sm tw:btn-primary tw:gap-2 shadow-sm">
+                        <i class="tw:icon-[lucide--palette] tw:w-4 tw:h-4"></i> Save & Compile Custom CSS
+                    </button>
+                    <div id="user_css_status" class="tw:text-xs tw:font-semibold" style="display: none;"></div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <hr>
-
-</form>
+</div>
 
 <script>
 const successMessage = $('#success-message');
@@ -140,7 +247,6 @@ const field_names = [
     'USERNAME',
     'NAME',
     'EMAIL',
-    'IDP',
     'CURRENT_PASSWORD',
     'NEW_PASSWORD',
     'NEW_PASSWORD2',
@@ -151,7 +257,6 @@ const checkbox_field_names = [
 ];
 
 var fields = {};
-// Populate fields object
 field_names.forEach(item => {
     fields[item] = {
         'input' : $('#' + item),
@@ -159,7 +264,6 @@ field_names.forEach(item => {
     };
 });
 
-// Checkboxes
 checkbox_field_names.forEach(item => {
     fields[item] = {
         'input' : $('#' + item),
@@ -172,30 +276,123 @@ fields['form_global'] = {
     'error' : failureMessage,
 };
 
+function updateCustomThemeDropdowns() {
+    var text = $('#user_custom_css').val();
+    var re = /name\s*:\s*["']?([a-zA-Z0-9_\-]+)["']?/g;
+    var match;
+    while ((match = re.exec(text)) !== null) {
+        var themeName = match[1];
+        ['#select_light_theme', '#select_dark_theme'].forEach(function(selId) {
+            var sel = $(selId);
+            if (sel.find('option[value="' + themeName + '"]').length === 0) {
+                sel.append('<option value="' + themeName + '">' + themeName + ' (Custom Theme)</option>');
+            }
+        });
+    }
+}
 
-$('#form_userinfo').on('submit', function() {
+// Theme Management Logic
+$(document).ready(function() {
+    // Text Sizing Controller Logic
+    var savedFontSize = localStorage.getItem('allsky-font-size') || '100%';
+    var savedPercent = parseInt(savedFontSize.replace('%', ''), 10);
+    if (isNaN(savedPercent)) savedPercent = 100;
 
-    // hide all errors
-    successMessage.css({'display' : 'none'});
-    Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
+    $('#font_size_slider').val(savedPercent);
+    $('#font_size_display').text(savedPercent + '%');
+
+    function applyFontSize(percent) {
+        var val = percent + '%';
+        localStorage.setItem('allsky-font-size', val);
+        document.documentElement.style.fontSize = val;
+        $('#font_size_display').text(val);
+    }
+
+    $('#font_size_slider').on('input change', function() {
+        var val = $(this).val();
+        applyFontSize(val);
     });
 
+    $('#btn_reset_font_size').on('click', function() {
+        $('#font_size_slider').val(100);
+        applyFontSize(100);
+    });
 
-    // Populate fields object
+    var lightT = localStorage.getItem('allsky-light-theme') || 'fantasy';
+    var darkT = localStorage.getItem('allsky-dark-theme') || 'forest';
+
+    $('#select_light_theme').val(lightT);
+    $('#select_dark_theme').val(darkT);
+
+    if (window.applyAllskyTheme) {
+        window.applyAllskyTheme();
+    }
+
+    $('#select_light_theme').on('change', function() {
+        localStorage.setItem('allsky-light-theme', $(this).val());
+        localStorage.setItem('allsky-theme-mode', 'light');
+        if (window.applyAllskyTheme) {
+            window.applyAllskyTheme();
+        }
+    });
+
+    $('#select_dark_theme').on('change', function() {
+        localStorage.setItem('allsky-dark-theme', $(this).val());
+        localStorage.setItem('allsky-theme-mode', 'dark');
+        if (window.applyAllskyTheme) {
+            window.applyAllskyTheme();
+        }
+    });
+
+    $('#btn_save_custom_css').on('click', function() {
+        var btn = $(this);
+        var statusDiv = $('#user_css_status');
+        btn.prop('disabled', true).html('<span class="tw:loading tw:loading-spinner tw:loading-xs"></span> Compiling...');
+        statusDiv.hide();
+
+        $.ajax({
+            type: "POST",
+            url: "{{ url_for('indi_allsky.ajax_custom_css_view') }}",
+            contentType: "application/json",
+            data: JSON.stringify({ custom_css: $('#user_custom_css').val() }),
+            success: function(data) {
+                btn.prop('disabled', false).html('<i class="tw:icon-[lucide--check] tw:w-4 tw:h-4"></i> Saved & Compiled');
+                updateCustomThemeDropdowns();
+                statusDiv.attr('class', 'tw:text-xs tw:font-semibold tw:text-success').html(data.message).show();
+                setTimeout(function() {
+                    btn.html('<i class="tw:icon-[lucide--palette] tw:w-4 tw:h-4"></i> Save & Compile Custom CSS');
+                    statusDiv.fadeOut();
+                }, 4000);
+            },
+            error: function(xhr) {
+                btn.prop('disabled', false).html('<i class="tw:icon-[lucide--alert-triangle] tw:w-4 tw:h-4"></i> Compile Failed');
+                var errObj = JSON.parse(xhr.responseText || '{}');
+                var errText = errObj.error || errObj.message || 'Build failed';
+                statusDiv.attr('class', 'tw:text-xs tw:font-semibold tw:text-error').html(errText).show();
+            }
+        });
+    });
+});
+
+$('#form_userinfo').on('submit', function() {
+    successMessage.hide();
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.hide();
+        if(fields[key].input) {
+            fields[key].input.removeClass('tw:input-error tw:select-error tw:toggle-error');
+        }
+    });
+
     var json_data = {};
     field_names.forEach(item => {
         json_data[item] = fields[item].input.val();
     });
 
-    // checkboxes
     checkbox_field_names.forEach(item => {
         json_data[item] = fields[item].input.prop('checked');
     });
 
-    // reset option
     $("#RELOAD_ON_SAVE").prop('checked', false);
-
 
     $.ajax({
         type: "POST",
@@ -203,10 +400,9 @@ $('#form_userinfo').on('submit', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
-            successMessage.html(data['success-message']);
-            successMessage.css({'display' : 'block'});
+            successMessage.html(data['success-message']).show();
             setTimeout(function() {
-                successMessage.css({'display' : 'none'});
+                successMessage.fadeOut();
             }, 10000);
 
             $('#CURRENT_PASSWORD').val('');
@@ -216,15 +412,12 @@ $('#form_userinfo').on('submit', function() {
         error: function(data){
             var errors = JSON.parse(data.responseText);
             Object.keys(errors).forEach((key) => {
-                fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key][0]);
-                fields[key].error.css({'display' : 'block'});
+                if (key === 'form_global' || !fields[key]) return;
+                fields[key].input.addClass('tw:input-error tw:select-error tw:toggle-error');
+                fields[key].error.html(errors[key][0]).show();
             });
         },
     });
-
 });
-
 </script>
-
 {% endblock %}

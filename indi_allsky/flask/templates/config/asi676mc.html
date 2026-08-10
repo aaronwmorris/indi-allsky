@@ -1,0 +1,110 @@
+{% macro repair_toggle(field, help_text, title='') -%}
+<div class="tw:flex tw:flex-col tw:gap-2 tw:p-4 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300"{% if title %} title="{{ title }}"{% endif %}>
+    <div class="tw:flex tw:items-center tw:justify-between tw:gap-4">
+        <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ field.label.text }}</span>
+        {{ field(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+    </div>
+    <p class="tw:text-xs tw:leading-relaxed tw:text-base-content/60">{{ help_text }}</p>
+    <div id="{{ field.id }}-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
+</div>
+{%- endmacro %}
+
+{% macro repair_number(field, help_text) -%}
+<div class="tw:flex tw:flex-col tw:gap-1">
+    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ field.label.text }}</span>
+    {{ field(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+    <p class="tw:text-[0.6875rem] tw:leading-relaxed tw:text-base-content/50">{{ help_text }}</p>
+    <div id="{{ field.id }}-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
+</div>
+{%- endmacro %}
+
+<div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+    <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-5">
+        <div class="tw:flex tw:flex-wrap tw:items-start tw:justify-between tw:gap-4">
+            <div>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Camera-specific RAW handling</span>
+                <h3 class="tw:text-lg tw:font-bold tw:mt-1">ASI676MC RAW16 Purple-frame Handling</h3>
+            </div>
+            <span class="tw:badge tw:badge-warning tw:badge-outline">Purple-frame cameras only</span>
+        </div>
+
+        <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:p-4 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+            <div class="tw:flex tw:flex-col tw:gap-1">
+                <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ASI676MC_REPAIR__ENABLE.label.text }}</span>
+                {% if asi676mc_repair_supported %}
+                <p class="tw:text-xs tw:leading-relaxed tw:text-base-content/60">
+                    Only enable this if the camera actually produces purple frames. Cameras without this failure should leave the feature disabled. Detection runs before calibration and debayering; other camera models remain unchanged.
+                    Detected ASI676MC camera{% if asi676mc_camera_names|length != 1 %}s{% endif %}: {{ asi676mc_camera_names|join(', ') }}.
+                </p>
+                {% else %}
+                <p class="tw:text-xs tw:leading-relaxed tw:text-warning">
+                    No local ASI676MC is currently available, so this feature cannot be enabled.
+                </p>
+                {% endif %}
+            </div>
+            {% if asi676mc_repair_supported %}
+            {{ form_config.IMAGE_ASI676MC_REPAIR__ENABLE(class='tw:toggle tw:toggle-primary') }}
+            {% else %}
+            {{ form_config.IMAGE_ASI676MC_REPAIR__ENABLE(class='tw:toggle tw:toggle-primary', disabled=true) }}
+            {% endif %}
+            <div id="IMAGE_ASI676MC_REPAIR__ENABLE-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
+        </div>
+
+        <div>
+            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Operation and evidence</span>
+            <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-2 tw:gap-3 tw:mt-3">
+                {{ repair_toggle(
+                    form_config.IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY,
+                    'Detect without repairing. The rendered faulty image is retained, flagged as excluded, and omitted from standard timelapses. This is selected automatically when the feature is first enabled; disable it after calibrated repair values have been applied. For stronger good/purple/good triplets, also save the preceding RAW FITS.'
+                ) }}
+                {{ repair_toggle(
+                    form_config.IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME,
+                    'Log every detection result. Successful repairs and validation failures are always logged; skipped handling and failed validation also create rate-limited Camera notifications.'
+                ) }}
+                {{ repair_toggle(
+                    form_config.IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE,
+                    'Show repair badges, outlines, and status filters in the gallery. The excluded filter covers only frames excluded by purple-frame handling, not manual exclusions.'
+                ) }}
+                {{ repair_toggle(
+                    form_config.IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS,
+                    'Save the untouched faulty RAW FITS and the immediately following same-camera FITS. Prefer this diagnostic source and leave standard FITS off unless you need them for another purpose. If diagnostic saving does not catch the purple frame, temporarily save every standard FITS to gather evidence.'
+                ) }}
+                {{ repair_toggle(
+                    form_config.IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS,
+                    'Also retain one untouched preceding normal FITS, producing a stronger good/purple/good triplet. This uses roughly one full FITS frame of additional memory per active camera.',
+                    'Requires diagnostic FITS saving'
+                ) }}
+            </div>
+        </div>
+
+        <div class="tw:border-t tw:border-base-300 tw:pt-5">
+            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Detection thresholds</span>
+            <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 xl:tw:grid-cols-5 tw:gap-4 tw:mt-3">
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD, 'Combined red/blue-to-green ratio. Default: 1.50.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD, 'Apparent red-to-first-green ratio. Default: 1.15.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD, 'Apparent blue-to-second-green ratio. Default: 1.75.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__SAMPLE_STEP, 'Even Bayer-aware signature sampling step. Default: 32.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD, 'RAW16 level treated as source-camera clipping. Default: 65000.') }}
+            </div>
+        </div>
+
+        <div class="tw:border-t tw:border-base-300 tw:pt-5">
+            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Repair gains</span>
+            <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 xl:tw:grid-cols-4 tw:gap-4 tw:mt-3">
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_R, 'Multiplier at the R Bayer position. Default: 0.91004.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_G1, 'Multiplier at the G1 Bayer position. Default: 1.68652.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_G2, 'Multiplier at the G2 Bayer position. Default: 1.09238.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_B, 'Multiplier at the B Bayer position. Default: 0.59537.') }}
+            </div>
+        </div>
+
+        <div class="tw:border-t tw:border-base-300 tw:pt-5">
+            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Highlight transition and memory</span>
+            <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:mt-3">
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO, 'Low-to-high ratio where clipped-highlight blending begins. Default: 0.55.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO, 'Ratio where blending reaches the stronger channel. Default: 0.75; must exceed the start.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__CHUNK_ROWS, 'Even RAW row count processed per repair chunk. Default: 128.') }}
+            </div>
+        </div>
+    </div>
+</div>

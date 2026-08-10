@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Generate the latest assets before committing
+npm run build
+
+# Add the compiled files to the current commit
+git add indi_allsky/flask/static/css/dist.css
+git add indi_allsky/flask/static/js/cally.js

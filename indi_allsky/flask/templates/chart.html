@@ -4,29 +4,8 @@
 
 {% block head %}
 <meta charset="UTF-8">
-<style>
-.loader {
-  display: block;
-  border: 3px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-canvas {
-    width:100%;
-    height:100%;
-    max-height:300px;
-};
-</style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/chart.umd.js') }}"></script>
+
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 var refreshInterval = {{ refreshInterval | int }};
@@ -1004,144 +983,120 @@ $( document ).ready(function() {
 {% endblock %}
 
 {% block content %}
-<div class="container h-100">
+<style>
+    /* Direct override block to bypass parent container layout restrictions */
+    .allsky-charts-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        width: 100%;
+    }
+    @media (min-width: 768px) {
+        .allsky-charts-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+    }
+</style>
 
-<form id="form_history" onSubmit="return false;">
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_history.HISTORY_SELECT.label(class='col-form-label') }}
+<div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-4">
+
+    <form id="form_history" onSubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)]">
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-center tw:gap-6">
+            
+            <div class="tw:flex tw:items-center tw:gap-2">
+                {{ form_history.HISTORY_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
+                <div class="tw:flex tw:flex-col">
+                    {{ form_history.HISTORY_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content') }}
+                </div>
+            </div>
+
+            <div class="tw:flex tw:items-center">
+                <span id="loader_chart" class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary" style="display: none;"></span>
+            </div>
+
         </div>
-        <div class="col-sm-2">
-            {{ form_history.HISTORY_SELECT(class='form-select bg-secondary') }}
-        </div>
-        <div class="col-sm-1">
-            <div class="loader" id="loader_chart"></div>
-        </div>
-    </div>
-</form>
+    </form>
 
-<hr>
-
-<div id="chart_note"><span class="badge rounded-pill bg-info text-dark">Note</span> If you recently changed the custom charts, a restart will be necessary for the new selections to appear</div>
-
-<div class="row">
-    <div class="text-center">
-        <div class="text-muted" id="message"></div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-sm-6">
-        <div class="bg-dark" style="margin:3px">
-            <canvas id="exposure-chart"></canvas>
-        </div>
-    </div>
-
-    <div class="col-sm-6">
-        <div class="bg-dark" style="margin:3px">
-            <canvas id="gain-chart"></canvas>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-sm-6">
-        <div class="bg-dark" style="margin:3px">
-            <canvas id="stars-chart"></canvas>
+    <div id="chart_note" class="tw:w-full">
+        <div class="tw:alert tw:bg-base-200 tw:border-l-4 tw:border-info tw:py-2.5 tw:px-4 tw:rounded-[var(--radius-box)] tw:text-xs">
+            <div class="tw:flex tw:items-center tw:gap-2">
+                <span class="tw:badge tw:badge-info tw:badge-sm tw:font-bold tw:text-base-200">Note</span>
+                <span class="tw:text-base-content/80 tw:font-medium">If you recently changed the custom charts, a restart will be necessary for the new selections to appear.</span>
+            </div>
         </div>
     </div>
 
-    <div class="col-sm-6">
-        <div class="bg-dark" style="margin:3px">
-            <canvas id="temp-chart"></canvas>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-sm-6">
-        <div class="bg-dark" style="margin:3px">
-            <canvas id="jsqm-chart"></canvas>
-        </div>
+    <div class="tw:w-full">
+        <div class="tw:text-base-content tw:text-center tw:font-medium tw:text-sm" id="message"></div>
     </div>
 
-    <div class="col-sm-6">
-        <div class="bg-dark" style="margin:3px">
-            <canvas id="detection-chart"></canvas>
+    <div class="allsky-charts-grid">
+        
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
+            <canvas id="exposure-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
-    </div>
-</div>
 
-<div class="row">
-    <div class="col-sm-6">
-        <div class="bg-dark" style="margin:3px">
-            <canvas id="custom-1-chart"></canvas>
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
+            <canvas id="gain-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
-    </div>
 
-    <div class="col-sm-6">
-        <div class="bg-dark" style="margin:3px">
-            <canvas id="custom-2-chart"></canvas>
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
+            <canvas id="stars-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
-    </div>
-</div>
 
-<div class="row">
-    <div class="col-sm-6">
-        <div class="bg-dark" style="margin:3px">
-            <canvas id="custom-3-chart"></canvas>
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
+            <canvas id="temp-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
-    </div>
 
-    <div class="col-sm-6">
-        <div class="bg-dark" style="margin:3px">
-            <canvas id="custom-4-chart"></canvas>
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
+            <canvas id="jsqm-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
-    </div>
-</div>
 
-<div class="row">
-    <div class="col-sm-6">
-        <div class="bg-dark" style="margin:3px">
-            <canvas id="custom-5-chart"></canvas>
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
+            <canvas id="detection-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
-    </div>
 
-    <div class="col-sm-6">
-        <div class="bg-dark" style="margin:3px">
-            <canvas id="custom-6-chart"></canvas>
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
+            <canvas id="custom-1-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
-    </div>
-</div>
 
-<div class="row">
-    <div class="col-sm-6">
-        <div class="bg-dark" style="margin:3px">
-            <canvas id="custom-7-chart"></canvas>
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
+            <canvas id="custom-2-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
-    </div>
 
-    <div class="col-sm-6">
-        <div class="bg-dark" style="margin:3px">
-            <canvas id="custom-8-chart"></canvas>
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
+            <canvas id="custom-3-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
-    </div>
-</div>
 
-
-<div class="row">
-    <div class="col-sm-6">
-        <div class="bg-dark" style="margin:3px">
-            <canvas id="custom-9-chart"></canvas>
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
+            <canvas id="custom-4-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
-    </div>
 
-    <div class="col-sm-6">
-        <div class="bg-dark" style="margin:3px">
-            <canvas id="histogram-chart"></canvas>
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
+            <canvas id="custom-5-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
+
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
+            <canvas id="custom-6-chart" class="tw:w-full tw:h-auto"></canvas>
+        </div>
+
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
+            <canvas id="custom-7-chart" class="tw:w-full tw:h-auto"></canvas>
+        </div>
+
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
+            <canvas id="custom-8-chart" class="tw:w-full tw:h-auto"></canvas>
+        </div>
+
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
+            <canvas id="custom-9-chart" class="tw:w-full tw:h-auto"></canvas>
+        </div>
+
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
+            <canvas id="histogram-chart" class="tw:w-full tw:h-auto"></canvas>
+        </div>
+
     </div>
-</div>
 
 </div>
 

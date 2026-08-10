@@ -136,6 +136,10 @@ image-correction algorithm to drift out of sync.
 ## Configuration reference
 
 All keys live below `IMAGE_ASI676MC_REPAIR`.
+In the web interface they appear together in the dedicated **ASI676MC RAW16
+Purple-frame Handling** card under **Config > Image**. The card follows the
+same responsive layout, controls, validation, and save permissions as the
+rest of the current configuration interface.
 
 | Key | Default | Purpose |
 | --- | ---: | --- |
@@ -580,8 +584,8 @@ recalibrate; do not loosen detection thresholds merely to suppress the warning.
 | `indi_allsky/video.py` | Background calibration task and seven-day session cleanup fallback. |
 | `indi_allsky/flask/forms.py` | Settings validators, calibration controls, saved-FITS lookup, viewer assets, and gallery filtering. |
 | `indi_allsky/flask/views.py` | Authenticated endpoints, task queueing, result/report access, and configuration apply/reload. |
-| `indi_allsky/flask/base_views.py` and `templates/base.html` | Context-aware Tools-menu visibility. |
-| `indi_allsky/flask/templates/config.html` | Settings UI and contextual guidance. |
+| `indi_allsky/flask/base_views.py` and `templates/base.html` | Context-aware Tools-menu visibility in the current navigation. |
+| `indi_allsky/flask/templates/config.html`, `config/image.html`, and `config/asi676mc.html` | Configuration save integration, responsive settings card, and contextual guidance. |
 | `indi_allsky/flask/templates/asi676mc_calibration.html` | Calibration setup/progress/result transitions, cancellation, reports, reset, and browser capability checks. |
 | `indi_allsky/flask/templates/gallery.html` | Optional repair/exclusion badges, outlines, and status-specific filtering. |
 | `indi_allsky/flask/templates/imageviewer.html` | Diagnostic preceding/purple/following FITS downloads. |

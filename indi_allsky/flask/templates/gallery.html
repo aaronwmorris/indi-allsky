@@ -4,176 +4,168 @@
 
 {% block head %}
 <meta charset="UTF-8">
-<style>
-figure {
-  display: inline-block;
-  margin: 0;
-  float: left;
-}
-figure img {width: 100%;}
-.spacer {height: 5em;}
-
-.loader {
-  display: block;
-  border: 3px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  animation: spin 2s linear infinite;
-}
-
-/* Make model-specific outcomes visible without replacing existing captions. */
-.asi676mc-repaired-thumbnail {
-  outline: 4px solid #fd7e14;
-  outline-offset: -4px;
-}
-
-.asi676mc-validation-failed-thumbnail {
-  outline: 4px solid #dc3545;
-  outline-offset: -4px;
-}
-
-.asi676mc-repair-badge {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  padding: 2px 5px;
-  color: #fff;
-  background-color: #fd7e14;
-  border-radius: 3px;
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 1.2;
-  pointer-events: none;
-}
-
-.asi676mc-repair-badge.validation-failed {
-  background-color: #dc3545;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-</style>
+<script type="module" src="{{ url_for('indi_allsky.static', filename='js/cally.js') }}"></script>
 
 <script src="{{ url_for('indi_allsky.static', filename='photoswipe/dist/umd/photoswipe.umd.min.js') }}"></script>
 <script src="{{ url_for('indi_allsky.static', filename='photoswipe/dist/umd/photoswipe-lightbox.umd.min.js') }}"></script>
-
 <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='photoswipe/dist/photoswipe.css') }}">
+<style>
+#allsky-gallery {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
+    gap: 1rem !important;
+}
+#allsky-gallery a {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    height: 180px !important;
+    overflow: hidden !important;
+    border-radius: 0.75rem !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    transition: transform 0.2s ease, border-color 0.2s ease !important;
+    background-color: var(--color-base-200, #1d232a) !important;
+}
+#allsky-gallery a:hover {
+    transform: scale(1.04) !important;
+    border-color: var(--color-primary, #3b82f6) !important;
+}
+#allsky-gallery img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+}
+
+/* Purple-frame audit styling uses stored server status only; the gallery
+ * never reclassifies or mutates a frame. */
+#allsky-gallery a.asi676mc-repaired-thumbnail,
+#allsky-gallery a.asi676mc-excluded-thumbnail {
+    box-shadow: inset 0 0 0 4px var(--color-warning, #f59e0b) !important;
+}
+
+#allsky-gallery a.asi676mc-validation-failed-thumbnail {
+    box-shadow: inset 0 0 0 4px var(--color-error, #ef4444) !important;
+}
+
+.asi676mc-repair-badge {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.4rem;
+    z-index: 1;
+    max-width: calc(100% - 0.8rem);
+    padding: 0.2rem 0.45rem;
+    border-radius: 9999px;
+    color: var(--color-warning-content, #111827);
+    background: var(--color-warning, #f59e0b);
+    font-size: 0.625rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    pointer-events: none;
+}
+
+.asi676mc-repair-badge.validation-failed {
+    color: var(--color-error-content, #ffffff);
+    background: var(--color-error, #ef4444);
+}
+</style>
+
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 var asi676mc_repair_gallery_enabled = Boolean({{ asi676mc_repair_gallery_enabled }});
 var lightbox = null;
 var newest_entry_default = true;
 </script>
-
 {% endblock %}
 
 {% block content %}
-<form id="form_viewer" onSubmit="return false;">
-    {{ form_viewer.csrf_token }}
-    <div class="text-danger my-2" id="csrf_token-error"></div>
+<div class="tw:container tw:h-full tw:mx-auto tw:flex tw:flex-col tw:gap-4">
 
-    <div class="form-group row">
-        <div class="col-sm-1">
-            {{ form_viewer.YEAR_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_viewer.YEAR_SELECT(class='form-select bg-secondary') }}
-            <div id="YEAR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+    <form id="form_viewer" onsubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)]">
+        {{ form_viewer.csrf_token }}
+        <div class="tw:text-error tw:text-xs tw:font-semibold tw:mb-2" id="csrf_token-error" style="display: none;"></div>
 
-            {{ form_viewer.CAMERA_ID(class='form-control bg-secondary') }}
-            <div id="CAMERA_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-center tw:gap-6">
+            
+            <div class="tw:hidden">
+                {{ form_viewer.YEAR_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
+                {{ form_viewer.YEAR_SELECT(class='tw:select') }}
+                <div id="YEAR_SELECT-error"></div>
+                
+                {{ form_viewer.CAMERA_ID(class='tw:input') }}
+                <div id="CAMERA_ID-error"></div>
 
-        <div class="col-sm-1">
-            {{ form_viewer.MONTH_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_viewer.MONTH_SELECT(class='form-select bg-secondary') }}
-            <div id="MONTH_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
+                {{ form_viewer.MONTH_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
+                {{ form_viewer.MONTH_SELECT(class='tw:select') }}
+                <div id="MONTH_SELECT-error"></div>
 
-        <div class="col-sm-1">
-            {{ form_viewer.DAY_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_viewer.DAY_SELECT(class='form-select bg-secondary') }}
-            <div id="DAY_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
+                {{ form_viewer.DAY_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
+                {{ form_viewer.DAY_SELECT(class='tw:select') }}
+                <div id="DAY_SELECT-error"></div>
+            </div>
 
-        <div class="col-sm-1">
-            {{ form_viewer.HOUR_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_viewer.HOUR_SELECT(class='form-select bg-secondary') }}
-            <div id="HOUR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-    </div>
+            {% include 'calendar_picker.html' %}
 
-    <div class="form-group row">
-        <div class="col-sm-2"></div>
+            <div class="tw:flex tw:items-center tw:gap-2">
+                {{ form_viewer.HOUR_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
+                <div class="tw:flex tw:flex-col">
+                    {{ form_viewer.HOUR_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content') }}
+                    <div id="HOUR_SELECT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                </div>
+            </div>
 
-        <div class="col-sm-2">
-            <div class="form-check form-switch">
-                {{ form_viewer.FILTER_DETECTIONS(class='form-check-input') }}
-                {{ form_viewer.FILTER_DETECTIONS.label(class='form-check-label') }}
-                <div id="FILTER_DETECTIONS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            <div class="tw:flex tw:items-center tw:gap-3">
+                {{ form_viewer.FILTER_DETECTIONS.label(class='tw:label-text tw:font-semibold') }}
+                <div class="tw:flex tw:items-center">
+                    {{ form_viewer.FILTER_DETECTIONS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                    <div id="FILTER_DETECTIONS-error" class="tw:text-error tw:text-xs tw:ml-2" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- These selectors cover only ASI676MC audit statuses. The
+                 excluded selector intentionally ignores manual exclusions. -->
+            <div id="asi676mc-gallery-filters" class="tw:flex tw:flex-wrap tw:items-center tw:justify-center tw:gap-4{% if not asi676mc_repair_gallery_enabled %} tw:hidden{% endif %}">
+                <div class="tw:flex tw:items-center tw:gap-2">
+                    {{ form_viewer.FILTER_ASI676MC_REPAIRED.label(class='tw:label-text tw:text-xs tw:font-semibold') }}
+                    {{ form_viewer.FILTER_ASI676MC_REPAIRED(class='tw:toggle tw:toggle-warning tw:toggle-sm') }}
+                    <div id="FILTER_ASI676MC_REPAIRED-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
+                </div>
+                <div class="tw:flex tw:items-center tw:gap-2" title="Only frames excluded automatically by ASI676MC purple-frame handling">
+                    {{ form_viewer.FILTER_ASI676MC_EXCLUDED.label(class='tw:label-text tw:text-xs tw:font-semibold') }}
+                    {{ form_viewer.FILTER_ASI676MC_EXCLUDED(class='tw:toggle tw:toggle-warning tw:toggle-sm') }}
+                    <div id="FILTER_ASI676MC_EXCLUDED-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
+                </div>
+                <div class="tw:flex tw:items-center tw:gap-2">
+                    {{ form_viewer.FILTER_ASI676MC_FAILED.label(class='tw:label-text tw:text-xs tw:font-semibold') }}
+                    {{ form_viewer.FILTER_ASI676MC_FAILED(class='tw:toggle tw:toggle-error tw:toggle-sm') }}
+                    <div id="FILTER_ASI676MC_FAILED-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
+                </div>
+            </div>
+
+            <div class="tw:flex tw:items-center">
+                <span id="loader_filter" class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary" style="display: none;"></span>
             </div>
         </div>
 
-        <!-- These switches are shown only with the ASI676MC gallery feature.
-             They filter its audit status, never the generic manual exclude flag. -->
-        <div id="asi676mc-gallery-filters" class="col-sm-7{% if not asi676mc_repair_gallery_enabled %} d-none{% endif %}">
-            <div class="d-flex flex-wrap gap-3">
-                <div class="form-check form-switch">
-                    {{ form_viewer.FILTER_ASI676MC_REPAIRED(class='form-check-input') }}
-                    {{ form_viewer.FILTER_ASI676MC_REPAIRED.label(class='form-check-label') }}
-                    <div id="FILTER_ASI676MC_REPAIRED-error" class="invalid-feedback text-danger" style="display: none;"></div>
-                </div>
-                <div class="form-check form-switch" title="Only frames excluded automatically by ASI676MC purple-frame handling">
-                    {{ form_viewer.FILTER_ASI676MC_EXCLUDED(class='form-check-input') }}
-                    {{ form_viewer.FILTER_ASI676MC_EXCLUDED.label(class='form-check-label') }}
-                    <div id="FILTER_ASI676MC_EXCLUDED-error" class="invalid-feedback text-danger" style="display: none;"></div>
-                </div>
-                <div class="form-check form-switch">
-                    {{ form_viewer.FILTER_ASI676MC_FAILED(class='form-check-input') }}
-                    {{ form_viewer.FILTER_ASI676MC_FAILED.label(class='form-check-label') }}
-                    <div id="FILTER_ASI676MC_FAILED-error" class="invalid-feedback text-danger" style="display: none;"></div>
-                </div>
-            </div>
-        </div>
+        <div id="success-message" class="tw:text-success tw:text-sm tw:font-medium tw:text-center tw:mt-1" style="display: none;"></div>
+        <div id="failure-message" class="tw:text-error tw:text-sm tw:font-medium tw:text-center tw:mt-1" style="display: none;"></div>
 
-        <div class="col-sm-1">
-            <div class="loader" id="loader_filter"></div>
+    </form>
+
+    <div class="tw:flex tw:justify-center">
+        <div class="tw:text-base-content/60 tw:text-center tw:text-xs tw:tracking-wide tw:bg-base-content/5 tw:px-4 tw:py-1.5 tw:rounded-full tw:font-medium">
+            Use arrow keys, <span class="tw:font-bold tw:text-base-content/80">WASD</span>, or <span class="tw:font-bold tw:text-base-content/80">VIM keys</span> to cycle images — Hour: <span class="tw:text-primary tw:font-bold">Up/Down</span>
         </div>
     </div>
 
-    <div id="success-message" class="text-success" style="display: none;"></div>
-    <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
-
-</form>
-
-<hr>
-
-<div class="row">
-    <div class="text-center" style="font-size:10px">
-        Use arrow keys, WASD, or VIM keys to cycle images - Hour: Up/Down
+    <div class="tw:w-full tw:grow">
+        <div id="allsky-gallery" class="pswp-gallery tw:w-full tw:grid tw:grid-cols-2 sm:tw:grid-cols-3 md:tw:grid-cols-4 lg:tw:grid-cols-6 xl:tw:grid-cols-8 tw:gap-3"></div>
     </div>
+
+    <div class="tw:py-4"></div>
+
 </div>
-
-<div class="container">
-  <div class="row">
-    <div class="col-sm-12">
-      <div id="allsky-gallery" class="pswp-gallery"></div>
-    </div>
-  </div>
-</div>
-
-<div class="spacer"></div>
-
 
 <script>
 const successMessage = $('#success-message');
@@ -216,6 +208,24 @@ fields['form_global'] = {
     'error' : failureMessage,
 };
 
+// Keep every calendar and filter request consistent without duplicating the
+// model-specific flags at each navigation level.
+function with_asi676mc_gallery_filters(json_data) {
+    json_data.FILTER_ASI676MC_REPAIRED = Boolean(
+        asi676mc_repair_gallery_enabled
+        && fields.FILTER_ASI676MC_REPAIRED.input.prop('checked')
+    );
+    json_data.FILTER_ASI676MC_EXCLUDED = Boolean(
+        asi676mc_repair_gallery_enabled
+        && fields.FILTER_ASI676MC_EXCLUDED.input.prop('checked')
+    );
+    json_data.FILTER_ASI676MC_FAILED = Boolean(
+        asi676mc_repair_gallery_enabled
+        && fields.FILTER_ASI676MC_FAILED.input.prop('checked')
+    );
+    return json_data;
+}
+
 
 function exclude_image(el, pswp, image_id, exclude) {
     var json_data = {
@@ -256,8 +266,6 @@ function populate_gallery(gallery_data) {
     $('#allsky-gallery').empty();
 
     gallery_data.forEach(item => {
-        // Render only server-provided audit status; gallery display never
-        // reclassifies an image or changes its exclusion state.
         const repair_status = (
             asi676mc_repair_gallery_enabled
             ? item['asi676mc_repair_status']
@@ -290,7 +298,22 @@ function populate_gallery(gallery_data) {
             'data-pswp-height' : item['height'],
             'target'      : "_blank",
             'rel'         : "noopener noreferrer",
-            'class'       : "text-decoration-none position-relative d-inline-block",
+            'class'       : (
+                'tw:no-underline '
+                + (
+                    repair_applied
+                    ? 'asi676mc-repaired-thumbnail'
+                    : (
+                        repair_excluded
+                        ? 'asi676mc-excluded-thumbnail'
+                        : (
+                            repair_validation_failed
+                            ? 'asi676mc-validation-failed-thumbnail'
+                            : ''
+                        )
+                    )
+                )
+            ),
             'data-exclude' : item['exclude'],
             'data-image_id' : item['id'],
             'data-ts'     : item['ts'],
@@ -303,20 +326,11 @@ function populate_gallery(gallery_data) {
             'src'       : item['thumbnail_url'],
             'loading'   : 'lazy',
             'alt'       : item['date'],
-            'class'     : (
-                (repair_applied || repair_excluded)
-                ? 'asi676mc-repaired-thumbnail'
-                : (
-                    repair_validation_failed
-                    ? 'asi676mc-validation-failed-thumbnail'
-                    : ''
-                )
-            ),
         });
         img_tag.appendTo(a_tag);
 
         if (repair_applied || repair_validation_failed || repair_excluded) {
-            var badge_tag = $('<span />', {
+            $('<span />', {
                 'class' : (
                     repair_validation_failed
                     ? 'asi676mc-repair-badge validation-failed'
@@ -327,8 +341,7 @@ function populate_gallery(gallery_data) {
                     ? 'Repair validation failed'
                     : (repair_excluded ? 'Purple frame excluded' : 'Purple frame repaired')
                 ),
-            });
-            badge_tag.appendTo(a_tag);
+            }).appendTo(a_tag);
         }
 
     });
@@ -583,6 +596,7 @@ function populate_gallery(gallery_data) {
 
 
 function hour_change(json_data) {
+    json_data = with_asi676mc_gallery_filters(json_data);
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_gallery_view') }}",
@@ -601,14 +615,13 @@ function hour_change(json_data) {
 
             populate_gallery(rdata['IMAGE_DATA']);
 
-            $("#loader_filter").css({'display' : 'none'});
-            $("#loader_filter").css({'display' : 'none'});
+            $("#loader_filter").hide();
         },
         error: function(rdata){
-            Object.keys(rdata).forEach((key) => {
-                fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key][0]);
-                fields[key].error.css({'display' : 'block'});
+            var errors = JSON.parse(rdata.responseText);
+            Object.keys(errors).forEach((key) => {
+                fields[key].input.addClass('tw:border-error');
+                fields[key].error.html(errors[key][0]).show();
             });
         },
     });
@@ -617,12 +630,12 @@ function hour_change(json_data) {
 
 $("#HOUR_SELECT").on("change", function() {
     // hide all errors
-    successMessage.css({'display' : 'none'});
+    successMessage.hide();
     Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
+        fields[key].error.hide();
     });
 
-    $("#loader_filter").css({'display' : 'block'});
+    $("#loader_filter").show();
 
     var json_data = {
         'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
@@ -631,16 +644,74 @@ $("#HOUR_SELECT").on("change", function() {
         'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
         'HOUR_SELECT'       : fields["HOUR_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
-        'FILTER_ASI676MC_REPAIRED' : fields["FILTER_ASI676MC_REPAIRED"].input.prop("checked"),
-        'FILTER_ASI676MC_EXCLUDED' : fields["FILTER_ASI676MC_EXCLUDED"].input.prop("checked"),
-        'FILTER_ASI676MC_FAILED' : fields["FILTER_ASI676MC_FAILED"].input.prop("checked"),
     };
 
     hour_change(json_data);
 });
 
 
-function day_change(json_data) {
+function syncCalendarFromSelects() {
+    var year = $("#YEAR_SELECT").val();
+    var month = $("#MONTH_SELECT").val();
+    var day = $("#DAY_SELECT").val();
+    
+    var picker = document.getElementById("cally-picker");
+    if (picker) {
+        if (year && month) {
+            const validDays = [];
+            $("#DAY_SELECT option").each(function() {
+                const val = parseInt($(this).val());
+                if (!isNaN(val)) {
+                    validDays.push(val);
+                }
+            });
+
+            const yearInt = parseInt(year);
+            const monthInt = parseInt(month) - 1;
+
+            picker.isDateDisallowed = (date) => {
+                if (date.getUTCFullYear() === yearInt && date.getUTCMonth() === monthInt) {
+                    return !validDays.includes(date.getUTCDate());
+                }
+                return false;
+            };
+
+            const years = $("#YEAR_SELECT option").map(function() { 
+                const val = $(this).val();
+                return val ? parseInt(val) : null; 
+            }).get().filter(v => v !== null && !isNaN(v));
+
+            if (years.length > 0) {
+                const minYear = Math.min(...years);
+                const maxYear = Math.max(...years);
+                picker.min = `${minYear}-01-01`;
+                picker.max = `${maxYear}-12-31`;
+            } else {
+                picker.min = "1970-01-01";
+                picker.max = "2099-12-31";
+            }
+
+            if (day) {
+                var formattedDate = year + "-" + month.padStart(2, '0') + "-" + day.padStart(2, '0');
+                picker.value = formattedDate;
+                $("#date-picker-label").text(formattedDate);
+            } else {
+                picker.value = "";
+                picker.focusedDate = year + "-" + month.padStart(2, '0') + "-01";
+                $("#date-picker-label").text(year + "-" + month.padStart(2, '0'));
+            }
+        } else {
+            picker.isDateDisallowed = () => true;
+            picker.min = "1970-01-01";
+            picker.max = "2099-12-31";
+            picker.value = "";
+            $("#date-picker-label").text("No Data");
+        }
+    }
+}
+
+function day_change(json_data, targetSelect) {
+    json_data = with_asi676mc_gallery_filters(json_data);
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_gallery_view') }}",
@@ -652,13 +723,15 @@ function day_change(json_data) {
                 $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
-
-            if (! newest_entry_default) {
-                // oldest entry is last index
-                hour_options_count = $('#HOUR_SELECT option').length;
-                $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value).change();
+            if (targetSelect && targetSelect.hour) {
+                $("#HOUR_SELECT").val(targetSelect.hour);
+            } else {
+                if (! newest_entry_default) {
+                    // oldest entry is last index
+                    hour_options_count = $('#HOUR_SELECT option').length;
+                    $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value);
+                }
             }
-
 
             gallery_data = [];
             rdata['IMAGE_DATA'].forEach(item => {
@@ -671,14 +744,14 @@ function day_change(json_data) {
             });
 
             populate_gallery(rdata['IMAGE_DATA']);
-
-            $("#loader_filter").css({'display' : 'none'});
+            syncCalendarFromSelects();
+            $("#loader_filter").hide();
         },
         error: function(rdata){
-            Object.keys(rdata).forEach((key) => {
-                fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key][0]);
-                fields[key].error.css({'display' : 'block'});
+            var errors = JSON.parse(rdata.responseText);
+            Object.keys(errors).forEach((key) => {
+                fields[key].input.addClass('tw:border-error');
+                fields[key].error.html(errors[key][0]).show();
             });
         },
     });
@@ -687,12 +760,12 @@ function day_change(json_data) {
 
 $("#DAY_SELECT").on("change", function() {
     // hide all errors
-    successMessage.css({'display' : 'none'});
+    successMessage.hide();
     Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
+        fields[key].error.hide();
     });
 
-    $("#loader_filter").css({'display' : 'block'});
+    $("#loader_filter").show();
 
     var json_data = {
         'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
@@ -700,16 +773,14 @@ $("#DAY_SELECT").on("change", function() {
         'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
         'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
-        'FILTER_ASI676MC_REPAIRED' : fields["FILTER_ASI676MC_REPAIRED"].input.prop("checked"),
-        'FILTER_ASI676MC_EXCLUDED' : fields["FILTER_ASI676MC_EXCLUDED"].input.prop("checked"),
-        'FILTER_ASI676MC_FAILED' : fields["FILTER_ASI676MC_FAILED"].input.prop("checked"),
     };
 
     day_change(json_data);
 });
 
 
-function month_change(json_data) {
+function month_change(json_data, targetSelect) {
+    json_data = with_asi676mc_gallery_filters(json_data);
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_gallery_view') }}",
@@ -726,35 +797,34 @@ function month_change(json_data) {
                 $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
-
-            if (! newest_entry_default) {
-                // oldest entry is last index
+            if (targetSelect && targetSelect.day) {
+                $("#DAY_SELECT").val(targetSelect.day);
+                var next_json = {
+                    'CAMERA_ID'         : json_data.CAMERA_ID,
+                    'YEAR_SELECT'       : json_data.YEAR_SELECT,
+                    'MONTH_SELECT'      : json_data.MONTH_SELECT,
+                    'DAY_SELECT'        : targetSelect.day,
+                    'FILTER_DETECTIONS' : json_data.FILTER_DETECTIONS,
+                };
+                day_change(next_json, targetSelect);
+            } else {
                 day_options_count = $('#DAY_SELECT option').length;
                 hour_options_count = $('#HOUR_SELECT option').length;
-                $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[day_options_count - 1].value);
-                $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value).change();
+                if (! newest_entry_default && day_options_count > 0 && hour_options_count > 0) {
+                    $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[day_options_count - 1].value);
+                    $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value).change();
+                } else {
+                    populate_gallery(rdata['IMAGE_DATA']);
+                    syncCalendarFromSelects();
+                    $("#loader_filter").hide();
+                }
             }
-
-
-            gallery_data = [];
-            rdata['IMAGE_DATA'].forEach(item => {
-                gallery_data.push({
-                    'src' : item['url'],
-                    'width' : item['width'],
-                    'height' : item['height'],
-                    'alt' : item['date'],
-                });
-            });
-
-            populate_gallery(rdata['IMAGE_DATA']);
-
-            $("#loader_filter").css({'display' : 'none'});
         },
         error: function(rdata){
-            Object.keys(rdata).forEach((key) => {
-                fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key][0]);
-                fields[key].error.css({'display' : 'block'});
+            var errors = JSON.parse(rdata.responseText);
+            Object.keys(errors).forEach((key) => {
+                fields[key].input.addClass('tw:border-error');
+                fields[key].error.html(errors[key][0]).show();
             });
         },
     });
@@ -763,28 +833,26 @@ function month_change(json_data) {
 
 $("#MONTH_SELECT").on("change", function() {
     // hide all errors
-    successMessage.css({'display' : 'none'});
+    successMessage.hide();
     Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
+        fields[key].error.hide();
     });
 
-    $("#loader_filter").css({'display' : 'block'});
+    $("#loader_filter").show();
 
     var json_data = {
         'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
-        'FILTER_ASI676MC_REPAIRED' : fields["FILTER_ASI676MC_REPAIRED"].input.prop("checked"),
-        'FILTER_ASI676MC_EXCLUDED' : fields["FILTER_ASI676MC_EXCLUDED"].input.prop("checked"),
-        'FILTER_ASI676MC_FAILED' : fields["FILTER_ASI676MC_FAILED"].input.prop("checked"),
     };
 
     month_change(json_data);
 });
 
 
-function year_change(json_data) {
+function year_change(json_data, targetSelect) {
+    json_data = with_asi676mc_gallery_filters(json_data);
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_gallery_view') }}",
@@ -806,27 +874,35 @@ function year_change(json_data) {
                 $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
-
-            if (! newest_entry_default) {
-                // oldest entry is last index
-                month_options_count = $('#MONTH_SELECT option').length
-                day_options_count = $('#DAY_SELECT option').length
-                hour_options_count = $('#HOUR_SELECT option').length
-                $("#MONTH_SELECT").val($("#MONTH_SELECT")[0].options[month_options_count - 1].value);
-                $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[day_options_count - 1].value);
-                $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value).change();
+            if (targetSelect && targetSelect.month) {
+                $("#MONTH_SELECT").val(targetSelect.month);
+                var next_json = {
+                    'CAMERA_ID'         : json_data.CAMERA_ID,
+                    'YEAR_SELECT'       : json_data.YEAR_SELECT,
+                    'MONTH_SELECT'      : targetSelect.month,
+                    'FILTER_DETECTIONS' : json_data.FILTER_DETECTIONS,
+                };
+                month_change(next_json, targetSelect);
+            } else {
+                month_options_count = $('#MONTH_SELECT option').length;
+                day_options_count = $('#DAY_SELECT option').length;
+                hour_options_count = $('#HOUR_SELECT option').length;
+                if (! newest_entry_default && month_options_count > 0 && day_options_count > 0 && hour_options_count > 0) {
+                    $("#MONTH_SELECT").val($("#MONTH_SELECT")[0].options[month_options_count - 1].value);
+                    $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[day_options_count - 1].value);
+                    $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value).change();
+                } else {
+                    populate_gallery(rdata['IMAGE_DATA']);
+                    syncCalendarFromSelects();
+                    $("#loader_filter").hide();
+                }
             }
-
-
-            populate_gallery(rdata['IMAGE_DATA']);
-
-            $("#loader_filter").css({'display' : 'none'});
         },
         error: function(rdata){
-            Object.keys(rdata).forEach((key) => {
-                fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key][0]);
-                fields[key].error.css({'display' : 'block'});
+            var errors = JSON.parse(rdata.responseText);
+            Object.keys(errors).forEach((key) => {
+                fields[key].input.addClass('tw:border-error');
+                fields[key].error.html(errors[key][0]).show();
             });
         },
     });
@@ -835,20 +911,17 @@ function year_change(json_data) {
 
 $("#YEAR_SELECT").on("change", function() {
     // hide all errors
-    successMessage.css({'display' : 'none'});
+    successMessage.hide();
     Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
+        fields[key].error.hide();
     });
 
-    $("#loader_filter").css({'display' : 'block'});
+    $("#loader_filter").show();
 
     var json_data = {
         'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
-        'FILTER_ASI676MC_REPAIRED' : fields["FILTER_ASI676MC_REPAIRED"].input.prop("checked"),
-        'FILTER_ASI676MC_EXCLUDED' : fields["FILTER_ASI676MC_EXCLUDED"].input.prop("checked"),
-        'FILTER_ASI676MC_FAILED' : fields["FILTER_ASI676MC_FAILED"].input.prop("checked"),
     };
 
     year_change(json_data);
@@ -857,20 +930,18 @@ $("#YEAR_SELECT").on("change", function() {
 
 $("#FILTER_DETECTIONS, #FILTER_ASI676MC_REPAIRED, #FILTER_ASI676MC_EXCLUDED, #FILTER_ASI676MC_FAILED").on("change", function() {
     // hide all errors
-    successMessage.css({'display' : 'none'});
+    successMessage.hide();
     Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
+        fields[key].error.hide();
     });
 
-    $("#loader_filter").css({'display' : 'block'});
+    $("#loader_filter").show();
 
     var json_data = {
         'CAMERA_ID'          : fields["CAMERA_ID"].input.val(),
         'FILTER_DETECTIONS'  : fields["FILTER_DETECTIONS"].input.prop("checked"),
-        'FILTER_ASI676MC_REPAIRED' : fields["FILTER_ASI676MC_REPAIRED"].input.prop("checked"),
-        'FILTER_ASI676MC_EXCLUDED' : fields["FILTER_ASI676MC_EXCLUDED"].input.prop("checked"),
-        'FILTER_ASI676MC_FAILED' : fields["FILTER_ASI676MC_FAILED"].input.prop("checked"),
     };
+    json_data = with_asi676mc_gallery_filters(json_data);
 
     $.ajax({
         type: "POST",
@@ -899,14 +970,14 @@ $("#FILTER_DETECTIONS, #FILTER_ASI676MC_REPAIRED, #FILTER_ASI676MC_EXCLUDED, #FI
             });
 
             populate_gallery(rdata['IMAGE_DATA']);
-
-            $("#loader_filter").css({'display' : 'none'});
+            syncCalendarFromSelects();
+            $("#loader_filter").hide();
         },
         error: function(rdata){
-            Object.keys(rdata).forEach((key) => {
-                fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key][0]);
-                fields[key].error.css({'display' : 'block'});
+            var errors = JSON.parse(rdata.responseText);
+            Object.keys(errors).forEach((key) => {
+                fields[key].input.addClass('tw:border-error');
+                fields[key].error.html(errors[key][0]).show();
             });
         },
     });
@@ -918,10 +989,114 @@ function init() {
         'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
-        'FILTER_ASI676MC_REPAIRED' : fields["FILTER_ASI676MC_REPAIRED"].input.prop("checked"),
-        'FILTER_ASI676MC_EXCLUDED' : fields["FILTER_ASI676MC_EXCLUDED"].input.prop("checked"),
-        'FILTER_ASI676MC_FAILED' : fields["FILTER_ASI676MC_FAILED"].input.prop("checked"),
     };
+
+    // Attach listener for Cally calendar picker
+    var picker = document.getElementById("cally-picker");
+    if (picker) {
+        picker.addEventListener("change", function(e) {
+            var val = e.target.value;
+            if (val) {
+                var parts = val.split('-');
+                var yr = parts[0];
+                var mo = parseInt(parts[1], 10).toString();
+                var dy = parseInt(parts[2], 10).toString();
+
+                var currentYear = $("#YEAR_SELECT").val();
+                var currentMonth = $("#MONTH_SELECT").val();
+
+                if (yr === currentYear && mo === currentMonth) {
+                    if ($("#DAY_SELECT option[value='" + dy + "']").length === 0) {
+                        syncCalendarFromSelects();
+                        return;
+                    }
+
+                    $("#DAY_SELECT").val(dy);
+                    $("#date-picker-label").text(val);
+                    $("#cally-dropdown-details").removeAttr("open");
+
+                    $("#loader_filter").show();
+                    var next_json = {
+                        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
+                        'YEAR_SELECT'       : yr,
+                        'MONTH_SELECT'      : mo,
+                        'DAY_SELECT'        : dy,
+                        'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+                    };
+                    day_change(next_json, { year: yr, month: mo, day: dy });
+                    return;
+                }
+
+                if ($("#YEAR_SELECT option[value='" + yr + "']").length === 0) {
+                    $("#YEAR_SELECT").append($('<option />', {value: yr}).text(yr));
+                }
+                if ($("#MONTH_SELECT option[value='" + mo + "']").length === 0) {
+                    $("#MONTH_SELECT").append($('<option />', {value: mo}).text(mo));
+                }
+                if ($("#DAY_SELECT option[value='" + dy + "']").length === 0) {
+                    $("#DAY_SELECT").append($('<option />', {value: dy}).text(dy));
+                }
+
+                $("#YEAR_SELECT").val(yr);
+                $("#MONTH_SELECT").val(mo);
+                $("#DAY_SELECT").val(dy);
+
+                $("#date-picker-label").text(val);
+                $("#cally-dropdown-details").removeAttr("open");
+
+                // Trigger change starting from year to ensure all suboptions are fully loaded
+                var next_json = {
+                    'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
+                    'YEAR_SELECT'       : yr,
+                    'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+                };
+                $("#loader_filter").show();
+                year_change(next_json, { year: yr, month: mo, day: dy });
+            }
+        });
+
+        picker.addEventListener("focusday", function(e) {
+            var newDate = e.detail;
+            if (!newDate) return;
+            var yr = newDate.getUTCFullYear().toString();
+            var mo = (newDate.getUTCMonth() + 1).toString();
+            var currentYear = $("#YEAR_SELECT").val();
+            var currentMonth = $("#MONTH_SELECT").val();
+            if (yr !== currentYear || mo !== currentMonth) {
+                if ($("#YEAR_SELECT option[value='" + yr + "']").length === 0) {
+                    const formattedMonth = String(currentMonth).padStart(2, '0');
+                    picker.focusedDate = `${currentYear}-${formattedMonth}-01`;
+                    return;
+                }
+                if (yr === currentYear && $("#MONTH_SELECT option[value='" + mo + "']").length === 0) {
+                    const formattedMonth = String(currentMonth).padStart(2, '0');
+                    picker.focusedDate = `${currentYear}-${formattedMonth}-01`;
+                    return;
+                }
+
+                if (yr !== currentYear) {
+                    $("#YEAR_SELECT").val(yr);
+                    var json_data = {
+                        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
+                        'YEAR_SELECT'       : yr,
+                        'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+                    };
+                    $("#loader_filter").show();
+                    year_change(json_data, { year: yr, month: mo });
+                } else {
+                    $("#MONTH_SELECT").val(mo);
+                    var json_data = {
+                        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
+                        'YEAR_SELECT'       : yr,
+                        'MONTH_SELECT'      : mo,
+                        'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
+                    };
+                    $("#loader_filter").show();
+                    month_change(json_data);
+                }
+            }
+        });
+    }
 
     year_change(json_data);
 }
@@ -1080,13 +1255,25 @@ function previousHour() {
 $( document ).ready(function() {
     // Uncheck checkboxes
     $("#FILTER_DETECTIONS").prop('checked', false);
-    $("#FILTER_ASI676MC_REPAIRED").prop('checked', false);
-    $("#FILTER_ASI676MC_EXCLUDED").prop('checked', false);
-    $("#FILTER_ASI676MC_FAILED").prop('checked', false);
     $("#FILTER_ASI676MC_REPAIRED, #FILTER_ASI676MC_EXCLUDED, #FILTER_ASI676MC_FAILED")
+        .prop('checked', false)
         .prop('disabled', !asi676mc_repair_gallery_enabled);
 
     init();
+
+    // jQuery's .on("toggle") doesn't fire on <details> elements (non-bubbling native event).
+    var callyDropdown = document.getElementById("cally-dropdown-details");
+    if (callyDropdown) {
+        callyDropdown.addEventListener("toggle", function() {
+            if (this.open) {
+                syncCalendarFromSelects();
+            }
+        });
+    }
+
+    window.customElements.whenDefined('calendar-date').then(() => {
+        syncCalendarFromSelects();
+    });
 
 
     $(document).keydown(function(e) {

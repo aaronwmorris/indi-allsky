@@ -3,52 +3,96 @@
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
 {% block head %}
-<style>
-pre {
-    white-space: pre-wrap;
-}
-</style>
 <link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
 <script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
+
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
-
 {% endblock %}
 
 {% block content %}
-<div class="container">
 
-<h4>Image stats in 15 minute blocks</h4>
+{# Compute summary stats for the stats bar #}
+{% set ns = namespace(count=0, adu_sum=0.0, sqm_sum=0.0, stars_sum=0.0) %}
+{% for row in rolling_adu_q %}
+    {% set ns.count = ns.count + 1 %}
+    {% set ns.adu_sum = ns.adu_sum + row.adu_avg %}
+    {% set ns.sqm_sum = ns.sqm_sum + row.jsqm_avg %}
+    {% set ns.stars_sum = ns.stars_sum + row.stars_avg %}
+{% endfor %}
 
-<div class="row" style="display:block;">
-  <div class="col-sm-12">
-    <table id="adu-table" class="table table-striped compact" data-bs-theme="dark">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Count</th>
-          <th>Exposure Avg</th>
-          <th>ADU Avg</th>
-          <th>jSQM Avg</th>
-          <th>Stars Avg</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for row in rolling_adu_q %}
-        <tr>
-          <td>{{ row.dt.strftime('%Y-%m-%d %H:%M') }}
-          <td>{{ row.i_count }}
-          <td>{{ "%0.4f"|format(row.exposure_avg) }}
-          <td>{{ "%0.2f"|format(row.adu_avg) }}
-          <td>{{ "%0.2f"|format(row.jsqm_avg) }}
-          <td>{{ "%0.1f"|format(row.stars_avg) }}
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6 tw:w-full">
+
+    {% if ns.count > 0 %}
+    <!-- Stats Summary Bar -->
+    <div class="tw:stats tw:stats-horizontal tw:shadow tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:w-full">
+
+        <div class="tw:stat">
+            <div class="tw:stat-figure tw:text-info">
+                <i class="tw:icon-[lucide--sun-dim] tw:w-8 tw:h-8"></i>
+            </div>
+            <div class="tw:stat-title tw:text-[0.625rem] tw:uppercase tw:tracking-widest">ADU Average</div>
+            <div class="tw:stat-value tw:text-info tw:text-2xl">{{ "%0.1f"|format(ns.adu_sum / ns.count) }}</div>
+            <div class="tw:stat-desc">Over {{ ns.count }} 15-min intervals</div>
+        </div>
+
+        <div class="tw:stat">
+            <div class="tw:stat-figure tw:text-warning">
+                <i class="tw:icon-[lucide--telescope] tw:w-8 tw:h-8"></i>
+            </div>
+            <div class="tw:stat-title tw:text-[0.625rem] tw:uppercase tw:tracking-widest">jSQM Average</div>
+            <div class="tw:stat-value tw:text-warning tw:text-2xl">{{ "%0.2f"|format(ns.sqm_sum / ns.count) }}</div>
+            <div class="tw:stat-desc">Sky quality metric</div>
+        </div>
+
+        <div class="tw:stat">
+            <div class="tw:stat-figure tw:text-success">
+                <i class="tw:icon-[lucide--star] tw:w-8 tw:h-8"></i>
+            </div>
+            <div class="tw:stat-title tw:text-[0.625rem] tw:uppercase tw:tracking-widest">Stars Average</div>
+            <div class="tw:stat-value tw:text-success tw:text-2xl">{{ "%0.0f"|format(ns.stars_sum / ns.count) }}</div>
+            <div class="tw:stat-desc">Detected per frame</div>
+        </div>
+
+    </div>
+    {% endif %}
+
+    <!-- Data Table Card -->
+    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+        <div class="tw:card-body tw:p-6">
+            <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:mb-6">
+                Image stats in 15 minute blocks
+            </h4>
+
+            <div class="tw:overflow-x-auto tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
+                <table id="adu-table" class="tw:table tw:table-zebra tw:table-xs tw:w-full tw:m-0">
+                    <thead>
+                        <tr class="tw:bg-base-300/60 tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
+                            <th class="tw:pl-4 tw:py-3">Date</th>
+                            <th class="tw:py-3">Count</th>
+                            <th class="tw:py-3">Exposure Avg</th>
+                            <th class="tw:py-3">ADU Avg</th>
+                            <th class="tw:py-3">jSQM Avg</th>
+                            <th class="tw:pr-4 tw:py-3">Stars Avg</th>
+                        </tr>
+                    </thead>
+                    <tbody class="tw:divide-y tw:divide-base-content/5">
+                        {% for row in rolling_adu_q %}
+                        <tr class="hover:tw:bg-base-content/5 tw:transition-colors tw:text-xs">
+                            <td class="tw:pl-4 tw:whitespace-nowrap tw:font-mono tw:text-base-content/80">{{ row.dt.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td class="tw:font-mono tw:text-base-content/70">{{ row.i_count }}</td>
+                            <td class="tw:font-mono tw:text-base-content/70">{{ "%0.4f"|format(row.exposure_avg) }}s</td>
+                            <td class="tw:font-mono tw:font-semibold tw:text-info">{{ "%0.2f"|format(row.adu_avg) }}</td>
+                            <td class="tw:font-mono tw:font-semibold tw:text-warning">{{ "%0.2f"|format(row.jsqm_avg) }}</td>
+                            <td class="tw:pr-4 tw:font-mono tw:text-base-content/80">{{ "%0.1f"|format(row.stars_avg) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
 </div>
 
@@ -59,7 +103,8 @@ function init() {
         order: [[0, 'desc']],
         lengthMenu: [20, 50, 100, -1],
         layout: {
-            topEnd: ['buttons', 'search'],
+            topStart: ['pageLength', 'buttons'],
+            topEnd: 'search',
         },
         buttons: [
             'copy',

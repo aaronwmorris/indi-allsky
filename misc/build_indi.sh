@@ -30,9 +30,9 @@ OS_PACKAGE_UPGRADE=${BUILD_INDI_OS_PACKAGE_UPGRADE:-}
 ### config ###
 INDISERVER_SERVICE_NAME="indiserver"
 INDI_CORE_REPO="https://github.com/indilib/indi.git"
-INDI_CORE_AUTO_TAG="v2.2.3.1"
+INDI_CORE_AUTO_TAG="v2.2.4.2"
 INDI_3RDPARTY_REPO="https://github.com/indilib/indi-3rdparty.git"
-INDI_3RDPARTY_AUTO_TAG="v2.2.3.1"
+INDI_3RDPARTY_AUTO_TAG="v2.2.4.1"
 INDI_AUTO_DRIVERS="supported"
 MAKE_BUILD_TYPE="${BUILD_INDI_MAKE_BUILD_TYPE:-Debug}"
 ### end config ###
@@ -888,7 +888,8 @@ if [ "$BUILD_INDI_CORE" == "true" ]; then
             --nocancel \
             --notags \
             --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
-                "v2.2.3.1" "v2.2.3.1 - Recommended" "ON" \
+                "v2.2.4.2" "v2.2.4.2 - Recommended" "ON" \
+                "v2.2.3.1" "v2.2.3.1" "OFF" \
                 "v2.2.2" "v2.2.2" "OFF" \
                 "v2.2.1.1" "v2.2.1.1" "OFF" \
                 "v2.2.0" "v2.2.0" "OFF" \
@@ -922,7 +923,8 @@ if [ "$BUILD_INDI_3RDPARTY" == "true" ]; then
             --nocancel \
             --notags \
             --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
-                "v2.2.3.1" "v2.2.3.1 - Recommended" "ON" \
+                "v2.2.4.1" "v2.2.4.1 - Recommended" "ON" \
+                "v2.2.3.1" "v2.2.3.1" "OFF" \
                 "v2.2.2.1" "v2.2.2.1" "OFF" \
                 "v2.2.1.1" "v2.2.1.1" "OFF" \
                 "v2.2.0" "v2.2.0" "OFF" \

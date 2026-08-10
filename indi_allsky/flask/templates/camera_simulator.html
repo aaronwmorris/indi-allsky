@@ -4,12 +4,8 @@
 
 {% block head %}
 <meta charset="UTF-8">
-<style>
-canvas {
-    width:75%;
-}
-</style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/clipboard.min.js') }}"></script>
+
 <script>
 var camera_id = {{ camera_id }};
 
@@ -352,61 +348,52 @@ var sd = {
 {% endblock %}
 
 {% block content %}
-<div class="container h-100">
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6 tw:w-full">
 
-<form id="form_camera_simulator" onSubmit="return false;">
-    <div class="form-group row">
-        <div class="col-sm-1">
-            {{ form_camera_simulator.LENS_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_camera_simulator.LENS_SELECT(class='form-select bg-secondary') }}
-        </div>
+    <form id="form_camera_simulator" onSubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4">
+            
+            <div class="tw:flex tw:items-center tw:gap-2 tw:flex-1 tw:min-w-[200px]">
+                {{ form_camera_simulator.LENS_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
+                <div class="tw:w-full">
+                    {{ form_camera_simulator.LENS_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                </div>
+            </div>
 
-        <div class="col-sm-1">
-            {{ form_camera_simulator.SENSOR_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            {{ form_camera_simulator.SENSOR_SELECT(class='form-select bg-secondary') }}
-        </div>
+            <div class="tw:flex tw:items-center tw:gap-2 tw:flex-1 tw:min-w-[200px]">
+                {{ form_camera_simulator.SENSOR_SELECT.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
+                <div class="tw:w-full">
+                    {{ form_camera_simulator.SENSOR_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                </div>
+            </div>
 
-        <div class="col-sm-1">
-            {{ form_camera_simulator.OFFSET_X.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_camera_simulator.OFFSET_X(class='form-control bg-secondary') }}
-        </div>
+            <div class="tw:flex tw:items-center tw:gap-2 tw:w-28">
+                {{ form_camera_simulator.OFFSET_X.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
+                {{ form_camera_simulator.OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:font-mono tw:bg-base-100 tw:text-base-content tw:w-full') }}
+            </div>
 
-        <div class="col-sm-1">
-            {{ form_camera_simulator.OFFSET_Y.label(class='col-form-label') }}
+            <div class="tw:flex tw:items-center tw:gap-2 tw:w-28">
+                {{ form_camera_simulator.OFFSET_Y.label(class='tw:label-text tw:font-semibold tw:whitespace-nowrap') }}
+                {{ form_camera_simulator.OFFSET_Y(class='tw:input tw:input-bordered tw:input-sm tw:font-mono tw:bg-base-100 tw:text-base-content tw:w-full') }}
+            </div>
+
         </div>
-        <div class="col-sm-1">
-            {{ form_camera_simulator.OFFSET_Y(class='form-control bg-secondary') }}
+    </form>
+
+    <div class="tw:alert tw:alert-info tw:py-2.5 tw:px-4 tw:text-[0.6875rem] tw:rounded-[var(--radius-box)]">
+        <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4 tw:shrink-0"></i>
+        <span>Only simulates the image circle. Field of View is dependent on lens profile mechanics. Field of View coverage circles are approximate boundaries.</span>
+    </div>
+
+    <div class="tw:w-full tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4 tw:flex tw:items-center tw:justify-center">
+        <div class="tw:w-full tw:flex tw:justify-center">
+            <canvas id="image-circle-canvas" class="tw:max-w-full tw:h-auto tw:rounded-[var(--radius-box)]"></canvas>
         </div>
     </div>
-</form>
 
-<hr>
-
-<div class="row">
-    <div class="text-center" style="font-size:10px">
-        Only simulates the image circle. Field of View is dependant on lens. Field of View circles are approximate.
+    <div class="tw:flex tw:justify-center tw:mt-2">
+        <div id="permalink" class="tw:flex tw:gap-2"></div>
     </div>
-</div>
-
-<div class="row">
-    <div class="text-center">
-      <div class="col-sm-12">
-        <canvas id="image-circle-canvas"></canvas>
-      </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="text-center">
-        <span id="permalink"></span>
-    </div>
-</div>
 
 </div>
 <script>
@@ -562,12 +549,11 @@ function show_simulation() {
 
     // Add Loop here link
     $('#permalink').html(
-        $('<span />', {
-            'text' : "Copy Permalink to Clipboard",
-            'class' : "badge pill bg-primary copy-clipboard",
-            'style' : "cursor: pointer;",
+        $('<a />', {
+            'href' : '#',
+            'class' : 'tw:btn tw:btn-xs tw:btn-ghost tw:gap-1 tw:no-underline tw:font-mono tw:text-primary copy-clipboard',
             'data-clipboard-text' : "{{ url_for('indi_allsky.camera_simulator_view', _external=True) }}?lens=" + $("#LENS_SELECT").val() + "&sensor=" + $("#SENSOR_SELECT").val() + "&offset_x=" + $("#OFFSET_X").val() + "&offset_y=" + $("#OFFSET_Y").val(),
-        })
+        }).html('<i class="tw:icon-[lucide--link] tw:w-3 tw:h-3"></i> Copy Permalink')
     );
 
 

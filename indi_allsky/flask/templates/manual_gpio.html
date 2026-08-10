@@ -4,16 +4,6 @@
 
 {% block head %}
 <meta charset="UTF-8">
-<style>
-.btn {
-	width: 150px;
-	height: 50px;
-}
-
-#pin-loader {
-  display: none;
-}
-</style>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 var gpio_class = "{{ gpio_class}}";
@@ -22,81 +12,58 @@ var pin_states = {{ pin_states | tojson }};
 {% endblock %}
 
 {% block content %}
-<div class="container h-100">
+<div class="tw:p-4 tw:flex tw:flex-col tw:gap-6">
 
-<hr>
-
-<div class="form-group row">
-    <div class="col-sm-12">
-        Click the buttons to toggle the pin state
+    <div class="tw:flex tw:flex-col tw:gap-3">
+        <div class="tw:alert tw:alert-info tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm">
+            <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
+            <span><strong>Note:</strong> Some pins read HIGH by default (e.g., Raspberry Pi GPIOs 1-8 have internal pull-ups enabled).</span>
+        </div>
+        <div class="tw:alert tw:alert-warning tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm">
+            <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4"></i>
+            <span><strong>Warning:</strong> Manual control of Dew Heater and Fan pins can lock GPIOs and interfere with automatic management.</span>
+        </div>
     </div>
-</div>
 
-<hr>
+    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+        <div class="tw:card-body tw:p-6">
+            <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:mb-6">
+                GPIO Pin State Control
+            </h4>
+            
+            <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
+                {% for i in range(3) %}
+                <div class="tw:flex tw:items-center tw:justify-between tw:bg-base-300/40 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10">
+                    <div class="tw:flex tw:items-center tw:gap-2.5">
+                        <div class="tw:flex tw:items-center tw:justify-center tw:w-8 tw:h-8 tw:rounded-full tw:bg-neutral tw:text-neutral-content tw:shrink-0">
+                            <i class="tw:icon-[lucide--cpu] tw:w-4 tw:h-4 tw:block"></i>
+                        </div>
+                        <span class="tw:font-mono tw:text-sm tw:font-bold tw:text-base-content/90">Pin {{ pin_names[i] }}</span>
+                    </div>
+                    <button id="pin-{{ i+1 }}-button" 
+                            class="tw:btn tw:btn-sm tw:btn-neutral tw:btn-accent-hover tw:btn-disabled tw:w-20">
+                        N/A
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
 
-<div class="form-group row">
-    <div class="col-sm-12">
-        <div><span class="badge rounded-pill bg-info text-dark">Note</span> Some pins will read HIGH by default due to the internal pull-up being enabled at boot.  Raspberry Pi GPIOs 1-8 have pull-ups enabled by default.</div>
+            <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-6 tw:mt-6 tw:pt-6 tw:border-t tw:border-base-content/10">
+                <label class="tw:flex tw:items-center tw:gap-3 tw:cursor-pointer">
+                    <input type="checkbox" id="PIN_CONFIRM1" name="PIN_CONFIRM1" value="y" class="tw:checkbox tw:checkbox-primary tw:checkbox-sm tw:rounded-[var(--radius-box)]">
+                    <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/85">Confirm Manual Override</span>
+                </label>
+                
+                <span id="pin-loader" class="tw:loading tw:loading-spinner tw:loading-sm tw:text-info" style="display: none;"></span>
+            </div>
+        </div>
     </div>
-</div>
 
-<hr>
-
-<div class="form-group row">
-    <div class="col-sm-12">
-        <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> It is not recommended to manually control the Dew Heater and Fan pins here.  If you try, it will result in a locked GPIO which may prevent indi-allsky from managing the devices or an error here.</div>
+    <div class="tw:min-h-[50px]">
+        <div id="success-message" class="tw:alert tw:alert-success tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm" style="display: none;"></div>
+        <div id="failure-message" class="tw:alert tw:alert-error tw:py-3.5 tw:text-xs tw:rounded-[var(--radius-box)] tw:shadow-sm" style="display: none;"></div>
     </div>
-</div>
 
-<hr>
-
-<div class="form-group row">
-    <div class="col-sm-2">
-      Pin {{ pin_names[0] }}
-    </div>
-    <div class="col-sm-2">
-        <button id="pin-1-button" class="btn btn-dark" disabled="disabled">n/a</button>
-    </div>
-</div>
-
-<hr>
-
-<div class="form-group row">
-    <div class="col-sm-2">
-      Pin {{ pin_names[1] }}
-    </div>
-    <div class="col-sm-2">
-        <button id="pin-2-button" class="btn btn-dark" disabled="disabled">n/a</button>
-    </div>
-</div>
-
-<hr>
-
-<div class="form-group row">
-    <div class="col-sm-2">
-      Pin {{ pin_names[2] }}
-    </div>
-    <div class="col-sm-2">
-        <button id="pin-3-button" class="btn btn-dark" disabled="disabled">n/a</button>
-    </div>
-</div>
-
-<hr>
-
-<div class="form-group row">
-    <div class="col-sm-2">
-        <span id="pin-loader" class="spinner-border" aria-hidden="true"></span>
-    </div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="PIN_CONFIRM1" name="PIN_CONFIRM1" type="checkbox" value="y"> Confirm
-    </div>
-</div>
-
-<div class="form-group row">
-    <div class="col-sm-5">
-        <div id="success-message" class="alert alert-success" role="alert" style="display: none;"></div>
-        <div id="failure-message" class="alert alert-danger" role="alert" style="display: none;"></div>
-    </div>
 </div>
 
 <script>
@@ -115,8 +82,8 @@ $('#pin-3-button').on('click', function() {
 });
 
 function togglePin(pin_id, new_pin_state, pin_button) {
-    $('#success-message').css({'display' : 'none'});
-    $('#failure-message').css({'display' : 'none'});
+    $('#success-message').hide();
+    $('#failure-message').hide();
 
     if (! $("#PIN_CONFIRM1").prop('checked')) {
         console.log('Confirm checkbox not checked');
@@ -124,9 +91,9 @@ function togglePin(pin_id, new_pin_state, pin_button) {
     }
     $("#PIN_CONFIRM1").prop('checked', false);
 
-    $('#pin-loader').css({'display' : 'block'});
+    $('#pin-loader').show();
 
-    $('#' + pin_button).attr({'disabled' : 'disabled'});
+    $('#' + pin_button).prop('disabled', true);
 
 
     var json_data = {
@@ -141,17 +108,17 @@ function togglePin(pin_id, new_pin_state, pin_button) {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $('#pin-loader').css({'display' : 'none'});
-            $('#' + pin_button).removeAttr('disabled');
+            $('#pin-loader').hide();
+            $('#' + pin_button).prop('disabled', false);
 
 
             if (rdata['pin_state']) {
-                $('#' + pin_button).removeClass('btn-success btn-danger');
-                $('#' + pin_button).addClass('btn-success');
+                $('#' + pin_button).removeClass('tw:btn-success tw:btn-error tw:btn-neutral');
+                $('#' + pin_button).addClass('tw:btn-success');
                 $('#' + pin_button).text('On');
             } else {
-                $('#' + pin_button).removeClass('btn-success btn-danger');
-                $('#' + pin_button).addClass('btn-danger');
+                $('#' + pin_button).removeClass('tw:btn-success tw:btn-error tw:btn-neutral');
+                $('#' + pin_button).addClass('tw:btn-error');
                 $('#' + pin_button).text('Off');
             }
 
@@ -159,20 +126,16 @@ function togglePin(pin_id, new_pin_state, pin_button) {
             pin_states[pin_id - 1] = Number(rdata['pin_state']);
 
 
-            $('#success-message').html(rdata['success-message']);
-            $('#success-message').css({'display' : 'block'});
-            setTimeout(function() {
-                $('#success-message').css({'display' : 'none'});
-            }, 15000);
+            $('#success-message').html(rdata['success-message']).show();
+            setTimeout(function() { $('#success-message').fadeOut(); }, 15000);
         },
         error: function(rdata){
-            $('#pin-loader').css({'display' : 'none'});
+            $('#pin-loader').hide();
 
             var errors = JSON.parse(rdata.responseText);
 
-            $('#' + pin_button).removeAttr('disabled');
-            $('#failure-message').html(errors['failure-message']);
-            $('#failure-message').css({'display' : 'block'});
+            $('#' + pin_button).prop('disabled', false);
+            $('#failure-message').html(errors['failure-message']).show();
         },
     });
 }
@@ -184,52 +147,52 @@ function init() {
     if (gpio_class) {
         if (pin_states[0] != -1) {
             if (pin_states[0]) {
-                $('#pin-1-button').addClass('btn-success');
+                $('#pin-1-button').addClass('tw:btn-success');
                 $('#pin-1-button').text('On');
             } else {
-                $('#pin-1-button').addClass('btn-danger');
+                $('#pin-1-button').addClass('tw:btn-error');
                 $('#pin-1-button').text('Off');
             }
 
-            $('#pin-1-button').removeClass('btn-dark');
-            $('#pin-1-button').removeAttr('disabled');
+            $('#pin-1-button').removeClass('tw:btn-neutral tw:btn-disabled');
+            $('#pin-1-button').prop('disabled', false);
         } else {
             $('#pin-1-button').text('Error');
-            $('#pin-1-button').attr({'disabled' : 'disabled'});
+            $('#pin-1-button').prop('disabled', true);
         }
 
 
         if (pin_states[1] != -1) {
             if (pin_states[1]) {
-                $('#pin-2-button').addClass('btn-success');
+                $('#pin-2-button').addClass('tw:btn-success');
                 $('#pin-2-button').text('On');
             } else {
-                $('#pin-2-button').addClass('btn-danger');
+                $('#pin-2-button').addClass('tw:btn-error');
                 $('#pin-2-button').text('Off');
             }
 
-            $('#pin-2-button').removeClass('btn-dark');
-            $('#pin-2-button').removeAttr('disabled');
+            $('#pin-2-button').removeClass('tw:btn-neutral tw:btn-disabled');
+            $('#pin-2-button').prop('disabled', false);
         } else {
             $('#pin-2-button').text('Error');
-            $('#pin-2-button').attr({'disabled' : 'disabled'});
+            $('#pin-2-button').prop('disabled', true);
         }
 
 
         if (pin_states[2] != -1) {
             if (pin_states[2]) {
-                $('#pin-3-button').addClass('btn-success');
+                $('#pin-3-button').addClass('tw:btn-success');
                 $('#pin-3-button').text('On');
             } else {
-                $('#pin-3-button').addClass('btn-danger');
+                $('#pin-3-button').addClass('tw:btn-error');
                 $('#pin-3-button').text('Off');
             }
 
-            $('#pin-3-button').removeClass('btn-dark');
-            $('#pin-3-button').removeAttr('disabled');
+            $('#pin-3-button').removeClass('tw:btn-neutral tw:btn-disabled');
+            $('#pin-3-button').prop('disabled', false);
         } else {
             $('#pin-3-button').text('Error');
-            $('#pin-3-button').attr({'disabled' : 'disabled'});
+            $('#pin-3-button').prop('disabled', true);
         }
     }
 }

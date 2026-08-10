@@ -192,98 +192,110 @@ function closeFullscreen() {
 {% endblock %}
 
 {% block content %}
-<div class="container h-100">
 
-<form id="form_imagecircle" onSubmit="return false;">
-    <div class="form-group row" style="font-size:10px">
-        <div class="col-sm-1"></div>
-        <div class="col-sm-2">
-            {{ form_imagecircle.IMAGE_CIRCLE_DIAMETER.label(class='col-form-label') }}
-        </div>
 
-        <div class="col-sm-1">
-            {{ form_imagecircle.OFFSET_X.label(class='col-form-label') }}
-        </div>
+<div class="tw:p-4 tw:flex tw:flex-col lg:tw:flex-row tw:gap-6 tw:w-full tw:items-start">
 
-        <div class="col-sm-1">
-            {{ form_imagecircle.OFFSET_Y.label(class='col-form-label') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_imagecircle.LINE_WIDTH.label(class='col-form-label') }}
-        </div>
-
-        <div class="col-sm-2">
-            {{ form_imagecircle.LINE_COLOR.label(class='col-form-label') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_imagecircle.KEOGRAM_ANGLE.label(class='col-form-label') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_imagecircle.AZIMUTH_ANGLE.label(class='col-form-label') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_imagecircle.KEOGRAM_LINE.label(class='col-form-label') }}
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-1"></div>
-        <div class="col-sm-2">
-            {{ form_imagecircle.IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_imagecircle.OFFSET_X(class='form-control bg-secondary') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_imagecircle.OFFSET_Y(class='form-control bg-secondary') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_imagecircle.LINE_WIDTH(class='form-control bg-secondary') }}
-        </div>
-
-        <div class="col-sm-2">
-            {{ form_imagecircle.LINE_COLOR(class='form-select bg-secondary') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_imagecircle.KEOGRAM_ANGLE(class='form-control bg-secondary') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_imagecircle.AZIMUTH_ANGLE(class='form-control bg-secondary') }}
-        </div>
-
-        <div class="col-sm-1">
-            <div class="form-switch">
-            {{ form_imagecircle.KEOGRAM_LINE(class='form-check-input') }}
+    <!-- Canvas Panel -->
+    <div class="tw:flex tw:flex-col tw:gap-4 tw:w-full lg:tw:flex-[1.8]">
+        
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+            <div class="tw:card-body tw:p-4 tw:flex tw:flex-row tw:justify-between tw:items-center tw:gap-4">
+                <div class="tw:flex tw:items-center tw:gap-3">
+                    <div class="tw:w-2 tw:h-2 tw:rounded-full tw:bg-primary tw:animate-pulse tw:hidden sm:tw:block"></div>
+                    <div>
+                        <p class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/90">
+                            Image Circle Visualizer Calibration
+                        </p>
+                        <p class="tw:text-[0.6875rem] tw:text-base-content/50 tw:mt-0.5">
+                            Line up the overlay circle parameters to perfectly match the active optical footprint on your screen.
+                        </p>
+                    </div>
+                </div>
+                <div id="message" class="tw:badge tw:badge-ghost tw:border tw:border-base-300 tw:px-4 tw:py-3.5 tw:text-xs tw:font-semibold tw:tracking-wide tw:text-base-content/80 tw:rounded-[var(--radius-box)]">
+                    Loading...
+                </div>
             </div>
         </div>
+
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+            <div class="tw:card-body tw:p-3 tw:flex tw:justify-center tw:items-center tw:overflow-auto">
+                <div class="tw:relative tw:max-w-full tw:w-full tw:flex tw:justify-center">
+                    <canvas id="canvas" class="tw:max-w-full tw:h-auto tw:rounded-[var(--radius-box)] tw:bg-neutral-950 tw:shadow-2xl tw:border tw:border-base-300/30"></canvas>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-</form>
+    <!-- Controls Panel -->
+    <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm tw:w-full lg:tw:flex-[1.2]">
+        <div class="tw:card-body tw:p-6">
+            <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:mb-5">
+                Circle Overlays &amp; Layout Metrics
+            </h4>
 
-<hr>
+            <form id="form_imagecircle" onSubmit="return false;">
+                
+                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                    
+                    <div class="tw:form-control">
+                        <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[0.625rem] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_imagecircle.IMAGE_CIRCLE_DIAMETER.label.text }}</span></label>
+                        {{ form_imagecircle.IMAGE_CIRCLE_DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:w-full tw:rounded-[var(--radius-box)] tw:text-sm') }}
+                        <div id="IMAGE_CIRCLE_DIAMETER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display:none;"></div>
+                    </div>
 
+                    <div class="tw:form-control">
+                        <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[0.625rem] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_imagecircle.KEOGRAM_ANGLE.label.text }}</span></label>
+                        {{ form_imagecircle.KEOGRAM_ANGLE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:w-full tw:rounded-[var(--radius-box)] tw:text-sm') }}
+                        <div id="KEOGRAM_ANGLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display:none;"></div>
+                    </div>
 
-<div class="row">
-    <div class="text-center" style="font-size:10px">
-        This page is used help size your image circle settings - Line up the green circle to match the image circle on the screen
+                    <div class="tw:form-control">
+                        <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[0.625rem] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_imagecircle.OFFSET_X.label.text }}</span></label>
+                        {{ form_imagecircle.OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:w-full tw:rounded-[var(--radius-box)] tw:text-sm') }}
+                        <div id="OFFSET_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display:none;"></div>
+                    </div>
+
+                    <div class="tw:form-control">
+                        <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[0.625rem] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_imagecircle.OFFSET_Y.label.text }}</span></label>
+                        {{ form_imagecircle.OFFSET_Y(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:w-full tw:rounded-[var(--radius-box)] tw:text-sm') }}
+                        <div id="OFFSET_Y-error" class="tw:text-error tw:text-xs tw:mt-1" style="display:none;"></div>
+                    </div>
+
+                    <div class="tw:form-control">
+                        <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[0.625rem] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_imagecircle.AZIMUTH_ANGLE.label.text }}</span></label>
+                        {{ form_imagecircle.AZIMUTH_ANGLE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:w-full tw:rounded-[var(--radius-box)] tw:text-sm') }}
+                        <div id="AZIMUTH_ANGLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display:none;"></div>
+                    </div>
+
+                    <div class="tw:form-control">
+                        <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[0.625rem] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_imagecircle.LINE_WIDTH.label.text }}</span></label>
+                        {{ form_imagecircle.LINE_WIDTH(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:w-full tw:rounded-[var(--radius-box)] tw:text-sm') }}
+                        <div id="LINE_WIDTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display:none;"></div>
+                    </div>
+
+                </div>
+
+                <div class="tw:form-control tw:mt-4">
+                    <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[0.625rem] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">{{ form_imagecircle.LINE_COLOR.label.text }}</span></label>
+                    {{ form_imagecircle.LINE_COLOR(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:w-full tw:rounded-[var(--radius-box)] tw:text-sm') }}
+                    <div id="LINE_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display:none;"></div>
+                </div>
+
+                <div class="tw:flex tw:items-center tw:justify-between tw:p-4 tw:mt-4 tw:bg-base-300/30 tw:rounded-[var(--radius-box)] tw:border tw:border-base-content/10">
+                    <span class="tw:text-[0.625rem] tw:font-extrabold tw:uppercase tw:tracking-widest tw:text-base-content/60">
+                        {{ form_imagecircle.KEOGRAM_LINE.label.text }}
+                    </span>
+                    <div class="tw:inline-flex tw:items-center">
+                        {{ form_imagecircle.KEOGRAM_LINE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                    </div>
+                    <div id="KEOGRAM_LINE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display:none;"></div>
+                </div>
+
+            </form>
+        </div>
     </div>
-
-    <div class="text-muted text-center" id="message">Loading...</div>
-</div>
-<div class="row">
-    <div class="text-center">
-        <canvas id="canvas"></canvas>
-    </div>
-</div>
 
 </div>
 

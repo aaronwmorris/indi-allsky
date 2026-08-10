@@ -143,7 +143,7 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
             )
         self.assertIn('id="asi676mc-gallery-filters"', template)
         self.assertIn(
-            '{% if not asi676mc_repair_gallery_enabled %} d-none{% endif %}',
+            '{% if not asi676mc_repair_gallery_enabled %} tw:hidden{% endif %}',
             template,
         )
         self.assertIn(

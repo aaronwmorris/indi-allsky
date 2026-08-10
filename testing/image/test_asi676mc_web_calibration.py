@@ -1598,7 +1598,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('RAW16, RGGB, 1x1 binning', template)
         self.assertIn('message explains what to check', template)
         self.assertIn('id="calibration-capture-facts"', template)
-        self.assertIn('class="calibration-fact-grid mb-3"', template)
+        self.assertIn('class="calibration-fact-grid tw:mb-4"', template)
         self.assertIn('id="calibration-settings"', template)
         self.assertIn('>Calibration settings</div>', template)
         self.assertIn('calibration-camera-control', template)
@@ -1642,9 +1642,15 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             template.index('id="calibration-reset"'),
             template.index('id="calibration-report-download"'),
         )
-        self.assertIn('calibration-source-card bg-dark border-secondary', template)
+        self.assertIn(
+            'calibration-source-card tw:bg-base-200 tw:border',
+            template,
+        )
         self.assertIn('Upload a FITS collection', template)
-        self.assertIn('calibration-values-table table table-dark', template)
+        self.assertIn(
+            'calibration-values-table tw:table tw:table-zebra',
+            template,
+        )
         self.assertIn('calibration-callout calibration-callout-info', template)
         self.assertIn('.calibration-callout-success', template)
         self.assertNotIn("? 'text-success' : 'text-info'", template)
@@ -2291,9 +2297,19 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         views_source = project_root.joinpath(
             'indi_allsky', 'flask', 'views.py'
         ).read_text(encoding='utf-8')
-        settings_template = project_root.joinpath(
+        settings_script = project_root.joinpath(
             'indi_allsky', 'flask', 'templates', 'config.html'
         ).read_text(encoding='utf-8')
+        settings_template = project_root.joinpath(
+            'indi_allsky', 'flask', 'templates', 'config', 'asi676mc.html'
+        ).read_text(encoding='utf-8')
+
+        self.assertIn(
+            "{% include 'config/asi676mc.html' %}",
+            project_root.joinpath(
+                'indi_allsky', 'flask', 'templates', 'config', 'image.html'
+            ).read_text(encoding='utf-8'),
+        )
 
         self.assertIn('"EXCLUDE_ONLY"                : True', config_source)
         self.assertIn('"SAVE_PRECEDING_FITS"          : False', config_source)
@@ -2315,21 +2331,21 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             "get('BLUE_SIDE_RATIO_THRESHOLD', 1.75)",
             views_source,
         )
-        self.assertIn('asi676mc_repair_was_enabled', settings_template)
+        self.assertIn('asi676mc_repair_was_enabled', settings_script)
         self.assertIn(
-            'form_config.IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS.label',
+            'form_config.IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS',
             settings_template,
         )
         self.assertIn(
             'update_asi676mc_preceding_fits_state',
-            settings_template,
+            settings_script,
         )
         self.assertLess(
             settings_template.index(
-                'form_config.IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS.label'
+                'form_config.IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS'
             ),
             settings_template.index(
-                'form_config.IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS.label'
+                'form_config.IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS'
             ),
         )
         self.assertIn(
@@ -2349,16 +2365,24 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             settings_template,
         )
         self.assertIn(
-            'red to first-green detection ratio [default: 1.15]',
+            'Apparent red-to-first-green ratio. Default: 1.15.',
             settings_template,
         )
         self.assertIn(
-            'blue to second-green detection ratio [default: 1.75]',
+            'Apparent blue-to-second-green ratio. Default: 1.75.',
+            settings_template,
+        )
+        self.assertIn(
+            'Even Bayer-aware signature sampling step. Default: 32.',
+            settings_template,
+        )
+        self.assertIn(
+            'Even RAW row count processed per repair chunk. Default: 128.',
             settings_template,
         )
         self.assertNotIn('Safe calibration workflow:', settings_template)
         enable_guidance_position = settings_template.index(
-            'Purple-frame cameras only'
+            'Only enable this if the camera actually produces purple frames.'
         )
         self.assertGreater(
             enable_guidance_position,
@@ -2369,30 +2393,30 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertLess(
             enable_guidance_position,
             settings_template.index(
-                'form_config.IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY.label'
+                'form_config.IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY,'
             ),
         )
         self.assertGreater(
             settings_template.index('For stronger good/purple/good triplets'),
             settings_template.index(
-                'form_config.IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY.label'
+                'form_config.IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY,'
             ),
         )
+        sample_step_position = settings_template.index(
+            'form_config.IMAGE_ASI676MC_REPAIR__SAMPLE_STEP'
+        )
         highlight_start_position = settings_template.index(
-            'form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO.label'
+            'form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO'
         )
         highlight_end_position = settings_template.index(
-            'form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO.label'
-        )
-        sample_step_position = settings_template.index(
-            'form_config.IMAGE_ASI676MC_REPAIR__SAMPLE_STEP.label'
+            'form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO'
         )
         chunk_rows_position = settings_template.index(
-            'form_config.IMAGE_ASI676MC_REPAIR__CHUNK_ROWS.label'
+            'form_config.IMAGE_ASI676MC_REPAIR__CHUNK_ROWS'
         )
+        self.assertLess(sample_step_position, highlight_start_position)
         self.assertLess(highlight_start_position, highlight_end_position)
-        self.assertLess(highlight_end_position, sample_step_position)
-        self.assertLess(sample_step_position, chunk_rows_position)
+        self.assertLess(highlight_end_position, chunk_rows_position)
 
 
 if __name__ == '__main__':
