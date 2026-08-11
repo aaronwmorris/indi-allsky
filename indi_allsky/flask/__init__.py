@@ -98,6 +98,9 @@ def create_app():
         instance_relative_config=False,
     )
 
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
     flask_config = os.environ.get('INDI_ALLSKY_FLASK_CONFIG', '/etc/indi-allsky/flask.json')
     app.config.from_file(flask_config, load=json.load)
 
@@ -234,6 +237,13 @@ def create_app():
             elif expires_at:
                 # Cache it if it was missing from session but present in DB
                 session['oidc_expires_at'] = expires_at
+
+
+    @app.after_request
+    def prevent_caching(response):
+        response.cache_control.no_store = True
+        response.cache_control.no_cache = True
+        return response
 
 
     with app.app_context():

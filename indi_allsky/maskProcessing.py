@@ -13,13 +13,12 @@ class MaskProcessor(object):
     def __init__(
         self,
         config,
-        binning
     ):
 
         self.config = config
-        self.binning = binning
 
         self._image = None
+        self._binning = 1
 
 
     @property
@@ -29,6 +28,15 @@ class MaskProcessor(object):
     @image.setter
     def image(self, new_image):
         self._image = new_image
+
+
+    @property
+    def binning(self):
+        return self._binning
+
+    @binning.setter
+    def binning(self, new_binning):
+        self._binning = int(new_binning)
 
 
     def rotate_90(self):
@@ -104,20 +112,58 @@ class MaskProcessor(object):
 
 
     def crop_image(self):
-        # divide the coordinates by binning value
-        x1 = int(self.config['IMAGE_CROP_ROI'][0] / self.binning)
-        y1 = int(self.config['IMAGE_CROP_ROI'][1] / self.binning)
-        x2 = int(self.config['IMAGE_CROP_ROI'][2] / self.binning)
-        y2 = int(self.config['IMAGE_CROP_ROI'][3] / self.binning)
+        if self.config.get('IMAGE_CROP_IMAGE_CIRCLE'):
+            image_height, image_width = self.image.shape[:2]
+
+            lens_offset_x = self.config.get('LENS_OFFSET_X', 0)
+            lens_offset_y = self.config.get('LENS_OFFSET_Y', 0)
+            image_center_x = int(image_width / 2)
+            image_center_y = int(image_height / 2)
+            radius = int(self.config.get('LENS_IMAGE_CIRCLE', 3000) / 2)
+
+            logger.info('Cropping to image circle (%d px)', radius * 2)
 
 
-        self.image = self.image[
-            y1:y2,
-            x1:x2,
-        ]
+            # need to maintain same offset of image circle
+            # offsets have to be doubled since they are added to the radius
+            if lens_offset_x >= 0:
+                x1 = max(0, (image_center_x - radius))
+                x2 = min(image_width, (image_center_x + radius) + (lens_offset_x * 2))
+            else:
+                x1 = max(0, (image_center_x - radius) + (lens_offset_x * 2))  # offset is negative
+                x2 = min(image_width, (image_center_x + radius))
 
-        #new_height, new_width = self.image.shape[:2]
-        #logger.info('New cropped size: %d x %d', new_width, new_height)
+            if lens_offset_y >= 0:
+                y1 = max(0, (image_center_y - radius) - (lens_offset_y * 2))
+                y2 = min(image_height, (image_center_y + radius))
+            else:
+                y1 = max(0, (image_center_y - radius))
+                y2 = min(image_height, (image_center_y + radius) - (lens_offset_y * 2))  # offset is negative
+
+            self.image = self.image[
+                y1:y2,
+                x1:x2,
+            ]
+
+            #new_height, new_width = self.image.shape[:2]
+            #logger.info('New cropped size: %d x %d', new_width, new_height)
+
+
+        elif self.config.get('IMAGE_CROP_ROI'):
+            # divide the coordinates by binning value
+            x1 = int(self.config['IMAGE_CROP_ROI'][0] / self.binning)
+            y1 = int(self.config['IMAGE_CROP_ROI'][1] / self.binning)
+            x2 = int(self.config['IMAGE_CROP_ROI'][2] / self.binning)
+            y2 = int(self.config['IMAGE_CROP_ROI'][3] / self.binning)
+
+
+            self.image = self.image[
+                y1:y2,
+                x1:x2,
+            ]
+
+            #new_height, new_width = self.image.shape[:2]
+            #logger.info('New cropped size: %d x %d', new_width, new_height)
 
 
     def scale_image(self):

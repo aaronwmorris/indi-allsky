@@ -1,6 +1,5 @@
-const CACHE_NAME = 'indi-allsky-v2';
+const CACHE_NAME = 'indi-allsky-v3';
 const ASSETS_TO_CACHE = [
-  '/indi-allsky/',
   '/indi-allsky/static/css/dist.css',
   '/indi-allsky/static/js/jquery-3.7.1.min.js',
   '/indi-allsky/static/images/favicon_32.png',
@@ -22,7 +21,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate Event
+// Activate Event - delete all old caches to clear stale HTML pages
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -40,14 +39,27 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Never cache HTML pages, navigation requests, or dynamic requests
+  const acceptHeader = event.request.headers.get('accept') || '';
+  if (event.request.mode === 'navigate' || acceptHeader.includes('text/html')) {
+    return;
+  }
+
+  // Block legacy Bootstrap stylesheet requests to prevent CSS interference
+  if (event.request.url.includes('bootstrap') && !event.request.url.includes('datatables')) {
+    event.respondWith(new Response('', { status: 404, statusText: 'Bootstrap Removed' }));
+    return;
+  }
+
   const url = new URL(event.request.url);
 
-  // Network-only for API calls, authentication, dynamic camera feeds, and video streams
+  // Only handle static assets under /static/
+  if (!url.pathname.includes('/static/')) {
+    return;
+  }
+
+  // Exclude dynamic image / video / stream endpoints
   if (
-    url.pathname.startsWith('/api') ||
-    url.pathname.startsWith('/auth') ||
-    url.pathname.startsWith('/actionapi') ||
-    url.pathname.startsWith('/syncapi') ||
     url.pathname.includes('/image') ||
     url.pathname.includes('/video') ||
     url.pathname.includes('/stream')

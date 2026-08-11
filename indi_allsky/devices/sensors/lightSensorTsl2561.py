@@ -13,7 +13,7 @@ logger = logging.getLogger('indi_allsky')
 class LightSensorTsl2561(SensorBase):
 
     def update(self):
-        astro_darkness = self.astro_av[constants.ASTRO_SUN_ALT] <= 18.0
+        astro_darkness = self.astro_av[constants.ASTRO_SUN_ALT] <= -18.0
         if self.astro_darkness != astro_darkness:
             self.astro_darkness = astro_darkness
             self.update_sensor_settings()
