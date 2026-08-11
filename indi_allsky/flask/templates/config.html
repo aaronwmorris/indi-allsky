@@ -57,7 +57,7 @@ var camera_id = {{ camera_id }};
     <div id="save-error-banner" class="tw:alert tw:alert-error tw:py-2.5 tw:text-sm" style="display: none;">
         <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4 tw:shrink-0"></i>
         <div>
-            <p class="tw:font-semibold">Save failed &mdash; please fix these fields:</p>
+            <p id="save-error-title" class="tw:font-semibold">Save failed &mdash; please fix these fields:</p>
             <p id="save-error-fields" class="tw:text-xs tw:opacity-90 tw:mt-0.5"></p>
         </div>
     </div>
@@ -967,7 +967,14 @@ $('#form_config').on('submit', function() {
 
             // Show banner and scroll it into view
             if (errorFieldNames.length > 0) {
+                $('#save-error-title').html('Save failed &mdash; please fix these fields:');
                 $('#save-error-fields').text(errorFieldNames.join(', '));
+                $('#save-error-banner').show()[0].scrollIntoView({behavior: 'smooth', block: 'nearest'});
+            } else {
+                var globalMsg = errors.description || errors.message || errors.form_global || (errors.error ? 'Server error (' + (errors.code || rdata.status) + '): ' + (errors.message || 'Bad Request') : 'An unexpected error occurred while saving.');
+                if (Array.isArray(globalMsg)) globalMsg = globalMsg.join(', ');
+                $('#save-error-title').html('Save failed:');
+                $('#save-error-fields').text(globalMsg);
                 $('#save-error-banner').show()[0].scrollIntoView({behavior: 'smooth', block: 'nearest'});
             }
 
