@@ -58,7 +58,7 @@ UPLOADING_STALE_SECONDS = 30 * 60
 QUEUED_STALE_SECONDS = 30 * 60
 RUNNING_STALE_SECONDS = 2 * 60 * 60
 DATABASE_GROUP_MIN = 7
-DATABASE_GROUP_MAX = 100
+DATABASE_GROUP_MAX = 30
 DATABASE_CAPTURE_TIME_TOLERANCE = 1.0
 DATABASE_MAX_FILES = MAX_FILE_COUNT
 DATABASE_MAX_BYTES = MAX_SESSION_BYTES
@@ -483,13 +483,14 @@ def capture_configuration_guidance(config):
             guidance_sentences.append(
                 'Diagnostic FITS are preferred. Keep periodic standard FITS '
                 'on only if you need them for another purpose. If diagnostic '
-                'saving misses purple frames, temporarily choose Every Image.'
+                'saving misses purple frames, temporarily set standard FITS '
+                'saving to Every Image.'
             )
         elif not standard_fits:
             guidance_sentences.append(
                 'Diagnostic FITS are preferred, so standard FITS can remain '
                 'off unless you need them. If diagnostic saving misses purple '
-                'frames, temporarily choose Every Image.'
+                'frames, temporarily set standard FITS saving to Every Image.'
             )
 
     if preceding_fits:

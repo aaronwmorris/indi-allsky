@@ -302,6 +302,20 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'roles': list(roles),
         }
 
+    def test_database_group_target_maximum_is_thirty(self):
+        self.assertEqual(asi676mc_calibration.DATABASE_GROUP_MAX, 30)
+        with self.assertRaisesRegex(
+            asi676mc_calibration.CalibrationSessionError,
+            'between 7 and 30',
+        ):
+            asi676mc_calibration.discover_full_retention_database_evidence(
+                [],
+                bad_frames=[],
+                target_groups=31,
+                max_pair_seconds=30.0,
+                settings=calibration_engine.DEFAULT_SETTINGS,
+            )
+
     def test_full_retention_discovery_finds_unmarked_bad_frames_5000_files_back(self):
         records = []
         bad_ids = {50, 150, 250, 350, 450, 550, 650}
@@ -1927,6 +1941,15 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('function validateSelectedFits(files)', template)
         self.assertIn('calibrationMaxSessionBytes', template)
         self.assertIn('Manual upload accepts uncompressed', template)
+        self.assertIn('Select 14 to 200 FITS', template)
+        self.assertIn('each file may be up to 256 MiB', template)
+        self.assertIn('frames do not need to have been marked as purple', template)
+        self.assertIn('The tool first applies the current', template)
+        self.assertIn('it looks for a separate', template)
+        self.assertIn('file-count or total-size limit', template)
+        self.assertIn('including at least two exposure', template)
+        self.assertIn('nearest one when a complete group would exceed', template)
+        self.assertIn('30 is intended for', template)
         self.assertIn('capture_guidance.guidance.level', template)
         self.assertIn('capture_guidance.guidance.title', template)
         self.assertNotIn('{% for message in capture_guidance.messages %}', template)
@@ -2159,7 +2182,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             periodic_message,
         )
         self.assertIn(
-            'temporarily choose Every Image',
+            'temporarily set standard FITS saving to Every Image',
             periodic_message,
         )
 

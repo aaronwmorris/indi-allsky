@@ -325,10 +325,14 @@
                 </div>
                 <div class="calibration-card-body tw:card-body tw:p-6 tw:pt-3">
                     <p class="calibration-help">
-                        Search all FITS still retained for this camera. The tool
-                        skips files it cannot use and prepares only the groups
-                        needed for calibration. Original saved FITS are not
-                        changed. A run can prepare up to 200 FITS or 2 GiB.
+                        Check every compatible FITS still retained for this
+                        camera; frames do not need to have been marked as purple
+                        when they were saved. The tool first applies the current
+                        detection settings. If they do not identify enough
+                        usable purple frames, it looks for a separate
+                        purple-frame population. The search itself has no
+                        file-count or total-size limit, and original saved FITS
+                        are not changed.
                     </p>
                     <div class="tw:mb-4">
                         {{ form_calibration.DATABASE_GROUP_LIMIT.label(class='tw:label-text tw:font-semibold') }}
@@ -339,10 +343,15 @@
                             <div class="calibration-help tw:text-sm">
                                 Choose {{ calibration_database_limits.minimum }}
                                 to {{ calibration_database_limits.maximum }}
-                                groups. One group is a purple frame with its
-                                nearby normal reference frames. Leave the
-                                default at 25 for normal use; a higher target
-                                may improve the result but takes longer.
+                                groups. The tool selects the newest suitable
+                                groups while including at least two exposure
+                                levels. One group is one purple frame with one
+                                or two nearby normal frames. It uses both normal
+                                frames where possible, but can use only the
+                                nearest one when a complete group would exceed
+                                the 200-FITS or 2-GiB temporary limit. Leave the
+                                default at 25 for normal use; 30 is intended for
+                                collections containing mostly two-frame groups.
                             </div>
                         </div>
                     </div>
@@ -362,8 +371,11 @@
                 </div>
                 <div class="calibration-card-body tw:card-body tw:p-6 tw:pt-3">
                     <p class="calibration-help">
-                        Select the complete collection in one file-picker action.
-                        Files are transferred sequentially with visible progress.
+                        Select 14 to 200 FITS in one file-picker action. Include
+                        at least seven purple frames and seven different nearby
+                        normal frames. The collection may total up to 2 GiB,
+                        and each file may be up to 256 MiB. Files are transferred
+                        sequentially with visible progress.
                     </p>
                     <label for="calibration-files" class="tw:label-text tw:font-semibold">FITS files</label>
                     <input
