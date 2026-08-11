@@ -28,6 +28,22 @@
             
             var savedFontSize = localStorage.getItem('allsky-font-size') || '100%';
             document.documentElement.style.fontSize = savedFontSize;
+
+            // One-time automatic purge of legacy Bootstrap caches & ServiceWorker storage
+            var PURGE_KEY = 'indi_allsky_bootstrap_purged_v4';
+            if (!localStorage.getItem(PURGE_KEY)) {
+                localStorage.setItem(PURGE_KEY, 'true');
+                if ('caches' in window) {
+                    caches.keys().then(function(names) {
+                        names.forEach(function(n) { caches.delete(n); });
+                    });
+                }
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(regs) {
+                        regs.forEach(function(r) { r.unregister(); });
+                    });
+                }
+            }
         })();
 
         if ('serviceWorker' in navigator) {
@@ -43,7 +59,7 @@
         }
     </script>
 
-    <link href="{{ url_for('indi_allsky.static', filename='css/dist.css') }}" rel="stylesheet">
+    <link href="{{ url_for('indi_allsky.static', filename='css/dist.css') }}?v={{ release if release else 'v2026.08.1' }}" rel="stylesheet">
     <script src="{{ url_for('indi_allsky.static', filename='js/jquery-3.7.1.min.js') }}"></script>
 
     <style>
