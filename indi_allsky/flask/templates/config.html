@@ -57,7 +57,7 @@ var camera_id = {{ camera_id }};
     <div id="save-error-banner" class="tw:alert tw:alert-error tw:py-2.5 tw:text-sm" style="display: none;">
         <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4 tw:shrink-0"></i>
         <div>
-            <p class="tw:font-semibold">Save failed &mdash; please fix these fields:</p>
+            <p id="save-error-title" class="tw:font-semibold">Save failed &mdash; please fix these fields:</p>
             <p id="save-error-fields" class="tw:text-xs tw:opacity-90 tw:mt-0.5"></p>
         </div>
     </div>
@@ -65,12 +65,17 @@ var camera_id = {{ camera_id }};
 
 <!-- Save & Note Footer Bar -->
 <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 hover:tw:border-base-content/25 tw:transition-all tw:rounded-[var(--radius-box)] shadow-md tw:mt-4 tw:mb-8">
-    <div class="tw:card-body tw:p-4 sm:tw:p-6 tw:flex tw:flex-row tw:items-center tw:gap-4">
+    <div class="tw:card-body tw:p-4 sm:tw:p-5 tw:flex tw:flex-row tw:flex-wrap sm:tw:flex-nowrap tw:items-center tw:gap-4">
         <button id="save-button" class="tw:btn tw:btn-primary tw:btn-md tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider tw:flex-shrink-0 tw:shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:tw:shadow-[0_0_25px_rgba(59,130,246,0.5)] active:tw:scale-95 tw:transition-all">
             <i class="tw:icon-[lucide--save] tw:w-4 tw:h-4"></i>
             Save Configuration
         </button>
-        <div class="tw:flex tw:items-center tw:gap-3 tw:flex-1">
+        <label class="tw:flex tw:items-center tw:gap-2 tw:cursor-pointer tw:select-none tw:flex-shrink-0 tw:px-1">
+            {{ form_config.RELOAD_ON_SAVE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+            <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80 tw:whitespace-nowrap" title="Automatically restart capture service upon saving configuration">{{ form_config.RELOAD_ON_SAVE.label.text }}</span>
+        </label>
+        <div id="RELOAD_ON_SAVE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+        <div class="tw:flex tw:items-center tw:gap-3 tw:flex-1 tw:min-w-[200px]">
             <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/70 tw:whitespace-nowrap">{{ form_config.CONFIG_NOTE.label.text }}:</span>
             <div class="tw:flex-1">
                 {{ form_config.CONFIG_NOTE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full', placeholder='Optional note describing this configuration change...') }}
@@ -962,7 +967,14 @@ $('#form_config').on('submit', function() {
 
             // Show banner and scroll it into view
             if (errorFieldNames.length > 0) {
+                $('#save-error-title').html('Save failed &mdash; please fix these fields:');
                 $('#save-error-fields').text(errorFieldNames.join(', '));
+                $('#save-error-banner').show()[0].scrollIntoView({behavior: 'smooth', block: 'nearest'});
+            } else {
+                var globalMsg = errors.description || errors.message || errors.form_global || (errors.error ? 'Server error (' + (errors.code || rdata.status) + '): ' + (errors.message || 'Bad Request') : 'An unexpected error occurred while saving.');
+                if (Array.isArray(globalMsg)) globalMsg = globalMsg.join(', ');
+                $('#save-error-title').html('Save failed:');
+                $('#save-error-fields').text(globalMsg);
                 $('#save-error-banner').show()[0].scrollIntoView({behavior: 'smooth', block: 'nearest'});
             }
 
@@ -1805,7 +1817,7 @@ $( document ).ready(function() {
         });
         const $toggle = $('#TEMP_SENSOR__FC37_ACTIVE_LOW');
         $toggle.prop('disabled', !fc37Selected);
-        $toggle.closest('.form-group.row').toggleClass('text-muted', !fc37Selected).css('opacity', fc37Selected ? '' : '0.5');
+        $toggle.parent().css('opacity', fc37Selected ? '' : '0.5');
     }
 
     $('#TEMP_SENSOR__A_CLASSNAME, #TEMP_SENSOR__B_CLASSNAME, #TEMP_SENSOR__C_CLASSNAME, #TEMP_SENSOR__D_CLASSNAME, #TEMP_SENSOR__E_CLASSNAME, #TEMP_SENSOR__F_CLASSNAME').on('change', updateFc37ActiveLowState);
