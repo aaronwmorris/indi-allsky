@@ -1941,15 +1941,20 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('function validateSelectedFits(files)', template)
         self.assertIn('calibrationMaxSessionBytes', template)
         self.assertIn('Manual upload accepts uncompressed', template)
-        self.assertIn('Select 14 to 200 FITS', template)
+        self.assertIn('Select 14 to 80 FITS', template)
         self.assertIn('each file may be up to 256 MiB', template)
         self.assertIn('frames do not need to have been marked as purple', template)
         self.assertIn('The tool first applies the current', template)
         self.assertIn('it looks for a separate', template)
-        self.assertIn('file-count or total-size limit', template)
         self.assertIn('including at least two exposure', template)
-        self.assertIn('nearest one when a complete group would exceed', template)
-        self.assertIn('30 is intended for', template)
+        self.assertIn('nearest one when a complete group cannot be', template)
+        self.assertIn('default at 20 for normal', template)
+        automatic_card = template.split(
+            '<span>Use saved FITS</span>',
+            1,
+        )[1].split('<span>Upload a FITS collection</span>', 1)[0]
+        self.assertNotIn('200-FITS', automatic_card)
+        self.assertNotIn('2-GiB', automatic_card)
         self.assertIn('capture_guidance.guidance.level', template)
         self.assertIn('capture_guidance.guidance.title', template)
         self.assertNotIn('{% for message in capture_guidance.messages %}', template)
@@ -2085,6 +2090,12 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         views_source = project_root.joinpath(
             'indi_allsky', 'flask', 'views.py'
         ).read_text(encoding='utf-8')
+        forms_source = project_root.joinpath(
+            'indi_allsky', 'flask', 'forms.py'
+        ).read_text(encoding='utf-8')
+        calibration_source = project_root.joinpath(
+            'indi_allsky', 'asi676mc_calibration.py'
+        ).read_text(encoding='utf-8')
         self.assertIn(
             "context['asi676mc_calibration_available']",
             base_view_source,
@@ -2117,6 +2128,19 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         )
         self.assertIn("context['calibration_upload_limits']", views_source)
         self.assertIn("context['calibration_database_limits']", views_source)
+        self.assertIn("'DATABASE_GROUP_LIMIT': 20", views_source)
+        self.assertIn("request_data.get('target_groups', 20)", views_source)
+        group_field_source = forms_source.split(
+            'DATABASE_GROUP_LIMIT = IntegerField(',
+            1,
+        )[1].split('\n\n', 1)[0]
+        self.assertIn('default=20', group_field_source)
+        self.assertIn(
+            "source_details.get('requested_group_count', 20)",
+            calibration_source,
+        )
+        self.assertEqual(asi676mc_calibration.MAX_FILE_COUNT, 80)
+        self.assertEqual(asi676mc_calibration.DATABASE_MAX_FILES, 200)
         self.assertIn('def _can_save_standard_configuration()', views_source)
         self.assertIn('def _asi676mc_feature_enabled()', views_source)
         self.assertIn('if not _asi676mc_feature_enabled():', views_source)

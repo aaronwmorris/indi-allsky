@@ -47,7 +47,7 @@ FITS_SUFFIXES = ('.fit', '.fits', '.fts')
 # An uncompressed full-resolution ASI676MC FITS is roughly tens of megabytes.
 # These limits comfortably allow sizeable calibration collections while
 # preventing one authenticated browser session from consuming the whole disk.
-MAX_FILE_COUNT = 200
+MAX_FILE_COUNT = 80
 MAX_FILE_BYTES = 256 * 1024 * 1024
 MAX_SESSION_BYTES = 2 * 1024 * 1024 * 1024
 TRANSFER_CHUNK_BYTES = 1024 * 1024
@@ -60,7 +60,7 @@ RUNNING_STALE_SECONDS = 2 * 60 * 60
 DATABASE_GROUP_MIN = 7
 DATABASE_GROUP_MAX = 30
 DATABASE_CAPTURE_TIME_TOLERANCE = 1.0
-DATABASE_MAX_FILES = MAX_FILE_COUNT
+DATABASE_MAX_FILES = 200
 DATABASE_MAX_BYTES = MAX_SESSION_BYTES
 PROGRESS_MANIFEST_INTERVAL_FILES = 50
 # A collection does not need every purple frame to have two normal references.
@@ -1496,7 +1496,7 @@ def _stage_database_files_unlocked(
             'the page and start a new search.'
         )
     records = list(records)
-    if len(records) > MAX_FILE_COUNT:
+    if len(records) > DATABASE_MAX_FILES:
         raise CalibrationSessionError(
             'The saved-FITS search selected too many files. Start a new search '
             'with a lower purple-frame group target.'
@@ -1634,7 +1634,7 @@ def _store_upload_unlocked(
     """Stream one browser-selected FITS into its private session.
 
     The browser calls this once per selected file, automatically.  Sequential
-    transfer avoids holding an entire 14-30 file collection in one request and
+    transfer avoids holding an entire 14-80 file collection in one request and
     allows the page to report reliable file-level progress.
     """
     session_dir, manifest = get_session(session_id, owner, storage_root)
@@ -3811,7 +3811,7 @@ def run_calibration_session(
                 discover_full_retention_database_evidence(
                     catalog.get('fits_records', ()),
                     catalog.get('bad_frames', ()),
-                    source_details.get('requested_group_count', 25),
+                    source_details.get('requested_group_count', 20),
                     manifest['max_pair_seconds'],
                     manifest.get('settings'),
                     progress_callback=record_progress,

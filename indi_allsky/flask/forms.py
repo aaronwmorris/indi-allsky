@@ -6839,7 +6839,7 @@ class IndiAllskyAsi676mcCalibrationForm(FlaskForm):
     )
     DATABASE_GROUP_LIMIT = IntegerField(
         'Purple-frame groups to find',
-        default=25,
+        default=20,
         validators=[NumberRange(
             min=asi676mc_calibration.DATABASE_GROUP_MIN,
             max=asi676mc_calibration.DATABASE_GROUP_MAX,

@@ -330,9 +330,8 @@
                         when they were saved. The tool first applies the current
                         detection settings. If they do not identify enough
                         usable purple frames, it looks for a separate
-                        purple-frame population. The search itself has no
-                        file-count or total-size limit, and original saved FITS
-                        are not changed.
+                        purple-frame population. Original saved FITS are not
+                        changed.
                     </p>
                     <div class="tw:mb-4">
                         {{ form_calibration.DATABASE_GROUP_LIMIT.label(class='tw:label-text tw:font-semibold') }}
@@ -348,10 +347,10 @@
                                 levels. One group is one purple frame with one
                                 or two nearby normal frames. It uses both normal
                                 frames where possible, but can use only the
-                                nearest one when a complete group would exceed
-                                the 200-FITS or 2-GiB temporary limit. Leave the
-                                default at 25 for normal use; 30 is intended for
-                                collections containing mostly two-frame groups.
+                                nearest one when a complete group cannot be
+                                prepared. Leave the default at 20 for normal
+                                use; choose a higher target only for collections
+                                containing mostly two-frame groups.
                             </div>
                         </div>
                     </div>
@@ -371,7 +370,7 @@
                 </div>
                 <div class="calibration-card-body tw:card-body tw:p-6 tw:pt-3">
                     <p class="calibration-help">
-                        Select 14 to 200 FITS in one file-picker action. Include
+                        Select 14 to 80 FITS in one file-picker action. Include
                         at least seven purple frames and seven different nearby
                         normal frames. The collection may total up to 2 GiB,
                         and each file may be up to 256 MiB. Files are transferred

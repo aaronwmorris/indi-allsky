@@ -7814,7 +7814,7 @@ class Asi676mcCalibrationView(TemplateView):
             data={
                 'CAMERA_ID': selected_camera.id,
                 'MAX_PAIR_SECONDS': 90.0,
-                'DATABASE_GROUP_LIMIT': 25,
+                'DATABASE_GROUP_LIMIT': 20,
             },
         )
         calibration_form.CAMERA_ID.choices = [
@@ -7961,7 +7961,7 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
         owner = _calibration_owner()
         try:
             camera_id = int(request_data.get('camera_id'))
-            target_groups = int(request_data.get('target_groups', 25))
+            target_groups = int(request_data.get('target_groups', 20))
             max_pair_seconds = float(
                 request_data.get('max_pair_seconds', 90.0)
             )
