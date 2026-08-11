@@ -12441,11 +12441,11 @@ bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', templ
 
 @bp_allsky.route('/sw.js')
 def service_worker():
-    response = make_response(send_from_directory(
+    response = send_from_directory(
         os.path.join(app.root_path, 'static', 'js'),
         'sw.js',
         mimetype='application/javascript'
-    ))
+    )
     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
