@@ -236,6 +236,13 @@ def create_app():
                 session['oidc_expires_at'] = expires_at
 
 
+    @app.after_request
+    def prevent_caching(response):
+        response.cache_control.no_store = True
+        response.cache_control.no_cache = True
+        return response
+
+
     with app.app_context():
         from sqlalchemy import event
 
