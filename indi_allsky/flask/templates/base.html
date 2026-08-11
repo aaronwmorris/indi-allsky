@@ -196,6 +196,7 @@
                 ('indi_allsky.shell_view', 'Shell', true)
                 ])
                 ] %}
+                {% if group_id != 'system' or (current_user.is_authenticated or login_disabled) %}
                 <li class="tw:w-full">
                     <details class="tw:w-full tw:group [&_summary::-webkit-details-marker]:tw:hidden"
                         id="menu-group-{{ group_id }}">
@@ -221,6 +222,7 @@
                         </ul>
                     </details>
                 </li>
+                {% endif %}
                 {% endfor %}
             </ul>
         </div>
