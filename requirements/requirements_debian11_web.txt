@@ -30,7 +30,7 @@ simple-websocket >= 1.0.0
 is-safe-url
 certifi >= 2023.7.22
 # https://www.wheelodex.org/projects/cryptography/
-cryptography >= 42.0.8
+cryptography >= 50.0.0
 dbus-python
 setuptools-rust
 # https://www.wheelodex.org/projects/bcrypt/

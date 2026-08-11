@@ -58,7 +58,7 @@ simple-websocket >= 1.0.0
 is-safe-url
 certifi
 # https://www.piwheels.org/project/cryptography/
-cryptography >= 42.0.5
+cryptography >= 50.0.0
 dbus-python
 paho-mqtt >= 2.0.0
 setuptools-rust
