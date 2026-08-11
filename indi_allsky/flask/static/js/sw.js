@@ -45,6 +45,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Block legacy Bootstrap stylesheet requests to prevent CSS interference
+  if (event.request.url.includes('bootstrap') && !event.request.url.includes('datatables')) {
+    event.respondWith(new Response('', { status: 404, statusText: 'Bootstrap Removed' }));
+    return;
+  }
+
   const url = new URL(event.request.url);
 
   // Only handle static assets under /static/
