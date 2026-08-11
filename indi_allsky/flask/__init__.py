@@ -98,6 +98,9 @@ def create_app():
         instance_relative_config=False,
     )
 
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
     flask_config = os.environ.get('INDI_ALLSKY_FLASK_CONFIG', '/etc/indi-allsky/flask.json')
     app.config.from_file(flask_config, load=json.load)
 

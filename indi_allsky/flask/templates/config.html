@@ -1817,7 +1817,7 @@ $( document ).ready(function() {
         });
         const $toggle = $('#TEMP_SENSOR__FC37_ACTIVE_LOW');
         $toggle.prop('disabled', !fc37Selected);
-        $toggle.closest('.form-group.row').toggleClass('text-muted', !fc37Selected).css('opacity', fc37Selected ? '' : '0.5');
+        $toggle.parent().css('opacity', fc37Selected ? '' : '0.5');
     }
 
     $('#TEMP_SENSOR__A_CLASSNAME, #TEMP_SENSOR__B_CLASSNAME, #TEMP_SENSOR__C_CLASSNAME, #TEMP_SENSOR__D_CLASSNAME, #TEMP_SENSOR__E_CLASSNAME, #TEMP_SENSOR__F_CLASSNAME').on('change', updateFc37ActiveLowState);
