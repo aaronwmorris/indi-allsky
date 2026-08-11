@@ -5894,42 +5894,6 @@ class AjaxSystemInfoView(BaseView):
         return jsonify(json_data)
 
 
-class AjaxSystemStatsView(SystemInfoView):
-    methods = ['GET']
-    decorators = [login_required]
-
-    def __init__(self, **kwargs):
-        super(AjaxSystemStatsView, self).__init__(template_name=None, **kwargs)
-
-    def dispatch_request(self):
-        context = self.get_context()
-        
-        now_dt = context.get('now')
-        now_str = now_dt.strftime('%Y-%m-%d %H:%M:%S') if now_dt else ''
-        now_date = now_dt.strftime('%m / %d / %Y') if now_dt else ''
-        now_time = now_dt.strftime('%I : %M : %S %P') if now_dt else ''
-
-        data = {
-            'cpu_usage': context.get('cpu_usage'),
-            'cpu_count': context.get('cpu_count'),
-            'cpu_load5': context.get('cpu_load5'),
-            'cpu_load10': context.get('cpu_load10'),
-            'cpu_load15': context.get('cpu_load15'),
-            'mem_total': context.get('mem_total'),
-            'mem_usage': context.get('mem_usage'),
-            'swap_total': context.get('swap_total'),
-            'swap_usage': context.get('swap_usage'),
-            'fs_data': context.get('fs_data'),
-            'uptime_str': context.get('uptime_str'),
-            'temp_list': context.get('temp_list'),
-            'fan_list': context.get('fan_list'),
-            'now': now_str,
-            'now_date': now_date,
-            'now_time': now_time,
-        }
-        return jsonify(data)
-
-
     def rebootSystemd(self):
         system_bus = dbus.SystemBus()
         systemd1 = system_bus.get_object('org.freedesktop.login1', '/org/freedesktop/login1')
@@ -6530,6 +6494,42 @@ class AjaxSystemStatsView(SystemInfoView):
         db.session.commit()
 
         return message_list
+
+
+class AjaxSystemStatsView(SystemInfoView):
+    methods = ['GET']
+    decorators = [login_required]
+
+    def __init__(self, **kwargs):
+        super(AjaxSystemStatsView, self).__init__(template_name=None, **kwargs)
+
+    def dispatch_request(self):
+        context = self.get_context()
+
+        now_dt = context.get('now')
+        now_str = now_dt.strftime('%Y-%m-%d %H:%M:%S') if now_dt else ''
+        now_date = now_dt.strftime('%m / %d / %Y') if now_dt else ''
+        now_time = now_dt.strftime('%I : %M : %S %P') if now_dt else ''
+
+        data = {
+            'cpu_usage': context.get('cpu_usage'),
+            'cpu_count': context.get('cpu_count'),
+            'cpu_load5': context.get('cpu_load5'),
+            'cpu_load10': context.get('cpu_load10'),
+            'cpu_load15': context.get('cpu_load15'),
+            'mem_total': context.get('mem_total'),
+            'mem_usage': context.get('mem_usage'),
+            'swap_total': context.get('swap_total'),
+            'swap_usage': context.get('swap_usage'),
+            'fs_data': context.get('fs_data'),
+            'uptime_str': context.get('uptime_str'),
+            'temp_list': context.get('temp_list'),
+            'fan_list': context.get('fan_list'),
+            'now': now_str,
+            'now_date': now_date,
+            'now_time': now_time,
+        }
+        return jsonify(data)
 
 
 class AjaxIndiServerChangeView(BaseView):
