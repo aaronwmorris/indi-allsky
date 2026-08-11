@@ -277,7 +277,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             )
             with self.assertRaisesRegex(
                 asi676mc_calibration.CalibrationSessionError,
-                'database search was cancelled',
+                'saved-FITS search was cancelled',
             ):
                 asi676mc_calibration.database_search_checkpoint(
                     session_id,
@@ -677,7 +677,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             source.write_bytes(b'database fits placeholder')
             with self.assertRaisesRegex(
                 asi676mc_calibration.CalibrationSessionError,
-                'new empty',
+                'already contains temporary files',
             ):
                 asi676mc_calibration.stage_database_files(
                     session_id,
@@ -708,7 +708,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             ]
             with self.assertRaisesRegex(
                 asi676mc_calibration.CalibrationSessionError,
-                'finish or cancel',
+                'Finish or cancel',
             ):
                 asi676mc_calibration.create_session('alice', root)
 
@@ -795,7 +795,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 10 - asi676mc_calibration.MAX_ACTIVE_SESSIONS_GLOBAL,
             )
             self.assertTrue(all(
-                'active-session limit' in message
+                'currently busy' in message
                 for message in rejected
             ))
 
@@ -1018,7 +1018,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             manifest = asi676mc_calibration.create_session('alice', root)
             with self.assertRaisesRegex(
                 asi676mc_calibration.CalibrationSessionError,
-                'select at least 14 FITS',
+                'Select at least 14 FITS',
             ):
                 asi676mc_calibration.mark_queued(
                     manifest['session_id'],
@@ -1100,7 +1100,8 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'already repaired by ASI676MC frame handling',
             report,
         )
-        self.assertIn('Rejected-file details are listed later', report)
+        self.assertIn('Rejected-file details are', report)
+        self.assertIn('listed later in this report.', report)
         self.assertNotIn('DATABASE FITS SELECTION', report)
         self.assertNotIn('REVIEW THESE CALIBRATION VALUES', report)
         self.assertNotIn('Source:', report)
@@ -1293,8 +1294,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('FITS selected: 21', report)
         self.assertIn('private uploaded copies were removed', report)
         self.assertIn(
-            '21 uploaded FITS files used the selected, currently available '
-            'ASI676MC identity',
+            '21 uploaded FITS files did not name the camera model',
             report,
         )
 
@@ -1321,10 +1321,10 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             database_report,
         )
         self.assertIn(
-            '21 saved FITS files used the ASI676MC identity from their',
+            '21 saved FITS files did not name the camera model',
             database_report,
         )
-        self.assertIn('camera-bound database', database_report)
+        self.assertIn('saved database entries belonged to the selected', database_report)
         self.assertIn(
             'camera-bound database records for 21 saved files',
             database_report,
@@ -1416,8 +1416,8 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             self.assertEqual(status['result']['quality']['unmatched_bad_count'], 1)
             self.assertEqual(status['result']['source']['kind'], 'database')
             warnings = ' '.join(status['result']['warnings'])
-            self.assertIn('Fewer than seven usable marked groups', warnings)
-            self.assertIn('checked all 14 eligible selected FITS', warnings)
+            self.assertIn('fewer than seven ready-to-use groups', warnings)
+            self.assertIn('checked all 14 suitable saved FITS', warnings)
             self.assertIn('whose file was no longer on disk', warnings)
             self.assertIn('with an unsupported filename', warnings)
             self.assertEqual(len(status['result']['warnings']), 2)
@@ -1501,11 +1501,11 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             },
         )
         self.assertEqual(len(warnings), 3)
-        self.assertIn('14 usable marked purple-frame groups', warnings[0])
+        self.assertIn('14 usable purple-frame groups', warnings[0])
         self.assertIn('requested 20', warnings[0])
         self.assertIn('3 of 7 purple frames had normal references', warnings[1])
-        self.assertIn('the other 4 purple frames used one adjacent', warnings[1])
-        self.assertIn('normal references were reused', warnings[1])
+        self.assertIn('the other 4 purple frames had one nearby', warnings[1])
+        self.assertIn('normal frames were used as a reference more than once', warnings[1])
         self.assertIn('1 purple frame without a compatible', warnings[2])
         self.assertIn('2 FITS files that could not be read or used', warnings[2])
         self.assertNotIn('(s)', ' '.join(warnings))
@@ -1518,8 +1518,8 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'rejected_file_count': 0,
         })
         self.assertEqual(len(reuse_only), 1)
-        self.assertIn('normal references were reused', reuse_only[0])
-        self.assertIn('more independent normal references', reuse_only[0])
+        self.assertIn('normal frames were used as a reference more than once', reuse_only[0])
+        self.assertIn('more different normal reference frames', reuse_only[0])
 
         fully_independent = asi676mc_calibration._result_warnings({
             'matched_bad_count': 7,
@@ -1817,11 +1817,10 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('multiple', template)
         self.assertIn('for (let index = 0; index < files.length; index++)', template)
         self.assertIn('Download text report', template)
-        self.assertIn('Apply values and reload', template)
+        self.assertIn('Save values and reload configuration', template)
         self.assertIn('Current FITS capture settings', template)
-        self.assertIn('Both camera-bound paths', template)
-        self.assertIn('camera name', template)
-        self.assertIn('RAW16, RGGB, 1x1 binning', template)
+        self.assertIn('original, unprocessed ASI676MC RAW16 FITS', template)
+        self.assertIn('skip files', template)
         self.assertIn('message explains what to check', template)
         self.assertIn('id="calibration-capture-facts"', template)
         self.assertIn(
@@ -1950,7 +1949,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertNotIn('id="calibration-apply-result"', template)
         self.assertNotIn('id="calibration-source-summary"', template)
         self.assertIn('id="calibration-warning-list"', template)
-        self.assertIn('Result notes', template)
+        self.assertIn('Additional result information', template)
         self.assertIn('new Set(result.warnings || [])', template)
         self.assertIn('configuration_comparison', template)
         self.assertIn('Current configured value', template)
@@ -2132,10 +2131,10 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'Ready for low-disk FITS collection',
         )
         message = guidance['guidance']['text']
-        self.assertIn('Exclude Only leaves purple frames unchanged', message)
-        self.assertIn('immediately following frame', message)
-        self.assertIn('leaving standard FITS off is recommended', message)
-        self.assertIn('preferred calibration source', message)
+        self.assertIn('Exclude Only keeps purple frames unchanged', message)
+        self.assertIn('next matching normal frame', message)
+        self.assertIn('standard FITS can remain off', message)
+        self.assertIn('Diagnostic FITS are preferred', message)
 
     def test_capture_guidance_prefers_diagnostics_when_both_paths_are_enabled(
         self,
@@ -2152,23 +2151,15 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         })
         periodic_message = periodic['guidance']['text']
         self.assertIn(
-            'Diagnostic FITS are the preferred calibration source',
+            'Diagnostic FITS are preferred',
             periodic_message,
         )
         self.assertIn(
-            'only when you want them for another purpose',
+            'only if you need them for another purpose',
             periodic_message,
         )
         self.assertIn(
-            'occasionally duplicate a diagnostic exposure',
-            periodic_message,
-        )
-        self.assertIn(
-            'temporarily use standard FITS set to Every Image',
-            periodic_message,
-        )
-        self.assertIn(
-            'periodic interval cannot reliably gather',
+            'temporarily choose Every Image',
             periodic_message,
         )
 
@@ -2183,16 +2174,16 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'IMAGE_FITS_EXPIRE_DAYS': 10,
         })
         every_image_message = every_image['guidance']['text']
-        self.assertIn('both files are retained', every_image_message)
+        self.assertIn('original purple frame before repair', every_image_message)
         self.assertIn(
-            'only when you explicitly want the standard files too',
+            'only if you also need standard FITS',
             every_image_message,
         )
         self.assertIn(
-            'diagnostic saving does not catch the purple frame',
+            'diagnostic saving misses purple frames',
             every_image_message,
         )
-        self.assertIn('uses the most disk space', every_image_message)
+        self.assertIn('takes the most disk space', every_image_message)
 
     def test_capture_guidance_explains_opt_in_preceding_cache(self):
         guidance = asi676mc_calibration.capture_configuration_guidance({
@@ -2212,10 +2203,10 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'On (one-frame memory cache)',
         )
         message = guidance['guidance']['text']
-        self.assertIn('one untouched normal frame is kept in memory', message)
-        self.assertIn('good/purple/good triplet', message)
-        self.assertIn('one full FITS frame of memory', message)
-        self.assertIn('additional disk space', message)
+        self.assertIn('keeps one normal frame in memory', message)
+        self.assertIn('before/purple/after group', message)
+        self.assertIn('one extra FITS frame of memory', message)
+        self.assertIn('disk space', message)
 
     def test_capture_guidance_warns_about_unsafe_or_periodic_saving(self):
         guidance = asi676mc_calibration.capture_configuration_guidance({
@@ -2238,8 +2229,8 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             guidance['guidance']['title'],
             'No untouched purple-frame FITS will be saved',
         )
-        self.assertIn('periodic standard FITS is written after repair', message)
-        self.assertIn('enable Save Bad and Following RAW FITS', message)
+        self.assertIn('Periodic standard FITS may miss purple frames', message)
+        self.assertIn('Turn on diagnostic saving', message)
         self.assertIn('switch to Exclude Only', message)
 
     def test_capture_guidance_consolidates_every_switch_combination(self):
@@ -2369,7 +2360,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                                     'On (one-frame memory cache)',
                                 )
                                 self.assertIn(
-                                    'one untouched normal frame is kept in memory',
+                                    'keeps one normal frame in memory',
                                     result['guidance']['text'],
                                 )
                             elif preceding_fits and not repair_enabled:
@@ -2487,10 +2478,10 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'No untouched purple-frame FITS will be saved',
         )
         message = result['guidance']['text']
-        self.assertIn('Repair is active, but no FITS saving is enabled', message)
-        self.assertIn('enable Save Bad and Following RAW FITS', message)
+        self.assertIn('Repair is active, but no FITS are being saved', message)
+        self.assertIn('Turn on diagnostic saving', message)
         self.assertIn(
-            'switch to Exclude Only and set standard FITS to Every Image',
+            'switch to Exclude Only and set',
             message,
         )
 
@@ -2509,7 +2500,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'Inactive (handling off)',
         )
         self.assertIn(
-            'option is inactive until purple-frame handling is enabled',
+            'configured diagnostic saving will then start',
             handling_off['guidance']['text'],
         )
 
@@ -2555,11 +2546,10 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertEqual(facts['Standard FITS'], 'Every Image')
         self.assertEqual(facts['Standard FITS compression'], 'On')
         self.assertIn(
-            'Manual upload accepts uncompressed FITS only',
+            'Decompress selected files before manual upload',
             result['guidance']['text'],
         )
-        self.assertIn('decompress the selected files first', result['guidance']['text'])
-        self.assertIn('enable handling in Exclude Only mode', result['guidance']['text'])
+        self.assertIn('turn on handling in Exclude Only mode', result['guidance']['text'])
 
     def test_safe_exclude_only_defaults_are_source_visible(self):
         project_root = Path(__file__).resolve().parents[2]
@@ -2628,15 +2618,15 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             settings_template,
         )
         self.assertIn(
-            'Cameras without this failure should leave the feature disabled.',
+            'Enable this only if the camera produces purple frames.',
             settings_template,
         )
         self.assertIn(
-            'Prefer this diagnostic source and leave standard FITS off',
+            'Leave standard FITS saving off unless you need those files',
             settings_template,
         )
         self.assertIn(
-            'If diagnostic saving does not catch the purple frame',
+            'If this option misses purple frames',
             settings_template,
         )
         self.assertIn(
@@ -2656,13 +2646,12 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             settings_template,
         )
         self.assertIn(
-            'Repair-only RAW16 clipping level; this does not affect '
-            'purple-frame detection.',
+            'Brightness level used only when repairing clipped highlights.',
             settings_template,
         )
         self.assertNotIn('Safe calibration workflow:', settings_template)
         enable_guidance_position = settings_template.index(
-            'Only enable this if the camera actually produces purple frames.'
+            'Enable this only if the camera produces purple frames.'
         )
         self.assertGreater(
             enable_guidance_position,
@@ -2677,7 +2666,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             ),
         )
         self.assertGreater(
-            settings_template.index('For stronger good/purple/good triplets'),
+            settings_template.index('stronger before/purple/after groups'),
             settings_template.index(
                 'form_config.IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY,'
             ),

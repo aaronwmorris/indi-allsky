@@ -477,14 +477,14 @@ def IMAGE_CALIBRATE_HOLE_THOLD_validator(form, field):
 def IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator(form, field):
     """Keep detector ratios finite, positive, and operationally bounded."""
     if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
-        raise ValidationError('Enter a finite number')
+        raise ValidationError('Enter a number, or restore the default shown below')
 
     if field.data <= 0:
-        raise ValidationError('Ratio must be greater than 0')
+        raise ValidationError('Enter a value greater than 0, or restore the default')
 
     if field.data > asi676mc.RATIO_THRESHOLD_MAX:
         raise ValidationError(
-            'Ratio must be {0:g} or less'.format(
+            'Enter a value no greater than {0:g}, or restore the default'.format(
                 asi676mc.RATIO_THRESHOLD_MAX,
             )
         )
@@ -493,11 +493,11 @@ def IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator(form, field):
 def IMAGE_ASI676MC_REPAIR__SAMPLE_STEP_validator(form, field):
     """Preserve Bayer parity while bounding detector sampling work."""
     if not isinstance(field.data, int):
-        raise ValidationError('Enter a whole number')
+        raise ValidationError('Enter a whole number, or restore the default')
 
     if field.data < 2 or field.data > asi676mc.SAMPLE_STEP_MAX or field.data % 2:
         raise ValidationError(
-            'Sample step must be an even number between 2 and {0:d}'.format(
+            'Enter an even number between 2 and {0:d}, or restore the default'.format(
                 asi676mc.SAMPLE_STEP_MAX,
             )
         )
@@ -506,20 +506,20 @@ def IMAGE_ASI676MC_REPAIR__SAMPLE_STEP_validator(form, field):
 def IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD_validator(form, field):
     """Restrict the clipping plateau to the unsigned RAW16 range."""
     if not isinstance(field.data, int):
-        raise ValidationError('Enter a whole number')
+        raise ValidationError('Enter a whole number, or restore the default')
 
     if field.data < 1 or field.data > 65535:
-        raise ValidationError('Threshold must be between 1 and 65535')
+        raise ValidationError('Enter a value between 1 and 65535, or restore the default')
 
 
 def IMAGE_ASI676MC_REPAIR__GAIN_validator(form, field):
     """Reject non-finite or destructive per-parity repair gains."""
     if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
-        raise ValidationError('Enter a finite number')
+        raise ValidationError('Enter a number, or restore the default shown below')
 
     if field.data < asi676mc.GAIN_MIN or field.data > asi676mc.GAIN_MAX:
         raise ValidationError(
-            'Gain must be between {0:g} and {1:g}'.format(
+            'Enter a gain between {0:g} and {1:g}, or restore the default'.format(
                 asi676mc.GAIN_MIN,
                 asi676mc.GAIN_MAX,
             )
@@ -529,10 +529,10 @@ def IMAGE_ASI676MC_REPAIR__GAIN_validator(form, field):
 def IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_RATIO_validator(form, field):
     """Require one finite normalized highlight transition ratio."""
     if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
-        raise ValidationError('Enter a finite number')
+        raise ValidationError('Enter a number, or restore the default shown below')
 
     if field.data <= 0 or field.data > 1:
-        raise ValidationError('Ratio must be greater than 0 and no more than 1')
+        raise ValidationError('Enter a value greater than 0 and no more than 1, or restore the default')
 
 
 def IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO_validator(form, field):
@@ -541,7 +541,7 @@ def IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO_validator(form, field):
 
     start_ratio = form.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO.data
     if isinstance(start_ratio, (int, float)) and field.data <= start_ratio:
-        raise ValidationError('End ratio must be greater than start ratio')
+        raise ValidationError('Enter an end value greater than the start value, or restore both defaults')
     if isinstance(start_ratio, (int, float)):
         try:
             asi676mc.normalize_settings({
@@ -555,11 +555,11 @@ def IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO_validator(form, field):
 def IMAGE_ASI676MC_REPAIR__CHUNK_ROWS_validator(form, field):
     """Preserve Bayer parity while bounding repair working memory."""
     if not isinstance(field.data, int):
-        raise ValidationError('Enter a whole number')
+        raise ValidationError('Enter a whole number, or restore the default')
 
     if field.data < 2 or field.data > asi676mc.CHUNK_ROWS_MAX or field.data % 2:
         raise ValidationError(
-            'Chunk rows must be an even number between 2 and {0:d}'.format(
+            'Enter an even number between 2 and {0:d}, or restore the default'.format(
                 asi676mc.CHUNK_ROWS_MAX,
             )
         )
@@ -4625,18 +4625,18 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE              = BooleanField('Show Purple-frame Status in Gallery')
     IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS         = BooleanField('Save Bad and Following RAW FITS')
     IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS          = BooleanField('Also Save Preceding RAW FITS')
-    IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD      = FloatField('Purple Ratio Threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator], widget=NumberInput(step=0.01))
-    IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD    = FloatField('Red-side Ratio Threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator], widget=NumberInput(step=0.01))
-    IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD   = FloatField('Blue-side Ratio Threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator], widget=NumberInput(step=0.01))
-    IMAGE_ASI676MC_REPAIR__SAMPLE_STEP                 = IntegerField('Signature Sample Step', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__SAMPLE_STEP_validator])
-    IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD = IntegerField('Source Saturation Threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD_validator])
-    IMAGE_ASI676MC_REPAIR__GAIN_R                      = FloatField('Purple-frame Gain R', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
-    IMAGE_ASI676MC_REPAIR__GAIN_G1                     = FloatField('Purple-frame Gain G1', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
-    IMAGE_ASI676MC_REPAIR__GAIN_G2                     = FloatField('Purple-frame Gain G2', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
-    IMAGE_ASI676MC_REPAIR__GAIN_B                      = FloatField('Purple-frame Gain B', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
-    IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO = FloatField('Highlight Blend Start Ratio', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_RATIO_validator], widget=NumberInput(step=0.01))
-    IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO   = FloatField('Highlight Blend End Ratio', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO_validator], widget=NumberInput(step=0.01))
-    IMAGE_ASI676MC_REPAIR__CHUNK_ROWS                  = IntegerField('Repair Chunk Rows', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__CHUNK_ROWS_validator])
+    IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD      = FloatField('Overall Purple-frame Threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator], widget=NumberInput(step=0.01))
+    IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD    = FloatField('Red-side Purple-frame Threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator], widget=NumberInput(step=0.01))
+    IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD   = FloatField('Blue-side Purple-frame Threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator], widget=NumberInput(step=0.01))
+    IMAGE_ASI676MC_REPAIR__SAMPLE_STEP                 = IntegerField('Detection Sample Step', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__SAMPLE_STEP_validator])
+    IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD = IntegerField('Clipped-highlight Brightness Level', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD_validator])
+    IMAGE_ASI676MC_REPAIR__GAIN_R                      = FloatField('Red Repair Gain', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
+    IMAGE_ASI676MC_REPAIR__GAIN_G1                     = FloatField('First Green Repair Gain', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
+    IMAGE_ASI676MC_REPAIR__GAIN_G2                     = FloatField('Second Green Repair Gain', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
+    IMAGE_ASI676MC_REPAIR__GAIN_B                      = FloatField('Blue Repair Gain', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
+    IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO = FloatField('Highlight Correction Start', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_RATIO_validator], widget=NumberInput(step=0.01))
+    IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO   = FloatField('Highlight Correction End', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO_validator], widget=NumberInput(step=0.01))
+    IMAGE_ASI676MC_REPAIR__CHUNK_ROWS                  = IntegerField('Rows Processed at Once', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__CHUNK_ROWS_validator])
     IMAGE_CALIBRATE_DARK             = BooleanField('Apply Dark Calibration Frames')
     IMAGE_CALIBRATE_BPM              = BooleanField('Apply Bad Pixel Map Frames')
     IMAGE_CALIBRATE_FIX_HOLES        = BooleanField('Fix Calibration Pin Holes')
@@ -6832,13 +6832,13 @@ class IndiAllskyAsi676mcCalibrationForm(FlaskForm):
         validators=[DataRequired()],
     )
     MAX_PAIR_SECONDS = FloatField(
-        'Maximum separation between purple and normal FITS (seconds)',
+        'Maximum time between purple and normal FITS (seconds)',
         default=90.0,
         validators=[DataRequired(), NumberRange(min=1.0, max=3600.0)],
         widget=NumberInput(step=1.0),
     )
     DATABASE_GROUP_LIMIT = IntegerField(
-        'Target purple-frame groups',
+        'Purple-frame groups to find',
         default=25,
         validators=[NumberRange(
             min=asi676mc_calibration.DATABASE_GROUP_MIN,

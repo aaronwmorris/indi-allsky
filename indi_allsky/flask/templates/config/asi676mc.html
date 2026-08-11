@@ -33,12 +33,12 @@
                 <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ASI676MC_REPAIR__ENABLE.label.text }}</span>
                 {% if asi676mc_repair_supported %}
                 <p class="tw:text-xs tw:leading-relaxed tw:text-base-content/60">
-                    Only enable this if the camera actually produces purple frames. Cameras without this failure should leave the feature disabled. Detection runs before calibration and debayering; other camera models remain unchanged.
+                    Enable this only if the camera produces purple frames. Other cameras are not affected. Leave the numeric values at their defaults until the calibration tool recommends new values.
                     Detected ASI676MC camera{% if asi676mc_camera_names|length != 1 %}s{% endif %}: {{ asi676mc_camera_names|join(', ') }}.
                 </p>
                 {% else %}
                 <p class="tw:text-xs tw:leading-relaxed tw:text-warning">
-                    No local ASI676MC is currently available, so this feature cannot be enabled.
+                    No local ASI676MC is available. Connect or select the camera, reload this page, and try again.
                 </p>
                 {% endif %}
             </div>
@@ -55,23 +55,23 @@
             <div class="tw:grid tw:grid-cols-1 tw:lg:grid-cols-2 tw:gap-3 tw:mt-3">
                 {{ repair_toggle(
                     form_config.IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY,
-                    'Detect without repairing. The rendered faulty image is retained, flagged as excluded, and omitted from standard timelapses. This is selected automatically when the feature is first enabled; disable it after calibrated repair values have been applied. For stronger good/purple/good triplets, also save the preceding RAW FITS.'
+                    'Keep this on while collecting calibration FITS. Purple frames remain unchanged and are excluded from standard timelapses. After applying calibrated repair values, turn this off to start repairing purple frames. Saving the preceding RAW FITS provides stronger before/purple/after groups.'
                 ) }}
                 {{ repair_toggle(
                     form_config.IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME,
-                    'Log every detection result. Successful repairs and validation failures are always logged; skipped handling and failed validation also create rate-limited Camera notifications.'
+                    'Log the result for every ASI676MC frame. Repairs and failed safety checks are logged even when this is off. Skipped frames may also create occasional Camera notifications.'
                 ) }}
                 {{ repair_toggle(
                     form_config.IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE,
-                    'Show repair badges, outlines, and status filters in the gallery. The excluded filter covers only frames excluded by purple-frame handling, not manual exclusions.'
+                    'Show repair badges, outlines, and filters in the gallery. The excluded filter shows only frames excluded automatically by purple-frame handling, not frames excluded manually.'
                 ) }}
                 {{ repair_toggle(
                     form_config.IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS,
-                    'Save the untouched faulty RAW FITS and its immediately following compatible same-camera FITS. A successor with different dimensions, exposure, gain, binning, or Bayer layout is not saved as a reference. Prefer this diagnostic source and leave standard FITS off unless you need them for another purpose. If diagnostic saving does not catch the purple frame, temporarily save every standard FITS to gather evidence.'
+                    'Save each untouched purple RAW FITS and the next matching frame for calibration. Leave standard FITS saving off unless you need those files for another purpose. If this option misses purple frames, temporarily set standard FITS saving to Every Image.'
                 ) }}
                 {{ repair_toggle(
                     form_config.IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS,
-                    'Also retain one untouched preceding normal FITS, producing a stronger good/purple/good triplet. This uses roughly one full FITS frame of additional memory per active camera.',
+                    'Also save the normal frame immediately before a purple frame. This creates a stronger before/purple/after group and uses roughly one additional full FITS frame of memory per active camera.',
                     'Requires diagnostic FITS saving'
                 ) }}
             </div>
@@ -80,36 +80,36 @@
         <div class="tw:border-t tw:border-base-300 tw:pt-5">
             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Detection thresholds</span>
             <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-3 tw:gap-4 tw:mt-3">
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD, 'Combined red/blue-to-green ratio. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['PURPLE_RATIO_THRESHOLD'])) ~ '.') }}
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD, 'Apparent red-to-first-green ratio. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['RED_SIDE_RATIO_THRESHOLD'])) ~ '.') }}
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD, 'Apparent blue-to-second-green ratio. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['BLUE_SIDE_RATIO_THRESHOLD'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD, 'Overall colour ratio used to recognise purple frames. Change this only when the calibration tool recommends it. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['PURPLE_RATIO_THRESHOLD'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD, 'Red-side colour ratio used to recognise purple frames. Change this only when the calibration tool recommends it. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['RED_SIDE_RATIO_THRESHOLD'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD, 'Blue-side colour ratio used to recognise purple frames. Change this only when the calibration tool recommends it. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['BLUE_SIDE_RATIO_THRESHOLD'])) ~ '.') }}
             </div>
         </div>
 
         <div class="tw:border-t tw:border-base-300 tw:pt-5">
             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Repair gains</span>
             <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-4 tw:gap-4 tw:mt-3">
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_R, 'Multiplier at the R Bayer position. Default: ' ~ ('%0.5f'|format(asi676mc_repair_defaults['GAIN_R'])) ~ '.') }}
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_G1, 'Multiplier at the G1 Bayer position. Default: ' ~ ('%0.5f'|format(asi676mc_repair_defaults['GAIN_G1'])) ~ '.') }}
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_G2, 'Multiplier at the G2 Bayer position. Default: ' ~ ('%0.5f'|format(asi676mc_repair_defaults['GAIN_G2'])) ~ '.') }}
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_B, 'Multiplier at the B Bayer position. Default: ' ~ ('%0.5f'|format(asi676mc_repair_defaults['GAIN_B'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_R, 'Correction for red pixels. This is normally set by the calibration tool. Default: ' ~ ('%0.5f'|format(asi676mc_repair_defaults['GAIN_R'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_G1, 'Correction for the first set of green pixels. This is normally set by the calibration tool. Default: ' ~ ('%0.5f'|format(asi676mc_repair_defaults['GAIN_G1'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_G2, 'Correction for the second set of green pixels. This is normally set by the calibration tool. Default: ' ~ ('%0.5f'|format(asi676mc_repair_defaults['GAIN_G2'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_B, 'Correction for blue pixels. This is normally set by the calibration tool. Default: ' ~ ('%0.5f'|format(asi676mc_repair_defaults['GAIN_B'])) ~ '.') }}
             </div>
         </div>
 
         <div class="tw:border-t tw:border-base-300 tw:pt-5">
             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Clipping and highlight reconstruction</span>
             <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-3 tw:gap-4 tw:mt-3">
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD, 'Repair-only RAW16 clipping level; this does not affect purple-frame detection. Default: ' ~ ('%d'|format(asi676mc_repair_defaults['SOURCE_SATURATION_THRESHOLD'])) ~ '.') }}
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO, 'Low-to-high ratio where clipped-highlight blending begins. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['HIGHLIGHT_BLEND_START_RATIO'])) ~ '.') }}
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO, 'Ratio where blending reaches the stronger channel. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['HIGHLIGHT_BLEND_END_RATIO'])) ~ '; must exceed the start.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD, 'Brightness level used only when repairing clipped highlights. This is normally set by the calibration tool. Default: ' ~ ('%d'|format(asi676mc_repair_defaults['SOURCE_SATURATION_THRESHOLD'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO, 'Point where clipped-highlight correction begins. This is normally set by the calibration tool. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['HIGHLIGHT_BLEND_START_RATIO'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO, 'Point where clipped-highlight correction reaches full strength. This is normally set by the calibration tool. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['HIGHLIGHT_BLEND_END_RATIO'])) ~ '; must be greater than the start value.') }}
             </div>
         </div>
 
         <div class="tw:border-t tw:border-base-300 tw:pt-5">
             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Sampling and memory</span>
             <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-4 tw:mt-3">
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__SAMPLE_STEP, 'Even Bayer-aware signature sampling step. Default: ' ~ ('%d'|format(asi676mc_repair_defaults['SAMPLE_STEP'])) ~ '.') }}
-                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__CHUNK_ROWS, 'Even RAW row count processed per repair chunk. Default: ' ~ ('%d'|format(asi676mc_repair_defaults['CHUNK_ROWS'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__SAMPLE_STEP, 'Controls how many pixels are checked during detection. Leave this at the default unless troubleshooting requires a change. Default: ' ~ ('%d'|format(asi676mc_repair_defaults['SAMPLE_STEP'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__CHUNK_ROWS, 'Controls how much of the image is repaired at once and therefore how much memory is used. Leave this at the default unless troubleshooting requires a change. Default: ' ~ ('%d'|format(asi676mc_repair_defaults['CHUNK_ROWS'])) ~ '.') }}
             </div>
         </div>
     </div>
