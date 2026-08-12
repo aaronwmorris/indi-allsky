@@ -1946,9 +1946,9 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('frames do not need to have been marked as purple', template)
         self.assertIn('The tool first applies the current', template)
         self.assertIn('it looks for a separate', template)
-        self.assertIn('including at least two exposure', template)
-        self.assertIn('nearest one when a complete group cannot be', template)
-        self.assertIn('default at 20 for normal', template)
+        self.assertIn('groups across at least two exposure levels', template)
+        self.assertIn('possible, two nearby normal frames', template)
+        self.assertIn('default at 20; choose more only', template)
         automatic_card = template.split(
             '<span>Use saved FITS</span>',
             1,
