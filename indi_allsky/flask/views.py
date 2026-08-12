@@ -3316,10 +3316,12 @@ class AjaxConfigView(BaseView):
         if request.json.get('IMAGE_ASI676MC_REPAIR__ENABLE') and not _visible_asi676mc_cameras():
             form_errors = {
                 'IMAGE_ASI676MC_REPAIR__ENABLE' : [
-                    'No detected ASI676MC camera is available',
+                    'No local ASI676MC is available. Connect or select the '
+                    'camera, reload Image Settings, and try again.',
                 ],
                 'form_global' : [
-                    'ASI676MC frame repair can only be enabled when an ASI676MC camera is available',
+                    'Connect or select an ASI676MC, reload Image Settings, and '
+                    'then enable purple-frame handling.',
                 ],
             }
             return jsonify(form_errors), 400
@@ -7812,7 +7814,7 @@ class Asi676mcCalibrationView(TemplateView):
             data={
                 'CAMERA_ID': selected_camera.id,
                 'MAX_PAIR_SECONDS': 90.0,
-                'DATABASE_GROUP_LIMIT': 25,
+                'DATABASE_GROUP_LIMIT': 20,
             },
         )
         calibration_form.CAMERA_ID.choices = [
@@ -7882,9 +7884,9 @@ class AjaxAsi676mcCalibrationSessionView(BaseView):
             app.logger.exception('Unable to create ASI676MC calibration session')
             return jsonify({
                 'error': (
-                    'A private calibration workspace could not be created. '
-                    'Check available disk space and the indi-allsky log, then '
-                    'try again.'
+                    'The calibration files could not be prepared. Free some '
+                    'disk space and try again. If this repeats, include this '
+                    'message when reporting the issue.'
                 ),
             }), 500
         return jsonify({'session_id': manifest['session_id']})
@@ -7933,9 +7935,9 @@ class AjaxAsi676mcCalibrationUploadView(BaseView):
             app.logger.exception('Unable to store uploaded calibration FITS')
             return jsonify({
                 'error': (
-                    'The uploaded FITS could not be stored. Check available '
-                    'disk space and try again; cancel the upload if it cannot '
-                    'continue.'
+                    'The uploaded FITS could not be saved temporarily. Free '
+                    'some disk space and try again. If it still fails, cancel '
+                    'the upload and include this message when reporting the issue.'
                 ),
             }), 500
 
@@ -7959,7 +7961,7 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
         owner = _calibration_owner()
         try:
             camera_id = int(request_data.get('camera_id'))
-            target_groups = int(request_data.get('target_groups', 25))
+            target_groups = int(request_data.get('target_groups', 20))
             max_pair_seconds = float(
                 request_data.get('max_pair_seconds', 90.0)
             )
@@ -7998,7 +8000,10 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
         camera = _supported_asi676mc_camera(camera_id)
         if camera is None:
             return jsonify({
-                'error': 'The selected camera is no longer available.',
+                'error': (
+                    'The selected camera is no longer available. Reload this '
+                    'page, select an available ASI676MC, and start again.'
+                ),
             }), 404
 
         try:
@@ -8077,8 +8082,9 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
         except (OverflowError, TypeError, ValueError):
             return jsonify({
                 'error': (
-                    'The current ASI676MC repair settings are invalid. Correct '
-                    'them in Image Settings, then try again.'
+                    'The current ASI676MC repair settings are invalid. Restore '
+                    'the defaults or correct the highlighted fields in Image '
+                    'Settings, then try again.'
                 ),
             }), 400
 
@@ -8131,9 +8137,10 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
                 )
             return jsonify({
                 'error': (
-                    'Calibration could not be started because the background '
-                    'worker is unavailable. Check that indi-allsky is running '
-                    'and try again.'
+                    'Calibration could not start because the calibration '
+                    'service is unavailable. Wait a minute and try again. If '
+                    'this repeats, restart indi-allsky or include this message '
+                    'when reporting the issue.'
                 ),
             }), 500
 
@@ -8164,8 +8171,8 @@ class AjaxAsi676mcCalibrationCancelView(BaseView):
             app.logger.exception('Unable to cancel ASI676MC calibration')
             return jsonify({
                 'error': (
-                    'Calibration cancellation could not be confirmed. Any '
-                    'private FITS left on the server will be removed '
+                    'Cancellation could not be confirmed. Try cancellation '
+                    'again. Any temporary FITS left behind will be removed '
                     'automatically after seven days.'
                 ),
             }), 500
@@ -8240,8 +8247,9 @@ class AjaxAsi676mcCalibrationStartView(BaseView):
             )
             return jsonify({
                 'error': (
-                    'The current ASI676MC settings are invalid. Correct them '
-                    'in Image Settings before starting calibration.'
+                    'The current ASI676MC settings are invalid. Restore the '
+                    'defaults or correct the highlighted fields in Image '
+                    'Settings before starting calibration.'
                 ),
             }), 400
 
@@ -8287,9 +8295,10 @@ class AjaxAsi676mcCalibrationStartView(BaseView):
                 )
             return jsonify({
                 'error': (
-                    'Calibration could not be started because the background '
-                    'worker is unavailable. Check that indi-allsky is running '
-                    'and try again.'
+                    'Calibration could not start because the calibration '
+                    'service is unavailable. Wait a minute and try again. If '
+                    'this repeats, restart indi-allsky or include this message '
+                    'when reporting the issue.'
                 ),
             }), 500
 
@@ -8393,7 +8402,10 @@ class AjaxAsi676mcCalibrationDiscardView(BaseView):
             # Expiry can race a user's Reset click. In that case the requested
             # end state is already true, so reset the browser without showing
             # a false failure.
-            if str(error) == 'calibration session not found':
+            if str(error) == (
+                'This calibration run is no longer available. Reload the page '
+                'and start a new calibration.'
+            ):
                 return jsonify({
                     'session_id': session_id,
                     'status': 'already_discarded',
@@ -8535,8 +8547,9 @@ class AjaxAsi676mcCalibrationApplyView(BaseView):
                     error,
                 )
                 error_message = (
-                    'Image Settings could not save the result values. Check '
-                    'the indi-allsky log and try again.'
+                    'Image Settings could not save the result values. Try '
+                    'again. If this repeats, include this message when '
+                    'reporting the issue.'
                 )
                 error_code = 'configuration_save_failed'
             else:
