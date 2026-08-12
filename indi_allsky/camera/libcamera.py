@@ -971,7 +971,9 @@ class IndiClientLibCameraImx296(IndiClientLibCameraGeneric):
             'height'        : 1088,
             'pixel'         : 3.45,
             'min_gain'      : 1.0,
-            'max_gain'      : 251.188644,
+            # libcamera reports max analog gain of 251.188644, however this is 48dB of gain which
+            # is the maximum analog + digital gain supported by the sensor
+            'max_gain'      : 16.0,
             'min_binning'   : 1,
             'max_binning'   : 1,
             'min_exposure'  : 0.016562,
