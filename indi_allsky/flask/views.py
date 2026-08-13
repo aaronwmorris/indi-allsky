@@ -13,6 +13,7 @@ from pathlib import Path
 import socket
 import ipaddress
 import re
+import threading
 import psutil
 import dbus
 import ephem
@@ -23,6 +24,9 @@ from passlib.hash import argon2
 from ..version import __version__
 from .. import constants
 from ..processing import ImageProcessor
+from ..lens_solver import IndiAllSkyLensSolver
+from ..lens_solver import parseSolverRequestValues
+from ..lens_solver import applySolvedValuesToConfig
 
 from cryptography.fernet import InvalidToken
 
@@ -435,13 +439,8 @@ class VirtualSkyView(TemplateView):
 
 
         ### Camera DB settings
-        if self.indi_allsky_config.get('PRIVACY_MODE'):
-            # reduce precision for privacy
-            context['camera_latitude'] = float(round(self.camera.latitude))
-            context['camera_longitude'] = float(round(self.camera.longitude))
-        else:
-            context['camera_latitude'] = self.camera.latitude
-            context['camera_longitude'] = self.camera.longitude
+        context['camera_latitude'], context['camera_longitude'] = \
+            self.getCameraPrivacyLatLong(self.camera)
 
 
         ### Calculate time offset
@@ -2666,6 +2665,14 @@ class ConfigView(FormView):
             'SYNCAPI__UPLOAD_VIDEO'          : True,  # cannot be changed
             'SYNCAPI__CONNECT_TIMEOUT'       : self.indi_allsky_config.get('SYNCAPI', {}).get('CONNECT_TIMEOUT', 10.0),
             'SYNCAPI__TIMEOUT'               : self.indi_allsky_config.get('SYNCAPI', {}).get('TIMEOUT', 60.0),
+            'ALLSKYMAP__ENABLE'              : self.indi_allsky_config.get('ALLSKYMAP', {}).get('ENABLE', False),
+            'ALLSKYMAP__API_URL'             : self.indi_allsky_config.get('ALLSKYMAP', {}).get('API_URL', 'https://allsky-map.com'),
+            'ALLSKYMAP__API_KEY'             : self.indi_allsky_config.get('ALLSKYMAP', {}).get('API_KEY', ''),
+            'ALLSKYMAP__CAMERA_NAME'         : self.indi_allsky_config.get('ALLSKYMAP', {}).get('CAMERA_NAME', ''),
+            'ALLSKYMAP__CAMERA_OWNER'        : self.indi_allsky_config.get('ALLSKYMAP', {}).get('CAMERA_OWNER', ''),
+            'ALLSKYMAP__WEBSITE_URL'         : self.indi_allsky_config.get('ALLSKYMAP', {}).get('WEBSITE_URL', ''),
+            'ALLSKYMAP__UPLOAD_IMAGE'        : self.indi_allsky_config.get('ALLSKYMAP', {}).get('UPLOAD_IMAGE', True),
+            'ALLSKYMAP__INTERVAL'            : self.indi_allsky_config.get('ALLSKYMAP', {}).get('INTERVAL', 10),
             'YOUTUBE__ENABLE'                : self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE', False),
             'YOUTUBE__SECRETS_FILE'          : self.indi_allsky_config.get('YOUTUBE', {}).get('SECRETS_FILE', ''),
             'YOUTUBE__PRIVACY_STATUS'        : self.indi_allsky_config.get('YOUTUBE', {}).get('PRIVACY_STATUS', 'private'),
@@ -3695,6 +3702,14 @@ class AjaxConfigView(BaseView):
         #self.indi_allsky_config['SYNCAPI']['UPLOAD_VIDEO']              = bool(request.json['SYNCAPI__UPLOAD_VIDEO'])  # cannot be changed
         self.indi_allsky_config['SYNCAPI']['CONNECT_TIMEOUT']           = float(request.json['SYNCAPI__CONNECT_TIMEOUT'])
         self.indi_allsky_config['SYNCAPI']['TIMEOUT']                   = float(request.json['SYNCAPI__TIMEOUT'])
+        self.indi_allsky_config['ALLSKYMAP']['ENABLE']                  = bool(request.json['ALLSKYMAP__ENABLE'])
+        self.indi_allsky_config['ALLSKYMAP']['API_URL']                 = str(request.json['ALLSKYMAP__API_URL'])
+        self.indi_allsky_config['ALLSKYMAP']['API_KEY']                 = str(request.json['ALLSKYMAP__API_KEY'])
+        self.indi_allsky_config['ALLSKYMAP']['CAMERA_NAME']             = str(request.json['ALLSKYMAP__CAMERA_NAME'])
+        self.indi_allsky_config['ALLSKYMAP']['CAMERA_OWNER']            = str(request.json['ALLSKYMAP__CAMERA_OWNER'])
+        self.indi_allsky_config['ALLSKYMAP']['WEBSITE_URL']             = str(request.json['ALLSKYMAP__WEBSITE_URL'])
+        self.indi_allsky_config['ALLSKYMAP']['UPLOAD_IMAGE']            = bool(request.json['ALLSKYMAP__UPLOAD_IMAGE'])
+        self.indi_allsky_config['ALLSKYMAP']['INTERVAL']                = int(request.json['ALLSKYMAP__INTERVAL'])
         self.indi_allsky_config['YOUTUBE']['ENABLE']                    = bool(request.json['YOUTUBE__ENABLE'])
         self.indi_allsky_config['YOUTUBE']['SECRETS_FILE']              = str(request.json['YOUTUBE__SECRETS_FILE'])
         self.indi_allsky_config['YOUTUBE']['PRIVACY_STATUS']            = str(request.json['YOUTUBE__PRIVACY_STATUS'])
@@ -4097,6 +4112,16 @@ class AjaxConfigView(BaseView):
             }
             return jsonify(error_data), 400
 
+        # Check if Allsky Map reporting is enabled, and fire a test ping
+        ping_status_msg = ""
+        if self.indi_allsky_config.get('ALLSKYMAP', {}).get('ENABLE'):
+            from ..allsky_map import send_allsky_map_ping
+            success, msg = send_allsky_map_ping(self.indi_allsky_config, app.logger)
+            if success:
+                ping_status_msg = " | Allsky Map Ping: Success!"
+            else:
+                ping_status_msg = f" | Allsky Map Ping Warning: {msg}"
+
         if reload_on_save:
             self._miscDb.setState('STATUS', constants.STATUS_RELOADING)
 
@@ -4111,14 +4136,36 @@ class AjaxConfigView(BaseView):
             db.session.commit()
 
             message = {
-                'success-message' : 'Saved new config, Reloading indi-allsky service.',
+                'success-message' : f'Saved new config. Reloading indi-allsky service.{ping_status_msg}',
             }
         else:
             message = {
-                'success-message' : 'Saved new config',
+                'success-message' : f'Saved new config.{ping_status_msg}',
             }
 
         return jsonify(message)
+
+
+class AjaxAllskyMapRequestKeyView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def dispatch_request(self):
+        if not app.config['LOGIN_DISABLED']:
+            if not current_user.is_admin:
+                return jsonify({'error': 'You do not have permission to make configuration changes'}), 400
+
+        api_url = request.json.get('API_URL') if request.json else None
+        if not api_url:
+            api_url = self.indi_allsky_config.get('ALLSKYMAP', {}).get('API_URL', 'https://allsky-map.com')
+
+        from ..allsky_map import request_allsky_map_api_key
+        success, res = request_allsky_map_api_key(api_url, app.logger)
+
+        if success:
+            return jsonify({'success': True, 'api_key': res})
+        else:
+            return jsonify({'error': res}), 400
 
 
 class AjaxSetTimeView(BaseView):
@@ -7479,6 +7526,147 @@ class AjaxFocusControllerView(BaseView):
         }
 
         return jsonify(r)
+
+
+class AjaxLensSolverView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    # Single-flight guard around the CPU-bound scipy fit. PRECONDITION: per-process lock,
+    # only effective while gunicorn.conf.py runs ONE worker -- more workers defeat it silently.
+    _solve_lock = threading.Lock()
+
+    # advisory hint on the 429 response only, not a correctness guarantee
+    LOCK_RETRY_AFTER_S = 10
+
+
+    def dispatch_request(self):
+        action = str(request.json.get('action', ''))
+
+        if action == 'solve':
+            return self.solve()
+        elif action == 'save':
+            return self.save()
+
+        return jsonify({'success': False, 'message': 'Unknown action'}), 400
+
+
+    def solve(self):
+        values, error = parseSolverRequestValues(request.json)
+        if error:
+            return jsonify({'success': False, 'message': error}), 400
+
+        try:
+            camera_id = int(request.json['camera_id'])
+            timestamp = int(request.json['timestamp'])
+        except (KeyError, TypeError, ValueError):
+            return jsonify({'success': False, 'message': 'camera_id and timestamp required'}), 400
+
+        # explicit check: an unknown camera_id would otherwise fall through to a FakeCamera (lat/long 0.0) and solve silently wrong
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .first()
+        if not camera:
+            return jsonify({'success': False, 'message': 'Unknown camera'}), 400
+
+        # pre-set self.camera so cameraSetup() reuses this row instead of re-querying
+        self.camera = camera
+        self.cameraSetup(camera_id=camera_id)
+
+        # resolve by exact camera + timestamp (NEVER "latest"); a huge int can raise OverflowError/OSError, not just ValueError
+        try:
+            ts_dt = datetime.fromtimestamp(timestamp)
+        except (OverflowError, OSError, ValueError):
+            return jsonify({'success': False, 'message': 'Invalid timestamp'}), 400
+        ts_dt_end = ts_dt + timedelta(seconds=1)
+
+        image_entry = IndiAllSkyDbImageTable.query\
+            .filter(IndiAllSkyDbImageTable.camera_id == camera_id)\
+            .filter(IndiAllSkyDbImageTable.createDate >= ts_dt)\
+            .filter(IndiAllSkyDbImageTable.createDate < ts_dt_end)\
+            .first()
+
+        if not image_entry:
+            return jsonify({'success': False, 'message': 'Image not found for timestamp'}), 400
+
+        image_file = image_entry.getFilesystemPath()
+        if not image_file.exists():
+            return jsonify({'success': False, 'message': 'Image file missing from filesystem'}), 400
+
+        # same lat/long the VirtualSky page renders with (incl. privacy rounding)
+        latitude, longitude = self.getCameraPrivacyLatLong(self.camera)
+
+        # identical effective-time computation to VirtualSkyView.get_context
+        obstime_unix = timestamp - self.camera_time_offset
+
+        solver = IndiAllSkyLensSolver(self.indi_allsky_config)
+
+        if not self._solve_lock.acquire(blocking=False):
+            return jsonify({
+                'success': False,
+                'message': 'A lens solve is already in progress -- please wait and try again.',
+            }), 429, {'Retry-After': str(self.LOCK_RETRY_AFTER_S)}
+
+        try:
+            result = solver.solve(image_file, latitude, longitude, obstime_unix, values)
+        except Exception:  # noqa: BLE001
+            # never return a raw exception string to the client
+            app.logger.exception('Lens solver failed')
+            return jsonify({'success': False, 'message': 'Solver error -- check server logs'}), 500
+        finally:
+            self._solve_lock.release()
+
+        return jsonify(result)
+
+
+    def save(self):
+        if not app.config['LOGIN_DISABLED']:
+            if not current_user.is_admin:
+                return jsonify({'success': False, 'message': 'You do not have permission to make configuration changes'}), 403
+
+        values, error = parseSolverRequestValues(request.json)
+        if error:
+            return jsonify({'success': False, 'message': error}), 400
+
+        reload_on_save = bool(request.json.get('RELOAD_ON_SAVE', False))
+
+        applySolvedValuesToConfig(self.indi_allsky_config, values)
+
+        # do NOT reassign `self._indi_allsky_config_obj.config = self.indi_allsky_config` here:
+        # the setter rebuilds `_config` as a new OrderedDict, breaking the object identity the
+        # in-place mutation above relies on -- later mutations would be silently discarded.
+        if not app.config['LOGIN_DISABLED']:
+            username = current_user.username
+        else:
+            username = 'system'
+
+        try:
+            self._indi_allsky_config_obj.save(username, 'Lens solver calibration')
+        except ConfigSaveException as e:
+            error_data = {
+                'form_global': [str(e)],
+            }
+            return jsonify(error_data), 400
+
+        message = 'Saved lens calibration to config. Note: saving Azimuth Angle also moves the cardinal-direction (N/E/S/W) labels burned into future images.'
+
+        if reload_on_save:
+            self._miscDb.setState('STATUS', constants.STATUS_RELOADING)
+
+            task_reload = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.MAIN,
+                state=TaskQueueState.MANUAL,
+                priority=100,
+                data={'action': 'reload'},
+            )
+            db.session.add(task_reload)
+            db.session.commit()
+
+            message += ' Reloading indi-allsky service.'
+        else:
+            message += ' Values become page defaults after the next service reload.'
+
+        return jsonify({'success': True, 'message': message})
 
 
 class ManualGpioView(TemplateView):
@@ -12789,6 +12977,7 @@ bp_allsky.add_url_rule('/config/list', view_func=ConfigListView.as_view('config_
 bp_allsky.add_url_rule('/config/download', view_func=ConfigDownloadView.as_view('config_download_view'))
 bp_allsky.add_url_rule('/config/restore', view_func=ConfigRestoreView.as_view('config_restore_view', template_name='config_restore.html'))
 bp_allsky.add_url_rule('/ajax/config/restore', view_func=AjaxConfigRestoreView.as_view('ajax_config_restore_view'))
+bp_allsky.add_url_rule('/ajax/allskymap/request_key', view_func=AjaxAllskyMapRequestKeyView.as_view('ajax_allskymap_request_key_view'))
 
 bp_allsky.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
 bp_allsky.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
@@ -12853,6 +13042,7 @@ bp_allsky.add_url_rule('/drives', view_func=DriveManagerView.as_view('drive_mana
 bp_allsky.add_url_rule('/ajax/drives', view_func=AjaxDriveManagerView.as_view('ajax_drive_manager_view'))
 
 bp_allsky.add_url_rule('/virtualsky', view_func=VirtualSkyView.as_view('virtualsky_view', template_name='virtualsky.html'))
+bp_allsky.add_url_rule('/ajax/lens_solver', view_func=AjaxLensSolverView.as_view('ajax_lens_solver_view'))
 
 bp_allsky.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_view('ajax_notification_view'))
 bp_allsky.add_url_rule('/ajax/selectcamera', view_func=AjaxSelectCameraView.as_view('ajax_select_camera_view'))
