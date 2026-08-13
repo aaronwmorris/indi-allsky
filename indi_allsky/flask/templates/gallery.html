@@ -47,7 +47,7 @@ var newest_entry_default = true;
 {% block content %}
 <div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-4">
 
-    <form id="form_viewer" onsubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] md:tw:sticky md:tw:top-0 md:tw:z-30 tw:shadow-md">
+    <form id="form_viewer" onsubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] sticky-desktop-header tw:shadow-md">
         {{ form_viewer.csrf_token }}
         <div class="tw:text-error tw:text-xs tw:font-semibold tw:mb-2" id="csrf_token-error" style="display: none;"></div>
 
