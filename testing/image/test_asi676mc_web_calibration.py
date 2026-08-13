@@ -1,5 +1,6 @@
 import io
 import ast
+import base64
 from datetime import timedelta
 from datetime import timezone
 from itertools import product
@@ -1210,6 +1211,134 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             '2026-08-02_14-34-56_asi676mc_calibration_report.txt',
         )
 
+    def test_population_preview_candidates_are_bounded_and_representative(self):
+        evidence = []
+        for population, base in (
+            ('Likely purple', 3.0),
+            ('Likely normal', 1.0),
+        ):
+            for index, offset in enumerate((-0.4, -0.1, 0.0, 0.1, 0.4)):
+                evidence.append({
+                    'name': '{0}_{1}.fit'.format(
+                        population.lower().replace(' ', '_'),
+                        index,
+                    ),
+                    'timestamp_utc': '2026-08-02T12:00:{0:02d}+00:00'.format(
+                        index
+                    ),
+                    'population': population,
+                    'purple_ratio': base + offset,
+                    'red_side_ratio': base + offset,
+                    'blue_side_ratio': base + offset,
+                })
+
+        selected = asi676mc_calibration._population_preview_candidates(evidence)
+
+        self.assertEqual(len(selected), 4)
+        self.assertEqual(
+            sum(item['population'] == 'Likely purple' for item in selected),
+            2,
+        )
+        self.assertEqual(
+            sum(item['population'] == 'Likely normal' for item in selected),
+            2,
+        )
+        self.assertTrue(all(
+            item['name'].endswith(('_1.fit', '_2.fit', '_3.fit'))
+            for item in selected
+        ))
+        self.assertEqual(
+            sum(item['name'].endswith('_2.fit') for item in selected),
+            2,
+        )
+
+    def test_population_preview_preserves_unrepaired_colour_cast(self):
+        numpy = calibration_engine.numpy
+        raw = numpy.empty((256, 256), dtype=numpy.uint16)
+        raw[0::2, 0::2] = 50000
+        raw[0::2, 1::2] = 10000
+        raw[1::2, 0::2] = 10000
+        raw[1::2, 1::2] = 40000
+        rendered_images = []
+
+        def fake_cvt_color(raw_crop, _conversion):
+            red = raw_crop[0::2, 0::2]
+            green = (
+                raw_crop[0::2, 1::2].astype(numpy.uint32)
+                + raw_crop[1::2, 0::2].astype(numpy.uint32)
+            ) // 2
+            blue = raw_crop[1::2, 1::2]
+            image = numpy.stack((blue, green, red), axis=2).astype(numpy.uint16)
+            return numpy.repeat(numpy.repeat(image, 2, axis=0), 2, axis=1)
+
+        def fake_imencode(_extension, image, _options):
+            rendered_images.append(image.copy())
+            return True, numpy.frombuffer(b'jpeg-preview', dtype=numpy.uint8)
+
+        fake_cv2 = mock.Mock()
+        fake_cv2.COLOR_BAYER_BG2BGR = 1
+        fake_cv2.INTER_AREA = 2
+        fake_cv2.IMWRITE_JPEG_QUALITY = 3
+        fake_cv2.cvtColor.side_effect = fake_cvt_color
+        fake_cv2.imencode.side_effect = fake_imencode
+        fake_engine = mock.Mock()
+        fake_engine._read_fits.return_value = (raw, {}, 0)
+
+        original = raw.copy()
+        with mock.patch.dict('sys.modules', {'cv2': fake_cv2}):
+            preview = asi676mc_calibration._render_population_preview(
+                Path('purple.fit'),
+                fake_engine,
+            )
+        encoded = base64.b64decode(preview['data_url'].split(',', 1)[1])
+
+        self.assertEqual(encoded, b'jpeg-preview')
+        self.assertEqual(preview['width'], 128)
+        self.assertEqual(preview['height'], 128)
+        channel_means = numpy.mean(rendered_images[0], axis=(0, 1))
+        self.assertGreater(channel_means[0], channel_means[1] * 2.0)
+        self.assertGreater(channel_means[2], channel_means[1] * 2.0)
+        self.assertTrue(numpy.array_equal(original, raw))
+
+    def test_population_preview_failure_does_not_discard_other_examples(self):
+        evidence = []
+        for population, ratio in (
+            ('Likely purple', 3.0),
+            ('Likely normal', 1.0),
+        ):
+            for index in range(2):
+                evidence.append({
+                    'name': '{0}_{1}.fit'.format(
+                        population.lower().replace(' ', '_'),
+                        index,
+                    ),
+                    'timestamp_utc': '2026-08-02T12:00:00+00:00',
+                    'population': population,
+                    'purple_ratio': ratio,
+                    'red_side_ratio': ratio,
+                    'blue_side_ratio': ratio,
+                })
+        rendered = {
+            'data_url': 'data:image/jpeg;base64,cHJldmlldw==',
+            'width': 320,
+            'height': 320,
+        }
+        with tempfile.TemporaryDirectory() as temp_dir, mock.patch.object(
+            asi676mc_calibration,
+            '_render_population_preview',
+            side_effect=[ValueError('unreadable'), rendered, rendered, rendered],
+        ), mock.patch.object(
+            asi676mc_calibration.logger,
+            'warning',
+        ):
+            previews = asi676mc_calibration._build_population_previews(
+                {'population_evidence': evidence},
+                Path(temp_dir),
+                calibration_engine,
+            )
+
+        self.assertEqual(len(previews), 3)
+
     def test_threshold_suggestion_is_preliminary_and_applies_only_changes(self):
         payload = self._threshold_payload()
         report = asi676mc_calibration.format_integrated_report(payload, {
@@ -1266,10 +1395,22 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 },
                 storage_root=root,
             )
+            preview = {
+                'name': 'threshold_00.fit',
+                'timestamp_utc': '2026-08-02T12:00:00+00:00',
+                'population': 'Likely purple',
+                'data_url': 'data:image/jpeg;base64,cHJldmlldw==',
+                'width': 320,
+                'height': 320,
+            }
             with mock.patch.object(
                 calibration_engine,
                 'calibrate_folder',
                 return_value=payload,
+            ), mock.patch.object(
+                asi676mc_calibration,
+                '_build_population_previews',
+                return_value=[preview],
             ):
                 result = asi676mc_calibration.run_calibration_session(
                     session_id,
@@ -1279,6 +1420,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             self.assertEqual(result['outcome'], 'threshold_suggestion')
             self.assertNotIn('values', result)
             self.assertEqual(result['quality']['likely_purple_count'], 7)
+            self.assertEqual(result['population_previews'], [preview])
             _manifest, completed, values = (
                 asi676mc_calibration.get_completed_result(
                     session_id,
@@ -1616,6 +1758,26 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         )
         self.assertIn('Fewer than 14 compatible files', threshold_population)
         self.assertIn('No settings were changed', threshold_population)
+
+        saved_population = asi676mc_calibration._friendly_failure_message(
+            'the complete retained database archive was exhausted after '
+            'inspecting 80 compatible FITS, but neither the configured '
+            'detector nor population analysis identified usable purple/normal '
+            'evidence: the detector ratios do not form two stable populations'
+        )
+        self.assertIn('All saved FITS were checked', saved_population)
+        self.assertIn('could not reliably separate', saved_population)
+        self.assertIn('genuine examples of both', saved_population)
+
+        already_safe = (
+            asi676mc_calibration._friendly_threshold_analysis_failure(
+                'the configured thresholds already lie inside every observed '
+                'gap; the detector result cannot be explained safely by '
+                'threshold changes'
+            )
+        )
+        self.assertIn('review the current detection settings', already_safe)
+        self.assertNotIn('files listed', already_safe)
 
         unstable_gain = asi676mc_calibration._friendly_failure_message(
             'GAIN_R varies too much between pairs (relative MAD 0.300)'
@@ -1986,6 +2148,10 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('Save detection settings', template)
         self.assertIn('id="confirm-higher-population"', template)
         self.assertIn('id="calibration-population-evidence"', template)
+        self.assertIn('id="calibration-population-previews"', template)
+        self.assertIn('result.population_previews || []', template)
+        self.assertIn('data:image/jpeg;base64,', template)
+        self.assertIn(".indexOf('no settings were changed') !== -1", template)
         self.assertIn('confirm_higher_population', template)
         self.assertIn('id="calibration-threshold-advisory"', template)
         self.assertIn(

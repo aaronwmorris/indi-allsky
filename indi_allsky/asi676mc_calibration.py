@@ -21,6 +21,7 @@ Deployments may override the location with ``ASI676MC_CALIBRATION_FOLDER``.
 from contextlib import contextmanager
 from contextlib import redirect_stdout
 from collections import Counter
+import base64
 from datetime import datetime
 from datetime import timezone
 import io
@@ -31,6 +32,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import statistics
 import tempfile
 import textwrap
 import threading
@@ -63,6 +65,10 @@ DATABASE_CAPTURE_TIME_TOLERANCE = 1.0
 DATABASE_MAX_FILES = 200
 DATABASE_MAX_BYTES = MAX_SESSION_BYTES
 PROGRESS_MANIFEST_INTERVAL_FILES = 50
+POPULATION_PREVIEW_COUNT_PER_GROUP = 2
+POPULATION_PREVIEW_MAX_DIMENSION = 320
+POPULATION_PREVIEW_JPEG_QUALITY = 82
+POPULATION_PREVIEW_MAX_BYTES = 256 * 1024
 # A collection does not need every purple frame to have two normal references.
 # Once nine out of ten matched frames form complete good/purple/good triplets,
 # the remaining one-sided evidence is too small a share to justify asking the
@@ -1972,9 +1978,153 @@ def _threshold_suggestion_summary(payload):
         'threshold_suggestions': payload['threshold_suggestions'],
         'signature_ranges': payload['signature_ranges'],
         'population_evidence': payload.get('population_evidence', []),
+        'population_previews': payload.get('population_previews', []),
         'quality': quality_summary,
         'warnings': _result_warnings(quality_summary),
     }
+
+
+def _population_preview_candidates(population_evidence):
+    """Choose a bounded set of representative frames from both populations."""
+    metric_names = ('purple_ratio', 'red_side_ratio', 'blue_side_ratio')
+    selected = []
+    for population in ('Likely purple', 'Likely normal'):
+        candidates = [
+            item for item in population_evidence
+            if item.get('population') == population
+        ]
+        if not candidates:
+            continue
+        centers = {
+            metric: statistics.median(
+                float(item[metric]) for item in candidates
+            )
+            for metric in metric_names
+        }
+
+        def distance_from_center(item):
+            return sum(
+                (
+                    (float(item[metric]) - centers[metric])
+                    / max(abs(centers[metric]), 1.0e-12)
+                ) ** 2
+                for metric in metric_names
+            )
+
+        selected.extend(sorted(
+            candidates,
+            key=lambda item: (
+                distance_from_center(item),
+                str(item.get('timestamp_utc') or ''),
+                str(item.get('name') or ''),
+            ),
+        )[:POPULATION_PREVIEW_COUNT_PER_GROUP])
+    return selected
+
+
+def _render_population_preview(path, engine):
+    """Return one small, neutral-stretch JPEG without repairing the RAW data."""
+    # These are existing indi-allsky runtime dependencies. Importing them here
+    # preserves the lightweight web-process path; previews are created only by
+    # the calibration worker after the numerical engine has already loaded.
+    import cv2
+    import numpy
+
+    data, _header, _index = engine._read_fits(path)
+    height, width = data.shape
+    y_start = (height // 4) & ~1
+    y_stop = (3 * height // 4) & ~1
+    x_start = (width // 4) & ~1
+    x_stop = (3 * width // 4) & ~1
+    raw_crop = numpy.ascontiguousarray(data[y_start:y_stop, x_start:x_stop])
+
+    # Match the project's RGGB conversion. One shared stretch across all three
+    # channels preserves the visible colour cast instead of white-balancing it
+    # away. The even crop origin also preserves the original Bayer phase.
+    image = cv2.cvtColor(raw_crop, cv2.COLOR_BAYER_BG2BGR)
+    sample_step = max(1, min(image.shape[:2]) // 512)
+    sample = image[::sample_step, ::sample_step]
+    black_point, white_point = numpy.percentile(sample, (0.5, 99.5))
+    if white_point <= black_point:
+        black_point = float(numpy.min(sample))
+        white_point = float(numpy.max(sample))
+    if white_point <= black_point:
+        raise ValueError('preview has no usable brightness range')
+
+    preview_height, preview_width = image.shape[:2]
+    resize_scale = min(
+        1.0,
+        POPULATION_PREVIEW_MAX_DIMENSION / max(preview_height, preview_width),
+    )
+    if resize_scale < 1.0:
+        preview_width = max(1, int(round(preview_width * resize_scale)))
+        preview_height = max(1, int(round(preview_height * resize_scale)))
+        image = cv2.resize(
+            image,
+            (preview_width, preview_height),
+            interpolation=cv2.INTER_AREA,
+        )
+    image = numpy.clip(
+        (image.astype(numpy.float32) - black_point)
+        * (255.0 / (white_point - black_point)),
+        0.0,
+        255.0,
+    ).astype(numpy.uint8)
+
+    encoded_ok, encoded = cv2.imencode(
+        '.jpg',
+        image,
+        [cv2.IMWRITE_JPEG_QUALITY, POPULATION_PREVIEW_JPEG_QUALITY],
+    )
+    if not encoded_ok:
+        raise ValueError('preview JPEG encoding failed')
+    encoded_bytes = encoded.tobytes()
+    if len(encoded_bytes) > POPULATION_PREVIEW_MAX_BYTES:
+        raise ValueError('preview JPEG exceeds the size limit')
+    return {
+        'data_url': 'data:image/jpeg;base64,{0}'.format(
+            base64.b64encode(encoded_bytes).decode('ascii')
+        ),
+        'width': int(image.shape[1]),
+        'height': int(image.shape[0]),
+    }
+
+
+def _build_population_previews(payload, upload_dir, engine):
+    """Build best-effort previews for a successful threshold-only result."""
+    previews = []
+    try:
+        candidates = _population_preview_candidates(
+            payload.get('population_evidence') or ()
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        logger.warning('Unable to select ASI676MC population previews: %s', error)
+        return previews
+    for item in candidates:
+        staged_name = str(item.get('name') or '')
+        if not staged_name or Path(staged_name).name != staged_name:
+            continue
+        try:
+            preview = _render_population_preview(
+                upload_dir.joinpath(staged_name),
+                engine,
+            )
+        except Exception as error:
+            # A thumbnail is explanatory only. Never discard a valid threshold
+            # result because one selected FITS could not be rendered again.
+            logger.warning(
+                'Unable to create ASI676MC population preview for %s: %s',
+                staged_name,
+                error,
+            )
+            continue
+        previews.append({
+            'name': staged_name,
+            'timestamp_utc': item.get('timestamp_utc'),
+            'population': item.get('population'),
+            **preview,
+        })
+    return previews
 
 
 def _readable_join(parts):
@@ -2508,9 +2658,9 @@ def _friendly_threshold_analysis_failure(message_text):
     if 'configured thresholds already lie inside every observed gap' in lowered:
         return (
             'The current thresholds already separate the two measured groups, '
-            'so threshold changes do not explain the detector result. Confirm '
-            'that the files listed as likely purple show the actual purple-frame '
-            'fault.'
+            'so threshold changes do not explain the detector result. Check that '
+            'the collection contains genuine normal and purple frames, then '
+            'review the current detection settings.'
         )
     if 'matched purple frames found' in lowered:
         return _friendly_failure_message(message_text)
@@ -2553,10 +2703,17 @@ def _friendly_failure_message(message):
                 'but found no eligible local ASI676MC FITS. Check FITS saving '
                 'and retention, then try again.'
             )
-        if 'no safe purple/normal population' in lowered:
+        if (
+            'no safe purple/normal population' in lowered
+            or (
+                'neither the configured detector nor population analysis '
+                'identified usable purple/normal evidence'
+            ) in lowered
+        ):
             return (
                 'All saved FITS were checked, but the tool could not reliably '
-                'separate normal and purple frames. No settings were changed.'
+                'separate normal and purple frames. Check that the saved FITS '
+                'include genuine examples of both. No settings were changed.'
             )
         return (
             'Saved-FITS discovery checked the complete retention period but '
@@ -3857,6 +4014,13 @@ def run_calibration_session(
             manifest['heartbeat_utc'] = _utc_now_text()
             _write_manifest(session_dir, manifest)
 
+        if payload.get('outcome') == 'threshold_suggestion':
+            payload['population_previews'] = _build_population_previews(
+                payload,
+                upload_dir,
+                asi676mc_calibration_engine,
+            )
+
         # The current engine always supplies scan audit fields. Defaults keep
         # retained results and test/dry-run engines readable without making
         # the web session depend on a single engine payload revision.
@@ -3879,6 +4043,11 @@ def run_calibration_session(
             evidence_item['name'] = original_names.get(
                 evidence_item.get('name'),
                 evidence_item.get('name'),
+            )
+        for preview_item in payload.get('population_previews', ()):
+            preview_item['name'] = original_names.get(
+                preview_item.get('name'),
+                preview_item.get('name'),
             )
 
         if payload.get('outcome') == 'threshold_suggestion':
