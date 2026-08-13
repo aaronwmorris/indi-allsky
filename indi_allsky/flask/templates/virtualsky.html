@@ -18,7 +18,6 @@ var max_age = 900;
 var camera_id = {{ camera_id }};
 var refreshInterval = {{ refreshInterval | int }};
 var timestamp = {{ timestamp | int }};  // does not really do anything yet
-var night = {{ night }};
 var fullscreen = false;  // initial state
 
 var camera_latitude = {{ camera_latitude }};
@@ -299,7 +298,11 @@ function loadJS(url, data, onDone, onError) {
                         {% for field in [form_virtualsky.IMAGE_CIRCLE_DIAMETER, form_virtualsky.OFFSET_X, form_virtualsky.OFFSET_Y, form_virtualsky.MAGNITUDE] %}
                         <div class="tw:form-control">
                             <label class="tw:label tw:pb-1"><span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">{{ field.label.text }}</span></label>
+                            {% if field == form_virtualsky.IMAGE_CIRCLE_DIAMETER %}
+                            {{ field(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:text-sm tw:w-full', title="The solved value is the 180° horizon circle under VirtualSky's equisolid fisheye projection. It can differ by a few percent from the visible illuminated circle in the image -- larger for lenses with less than a 180° field of view, smaller for lenses with more than 180°.") }}
+                            {% else %}
                             {{ field(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:text-sm tw:w-full') }}
+                            {% endif %}
                         </div>
                         {% endfor %}
                     </div>
@@ -312,10 +315,57 @@ function loadJS(url, data, onDone, onError) {
                         </div>
                         {% endfor %}
                         
-                        <a href="https://github.com/aaronwmorris/indi-allsky/wiki/VirtualSky" target="_blank" 
+                        <a href="https://github.com/aaronwmorris/indi-allsky/wiki/VirtualSky" target="_blank"
                            class="tw:btn tw:btn-xs tw:btn-neutral tw:btn-accent-hover tw:gap-1.5 tw:rounded-full tw:no-underline tw:ml-auto">
                             <i class="tw:icon-[lucide--external-link] tw:w-3 tw:h-3 tw:block"></i> VirtualSky Wiki
                         </a>
+                    </div>
+
+                    <div class="tw:flex tw:flex-wrap tw:gap-4 tw:items-center tw:pt-4 tw:border-t tw:border-base-300/40">
+                        <button id="lens_solve" type="button"
+                                title="Astrometrically solve the six geometry fields from the image shown below. Results fill the form for review; nothing is saved."
+                                class="tw:btn tw:btn-sm tw:btn-info tw:gap-1.5 tw:rounded-[var(--radius-box)]">
+                            <span id="lens_solve_spinner" class="tw:loading tw:loading-spinner tw:loading-xs" style="display: none;" aria-hidden="true"></span>
+                            Solve
+                        </button>
+
+                        {# Gate mirrors the server-side save() check exactly -- admin, or
+                           LOGIN_DISABLED mode where all users act as admin. #}
+                        {% if login_disabled or (current_user.is_authenticated and current_user.is_admin) %}
+                        <button id="lens_save" type="button" disabled
+                                title="Write the six values above to the configuration. See the note below for details."
+                                aria-describedby="lens_save_help"
+                                class="tw:btn tw:btn-sm tw:btn-primary tw:gap-1.5 tw:rounded-[var(--radius-box)]">
+                            Save
+                        </button>
+                        <label class="tw:flex tw:items-center tw:gap-2 tw:cursor-pointer tw:select-none">
+                            <input type="checkbox" id="lens_reload_on_save" class="tw:toggle tw:toggle-primary tw:toggle-sm">
+                            <span title="Automatically restart capture service upon saving configuration"
+                                  class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:cursor-pointer">Reload on Save</span>
+                        </label>
+                        {% endif %}
+
+                        <button id="lens_help_toggle" type="button"
+                                title="What do Solve and Save do?"
+                                aria-expanded="false" aria-controls="lens_help"
+                                class="tw:btn tw:btn-xs tw:btn-circle tw:btn-neutral">?</button>
+
+                        <span id="lens_solver_message" class="tw:text-xs tw:text-base-content/70" aria-live="polite" role="status"></span>
+                    </div>
+
+                    <div id="lens_help" style="display: none;"
+                         class="tw:text-xs tw:text-base-content/70 tw:space-y-1.5 tw:pt-2 tw:max-w-2xl">
+                        <p><strong>Solve</strong> detects stars in the image shown below and fits the six geometry
+                           fields above (all but Magnitude) to match the sky at that image's timestamp. Results
+                           fill the form for review &mdash; nothing is saved. The entered values seed the search:
+                           any Azimuth Angle works, the Diameter can be off by roughly 40%, but the X/Y Offsets
+                           must be within about 100 px of correct. Cloudy, moonlit, or twilight frames are
+                           refused &mdash; open a clear frame from the Gallery and solve that instead.</p>
+                        <p id="lens_save_help"><strong>Save</strong> writes
+                           <code class="tw:bg-neutral-content/10 tw:font-mono tw:px-1.5 tw:py-0.5 tw:rounded">LENS_AZIMUTH</code> and the
+                           <code class="tw:bg-neutral-content/10 tw:font-mono tw:px-1.5 tw:py-0.5 tw:rounded">VIRTUALSKY</code>
+                           offset/diameter settings above to the camera configuration. Azimuth also repositions
+                           the cardinal-direction labels burned into future captured images.</p>
                     </div>
                 </div>
             </form>
@@ -333,8 +383,8 @@ function loadJS(url, data, onDone, onError) {
             <span>Calibration settings must be configured under <code class="tw:bg-neutral-content/10 tw:font-mono tw:px-1.5 tw:py-0.5 tw:rounded">Config -> Location</code></span>
         </div>
 
-        <div id="wrapper" class="tw:relative tw:bg-neutral-950 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300/40 tw:overflow-hidden tw:shadow-2xl">
-            <img id="latest-image" class="tw:w-full tw:h-auto tw:object-contain" alt="Live Allsky View">
+        <div id="wrapper" class="tw:relative tw:bg-neutral-950 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300/40 tw:overflow-hidden tw:shadow-2xl tw:w-fit tw:max-w-full tw:mx-auto">
+            <img id="latest-image" class="tw:max-h-[calc(100dvh-14rem)] tw:w-auto tw:h-auto tw:object-contain tw:block" alt="Live Allsky View">
             <div id="starmap_container" class="tw:absolute tw:inset-0">
                 <div id="starmap"></div>
             </div>
@@ -521,6 +571,136 @@ $( document ).ready(function() {
     }
   }, { capture: true, passive: false });
 })();
+
+
+const SOLVE_FIELDS = ['AZIMUTH_ANGLE', 'LATITUDE_OFFSET', 'LONGITUDE_OFFSET',
+                      'IMAGE_CIRCLE_DIAMETER', 'OFFSET_X', 'OFFSET_Y'];
+
+function solverPayload(action) {
+    var payload = {'action': action, 'camera_id': camera_id};
+    SOLVE_FIELDS.forEach(function(f) {
+        payload[f] = $('#' + f).val();
+    });
+    return payload;
+}
+
+// Outcome-conditional coloring for the #lens_solver_message banner:
+// muted default while idle/in-progress, success/error only on an actual outcome.
+function setSolverMessage(text, state) {
+    var $msg = $('#lens_solver_message');
+    $msg.removeClass('tw:text-error tw:text-success tw:text-base-content/70');
+    if (state === 'error') {
+        $msg.addClass('tw:text-error');
+    } else if (state === 'success') {
+        $msg.addClass('tw:text-success');
+    } else {
+        $msg.addClass('tw:text-base-content/70');
+    }
+    $msg.text(text);
+}
+
+// #lens_save is tw:btn-primary at rest -- red (tw:btn-error) is this app's
+// failure signal, so it is only ever applied after an actual failed save.
+function setSaveButtonFailed(failed) {
+    var $btn = $('#lens_save');
+    if (failed) {
+        $btn.removeClass('tw:btn-primary').addClass('tw:btn-error');
+    } else {
+        $btn.removeClass('tw:btn-error').addClass('tw:btn-primary');
+    }
+}
+
+$('#lens_help_toggle').on('click', function() {
+    var $help = $('#lens_help');
+    var open = $help.is(':visible');
+    $help.toggle(!open);
+    $(this).attr('aria-expanded', String(!open));
+});
+
+$('#lens_solve').on('click', function() {
+    if (!last_image_timestamp) {
+        setSolverMessage('No image loaded yet.', 'error');
+        return;
+    }
+
+    var payload = solverPayload('solve');
+    // use the timestamp of the frame actually being displayed, not whatever
+    // the image-list poll most recently fetched
+    payload['timestamp'] = last_image_timestamp;
+
+    $('#lens_solve').prop('disabled', true);
+    // disabled for the duration of the solve; re-enabled only on a
+    // successful solve below (never in the failure/error/complete paths)
+    $('#lens_save').prop('disabled', true);
+    $('#lens_solve_spinner').show();
+    setSolverMessage('Solving...', 'info');
+
+    $.ajax({
+        type: 'POST',
+        url: "{{ url_for('indi_allsky.ajax_lens_solver_view') }}",
+        contentType: 'application/json',
+        data: JSON.stringify(payload),
+        timeout: 60000,
+        success: function(rdata) {
+            if (rdata['success']) {
+                SOLVE_FIELDS.forEach(function(f) {
+                    $('#' + f).val(rdata['values'][f]);
+                });
+                forceRedrawPlanetarium();
+                setSolverMessage(rdata['message'], 'success');
+                setSaveButtonFailed(false);
+                $('#lens_save').prop('disabled', false);
+            } else {
+                setSolverMessage(rdata['message'], 'error');
+            }
+        },
+        error: function(xhr) {
+            var msg = 'Solve failed.';
+            if (xhr.responseJSON && xhr.responseJSON['message']) {
+                msg = xhr.responseJSON['message'];
+            }
+            setSolverMessage(msg, 'error');
+        },
+        complete: function() {
+            $('#lens_solve').prop('disabled', false);
+            $('#lens_solve_spinner').hide();
+        },
+    });
+});
+
+$('#lens_save').on('click', function() {
+    var payload = solverPayload('save');
+    payload['RELOAD_ON_SAVE'] = $('#lens_reload_on_save').prop('checked');
+
+    // one-shot opt-in, matching config.html's convention: force back to
+    // unchecked immediately so it doesn't silently carry over to a later save
+    $('#lens_reload_on_save').prop('checked', false);
+
+    $('#lens_save').prop('disabled', true);
+    setSaveButtonFailed(false);
+    setSolverMessage('Saving...', 'info');
+
+    $.ajax({
+        type: 'POST',
+        url: "{{ url_for('indi_allsky.ajax_lens_solver_view') }}",
+        contentType: 'application/json',
+        data: JSON.stringify(payload),
+        timeout: 15000,
+        success: function(rdata) {
+            setSolverMessage(rdata['message'], 'success');
+            $('#lens_save').prop('disabled', false);
+        },
+        error: function(xhr) {
+            // ConfigSaveException returns 400 {'form_global': ['...']} with
+            // no 'message' key (mirrors AjaxConfigView) -- fall back to it
+            // before the generic string so the real validation error shows.
+            var msg = (xhr.responseJSON && (xhr.responseJSON['message'] || (xhr.responseJSON['form_global'] && xhr.responseJSON['form_global'][0]))) || 'Save failed.';
+            setSolverMessage(msg, 'error');
+            setSaveButtonFailed(true);
+            $('#lens_save').prop('disabled', false);
+        },
+    });
+});
 
 </script>
 {% endblock %}

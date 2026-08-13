@@ -59,9 +59,9 @@ var youtube__enable = {{ youtube__enable }};
 {% endblock %}
 
 {% block content %}
-<div class="tw:container tw:h-full tw:mx-auto tw:flex tw:flex-col tw:gap-4">
+<div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-4">
 
-    <form id="form_video_viewer" onsubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:relative">
+    <form id="form_video_viewer" onsubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] tw:relative sticky-desktop-header tw:shadow-md">
         {{ form_video_viewer.csrf_token }}
         <div class="tw:text-error tw:text-sm tw:my-1 tw:font-semibold" id="csrf_token-error"></div>
 

@@ -43,6 +43,8 @@ services:
     privileged: true
     ports:
       - "17624:7624"
+    volumes:
+      - /run/udev:/run/udev:ro  # enable for indi_libcamera_ccd
   ### Uncomment to connect to gpsd running on the host (listening to all interfaces)
   #  extra_hosts:
   #    - "localhost:host-gateway"

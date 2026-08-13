@@ -768,11 +768,11 @@ npm run build
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=aaronwmorris%2Findi-allsky&type=date&legend=top-left">
+<a href="https://star-history.dera.page/#aaronwmorris/indi-allsky&type=date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=aaronwmorris/indi-allsky&type=date&theme=dark&legend=bottom-right" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=aaronwmorris/indi-allsky&type=date&legend=bottom-right" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=aaronwmorris/indi-allsky&type=date&legend=bottom-right" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=aaronwmorris/indi-allsky&type=date&theme=dark&legend=bottom-right" />
+   <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=aaronwmorris/indi-allsky&type=date&legend=bottom-right" />
+   <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=aaronwmorris/indi-allsky&type=date&legend=bottom-right" />
  </picture>
 </a>
 
