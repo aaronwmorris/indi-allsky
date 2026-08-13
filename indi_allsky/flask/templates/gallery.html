@@ -45,9 +45,9 @@ var newest_entry_default = true;
 {% endblock %}
 
 {% block content %}
-<div class="tw:container tw:h-full tw:mx-auto tw:flex tw:flex-col tw:gap-4">
+<div class="tw:container tw:mx-auto tw:flex tw:flex-col tw:gap-4">
 
-    <form id="form_viewer" onsubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)]">
+    <form id="form_viewer" onsubmit="return false;" class="tw:w-full tw:bg-base-200 tw:p-4 tw:rounded-[var(--radius-box)] md:tw:sticky md:tw:top-0 md:tw:z-30 tw:shadow-md">
         {{ form_viewer.csrf_token }}
         <div class="tw:text-error tw:text-xs tw:font-semibold tw:mb-2" id="csrf_token-error" style="display: none;"></div>
 
@@ -129,7 +129,6 @@ const checkbox_field_names = [
 ];
 
 var fields = {};
-// Populate fields object
 field_names.forEach(item => {
     fields[item] = {
         'input' : $('#' + item),
@@ -137,7 +136,6 @@ field_names.forEach(item => {
     };
 });
 
-// Checkboxes
 checkbox_field_names.forEach(item => {
     fields[item] = {
         'input' : $('#' + item),
@@ -180,12 +178,22 @@ function exclude_image(el, pswp, image_id, exclude) {
 }
 
 
+function scrollToTop() {
+    const mainScroll = document.querySelector('main .tw\\:overflow-y-auto') || document.documentElement || window;
+    if (mainScroll && 'scrollTop' in mainScroll) {
+        mainScroll.scrollTop = 0;
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+}
+
+
 function populate_gallery(gallery_data) {
     if (lightbox) {
         lightbox.destroy();
         lightbox = null;
     }
 
+    scrollToTop();
 
     $('#allsky-gallery').empty();
 
@@ -1076,6 +1084,7 @@ function previousDay() {
 
 
 function nextHour() {
+    scrollToTop();
     var hour_select_val = $("#HOUR_SELECT").val();
 
     newest_entry_default = false;
@@ -1095,6 +1104,7 @@ function nextHour() {
 
 
 function previousHour() {
+    scrollToTop();
     var hour_select_val = $("#HOUR_SELECT").val();
 
     newest_entry_default = true;
