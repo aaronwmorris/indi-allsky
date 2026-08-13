@@ -333,8 +333,8 @@ function loadJS(url, data, onDone, onError) {
             <span>Calibration settings must be configured under <code class="tw:bg-neutral-content/10 tw:font-mono tw:px-1.5 tw:py-0.5 tw:rounded">Config -> Location</code></span>
         </div>
 
-        <div id="wrapper" class="tw:relative tw:bg-neutral-950 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300/40 tw:overflow-hidden tw:shadow-2xl">
-            <img id="latest-image" class="tw:w-full tw:h-auto tw:object-contain" alt="Live Allsky View">
+        <div id="wrapper" class="tw:relative tw:bg-neutral-950 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300/40 tw:overflow-hidden tw:shadow-2xl tw:w-fit tw:max-w-full tw:mx-auto">
+            <img id="latest-image" class="tw:max-h-[calc(100dvh-14rem)] tw:w-auto tw:h-auto tw:object-contain tw:block" alt="Live Allsky View">
             <div id="starmap_container" class="tw:absolute tw:inset-0">
                 <div id="starmap"></div>
             </div>
