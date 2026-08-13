@@ -139,7 +139,7 @@ in the **ASI676MC purple-frame handling** card under **Config > Image**.
 | **Enable ASI676MC purple-frame handling** | `ENABLE` | `False` | Master safety switch. Leave off for unaffected cameras. |
 | **Detect and exclude only** | `EXCLUDE_ONLY` | `True` | Detect, flag, and exclude purple frames without changing pixels. Disable only after reviewing calibration. |
 | **Log every ASI676MC frame** | `LOG_EVERY_FRAME` | `False` | Log normal-frame checks at info level instead of debug level. Purple frames and failures are always logged prominently. |
-| **Show purple-frame status in gallery** | `GALLERY_ENABLE` | `True` | Show repaired, excluded, and failed states and their filters. The excluded filter does not include manually excluded frames. Turning off the master feature also turns this option off. |
+| **Show purple-frame status in gallery** | `GALLERY_ENABLE` | `False` | Show repaired, excluded, and failed states and their filters. The excluded filter does not include manually excluded frames. Turning off the master feature also turns this option off. |
 | **Save purple and following normal FITS for calibration** | `SAVE_DIAGNOSTIC_FITS` | `False` | Save the untouched purple frame and its immediately following compatible frame as the preferred low-disk evidence. A successor with different capture/layout metadata breaks the group and is not retained as its reference. |
 | **Also save the preceding normal FITS** | `SAVE_PRECEDING_FITS` | `False` | Cache the immediately preceding normal FITS and save it when the next compatible frame is purple. Requires the parent diagnostic option. |
 
