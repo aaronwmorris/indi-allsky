@@ -2239,6 +2239,24 @@ class VideoWorker(Process):
         self._miscUpload.upload_db_backup(backup_file)
 
 
+    def sendAllskyMapPing(self, task, **kwargs):
+        task.setRunning()
+
+        from .allsky_map import send_allsky_map_ping
+        from .flask.models import NotificationCategory
+
+        def db_notify(category, name, message, expire):
+            self._miscDb.addNotification(category, name, message, expire=expire)
+
+        success, msg = send_allsky_map_ping(self.config, logger, db_notify)
+
+        if success:
+            task.setSuccess(f'Allsky Map Ping successful: {msg}')
+            self._miscDb.clearNotification(NotificationCategory.STATE, 'allskymap_auth_error')
+        else:
+            task.setFailed(f'Allsky Map Ping failed: {msg}')
+
+
     def expireData(self, task, **kwargs):
         camera_id = kwargs['camera_id']
 
@@ -2525,35 +2543,30 @@ class VideoWorker(Process):
                 mask_processor.image = cv2.resize(mask_data, (new_mask_width, new_mask_height), interpolation=cv2.INTER_AREA)
 
 
-            if self.config.get('IMAGE_ROTATE'):
-                mask_processor.rotate_90()
-
 
             # rotation
-            if self.config.get('IMAGE_ROTATE_ANGLE'):
-                mask_processor.rotate_angle()
+            mask_processor.rotate_90()
+            mask_processor.rotate_angle()
 
 
             # verticle flip
-            if self.config.get('IMAGE_FLIP_V'):
-                mask_processor.flip_v()
+            mask_processor.flip_v()
 
 
             # horizontal flip
-            if self.config.get('IMAGE_FLIP_H'):
-                mask_processor.flip_h()
+            mask_processor.flip_h()
 
 
             # crop
-            if self.config.get('IMAGE_CROP_IMAGE_CIRCLE'):
-                mask_processor.crop_image()
-            elif self.config.get('IMAGE_CROP_ROI'):
-                mask_processor.crop_image()
+            mask_processor.crop_image()
 
 
             # scale
-            if self.config['IMAGE_SCALE'] and self.config['IMAGE_SCALE'] != 100:
-                mask_processor.scale_image()
+            mask_processor.scale_image()
+
+
+            # add border
+            mask_processor.add_border()
 
 
             mask_dict[x] = mask_processor.image
