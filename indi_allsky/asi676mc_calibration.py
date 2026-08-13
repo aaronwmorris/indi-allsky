@@ -228,7 +228,7 @@ def capture_configuration_guidance(config):
     mode_text = (
         'Off'
         if not repair_enabled
-        else ('Exclude Only' if exclude_only else 'Repair active')
+        else ('Detect and exclude only' if exclude_only else 'Repair active')
     )
     if diagnostic_fits and repair_enabled:
         diagnostic_text = 'On'
@@ -241,7 +241,7 @@ def capture_configuration_guidance(config):
     elif preceding_fits_configured and not repair_enabled:
         preceding_text = 'Inactive (handling off)'
     elif preceding_fits_configured and not diagnostic_fits:
-        preceding_text = 'Inactive (Save Bad and Following RAW FITS off)'
+        preceding_text = 'Inactive (calibration FITS saving off)'
     else:
         preceding_text = 'Off'
     if compressed_fits and standard_fits:
@@ -251,13 +251,13 @@ def capture_configuration_guidance(config):
     else:
         compression_text = 'Off'
     facts = [
-        {'label': 'Repair mode', 'value': mode_text},
+        {'label': 'Purple-frame mode', 'value': mode_text},
         {
-            'label': 'Save Bad and Following RAW FITS',
+            'label': 'Save purple and following normal FITS',
             'value': diagnostic_text,
         },
         {
-            'label': 'Also Save Preceding RAW FITS',
+            'label': 'Also save the preceding normal FITS',
             'value': preceding_text,
         },
         {'label': 'Standard FITS', 'value': standard_fits_text},
@@ -286,15 +286,16 @@ def capture_configuration_guidance(config):
         guidance_title = 'Purple-frame handling is off'
         if diagnostic_fits:
             guidance_sentences.append(
-                'Automatic saved-FITS search cannot mark new purple frames '
-                'while handling is off. Turn on purple-frame handling and '
-                'keep Exclude Only on; the configured diagnostic saving will '
-                'then start.'
+                'New purple frames are not being collected for calibration. '
+                'In Image Settings, turn on purple-frame handling and leave '
+                'Detect and exclude only on. Calibration FITS saving will then start.'
             )
         else:
             guidance_sentences.append(
-                'Automatic saved-FITS search cannot mark new purple frames '
-                'while handling is off.'
+                'New purple frames are not being collected for calibration. '
+                'In Image Settings, turn on purple-frame handling, leave '
+                'Detect and exclude only on, and enable Save purple and '
+                'following normal FITS for calibration.'
             )
         if standard_fits and fits_period == 0:
             # Database discovery can open indi-allsky's gzip-compressed FITS,
@@ -303,212 +304,186 @@ def capture_configuration_guidance(config):
             # only way to use this particular saved sequence manually.
             if compressed_fits:
                 guidance_sentences.append(
-                    'Complete compressed FITS sequences are being saved. '
-                    'Decompress selected files before manual upload, or turn '
-                    'on handling in Exclude Only mode for future automatic searches.'
+                    'Complete compressed FITS sequences are already being saved. '
+                    'They can be used with Search saved FITS.'
                 )
             else:
                 guidance_sentences.append(
-                    'Complete FITS sequences are being saved and can be '
-                    'uploaded manually. Turn on handling in Exclude Only mode '
-                    'for future automatic searches.'
+                    'Complete FITS sequences are already being saved and can '
+                    'be uploaded manually.'
                 )
         elif standard_fits and not fits_period_valid:
             if diagnostic_fits:
                 guidance_sentences.append(
-                    'Correct or disable the invalid standard FITS interval. '
-                    'Then turn on handling in Exclude Only mode; the configured '
-                    'diagnostic saving will begin collecting calibration FITS.'
+                    'Correct or disable the invalid standard FITS interval in '
+                    'Image Settings.'
                 )
             else:
                 guidance_sentences.append(
-                    'Correct the invalid standard FITS interval. For future '
-                    'calibration data, turn on handling in Exclude Only mode '
-                    'and save diagnostic FITS, or save standard FITS for Every Image.'
+                    'Correct the invalid standard FITS interval in Image Settings.'
                 )
         elif standard_fits:
             if diagnostic_fits:
                 guidance_sentences.append(
-                    'Periodic standard FITS may miss random purple frames. '
-                    'Turn on handling in Exclude Only mode; the configured '
-                    'diagnostic saving will then collect them more reliably.'
+                    'Periodic standard FITS may miss random purple frames.'
                 )
             else:
                 guidance_sentences.append(
-                    'Periodic standard FITS may miss random purple frames. '
-                    'Turn on handling in Exclude Only mode and save diagnostic '
-                    'FITS, or save standard FITS for Every Image.'
+                    'Periodic standard FITS may miss random purple frames.'
                 )
         else:
             if diagnostic_fits:
                 guidance_sentences.append(
-                    'No FITS are being saved. Turn on handling in Exclude Only '
-                    'mode; the configured diagnostic saving will then begin.'
+                    'No FITS are currently being saved.'
                 )
             else:
                 guidance_sentences.append(
-                    'No FITS are being saved. Turn on handling in Exclude Only '
-                    'mode and save diagnostic FITS, or save standard FITS for '
-                    'Every Image.'
+                    'No FITS are currently being saved.'
                 )
     elif exclude_only:
         if diagnostic_fits:
             guidance_level = 'success'
             if standard_fits and fits_period == 0:
-                guidance_title = 'Ready to collect complete FITS sequences'
+                guidance_title = 'Ready to collect calibration FITS'
                 guidance_sentences.append(
-                    'Exclude Only keeps purple frames unchanged. Diagnostic '
-                    'saving keeps each purple frame and the next matching '
-                    'frame. Every Image also saves the complete sequence and '
-                    'uses additional disk space.'
+                    'Purple frames and the next normal frame will be saved '
+                    'automatically. Standard FITS are also set to Every Image, '
+                    'which uses additional disk space.'
                 )
             elif standard_fits and not fits_period_valid:
                 guidance_level = 'warning'
                 guidance_title = 'Standard FITS setting needs correction'
                 guidance_sentences.append(
-                    'Diagnostic calibration FITS will be saved. Correct the '
+                    'Calibration FITS will be saved. Correct the '
                     'invalid standard FITS interval or turn standard FITS off.'
                 )
             elif standard_fits:
-                guidance_title = 'Ready for low-disk FITS collection'
+                guidance_title = 'Ready to collect calibration FITS'
                 guidance_sentences.append(
-                    'Exclude Only keeps purple frames unchanged. Diagnostic '
-                    'saving keeps each purple frame and the next matching '
-                    'normal frame. Periodic standard FITS are not required for calibration.'
+                    'Purple frames and the next normal frame will be saved '
+                    'automatically without relying on periodic standard FITS.'
                 )
             else:
-                guidance_title = 'Ready for low-disk FITS collection'
+                guidance_title = 'Ready to collect calibration FITS'
                 guidance_sentences.append(
-                    'Exclude Only keeps purple frames unchanged. Diagnostic '
-                    'saving keeps each purple frame and the next matching '
-                    'normal frame without saving every image.'
+                    'Purple frames and the next normal frame will be saved '
+                    'automatically without saving every image.'
                 )
         elif standard_fits and fits_period == 0:
             guidance_level = 'success'
-            guidance_title = 'Ready to collect complete FITS sequences'
+            guidance_title = 'Ready to collect calibration FITS'
             guidance_sentences.append(
-                'Exclude Only keeps purple frames unchanged, and Every Image '
-                'saves complete sequences for automatic search. This provides '
-                'strong evidence but uses more disk space.'
+                'Purple frames remain unchanged, and Every Image saves complete '
+                'sequences for calibration. This uses more disk space.'
             )
         elif standard_fits and not fits_period_valid:
-            guidance_title = 'No reliable calibration FITS will be saved'
+            guidance_title = 'Calibration FITS are not being saved reliably'
             guidance_sentences.append(
                 'Purple frames will remain unchanged, but the standard FITS '
-                'interval is invalid. Save diagnostic FITS, or correct the '
-                'interval and choose Every Image.'
+                'interval is invalid. Enable Save purple and following normal '
+                'FITS, or correct the interval and choose Every Image.'
             )
         elif standard_fits:
             guidance_title = 'Periodic FITS saving may miss purple frames'
             guidance_sentences.append(
                 'Purple frames will remain unchanged, but periodic FITS may '
-                'miss them. Save diagnostic FITS, or set standard FITS to Every Image.'
+                'miss them. Enable Save purple and following normal FITS, or '
+                'set standard FITS to Every Image.'
             )
         else:
-            guidance_title = 'No calibration FITS will be saved'
+            guidance_title = 'Calibration FITS are not being saved'
             guidance_sentences.append(
                 'Purple frames will remain unchanged, but no FITS are being '
-                'saved. Save diagnostic FITS, or set standard FITS to Every Image.'
+                'saved. Enable Save purple and following normal FITS, or set '
+                'standard FITS to Every Image.'
             )
     else:
         if diagnostic_fits:
             guidance_level = 'success'
             if standard_fits and fits_period == 0:
-                guidance_title = 'Ready to collect complete FITS sequences'
+                guidance_title = 'Ready to collect calibration FITS'
                 guidance_sentences.append(
-                    'Repair is active. Diagnostic saving keeps the original '
-                    'purple frame before repair and the next matching frame. '
-                    'Every Image also saves the normal processed output and '
-                    'uses additional disk space.'
+                    'The untouched purple frame and the next normal frame will '
+                    'be saved automatically. Standard FITS are also set to '
+                    'Every Image, which uses additional disk space.'
                 )
             elif standard_fits and not fits_period_valid:
                 guidance_level = 'warning'
                 guidance_title = 'Standard FITS setting needs correction'
                 guidance_sentences.append(
-                    'Diagnostic calibration FITS will be saved before repair. '
+                    'Calibration FITS will be saved before repair. '
                     'Correct the invalid standard FITS interval or turn '
                     'standard FITS off.'
                 )
             elif standard_fits:
-                guidance_title = 'Ready for low-disk FITS collection'
+                guidance_title = 'Ready to collect calibration FITS'
                 guidance_sentences.append(
-                    'Repair is active. Diagnostic saving keeps the original '
-                    'purple frame before repair and the next matching normal '
-                    'frame. Periodic standard FITS are not required for calibration.'
+                    'The untouched purple frame and the next normal frame will '
+                    'be saved automatically without relying on periodic standard FITS.'
                 )
             else:
-                guidance_title = 'Ready for low-disk FITS collection'
+                guidance_title = 'Ready to collect calibration FITS'
                 guidance_sentences.append(
-                    'Repair is active. Diagnostic saving keeps the original '
-                    'purple frame before repair and the next matching normal '
-                    'frame without saving every image.'
+                    'The untouched purple frame and the next normal frame will '
+                    'be saved automatically without saving every image.'
                 )
         else:
-            guidance_title = 'No untouched purple-frame FITS will be saved'
+            guidance_title = 'Calibration FITS are not being saved'
             if standard_fits and fits_period == 0:
                 guidance_sentences.append(
-                    'Every Image saves files after repair, so the original '
-                    'purple frame is lost. Turn on diagnostic FITS saving, or '
-                    'switch to Exclude Only while collecting calibration data.'
+                    'Every Image saves files after repair, so the untouched '
+                    'purple frame is not kept. Enable Save purple and following '
+                    'normal FITS, or use Detect and exclude only while collecting data.'
                 )
             elif standard_fits and not fits_period_valid:
                 guidance_sentences.append(
-                    'Repair is active, diagnostic FITS saving is off, and the '
-                    'standard FITS interval is invalid. Turn on diagnostic '
-                    'saving, or switch to Exclude Only and set standard FITS '
-                    'to Every Image while collecting calibration data.'
+                    'Repair is active and the standard FITS interval is invalid. '
+                    'Enable Save purple and following normal FITS, or use Detect '
+                    'and exclude only with standard FITS set to Every Image.'
                 )
             elif standard_fits:
                 guidance_sentences.append(
-                    'Periodic standard FITS may miss purple frames and are '
-                    'saved after repair. Turn on diagnostic saving, or switch '
-                    'to Exclude Only and set standard FITS to Every Image '
-                    'while collecting calibration data.'
+                    'Periodic standard FITS may miss purple frames and are saved '
+                    'after repair. Enable Save purple and following normal FITS, '
+                    'or use Detect and exclude only with Every Image.'
                 )
             else:
                 guidance_sentences.append(
-                    'Repair is active, but no FITS are being saved. Turn on '
-                    'diagnostic saving, or switch to Exclude Only and set '
-                    'standard FITS to Every Image while collecting calibration data.'
+                    'Repair is active, but no FITS are being saved. Enable Save '
+                    'purple and following normal FITS, or use Detect and exclude '
+                    'only with standard FITS set to Every Image.'
                 )
 
     if repair_enabled and diagnostic_fits:
         if standard_fits and fits_period == 0:
             guidance_sentences.append(
-                'Diagnostic FITS are preferred. Keep Every Image on only if '
-                'you also need standard FITS, or temporarily if diagnostic '
-                'saving misses purple frames. Using both takes the most disk space.'
+                'Calibration FITS are preferred. Keep Every Image on only if '
+                'you also need standard FITS. Using both takes more disk space.'
             )
         elif standard_fits and fits_period_valid:
             guidance_sentences.append(
-                'Diagnostic FITS are preferred. Keep periodic standard FITS '
-                'on only if you need them for another purpose. If diagnostic '
-                'saving misses purple frames, temporarily set standard FITS '
-                'saving to Every Image.'
+                'Calibration FITS are preferred. Keep periodic standard FITS '
+                'on only if you need them for another purpose.'
             )
         elif not standard_fits:
             guidance_sentences.append(
-                'Diagnostic FITS are preferred, so standard FITS can remain '
-                'off unless you need them. If diagnostic saving misses purple '
-                'frames, temporarily set standard FITS saving to Every Image.'
+                'Standard FITS can remain off unless you need them for another purpose.'
             )
 
     if preceding_fits:
         guidance_sentences.append(
-            'Preceding RAW FITS saving is on. It keeps one normal frame in '
-            'memory and saves it only when the next matching frame is purple. '
-            'This provides a before/purple/after group while using about one '
-            'extra FITS frame of memory and disk space.'
+            'The normal frame before each purple frame will also be saved. '
+            'This improves calibration and uses about one extra FITS frame of memory.'
         )
 
     if not retention_valid:
         guidance_level = 'warning'
         if guidance_title.startswith('Ready'):
             guidance_title = (
-                'FITS can be saved, but automatic search is unavailable'
+                'Saved-FITS search is unavailable'
             )
         guidance_sentences.append(
-            'Set FITS retention to at least 1 day before using Find saved '
+            'Set FITS retention to at least 1 day before using Search saved '
             'FITS; manual upload remains available.'
         )
 
@@ -693,8 +668,7 @@ def _read_manifest(session_dir):
     except (OSError, json.JSONDecodeError) as error:
         raise CalibrationSessionError(
             'This calibration run could not be read. Reload the page and '
-            'start a new calibration. If this repeats, include this message '
-            'when reporting the issue.'
+            'start a new calibration.'
         ) from error
 
 
@@ -1487,8 +1461,7 @@ def _stage_database_files_unlocked(
     ):
         raise CalibrationSessionError(
             'The calibration service could not continue this run. Reload the '
-            'page and start again. If this repeats, include this message when '
-            'reporting the issue.'
+            'page and start again.'
         )
     if manifest.get('files') or manifest.get('total_bytes'):
         raise CalibrationSessionError(
@@ -1837,8 +1810,8 @@ def _mark_queued_unlocked(
         or max_pair_seconds > 3600
     ):
         raise CalibrationSessionError(
-            'Enter a maximum time between 1 and 3600 seconds. Use 90 seconds '
-            'unless the matching frames are farther apart.'
+            'Enter a maximum gap between 1 and 3600 seconds. Leave it at 90 '
+            'unless matching frames are farther apart.'
         )
 
     from . import asi676mc
@@ -2032,9 +2005,8 @@ def _result_warnings(
     )
     if bound_identity_count:
         warnings.append(
-            'No action is needed: {0} did not name the camera model. The tool '
-            'could use {1} because this upload was tied to the selected '
-            'ASI676MC. Files that named a different camera were rejected.'
+            '{0} did not name the camera model, but could still be used because '
+            'this upload was tied to the selected ASI676MC. No action is needed.'
             .format(
                 _counted_item(bound_identity_count, 'uploaded FITS file'),
                 'it' if bound_identity_count == 1 else 'they',
@@ -2045,9 +2017,8 @@ def _result_warnings(
     )
     if bound_database_count:
         warnings.append(
-            'No action is needed: {0} did not name the camera model. The tool '
-            'could use {1} because the saved database {2} belonged to the '
-            'selected ASI676MC. Files that named a different camera were rejected.'
+            '{0} did not name the camera model, but could still be used because '
+            'the saved {2} belonged to the selected ASI676MC. No action is needed.'
             .format(
                 _counted_item(bound_database_count, 'saved FITS file'),
                 'it' if bound_database_count == 1 else 'they',
@@ -2074,18 +2045,25 @@ def _result_warnings(
                     item['suggested'],
                 )
             )
-        warnings.append((
-            'Calibration is valid, but {0}: {1}. Collect more varied FITS and '
-            'calibrate again before changing {2}.'
-        ).format(
-            'this threshold has a narrow margin'
-            if len(details) == 1
-            else 'these thresholds have narrow margins',
-            '; '.join(details),
-            'this detection value'
-            if len(details) == 1
-            else 'these detection values',
-        ))
+        if report_context:
+            warnings.append((
+                'Calibration is valid, but {0}: {1}. Collect more varied FITS '
+                'and calibrate again before changing {2}.'
+            ).format(
+                'this threshold has a narrow margin'
+                if len(details) == 1
+                else 'these thresholds have narrow margins',
+                '; '.join(details),
+                'this detection value'
+                if len(details) == 1
+                else 'these detection values',
+            ))
+        else:
+            warnings.append(
+                'Some purple and normal frames were difficult to tell apart. '
+                'Leave the detection settings unchanged, collect more varied '
+                'FITS, and calibrate again before changing them.'
+            )
 
     if source_details.get('kind') == 'database':
         selection_mode = source_details.get('selection_mode')
@@ -2098,16 +2076,15 @@ def _result_warnings(
         )
         if staging_skipped:
             warnings.append(
-                'No action is needed: {0} selected FITS changed or disappeared '
-                'before analysis. The remaining files were still sufficient.'
+                '{0} selected FITS changed or disappeared before calibration. '
+                'The remaining files were enough, so no action is needed.'
                 .format(staging_skipped)
             )
         if source_details.get('selection_limit_reached'):
             if str(selection_mode or '').startswith('full_retention_'):
                 warnings.append(
-                    'No action is needed: the complete saved-FITS archive was '
-                    'searched. The temporary {0}-file or 2-GiB limit was '
-                    'reached, so the newest suitable groups that fit were used.'
+                    'The saved-FITS limit was reached, so the newest suitable '
+                    'frame groups were used. No action is needed.'
                     .format(
                         source_details.get(
                             'selection_limit_file_count',
@@ -2117,10 +2094,9 @@ def _result_warnings(
                 )
             else:
                 warnings.append(
-                    'The saved-FITS search reached its temporary {0}-file or '
-                    '2-GiB limit. The newest marked purple-frame groups were '
-                    'used first. If the result asks for more evidence, upload '
-                    'the older FITS manually.'
+                    'The saved-FITS limit was reached, so the newest purple-frame '
+                    'groups were used. If more files are requested, upload older '
+                    'FITS manually.'
                     .format(
                         source_details.get(
                             'selection_limit_file_count',
@@ -2130,10 +2106,9 @@ def _result_warnings(
                 )
         if selection_mode == 'marked_groups' and marked_groups < target_groups:
             warnings.append(
-                'No action is needed: the saved-FITS search found {0} usable '
-                'purple-frame groups instead of the requested {1}. At least '
-                'seven groups had nearby normal frames, so calibration could '
-                'continue.'
+                'The search found {0} usable frame groups instead of the '
+                'requested {1}. This was enough for calibration, so no action '
+                'is needed.'
                 .format(marked_groups, target_groups)
             )
         elif selection_mode == 'progressive_search':
@@ -2144,9 +2119,8 @@ def _result_warnings(
             )
             if quality.get('search_stopped_early'):
                 warnings.append(
-                    'No action is needed: fewer than seven ready-to-use groups '
-                    'were available, so the tool checked additional saved '
-                    'FITS. It found enough evidence after {0} of {1} files.'
+                    'The tool checked additional saved FITS and found enough '
+                    'files after checking {0} of {1}. No action is needed.'
                     .format(
                         scanned,
                         available,
@@ -2154,23 +2128,21 @@ def _result_warnings(
                 )
             else:
                 warnings.append(
-                    'No action is needed: fewer than seven ready-to-use groups '
-                    'were available, so the tool checked all {0} suitable '
-                    'saved FITS before producing this result.'.format(
+                    'The tool checked all {0} suitable saved FITS before '
+                    'producing this result. No action is needed.'.format(
                         scanned or available
                     )
                 )
         elif selection_mode == 'full_retention_population_groups':
             warnings.append(
-                'The current detection settings did not identify enough '
-                'purple frames. The tool checked all retained FITS and found '
-                'another possible purple-frame group with nearby normal frames.'
+                'The current settings did not find enough purple frames. The '
+                'tool checked all saved FITS and found another likely group '
+                'with nearby normal frames.'
             )
         elif selection_mode == 'full_retention_detector_groups':
             warnings.append(
-                'No action is needed: the tool checked all retained FITS and '
-                'prepared only the recognised purple frames and their nearby '
-                'normal references.'
+                'The tool checked all saved FITS and used the recognised purple '
+                'frames with their nearby normal frames. No action is needed.'
             )
 
     matched_count = int(quality.get('matched_bad_count', 0))
@@ -2230,12 +2202,12 @@ def _result_warnings(
                     and not triplet_coverage_complete
                 ):
                     improvement = (
-                        'more complete before/purple/after groups with '
+                        'more complete normal/purple/normal groups with '
                         'different normal frames would improve confidence'
                     )
                 elif one_sided_count and not triplet_coverage_complete:
                     improvement = (
-                        'more complete before/purple/after groups would '
+                        'more complete normal/purple/normal groups would '
                         'improve confidence'
                     )
                 else:
@@ -2470,9 +2442,8 @@ def _friendly_all_rejected_message(message_text):
     raw_counts = _rejection_summary(message_text)
     if not raw_counts:
         return (
-            'No compatible unprocessed ASI676MC RAW16 RGGB FITS were found. '
-            'Check that the files are original, unbinned RAW16 RGGB camera '
-            'FITS with valid exposure, gain, timestamp, and camera metadata.'
+            'No compatible ASI676MC FITS were found. Use original, unprocessed '
+            'RAW16 FITS from the selected camera.'
         )
     grouped = {}
     for reason, count in raw_counts.items():
@@ -2513,9 +2484,8 @@ def _friendly_threshold_analysis_failure(message_text):
         )
     if 'do not vary in all three detector ratios' in lowered:
         return (
-            'The files do not show two distinguishable groups across all '
-            'three detector measurements. Include genuine purple and normal '
-            'frames from the same camera.'
+            'The files do not show two clear groups. Include genuine purple and '
+            'normal frames from the same camera.'
         )
     if (
         'do not form two stable populations' in lowered
@@ -2524,8 +2494,8 @@ def _friendly_threshold_analysis_failure(message_text):
         or 'fall in the lower-ratio population' in lowered
     ):
         return (
-            'The measured ratios do not form two clean normal and purple '
-            'groups. Check the selected files and add clearer examples of both.'
+            'The files do not form clear normal and purple groups. Check the '
+            'selection and add clearer examples of both.'
         )
     if 'does not have the required clean gap' in lowered:
         label = message_text.split(' does not ', 1)[0].strip()
@@ -2539,14 +2509,15 @@ def _friendly_threshold_analysis_failure(message_text):
         return (
             'The current thresholds already separate the two measured groups, '
             'so threshold changes do not explain the detector result. Confirm '
-            'that the higher-ratio files show the actual purple-frame fault.'
+            'that the files listed as likely purple show the actual purple-frame '
+            'fault.'
         )
     if 'matched purple frames found' in lowered:
         return _friendly_failure_message(message_text)
     if 'no compatible nearby normal' in lowered:
         return (
             'Some likely purple frames have no compatible normal frame nearby. '
-            'Include complete good/purple/good sequences.'
+            'Include complete normal/purple/normal sequences.'
         )
     if 'normal/purple ratio' in lowered:
         return (
@@ -2584,9 +2555,8 @@ def _friendly_failure_message(message):
             )
         if 'no safe purple/normal population' in lowered:
             return (
-                'Saved-FITS discovery checked the complete retention period '
-                'but the detector ratios did not form a safe purple/normal '
-                'population. No settings were changed.'
+                'All saved FITS were checked, but the tool could not reliably '
+                'separate normal and purple frames. No settings were changed.'
             )
         return (
             'Saved-FITS discovery checked the complete retention period but '
@@ -2628,7 +2598,7 @@ def _friendly_failure_message(message):
     if 'detected purple frames have no compatible nearby normal' in lowered:
         return (
             'Some detected purple frames have no compatible normal FITS '
-            'nearby. Include complete good/purple/good sequences or increase '
+            'nearby. Include complete normal/purple/normal sequences or increase '
             'the maximum separation only if those frames belong together.'
         )
     if 'cover only one exposure' in lowered:
@@ -2653,10 +2623,9 @@ def _friendly_failure_message(message):
         )
     if 'no fits matched the configured purple-frame detector' in lowered:
         return (
-            'No FITS matched the configured purple-frame detector. Confirm '
-            'that the collection contains untouched purple frames. If it '
-            'does, this camera may need different detection thresholds in '
-            'Image Settings before calibration can identify the failures.'
+            'The current settings did not recognise any purple frames. Check '
+            'that the collection contains untouched purple frames. If it does, '
+            'the detection settings may need adjustment.'
         )
     if 'no fits remained classified as normal' in lowered:
         return (
@@ -2700,7 +2669,7 @@ def _friendly_failure_message(message):
     ):
         return (
             'The collection does not contain enough stable bright daylight '
-            'highlights. Add brighter daylight pairs or good/purple/good groups.'
+            'areas. Add brighter normal/purple/normal frame groups.'
         )
     if 'has usable samples in only' in lowered:
         return (
@@ -2709,9 +2678,9 @@ def _friendly_failure_message(message):
         )
     if 'estimate' in lowered and 'outside the plausible asi676mc range' in lowered:
         return (
-            'The fitted colour gain is outside the safe ASI676MC range. Check '
-            'that the files show the purple row-shift fault and use cleaner '
-            'good/purple/good daylight sequences.'
+            'The calculated colour adjustment is outside the safe ASI676MC '
+            'range. Check the files and use cleaner normal/purple/normal '
+            'daylight sequences.'
         )
     if 'varies too much between pairs' in lowered:
         return (
@@ -2721,8 +2690,8 @@ def _friendly_failure_message(message):
         )
     if 'best clipped-highlight fit score' in lowered:
         return (
-            'The bright-highlight fit was not consistent enough to use safely. '
-            'Collect more stable daylight good/purple/good sequences with '
+            'The bright areas were not consistent enough to use safely. '
+            'Collect more stable daylight normal/purple/normal sequences with '
             'visible highlights.'
         )
     if (
@@ -2756,14 +2725,14 @@ def _friendly_failure_message(message):
         or 'repair validation failed' in lowered
     ):
         return (
-            'The derived values did not pass the final safety checks, so no '
+            'The recommended values did not pass the final safety checks, so no '
             'result was produced. Try a larger, cleaner, more varied collection.'
         )
     if 'queue' in lowered and 'calibration' in lowered:
         return (
             'Calibration could not start because the calibration service is '
             'unavailable. Wait a minute and try again. If this repeats, '
-            'restart indi-allsky or include this message when reporting the issue.'
+            'restart indi-allsky.'
         )
     if 'session' in lowered and (
         'not found' in lowered
@@ -2775,9 +2744,8 @@ def _friendly_failure_message(message):
             'a new calibration.'
         )
     return (
-        'An unexpected error occurred while checking the FITS. Try again with '
-        'the original unprocessed FITS. If the problem repeats, include this '
-        'message and the selected input method when reporting the issue.'
+        'Calibration could not check these FITS. Try again with the original, '
+        'unprocessed FITS.'
     )
 
 
@@ -2788,7 +2756,7 @@ def task_failure_message(message, limit=255):
         return friendly
     fallback = (
         'Calibration could not use the selected evidence. Open Tools > '
-        'ASI676MC Calibration for the complete grouped reasons and next steps.'
+        'Fix ASI676MC purple frames for the complete reasons and next steps.'
     )
     return fallback[:limit]
 
@@ -2926,7 +2894,7 @@ def compare_result_to_configuration(result, repair_config):
         return {
             'status': 'exact',
             'message': (
-                'The derived values already match the current configuration '
+                'The recommended values already match the current settings '
                 'exactly. No update is needed.'
             ),
             'configured_values': configured_values,
@@ -2936,8 +2904,8 @@ def compare_result_to_configuration(result, repair_config):
         return {
             'status': 'equivalent',
             'message': (
-                'Result effectively matches the current configuration. '
-                'Applying it is unlikely to produce a visible change.'
+                'The recommended values are effectively the same as the current '
+                'settings. Saving them is unlikely to produce a visible change.'
             ),
             'configured_values': configured_values,
             'differing_keys': [],
@@ -3043,7 +3011,7 @@ def format_threshold_suggestion_report(payload, manifest):
         ('Likely purple frames skipped without a reference',
          quality.get('unmatched_bad_count', 0)),
         ('Distinct normal references', quality['unique_good_count']),
-        ('Good/purple/good groups', '{0} of {1}'.format(
+        ('Normal/purple/normal groups', '{0} of {1}'.format(
             quality['two_sided_count'], quality['pair_count']
         )),
         ('Exposure settings represented', len(quality['exposure_levels'])),
@@ -3086,8 +3054,8 @@ def format_threshold_suggestion_report(payload, manifest):
         _append_report_paragraph(
             lines,
             'Review these filenames and capture times before saving threshold '
-            'changes. The higher-ratio group must be the actual ASI676MC '
-            'purple-frame failure, not a second ordinary lighting regime.',
+            'changes. The files listed as likely purple must show the actual '
+            'ASI676MC purple-frame failure, not a second ordinary lighting regime.',
         )
         for item in population_evidence:
             lines.append(
@@ -3112,7 +3080,7 @@ def format_threshold_suggestion_report(payload, manifest):
     )
     if source_kind == 'database':
         lines.extend((
-            'Method: Saved FITS search on the ASI676MC Calibration page',
+            'Method: Saved FITS search in Tools > Fix ASI676MC purple frames',
             'Camera: {0}'.format(source_details.get('camera_name', 'Unknown')),
             'Selection preference: Newest compatible FITS with required '
             'exposure diversity',
@@ -3194,7 +3162,7 @@ def format_threshold_suggestion_report(payload, manifest):
         _append_report_paragraph(lines, source_explanation)
     elif source_kind == 'upload':
         lines.extend((
-            'Method: Manual FITS upload on the ASI676MC Calibration page',
+            'Method: Manual FITS upload in Tools > Fix ASI676MC purple frames',
             'FITS inspected: {0}'.format(selected_count),
         ))
         _append_report_paragraph(
@@ -3234,7 +3202,7 @@ def format_threshold_suggestion_report(payload, manifest):
     _append_report_section(lines, 'About this report')
     _append_report_paragraph(
         lines,
-        'This is a human-readable record from Tools > ASI676MC Calibration. '
+        'This is a human-readable record from Tools > Fix ASI676MC purple frames. '
         'It is not a configuration file and cannot be imported. Threshold '
         'suggestions are intentionally separate from the seven repair values; '
         'saving them never activates repair or replaces repair constants.',
@@ -3291,10 +3259,10 @@ def format_integrated_report(payload, manifest):
     _append_report_section(lines, 'Recommended calibration values')
     _append_report_paragraph(
         lines,
-        'Review these values under Tools > ASI676MC Calibration. A user who '
-        'can save settings on the Config page can select Apply values and '
-        'reload. Alternatively, enter the values manually under Config > '
-        'Image > ASI676MC RAW16 Purple-frame Handling.',
+        'Review these values under Tools > Fix ASI676MC purple frames. A user who '
+        'can save settings on the Config page can select Save calibration values. '
+        'Alternatively, enter the values manually under Config > '
+        'Image > ASI676MC purple-frame handling.',
     )
 
     configured_values = comparison.get('configured_values', {})
@@ -3384,7 +3352,7 @@ def format_integrated_report(payload, manifest):
     )
     if source_kind == 'database':
         lines.extend((
-            'Method: Saved FITS search on the ASI676MC Calibration page',
+            'Method: Saved FITS search in Tools > Fix ASI676MC purple frames',
             'Camera: {0}'.format(source_details.get('camera_name', 'Unknown')),
             'Selection preference: Newest compatible FITS with required '
             'exposure diversity',
@@ -3480,7 +3448,7 @@ def format_integrated_report(payload, manifest):
         _append_report_paragraph(lines, source_explanation)
     elif source_kind == 'upload':
         lines.extend((
-            'Method: Manual FITS upload on the ASI676MC Calibration page',
+            'Method: Manual FITS upload in Tools > Fix ASI676MC purple frames',
             'FITS selected: {0}'.format(selected_file_count),
         ))
         _append_report_paragraph(
@@ -3490,7 +3458,7 @@ def format_integrated_report(payload, manifest):
         )
     else:
         lines.extend((
-            'Method: ASI676MC Calibration page',
+            'Method: Tools > Fix ASI676MC purple frames',
             'FITS selected: {0}'.format(selected_file_count),
         ))
         _append_report_paragraph(
@@ -3506,7 +3474,7 @@ def format_integrated_report(payload, manifest):
         ('Distinct normal references', quality['unique_good_count']),
         ('Normal-to-purple ratio',
          '{0:.2f}:1'.format(quality['good_bad_ratio'])),
-        ('Good/purple/good groups', '{0} of {1}'.format(
+        ('Normal/purple/normal groups', '{0} of {1}'.format(
             quality['two_sided_count'], quality['pair_count']
         )),
         ('Exposure settings represented', len(quality['exposure_levels'])),
@@ -3701,7 +3669,7 @@ def format_integrated_report(payload, manifest):
     _append_report_section(lines, 'About this report')
     _append_report_paragraph(
         lines,
-        'This is a human-readable record from Tools > ASI676MC Calibration, '
+        'This is a human-readable record from Tools > Fix ASI676MC purple frames, '
         'not a configuration file. It cannot be imported into indi-allsky.',
     )
     _append_report_paragraph(

@@ -1013,16 +1013,16 @@ class ImageProcessor(object):
         if status == 'validation_failed':
             item = 'Asi676mcRepairFailed'
             notification = (
-                'ASI676MC purple-frame repair validation failed. The original '
-                'frame was retained and will be excluded from standard '
-                'timelapses. Collect diagnostic FITS and recalibrate.'
+                'ASI676MC purple-frame repair failed. The original frame was '
+                'kept unchanged and left out of standard timelapses. Open '
+                'Tools > Fix ASI676MC purple frames and calibrate again.'
             )
         elif status == 'skipped':
             item = 'Asi676mcRepairSkipped'
             notification = (
                 'ASI676MC purple-frame handling was skipped: {0}. The frame '
-                'continued without purple-frame handling; review the capture '
-                'format and repair settings.'
+                'was kept unchanged. If this repeats, check that the camera '
+                'uses RAW16, 1x1 binning, and RGGB in Image Settings.'
             ).format(str(reason or 'no reason was recorded'))
         else:
             return

@@ -1314,7 +1314,7 @@ def threshold_suggestion_payload(
                 record.timestamp,
                 tz=timezone.utc,
             ).isoformat(),
-            'population': 'higher ratio' if record.is_bad else 'lower ratio',
+            'population': 'Likely purple' if record.is_bad else 'Likely normal',
             'purple_ratio': record.signature['purple_ratio'],
             'red_side_ratio': record.signature['red_side_ratio'],
             'blue_side_ratio': record.signature['blue_side_ratio'],

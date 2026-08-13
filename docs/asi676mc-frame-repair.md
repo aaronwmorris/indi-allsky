@@ -1,5 +1,15 @@
 # ASI676MC purple-frame handling and calibration
 
+## Quick start
+
+1. In Image Settings, turn on **Enable ASI676MC purple-frame handling**.
+2. Leave **Detect and exclude only** enabled.
+3. Enable **Save purple and following normal FITS for calibration** and save.
+4. After at least seven purple frames have been collected, open **Tools > Fix
+   ASI676MC purple frames** and run calibration.
+5. Save the recommended values. Then turn off **Detect and exclude only** in
+   Image Settings to begin repairing purple frames.
+
 ## Purpose and safety boundary
 
 Some ZWO ASI676MC cameras occasionally deliver a RAW16 RGGB mosaic with a
@@ -7,7 +17,7 @@ strong purple cast. This feature detects that specific failure, can flag the
 affected frame for exclusion without modifying it, and can optionally repair
 it before the normal indi-allsky image pipeline continues.
 
-Leave **Enable ASI676MC Purple-frame Handling** off unless the camera actually
+Leave **Enable ASI676MC purple-frame handling** off unless the camera actually
 produces this failure. The implementation is deliberately narrow:
 
 - the master option must be enabled;
@@ -22,15 +32,15 @@ reason is recorded in the image metadata and written to the log. Other camera
 models remain outside this feature and are mentioned only at debug log level;
 they do not receive ASI676MC repair metadata.
 
-New configurations default to **Exclude Only**. This mode detects and flags a
+New configurations default to **Detect and exclude only**. This mode detects and flags a
 purple frame, preserves its original pixels, and excludes it from standard
-timelapses. Pixel repair begins only after the user explicitly disables Exclude
-Only.
+timelapses. Pixel repair begins only after the user explicitly disables
+**Detect and exclude only**.
 
 The existing indi-allsky `exclude` flag is not honored by every derived
 timelapse-style output. This feature deliberately uses that standard flag
 without changing its wider propagation; non-standard outputs may still include
-an Exclude Only frame. Within the standard image path, excluded and
+an exclusion-only frame. Within the standard image path, excluded and
 validation-failed frames are also removed from stacking history and ignored by
 automatic exposure control, so they cannot contaminate the next normal image.
 
@@ -47,7 +57,7 @@ The image worker follows this sequence:
 2. Sample the four RGGB parities and calculate the purple, red-side, and
    blue-side ratios.
 3. Classify the frame as normal or purple using the configured thresholds.
-4. In Exclude Only mode, retain a purple frame unchanged and mark it excluded.
+4. In Detect and exclude only mode, retain a purple frame unchanged and mark it excluded.
 5. In repair mode, repair a temporary copy of a purple frame.
 6. Recalculate the signature on the temporary copy.
 7. Commit the copy only if it no longer matches the failure signature.
@@ -61,7 +71,7 @@ The status stored under `asi676mc_repair_status` is one of:
 | Status | Meaning |
 | --- | --- |
 | `normal` | The frame did not match the purple-frame signature. |
-| `excluded` | A purple frame was detected in Exclude Only mode; pixels were retained and the frame was excluded from standard timelapses. |
+| `excluded` | A purple frame was detected in Detect and exclude only mode; pixels were retained and the frame was excluded from standard timelapses. |
 | `repaired` | A purple frame was repaired and passed post-repair validation. |
 | `validation_failed` | Repair output still matched the failure; the original frame was retained and excluded from standard timelapses. |
 | `skipped` | The camera or RAW layout did not meet the safety boundary, or the configuration was invalid. |
@@ -72,7 +82,7 @@ text. Gallery decoration is optional and does not affect processing.
 A skipped check or failed post-repair validation also creates a Camera
 notification. The first occurrence appears immediately; identical notification
 types are suppressed for two hours so an incompatible capture stream cannot
-flood the notification list. Normal frames, expected Exclude Only detections,
+flood the notification list. Normal frames, expected exclusion-only detections,
 and successful repairs remain visible through their usual logs and gallery
 metadata without generating notifications.
 
@@ -104,12 +114,12 @@ and filenames do not decide inferred populations.
 
 Threshold discovery is a preliminary outcome, not calibration. It derives no
 repair constants and changes no settings during analysis. The user must confirm
-that the higher-ratio population represents the expected purple-frame failure.
-A user who can save settings on the Config page can then select **Apply
-thresholds and reload**, or enter only the recommended thresholds in Image
-Settings, and rerun calibration. Saving is blocked until the user confirms,
-after reviewing listed filenames and capture times, that the higher-ratio
-population is the actual failure rather than an ordinary scene regime.
+that the files listed as likely purple show the expected purple-frame failure.
+A user who can save settings on the Config page can then select **Save detection
+settings**, or enter only the recommended thresholds in Image Settings, and
+rerun calibration. Saving is blocked until the user confirms, after reviewing
+the listed filenames and capture times, that the likely purple files show the
+actual failure rather than an ordinary scene regime.
 A configured threshold already inside an observed safe gap is retained rather
 than replaced by a cosmetically different midpoint. Overlapping or
 inconsistently ordered populations produce an explanation instead of an unsafe
@@ -140,8 +150,8 @@ image-correction algorithm to drift out of sync.
 ## Configuration reference
 
 All keys live below `IMAGE_ASI676MC_REPAIR`.
-In the web interface they appear together in the dedicated **ASI676MC RAW16
-Purple-frame Handling** card under **Config > Image**. The card follows the
+In the web interface they appear together in the dedicated **ASI676MC
+purple-frame handling** card under **Config > Image**. The card follows the
 same responsive layout, controls, validation, and save permissions as the
 rest of the current configuration interface.
 
@@ -150,7 +160,7 @@ rest of the current configuration interface.
 | `ENABLE` | `False` | Master safety switch. Leave off for unaffected cameras. |
 | `EXCLUDE_ONLY` | `True` | Detect, flag, and exclude purple frames without changing pixels. Disable only after reviewing calibration. |
 | `LOG_EVERY_FRAME` | `False` | Log normal-frame checks at info level instead of debug level. Purple frames and failures are always logged prominently. |
-| `GALLERY_ENABLE` | `True` | Show repair/exclusion status in the gallery and enable repaired, purple-frame-excluded, and validation-failed filters. |
+| `GALLERY_ENABLE` | `True` | Show repair/exclusion status in the gallery and enable repaired, purple-frame-excluded, and validation-failed filters. Turning off the master feature also turns this option off. |
 | `SAVE_DIAGNOSTIC_FITS` | `False` | Save the untouched purple frame and its immediately following compatible frame as the preferred low-disk calibration evidence. A successor with different capture/layout metadata breaks the group and is not retained as its reference. |
 | `SAVE_PRECEDING_FITS` | `False` | Also cache the immediately preceding normal FITS and save it when the next compatible frame is purple. Requires the parent diagnostic option. |
 | `PURPLE_RATIO_THRESHOLD` | `1.5` | Combined purple signature threshold. |
@@ -185,12 +195,12 @@ for another purpose.
 
 ### Low-disk diagnostic capture
 
-Enable **Save Bad and Following RAW FITS**. For each detected purple frame,
+Enable **Save purple and following normal FITS for calibration**. For each detected purple frame,
 indi-allsky copies the original camera FITS before the temporary repaired array
 can affect later processing, then saves the immediately following ingested
 frame. This mode adds no persistent full-frame memory cache.
 
-Optionally enable **Also Save Preceding RAW FITS**. The image worker then keeps
+Optionally enable **Also save the preceding normal FITS**. The image worker then keeps
 up to one untouched, normal FITS byte string per active camera in memory. It
 writes that cached frame only if the next compatible frame is purple. If the
 normal frame was already saved as the following member of an earlier group,
@@ -224,7 +234,7 @@ FITS saving to **Every Image** to collect complete normal/purple/normal
 sequences. A periodic interval cannot reliably capture a randomly occurring
 failure.
 
-In **Exclude Only** mode, standard FITS still contain the original mosaic and
+In **Detect and exclude only** mode, standard FITS still contain the original mosaic and
 can therefore provide this fallback evidence.
 
 When repair is active, standard FITS are written from the already repaired
@@ -234,7 +244,7 @@ option if untouched purple evidence is required.
 This also applies when **Save FITS Pre-Calibration** is enabled. ASI676MC
 handling runs immediately after the camera FITS is opened, before the optional
 pre-dark save point; "pre-calibration" refers to dark-frame calibration, not to
-purple-frame handling. In Exclude Only mode, both standard save paths retain
+purple-frame handling. In Detect and exclude only mode, both standard save paths retain
 the original mosaic.
 
 The settings and calibration pages display a combined capture outlook based on
@@ -275,8 +285,8 @@ status detail, and cancel action. The page scrolls to that view once, but later
 polling updates do not move the page again. Successful completion replaces the
 progress view with the result. Cancellation restores the original input
 controls. A failed analysis remains on the compact progress view, where the
-complete error is visible and the cancel action is replaced by **Reset / try
-again**. Reset removes the finished failed session and restores the inputs.
+complete error is visible and the cancel action is replaced by **Try again**.
+That action removes the finished failed session and restores the inputs.
 Reloading the page while a retained calibration is queued, running, or waiting
 to be reset opens directly in its current compact view.
 
@@ -336,7 +346,7 @@ is important when a camera's failure ratios fall outside the configured
 detector thresholds. The only data deliberately excluded before inspection is
 a standard FITS associated with a successfully repaired frame, because it
 contains the corrected mosaic. Untouched diagnostic RAW FITS and standard FITS
-from Exclude Only remain eligible. Pairs and triplets can be mixed in one run.
+from Detect and exclude only remain eligible. Pairs and triplets can be mixed in one run.
 
 Newly saved FITS database rows retain the three measured detector ratios as
 small, threshold-independent metadata. The background search can reclassify
@@ -361,7 +371,7 @@ change after selection. If cleanup or deletion removes an individual selected
 FITS between discovery and staging, that file is skipped and the remaining
 evidence is still evaluated instead of discarding the whole staged set. The
 browser reserves a camera-bound private session
-before discovery begins, so **Cancel saved-FITS search** remains available
+before discovery begins, so **Cancel search** remains available
 throughout database inspection and staging. Cancellation removes only the
 session's private hard links, copies, or partial copy. Source FITS pixels and
 headers are never changed. The only durable discovery update is the small
@@ -425,7 +435,7 @@ A successful results page shows:
   deliberately small tolerance.
 
 Two-sided evidence is considered complete enough when at least 90 percent of
-the matched purple frames belong to good/purple/good triplets. Above that
+the matched purple frames belong to normal/purple/normal triplets. Above that
 guideline, no triplet-completeness note is shown because the remaining
 one-sided evidence is unlikely to change the calibration. Lower coverage keeps
 the plain-language recommendation to gather more complete groups. Reused
@@ -434,8 +444,8 @@ normal references remain a separate confidence warning.
 A preliminary threshold result instead shows current and suggested detection
 values, each observed safe interval, population and adjacency evidence, and a
 prominent instruction to review and rerun. The repair-value table is hidden.
-For a user who can save settings on the Config page, **Apply thresholds and
-reload** saves only fields marked Change recommended; it never saves repair
+For a user who can save settings on the Config page, **Save detection settings**
+saves only fields marked Change recommended; it never saves repair
 constants from a preliminary result. The result lists population filenames,
 capture times, and ratios, and requires explicit higher-population
 confirmation.
@@ -460,8 +470,8 @@ to the indi-allsky log. The background task list uses the same safe wording;
 when its short status field cannot hold every grouped reason, it directs the
 user back to the retained calibration failure view.
 
-A user who can save settings on the Config page can select **Apply values and
-reload**. The server writes only the seven derived keys, using the same
+A user who can save settings on the Config page can select **Save calibration
+values**. The server writes only the seven derived keys, using the same
 configuration-save mechanism as the settings page, then queues an application
 reload. It refuses the update if the configuration or bound ASI676MC identity
 changed after the run began. Operational switches such as Enable and Exclude
@@ -477,7 +487,7 @@ from overwriting each other's run. After one run is cleared, the next retained
 run is restored automatically. Transient polling failures retry without
 discarding the handle. The browser stores no FITS data or calibration values.
 Every result, report, discard, and apply request rechecks ownership and camera
-binding. **Reset / recalibrate** discards the retained result.
+binding. **Start over** discards the retained result.
 
 ## Session storage and cleanup
 
@@ -515,22 +525,22 @@ indi-allsky FITS expiration behavior.
 ## User workflow
 
 1. Confirm that the ASI676MC actually produces the purple-frame failure.
-2. Enable purple-frame handling and leave Exclude Only enabled.
-3. Prefer low-disk diagnostic FITS. Leave standard FITS off unless they are
+2. Enable purple-frame handling and leave **Detect and exclude only** enabled.
+3. Enable **Save purple and following normal FITS for calibration**. Leave standard FITS off unless they are
    independently wanted; use temporary standard FITS saving for every image
    only when diagnostics do not catch the purple frame. Enable preceding-frame
    caching only when the additional memory and disk use are acceptable.
 4. Collect several purple events across at least two exposure levels.
-5. Open **Tools > ASI676MC Calibration** as a user who can save settings on the
+5. Open **Tools > Fix ASI676MC purple frames** as a user who can save settings on the
    Config page.
 6. Discover saved FITS or select a multi-file upload.
-7. If preliminary threshold suggestions appear, verify the populations, apply
+7. If recommended detection settings appear, verify the likely purple files, apply
    or manually edit only the recommended detection fields, reset the tool, and
    rerun.
-8. Review the evidence summary, warnings, derived values, and current values.
+8. Review the file summary, notes, recommended values, and current values.
 9. Download the report if an audit copy is useful.
 10. Apply the result only after it looks credible.
-11. Disable Exclude Only to activate repair, then monitor gallery status and
+11. Disable **Detect and exclude only** to activate repair, then monitor gallery status and
     logs for validation failures.
 12. Return FITS-saving options to the desired long-term disk-use policy.
 
@@ -547,7 +557,7 @@ disabled, the tool follows the same open access policy as Config.
 The current settings describe future evidence only. Existing purple frames may
 have expired or may never have been saved as untouched FITS. Prefer diagnostic
 FITS, collect new events, and try again. If diagnostics do not catch the purple
-frame, use Exclude Only plus standard FITS for every image temporarily.
+frame, use **Detect and exclude only** plus standard FITS for every image temporarily.
 
 **Files upload but calibration rejects the collection**
 
@@ -558,13 +568,13 @@ for a missing minimum. Default indi-allsky standard FITS with only the generic
 `INSTRUME=indi-allsky` camera header are accepted through either manual upload
 or automatic saved-FITS discovery when that path is bound to the selected
 ASI676MC; an explicit different-camera header is not. The failure remains
-beside the completed progress bar until **Reset / try again** is selected. The
+beside the completed progress bar until **Try again** is selected. The
 message states the known reason and what to check; if several requirements
 failed, it groups the affected file counts. If the error names a detection
 ratio, compare the reported likely-normal and likely-purple populations. When
 all three ratios have strong gaps, the tool may show preliminary threshold
 suggestions instead of failing. Change a recommended threshold only after
-confirming that the higher-ratio files are the expected camera failure, then
+confirming that the files listed as likely purple show the expected camera failure, then
 rerun calibration; the tool never changes detection thresholds during
 analysis. A user who can save Config may save the recommended subset after
 reviewing it.
@@ -591,9 +601,9 @@ recalibrate; do not loosen detection thresholds merely to suppress the warning.
 
 | File | Responsibility |
 | --- | --- |
-| `indi_allsky/config.py` | Conservative new-install defaults, including disabled handling and Exclude Only mode. |
+| `indi_allsky/config.py` | Conservative new-install defaults, including disabled handling and Detect and exclude only mode. |
 | `indi_allsky/asi676mc.py` | Authoritative settings normalization, signature detection, repair, validation, metadata, and diagnostic-role helpers. |
-| `indi_allsky/processing.py` | Runtime eligibility checks, Exclude Only behavior, repair invocation, logging, and actionable notifications. |
+| `indi_allsky/processing.py` | Runtime eligibility checks, Detect and exclude only behavior, repair invocation, logging, and actionable notifications. |
 | `indi_allsky/image.py` | Untouched diagnostic FITS capture, optional preceding-frame cache, database records, and rendered-image metadata. |
 | `indi_allsky/asi676mc_calibration_engine.py` | FITS inspection, matching, evidence policy, numerical fitting, and validation through the live repair path. |
 | `indi_allsky/asi676mc_calibration.py` | Private sessions, uploads, database discovery/staging, cleanup, user guidance, result comparison, and text reports. |

@@ -4646,24 +4646,24 @@ class IndiAllskyConfigForm(FlaskForm):
     STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY   = IntegerField('Mask Opacity %', validators=[IMAGE_CIRCLE_MASK__OPACITY_validator])
     # Keep the complete model-specific configuration surface together so new
     # controls cannot silently miss the Config load/save wiring below.
-    IMAGE_ASI676MC_REPAIR__ENABLE                      = BooleanField('Enable ASI676MC Purple-frame Handling')
-    IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY                = BooleanField('Exclude Only (Do Not Repair)')
-    IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME             = BooleanField('Log Every ASI676MC Frame')
-    IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE              = BooleanField('Show Purple-frame Status in Gallery')
-    IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS         = BooleanField('Save Bad and Following RAW FITS')
-    IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS          = BooleanField('Also Save Preceding RAW FITS')
-    IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD      = FloatField('Overall Purple-frame Threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator], widget=NumberInput(step=0.01))
-    IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD    = FloatField('Red-side Purple-frame Threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator], widget=NumberInput(step=0.01))
-    IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD   = FloatField('Blue-side Purple-frame Threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator], widget=NumberInput(step=0.01))
-    IMAGE_ASI676MC_REPAIR__SAMPLE_STEP                 = IntegerField('Detection Sample Step', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__SAMPLE_STEP_validator])
-    IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD = IntegerField('Clipped-highlight Brightness Level', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD_validator])
-    IMAGE_ASI676MC_REPAIR__GAIN_R                      = FloatField('Red Repair Gain', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
-    IMAGE_ASI676MC_REPAIR__GAIN_G1                     = FloatField('First Green Repair Gain', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
-    IMAGE_ASI676MC_REPAIR__GAIN_G2                     = FloatField('Second Green Repair Gain', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
-    IMAGE_ASI676MC_REPAIR__GAIN_B                      = FloatField('Blue Repair Gain', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
-    IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO = FloatField('Highlight Correction Start', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_RATIO_validator], widget=NumberInput(step=0.01))
-    IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO   = FloatField('Highlight Correction End', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO_validator], widget=NumberInput(step=0.01))
-    IMAGE_ASI676MC_REPAIR__CHUNK_ROWS                  = IntegerField('Rows Processed at Once', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__CHUNK_ROWS_validator])
+    IMAGE_ASI676MC_REPAIR__ENABLE                      = BooleanField('Enable ASI676MC purple-frame handling')
+    IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY                = BooleanField('Detect and exclude only')
+    IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME             = BooleanField('Log every ASI676MC frame')
+    IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE              = BooleanField('Show purple-frame status in gallery')
+    IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS         = BooleanField('Save purple and following normal FITS for calibration')
+    IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS          = BooleanField('Also save the preceding normal FITS')
+    IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD      = FloatField('Overall purple-frame threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator], widget=NumberInput(step=0.01))
+    IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD    = FloatField('Red-side purple-frame threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator], widget=NumberInput(step=0.01))
+    IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD   = FloatField('Blue-side purple-frame threshold', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__RATIO_THRESHOLD_validator], widget=NumberInput(step=0.01))
+    IMAGE_ASI676MC_REPAIR__SAMPLE_STEP                 = IntegerField('Detection sample step', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__SAMPLE_STEP_validator])
+    IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD = IntegerField('Clipped-highlight brightness level', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD_validator])
+    IMAGE_ASI676MC_REPAIR__GAIN_R                      = FloatField('Red repair gain', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
+    IMAGE_ASI676MC_REPAIR__GAIN_G1                     = FloatField('First green repair gain', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
+    IMAGE_ASI676MC_REPAIR__GAIN_G2                     = FloatField('Second green repair gain', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
+    IMAGE_ASI676MC_REPAIR__GAIN_B                      = FloatField('Blue repair gain', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__GAIN_validator], widget=NumberInput(step=0.00001))
+    IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO = FloatField('Highlight correction start', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_RATIO_validator], widget=NumberInput(step=0.01))
+    IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO   = FloatField('Highlight correction end', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO_validator], widget=NumberInput(step=0.01))
+    IMAGE_ASI676MC_REPAIR__CHUNK_ROWS                  = IntegerField('Rows processed at once', validators=[DataRequired(), IMAGE_ASI676MC_REPAIR__CHUNK_ROWS_validator])
     IMAGE_CALIBRATE_DARK             = BooleanField('Apply Dark Calibration Frames')
     IMAGE_CALIBRATE_BPM              = BooleanField('Apply Bad Pixel Map Frames')
     IMAGE_CALIBRATE_FIX_HOLES        = BooleanField('Fix Calibration Pin Holes')
@@ -6867,13 +6867,13 @@ class IndiAllskyAsi676mcCalibrationForm(FlaskForm):
         validators=[DataRequired()],
     )
     MAX_PAIR_SECONDS = FloatField(
-        'Maximum time between purple and normal FITS (seconds)',
+        'Maximum gap between matching frames (seconds)',
         default=90.0,
         validators=[DataRequired(), NumberRange(min=1.0, max=3600.0)],
         widget=NumberInput(step=1.0),
     )
     DATABASE_GROUP_LIMIT = IntegerField(
-        'Purple-frame groups to find',
+        'Frame groups to use',
         default=20,
         validators=[NumberRange(
             min=asi676mc_calibration.DATABASE_GROUP_MIN,
@@ -7593,7 +7593,7 @@ class IndiAllskyGalleryViewer(FlaskForm):
     FILTER_DETECTIONS    = BooleanField('Detections')
     FILTER_ASI676MC_REPAIRED = BooleanField('Purple frame repaired')
     FILTER_ASI676MC_EXCLUDED = BooleanField('Purple frame excluded')
-    FILTER_ASI676MC_FAILED = BooleanField('Repair validation failed')
+    FILTER_ASI676MC_FAILED = BooleanField('Purple-frame repair failed')
 
 
     def __init__(self, *args, **kwargs):
