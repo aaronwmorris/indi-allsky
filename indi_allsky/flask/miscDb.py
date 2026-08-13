@@ -302,6 +302,7 @@ class miscDb(object):
 
         try:
             from ..events import event_manager
+            from ..sensors_mapping import get_latest_sensors_payload
             event_manager.broadcast('exposure_complete', {
                 'id': image.id,
                 'filename': str(image.filename),
@@ -316,8 +317,10 @@ class miscDb(object):
                 'sqm': image.sqm,
                 'stars': image.stars,
             })
+            sensor_payload = get_latest_sensors_payload()
+            event_manager.broadcast('sensor_update', sensor_payload)
         except Exception as ev_err:
-            logger.error('Error broadcasting exposure_complete event: %s', ev_err)
+            logger.error('Error broadcasting exposure events: %s', ev_err)
 
         return image
 

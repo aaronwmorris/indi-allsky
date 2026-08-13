@@ -12475,12 +12475,14 @@ class WsControlView(BaseView):
                                 "timestamp": time.time(),
                                 "data": {"action": msg_type, "status": "queued", "task_id": task.id}
                             }, default=str))
-                    elif msg_type in ('pause', 'unpause', 'generate_keogram', 'generate_timelapse', 'generate_startrail', 'trigger_darks'):
+                    elif msg_type in ('pause', 'unpause', 'reload_config', 'reload', 'generate_keogram', 'generate_timelapse', 'generate_startrail', 'trigger_darks'):
                         from .models import IndiAllSkyDbTaskQueueTable, TaskQueueQueue, TaskQueueState
                         
                         task_name_map = {
                             'pause': 'pause',
                             'unpause': 'unpause',
+                            'reload_config': 'reload',
+                            'reload': 'reload',
                             'generate_keogram': 'keogram',
                             'generate_timelapse': 'video',
                             'generate_startrail': 'startrail',
@@ -12501,37 +12503,43 @@ class WsControlView(BaseView):
                             "timestamp": time.time(),
                             "data": {"action": msg_type, "status": "queued", "task_id": task.id}
                         }, default=str))
-                    elif msg_type == 'restart_service':
+                    elif msg_type in ('restart_service', 'start_service', 'stop_service'):
                         service_name = msg.get('service', 'indi-allsky')
+                        unit_map = {
+                            'indiserver': app.config.get('INDISERVER_SERVICE_NAME', 'indiserver.service'),
+                            'indi-allsky': app.config.get('ALLSKY_SERVICE_NAME', 'indi-allsky.service'),
+                            'allsky': app.config.get('ALLSKY_SERVICE_NAME', 'indi-allsky.service'),
+                            'gunicorn': app.config.get('GUNICORN_SERVICE_NAME', 'gunicorn-indi-allsky.service'),
+                        }
+                        unit_name = unit_map.get(service_name, service_name)
                         try:
-                            if service_name == 'indiserver':
-                                self.restartSystemdUnit(app.config.get('INDISERVER_SERVICE_NAME', 'indiserver.service'))
-                            elif service_name in ('allsky', 'indi-allsky'):
-                                self.restartSystemdUnit(app.config.get('ALLSKY_SERVICE_NAME', 'indi-allsky.service'))
-                            elif service_name == 'gunicorn':
-                                self.restartSystemdUnit(app.config.get('GUNICORN_SERVICE_NAME', 'gunicorn-indi-allsky.service'))
+                            if msg_type == 'stop_service':
+                                self.stopSystemdUnit(unit_name)
+                            elif msg_type == 'start_service':
+                                self.startSystemdUnit(unit_name)
                             else:
-                                self.restartSystemdUnit(service_name)
+                                self.restartSystemdUnit(unit_name)
                             ws.send(json.dumps({
                                 "event": "command_result",
                                 "timestamp": time.time(),
-                                "data": {"action": "restart_service", "service": service_name, "status": "executed"}
+                                "data": {"action": msg_type, "service": service_name, "status": "executed"}
                             }, default=str))
                         except Exception as sys_err:
-                            app.logger.warning("DBus restartSystemdUnit failed (%s), queuing task in DB", sys_err)
+                            app.logger.warning("DBus service operation failed (%s), queuing task in DB", sys_err)
                             from .models import IndiAllSkyDbTaskQueueTable, TaskQueueQueue, TaskQueueState
+                            task_action_prefix = "restart" if msg_type == "restart_service" else ("start" if msg_type == "start_service" else "stop")
                             task = IndiAllSkyDbTaskQueueTable(
                                 queue=TaskQueueQueue.MAIN,
                                 state=TaskQueueState.MANUAL,
                                 priority=100,
-                                data={'action': f'restart_{service_name}'},
+                                data={'action': f'{task_action_prefix}_{service_name}'},
                             )
                             db.session.add(task)
                             db.session.commit()
                             ws.send(json.dumps({
                                 "event": "command_result",
                                 "timestamp": time.time(),
-                                "data": {"action": "restart_service", "service": service_name, "status": "queued", "task_id": task.id}
+                                "data": {"action": msg_type, "service": service_name, "status": "queued", "task_id": task.id}
                             }, default=str))
                 except json.JSONDecodeError:
                     pass
