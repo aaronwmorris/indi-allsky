@@ -916,6 +916,12 @@ class IndiAllSky(object):
             db.session.commit()
 
             logger.warning('*** Timelapse videos inserted: %d ***', len(video_entries))
+            try:
+                from .events import event_manager
+                for ventry in video_entries:
+                    event_manager.broadcast('timelapse_complete', ventry)
+            except Exception as ev_err:
+                logger.error('Error broadcasting timelapse_complete event: %s', str(ev_err))
         except IntegrityError as e:
             logger.warning('Integrity error: %s', str(e))
             db.session.rollback()
@@ -973,6 +979,12 @@ class IndiAllSky(object):
             db.session.commit()
 
             logger.warning('*** Keograms inserted: %d ***', len(keogram_entries))
+            try:
+                from .events import event_manager
+                for kentry in keogram_entries:
+                    event_manager.broadcast('keogram_complete', kentry)
+            except Exception as ev_err:
+                logger.error('Error broadcasting keogram_complete event: %s', str(ev_err))
         except IntegrityError as e:
             logger.warning('Integrity error: %s', str(e))
             db.session.rollback()
@@ -1024,6 +1036,12 @@ class IndiAllSky(object):
             db.session.commit()
 
             logger.warning('*** Star trails inserted: %d ***', len(startrail_entries))
+            try:
+                from .events import event_manager
+                for stentry in startrail_entries:
+                    event_manager.broadcast('startrail_complete', stentry)
+            except Exception as ev_err:
+                logger.error('Error broadcasting startrail_complete event: %s', str(ev_err))
         except IntegrityError as e:
             logger.warning('Integrity error: %s', str(e))
             db.session.rollback()
@@ -1198,6 +1216,12 @@ class IndiAllSky(object):
             db.session.commit()
 
             logger.warning('*** Images inserted: %d ***', len(image_entries))
+            try:
+                from .events import event_manager
+                for img_entry in image_entries:
+                    event_manager.broadcast('exposure_complete', img_entry)
+            except Exception as ev_err:
+                logger.error('Error broadcasting exposure_complete event: %s', str(ev_err))
         except IntegrityError as e:
             logger.warning('Integrity error: %s', str(e))
             db.session.rollback()

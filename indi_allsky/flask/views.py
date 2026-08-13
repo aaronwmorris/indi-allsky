@@ -1938,12 +1938,24 @@ class JsonSensorPanelView(JsonView):
             last_update = None
             last_update_age_s = None
 
-        return {
+        from ..sensors_mapping import format_named_sensors
+        named_sensors = format_named_sensors(sensor_temp, sensor_user, getattr(self, 'indi_allsky_config', {}))
+
+        payload = {
             'last_update': last_update,
             'last_update_age_s': last_update_age_s,
             'sensor_user': sensor_user,
             'sensor_temp': sensor_temp,
+            'sensors': named_sensors,
         }
+
+        try:
+            from ..events import event_manager
+            event_manager.broadcast('sensor_update', payload)
+        except Exception:
+            pass
+
+        return payload
 
 
 class SensorPanelView(TemplateView):
@@ -12255,6 +12267,125 @@ class WsShellView(BaseView):
         return ''
 
 
+class WsEventsView(BaseView):
+    """
+    WebSocket Event Stream View.
+    Allows real-time event subscribers (e.g. Home Assistant, web dashboards)
+    to receive live push events from indi-allsky.
+    """
+    decorators = []
+
+    def dispatch_request(self):
+        import simple_websocket
+        from ..events import event_manager
+
+        api_key = request.args.get('api_key') or request.args.get('token')
+
+        if not current_user.is_authenticated and not self.public_view:
+            valid_key = app.config.get('WEBSOCKET_API_KEY') or app.config.get('SECRET_KEY')
+            if not api_key or (api_key != valid_key):
+                return 'Unauthorized', 401
+
+        ws = simple_websocket.Server.accept(request.environ)
+        event_manager.register(ws)
+
+        try:
+            ws.send(json.dumps({
+                "event": "connected",
+                "timestamp": time.time(),
+                "data": {
+                    "server": "indi-allsky",
+                    "version": getattr(constants, 'INDI_ALLSKY_VERSION', "1.0.0"),
+                    "active_clients": event_manager.client_count
+                }
+            }))
+        except Exception as e:
+            app.logger.error("Failed sending WS connected handshake: %s", e)
+            event_manager.unregister(ws)
+            return ''
+
+        try:
+            while True:
+                message = ws.receive()
+                if message is None:
+                    break
+                try:
+                    msg = json.loads(message)
+                    msg_type = msg.get('type') or msg.get('action') or msg.get('event')
+                    if msg_type == 'ping':
+                        ws.send(json.dumps({
+                            "event": "pong",
+                            "timestamp": time.time(),
+                            "data": {}
+                        }))
+                    elif msg_type == 'get_status':
+                        ws.send(json.dumps({
+                            "event": "status_response",
+                            "timestamp": time.time(),
+                            "data": {
+                                "active_clients": event_manager.client_count,
+                                "server": "indi-allsky"
+                            }
+                        }))
+                    elif msg_type in ('pause', 'unpause', 'reboot', 'shutdown', 'generate_keogram', 'generate_timelapse', 'generate_startrail', 'trigger_darks'):
+                        from .models import IndiAllSkyDbTaskQueueTable, TaskQueueQueue, TaskQueueState
+                        
+                        task_name_map = {
+                            'pause': 'pause',
+                            'unpause': 'unpause',
+                            'reboot': 'reboot',
+                            'shutdown': 'shutdown',
+                            'generate_keogram': 'keogram',
+                            'generate_timelapse': 'video',
+                            'generate_startrail': 'startrail',
+                            'trigger_darks': 'darks',
+                        }
+                        
+                        target_task = task_name_map.get(msg_type, msg_type)
+                        task = IndiAllSkyDbTaskQueueTable(
+                            queue=TaskQueueQueue.ALLSKY.value,
+                            task=target_task,
+                            state=TaskQueueState.WAITING.value,
+                        )
+                        db.session.add(task)
+                        db.session.commit()
+                        ws.send(json.dumps({
+                            "event": "command_result",
+                            "timestamp": time.time(),
+                            "data": {"action": msg_type, "status": "queued", "task_id": task.id}
+                        }))
+                    elif msg_type == 'restart_service':
+                        service_name = msg.get('service', 'indi-allsky')
+                        from .models import IndiAllSkyDbTaskQueueTable, TaskQueueQueue, TaskQueueState
+                        task = IndiAllSkyDbTaskQueueTable(
+                            queue=TaskQueueQueue.ALLSKY.value,
+                            task=f'restart_{service_name}',
+                            state=TaskQueueState.WAITING.value,
+                        )
+                        db.session.add(task)
+                        db.session.commit()
+                        ws.send(json.dumps({
+                            "event": "command_result",
+                            "timestamp": time.time(),
+                            "data": {"action": "restart_service", "service": service_name, "status": "queued", "task_id": task.id}
+                        }))
+                except json.JSONDecodeError:
+                    pass
+                except Exception as e:
+                    app.logger.error("Error handling WS event message: %s", e)
+        except simple_websocket.ConnectionClosed:
+            pass
+        finally:
+            event_manager.unregister(ws)
+            try:
+                ws.close()
+            except Exception:
+                pass
+
+        return ''
+
+
+
 class ESP32ImageView(BaseView):
     decorators = []
 
@@ -12509,6 +12640,7 @@ bp_allsky.add_url_rule('/network', view_func=NetworkManagerView.as_view('network
 bp_allsky.add_url_rule('/ajax/network', view_func=AjaxNetworkManagerView.as_view('ajax_network_manager_view'))
 bp_allsky.add_url_rule('/shell', view_func=ShellView.as_view('shell_view', template_name='shell.html'))
 bp_allsky.add_url_rule('/ws/shell', view_func=WsShellView.as_view('ws_shell_view'), websocket=True)
+bp_allsky.add_url_rule('/ws/events', view_func=WsEventsView.as_view('ws_events_view'), websocket=True)
 
 bp_allsky.add_url_rule('/drives', view_func=DriveManagerView.as_view('drive_manager_view', template_name='drive_manager.html'))
 bp_allsky.add_url_rule('/ajax/drives', view_func=AjaxDriveManagerView.as_view('ajax_drive_manager_view'))
