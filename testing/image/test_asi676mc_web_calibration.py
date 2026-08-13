@@ -2151,6 +2151,13 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('id="calibration-population-previews"', template)
         self.assertIn('result.population_previews || []', template)
         self.assertIn('data:image/jpeg;base64,', template)
+        self.assertIn(
+            '#calibration-population-previews > .calibration-preview-card',
+            template,
+        )
+        self.assertIn('display: block;', template)
+        self.assertIn("'class': 'calibration-preview-filename'", template)
+        self.assertIn('text-overflow: ellipsis;', template)
         self.assertIn(".indexOf('no settings were changed') !== -1", template)
         self.assertIn('confirm_higher_population', template)
         self.assertIn('id="calibration-threshold-advisory"', template)

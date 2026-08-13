@@ -162,7 +162,8 @@
     gap: 1rem;
 }
 
-.calibration-preview-card {
+#calibration-population-previews > .calibration-preview-card {
+    display: block;
     min-width: 0;
     overflow: hidden;
     margin: 0;
@@ -179,8 +180,30 @@
 }
 
 .calibration-preview-caption {
+    width: 100%;
+    min-width: 0;
     padding: 0.65rem 0.8rem;
-    overflow-wrap: anywhere;
+    color: var(--color-base-content);
+}
+
+.calibration-preview-title {
+    font-weight: 600;
+}
+
+.calibration-preview-filename {
+    overflow: hidden;
+    margin-top: 0.15rem;
+    color: color-mix(in oklab, var(--color-base-content) 85%, transparent);
+    font-size: 0.8rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.calibration-preview-time {
+    margin-top: 0.1rem;
+    color: color-mix(in oklab, var(--color-base-content) 65%, transparent);
+    font-size: 0.75rem;
+    white-space: nowrap;
 }
 
 .calibration-progress-track {
@@ -1329,9 +1352,16 @@ function renderThresholdSuggestion(sessionId, result) {
                 $('<figcaption />', {
                     'class': 'calibration-preview-caption',
                 }).append(
-                    $('<div />', {'class': 'tw:font-semibold'}).text(item.population),
-                    $('<div />', {'class': 'calibration-help tw:text-xs'}).text(item.name),
-                    $('<div />', {'class': 'calibration-help tw:text-xs'}).text(capturedText)
+                    $('<div />', {'class': 'calibration-preview-title'}).text(
+                        item.population
+                    ),
+                    $('<div />', {
+                        'class': 'calibration-preview-filename',
+                        title: item.name,
+                    }).text(item.name),
+                    $('<div />', {'class': 'calibration-preview-time'}).text(
+                        capturedText
+                    )
                 )
             )
         );
