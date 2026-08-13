@@ -12269,25 +12269,12 @@ class WsShellView(BaseView):
 
 class WsEventsView(BaseView):
     """
-    WebSocket Event Stream View.
-    Allows real-time event subscribers (e.g. Home Assistant, web dashboards)
-    to receive live push events from indi-allsky.
+    WebSocket Read-Only Event Stream View (/ws/events).
+    Allows live event subscribers (Home Assistant, web dashboards) to receive push events
+    (exposure_complete, sensor_update, keogram_complete, timelapse_complete).
+    Read-only: Rejects command executions.
     """
     decorators = []
-
-    def rebootSystemd(self):
-        import dbus
-        system_bus = dbus.SystemBus()
-        systemd1 = system_bus.get_object('org.freedesktop.login1', '/org/freedesktop/login1')
-        manager = dbus.Interface(systemd1, 'org.freedesktop.login1.Manager')
-        return manager.Reboot(False)
-
-    def poweroffSystemd(self):
-        import dbus
-        system_bus = dbus.SystemBus()
-        systemd1 = system_bus.get_object('org.freedesktop.login1', '/org/freedesktop/login1')
-        manager = dbus.Interface(systemd1, 'org.freedesktop.login1.Manager')
-        return manager.PowerOff(False)
 
     def dispatch_request(self):
         import simple_websocket
@@ -12311,11 +12298,121 @@ class WsEventsView(BaseView):
                 "data": {
                     "server": "indi-allsky",
                     "version": str(__version__),
+                    "endpoint": "events",
+                    "mode": "read_only",
                     "active_clients": event_manager.client_count
                 }
-            }))
+            }, default=str))
         except Exception as e:
             app.logger.error("Failed sending WS connected handshake: %s", e)
+            event_manager.unregister(ws)
+            return ''
+
+        try:
+            while True:
+                message = ws.receive()
+                if message is None:
+                    break
+                try:
+                    msg = json.loads(message)
+                    msg_type = msg.get('type') or msg.get('action') or msg.get('event')
+                    if msg_type == 'ping':
+                        ws.send(json.dumps({
+                            "event": "pong",
+                            "timestamp": time.time(),
+                            "data": {}
+                        }, default=str))
+                    elif msg_type == 'get_status':
+                        ws.send(json.dumps({
+                            "event": "status_response",
+                            "timestamp": time.time(),
+                            "data": {
+                                "active_clients": event_manager.client_count,
+                                "server": "indi-allsky",
+                                "version": str(__version__)
+                            }
+                        }, default=str))
+                    elif msg_type in ('get_sensors', 'sensors'):
+                        from ..sensors_mapping import get_latest_sensors_payload
+                        sensor_payload = get_latest_sensors_payload(getattr(self, 'indi_allsky_config', {}))
+                        ws.send(json.dumps({
+                            "event": "sensor_update",
+                            "timestamp": time.time(),
+                            "data": sensor_payload
+                        }, default=str))
+                    elif msg_type in ('shutdown', 'reboot', 'pause', 'unpause', 'restart_service', 'generate_keogram', 'generate_timelapse', 'generate_startrail', 'trigger_darks'):
+                        ws.send(json.dumps({
+                            "event": "error",
+                            "timestamp": time.time(),
+                            "data": {
+                                "message": f"Action command '{msg_type}' disabled on read-only /ws/events endpoint. Use authenticated /ws/control endpoint."
+                            }
+                        }, default=str))
+                except json.JSONDecodeError:
+                    pass
+                except Exception as e:
+                    app.logger.error("Error handling WS event message: %s", e)
+        except simple_websocket.ConnectionClosed:
+            pass
+        finally:
+            event_manager.unregister(ws)
+            try:
+                ws.close()
+            except Exception:
+                pass
+
+
+class WsControlView(BaseView):
+    """
+    WebSocket Authenticated Command & Control View (/ws/control).
+    Allows authorized clients (Home Assistant control entities, admin clients)
+    to execute control commands and receive live event updates.
+    Requires API key or active admin authentication session.
+    """
+    decorators = []
+
+    def rebootSystemd(self):
+        import dbus
+        system_bus = dbus.SystemBus()
+        systemd1 = system_bus.get_object('org.freedesktop.login1', '/org/freedesktop/login1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.login1.Manager')
+        return manager.Reboot(False)
+
+    def poweroffSystemd(self):
+        import dbus
+        system_bus = dbus.SystemBus()
+        systemd1 = system_bus.get_object('org.freedesktop.login1', '/org/freedesktop/login1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.login1.Manager')
+        return manager.PowerOff(False)
+
+    def dispatch_request(self):
+        import simple_websocket
+        from ..events import event_manager
+
+        api_key = request.args.get('api_key') or request.args.get('token')
+
+        # Control endpoint ALWAYS requires authentication
+        valid_key = app.config.get('WEBSOCKET_API_KEY') or app.config.get('SECRET_KEY')
+        if not current_user.is_authenticated and (not api_key or api_key != valid_key):
+            return 'Unauthorized - API key or admin session required for /ws/control', 401
+
+        ws = simple_websocket.Server.accept(request.environ)
+        event_manager.register(ws)
+
+        try:
+            ws.send(json.dumps({
+                "event": "connected",
+                "timestamp": time.time(),
+                "data": {
+                    "server": "indi-allsky",
+                    "version": str(__version__),
+                    "endpoint": "control",
+                    "mode": "read_write",
+                    "active_clients": event_manager.client_count
+                }
+            }, default=str))
+        except Exception as e:
+            app.logger.error("Failed sending WS control connected handshake: %s", e)
             event_manager.unregister(ws)
             return ''
 
@@ -12439,7 +12536,7 @@ class WsEventsView(BaseView):
                 except json.JSONDecodeError:
                     pass
                 except Exception as e:
-                    app.logger.error("Error handling WS event message: %s", e)
+                    app.logger.error("Error handling WS control message: %s", e)
         except simple_websocket.ConnectionClosed:
             pass
         finally:
@@ -12708,6 +12805,7 @@ bp_allsky.add_url_rule('/ajax/network', view_func=AjaxNetworkManagerView.as_view
 bp_allsky.add_url_rule('/shell', view_func=ShellView.as_view('shell_view', template_name='shell.html'))
 bp_allsky.add_url_rule('/ws/shell', view_func=WsShellView.as_view('ws_shell_view'), websocket=True)
 bp_allsky.add_url_rule('/ws/events', view_func=WsEventsView.as_view('ws_events_view'), websocket=True)
+bp_allsky.add_url_rule('/ws/control', view_func=WsControlView.as_view('ws_control_view'), websocket=True)
 
 bp_allsky.add_url_rule('/drives', view_func=DriveManagerView.as_view('drive_manager_view', template_name='drive_manager.html'))
 bp_allsky.add_url_rule('/ajax/drives', view_func=AjaxDriveManagerView.as_view('ajax_drive_manager_view'))

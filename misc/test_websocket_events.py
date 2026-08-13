@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Interactive Test WebSocket client for indi-allsky event stream.
+Interactive Test WebSocket client for indi-allsky event stream and control endpoints.
 Usage:
-    # Interactive mode (listen + type commands in terminal):
+    # Read-Only Event Stream Listener:
     ./misc/test_websocket_events.py --url wss://192.168.86.232/indi-allsky/ws/events --no-ssl-verify
 
-    # Single command mode:
-    ./misc/test_websocket_events.py --url wss://192.168.86.232/indi-allsky/ws/events --no-ssl-verify --action pause
+    # Authenticated Command Stream:
+    ./misc/test_websocket_events.py --url wss://192.168.86.232/indi-allsky/ws/control --no-ssl-verify --action pause
 """
 import sys
 import argparse
@@ -28,6 +28,8 @@ SUPPORTED_SHORTCUT_COMMANDS = {
     "ping": {"action": "ping"},
     "status": {"action": "get_status"},
     "get_status": {"action": "get_status"},
+    "sensors": {"action": "get_sensors"},
+    "get_sensors": {"action": "get_sensors"},
     "reboot": {"action": "reboot"},
     "shutdown": {"action": "shutdown"},
     "keogram": {"action": "generate_keogram"},
@@ -40,7 +42,7 @@ SUPPORTED_SHORTCUT_COMMANDS = {
 def stdin_reader_thread(ws, running_flag):
     """Background thread to read interactive commands from stdin."""
     print("\n💡 Interactive Terminal Mode Active!")
-    print("Type a command name (pause, unpause, ping, status, keogram, timelapse, reboot) or raw JSON, then hit Enter:\n")
+    print("Type a command name (pause, unpause, ping, status, sensors, keogram, timelapse, reboot) or raw JSON, then hit Enter:\n")
     while running_flag[0]:
         try:
             line = input().strip()
@@ -68,12 +70,16 @@ def stdin_reader_thread(ws, running_flag):
 def main():
     parser = argparse.ArgumentParser(description="indi-allsky WebSocket Event Test Listener & Command Sender")
     parser.add_argument("--url", default="ws://127.0.0.1:8080/indi-allsky/ws/events", help="WebSocket URL (ws:// or wss://)")
+    parser.add_argument("--control", action="store_true", help="Connect to the authenticated /ws/control endpoint instead of /ws/events")
     parser.add_argument("--api-key", default="", help="API Key / Token if required")
     parser.add_argument("--no-ssl-verify", action="store_true", help="Disable SSL certificate verification for wss://")
-    parser.add_argument("--action", default="", help="Send a single action command (e.g. pause, unpause, ping, get_status) and exit")
+    parser.add_argument("--action", default="", help="Send a single action command (e.g. pause, unpause, ping, shutdown) and exit")
     args = parser.parse_args()
 
     url = args.url
+    if args.control or (args.action and "/ws/events" in url):
+        url = url.replace("/ws/events", "/ws/control")
+
     if args.api_key:
         separator = "&" if "?" in url else "?"
         url += f"{separator}api_key={args.api_key}"

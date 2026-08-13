@@ -300,6 +300,25 @@ class miscDb(object):
         db.session.add(image)
         db.session.commit()
 
+        try:
+            from ..events import event_manager
+            event_manager.broadcast('exposure_complete', {
+                'id': image.id,
+                'filename': str(image.filename),
+                'camera_id': image.camera_id,
+                'createDate': str(image.createDate),
+                'dayDate': str(image.dayDate),
+                'exposure': image.exposure,
+                'gain': image.gain,
+                'binmode': image.binmode,
+                'night': image.night,
+                'temp': image.temp,
+                'sqm': image.sqm,
+                'stars': image.stars,
+            })
+        except Exception as ev_err:
+            logger.error('Error broadcasting exposure_complete event: %s', ev_err)
+
         return image
 
 
