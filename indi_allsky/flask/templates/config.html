@@ -1511,7 +1511,6 @@ var group_fields_asi676mc_repair = [
 var group_checkbox_fields_asi676mc_repair = [
     'IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY',
     'IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME',
-    'IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE',
     'IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS',
     'IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS',
 ];
@@ -1538,6 +1537,24 @@ function update_asi676mc_preceding_fits_state() {
 $('#IMAGE_ASI676MC_REPAIR__ENABLE, #IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS').on(
     'change',
     update_asi676mc_preceding_fits_state
+);
+
+// Gallery decoration is part of the feature, not an independent preference.
+// Turning the master switch off clears the saved gallery option as well as
+// disabling its control. The gallery view and its data endpoint repeat this
+// master-switch check before showing badges or accepting filters.
+function update_asi676mc_gallery_state() {
+    var repair_enabled = $('#IMAGE_ASI676MC_REPAIR__ENABLE').prop('checked');
+    var gallery_toggle = $('#IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE');
+    if (!repair_enabled) {
+        gallery_toggle.prop('checked', false);
+    }
+    gallery_toggle.prop('disabled', !repair_enabled);
+}
+
+$('#IMAGE_ASI676MC_REPAIR__ENABLE').on(
+    'change',
+    update_asi676mc_gallery_state
 );
 
 // A newly enabled installation starts in detection-only mode. Existing
@@ -1887,6 +1904,7 @@ $( document ).ready(function() {
         group_fields_asi676mc_repair,
         group_checkbox_fields_asi676mc_repair
     );
+    update_asi676mc_gallery_state();
     update_asi676mc_preceding_fits_state();
     group_on_ready('IMAGE_SAVE_FITS', group_fields_fits, group_checkbox_fields_fits);
     group_on_ready('IMAGE_CIRCLE_MASK__ENABLE', group_fields_image_circle_mask, group_checkbox_fields_image_circle_mask);

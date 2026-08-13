@@ -150,6 +150,12 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
             ".prop('disabled', !asi676mc_repair_gallery_enabled)",
             template,
         )
+        self.assertGreaterEqual(
+            views_source.count(
+                "get('IMAGE_ASI676MC_REPAIR', {}).get('ENABLE', False)"
+            ),
+            2,
+        )
         self.assertIn('Purple-frame repair failed', template)
         self.assertNotIn("? 'repair failed'", template)
 

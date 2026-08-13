@@ -160,7 +160,7 @@ rest of the current configuration interface.
 | `ENABLE` | `False` | Master safety switch. Leave off for unaffected cameras. |
 | `EXCLUDE_ONLY` | `True` | Detect, flag, and exclude purple frames without changing pixels. Disable only after reviewing calibration. |
 | `LOG_EVERY_FRAME` | `False` | Log normal-frame checks at info level instead of debug level. Purple frames and failures are always logged prominently. |
-| `GALLERY_ENABLE` | `True` | Show repair/exclusion status in the gallery and enable repaired, purple-frame-excluded, and validation-failed filters. |
+| `GALLERY_ENABLE` | `True` | Show repair/exclusion status in the gallery and enable repaired, purple-frame-excluded, and validation-failed filters. Turning off the master feature also turns this option off. |
 | `SAVE_DIAGNOSTIC_FITS` | `False` | Save the untouched purple frame and its immediately following compatible frame as the preferred low-disk calibration evidence. A successor with different capture/layout metadata breaks the group and is not retained as its reference. |
 | `SAVE_PRECEDING_FITS` | `False` | Also cache the immediately preceding normal FITS and save it when the next compatible frame is purple. Requires the parent diagnostic option. |
 | `PURPLE_RATIO_THRESHOLD` | `1.5` | Combined purple signature threshold. |

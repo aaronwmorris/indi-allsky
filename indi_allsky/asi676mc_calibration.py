@@ -2904,8 +2904,8 @@ def compare_result_to_configuration(result, repair_config):
         return {
             'status': 'equivalent',
             'message': (
-                'The recommended values effectively match the current settings. '
-                'Applying it is unlikely to produce a visible change.'
+                'The recommended values are effectively the same as the current '
+                'settings. Saving them is unlikely to produce a visible change.'
             ),
             'configured_values': configured_values,
             'differing_keys': [],

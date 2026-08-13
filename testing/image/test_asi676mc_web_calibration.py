@@ -1474,7 +1474,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertEqual(equivalent['status'], 'equivalent')
         self.assertTrue(
             equivalent['message'].startswith(
-                'The recommended values effectively match the current settings'
+                'The recommended values are effectively the same as the current settings'
             )
         )
         self.assertIn('unlikely to produce a visible change', equivalent['message'])
@@ -2636,6 +2636,14 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             views_source,
         )
         self.assertIn('asi676mc_repair_was_enabled', settings_script)
+        self.assertIn('update_asi676mc_gallery_state', settings_script)
+        self.assertIn("gallery_toggle.prop('checked', false)", settings_script)
+        self.assertIn(
+            "asi676mc_repair_config['GALLERY_ENABLE']              = bool(\n"
+            "            asi676mc_repair_enabled\n"
+            "            and request.json['IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE']",
+            views_source,
+        )
         self.assertIn(
             'form_config.IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS',
             settings_template,
