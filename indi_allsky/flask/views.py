@@ -2366,6 +2366,7 @@ class ConfigView(FormView):
             'NIGHT_MOONMODE_PHASE'           : self.indi_allsky_config.get('NIGHT_MOONMODE_PHASE', 50.0),
             'WEB_STATUS_TEMPLATE'            : self.indi_allsky_config.get('WEB_STATUS_TEMPLATE', ''),
             'WEB_EXTRA_TEXT'                 : self.indi_allsky_config.get('WEB_EXTRA_TEXT', ''),
+            'WEBSOCKET_API_KEY'              : self.indi_allsky_config.get('WEBSOCKET_API_KEY', ''),
             'WEB_NONLOCAL_IMAGES'            : self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES', False),
             'WEB_LOCAL_IMAGES_ADMIN'         : self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN', False),
             'IMAGE_STRETCH__CLASSNAME'       : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('CLASSNAME', ''),
@@ -3391,6 +3392,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['NIGHT_MOONMODE_PHASE']                 = float(request.json['NIGHT_MOONMODE_PHASE'])
         self.indi_allsky_config['WEB_STATUS_TEMPLATE']                  = str(request.json['WEB_STATUS_TEMPLATE'])
         self.indi_allsky_config['WEB_EXTRA_TEXT']                       = str(request.json['WEB_EXTRA_TEXT'])
+        self.indi_allsky_config['WEBSOCKET_API_KEY']                    = str(request.json.get('WEBSOCKET_API_KEY', '')).strip()
         self.indi_allsky_config['WEB_NONLOCAL_IMAGES']                  = bool(request.json['WEB_NONLOCAL_IMAGES'])
         self.indi_allsky_config['WEB_LOCAL_IMAGES_ADMIN']               = bool(request.json['WEB_LOCAL_IMAGES_ADMIN'])
         self.indi_allsky_config['IMAGE_STRETCH']['CLASSNAME']           = str(request.json['IMAGE_STRETCH__CLASSNAME'])
@@ -12284,7 +12286,7 @@ class WsEventsView(BaseView):
 
         auth_required = app.config.get('INDI_ALLSKY_AUTH_ALL_VIEWS', False)
         if auth_required and not current_user.is_authenticated:
-            valid_key = app.config.get('WEBSOCKET_API_KEY') or app.config.get('SECRET_KEY')
+            valid_key = getattr(self, 'indi_allsky_config', {}).get('WEBSOCKET_API_KEY') or app.config.get('WEBSOCKET_API_KEY') or app.config.get('SECRET_KEY')
             if not api_key or (api_key != valid_key):
                 return 'Unauthorized', 401
 
@@ -12392,7 +12394,7 @@ class WsControlView(BaseView):
         api_key = request.args.get('api_key') or request.args.get('token')
 
         # Control endpoint ALWAYS requires authentication
-        valid_key = app.config.get('WEBSOCKET_API_KEY') or app.config.get('SECRET_KEY')
+        valid_key = getattr(self, 'indi_allsky_config', {}).get('WEBSOCKET_API_KEY') or app.config.get('WEBSOCKET_API_KEY') or app.config.get('SECRET_KEY')
         if not current_user.is_authenticated and (not api_key or api_key != valid_key):
             return 'Unauthorized - API key or admin session required for /ws/control', 401
 

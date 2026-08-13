@@ -269,6 +269,36 @@
                     </div>
                 </div>
 
+                <!-- WebSocket API Key -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WEBSOCKET_API_KEY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">API key for Home Assistant &amp; WebSocket control (<code class="tw:bg-neutral-content/10 tw:font-mono tw:px-1 tw:py-0.5 tw:rounded">/ws/control</code>)</span>
+                    </div>
+                    <div class="md:tw:col-span-3 tw:flex tw:flex-col">
+                        <div class="tw:flex tw:gap-2 tw:w-full">
+                            <label class="tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:font-mono tw:text-xs tw:flex tw:items-center tw:gap-1.5 tw:flex-1">
+                                {{ form_config.WEBSOCKET_API_KEY(type='password', class='tw:grow tw:font-mono tw:bg-transparent tw:border-0 tw:outline-none tw:w-full', id='WEBSOCKET_API_KEY', placeholder='Optional custom API key (falls back to system secret key if empty)') }}
+                                
+                                <!-- Show / Hide Password Button -->
+                                <button type="button" id="btn-toggle-show-key" class="tw:btn tw:btn-ghost tw:btn-xs tw:btn-square tw:text-base-content/60 hover:tw:text-base-content" title="Toggle Visibility">
+                                    <i id="icon-eye-key" class="tw:icon-[lucide--eye] tw:w-4 tw:h-4 tw:block"></i>
+                                </button>
+                                
+                                <!-- Copy to Clipboard Button -->
+                                <button type="button" id="btn-copy-api-key" class="tw:btn tw:btn-ghost tw:btn-xs tw:btn-square tw:text-base-content/60 hover:tw:text-base-content" title="Copy to Clipboard">
+                                    <i id="icon-copy-key" class="tw:icon-[lucide--copy] tw:w-4 tw:h-4 tw:block"></i>
+                                </button>
+                            </label>
+
+                            <button type="button" id="btn-generate-api-key" class="tw:btn tw:btn-sm tw:btn-accent tw:gap-1.5 tw:h-11 tw:shrink-0 active:tw:scale-95 tw:transition-all">
+                                <i class="tw:icon-[lucide--key] tw:w-4 tw:h-4"></i> Generate Key
+                            </button>
+                        </div>
+                        <div id="WEBSOCKET_API_KEY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
                 <!-- Nonlocal Images, Local Images Admin & Encrypt Passwords Grid -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
@@ -302,3 +332,52 @@
 
     </div>
 </div><!-- end admin tab -->
+
+<script>
+// Toggle API key visibility (password vs text)
+document.getElementById('btn-toggle-show-key')?.addEventListener('click', function() {
+    const input = document.getElementById('WEBSOCKET_API_KEY');
+    const eyeIcon = document.getElementById('icon-eye-key');
+    if (!input || !eyeIcon) return;
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        eyeIcon.className = 'tw:icon-[lucide--eye-off] tw:w-4 tw:h-4 tw:block';
+    } else {
+        input.type = 'password';
+        eyeIcon.className = 'tw:icon-[lucide--eye] tw:w-4 tw:h-4 tw:block';
+    }
+});
+
+// Copy API key to clipboard with checkmark visual feedback
+document.getElementById('btn-copy-api-key')?.addEventListener('click', function() {
+    const input = document.getElementById('WEBSOCKET_API_KEY');
+    const copyIcon = document.getElementById('icon-copy-key');
+    if (!input || !input.value) return;
+
+    navigator.clipboard.writeText(input.value).then(function() {
+        if (copyIcon) {
+            copyIcon.className = 'tw:icon-[lucide--check] tw:w-4 tw:h-4 tw:block tw:text-success';
+            setTimeout(function() {
+                copyIcon.className = 'tw:icon-[lucide--copy] tw:w-4 tw:h-4 tw:block';
+            }, 1500);
+        }
+    });
+});
+
+// Generate random API key and display in text mode
+document.getElementById('btn-generate-api-key')?.addEventListener('click', function() {
+    const array = new Uint8Array(32);
+    window.crypto.getRandomValues(array);
+    const hexKey = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+    const input = document.getElementById('WEBSOCKET_API_KEY');
+    const eyeIcon = document.getElementById('icon-eye-key');
+    if (input) {
+        input.value = hexKey;
+        input.type = 'text';
+        if (eyeIcon) {
+            eyeIcon.className = 'tw:icon-[lucide--eye-off] tw:w-4 tw:h-4 tw:block';
+        }
+    }
+});
+</script>
