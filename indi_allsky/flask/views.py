@@ -7985,7 +7985,7 @@ class AjaxManualGpioView(BaseView):
 class Asi676mcCalibrationView(TemplateView):
     """Authenticated landing page for both calibration evidence sources."""
 
-    page_title = 'ASI676MC Calibration'
+    page_title = 'Fix ASI676MC purple frames'
     decorators = [asi676mc_calibration_required, login_required]
 
     def get_context(self):
@@ -8073,8 +8073,7 @@ class AjaxAsi676mcCalibrationSessionView(BaseView):
             return jsonify({
                 'error': (
                     'The calibration files could not be prepared. Free some '
-                    'disk space and try again. If this repeats, include this '
-                    'message when reporting the issue.'
+                    'disk space and try again.'
                 ),
             }), 500
         return jsonify({'session_id': manifest['session_id']})
@@ -8124,8 +8123,7 @@ class AjaxAsi676mcCalibrationUploadView(BaseView):
             return jsonify({
                 'error': (
                     'The uploaded FITS could not be saved temporarily. Free '
-                    'some disk space and try again. If it still fails, cancel '
-                    'the upload and include this message when reporting the issue.'
+                    'some disk space, cancel this upload, and try again.'
                 ),
             }), 500
 
@@ -8156,8 +8154,7 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
         except (TypeError, ValueError):
             return jsonify({
                 'error': (
-                    'Enter a valid purple-frame group target and maximum '
-                    'separation.'
+                    'Enter a valid number of frame groups and a valid maximum gap.'
                 ),
             }), 400
 
@@ -8167,7 +8164,7 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
         ):
             return jsonify({
                 'error': (
-                    'Choose a purple-frame group target between {0} and {1}.'
+                    'Choose between {0} and {1} frame groups.'
                 ).format(
                     asi676mc_calibration.DATABASE_GROUP_MIN,
                     asi676mc_calibration.DATABASE_GROUP_MAX,
@@ -8180,8 +8177,7 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
         ):
             return jsonify({
                 'error': (
-                    'Maximum pair separation must be greater than 0 and no '
-                    'more than 3600 seconds.'
+                    'The maximum gap must be between 1 and 3600 seconds.'
                 ),
             }), 400
 
@@ -8229,7 +8225,7 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
             return jsonify({
                 'error': (
                     'FITS retention is invalid. Correct it in Image Settings '
-                    'before searching saved FITS; manual upload remains available.'
+                    'before searching saved FITS. Manual upload is still available.'
                 ),
             }), 400
         if retention_days < 1:
@@ -8325,10 +8321,9 @@ class AjaxAsi676mcCalibrationDatabaseView(BaseView):
                 )
             return jsonify({
                 'error': (
-                    'Calibration could not start because the calibration '
-                    'service is unavailable. Wait a minute and try again. If '
-                    'this repeats, restart indi-allsky or include this message '
-                    'when reporting the issue.'
+                    'Calibration could not start because the service is '
+                    'unavailable. Wait a minute and try again. If this repeats, '
+                    'restart indi-allsky.'
                 ),
             }), 500
 
@@ -8359,9 +8354,8 @@ class AjaxAsi676mcCalibrationCancelView(BaseView):
             app.logger.exception('Unable to cancel ASI676MC calibration')
             return jsonify({
                 'error': (
-                    'Cancellation could not be confirmed. Try cancellation '
-                    'again. Any temporary FITS left behind will be removed '
-                    'automatically after seven days.'
+                    'Cancellation could not be confirmed. Try again. Any '
+                    'temporary FITS will be removed automatically later.'
                 ),
             }), 500
 
@@ -8385,7 +8379,7 @@ class AjaxAsi676mcCalibrationStartView(BaseView):
             max_pair_seconds = float(request_data.get('max_pair_seconds', 90.0))
         except (TypeError, ValueError):
             return jsonify({
-                'error': 'Maximum pair separation must be a valid number.',
+                'error': 'Enter a valid maximum gap between matching frames.',
             }), 400
         if (
             not math.isfinite(max_pair_seconds)
@@ -8394,8 +8388,7 @@ class AjaxAsi676mcCalibrationStartView(BaseView):
         ):
             return jsonify({
                 'error': (
-                    'Maximum pair separation must be greater than 0 and no '
-                    'more than 3600 seconds.'
+                    'The maximum gap must be between 1 and 3600 seconds.'
                 ),
             }), 400
 
@@ -8483,10 +8476,9 @@ class AjaxAsi676mcCalibrationStartView(BaseView):
                 )
             return jsonify({
                 'error': (
-                    'Calibration could not start because the calibration '
-                    'service is unavailable. Wait a minute and try again. If '
-                    'this repeats, restart indi-allsky or include this message '
-                    'when reporting the issue.'
+                    'Calibration could not start because the service is '
+                    'unavailable. Wait a minute and try again. If this repeats, '
+                    'restart indi-allsky.'
                 ),
             }), 500
 
@@ -8517,8 +8509,8 @@ class AjaxAsi676mcCalibrationStatusView(BaseView):
             )
             return jsonify({
                 'error': (
-                    'The previous calibration expired, was cleared, or is no '
-                    'longer readable. Start a new calibration.'
+                    'The previous calibration is no longer available. Start a '
+                    'new calibration.'
                 ),
             }), 404
 
@@ -8676,9 +8668,8 @@ class AjaxAsi676mcCalibrationApplyView(BaseView):
         ):
             return jsonify({
                 'error': (
-                    'Confirm that the listed higher-ratio population is the '
-                    'actual ASI676MC purple-frame failure before saving '
-                    'detection thresholds.'
+                    'Confirm that the files listed as likely purple are the '
+                    'purple frames you saw before saving detection settings.'
                 ),
                 'error_code': 'population_confirmation_required',
             }), 400
@@ -8735,9 +8726,7 @@ class AjaxAsi676mcCalibrationApplyView(BaseView):
                     error,
                 )
                 error_message = (
-                    'Image Settings could not save the result values. Try '
-                    'again. If this repeats, include this message when '
-                    'reporting the issue.'
+                    'Image Settings could not save the result values. Try again.'
                 )
                 error_code = 'configuration_save_failed'
             else:
@@ -8773,25 +8762,24 @@ class AjaxAsi676mcCalibrationApplyView(BaseView):
         return jsonify({
             'success-message': (
                 (
-                    'The recommended detection thresholds were saved; repair '
-                    'constants and all other settings remain unchanged. '
-                    'indi-allsky will reload its configuration shortly.'
+                    'The recommended detection settings were saved. Repair '
+                    'values and all other settings remain unchanged. '
+                    'indi-allsky will reload shortly.'
                     if result_outcome == 'threshold_suggestion'
                     else (
-                        'The seven derived values were saved; all other '
-                        'settings remain unchanged. indi-allsky will reload '
-                        'its configuration shortly.'
+                        'The calibration values were saved. All other settings '
+                        'remain unchanged. indi-allsky will reload shortly.'
                     )
                 )
                 if reload_queued
                 else (
                     (
-                        'The recommended detection thresholds were saved and '
+                        'The recommended detection settings were saved and '
                         'all other settings remain unchanged, but the '
                         'configuration reload could not be started.'
                         if result_outcome == 'threshold_suggestion'
                         else (
-                            'The seven derived values were saved and all other '
+                            'The calibration values were saved and all other '
                             'settings remain unchanged, but the configuration '
                             'reload could not be started.'
                         )

@@ -285,17 +285,8 @@ function populate_gallery(gallery_data) {
         var repair_title = '';
         if (repair_applied) {
             repair_title = 'Purple frame repaired';
-            if (
-                item['asi676mc_purple_ratio_before'] !== null
-                && item['asi676mc_purple_ratio_after'] !== null
-            ) {
-                repair_title += ': purple ratio '
-                    + Number(item['asi676mc_purple_ratio_before']).toFixed(3)
-                    + ' \u2192 '
-                    + Number(item['asi676mc_purple_ratio_after']).toFixed(3);
-            }
         } else if (repair_validation_failed) {
-            repair_title = 'ASI676MC repair validation failed; original frame retained';
+            repair_title = 'Purple-frame repair failed; original frame retained and excluded from standard timelapses';
         } else if (repair_excluded) {
             repair_title = 'Purple frame detected; original frame retained and excluded from standard timelapses';
         }
@@ -346,7 +337,7 @@ function populate_gallery(gallery_data) {
                 ),
                 'text' : (
                     repair_validation_failed
-                    ? 'Repair validation failed'
+                    ? 'Purple-frame repair failed'
                     : (repair_excluded ? 'Purple frame excluded' : 'Purple frame repaired')
                 ),
             }).appendTo(a_tag);

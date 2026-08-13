@@ -87,7 +87,7 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
         args, kwargs = processor._miscDb.addNotification.call_args
         self.assertEqual(args[0], camera_category)
         self.assertEqual(args[1], 'Asi676mcRepairFailed')
-        self.assertIn('original frame was retained', args[2])
+        self.assertIn('original frame was kept', args[2])
         self.assertEqual(kwargs['expire'], timedelta(hours=2))
 
         processor._miscDb.addNotification.side_effect = RuntimeError('db down')
@@ -150,7 +150,7 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
             ".prop('disabled', !asi676mc_repair_gallery_enabled)",
             template,
         )
-        self.assertIn('Repair validation failed', template)
+        self.assertIn('Purple-frame repair failed', template)
         self.assertNotIn("? 'repair failed'", template)
 
     def test_documentation_records_shared_multi_camera_profile_limit(self):
@@ -266,9 +266,9 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
         self.assertIn('asi676mc_diagnostic_preceding_fits', imageviewer_template)
         self.assertIn('asi676mc_diagnostic_bad_fits', imageviewer_template)
         self.assertIn('asi676mc_diagnostic_following_fits', imageviewer_template)
-        self.assertIn('Previous FITS', imageviewer_template)
+        self.assertIn('Previous normal FITS', imageviewer_template)
         self.assertIn('Purple FITS', imageviewer_template)
-        self.assertIn('Next FITS', imageviewer_template)
+        self.assertIn('Next normal FITS', imageviewer_template)
 
     def test_camera_name_gate(self):
         self.assertTrue(asi676mc.camera_name_matches('ZWO CCD ASI676MC'))

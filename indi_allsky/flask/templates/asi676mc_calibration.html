@@ -217,8 +217,8 @@
 <div id="calibration-shell" class="tw:container tw:mx-auto tw:w-full">
 <div class="tw:mb-5">
     <div class="tw:text-base-content/70">
-        Derive purple-frame repair values from FITS saved by indi-allsky or
-        from a collection you select manually.
+        Use saved or uploaded FITS to create repair settings for ASI676MC
+        purple frames.
     </div>
 </div>
 
@@ -237,20 +237,18 @@
     <div>
         <div class="calibration-callout calibration-callout-info tw:h-full">
             <div class="tw:font-semibold tw:mb-1">How it works</div>
-            Let indi-allsky search its saved FITS, or select a complete FITS
-            collection from your device. Both methods perform the same checks
-            and produce the same calibration values. Uploaded copies remain
-            private and are deleted when the run ends.
+            Search FITS already saved by indi-allsky, or upload your own
+            collection. Both methods perform the same calibration. Uploaded
+            copies are private and deleted afterwards.
         </div>
     </div>
     <div>
         <div class="calibration-callout calibration-callout-warning tw:h-full">
             <div class="tw:font-semibold tw:mb-1">Evidence needed</div>
-            Use daylight data with visible highlights and at least two exposure
-            levels. Calibration needs at least seven purple frames and seven
-            different compatible normal frames; before-and-after references are
-            better. If files are skipped or the run stops, the result or failure
-            message explains what to check.
+            Use daylight FITS with visible bright areas and at least two
+            exposure settings. Include at least seven purple frames and nearby
+            normal frames. A normal frame before and after each purple frame
+            gives the best result.
         </div>
     </div>
 </div>
@@ -260,11 +258,9 @@
     <div class="tw:px-6 tw:pt-5 tw:font-semibold">Current FITS capture settings</div>
     <div class="tw:card-body tw:p-6 tw:pt-3">
         <p class="calibration-help tw:text-sm tw:mb-3">
-            These settings affect future captures only. Existing data can still
-            be used. Saved FITS search checks everything still retained by
-            indi-allsky, while manual upload checks the files you select. Use
-            original, unprocessed ASI676MC RAW16 FITS. The tool will skip files
-            that are incompatible or do not contain the required camera data.
+            These settings affect new captures only; older FITS can still be
+            used. Use original, unprocessed ASI676MC FITS. Unsuitable files are
+            skipped automatically.
         </p>
         <div id="calibration-capture-facts" class="calibration-fact-grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:lg:grid-cols-3 tw:mb-4">
             {% for fact in capture_guidance.facts %}
@@ -296,18 +292,17 @@
                     {{ form_calibration.CAMERA_ID.label(class='tw:label-text tw:font-semibold tw:block tw:mb-2') }}
                     {{ form_calibration.CAMERA_ID(class='tw:select tw:select-bordered tw:bg-base-100 tw:text-base-content tw:w-full calibration-camera-control') }}
                     <div class="calibration-help tw:text-xs tw:mt-2">
-                        Select the ASI676MC that produced the FITS. The tool
-                        checks the camera again before saving. Applied values
-                        affect every ASI676MC that uses this configuration.
+                        Choose the camera that produced these FITS. If this
+                        installation uses more than one ASI676MC, the saved
+                        values apply to all of them.
                     </div>
                 </div>
                 <div class="calibration-setting-panel">
                     {{ form_calibration.MAX_PAIR_SECONDS.label(class='tw:label-text tw:font-semibold tw:block tw:mb-2') }}
                     {{ form_calibration.MAX_PAIR_SECONDS(class='tw:input tw:input-bordered tw:bg-base-100 tw:text-base-content tw:w-full calibration-reference-control') }}
                     <div class="calibration-help tw:text-xs tw:mt-2">
-                        Leave this at 90 seconds unless the matching normal
-                        frames were captured farther from each purple frame.
-                        The same limit is used for both input methods.
+                        Leave this at 90 seconds unless the nearby normal
+                        frames were captured farther apart.
                     </div>
                 </div>
             </div>
@@ -325,13 +320,9 @@
                 </div>
                 <div class="calibration-card-body tw:card-body tw:p-6 tw:pt-3">
                     <p class="calibration-help">
-                        Check every compatible FITS still retained for this
-                        camera; frames do not need to have been marked as purple
-                        when they were saved. The tool first applies the current
-                        detection settings. If they do not identify enough
-                        usable purple frames, it looks for a separate
-                        purple-frame population. Original saved FITS are not
-                        changed.
+                        Search the FITS already saved for this camera. The tool
+                        finds suitable purple and normal frames automatically.
+                        Your saved FITS are not changed.
                     </p>
                     <div class="tw:mb-4">
                         {{ form_calibration.DATABASE_GROUP_LIMIT.label(class='tw:label-text tw:font-semibold') }}
@@ -340,20 +331,16 @@
                                 {{ form_calibration.DATABASE_GROUP_LIMIT(class='tw:input tw:input-bordered tw:bg-base-100 tw:text-base-content tw:w-full') }}
                             </div>
                             <div class="calibration-help tw:text-sm">
-                                Choose {{ calibration_database_limits.minimum }}
-                                to {{ calibration_database_limits.maximum }}
-                                groups. The tool selects the newest suitable
-                                groups across at least two exposure levels.
-                                Each group contains one purple frame and, where
-                                possible, two nearby normal frames. Leave the
-                                default at 20; choose more only if most groups
-                                have one normal frame.
+                                Leave this at 20. Increase it only if calibration
+                                reports that more groups are needed. Allowed
+                                range: {{ calibration_database_limits.minimum }}
+                                to {{ calibration_database_limits.maximum }}.
                             </div>
                         </div>
                     </div>
                     <div class="calibration-source-action">
                         <button id="start-database-calibration" type="button" class="tw:btn tw:btn-primary">
-                            Find saved FITS and calibrate
+                            Search saved FITS and calibrate
                         </button>
                     </div>
                 </div>
@@ -367,11 +354,9 @@
                 </div>
                 <div class="calibration-card-body tw:card-body tw:p-6 tw:pt-3">
                     <p class="calibration-help">
-                        Select 14 to 80 FITS in one file-picker action. Include
-                        at least seven purple frames and seven different nearby
-                        normal frames. The collection may total up to 2 GiB,
-                        and each file may be up to 256 MiB. Files are transferred
-                        sequentially with visible progress.
+                        Select all FITS at once. Include at least seven purple
+                        frames and nearby normal frames. You can select 14 to 80
+                        files, up to 2 GiB in total.
                     </p>
                     <label for="calibration-files" class="tw:label-text tw:font-semibold">FITS files</label>
                     <input
@@ -386,9 +371,9 @@
                         <span class="calibration-help tw:text-xs">Select all files at once; you do not need to upload them one by one.</span>
                     </div>
                     <div class="calibration-help tw:text-xs tw:mt-2">
-                        Manual upload accepts uncompressed .fit, .fits, and .fts
-                        files. Automatic saved FITS search also supports
-                        indi-allsky's compressed FITS.
+                        Only uncompressed .fit, .fits, and .fts files can be
+                        uploaded. Compressed FITS can be used with Search saved
+                        FITS.
                     </div>
                     <div id="calibration-file-list" class="tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:text-xs tw:p-2 tw:mt-3" style="display: none;"></div>
                     <div class="calibration-source-action">
@@ -430,7 +415,7 @@
                 Cancel calibration
             </button>
             <button id="calibration-failure-reset" type="button" class="tw:btn tw:btn-neutral" style="display: none;">
-                Reset / try again
+                Try again
             </button>
         </div>
     </div>
@@ -450,14 +435,14 @@
             <!-- Keep reset before report download so the action row reads and
                  wraps cleanly on narrow displays. -->
             <button id="calibration-reset" type="button" class="tw:btn tw:btn-neutral">
-                Reset / recalibrate
+                Start over
             </button>
             <a id="calibration-report-download" class="tw:btn tw:btn-info tw:no-underline" href="#">
-                Download text report
+                Download details
             </a>
             {% if calibration_can_save_config %}
             <button id="calibration-apply-values" type="button" class="tw:btn tw:btn-warning">
-                Save values and reload configuration
+                Save calibration values
             </button>
             {% endif %}
         </div>
@@ -466,8 +451,8 @@
     <div class="tw:card-body tw:p-6">
         <div id="calibration-result-status" class="calibration-callout calibration-callout-success" role="status">
             <div id="calibration-result-status-primary">
-                Calibration successful. Only the seven calibration values
-                shown below were derived; all other settings remain unchanged.
+                Calibration complete. The recommended values are shown below.
+                Saving them will not change any other settings.
             </div>
             <div id="calibration-result-status-detail" class="calibration-result-emphasis tw:mt-2 tw:pt-2" style="display: none;"></div>
         </div>
@@ -476,9 +461,9 @@
             <table class="calibration-values-table tw:table tw:table-zebra tw:w-full">
                 <thead>
                     <tr>
-                        <th>Configuration field</th>
-                        <th>Current configured value</th>
-                        <th>Derived value</th>
+                        <th>Setting</th>
+                        <th>Current</th>
+                        <th>Recommended</th>
                     </tr>
                 </thead>
                 <tbody id="calibration-values"></tbody>
@@ -489,27 +474,29 @@
              an observed population edge. Keep that advisory beside the
              derived values so it cannot be mistaken for a failed fit. -->
         <div id="calibration-threshold-advisory" class="calibration-callout calibration-callout-warning tw:mt-4" style="display: none;">
-            <div class="tw:font-semibold tw:mb-1">Detection threshold margin</div>
+            <div class="tw:font-semibold tw:mb-1">More calibration FITS recommended</div>
             <div class="calibration-help tw:mb-2">
-                Calibration succeeded, but these thresholds are close to the
-                observed normal or purple range. Collect more varied FITS and
-                rerun before deciding whether to change them. Applying the
-                seven derived values does not change detection thresholds;
-                any threshold change must be made manually in Image Settings.
+                Some purple and normal frames were difficult to tell apart.
+                The repair values are still usable, but leave the detection
+                settings unchanged for now. Collect more varied FITS and
+                calibrate again before changing them.
             </div>
-            <div class="calibration-table-wrap">
-                <table class="calibration-values-table tw:table tw:table-sm tw:w-full">
-                    <thead>
-                        <tr>
-                            <th>Detection field</th>
-                            <th>Current</th>
-                            <th>Observed normal / purple gap</th>
-                            <th>Gap midpoint</th>
-                        </tr>
-                    </thead>
-                    <tbody id="calibration-threshold-advisory-values"></tbody>
-                </table>
-            </div>
+            <details>
+                <summary>Technical details</summary>
+                <div class="calibration-table-wrap tw:mt-2">
+                    <table class="calibration-values-table tw:table tw:table-sm tw:w-full">
+                        <thead>
+                            <tr>
+                                <th>Setting</th>
+                                <th>Current</th>
+                                <th>Normal / purple range</th>
+                                <th>Suggested midpoint</th>
+                            </tr>
+                        </thead>
+                        <tbody id="calibration-threshold-advisory-values"></tbody>
+                    </table>
+                </div>
+            </details>
         </div>
 
         <!-- A detector miss produces a deliberately separate preliminary
@@ -520,11 +507,11 @@
             <table class="calibration-values-table tw:table tw:table-zebra tw:w-full">
                 <thead>
                     <tr>
-                        <th>Detection field</th>
-                        <th>Current value</th>
-                        <th>Suggested value</th>
-                        <th>Observed safe interval</th>
-                        <th>Recommendation</th>
+                        <th>Setting</th>
+                        <th>Current</th>
+                        <th>Recommended</th>
+                        <th>Suggested range</th>
+                        <th>What to do</th>
                     </tr>
                 </thead>
                 <tbody id="calibration-threshold-values"></tbody>
@@ -533,24 +520,23 @@
                 <div class="tw:flex tw:items-start tw:gap-3">
                     <input id="confirm-higher-population" class="tw:checkbox tw:checkbox-warning tw:mt-1" type="checkbox">
                     <label class="tw:font-semibold" for="confirm-higher-population">
-                        I checked the examples below and confirm that the
-                        higher-ratio population is the ASI676MC purple-frame failure.
+                        I confirmed that the files listed as likely purple are
+                        the purple frames I saw.
                     </label>
                 </div>
                 <div class="calibration-help tw:mt-2">
-                    Two ordinary lighting regimes can also form two clean
-                    populations. Detection thresholds cannot be saved until
-                    this fault-specific confirmation is checked.
+                    Check the filenames and capture times before confirming.
+                    Detection settings cannot be saved until this box is checked.
                 </div>
             </div>
             <div class="calibration-table-wrap tw:mt-4">
                 <table class="calibration-values-table tw:table tw:table-sm tw:w-full">
                     <thead>
                         <tr>
-                            <th>Population</th>
+                            <th>Likely frame type</th>
                             <th>Capture time</th>
                             <th>FITS file</th>
-                            <th>Purple / red / blue ratios</th>
+                            <th>Technical ratios</th>
                         </tr>
                     </thead>
                     <tbody id="calibration-population-evidence"></tbody>
@@ -558,12 +544,12 @@
             </div>
         </div>
 
-        <h3 class="tw:text-lg tw:font-bold tw:mt-5">Evidence used</h3>
+        <h3 class="tw:text-lg tw:font-bold tw:mt-5">Files used</h3>
         <div id="calibration-quality" class="calibration-fact-grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:lg:grid-cols-4"></div>
         <!-- All non-fatal evidence observations share one dynamically populated
              box instead of appearing as a stack of near-identical alerts. -->
         <div id="calibration-warnings" class="calibration-callout calibration-callout-warning tw:mt-4" style="display: none;">
-            <div class="tw:font-semibold tw:mb-1">Additional result information</div>
+            <div class="tw:font-semibold tw:mb-1">Notes</div>
             <ul id="calibration-warning-list"></ul>
         </div>
     </div>
@@ -650,6 +636,7 @@ const calibrationMaxFileBytes = {{ calibration_upload_limits.file_bytes }};
 const calibrationMaxSessionBytes = {{ calibration_upload_limits.session_bytes }};
 const calibrationMinDatabaseGroupCount = {{ calibration_database_limits.minimum }};
 const calibrationMaxDatabaseGroupCount = {{ calibration_database_limits.maximum }};
+const calibrationExcludeOnly = {{ 'true' if capture_guidance.exclude_only else 'false' }};
 {% if calibration_can_save_config %}
 const calibrationApplyUrlTemplate = "{{ url_for('indi_allsky.ajax_asi676mc_calibration_apply_view', session_id='SESSION_ID') }}";
 {% endif %}
@@ -711,17 +698,15 @@ async function calibrationJson(response) {
         data = await response.json();
     } catch (error) {
         const responseError = new Error(
-            'The server response could not be read. Reload this page and try '
-            + 'again. If the problem repeats, include this message when '
-            + 'reporting the issue.'
+            'The calibration response could not be read. Reload this page and '
+            + 'try again.'
         );
         responseError.resultUnconfirmed = true;
         throw responseError;
     }
     if (!response.ok) {
         const requestError = new Error(
-            data.error || 'The calibration request failed. Try again. If the '
-                + 'problem repeats, include this message when reporting the issue.'
+            data.error || 'Calibration could not continue. Try again.'
         );
         requestError.serverRejected = true;
         requestError.code = data.error_code || '';
@@ -801,8 +786,8 @@ function calibrationPairSeparation() {
     const seconds = Number($('#MAX_PAIR_SECONDS').val());
     if (!Number.isFinite(seconds) || seconds <= 0 || seconds > 3600) {
         showCalibrationError(
-            'Enter a maximum time between 1 and 3600 seconds. Use 90 seconds '
-            + 'unless you know the matching frames are farther apart.'
+            'Enter a maximum gap between 1 and 3600 seconds. Leave it at 90 '
+            + 'unless matching frames are farther apart.'
         );
         return null;
     }
@@ -838,7 +823,7 @@ function resetCalibrationInterface() {
     $('#calibration-value-result').show();
     $('#calibration-threshold-result, #calibration-threshold-advisory').hide();
     $('#calibration-result-title').text('Calibration result');
-    $('#calibration-apply-values').show().text('Save values and reload configuration');
+    $('#calibration-apply-values').show().text('Save calibration values');
     $('#calibration-warnings').hide();
     $('#calibration-progress')
         .css('width', '0%')
@@ -885,9 +870,8 @@ function renderSelectedFiles() {
 function validateSelectedFits(files) {
     if (files.length < 14) {
         showCalibrationError(
-            'Select at least 14 FITS at once: at least seven purple frames and '
-            + 'seven different nearby normal frames. More complete '
-            + 'before/purple/after groups can improve the result.'
+            'Select at least 14 FITS at once, including at least seven purple '
+            + 'frames and nearby normal frames.'
         );
         return false;
     }
@@ -1037,7 +1021,7 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
     $('#calibration-result-title').text('Calibration result');
     $('#calibration-value-result').show();
     $('#calibration-threshold-result, #calibration-threshold-advisory').hide();
-    $('#calibration-apply-values').show().text('Save values and reload configuration');
+    $('#calibration-apply-values').show().text('Save calibration values');
 
     const completed = result.completed_utc ? new Date(result.completed_utc) : null;
     $('#calibration-completed').text(
@@ -1049,18 +1033,18 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
     let resultSummary;
     if (result.source && result.source.kind === 'database') {
         resultSummary = (
-            'Calibration successful. Saved FITS from '
+            'Calibration complete. Saved FITS from '
             + (result.source.camera_name || 'the selected camera')
-            + ' were used; the original files were left unchanged.'
+            + ' were used. The original files were not changed.'
         );
     } else {
         resultSummary = (
-            'Calibration successful. Uploaded FITS were used and then deleted.'
+            'Calibration complete. Uploaded FITS were used and then deleted.'
         );
     }
     resultSummary += (
-        ' Only the seven calibration values shown below were derived; all '
-        + 'other settings remain unchanged.'
+        ' The recommended values are shown below. Saving them will not change '
+        + 'any other settings.'
     );
 
     let resultLevel = 'success';
@@ -1079,14 +1063,14 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
         } else if (configurationComparison.status === 'different') {
             {% if calibration_can_save_config %}
             comparisonMessage = (
-                'The result differs from the current configuration. Review '
-                + 'both value columns before applying it.'
+                'The recommended values differ from the current values. Review '
+                + 'both columns before saving.'
             );
             {% else %}
             comparisonMessage = (
-                'The result differs from the current configuration. Review '
-                + 'both value columns; a user who can save settings on the '
-                + 'Config page can apply it.'
+                'The recommended values differ from the current values. Review '
+                + 'both columns, then ask an administrator to save them in '
+                + 'Image Settings.'
             );
             {% endif %}
         }
@@ -1094,9 +1078,9 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
     if (marginalThresholds.length) {
         resultLevel = 'warning';
         const marginMessage = (
-            'Calibration is valid, but one or more detection thresholds have '
-            + 'a narrow margin. Review the observed gaps below, collect more '
-            + 'varied FITS, and rerun before changing those thresholds.'
+            'Some purple and normal frames were difficult to tell apart. Leave '
+            + 'the detection settings unchanged, collect more varied FITS, and '
+            + 'calibrate again before changing them.'
         );
         comparisonMessage = comparisonMessage
             ? comparisonMessage + ' ' + marginMessage
@@ -1149,16 +1133,16 @@ function renderCalibrationResult(sessionId, result, configurationComparison) {
     const quality = result.quality;
     $('#calibration-quality').empty().append(
         qualityCard('Purple frames used', quality.matched_bad_count),
-        qualityCard('Normal reference frames used', quality.matched_normal_count),
-        qualityCard('Good/purple/good groups', quality.two_sided_count),
-        qualityCard('Exposure levels', quality.exposure_level_count),
-        qualityCard('Repair checks passed', quality.validated_bad_count),
-        qualityCard('Normal-frame checks passed', quality.validated_normal_count),
+        qualityCard('Normal frames used', quality.matched_normal_count),
+        qualityCard('Complete frame groups', quality.two_sided_count),
+        qualityCard('Exposure settings', quality.exposure_level_count),
+        qualityCard('Purple frames checked after repair', quality.validated_bad_count),
+        qualityCard('Normal frames checked', quality.validated_normal_count),
         qualityCard(
-            'Purple frames skipped (no reference)',
+            'Purple frames without a nearby normal frame',
             quality.unmatched_bad_count
         ),
-        qualityCard('Files rejected', quality.rejected_file_count)
+        qualityCard('Files skipped', quality.rejected_file_count)
     );
 
     const warnings = $('#calibration-warnings').hide();
@@ -1194,14 +1178,14 @@ function renderThresholdSuggestion(sessionId, result) {
     activeCalibrationSourceKind = null;
     $('#calibration-progress').removeClass('progress-bar-animated');
     $('#calibration-setup-panel, #calibration-progress-panel, #calibration-error, #calibration-notice').hide();
-    $('#calibration-result-title').text('Detection threshold suggestion');
+    $('#calibration-result-title').text('Purple-frame detection needs adjustment');
     $('#calibration-value-result').hide();
     $('#calibration-threshold-result').show();
     $('#calibration-threshold-advisory').hide();
     {% if calibration_can_save_config %}
     $('#calibration-apply-values')
         .show()
-        .text('Apply thresholds and reload');
+        .text('Save detection settings');
     {% else %}
     $('#calibration-apply-values').hide();
     {% endif %}
@@ -1213,28 +1197,21 @@ function renderThresholdSuggestion(sessionId, result) {
             : 'Analysis completed'
     );
     const quality = result.quality;
-    const detectionIssue = (
-        quality.detected_bad_count >= 7
-            ? 'The combined detector found enough purple frames, but at least '
-                + 'one individual detection threshold lies outside its clean '
-                + 'normal/purple gap.'
-            : 'The current detector did not recognise enough purple and '
-                + 'normal evidence for calibration.'
-    );
     setResultStatus(
         'warning',
-        detectionIssue + ' The FITS still form two clean ratio populations. '
-        + 'No repair values were derived and no settings were changed.',
-        'Confirm that the higher-ratio population is the expected ASI676MC '
-        + 'purple-frame failure. Save only fields marked Change recommended, '
-        + 'then reset this tool and run calibration again.'
+        'The current settings could not reliably identify the purple frames. '
+        + 'The tool found likely purple and normal frames, but no repair values were created '
+        + 'and no settings were changed.',
+        'Check that the files listed as likely purple are the purple frames you '
+        + 'saw. If they are, confirm this below and save the recommended '
+        + 'detection settings. Then run calibration again.'
     );
 
     const thresholdBody = $('#calibration-threshold-values').empty();
     (result.threshold_suggestions || []).forEach(item => {
         const safeInterval = (
-            '>' + Number(item.normal_max).toFixed(3)
-            + ' and <= ' + Number(item.purple_min).toFixed(3)
+            'More than ' + Number(item.normal_max).toFixed(3)
+            + ', up to ' + Number(item.purple_min).toFixed(3)
         );
         thresholdBody.append(
             $('<tr />').append(
@@ -1247,8 +1224,8 @@ function renderThresholdSuggestion(sessionId, result) {
                 $('<td />').text(safeInterval),
                 $('<td />').text(
                     item.change_recommended
-                        ? 'Change recommended'
-                        : 'Current value is already safe'
+                        ? 'Change this value'
+                        : 'Keep the current value'
                 )
             )
         );
@@ -1266,10 +1243,15 @@ function renderThresholdSuggestion(sessionId, result) {
                         : captured.toLocaleString()
                 ),
                 $('<td />').text(item.name),
-                $('<td />').text(
-                    Number(item.purple_ratio).toFixed(3) + ' / '
-                    + Number(item.red_side_ratio).toFixed(3) + ' / '
-                    + Number(item.blue_side_ratio).toFixed(3)
+                $('<td />').append(
+                    $('<details />').append(
+                        $('<summary />').text('Show'),
+                        $('<span />').text(
+                            Number(item.purple_ratio).toFixed(3) + ' / '
+                            + Number(item.red_side_ratio).toFixed(3) + ' / '
+                            + Number(item.blue_side_ratio).toFixed(3)
+                        )
+                    )
                 )
             )
         );
@@ -1278,14 +1260,14 @@ function renderThresholdSuggestion(sessionId, result) {
     $('#calibration-apply-values').prop('disabled', true);
 
     $('#calibration-quality').empty().append(
-        qualityCard('Recognised by current detector', quality.detected_bad_count),
-        qualityCard('Likely purple population', quality.likely_purple_count),
-        qualityCard('Likely normal population', quality.likely_normal_count),
-        qualityCard('Likely purple frames matched', quality.matched_bad_count),
-        qualityCard('Distinct normal references', quality.matched_normal_count),
-        qualityCard('Good/purple/good groups', quality.two_sided_count),
-        qualityCard('Exposure levels', quality.exposure_level_count),
-        qualityCard('Files rejected', quality.rejected_file_count)
+        qualityCard('Purple frames found by current settings', quality.detected_bad_count),
+        qualityCard('Likely purple frames', quality.likely_purple_count),
+        qualityCard('Likely normal frames', quality.likely_normal_count),
+        qualityCard('Likely purple frames with a nearby normal frame', quality.matched_bad_count),
+        qualityCard('Different normal frames used', quality.matched_normal_count),
+        qualityCard('Complete frame groups', quality.two_sided_count),
+        qualityCard('Exposure settings', quality.exposure_level_count),
+        qualityCard('Files skipped', quality.rejected_file_count)
     );
 
     const warnings = $('#calibration-warnings').hide();
@@ -1333,16 +1315,16 @@ async function cancelCalibration() {
         const cancellation = await requestCalibrationCancellation(sessionId);
         if (cancellation.status === 'cancel_requested') {
             showCalibrationNotice(
-                'Cancellation requested. The current validation step will '
-                + 'stop at its next safe checkpoint.'
+                'Cancellation requested. The current step will finish before '
+                + 'calibration stops.'
             );
             return;
         }
         resetCalibrationInterface();
         showCalibrationNotice(
             sourceKind === 'database'
-                ? 'Saved-FITS search cancelled. Database FITS were not changed.'
-                : 'Calibration cancelled. Temporary FITS were deleted.'
+                ? 'Calibration cancelled. Your saved FITS were not changed.'
+                : 'Calibration cancelled. Uploaded FITS were deleted.'
         );
     } catch (error) {
         calibrationCancellationRequested = false;
@@ -1381,15 +1363,15 @@ async function discardCalibrationResult() {
         await calibrationJson(response);
         resetCalibrationInterface();
         showCalibrationNotice(
-            'Calibration result cleared. Choose saved FITS or upload a new '
-            + 'collection to calibrate again.'
+            'Result cleared. Search saved FITS or upload a new collection to '
+            + 'calibrate again.'
         );
     } catch (error) {
         if (failedResult) {
             $('#calibration-progress-error').text(
                 error.serverRejected
-                    ? 'The failed calibration was not cleared. Try Reset / '
-                        + 'try again once more; otherwise it will be removed '
+                    ? 'The failed calibration was not cleared. Try again once '
+                        + 'more; otherwise it will be removed '
                         + 'automatically after seven days.'
                     : 'The browser could not confirm whether the failed '
                         + 'calibration was cleared. Reload this page to check '
@@ -1424,8 +1406,8 @@ async function applyCalibrationValues() {
     if (!completedCalibrationSessionId) {
         setResultStatus(
             'warning',
-            'This calibration result is no longer available. Reset the tool '
-            + 'and run calibration again.'
+            'This calibration result is no longer available. Start over and '
+            + 'run calibration again.'
         );
         return;
     }
@@ -1438,18 +1420,16 @@ async function applyCalibrationValues() {
     ) {
         setResultStatus(
             'warning',
-            'Review the listed FITS examples and confirm that the higher-ratio '
-            + 'population is the actual purple-frame failure before saving.'
+            'Confirm that the files listed as likely purple are the purple '
+            + 'frames you saw before saving.'
         );
         return;
     }
     const confirmation = applyingThresholds
-        ? 'Apply only the recommended detection thresholds and reload '
-            + 'indi-allsky? Repair constants, repair mode, FITS saving, and '
-            + 'all other settings will remain unchanged. You must rerun '
-            + 'calibration afterwards.'
-        : 'Apply the seven derived values and reload indi-allsky? Repair mode, '
-            + 'FITS saving, and all other settings will remain unchanged.';
+        ? 'Save the recommended detection settings? Repair values and all other '
+            + 'settings will remain unchanged. You must run calibration again.'
+        : 'Save the recommended calibration values? All switches and other '
+            + 'settings will remain unchanged.';
     if (!window.confirm(confirmation)) {
         return;
     }
@@ -1458,10 +1438,8 @@ async function applyCalibrationValues() {
     setResultStatus(
         'info',
         applyingThresholds
-            ? 'Saving the recommended detection thresholds and requesting a '
-                + 'configuration reload...'
-            : 'Saving the seven derived values and requesting a configuration '
-                + 'reload...'
+            ? 'Saving the recommended detection settings...'
+            : 'Saving the calibration values...'
     );
     try {
         const response = await fetch(
@@ -1483,9 +1461,13 @@ async function applyCalibrationValues() {
             result.reload_queued ? 'success' : 'warning',
             result['success-message'],
             applyingThresholds
-                ? 'Reset this tool and rerun calibration with the new '
-                    + 'thresholds before applying repair constants.'
-                : ''
+                ? 'Start over and run calibration again with the new detection settings.'
+                : (
+                    calibrationExcludeOnly
+                        ? 'To start repairing purple frames, open Image Settings, '
+                            + 'turn off Detect and exclude only, and save.'
+                        : 'The new repair values will be used after indi-allsky reloads.'
+                )
         );
         // The server returns exactly the values it persisted. Reflect them in
         // the comparison table immediately instead of waiting for navigation.
@@ -1507,8 +1489,8 @@ async function applyCalibrationValues() {
             } else {
                 setResultStatus(
                     'danger',
-                    'The derived values were not saved. The existing '
-                    + 'configuration is unchanged.',
+                    'The calibration values were not saved. The existing '
+                    + 'settings are unchanged.',
                     error.message
                 );
             }
@@ -1516,9 +1498,7 @@ async function applyCalibrationValues() {
             setResultStatus(
                 'warning',
                 'The browser could not confirm whether the values were saved. '
-                + 'Check the current values in Image Settings before trying '
-                + 'again.',
-                'Details: ' + error.message
+                + 'Check Image Settings before trying again.'
             );
         }
         applyButton.prop('disabled', false);
@@ -1551,16 +1531,15 @@ async function fetchCalibrationStatus(sessionId) {
             setCalibrationProgress(
                 75,
                 'Reconnecting',
-                'The status request was interrupted. Retrying without losing '
-                + 'this calibration session (' + attempt + ' of 5).'
+                'Connection interrupted. Retrying without losing this '
+                + 'calibration (' + attempt + ' of 5).'
             );
             await new Promise(resolve => setTimeout(resolve, 2000));
         }
     }
     const error = new Error(
-        'This page cannot currently reach the calibration service. Your run '
-        + 'was kept. Reload the page to continue checking it. If this keeps '
-        + 'happening, include this message when reporting the issue. '
+        'This calibration is still saved, but the page cannot reach it. Reload '
+        + 'the page to continue. '
         + (lastError ? lastError.message : '')
     );
     error.resultUnconfirmed = true;
@@ -1586,13 +1565,12 @@ async function pollCalibration(sessionId) {
             let cleanupMessage;
             if (!status.sources_deleted_utc) {
                 cleanupMessage = (
-                    'Some temporary calibration data could not be removed '
-                    + 'immediately; regular cleanup will remove it later.'
+                    'Some temporary calibration files could not be removed '
+                    + 'immediately. They will be removed automatically later.'
                 );
             } else if (status.source_kind === 'database') {
                 cleanupMessage = (
-                    'Temporary working files were removed; the original saved '
-                    + 'FITS were left unchanged.'
+                    'Temporary files were removed. Your saved FITS were not changed.'
                 );
             } else {
                 cleanupMessage = 'Uploaded FITS were deleted.';
@@ -1610,7 +1588,7 @@ async function pollCalibration(sessionId) {
             resetCalibrationInterface();
             showCalibrationNotice(
                 status.source_kind === 'database'
-                    ? 'The saved-FITS search was cancelled. Database FITS were not changed.'
+                    ? 'Calibration cancelled. Your saved FITS were not changed.'
                     : 'The incomplete upload was cancelled and removed.'
             );
             return;
@@ -1619,7 +1597,7 @@ async function pollCalibration(sessionId) {
             setCalibrationProgress(
                 72,
                 'Waiting to start',
-                'The calibration service will start this run when it is ready.'
+                'Calibration will start when the service is ready.'
             );
         } else if (
             status.status === 'running'
@@ -1637,28 +1615,27 @@ async function pollCalibration(sessionId) {
                 setCalibrationProgress(
                     96,
                     'Stopping calibration',
-                    'Waiting for the current safe validation checkpoint.'
+                    'The current step will finish before calibration stops.'
                 );
             } else if (progress.phase === 'database_catalog') {
                 setCalibrationProgress(
                     catalogPercent,
                     'Checking saved FITS',
-                    'Checked ' + processed + ' of ' + available
-                        + ' saved FITS records from the complete retention period.'
+                    'Checked ' + processed + ' of ' + available + ' saved FITS.'
                 );
             } else if (progress.phase === 'threshold_search') {
                 setCalibrationProgress(
                     scanPercent,
-                    'Searching for missed purple frames',
-                    'The current settings found only '
+                    'Looking for additional purple frames',
+                    'The current settings found '
                     + Number(progress.detected_bad_count || 0)
                     + '. Checked ' + processed + ' of ' + available
-                    + ' retained FITS while looking for additional purple frames.'
+                        + ' saved FITS while looking for more.'
                 );
             } else if (progress.phase === 'detector_scan') {
                 setCalibrationProgress(
                     scanPercent,
-                    'Checking the current detector',
+                    'Finding purple frames',
                     'Checked ' + processed + ' of ' + available + ' FITS; '
                     + Number(progress.detected_bad_count || 0)
                     + ' purple frames recognised so far.'
@@ -1666,21 +1643,20 @@ async function pollCalibration(sessionId) {
             } else if (progress.phase === 'evidence_ready') {
                 setCalibrationProgress(
                     86,
-                    'Evidence ready',
-                    'Enough compatible evidence was found; preparing the '
-                    + 'selected groups.'
+                    'Enough files found',
+                    'Preparing the selected frame groups.'
                 );
             } else if (progress.phase === 'fitting') {
                 setCalibrationProgress(
                     91,
-                    'Deriving repair values',
+                    'Creating repair values',
                     'Comparing the selected purple and normal frame groups.'
                 );
             } else if (progress.phase === 'validating') {
                 setCalibrationProgress(
                     96,
-                    'Validating the result',
-                    'Checking the derived values against every selected group.'
+                    'Checking the result',
+                    'Testing the recommended values against every selected group.'
                 );
             } else {
                 setCalibrationProgress(
@@ -1702,9 +1678,8 @@ async function pollCalibration(sessionId) {
             return;
         } else {
             throw new Error(
-                'The saved calibration run could not be resumed. Reload this '
-                + 'page. If the problem repeats, include this message when '
-                + 'reporting the issue.'
+                'The saved calibration could not be resumed. Reload this page '
+                + 'and try again.'
             );
         }
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -1730,7 +1705,7 @@ async function submitCalibration() {
     setCalibrationProgress(
         0,
         'Preparing upload',
-        'Creating a private calibration session.'
+        'Preparing the selected FITS.'
     );
 
     try {
@@ -1804,9 +1779,9 @@ async function submitDatabaseCalibration() {
         || targetGroups > calibrationMaxDatabaseGroupCount
     ) {
         showCalibrationError(
-            'Choose a purple-frame group target between '
+            'Choose between '
             + calibrationMinDatabaseGroupCount + ' and '
-            + calibrationMaxDatabaseGroupCount + '.'
+            + calibrationMaxDatabaseGroupCount + ' frame groups.'
         );
         return;
     }
@@ -1821,7 +1796,7 @@ async function submitDatabaseCalibration() {
     setCalibrationProgress(
         10,
         'Searching saved FITS',
-        'Checking the newest saved FITS within the configured retention period.'
+        'Checking saved FITS for suitable purple and normal frames.'
     );
 
     try {
@@ -1834,7 +1809,7 @@ async function submitDatabaseCalibration() {
         $('#cancel-calibration')
             .show()
             .prop('disabled', false)
-            .text('Cancel saved-FITS search');
+            .text('Cancel search');
 
         const response = await fetch(calibrationDatabaseUrl, {
             method: 'POST',
@@ -1870,7 +1845,7 @@ async function submitDatabaseCalibration() {
             .text('Cancel calibration');
         setCalibrationProgress(
             72,
-            'Saved FITS ready',
+            'Saved FITS found',
             queued.discovery.selection_mode === 'marked_groups'
                 ? 'Found '
                     + countedResultItem(
@@ -1878,9 +1853,8 @@ async function submitDatabaseCalibration() {
                         'marked group',
                         'marked groups'
                     ) + ' with nearby normal FITS. Starting calibration.'
-                : 'Fewer than seven ready-to-use groups were found. The '
-                    + 'tool will check the retained FITS for additional '
-                    + 'purple frames.'
+                : 'Fewer than seven ready-to-use groups were found. Looking '
+                    + 'through the remaining saved FITS for more purple frames.'
         );
         await pollCalibration(queued.session_id);
         pollingCalibrationSessionId = null;

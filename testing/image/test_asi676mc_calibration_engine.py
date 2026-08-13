@@ -305,7 +305,7 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
         self.assertEqual(len(payload['population_evidence']), 21)
         self.assertEqual(
             {item['population'] for item in payload['population_evidence']},
-            {'higher ratio', 'lower ratio'},
+            {'Likely purple', 'Likely normal'},
         )
         self.assertTrue(all(
             item['timestamp_utc'].endswith('+00:00')
