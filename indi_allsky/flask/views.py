@@ -3393,6 +3393,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['WEB_STATUS_TEMPLATE']                  = str(request.json['WEB_STATUS_TEMPLATE'])
         self.indi_allsky_config['WEB_EXTRA_TEXT']                       = str(request.json['WEB_EXTRA_TEXT'])
         self.indi_allsky_config['WEBSOCKET_API_KEY']                    = str(request.json.get('WEBSOCKET_API_KEY', '')).strip()
+        app.config['WEBSOCKET_API_KEY']                                 = self.indi_allsky_config['WEBSOCKET_API_KEY']
         self.indi_allsky_config['WEB_NONLOCAL_IMAGES']                  = bool(request.json['WEB_NONLOCAL_IMAGES'])
         self.indi_allsky_config['WEB_LOCAL_IMAGES_ADMIN']               = bool(request.json['WEB_LOCAL_IMAGES_ADMIN'])
         self.indi_allsky_config['IMAGE_STRETCH']['CLASSNAME']           = str(request.json['IMAGE_STRETCH__CLASSNAME'])
@@ -12282,12 +12283,26 @@ class WsEventsView(BaseView):
         import simple_websocket
         from ..events import event_manager
 
-        api_key = request.args.get('api_key') or request.args.get('token')
+        api_key = request.args.get('api_key') or request.args.get('token') or request.headers.get('X-API-Key')
+        if not api_key and request.headers.get('Authorization'):
+            auth_h = request.headers.get('Authorization', '')
+            if auth_h.startswith('Bearer '):
+                api_key = auth_h[7:].strip()
 
         auth_required = app.config.get('INDI_ALLSKY_AUTH_ALL_VIEWS', False)
         if auth_required and not current_user.is_authenticated:
-            valid_key = getattr(self, 'indi_allsky_config', {}).get('WEBSOCKET_API_KEY') or app.config.get('WEBSOCKET_API_KEY') or app.config.get('SECRET_KEY')
-            if not api_key or (api_key != valid_key):
+            valid_keys = set()
+            db_ws_key = str(getattr(self, 'indi_allsky_config', {}).get('WEBSOCKET_API_KEY', '')).strip()
+            if db_ws_key:
+                valid_keys.add(db_ws_key)
+            flask_ws_key = str(app.config.get('WEBSOCKET_API_KEY', '')).strip()
+            if flask_ws_key:
+                valid_keys.add(flask_ws_key)
+            secret_key = str(app.config.get('SECRET_KEY', '')).strip()
+            if secret_key and secret_key != 'CHANGEME':
+                valid_keys.add(secret_key)
+
+            if not api_key or api_key.strip() not in valid_keys:
                 return 'Unauthorized', 401
 
         ws = simple_websocket.Server.accept(request.environ)
@@ -12363,6 +12378,8 @@ class WsEventsView(BaseView):
             except Exception:
                 pass
 
+        return ''
+
 
 class WsControlView(BaseView):
     """
@@ -12391,11 +12408,26 @@ class WsControlView(BaseView):
         import simple_websocket
         from ..events import event_manager
 
-        api_key = request.args.get('api_key') or request.args.get('token')
+        api_key = request.args.get('api_key') or request.args.get('token') or request.headers.get('X-API-Key')
+        if not api_key and request.headers.get('Authorization'):
+            auth_h = request.headers.get('Authorization', '')
+            if auth_h.startswith('Bearer '):
+                api_key = auth_h[7:].strip()
 
         # Control endpoint ALWAYS requires authentication
-        valid_key = getattr(self, 'indi_allsky_config', {}).get('WEBSOCKET_API_KEY') or app.config.get('WEBSOCKET_API_KEY') or app.config.get('SECRET_KEY')
-        if not current_user.is_authenticated and (not api_key or api_key != valid_key):
+        valid_keys = set()
+        db_ws_key = str(getattr(self, 'indi_allsky_config', {}).get('WEBSOCKET_API_KEY', '')).strip()
+        if db_ws_key:
+            valid_keys.add(db_ws_key)
+        flask_ws_key = str(app.config.get('WEBSOCKET_API_KEY', '')).strip()
+        if flask_ws_key:
+            valid_keys.add(flask_ws_key)
+        secret_key = str(app.config.get('SECRET_KEY', '')).strip()
+        if secret_key and secret_key != 'CHANGEME':
+            valid_keys.add(secret_key)
+
+        if not current_user.is_authenticated and (not api_key or api_key.strip() not in valid_keys):
+            app.logger.warning("WS control auth failed for client %s (provided: '%s', valid_keys count: %d)", request.remote_addr, api_key, len(valid_keys))
             return 'Unauthorized - API key or admin session required for /ws/control', 401
 
         ws = simple_websocket.Server.accept(request.environ)
