@@ -115,6 +115,7 @@ class IndiAllSky(object):
         self.smoke_tasks_time = now_time     # run asap
         self.sat_data_tasks_time = now_time  # run asap
         self.backup_tasks_time = now_time    # run asap
+        self.allskymap_tasks_time = now_time  # run asap
 
 
         self.position_av = Array('f', [
@@ -1469,6 +1470,18 @@ class IndiAllSky(object):
                     self._backupDatabase()
 
 
+        # Allsky Map Ping integration
+        if self.config.get('ALLSKYMAP', {}).get('ENABLE'):
+            if self.allskymap_tasks_time < now_time:
+                interval_mins = self.config['ALLSKYMAP'].get('INTERVAL', 10)
+                if not isinstance(interval_mins, int) or interval_mins < 1:
+                    interval_mins = 10
+                self.allskymap_tasks_time = now_time + (interval_mins * 60)
+
+                logger.info('Triggering Allsky Map Ping thread')
+                self._triggerAllskyMapPing()
+
+
     def _updateAuroraData(self, task_state=TaskQueueState.QUEUED):
 
         active_cameras = IndiAllSkyDbCameraTable.query\
@@ -1601,4 +1614,21 @@ class IndiAllSky(object):
             logger.info('Wrote new config')
         except ConfigSaveException:
             return
+
+
+    def _triggerAllskyMapPing(self, task_state=TaskQueueState.QUEUED):
+        jobdata = {
+            'action' : 'sendAllskyMapPing',
+            'kwargs' : {},
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=task_state,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.video_q.put({'task_id' : task.id})
 

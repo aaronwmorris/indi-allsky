@@ -29,6 +29,7 @@ var camera_id = {{ camera_id }};
     <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-youtube-tab" data-tab-target="nav-youtube" type="button" role="tab"><i class="tw:icon-[lucide--youtube] tw:w-3.5 tw:h-3.5"></i> YouTube</button>
     <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-s3-tab" data-tab-target="nav-s3" type="button" role="tab"><i class="tw:icon-[lucide--database] tw:w-3.5 tw:h-3.5"></i> Object Storage</button>
     <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-syncapi-tab" data-tab-target="nav-syncapi" type="button" role="tab"><i class="tw:icon-[lucide--refresh-cw] tw:w-3.5 tw:h-3.5"></i> SyncAPI</button>
+    <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-allskymap-tab" data-tab-target="nav-allskymap" type="button" role="tab"><i class="tw:icon-[lucide--map] tw:w-3.5 tw:h-3.5"></i> Allsky Map</button>
     <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-sensors-tab" data-tab-target="nav-sensors" type="button" role="tab"><i class="tw:icon-[lucide--cpu] tw:w-3.5 tw:h-3.5"></i> Sensors</button>
     <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-devices-tab" data-tab-target="nav-devices" type="button" role="tab"><i class="tw:icon-[lucide--plug] tw:w-3.5 tw:h-3.5"></i> Devices</button>
     <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-adsb-tab" data-tab-target="nav-adsb" type="button" role="tab"><i class="tw:icon-[lucide--plane] tw:w-3.5 tw:h-3.5"></i> ADS-B</button>
@@ -98,14 +99,12 @@ var camera_id = {{ camera_id }};
     {% include 'config/youtube.html' %}
     {% include 'config/s3.html' %}
     {% include 'config/syncapi.html' %}
+    {% include 'config/allskymap.html' %}
     {% include 'config/sensors.html' %}
     {% include 'config/devices.html' %}
     {% include 'config/adsb.html' %}
     {% include 'config/sat_track.html' %}
 </div>
-
-
-
 
 </form>
 </div>
@@ -678,6 +677,12 @@ const field_names = [
     'INDI_CONFIG_DEFAULTS',
     'INDI_CONFIG_DAY',
     'CONFIG_NOTE',
+    'ALLSKYMAP__API_URL',
+    'ALLSKYMAP__API_KEY',
+    'ALLSKYMAP__CAMERA_NAME',
+    'ALLSKYMAP__CAMERA_OWNER',
+    'ALLSKYMAP__WEBSITE_URL',
+    'ALLSKYMAP__INTERVAL',
 ];
 
 const checkbox_field_names = [
@@ -846,6 +851,8 @@ const checkbox_field_names = [
     'WEB_NONLOCAL_IMAGES',
     'WEB_LOCAL_IMAGES_ADMIN',
     'RELOAD_ON_SAVE',
+    'ALLSKYMAP__ENABLE',
+    'ALLSKYMAP__UPLOAD_IMAGE',
 ];
 
 var fields = {};
