@@ -941,8 +941,6 @@ $("#button_indiserver_change").on("click", function() {
     });
 });
 
-function reloadPage() { location.reload(); }
-
 $(document).ready(function() {
     // Reset all checkboxes on load
     $('input[type="checkbox"]').prop('checked', false);
@@ -1056,8 +1054,6 @@ $(document).ready(function() {
 
     // Refresh system statistics every 2 seconds
     setInterval(updateSystemStats, 2000);
-
-    setTimeout(reloadPage, 300000);
 });
 </script>
 {% endblock %}

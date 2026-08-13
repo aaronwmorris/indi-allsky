@@ -13,6 +13,7 @@ from pathlib import Path
 import socket
 import ipaddress
 import re
+import threading
 import psutil
 import dbus
 import ephem
@@ -23,6 +24,9 @@ from passlib.hash import argon2
 from ..version import __version__
 from .. import constants
 from ..processing import ImageProcessor
+from ..lens_solver import IndiAllSkyLensSolver
+from ..lens_solver import parseSolverRequestValues
+from ..lens_solver import applySolvedValuesToConfig
 
 from cryptography.fernet import InvalidToken
 
@@ -435,13 +439,8 @@ class VirtualSkyView(TemplateView):
 
 
         ### Camera DB settings
-        if self.indi_allsky_config.get('PRIVACY_MODE'):
-            # reduce precision for privacy
-            context['camera_latitude'] = float(round(self.camera.latitude))
-            context['camera_longitude'] = float(round(self.camera.longitude))
-        else:
-            context['camera_latitude'] = self.camera.latitude
-            context['camera_longitude'] = self.camera.longitude
+        context['camera_latitude'], context['camera_longitude'] = \
+            self.getCameraPrivacyLatLong(self.camera)
 
 
         ### Calculate time offset
@@ -5942,42 +5941,6 @@ class AjaxSystemInfoView(BaseView):
         return jsonify(json_data)
 
 
-class AjaxSystemStatsView(SystemInfoView):
-    methods = ['GET']
-    decorators = [login_required]
-
-    def __init__(self, **kwargs):
-        super(AjaxSystemStatsView, self).__init__(template_name=None, **kwargs)
-
-    def dispatch_request(self):
-        context = self.get_context()
-        
-        now_dt = context.get('now')
-        now_str = now_dt.strftime('%Y-%m-%d %H:%M:%S') if now_dt else ''
-        now_date = now_dt.strftime('%m / %d / %Y') if now_dt else ''
-        now_time = now_dt.strftime('%I : %M : %S %P') if now_dt else ''
-
-        data = {
-            'cpu_usage': context.get('cpu_usage'),
-            'cpu_count': context.get('cpu_count'),
-            'cpu_load5': context.get('cpu_load5'),
-            'cpu_load10': context.get('cpu_load10'),
-            'cpu_load15': context.get('cpu_load15'),
-            'mem_total': context.get('mem_total'),
-            'mem_usage': context.get('mem_usage'),
-            'swap_total': context.get('swap_total'),
-            'swap_usage': context.get('swap_usage'),
-            'fs_data': context.get('fs_data'),
-            'uptime_str': context.get('uptime_str'),
-            'temp_list': context.get('temp_list'),
-            'fan_list': context.get('fan_list'),
-            'now': now_str,
-            'now_date': now_date,
-            'now_time': now_time,
-        }
-        return jsonify(data)
-
-
     def rebootSystemd(self):
         system_bus = dbus.SystemBus()
         systemd1 = system_bus.get_object('org.freedesktop.login1', '/org/freedesktop/login1')
@@ -6578,6 +6541,42 @@ class AjaxSystemStatsView(SystemInfoView):
         db.session.commit()
 
         return message_list
+
+
+class AjaxSystemStatsView(SystemInfoView):
+    methods = ['GET']
+    decorators = [login_required]
+
+    def __init__(self, **kwargs):
+        super(AjaxSystemStatsView, self).__init__(template_name=None, **kwargs)
+
+    def dispatch_request(self):
+        context = self.get_context()
+
+        now_dt = context.get('now')
+        now_str = now_dt.strftime('%Y-%m-%d %H:%M:%S') if now_dt else ''
+        now_date = now_dt.strftime('%m / %d / %Y') if now_dt else ''
+        now_time = now_dt.strftime('%I : %M : %S %P') if now_dt else ''
+
+        data = {
+            'cpu_usage': context.get('cpu_usage'),
+            'cpu_count': context.get('cpu_count'),
+            'cpu_load5': context.get('cpu_load5'),
+            'cpu_load10': context.get('cpu_load10'),
+            'cpu_load15': context.get('cpu_load15'),
+            'mem_total': context.get('mem_total'),
+            'mem_usage': context.get('mem_usage'),
+            'swap_total': context.get('swap_total'),
+            'swap_usage': context.get('swap_usage'),
+            'fs_data': context.get('fs_data'),
+            'uptime_str': context.get('uptime_str'),
+            'temp_list': context.get('temp_list'),
+            'fan_list': context.get('fan_list'),
+            'now': now_str,
+            'now_date': now_date,
+            'now_time': now_time,
+        }
+        return jsonify(data)
 
 
 class AjaxIndiServerChangeView(BaseView):
@@ -7512,6 +7511,147 @@ class AjaxFocusControllerView(BaseView):
         }
 
         return jsonify(r)
+
+
+class AjaxLensSolverView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    # Single-flight guard around the CPU-bound scipy fit. PRECONDITION: per-process lock,
+    # only effective while gunicorn.conf.py runs ONE worker -- more workers defeat it silently.
+    _solve_lock = threading.Lock()
+
+    # advisory hint on the 429 response only, not a correctness guarantee
+    LOCK_RETRY_AFTER_S = 10
+
+
+    def dispatch_request(self):
+        action = str(request.json.get('action', ''))
+
+        if action == 'solve':
+            return self.solve()
+        elif action == 'save':
+            return self.save()
+
+        return jsonify({'success': False, 'message': 'Unknown action'}), 400
+
+
+    def solve(self):
+        values, error = parseSolverRequestValues(request.json)
+        if error:
+            return jsonify({'success': False, 'message': error}), 400
+
+        try:
+            camera_id = int(request.json['camera_id'])
+            timestamp = int(request.json['timestamp'])
+        except (KeyError, TypeError, ValueError):
+            return jsonify({'success': False, 'message': 'camera_id and timestamp required'}), 400
+
+        # explicit check: an unknown camera_id would otherwise fall through to a FakeCamera (lat/long 0.0) and solve silently wrong
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .first()
+        if not camera:
+            return jsonify({'success': False, 'message': 'Unknown camera'}), 400
+
+        # pre-set self.camera so cameraSetup() reuses this row instead of re-querying
+        self.camera = camera
+        self.cameraSetup(camera_id=camera_id)
+
+        # resolve by exact camera + timestamp (NEVER "latest"); a huge int can raise OverflowError/OSError, not just ValueError
+        try:
+            ts_dt = datetime.fromtimestamp(timestamp)
+        except (OverflowError, OSError, ValueError):
+            return jsonify({'success': False, 'message': 'Invalid timestamp'}), 400
+        ts_dt_end = ts_dt + timedelta(seconds=1)
+
+        image_entry = IndiAllSkyDbImageTable.query\
+            .filter(IndiAllSkyDbImageTable.camera_id == camera_id)\
+            .filter(IndiAllSkyDbImageTable.createDate >= ts_dt)\
+            .filter(IndiAllSkyDbImageTable.createDate < ts_dt_end)\
+            .first()
+
+        if not image_entry:
+            return jsonify({'success': False, 'message': 'Image not found for timestamp'}), 400
+
+        image_file = image_entry.getFilesystemPath()
+        if not image_file.exists():
+            return jsonify({'success': False, 'message': 'Image file missing from filesystem'}), 400
+
+        # same lat/long the VirtualSky page renders with (incl. privacy rounding)
+        latitude, longitude = self.getCameraPrivacyLatLong(self.camera)
+
+        # identical effective-time computation to VirtualSkyView.get_context
+        obstime_unix = timestamp - self.camera_time_offset
+
+        solver = IndiAllSkyLensSolver(self.indi_allsky_config)
+
+        if not self._solve_lock.acquire(blocking=False):
+            return jsonify({
+                'success': False,
+                'message': 'A lens solve is already in progress -- please wait and try again.',
+            }), 429, {'Retry-After': str(self.LOCK_RETRY_AFTER_S)}
+
+        try:
+            result = solver.solve(image_file, latitude, longitude, obstime_unix, values)
+        except Exception:  # noqa: BLE001
+            # never return a raw exception string to the client
+            app.logger.exception('Lens solver failed')
+            return jsonify({'success': False, 'message': 'Solver error -- check server logs'}), 500
+        finally:
+            self._solve_lock.release()
+
+        return jsonify(result)
+
+
+    def save(self):
+        if not app.config['LOGIN_DISABLED']:
+            if not current_user.is_admin:
+                return jsonify({'success': False, 'message': 'You do not have permission to make configuration changes'}), 403
+
+        values, error = parseSolverRequestValues(request.json)
+        if error:
+            return jsonify({'success': False, 'message': error}), 400
+
+        reload_on_save = bool(request.json.get('RELOAD_ON_SAVE', False))
+
+        applySolvedValuesToConfig(self.indi_allsky_config, values)
+
+        # do NOT reassign `self._indi_allsky_config_obj.config = self.indi_allsky_config` here:
+        # the setter rebuilds `_config` as a new OrderedDict, breaking the object identity the
+        # in-place mutation above relies on -- later mutations would be silently discarded.
+        if not app.config['LOGIN_DISABLED']:
+            username = current_user.username
+        else:
+            username = 'system'
+
+        try:
+            self._indi_allsky_config_obj.save(username, 'Lens solver calibration')
+        except ConfigSaveException as e:
+            error_data = {
+                'form_global': [str(e)],
+            }
+            return jsonify(error_data), 400
+
+        message = 'Saved lens calibration to config. Note: saving Azimuth Angle also moves the cardinal-direction (N/E/S/W) labels burned into future images.'
+
+        if reload_on_save:
+            self._miscDb.setState('STATUS', constants.STATUS_RELOADING)
+
+            task_reload = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.MAIN,
+                state=TaskQueueState.MANUAL,
+                priority=100,
+                data={'action': 'reload'},
+            )
+            db.session.add(task_reload)
+            db.session.commit()
+
+            message += ' Reloading indi-allsky service.'
+        else:
+            message += ' Values become page defaults after the next service reload.'
+
+        return jsonify({'success': True, 'message': message})
 
 
 class ManualGpioView(TemplateView):
@@ -12303,6 +12443,119 @@ class WsShellView(BaseView):
         return ''
 
 
+class ESP32ImageView(BaseView):
+    decorators = []
+
+    VALID_SIZES = (240, 280, 320, 720, 800)
+    DEFAULT_SIZE = 240
+
+
+    def dispatch_request(self):
+        import cv2
+
+        try:
+            camera_id = int(request.args.get('camera_id', 0))
+        except (ValueError, TypeError):
+            camera_id = 0
+
+        try:
+            size = int(request.args.get('size', self.DEFAULT_SIZE))
+        except (ValueError, TypeError):
+            size = self.DEFAULT_SIZE
+
+        if size not in self.VALID_SIZES:
+            size = self.DEFAULT_SIZE
+
+        if not camera_id:
+            camera = self.getLatestCamera()
+            camera_id = camera.id
+
+        self.cameraSetup(camera_id=camera_id)
+
+        image_data = None
+
+        if self.indi_allsky_config.get('CIRCULAR_DISPLAY', {}).get('ENABLE', False):
+            image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
+            circular_image_p = image_dir.joinpath('circular_display.{0:s}'.format(self.indi_allsky_config['IMAGE_FILE_TYPE']))
+
+            if circular_image_p.exists():
+                image_data = self._readImage(circular_image_p)
+
+        if image_data is None:
+            image_entry = self._getLatestImage(camera_id)
+            if not image_entry:
+                return 'No image available', 404
+
+            image_p = image_entry.getFilesystemPath()
+
+            if not image_p.exists():
+                app.logger.error('ESP32: image file not found: %s', image_p)
+                return 'Image file not found', 404
+
+            image_data = self._readImage(image_p)
+            if image_data is None:
+                return 'Unable to read image', 500
+
+        image_resized = cv2.resize(image_data, (size, size), interpolation=cv2.INTER_AREA)
+
+        jpg_quality = self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('jpg', 90)
+        _, image_bytes = cv2.imencode('.jpg', image_resized, [cv2.IMWRITE_JPEG_QUALITY, jpg_quality])
+        image_buffer = io.BytesIO(image_bytes.tobytes())
+
+        return Response(image_buffer.getvalue(), mimetype='image/jpeg')
+
+
+    def _getLatestImage(self, camera_id):
+        return IndiAllSkyDbImageTable.query\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .first()
+
+
+    def _readImage(self, image_p):
+        import cv2
+
+        if image_p.suffix in ('.jpg', '.jpeg'):
+            import simplejpeg
+            try:
+                with io.open(str(image_p), 'rb') as f:
+                    return simplejpeg.decode_jpeg(f.read(), colorspace='BGR')
+            except ValueError:
+                app.logger.error('Unable to read %s', image_p)
+                return None
+
+        elif image_p.suffix in ('.png',):
+            data = cv2.imread(str(image_p), cv2.IMREAD_COLOR)
+            if isinstance(data, type(None)):
+                app.logger.error('Unable to read %s', image_p)
+                return None
+            return data
+
+        elif image_p.suffix in ('.fit', '.fits'):
+            import numpy
+            from astropy.io import fits
+            try:
+                hdulist = fits.open(image_p)
+            except OSError:
+                app.logger.error('Unable to read %s', image_p)
+                return None
+            image_data = numpy.swapaxes(hdulist[0].data, 0, 2)
+            image_data = numpy.swapaxes(image_data, 0, 1)
+            return cv2.cvtColor(image_data, cv2.COLOR_RGB2BGR)
+
+        else:
+            import numpy
+            import PIL
+            from PIL import Image
+            try:
+                with Image.open(str(image_p)) as img_pil:
+                    return cv2.cvtColor(numpy.array(img_pil), cv2.COLOR_RGB2BGR)
+            except PIL.UnidentifiedImageError:
+                app.logger.error('Unable to read %s', image_p)
+                return None
+
+
 # images are normally served directly by the web server, this is a backup method
 @bp_allsky.route('/images/<path:path>')  # noqa: E302
 def images_folder(path):
@@ -12450,6 +12703,7 @@ bp_allsky.add_url_rule('/drives', view_func=DriveManagerView.as_view('drive_mana
 bp_allsky.add_url_rule('/ajax/drives', view_func=AjaxDriveManagerView.as_view('ajax_drive_manager_view'))
 
 bp_allsky.add_url_rule('/virtualsky', view_func=VirtualSkyView.as_view('virtualsky_view', template_name='virtualsky.html'))
+bp_allsky.add_url_rule('/ajax/lens_solver', view_func=AjaxLensSolverView.as_view('ajax_lens_solver_view'))
 
 bp_allsky.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_view('ajax_notification_view'))
 bp_allsky.add_url_rule('/ajax/selectcamera', view_func=AjaxSelectCameraView.as_view('ajax_select_camera_view'))
@@ -12481,6 +12735,8 @@ bp_allsky.add_url_rule('/latesttimelapsewatch', view_func=LatestTimelapseVideoWa
 bp_allsky.add_url_rule('/lateststartrailvideowatch', view_func=LatestStartrailVideoWatchRedirect.as_view('latest_startrail_video_watch_redirect_view'))
 bp_allsky.add_url_rule('/latestpanoramavideowatch', view_func=LatestPanoramaVideoWatchRedirect.as_view('latest_panorama_video_watch_redirect_view'))
 
+bp_allsky.add_url_rule('/allsky_esp32', view_func=ESP32ImageView.as_view('esp32_image_view'))
+
 # hidden
 bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
 bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
@@ -12490,11 +12746,15 @@ bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', templ
 
 @bp_allsky.route('/sw.js')
 def service_worker():
-    return send_from_directory(
+    response = send_from_directory(
         os.path.join(app.root_path, 'static', 'js'),
         'sw.js',
         mimetype='application/javascript'
     )
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 
 @bp_allsky.route('/manifest.json')

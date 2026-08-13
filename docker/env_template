@@ -6,11 +6,13 @@ TZ=America/New_York
 
 INDIALLSKY_INDI_CCD_DRIVER=indi_simulator_ccd
 #INDIALLSKY_INDI_CCD_DRIVER=indi_asi_ccd
+#INDIALLSKY_INDI_CCD_DRIVER=indi_qhy_ccd
 #INDIALLSKY_INDI_CCD_DRIVER=indi_toupcam_ccd
 #INDIALLSKY_INDI_CCD_DRIVER=indi_altaircam_ccd
 #INDIALLSKY_INDI_CCD_DRIVER=indi_ogmacam_ccd_ccd
 #INDIALLSKY_INDI_CCD_DRIVER=indi_omegonprocam_ccd
 #INDIALLSKY_INDI_CCD_DRIVER=indi_playerone_ccd
+#INDIALLSKY_INDI_CCD_DRIVER=indi_libcamera_ccd
 INDIALLSKY_INDI_GPS_DRIVER=
 
 # This folder needs to be shared to the capture, gunicorn, and nginx containers
@@ -42,16 +44,25 @@ INDIALLSKY_MOSQUITTO_PASS=%WEB_PASS%
 INDIALLSKY_WEB_GENERATE_APIKEY=false
 
 # Only used on the debian build
-INDIALLSKY_INDI_CORE_VERSION=v2.2.3.1
-INDIALLSKY_INDI_3RDPARTY_VERSION=v2.2.3.1
+INDIALLSKY_INDI_CORE_VERSION=v2.2.4.2
+INDIALLSKY_INDI_3RDPARTY_VERSION=v2.2.4.1
 
 # "supported" includes all supported camera drivers except libcamera
-# asi, qhy, playerone, sx, touptek, svbony, libcamera, gphoto, webcam
+# Vendor options: asi, qhy, playerone, sx, touptek, altair, svbony, libcamera, gphoto, webcam
+# The "libcamera" server is not compiled by default and requires the libcamera library (commented out in indi_base image)
+# "qhy" will be problematic due to the way the firmware is loaded and the device entries change during initialization
 INDIALLSKY_CAMERA_VENDOR=supported
+#INDIALLSKY_CAMERA_VENDOR=asi
+#INDIALLSKY_CAMERA_VENDOR=qhy
+#INDIALLSKY_CAMERA_VENDOR=playerone
+#INDIALLSKY_CAMERA_VENDOR=touptek
+#INDIALLSKY_CAMERA_VENDOR=altair
+#INDIALLSKY_CAMERA_VENDOR=svbony
+#INDIALLSKY_CAMERA_VENDOR=libcamera
 
 # libcamera is commented out of Dockerfile.indi_base_debian13
-INDIALLSKY_LIBCAMERA_TAG=v0.7.0+rpt20260205
-INDIALLSKY_RPICAM_APPS_TAG=v1.11.1
+INDIALLSKY_LIBCAMERA_TAG=v0.7.2+rpt20260807
+INDIALLSKY_RPICAM_APPS_TAG=v1.13.0
 
 INDIALLSKY_MARIADB_HOST=mariadb.indi.allsky
 INDIALLSKY_MARIADB_PORT=3306

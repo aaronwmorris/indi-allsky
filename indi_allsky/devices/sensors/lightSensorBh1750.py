@@ -25,7 +25,7 @@ class LightSensorBh1750(SensorBase):
         logger.info('[%s] BH1750 - lux: %0.4f', self.name, lux)
 
 
-        astro_darkness = self.astro_av[constants.ASTRO_SUN_ALT] <= 18.0
+        astro_darkness = self.astro_av[constants.ASTRO_SUN_ALT] <= -18.0
         if astro_darkness:
             try:
                 sqm_mag, raw_mag = self.lux2mag(lux)

@@ -135,6 +135,14 @@ class BaseView(View):
         return camera
 
 
+    def getCameraPrivacyLatLong(self, camera):
+        # reduce precision for privacy
+        if self.indi_allsky_config.get('PRIVACY_MODE'):
+            return float(round(camera.latitude)), float(round(camera.longitude))
+
+        return camera.latitude, camera.longitude
+
+
     def verify_admin_network(self):
         network_list = list()
 
@@ -965,8 +973,9 @@ class BaseView(View):
 
         mask_processor = MaskProcessor(
             self.indi_allsky_config,
-            binning,
         )
+
+        mask_processor.binning = binning
 
 
         # masks need to be rotated, flipped, cropped for post-processed images
@@ -993,7 +1002,9 @@ class BaseView(View):
 
 
         # crop
-        if self.indi_allsky_config.get('IMAGE_CROP_ROI'):
+        if self.indi_allsky_config.get('IMAGE_CROP_IMAGE_CIRCLE'):
+            mask_processor.crop_image()
+        elif self.indi_allsky_config.get('IMAGE_CROP_ROI'):
             mask_processor.crop_image()
 
 

@@ -2080,6 +2080,7 @@ fi
 
 # pyindi-client setup
 SUPPORTED_INDI_VERSIONS=(
+    "2.2.4"
     "2.2.3"
     "2.2.2"
     "2.2.1"
