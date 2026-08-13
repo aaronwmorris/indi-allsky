@@ -115,6 +115,12 @@ and filenames do not decide inferred populations.
 Threshold discovery is a preliminary outcome, not calibration. It derives no
 repair constants and changes no settings during analysis. The user must confirm
 that the files listed as likely purple show the expected purple-frame failure.
+When representative frames can be rendered, the result also shows up to two
+likely purple frames and two likely normal frames. These examples are available
+for both uploaded and saved FITS. They are rendered from the original,
+unrepaired FITS with one brightness stretch across all three colour channels so
+the purple/normal colour difference remains visible.
+
 A user who can save settings on the Config page can then select **Save detection
 settings**, or enter only the recommended thresholds in Image Settings, and
 rerun calibration. Saving is blocked until the user confirms, after reviewing
@@ -123,7 +129,8 @@ actual failure rather than an ordinary scene regime.
 A configured threshold already inside an observed safe gap is retained rather
 than replaced by a cosmetically different midpoint. Overlapping or
 inconsistently ordered populations produce an explanation instead of an unsafe
-suggestion.
+suggestion. If no sufficiently clear populations can be established, analysis
+stops without offering confirmation or changing any settings.
 
 When calibration succeeds but a configured threshold sits within fifteen
 percent of either edge of its observed normal/purple gap, the repair constants
@@ -296,7 +303,7 @@ The file picker accepts all selected FITS at once. The browser uploads them
 sequentially so a Raspberry Pi does not need to buffer a large collection in
 one request. Limits are enforced on both browser and server:
 
-- 200 files per session;
+- 80 files per session;
 - 256 MiB per file; and
 - 2 GiB total per session.
 
@@ -331,7 +338,7 @@ late request from reviving a cancelled session.
 ### Discover saved FITS
 
 Automatic discovery searches database-managed FITS for the selected ASI676MC.
-The user chooses a target of 7 to 100 purple-frame groups rather than a raw file
+The user chooses a target of 7 to 30 purple-frame groups rather than a raw file
 limit. The browser queues one background job immediately. That job enumerates
 the complete configured FITS retention period, checks every eligible row, and
 then stages up to the requested number of usable groups. If fewer than seven
@@ -444,6 +451,12 @@ normal references remain a separate confidence warning.
 A preliminary threshold result instead shows current and suggested detection
 values, each observed safe interval, population and adjacency evidence, and a
 prominent instruction to review and rerun. The repair-value table is hidden.
+Up to two representative examples from each likely population appear above the
+filename table when they can be created. A preview is explanatory only: if a
+selected FITS cannot be reopened or rendered, the other examples and the full
+filename, capture-time, and ratio table remain available, and the valid
+threshold result is not discarded.
+
 For a user who can save settings on the Config page, **Save detection settings**
 saves only fields marked Change recommended; it never saves repair
 constants from a preliminary result. The result lists population filenames,
@@ -534,9 +547,10 @@ indi-allsky FITS expiration behavior.
 5. Open **Tools > Fix ASI676MC purple frames** as a user who can save settings on the
    Config page.
 6. Discover saved FITS or select a multi-file upload.
-7. If recommended detection settings appear, verify the likely purple files, apply
-   or manually edit only the recommended detection fields, reset the tool, and
-   rerun.
+7. If recommended detection settings appear, compare the likely purple and
+   likely normal previews when available, verify the listed likely purple
+   files, apply or manually edit only the recommended detection fields, reset
+   the tool, and rerun.
 8. Review the file summary, notes, recommended values, and current values.
 9. Download the report if an audit copy is useful.
 10. Apply the result only after it looks credible.
@@ -579,6 +593,13 @@ rerun calibration; the tool never changes detection thresholds during
 analysis. A user who can save Config may save the recommended subset after
 reviewing it.
 
+**No preview images appear with a threshold suggestion**
+
+Previews are best-effort visual aids. Use the complete filename, capture-time,
+and ratio table to confirm the populations if one or more selected FITS could
+not be rendered. A missing preview does not weaken or replace the evidence
+checks that produced the threshold suggestion.
+
 **The report time differs from UTC**
 
 This is intentional. Browser and text-report timestamps are shown in local
@@ -606,13 +627,13 @@ recalibrate; do not loosen detection thresholds merely to suppress the warning.
 | `indi_allsky/processing.py` | Runtime eligibility checks, Detect and exclude only behavior, repair invocation, logging, and actionable notifications. |
 | `indi_allsky/image.py` | Untouched diagnostic FITS capture, optional preceding-frame cache, database records, and rendered-image metadata. |
 | `indi_allsky/asi676mc_calibration_engine.py` | FITS inspection, matching, evidence policy, numerical fitting, and validation through the live repair path. |
-| `indi_allsky/asi676mc_calibration.py` | Private sessions, uploads, database discovery/staging, cleanup, user guidance, result comparison, and text reports. |
+| `indi_allsky/asi676mc_calibration.py` | Private sessions, uploads, database discovery/staging, population previews, cleanup, user guidance, result comparison, and text reports. |
 | `indi_allsky/video.py` | Dedicated serial calibration consumer, retained-FITS database access and ratio-cache backfill, plus seven-day session cleanup fallback. |
 | `indi_allsky/flask/forms.py` | Settings validators, calibration controls, saved-FITS lookup, viewer assets, and gallery filtering. |
 | `indi_allsky/flask/views.py` | Authenticated endpoints, task queueing, result/report access, and configuration apply/reload. |
 | `indi_allsky/flask/base_views.py` and `templates/base.html` | Context-aware Tools-menu visibility in the current navigation. |
 | `indi_allsky/flask/templates/config.html`, `config/image.html`, and `config/asi676mc.html` | Configuration save integration, responsive settings card, and contextual guidance. |
-| `indi_allsky/flask/templates/asi676mc_calibration.html` | Calibration setup/progress/result transitions, cancellation, reports, reset, and browser capability checks. |
+| `indi_allsky/flask/templates/asi676mc_calibration.html` | Calibration setup/progress/result transitions, population previews, cancellation, reports, reset, and browser capability checks. |
 | `indi_allsky/flask/templates/gallery.html` | Optional repair/exclusion badges, outlines, and status-specific filtering. |
 | `indi_allsky/flask/templates/imageviewer.html` | Diagnostic preceding/purple/following FITS downloads. |
 | `testing/image/test_asi676mc_repair.py` | Detection, repair, validation, metadata, and diagnostic helper coverage. |

@@ -2235,6 +2235,24 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         ).read_text(encoding='utf-8')
         self.assertIn('camera-bound legacy', docs)
         self.assertIn('Start over', docs)
+        self.assertIn(
+            '- {0} files per session;'.format(
+                asi676mc_calibration.MAX_FILE_COUNT,
+            ),
+            docs,
+        )
+        self.assertIn(
+            'target of {0} to {1} purple-frame groups'.format(
+                asi676mc_calibration.DATABASE_GROUP_MIN,
+                asi676mc_calibration.DATABASE_GROUP_MAX,
+            ),
+            docs,
+        )
+        self.assertIn(
+            'up to two likely purple frames and two likely normal frames',
+            ' '.join(docs.split()),
+        )
+        self.assertIn('Previews are best-effort visual aids.', docs)
 
         video_source = project_root.joinpath(
             'indi_allsky', 'video.py'
