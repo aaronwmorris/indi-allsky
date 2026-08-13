@@ -4,6 +4,7 @@ Dynamically resolves configured sensor slots into named dictionary entries based
 """
 import logging
 from typing import Dict, Any, List
+from datetime import datetime
 from . import constants
 
 logger = logging.getLogger('indi_allsky')
@@ -108,19 +109,14 @@ def build_slot_label_map(config: Dict[str, Any]) -> Dict[int, Dict[str, Any]]:
 def format_named_sensors(sensor_temp: List[float], sensor_user: List[float], config: Dict[str, Any] = None) -> Dict[str, Any]:
     """
     Formats raw sensor arrays into a dictionary of named sensor objects.
-
-    Returns:
-        Dict of sensor_key -> { "name": ..., "value": ..., "unit": ..., "device_class": ..., "slot": ... }
     """
     config = config or {}
     slot_map = build_slot_label_map(config)
     named_sensors: Dict[str, Any] = {}
 
     for idx, val in enumerate(sensor_user):
-        # Ignore unpopulated/zero slots unless explicitly configured
         if idx in slot_map:
             meta = slot_map[idx]
-            # Include non-zero values or designated fixed slots
             if val != 0.0 or idx in (0, 1, 4):
                 named_sensors[meta["key"]] = {
                     "name": meta["name"],
@@ -131,3 +127,40 @@ def format_named_sensors(sensor_temp: List[float], sensor_user: List[float], con
                 }
 
     return named_sensors
+
+
+def get_latest_sensors_payload(config: Dict[str, Any] = None) -> Dict[str, Any]:
+    """
+    Queries the latest sensor data from the database and returns a formatted payload.
+    """
+    from .flask.models import IndiAllSkyDbImageTable
+
+    config = config or {}
+    sensor_user = [0.0] * 60
+    sensor_temp = [0.0] * 60
+    last_update = None
+    last_update_age_s = None
+
+    try:
+        latest_img = IndiAllSkyDbImageTable.query.order_by(IndiAllSkyDbImageTable.createDate.desc()).first()
+
+        if latest_img:
+            last_update = str(latest_img.createDate)
+            last_update_age_s = int((datetime.now() - latest_img.createDate).total_seconds())
+
+            data = dict(latest_img.data) if hasattr(latest_img, 'data') and latest_img.data else {}
+
+            sensor_user = [float(data.get(f'sensor_user_{i}', 0.0)) for i in range(60)]
+            sensor_temp = [float(data.get(f'sensor_temp_{i}', 0.0)) for i in range(60)]
+    except Exception as e:
+        logger.error("Error querying latest sensor image data: %s", e)
+
+    named_sensors = format_named_sensors(sensor_temp, sensor_user, config)
+
+    return {
+        'last_update': last_update,
+        'last_update_age_s': last_update_age_s,
+        'sensor_user': sensor_user,
+        'sensor_temp': sensor_temp,
+        'sensors': named_sensors,
+    }

@@ -58,7 +58,7 @@ class EventManager:
             "event": event_type,
             "timestamp": time.time(),
             "data": data
-        })
+        }, default=str)
 
         dead_clients = set()
         sent_count = 0

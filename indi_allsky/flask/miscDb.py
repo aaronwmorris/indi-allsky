@@ -690,6 +690,20 @@ class miscDb(object):
         db.session.add(keogram)
         db.session.commit()
 
+        try:
+            from ..events import event_manager
+            event_manager.broadcast('keogram_complete', {
+                'id': keogram.id,
+                'filename': str(keogram.filename),
+                'camera_id': camera_id,
+                'createDate': str(keogram.createDate),
+                'dayDate': str(keogram.dayDate),
+                'night': keogram.night,
+                'frames': keogram.frames,
+            })
+        except Exception as ev_err:
+            logger.error('Error broadcasting keogram_complete event: %s', ev_err)
+
         return keogram
 
 
@@ -746,6 +760,20 @@ class miscDb(object):
 
         db.session.add(startrail)
         db.session.commit()
+
+        try:
+            from ..events import event_manager
+            event_manager.broadcast('startrail_complete', {
+                'id': startrail.id,
+                'filename': str(startrail.filename),
+                'camera_id': camera_id,
+                'createDate': str(startrail.createDate),
+                'dayDate': str(startrail.dayDate),
+                'night': startrail.night,
+                'frames': startrail.frames,
+            })
+        except Exception as ev_err:
+            logger.error('Error broadcasting startrail_complete event: %s', ev_err)
 
         return startrail
 

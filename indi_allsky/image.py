@@ -830,6 +830,22 @@ class ImageWorker(Process):
                 image_metadata,
             )
 
+            try:
+                from .events import event_manager
+                exposure_payload = {
+                    'filename': str(new_filename.relative_to(self.image_dir)),
+                    'camera_id': camera_id,
+                    'createDate': str(exp_date),
+                    'exposure': round(i_ref.exposure, 6),
+                    'gain': round(i_ref.gain, 3),
+                    'binmode': i_ref.binning,
+                    'night': bool(self.night_av[constants.NIGHT_NIGHT]),
+                    'id': getattr(image_entry, 'id', None) if image_entry else None
+                }
+                event_manager.broadcast('exposure_complete', exposure_payload)
+            except Exception as ev_err:
+                logger.error('Error broadcasting exposure_complete event: %s', str(ev_err))
+
 
             image_thumbnail_metadata = {
                 'type'       : constants.THUMBNAIL,
