@@ -982,35 +982,29 @@ class BaseView(View):
         mask_processor.image = mask_data
 
 
-        if self.indi_allsky_config.get('IMAGE_ROTATE'):
-            mask_processor.rotate_90()
-
-
         # rotation
-        if self.indi_allsky_config.get('IMAGE_ROTATE_ANGLE'):
-            mask_processor.rotate_angle()
+        mask_processor.rotate_90()
+        mask_processor.rotate_angle()
 
 
         # verticle flip
-        if self.indi_allsky_config.get('IMAGE_FLIP_V'):
-            mask_processor.flip_v()
+        mask_processor.flip_v()
 
 
         # horizontal flip
-        if self.indi_allsky_config.get('IMAGE_FLIP_H'):
-            mask_processor.flip_h()
+        mask_processor.flip_h()
 
 
         # crop
-        if self.indi_allsky_config.get('IMAGE_CROP_IMAGE_CIRCLE'):
-            mask_processor.crop_image()
-        elif self.indi_allsky_config.get('IMAGE_CROP_ROI'):
-            mask_processor.crop_image()
+        mask_processor.crop_image()
 
 
         # scale
-        if self.indi_allsky_config['IMAGE_SCALE'] and self.indi_allsky_config['IMAGE_SCALE'] != 100:
-            mask_processor.scale_image()
+        mask_processor.scale_image()
+
+
+        # add border
+        mask_processor.add_border()
 
 
         return mask_processor.image
