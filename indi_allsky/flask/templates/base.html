@@ -113,6 +113,14 @@
                 display: block;
             }
         }
+
+        @media (min-width: 768px) {
+            .sticky-desktop-header {
+                position: sticky !important;
+                top: -2rem !important;
+                z-index: 30 !important;
+            }
+        }
     </style>
     {% block head %}{% endblock %}
 </head>

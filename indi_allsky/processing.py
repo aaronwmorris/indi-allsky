@@ -3847,6 +3847,10 @@ class ImageProcessor(object):
 
 
     def add_border(self):
+        if self.focus_mode:
+            return
+
+
         top = self.config.get('IMAGE_BORDER', {}).get('TOP', 0)
         left = self.config.get('IMAGE_BORDER', {}).get('LEFT', 0)
         right = self.config.get('IMAGE_BORDER', {}).get('RIGHT', 0)
@@ -3857,6 +3861,10 @@ class ImageProcessor(object):
             return
 
 
+        self.image = self._add_border(top, left, right, bottom)
+
+
+    def _add_border(self, top, left, right, bottom):
         border_color_bgr = list(self.config.get('IMAGE_BORDER', {}).get('COLOR', [0, 0, 0]))
         border_color_bgr.reverse()
 
@@ -3875,7 +3883,7 @@ class ImageProcessor(object):
         ] = self.image
 
 
-        self.image = new_image
+        return new_image
 
 
     def colormap(self):

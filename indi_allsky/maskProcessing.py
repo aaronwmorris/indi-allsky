@@ -2,6 +2,7 @@
 ### Masks are pre-rotation/flip/cropping and need these operations to be applied to processed images
 
 #import time
+import numpy
 import cv2
 import logging
 
@@ -40,6 +41,10 @@ class MaskProcessor(object):
 
 
     def rotate_90(self):
+        if not self.config.get('IMAGE_ROTATE'):
+            return
+
+
         try:
             rotate_enum = getattr(cv2, self.config['IMAGE_ROTATE'])
         except AttributeError:
@@ -50,6 +55,10 @@ class MaskProcessor(object):
 
 
     def rotate_angle(self):
+        if not self.config.get('IMAGE_ROTATE_ANGLE'):
+            return
+
+
         angle = self.config.get('IMAGE_ROTATE_ANGLE')
         keep_size = self.config.get('IMAGE_ROTATE_KEEP_SIZE')
 
@@ -104,10 +113,16 @@ class MaskProcessor(object):
 
 
     def flip_v(self):
+        if not self.config.get('IMAGE_FLIP_V'):
+            return
+
         self.image = self._flip(self.image, 0)
 
 
     def flip_h(self):
+        if not self.config.get('IMAGE_FLIP_H'):
+            return
+
         self.image = self._flip(self.image, 1)
 
 
@@ -167,6 +182,10 @@ class MaskProcessor(object):
 
 
     def scale_image(self):
+        if not self.config['IMAGE_SCALE'] or self.config['IMAGE_SCALE'] == 100:
+            return
+
+
         image_height, image_width = self.image.shape[:2]
 
         logger.info('Scaling mask by %d%%', self.config['IMAGE_SCALE'])
@@ -180,4 +199,32 @@ class MaskProcessor(object):
         logger.info('New size: %d x %d', new_width, new_height)
 
         self.image = cv2.resize(self.image, (new_width, new_height), interpolation=cv2.INTER_AREA)
+
+
+    def add_border(self):
+        top = self.config.get('IMAGE_BORDER', {}).get('TOP', 0)
+        left = self.config.get('IMAGE_BORDER', {}).get('LEFT', 0)
+        right = self.config.get('IMAGE_BORDER', {}).get('RIGHT', 0)
+        bottom = self.config.get('IMAGE_BORDER', {}).get('BOTTOM', 0)
+
+
+        if not top and not left and not right and not bottom:
+            return
+
+
+        image_height, image_width = self.image.shape[:2]
+
+        new_height = image_height + top + bottom
+        new_width = image_width + left + right
+
+
+        new_image = numpy.full([new_height, new_width], 0, dtype=numpy.uint8)  # mask is monochrome
+
+        new_image[
+            top:top + image_height,
+            left:left + image_width,
+        ] = self.image
+
+
+        self.image = new_image
 
