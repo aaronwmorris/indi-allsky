@@ -2257,35 +2257,30 @@ class VideoWorker(Process):
                 mask_processor.image = cv2.resize(mask_data, (new_mask_width, new_mask_height), interpolation=cv2.INTER_AREA)
 
 
-            if self.config.get('IMAGE_ROTATE'):
-                mask_processor.rotate_90()
-
 
             # rotation
-            if self.config.get('IMAGE_ROTATE_ANGLE'):
-                mask_processor.rotate_angle()
+            mask_processor.rotate_90()
+            mask_processor.rotate_angle()
 
 
             # verticle flip
-            if self.config.get('IMAGE_FLIP_V'):
-                mask_processor.flip_v()
+            mask_processor.flip_v()
 
 
             # horizontal flip
-            if self.config.get('IMAGE_FLIP_H'):
-                mask_processor.flip_h()
+            mask_processor.flip_h()
 
 
             # crop
-            if self.config.get('IMAGE_CROP_IMAGE_CIRCLE'):
-                mask_processor.crop_image()
-            elif self.config.get('IMAGE_CROP_ROI'):
-                mask_processor.crop_image()
+            mask_processor.crop_image()
 
 
             # scale
-            if self.config['IMAGE_SCALE'] and self.config['IMAGE_SCALE'] != 100:
-                mask_processor.scale_image()
+            mask_processor.scale_image()
+
+
+            # add border
+            mask_processor.add_border()
 
 
             mask_dict[x] = mask_processor.image
