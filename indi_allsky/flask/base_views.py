@@ -135,6 +135,14 @@ class BaseView(View):
         return camera
 
 
+    def getCameraPrivacyLatLong(self, camera):
+        # reduce precision for privacy
+        if self.indi_allsky_config.get('PRIVACY_MODE'):
+            return float(round(camera.latitude)), float(round(camera.longitude))
+
+        return camera.latitude, camera.longitude
+
+
     def verify_admin_network(self):
         network_list = list()
 

@@ -13,6 +13,7 @@ from pathlib import Path
 import socket
 import ipaddress
 import re
+import threading
 import psutil
 import dbus
 import ephem
@@ -23,6 +24,9 @@ from passlib.hash import argon2
 from ..version import __version__
 from .. import constants
 from ..processing import ImageProcessor
+from ..lens_solver import IndiAllSkyLensSolver
+from ..lens_solver import parseSolverRequestValues
+from ..lens_solver import applySolvedValuesToConfig
 
 from cryptography.fernet import InvalidToken
 
@@ -435,13 +439,8 @@ class VirtualSkyView(TemplateView):
 
 
         ### Camera DB settings
-        if self.indi_allsky_config.get('PRIVACY_MODE'):
-            # reduce precision for privacy
-            context['camera_latitude'] = float(round(self.camera.latitude))
-            context['camera_longitude'] = float(round(self.camera.longitude))
-        else:
-            context['camera_latitude'] = self.camera.latitude
-            context['camera_longitude'] = self.camera.longitude
+        context['camera_latitude'], context['camera_longitude'] = \
+            self.getCameraPrivacyLatLong(self.camera)
 
 
         ### Calculate time offset
@@ -7466,6 +7465,147 @@ class AjaxFocusControllerView(BaseView):
         return jsonify(r)
 
 
+class AjaxLensSolverView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    # Single-flight guard around the CPU-bound scipy fit. PRECONDITION: per-process lock,
+    # only effective while gunicorn.conf.py runs ONE worker -- more workers defeat it silently.
+    _solve_lock = threading.Lock()
+
+    # advisory hint on the 429 response only, not a correctness guarantee
+    LOCK_RETRY_AFTER_S = 10
+
+
+    def dispatch_request(self):
+        action = str(request.json.get('action', ''))
+
+        if action == 'solve':
+            return self.solve()
+        elif action == 'save':
+            return self.save()
+
+        return jsonify({'success': False, 'message': 'Unknown action'}), 400
+
+
+    def solve(self):
+        values, error = parseSolverRequestValues(request.json)
+        if error:
+            return jsonify({'success': False, 'message': error}), 400
+
+        try:
+            camera_id = int(request.json['camera_id'])
+            timestamp = int(request.json['timestamp'])
+        except (KeyError, TypeError, ValueError):
+            return jsonify({'success': False, 'message': 'camera_id and timestamp required'}), 400
+
+        # explicit check: an unknown camera_id would otherwise fall through to a FakeCamera (lat/long 0.0) and solve silently wrong
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .first()
+        if not camera:
+            return jsonify({'success': False, 'message': 'Unknown camera'}), 400
+
+        # pre-set self.camera so cameraSetup() reuses this row instead of re-querying
+        self.camera = camera
+        self.cameraSetup(camera_id=camera_id)
+
+        # resolve by exact camera + timestamp (NEVER "latest"); a huge int can raise OverflowError/OSError, not just ValueError
+        try:
+            ts_dt = datetime.fromtimestamp(timestamp)
+        except (OverflowError, OSError, ValueError):
+            return jsonify({'success': False, 'message': 'Invalid timestamp'}), 400
+        ts_dt_end = ts_dt + timedelta(seconds=1)
+
+        image_entry = IndiAllSkyDbImageTable.query\
+            .filter(IndiAllSkyDbImageTable.camera_id == camera_id)\
+            .filter(IndiAllSkyDbImageTable.createDate >= ts_dt)\
+            .filter(IndiAllSkyDbImageTable.createDate < ts_dt_end)\
+            .first()
+
+        if not image_entry:
+            return jsonify({'success': False, 'message': 'Image not found for timestamp'}), 400
+
+        image_file = image_entry.getFilesystemPath()
+        if not image_file.exists():
+            return jsonify({'success': False, 'message': 'Image file missing from filesystem'}), 400
+
+        # same lat/long the VirtualSky page renders with (incl. privacy rounding)
+        latitude, longitude = self.getCameraPrivacyLatLong(self.camera)
+
+        # identical effective-time computation to VirtualSkyView.get_context
+        obstime_unix = timestamp - self.camera_time_offset
+
+        solver = IndiAllSkyLensSolver(self.indi_allsky_config)
+
+        if not self._solve_lock.acquire(blocking=False):
+            return jsonify({
+                'success': False,
+                'message': 'A lens solve is already in progress -- please wait and try again.',
+            }), 429, {'Retry-After': str(self.LOCK_RETRY_AFTER_S)}
+
+        try:
+            result = solver.solve(image_file, latitude, longitude, obstime_unix, values)
+        except Exception:  # noqa: BLE001
+            # never return a raw exception string to the client
+            app.logger.exception('Lens solver failed')
+            return jsonify({'success': False, 'message': 'Solver error -- check server logs'}), 500
+        finally:
+            self._solve_lock.release()
+
+        return jsonify(result)
+
+
+    def save(self):
+        if not app.config['LOGIN_DISABLED']:
+            if not current_user.is_admin:
+                return jsonify({'success': False, 'message': 'You do not have permission to make configuration changes'}), 403
+
+        values, error = parseSolverRequestValues(request.json)
+        if error:
+            return jsonify({'success': False, 'message': error}), 400
+
+        reload_on_save = bool(request.json.get('RELOAD_ON_SAVE', False))
+
+        applySolvedValuesToConfig(self.indi_allsky_config, values)
+
+        # do NOT reassign `self._indi_allsky_config_obj.config = self.indi_allsky_config` here:
+        # the setter rebuilds `_config` as a new OrderedDict, breaking the object identity the
+        # in-place mutation above relies on -- later mutations would be silently discarded.
+        if not app.config['LOGIN_DISABLED']:
+            username = current_user.username
+        else:
+            username = 'system'
+
+        try:
+            self._indi_allsky_config_obj.save(username, 'Lens solver calibration')
+        except ConfigSaveException as e:
+            error_data = {
+                'form_global': [str(e)],
+            }
+            return jsonify(error_data), 400
+
+        message = 'Saved lens calibration to config. Note: saving Azimuth Angle also moves the cardinal-direction (N/E/S/W) labels burned into future images.'
+
+        if reload_on_save:
+            self._miscDb.setState('STATUS', constants.STATUS_RELOADING)
+
+            task_reload = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.MAIN,
+                state=TaskQueueState.MANUAL,
+                priority=100,
+                data={'action': 'reload'},
+            )
+            db.session.add(task_reload)
+            db.session.commit()
+
+            message += ' Reloading indi-allsky service.'
+        else:
+            message += ' Values become page defaults after the next service reload.'
+
+        return jsonify({'success': True, 'message': message})
+
+
 class ManualGpioView(TemplateView):
     decorators = [login_required]
     page_title = 'Manual GPIO'
@@ -12514,6 +12654,7 @@ bp_allsky.add_url_rule('/drives', view_func=DriveManagerView.as_view('drive_mana
 bp_allsky.add_url_rule('/ajax/drives', view_func=AjaxDriveManagerView.as_view('ajax_drive_manager_view'))
 
 bp_allsky.add_url_rule('/virtualsky', view_func=VirtualSkyView.as_view('virtualsky_view', template_name='virtualsky.html'))
+bp_allsky.add_url_rule('/ajax/lens_solver', view_func=AjaxLensSolverView.as_view('ajax_lens_solver_view'))
 
 bp_allsky.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_view('ajax_notification_view'))
 bp_allsky.add_url_rule('/ajax/selectcamera', view_func=AjaxSelectCameraView.as_view('ajax_select_camera_view'))
