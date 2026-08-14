@@ -257,6 +257,34 @@ class IndiAllSkyConfigBase(object):
             "IMAGE_CIRCLE_MASK_BLUR"     : 35,
             "IMAGE_CIRCLE_MASK_OPACITY"  : 100,
         },
+        # Opt-in, model-specific RAW correction. Runtime performs its own
+        # camera/layout checks even if this configuration block is enabled.
+        "IMAGE_ASI676MC_REPAIR" : {
+            "ENABLE"                      : False,
+            # Detection-only is the safe starting point. The settings page
+            # also selects this when the feature is enabled for the first
+            # time; a user must deliberately opt into pixel repair.
+            "EXCLUDE_ONLY"                : True,
+            "LOG_EVERY_FRAME"             : False,
+            "GALLERY_ENABLE"              : True,
+            "SAVE_DIAGNOSTIC_FITS"         : False,
+            # Opt-in because retaining the untouched previous FITS in RAM adds
+            # roughly one full camera frame per active camera.  The parent
+            # option remains the default low-memory bad/following workflow.
+            "SAVE_PRECEDING_FITS"          : False,
+            "PURPLE_RATIO_THRESHOLD"      : 1.5,
+            "RED_SIDE_RATIO_THRESHOLD"    : 1.15,
+            "BLUE_SIDE_RATIO_THRESHOLD"   : 1.75,
+            "SAMPLE_STEP"                 : 32,
+            "SOURCE_SATURATION_THRESHOLD" : 65000,
+            "GAIN_R"                      : 0.91004,
+            "GAIN_G1"                     : 1.68652,
+            "GAIN_G2"                     : 1.09238,
+            "GAIN_B"                      : 0.59537,
+            "HIGHLIGHT_BLEND_START_RATIO" : 0.55,
+            "HIGHLIGHT_BLEND_END_RATIO"   : 0.75,
+            "CHUNK_ROWS"                  : 128,
+        },
         "IMAGE_CALIBRATE_DARK"          : True,
         "IMAGE_CALIBRATE_BPM"           : False,
         "IMAGE_CALIBRATE_FIX_HOLES"     : False,

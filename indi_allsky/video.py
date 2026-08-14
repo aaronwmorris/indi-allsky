@@ -12,12 +12,15 @@ from pathlib import Path
 import psutil
 import tempfile
 import signal
+import threading
 import traceback
 import logging
 
 import ephem
 
 from . import constants
+from . import asi676mc
+from . import asi676mc_calibration
 
 from .timelapse import TimelapseGenerator
 from .keogram import KeogramGenerator
@@ -160,6 +163,16 @@ class VideoWorker(Process):
         signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
 
 
+        # Calibration has its own serial thread so a long retained-FITS scan
+        # does not prevent the video worker from accepting timelapse jobs.
+        self._asi676mc_calibration_q = queue.Queue()
+        calibration_thread = threading.Thread(
+            target=self._asi676mcCalibrationWorker,
+            name='{0:s}-ASI676MC-calibration'.format(self.name),
+            daemon=True,
+        )
+        calibration_thread.start()
+
         ### use this as a method to log uncaught exceptions
         try:
             self.saferun()
@@ -167,6 +180,8 @@ class VideoWorker(Process):
             tb = traceback.format_exc()
             self.error_q.put((str(e), tb))
             raise e
+        finally:
+            self._asi676mc_calibration_q.put(None)
 
 
     def saferun(self):
@@ -224,6 +239,252 @@ class VideoWorker(Process):
 
         # perform the action
         action_method(task, **kwargs)
+
+
+    def _loadAsi676mcCalibrationDatabase(self, source_details, progress_callback):
+        """Return every retained FITS row for one bound ASI676MC camera."""
+        camera_id = int(source_details['camera_id'])
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .first()
+        expected_uuid = str(source_details.get('camera_uuid') or '')
+        if (
+            camera is None
+            or not expected_uuid
+            or not camera.uuid
+            or str(camera.uuid) != expected_uuid
+        ):
+            raise RuntimeError(
+                'the ASI676MC selected for this database search has changed'
+            )
+        camera_name = asi676mc.camera_record_identity_name(camera)
+        if not asi676mc.camera_name_matches(camera_name):
+            raise RuntimeError(
+                'the selected database camera is no longer an ASI676MC'
+            )
+        retention_cutoff = datetime.strptime(
+            str(source_details['retention_cutoff']),
+            '%Y-%m-%d',
+        ).date()
+
+        fits_query = IndiAllSkyDbFitsImageTable.query\
+            .filter(IndiAllSkyDbFitsImageTable.camera_id == camera_id)\
+            .filter(IndiAllSkyDbFitsImageTable.dayDate >= retention_cutoff)\
+            .order_by(IndiAllSkyDbFitsImageTable.createDate.desc())
+        database_fits_count = fits_query.count()
+        fits_records = []
+        missing_local_count = 0
+        unsupported_count = 0
+        for index, fits_entry in enumerate(
+            fits_query.yield_per(250),
+            start=1,
+        ):
+            if index % 25 == 0 or index == database_fits_count:
+                progress_callback({
+                    'phase': 'database_catalog',
+                    'processed_files': index,
+                    'total_files': database_fits_count,
+                    'initial_target_files': database_fits_count,
+                    'detected_bad_count': 0,
+                })
+            try:
+                source_path = fits_entry.getFilesystemPath()
+                if not source_path.is_file():
+                    missing_local_count += 1
+                    continue
+                source_size = source_path.stat().st_size
+            except OSError:
+                missing_local_count += 1
+                continue
+            if not asi676mc_calibration.is_database_fits_path(source_path):
+                unsupported_count += 1
+                continue
+            fits_data = (
+                fits_entry.data
+                if isinstance(fits_entry.data, dict)
+                else {}
+            )
+            diagnostic = fits_data.get(
+                asi676mc.DIAGNOSTIC_METADATA_KEY,
+                {},
+            )
+            roles = (
+                diagnostic.get('roles', ())
+                if isinstance(diagnostic, dict)
+                else ()
+            )
+            signature = fits_data.get(asi676mc.SIGNATURE_METADATA_KEY)
+            fits_records.append({
+                'id': fits_entry.id,
+                'path': source_path,
+                'size': source_size,
+                'timestamp': fits_entry.createDate.timestamp(),
+                'exposure': fits_entry.exposure,
+                'gain': fits_entry.gain,
+                'binmode': fits_entry.binmode,
+                'width': fits_entry.width,
+                'height': fits_entry.height,
+                'signature': (
+                    dict(signature)
+                    if isinstance(signature, dict)
+                    else None
+                ),
+                'repair_status': fits_data.get(
+                    asi676mc.FITS_REPAIR_STATUS_METADATA_KEY
+                ),
+                'camera_name': camera_name,
+                'roles': [
+                    dict(role)
+                    for role in roles
+                    if isinstance(role, dict)
+                ],
+            })
+        repair_status = (
+            IndiAllSkyDbImageTable.data['asi676mc_repair_status'].as_string()
+        )
+        bad_images = IndiAllSkyDbImageTable.query\
+            .filter(IndiAllSkyDbImageTable.camera_id == camera_id)\
+            .filter(IndiAllSkyDbImageTable.dayDate >= retention_cutoff)\
+            .filter(repair_status.in_(asi676mc.DIAGNOSTIC_BAD_STATUSES))\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .yield_per(250)
+        bad_frames = []
+        for image in bad_images:
+            image_data = image.data if isinstance(image.data, dict) else {}
+            bad_frames.append({
+                'timestamp': image.createDate.timestamp(),
+                'exposure': image.exposure,
+                'gain': image.gain,
+                'allow_standard': (
+                    image_data.get('asi676mc_repair_status') != 'repaired'
+                ),
+            })
+
+        return {
+            'fits_records': fits_records,
+            'bad_frames': bad_frames,
+            'source_details': {
+                'database_fits_count': database_fits_count,
+                'local_fits_count': len(fits_records),
+                'missing_local_count': missing_local_count,
+                'unsupported_count': unsupported_count,
+            },
+        }
+
+    def _saveAsi676mcCalibrationSignatures(
+        self,
+        source_details,
+        signature_updates,
+    ):
+        """Backfill threshold-independent ratios on inspected legacy rows."""
+        camera_id = int(source_details['camera_id'])
+        update_ids = sorted(int(record_id) for record_id in signature_updates)
+        batch_size = 250
+        for offset in range(0, len(update_ids), batch_size):
+            batch_ids = update_ids[offset:offset + batch_size]
+            entries = IndiAllSkyDbFitsImageTable.query\
+                .filter(IndiAllSkyDbFitsImageTable.camera_id == camera_id)\
+                .filter(IndiAllSkyDbFitsImageTable.id.in_(batch_ids))\
+                .all()
+            for entry in entries:
+                entry_data = (
+                    dict(entry.data)
+                    if isinstance(entry.data, dict)
+                    else {}
+                )
+                entry_data[asi676mc.SIGNATURE_METADATA_KEY] = dict(
+                    signature_updates[entry.id]
+                )
+                entry.data = entry_data
+            db.session.commit()
+
+    def _asi676mcCalibrationWorker(self):
+        """Run one calibration at a time without occupying the video queue."""
+        while True:
+            work_item = self._asi676mc_calibration_q.get()
+            if work_item is None:
+                return
+            task_id, session_id = work_item
+            with app.app_context():
+                try:
+                    task = IndiAllSkyDbTaskQueueTable.query\
+                        .filter(IndiAllSkyDbTaskQueueTable.id == task_id)\
+                        .filter(
+                            IndiAllSkyDbTaskQueueTable.state
+                            == TaskQueueState.RUNNING
+                        )\
+                        .one()
+                except NoResultFound:
+                    logger.error(
+                        'ASI676MC calibration task %d is no longer running',
+                        task_id,
+                    )
+                    continue
+                try:
+                    self._runAsi676mcCalibration(task, session_id)
+                except Exception:
+                    # A database/task update failure must not permanently
+                    # terminate the dedicated calibration consumer.
+                    logger.exception(
+                        'Unexpected ASI676MC calibration worker failure'
+                    )
+                finally:
+                    db.session.remove()
+
+    def generateAsi676mcCalibration(self, task, **kwargs):
+        """Queue staged calibration on the worker's dedicated serial thread.
+
+        The task remains RUNNING while the calibration thread works, but the
+        main video loop can immediately accept normal timelapse tasks.
+        """
+        session_id = str(kwargs['session_id'])
+        self._asi676mc_calibration_q.put((int(task.id), session_id))
+
+    def _runAsi676mcCalibration(self, task, session_id):
+        """Complete one queued calibration and publish its task outcome."""
+        try:
+            result = asi676mc_calibration.run_calibration_session(
+                session_id,
+                database_loader=self._loadAsi676mcCalibrationDatabase,
+                database_signature_saver=(
+                    self._saveAsi676mcCalibrationSignatures
+                ),
+            )
+        except Exception as error:
+            logger.exception(
+                'ASI676MC web calibration failed for session %s',
+                session_id,
+            )
+            # The task list is user-visible. Keep the full technical exception
+            # in the log, but show the same actionable wording as the
+            # calibration page instead of a path or internal engine phrase.
+            task.setFailed(
+                asi676mc_calibration.task_failure_message(error)
+            )
+            return
+
+        if result is None:
+            # Session cancellation is already recorded by the calibration
+            # layer. Expire the queue row instead of dereferencing None or
+            # presenting cancellation as either success or failure.
+            task.setExpired()
+            return
+
+        quality = result['quality']
+        if result.get('outcome') == 'threshold_suggestion':
+            message = (
+                'ASI676MC threshold suggestions available: {0} likely '
+                'purple / {1} likely normal'
+            ).format(
+                quality['likely_purple_count'],
+                quality['likely_normal_count'],
+            )
+        else:
+            message = 'ASI676MC calibration passed: {0} purple / {1} normal'.format(
+                quality['matched_bad_count'],
+                quality['matched_normal_count'],
+            )
+        task.setSuccess(message[:255])
 
 
     def generateVideo(self, task, **kwargs):
@@ -2128,7 +2389,32 @@ class VideoWorker(Process):
                 logger.error('Cannot remove folder: %s', str(e))
 
 
-        task.setSuccess('Expired {0:d} assets'.format(delete_count))
+        # Calibration uploads are private scratch data rather than registered
+        # FITS assets, so the database-backed FITS expiry above cannot see them.
+        # Run their fixed seven-day retention cleanup alongside the regular
+        # asset expiry as a server-side catch-all for interrupted browsers,
+        # broken network connections, crashes, and power loss.
+        try:
+            calibration_session_count = (
+                asi676mc_calibration.cleanup_expired_sessions()
+            )
+        except OSError:
+            calibration_session_count = 0
+            logger.exception('Unable to expire ASI676MC calibration sessions')
+        else:
+            if calibration_session_count:
+                logger.info(
+                    'Expired %d ASI676MC calibration session(s)',
+                    calibration_session_count,
+                )
+
+
+        task.setSuccess(
+            'Expired {0:d} assets and {1:d} calibration sessions'.format(
+                delete_count,
+                calibration_session_count,
+            )
+        )
 
 
     def _deleteAssets(self, table, entry_id_list):

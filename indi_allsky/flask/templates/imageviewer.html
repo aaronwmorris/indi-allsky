@@ -179,6 +179,9 @@ function closeFullscreen() {
             <span id="lag_here"></span>
             <span id="img_download"></span>
             <span id="fits_download"></span>
+            <span id="asi676mc_preceding_fits_download"></span>
+            <span id="asi676mc_bad_fits_download"></span>
+            <span id="asi676mc_following_fits_download"></span>
             <span id="fits_processing"></span>
             <span id="raw_download"></span>
             <span id="panorama_download"></span>
@@ -895,6 +898,59 @@ function init() {
                 $('#fits_processing').empty();
             };
 
+            // Diagnostic roles are database assets with ordinary protected
+            // download URLs; only this standard viewer exposes the links.
+            const asi676mc_preceding_fits = (
+                image_data[image_index]['asi676mc_diagnostic_preceding_fits']
+            );
+            if (asi676mc_preceding_fits) {
+                $('#asi676mc_preceding_fits_download').html(
+                    $('<a />', {
+                        'href'     : asi676mc_preceding_fits['url'],
+                        'rel'      : 'noopener noreferrer',
+                        'class'    : "tw:btn tw:btn-xs tw:btn-success tw:gap-1 tw:no-underline",
+                        'download' : asi676mc_preceding_fits['filename'],
+                        'title'    : 'Download immediately preceding RAW FITS',
+                    }).html('<i class="tw:icon-[lucide--download] tw:w-3 tw:h-3"></i> Previous normal FITS')
+                );
+            } else {
+                $('#asi676mc_preceding_fits_download').empty();
+            };
+
+            const asi676mc_bad_fits = (
+                image_data[image_index]['asi676mc_diagnostic_bad_fits']
+            );
+            if (asi676mc_bad_fits) {
+                $('#asi676mc_bad_fits_download').html(
+                    $('<a />', {
+                        'href'     : asi676mc_bad_fits['url'],
+                        'rel'      : 'noopener noreferrer',
+                        'class'    : "tw:btn tw:btn-xs tw:btn-error tw:gap-1 tw:no-underline",
+                        'download' : asi676mc_bad_fits['filename'],
+                        'title'    : 'Download untouched faulty RAW FITS',
+                    }).html('<i class="tw:icon-[lucide--download] tw:w-3 tw:h-3"></i> Purple FITS')
+                );
+            } else {
+                $('#asi676mc_bad_fits_download').empty();
+            };
+
+            const asi676mc_following_fits = (
+                image_data[image_index]['asi676mc_diagnostic_following_fits']
+            );
+            if (asi676mc_following_fits) {
+                $('#asi676mc_following_fits_download').html(
+                    $('<a />', {
+                        'href'     : asi676mc_following_fits['url'],
+                        'rel'      : 'noopener noreferrer',
+                        'class'    : "tw:btn tw:btn-xs tw:btn-success tw:gap-1 tw:no-underline",
+                        'download' : asi676mc_following_fits['filename'],
+                        'title'    : 'Download immediately following RAW FITS',
+                    }).html('<i class="tw:icon-[lucide--download] tw:w-3 tw:h-3"></i> Next normal FITS')
+                );
+            } else {
+                $('#asi676mc_following_fits_download').empty();
+            };
+
             // Add RAW download link if it exists
             if (image_data[image_index]['raw']) {
                 $('#raw_download').html(
@@ -938,6 +994,9 @@ function init() {
         } else {
             // this should never happen, but just in case
             $('#fits_download').empty();
+            $('#asi676mc_preceding_fits_download').empty();
+            $('#asi676mc_bad_fits_download').empty();
+            $('#asi676mc_following_fits_download').empty();
             $('#fits_processing').empty();
             $('#raw_download').empty();
             $('#panorama_download').empty();

@@ -1066,7 +1066,12 @@ class CaptureWorker(Process):
             'web_nonlocal_images'   : self.config.get('WEB_NONLOCAL_IMAGES', False),
             'web_local_images_admin': self.config.get('WEB_LOCAL_IMAGES_ADMIN', False),
 
-            'data'                  : {},
+            'data'                  : {
+                # Keep the most recently detected device identity distinct
+                # from friendly labels and historical aliases. Camera-specific
+                # tools use this value as their authoritative persisted gate.
+                'detected_name': self.camera_name,
+            },
         }
 
 

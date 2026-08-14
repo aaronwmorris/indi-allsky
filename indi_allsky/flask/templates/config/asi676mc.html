@@ -1,0 +1,123 @@
+{% macro repair_toggle(field, help_text, title='') -%}
+<div class="tw:flex tw:flex-col tw:gap-2 tw:p-4 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300"{% if title %} title="{{ title }}"{% endif %}>
+    <div class="tw:flex tw:items-center tw:justify-between tw:gap-4">
+        <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ field.label.text }}</span>
+        {{ field(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+    </div>
+    <p class="tw:text-xs tw:leading-relaxed tw:text-base-content/60">{{ help_text }}</p>
+    <div id="{{ field.id }}-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
+</div>
+{%- endmacro %}
+
+{% macro repair_number(field, help_text) -%}
+<div class="tw:flex tw:flex-col tw:gap-1">
+    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ field.label.text }}</span>
+    {{ field(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+    <p class="tw:text-[0.6875rem] tw:leading-relaxed tw:text-base-content/50">{{ help_text }}</p>
+    <div id="{{ field.id }}-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
+</div>
+{%- endmacro %}
+
+<div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+    <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-5">
+        <div class="tw:flex tw:flex-wrap tw:items-start tw:justify-between tw:gap-4">
+            <div>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Camera-specific handling</span>
+                <h3 class="tw:text-lg tw:font-bold tw:mt-1">ASI676MC purple-frame handling</h3>
+            </div>
+            <span class="tw:badge tw:badge-warning tw:badge-outline">ASI676MC only</span>
+        </div>
+
+        <div class="tw:flex tw:flex-col tw:sm:flex-row tw:sm:items-center tw:justify-between tw:gap-4 tw:p-4 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+            <div class="tw:flex tw:flex-col tw:gap-1">
+                <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ASI676MC_REPAIR__ENABLE.label.text }}</span>
+                {% if asi676mc_repair_supported %}
+                <p class="tw:text-xs tw:leading-relaxed tw:text-base-content/60">
+                    Turn this on only if your ASI676MC produces purple frames. Leave the values below unchanged. Save your settings, then open Tools &gt; Fix ASI676MC purple frames.
+                    Detected ASI676MC camera{% if asi676mc_camera_names|length != 1 %}s{% endif %}: {{ asi676mc_camera_names|join(', ') }}.
+                </p>
+                {% else %}
+                <p class="tw:text-xs tw:leading-relaxed tw:text-warning">
+                    No local ASI676MC is available. Connect or select the camera, reload this page, and try again.
+                </p>
+                {% endif %}
+            </div>
+            {% if asi676mc_repair_supported %}
+            {{ form_config.IMAGE_ASI676MC_REPAIR__ENABLE(class='tw:toggle tw:toggle-primary') }}
+            {% else %}
+            {{ form_config.IMAGE_ASI676MC_REPAIR__ENABLE(class='tw:toggle tw:toggle-primary', disabled=true) }}
+            {% endif %}
+            <div id="IMAGE_ASI676MC_REPAIR__ENABLE-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
+        </div>
+
+        <div>
+            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Purple-frame options</span>
+            <div class="tw:grid tw:grid-cols-1 tw:lg:grid-cols-2 tw:gap-3 tw:mt-3">
+                {{ repair_toggle(
+                    form_config.IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY,
+                    'Use this while collecting calibration FITS. Purple frames are kept unchanged and left out of standard timelapses. After calibration, turn this off to start repairing them.'
+                ) }}
+                {{ repair_toggle(
+                    form_config.IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME,
+                    'Write a log entry for every ASI676MC frame. Purple frames and errors are always logged, even when this is off.'
+                ) }}
+                {{ repair_toggle(
+                    form_config.IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE,
+                    'Show repaired, excluded, and failed purple frames in the gallery. This turns off automatically when purple-frame handling is turned off. The excluded filter does not include manually excluded frames.'
+                ) }}
+                {{ repair_toggle(
+                    form_config.IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS,
+                    'Recommended for calibration. Saves each untouched purple FITS and the next normal FITS without saving every image.'
+                ) }}
+                {{ repair_toggle(
+                    form_config.IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS,
+                    'Optional. Also saves the normal frame before each purple frame. This improves calibration but uses about one extra FITS frame of memory.',
+                    'Requires Save purple and following normal FITS for calibration'
+                ) }}
+            </div>
+        </div>
+
+        <div class="tw:border-t tw:border-base-300 tw:pt-5">
+            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Advanced options</span>
+            <p class="tw:text-xs tw:leading-relaxed tw:text-base-content/60 tw:mt-2">
+                These values should normally be set by the calibration tool. Manual tuning is not recommended.
+            </p>
+        </div>
+
+        <div>
+            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Detection thresholds</span>
+            <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-3 tw:gap-4 tw:mt-3">
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD, 'Controls how strongly red and blue must outweigh green before a frame can be identified as purple. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['PURPLE_RATIO_THRESHOLD'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD, 'Controls how strongly red must outweigh green before a frame can be identified as purple. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['RED_SIDE_RATIO_THRESHOLD'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD, 'Controls how strongly blue must outweigh green before a frame can be identified as purple. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['BLUE_SIDE_RATIO_THRESHOLD'])) ~ '.') }}
+            </div>
+        </div>
+
+        <div class="tw:border-t tw:border-base-300 tw:pt-5">
+            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Repair gains</span>
+            <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-4 tw:gap-4 tw:mt-3">
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_R, 'Adjusts red pixels when a purple frame is repaired. Default: ' ~ ('%0.5f'|format(asi676mc_repair_defaults['GAIN_R'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_G1, 'Adjusts the first set of green pixels when a purple frame is repaired. Default: ' ~ ('%0.5f'|format(asi676mc_repair_defaults['GAIN_G1'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_G2, 'Adjusts the second set of green pixels when a purple frame is repaired. Default: ' ~ ('%0.5f'|format(asi676mc_repair_defaults['GAIN_G2'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__GAIN_B, 'Adjusts blue pixels when a purple frame is repaired. Default: ' ~ ('%0.5f'|format(asi676mc_repair_defaults['GAIN_B'])) ~ '.') }}
+            </div>
+        </div>
+
+        <div class="tw:border-t tw:border-base-300 tw:pt-5">
+            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Clipping and highlight reconstruction</span>
+            <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-3 tw:gap-4 tw:mt-3">
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD, 'Sets the brightness at which clipped highlights need special repair. Default: ' ~ ('%d'|format(asi676mc_repair_defaults['SOURCE_SATURATION_THRESHOLD'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO, 'Sets where clipped-highlight correction begins to blend in. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['HIGHLIGHT_BLEND_START_RATIO'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO, 'Sets where clipped-highlight correction reaches full strength. Default: ' ~ ('%0.2f'|format(asi676mc_repair_defaults['HIGHLIGHT_BLEND_END_RATIO'])) ~ '; must be greater than the start value.') }}
+            </div>
+        </div>
+
+        <div class="tw:border-t tw:border-base-300 tw:pt-5">
+            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Sampling and memory</span>
+            <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-4 tw:mt-3">
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__SAMPLE_STEP, 'Sets the spacing between pixels checked when detecting a purple frame. A larger value checks fewer pixels. Default: ' ~ ('%d'|format(asi676mc_repair_defaults['SAMPLE_STEP'])) ~ '.') }}
+                {{ repair_number(form_config.IMAGE_ASI676MC_REPAIR__CHUNK_ROWS, 'Sets how many image rows are repaired at once and therefore how much memory repair uses. Default: ' ~ ('%d'|format(asi676mc_repair_defaults['CHUNK_ROWS'])) ~ '.') }}
+            </div>
+        </div>
+    </div>
+</div>

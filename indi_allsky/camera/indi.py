@@ -408,6 +408,8 @@ class IndiClient(PyIndi.BaseClient):
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,
+            # Preserve the capture-time device identity for model-specific gates.
+            'camera_name' : self.ccd_device.getDeviceName(),
             'filename_t'  : self._filename_t,
         }
 

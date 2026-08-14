@@ -1,0 +1,1066 @@
+import ast
+import json
+from datetime import timedelta
+from pathlib import Path
+import unittest
+from unittest import mock
+from types import SimpleNamespace
+
+import numpy
+
+from indi_allsky import asi676mc
+
+
+class TestAsi676mcFrameRepair(unittest.TestCase):
+
+    def test_runtime_issues_create_rate_limited_camera_notifications(self):
+        processing_path = (
+            Path(__file__).resolve().parents[2]
+            / 'indi_allsky'
+            / 'processing.py'
+        )
+        processing_source = processing_path.read_text(encoding='utf-8')
+        processing_tree = ast.parse(
+            processing_source,
+            filename=str(processing_path),
+        )
+        image_processor = next(
+            node
+            for node in processing_tree.body
+            if isinstance(node, ast.ClassDef) and node.name == 'ImageProcessor'
+        )
+        methods = {
+            node.name: ast.get_source_segment(processing_source, node)
+            for node in image_processor.body
+            if isinstance(node, ast.FunctionDef)
+        }
+        method_nodes = {
+            node.name: node
+            for node in image_processor.body
+            if isinstance(node, ast.FunctionDef)
+        }
+
+        result_method = methods['_set_asi676mc_repair_result']
+        notification_method = methods['_notify_asi676mc_issue']
+        self.assertIn("('skipped', 'validation_failed')", result_method)
+        self.assertIn('self._notify_asi676mc_issue(status, reason)', result_method)
+        self.assertIn('NotificationCategory.CAMERA', notification_method)
+        self.assertIn("'Asi676mcRepairSkipped'", notification_method)
+        self.assertIn("'Asi676mcRepairFailed'", notification_method)
+        self.assertIn('expire=timedelta(hours=2)', notification_method)
+        self.assertIn('except Exception:', notification_method)
+
+        # Execute the isolated helper without importing the full OpenCV-backed
+        # processing module, which is intentionally outside this test suite's
+        # dependency surface.
+        camera_category = object()
+        logger_mock = mock.Mock()
+        namespace = {
+            'NotificationCategory': SimpleNamespace(CAMERA=camera_category),
+            'timedelta': timedelta,
+            'logger': logger_mock,
+        }
+        helper_module = ast.Module(
+            body=[method_nodes['_notify_asi676mc_issue']],
+            type_ignores=[],
+        )
+        exec(
+            compile(
+                ast.fix_missing_locations(helper_module),
+                filename=str(processing_path),
+                mode='exec',
+            ),
+            namespace,
+        )
+        notify = namespace['_notify_asi676mc_issue']
+        processor = SimpleNamespace(_miscDb=mock.Mock())
+
+        notify(processor, 'skipped', 'binning 2 is not supported')
+        args, kwargs = processor._miscDb.addNotification.call_args
+        self.assertEqual(args[0], camera_category)
+        self.assertEqual(args[1], 'Asi676mcRepairSkipped')
+        self.assertIn('binning 2 is not supported', args[2])
+        self.assertEqual(kwargs['expire'], timedelta(hours=2))
+
+        processor._miscDb.addNotification.reset_mock()
+        notify(processor, 'validation_failed', 'post-repair check failed')
+        args, kwargs = processor._miscDb.addNotification.call_args
+        self.assertEqual(args[0], camera_category)
+        self.assertEqual(args[1], 'Asi676mcRepairFailed')
+        self.assertIn('original frame was kept', args[2])
+        self.assertEqual(kwargs['expire'], timedelta(hours=2))
+
+        processor._miscDb.addNotification.side_effect = RuntimeError('db down')
+        notify(processor, 'skipped', 'test')
+        logger_mock.exception.assert_called_once()
+
+    def test_gallery_filters_only_use_purple_frame_audit_status(self):
+        project_root = Path(__file__).resolve().parents[2]
+        forms_path = project_root / 'indi_allsky' / 'flask' / 'forms.py'
+        views_path = project_root / 'indi_allsky' / 'flask' / 'views.py'
+        template_path = (
+            project_root / 'indi_allsky' / 'flask' / 'templates' / 'gallery.html'
+        )
+        forms_source = forms_path.read_text(encoding='utf-8')
+        views_source = views_path.read_text(encoding='utf-8')
+        template = template_path.read_text(encoding='utf-8')
+
+        for field_name in (
+            'FILTER_ASI676MC_REPAIRED',
+            'FILTER_ASI676MC_EXCLUDED',
+            'FILTER_ASI676MC_FAILED',
+        ):
+            self.assertIn(field_name, forms_source)
+            self.assertIn(field_name, views_source)
+            self.assertIn(field_name, template)
+
+        forms_tree = ast.parse(forms_source, filename=str(forms_path))
+        gallery_class = next(
+            node
+            for node in forms_tree.body
+            if (
+                isinstance(node, ast.ClassDef)
+                and node.name == 'IndiAllskyGalleryViewer'
+            )
+        )
+        status_filter = next(
+            node
+            for node in gallery_class.body
+            if (
+                isinstance(node, ast.FunctionDef)
+                and node.name == '_apply_asi676mc_status_filter'
+            )
+        )
+        status_filter_source = ast.get_source_segment(forms_source, status_filter)
+        self.assertIn("data['asi676mc_repair_status']", status_filter_source)
+        self.assertIn('.in_(self.asi676mc_statuses)', status_filter_source)
+        self.assertNotIn("data['exclude']", status_filter_source)
+
+        for status in ('repaired', 'excluded', 'validation_failed'):
+            self.assertIn(
+                "form_filter_asi676mc_statuses.append('{0}')".format(status),
+                views_source,
+            )
+        self.assertIn('id="asi676mc-gallery-filters"', template)
+        self.assertIn(
+            '{% if not asi676mc_repair_gallery_enabled %} tw:hidden{% endif %}',
+            template,
+        )
+        self.assertIn(
+            ".prop('disabled', !asi676mc_repair_gallery_enabled)",
+            template,
+        )
+        self.assertGreaterEqual(
+            views_source.count(
+                "get('IMAGE_ASI676MC_REPAIR', {}).get('ENABLE', False)"
+            ),
+            2,
+        )
+        self.assertIn('Purple-frame repair failed', template)
+        self.assertNotIn("? 'repair failed'", template)
+
+    def test_documentation_records_shared_multi_camera_profile_limit(self):
+        docs = (
+            Path(__file__).resolve().parents[2]
+            / 'docs'
+            / 'asi676mc-frame-repair.md'
+        ).read_text(encoding='utf-8')
+
+        self.assertIn('### Multiple ASI676MC units', docs)
+        self.assertIn('per-camera repair profile', docs)
+        self.assertIn('one installation-wide', docs)
+
+    def test_image_viewer_initializes_diagnostic_download_flag(self):
+        forms_path = (
+            Path(__file__).resolve().parents[2]
+            / 'indi_allsky'
+            / 'flask'
+            / 'forms.py'
+        )
+        forms_tree = ast.parse(
+            forms_path.read_text(encoding='utf-8'),
+            filename=str(forms_path),
+        )
+        class_assignments = {}
+        for node in forms_tree.body:
+            if not isinstance(node, ast.ClassDef):
+                continue
+
+            assigned_attributes = {
+                child.attr
+                for child in ast.walk(node)
+                if (
+                    isinstance(child, ast.Attribute)
+                    and isinstance(child.value, ast.Name)
+                    and child.value.id == 'self'
+                    and isinstance(child.ctx, ast.Store)
+                )
+            }
+            class_assignments[node.name] = assigned_attributes
+
+        flag_name = 'asi676mc_diagnostic_download_enabled'
+        self.assertIn(
+            flag_name,
+            class_assignments['IndiAllskyImageViewer'],
+        )
+        self.assertNotIn(
+            flag_name,
+            class_assignments['IndiAllskyGalleryViewer'],
+        )
+
+    def test_diagnostic_downloads_are_only_in_image_viewer(self):
+        project_root = Path(__file__).resolve().parents[2]
+        gallery_template = (
+            project_root
+            / 'indi_allsky'
+            / 'flask'
+            / 'templates'
+            / 'gallery.html'
+        ).read_text(encoding='utf-8')
+        imageviewer_template = (
+            project_root
+            / 'indi_allsky'
+            / 'flask'
+            / 'templates'
+            / 'imageviewer.html'
+        ).read_text(encoding='utf-8')
+        forms_path = project_root / 'indi_allsky' / 'flask' / 'forms.py'
+        forms_source = forms_path.read_text(encoding='utf-8')
+        forms_tree = ast.parse(forms_source, filename=str(forms_path))
+        form_classes = {
+            node.name: ast.get_source_segment(forms_source, node)
+            for node in forms_tree.body
+            if isinstance(node, ast.ClassDef)
+        }
+
+        diagnostic_markers = (
+            'asi676mc_diagnostic_preceding_fits',
+            'asi676mc_diagnostic_bad_fits',
+            'asi676mc_diagnostic_following_fits',
+            'data-asi676mc-preceding-fits-url',
+            'data-asi676mc-bad-fits-url',
+            'data-asi676mc-following-fits-url',
+            'register_asi676mc_fits_button',
+        )
+        for marker in diagnostic_markers:
+            self.assertNotIn(marker, gallery_template)
+
+        self.assertNotIn(
+            'asi676mc_diagnostic_preceding_fits',
+            form_classes['IndiAllskyGalleryViewer'],
+        )
+        self.assertNotIn(
+            'asi676mc_diagnostic_bad_fits',
+            form_classes['IndiAllskyGalleryViewer'],
+        )
+        self.assertNotIn(
+            'asi676mc_diagnostic_following_fits',
+            form_classes['IndiAllskyGalleryViewer'],
+        )
+        self.assertIn(
+            'asi676mc_diagnostic_preceding_fits',
+            form_classes['IndiAllskyImageViewer'],
+        )
+        self.assertIn(
+            'asi676mc_diagnostic_bad_fits',
+            form_classes['IndiAllskyImageViewer'],
+        )
+        self.assertIn(
+            'asi676mc_diagnostic_following_fits',
+            form_classes['IndiAllskyImageViewer'],
+        )
+        self.assertIn('asi676mc_diagnostic_preceding_fits', imageviewer_template)
+        self.assertIn('asi676mc_diagnostic_bad_fits', imageviewer_template)
+        self.assertIn('asi676mc_diagnostic_following_fits', imageviewer_template)
+        self.assertIn('Previous normal FITS', imageviewer_template)
+        self.assertIn('Purple FITS', imageviewer_template)
+        self.assertIn('Next normal FITS', imageviewer_template)
+
+    def test_camera_name_gate(self):
+        self.assertTrue(asi676mc.camera_name_matches('ZWO CCD ASI676MC'))
+        self.assertTrue(asi676mc.camera_name_matches('ASI-676MC'))
+        self.assertTrue(asi676mc.camera_name_matches('ASI676MC 1'))
+        self.assertFalse(asi676mc.camera_name_matches('ZWO CCD ASI678MC'))
+        self.assertFalse(asi676mc.camera_name_matches(''))
+
+    def test_master_switch_requires_an_explicit_enabled_config_block(self):
+        self.assertTrue(asi676mc.feature_enabled({
+            'IMAGE_ASI676MC_REPAIR': {'ENABLE': True},
+        }))
+        self.assertFalse(asi676mc.feature_enabled({
+            'IMAGE_ASI676MC_REPAIR': {'ENABLE': False},
+        }))
+        self.assertFalse(asi676mc.feature_enabled({}))
+        self.assertFalse(asi676mc.feature_enabled({
+            'IMAGE_ASI676MC_REPAIR': 'invalid',
+        }))
+
+    def test_camera_record_gate_checks_persistent_names(self):
+        asi_camera = SimpleNamespace(
+            name='ZWO CCD',
+            name_alt1='ZWO CCD ASI676MC',
+            name_alt2=None,
+            friendlyName='All-sky camera',
+        )
+        other_camera = SimpleNamespace(
+            name='ZWO CCD ASI678MC',
+            name_alt1=None,
+            name_alt2=None,
+            friendlyName='Other camera',
+        )
+
+        self.assertTrue(asi676mc.camera_record_matches(asi_camera))
+        self.assertFalse(asi676mc.camera_record_matches(other_camera))
+
+    def test_camera_record_gate_uses_current_identity_not_friendly_label(self):
+        friendly_only = SimpleNamespace(
+            name='ZWO CCD ASI678MC',
+            name_alt1=None,
+            name_alt2=None,
+            friendlyName='My ASI676MC',
+            data={},
+        )
+        stale_alias = SimpleNamespace(
+            name='ZWO CCD ASI676MC',
+            name_alt1=None,
+            name_alt2=None,
+            friendlyName='All sky',
+            data={'detected_name': 'ZWO CCD ASI678MC'},
+        )
+        current_asi = SimpleNamespace(
+            name='Generic ZWO CCD',
+            name_alt1=None,
+            name_alt2=None,
+            friendlyName='All sky',
+            data={'detected_name': 'ZWO CCD ASI676MC'},
+        )
+
+        self.assertFalse(asi676mc.camera_record_matches(friendly_only))
+        self.assertFalse(asi676mc.camera_record_matches(stale_alias))
+        self.assertTrue(asi676mc.camera_record_matches(current_asi))
+
+    def test_settings_reject_nonfinite_and_destructive_values(self):
+        unsafe_settings = (
+            {'PURPLE_RATIO_THRESHOLD': float('nan')},
+            {'RED_SIDE_RATIO_THRESHOLD': float('inf')},
+            {'GAIN_R': 0.01},
+            {'GAIN_G1': float('inf')},
+            {'SAMPLE_STEP': asi676mc.SAMPLE_STEP_MAX + 2},
+            {'SAMPLE_STEP': float('inf')},
+            {'CHUNK_ROWS': asi676mc.CHUNK_ROWS_MAX + 2},
+        )
+        for settings in unsafe_settings:
+            with self.subTest(settings=settings):
+                with self.assertRaises(ValueError):
+                    asi676mc.normalize_settings(settings)
+
+    def test_zero_signal_is_skipped_without_json_infinity(self):
+        zero_frame = numpy.zeros((64, 64), dtype=numpy.uint16)
+        with self.assertRaisesRegex(ValueError, 'no usable green signal'):
+            asi676mc.detect_frame(zero_frame)
+
+        metadata = asi676mc.audit_metadata(
+            'skipped',
+            signature_before={
+                'purple_ratio': float('inf'),
+                'red_side_ratio': float('inf'),
+                'blue_side_ratio': float('inf'),
+            },
+        )
+        self.assertNotIn('signature_before', metadata)
+        self.assertNotIn('Infinity', json.dumps(metadata, allow_nan=False))
+
+    def test_runtime_marks_repaired_fits_and_excludes_failed_validation(self):
+        project_root = Path(__file__).resolve().parents[2]
+        processing_source = project_root.joinpath(
+            'indi_allsky',
+            'processing.py',
+        ).read_text(encoding='utf-8')
+        image_source = project_root.joinpath(
+            'indi_allsky',
+            'image.py',
+        ).read_text(encoding='utf-8')
+
+        self.assertIn("header['ASI676FX']", processing_source)
+        self.assertIn("'validation_failed',", image_source)
+        self.assertIn("image_metadata['exclude'] = True", image_source)
+
+    def test_diagnostic_capture_plan_pairs_bad_and_following_frames(self):
+        bad_roles, pending_id = asi676mc.diagnostic_capture_plan(
+            None,
+            'repaired',
+            new_capture_id='pair-a',
+        )
+        self.assertEqual(
+            bad_roles,
+            [{'capture_id': 'pair-a', 'role': 'bad'}],
+        )
+        self.assertEqual(pending_id, 'pair-a')
+
+        following_roles, pending_id = asi676mc.diagnostic_capture_plan(
+            pending_id,
+            'normal',
+        )
+        self.assertEqual(
+            following_roles,
+            [{'capture_id': 'pair-a', 'role': 'following'}],
+        )
+        self.assertIsNone(pending_id)
+
+    def test_diagnostic_capture_plan_handles_consecutive_bad_frames(self):
+        roles, pending_id = asi676mc.diagnostic_capture_plan(
+            'pair-a',
+            'repaired',
+            new_capture_id='pair-b',
+        )
+        self.assertEqual(
+            roles,
+            [
+                {'capture_id': 'pair-a', 'role': 'following'},
+                {'capture_id': 'pair-b', 'role': 'bad'},
+            ],
+        )
+        self.assertEqual(pending_id, 'pair-b')
+
+    def test_diagnostic_capture_plan_includes_validation_failures(self):
+        roles, pending_id = asi676mc.diagnostic_capture_plan(
+            None,
+            'validation_failed',
+            new_capture_id='pair-a',
+        )
+        self.assertEqual(
+            roles,
+            [{'capture_id': 'pair-a', 'role': 'bad'}],
+        )
+        self.assertEqual(pending_id, 'pair-a')
+
+    def test_diagnostic_capture_plan_requires_a_pair_id(self):
+        with self.assertRaises(ValueError):
+            asi676mc.diagnostic_capture_plan(None, 'repaired')
+
+    def test_diagnostic_preceding_reference_requires_matching_capture_context(self):
+        previous = {
+            'camera_id': 1,
+            'image_shape': (3552, 3552),
+            'exposure': 0.001,
+            'gain': 100.0,
+            'binning': 1,
+            'bayer_pattern': 'RGGB',
+        }
+        current = dict(previous)
+        current['exposure'] = 0.0010000000001
+        current['gain'] = 100.0000001
+        current['bayer_pattern'] = 'rggb'
+        self.assertTrue(
+            asi676mc.diagnostic_reference_compatible(previous, current)
+        )
+
+        incompatible_fields = {
+            'camera_id': 2,
+            'image_shape': (3000, 3000),
+            'exposure': 0.01,
+            'gain': 200.0,
+            'binning': 2,
+            'bayer_pattern': 'BGGR',
+        }
+        for field, value in incompatible_fields.items():
+            with self.subTest(field=field):
+                incompatible = dict(current)
+                incompatible[field] = value
+                self.assertFalse(
+                    asi676mc.diagnostic_reference_compatible(
+                        previous,
+                        incompatible,
+                    )
+                )
+
+        self.assertFalse(
+            asi676mc.diagnostic_reference_compatible({}, current)
+        )
+
+    def test_diagnostic_role_append_is_idempotent_and_non_mutating(self):
+        """One FITS may be the following and preceding frame of two groups."""
+        original = [{'capture_id': 'older', 'role': 'following'}]
+        preceding = {'capture_id': 'newer', 'role': 'preceding'}
+
+        updated = asi676mc.append_diagnostic_role(original, preceding)
+        updated_again = asi676mc.append_diagnostic_role(updated, preceding)
+
+        self.assertEqual(
+            original,
+            [{'capture_id': 'older', 'role': 'following'}],
+        )
+        self.assertEqual(
+            updated,
+            [
+                {'capture_id': 'older', 'role': 'following'},
+                {'capture_id': 'newer', 'role': 'preceding'},
+            ],
+        )
+        self.assertEqual(updated_again, updated)
+        self.assertIsNot(updated[0], original[0])
+
+    def test_preceding_cache_is_opt_in_and_reuses_saved_following_fits(self):
+        project_root = Path(__file__).resolve().parents[2]
+        config_source = project_root.joinpath(
+            'indi_allsky', 'config.py'
+        ).read_text(encoding='utf-8')
+        image_source = project_root.joinpath(
+            'indi_allsky', 'image.py'
+        ).read_text(encoding='utf-8')
+
+        self.assertIn('"SAVE_PRECEDING_FITS"          : False', config_source)
+        self.assertIn("get('SAVE_PRECEDING_FITS', False)", image_source)
+        self.assertIn(
+            "if save_preceding and repair_status == 'normal':",
+            image_source,
+        )
+        self.assertIn("if fits_entry is None:", image_source)
+        self.assertIn(
+            "context['fits_bytes'] = Path(source_filename_p).read_bytes()",
+            image_source,
+        )
+        self.assertIn("'diagnostic_fits_id': (", image_source)
+        self.assertIn("'role': 'preceding'", image_source)
+        self.assertIn('_add_asi676mc_diagnostic_role', image_source)
+        self.assertIn('previous_context = None', image_source)
+
+    def test_normal_frame_is_not_modified(self):
+        data = numpy.full((64, 64), 1000, dtype=numpy.uint16)
+        original = data.copy()
+
+        result = asi676mc.repair_if_needed(data)
+
+        self.assertFalse(result['repaired'])
+        self.assertGreaterEqual(result['timing']['detection_s'], 0.0)
+        self.assertEqual(result['timing']['repair_s'], 0.0)
+        self.assertGreaterEqual(
+            result['timing']['total_s'],
+            result['timing']['detection_s'],
+        )
+        numpy.testing.assert_array_equal(data, original)
+
+    def test_bad_frame_is_repaired_in_place(self):
+        data = numpy.empty((64, 64), dtype=numpy.uint16)
+        data[0::2, 0::2] = 4000
+        data[0::2, 1::2] = 1000
+        data[1::2, 0::2] = 1000
+        data[1::2, 1::2] = 4000
+
+        original_object = data
+        result = asi676mc.repair_if_needed(data)
+
+        self.assertTrue(result['repaired'])
+        self.assertIs(data, original_object)
+        self.assertEqual(data.dtype, numpy.uint16)
+        self.assertEqual(data.shape, (64, 64))
+        self.assertFalse(result['signature_after']['is_bad'])
+        self.assertGreaterEqual(result['timing']['detection_s'], 0.0)
+        self.assertGreaterEqual(result['timing']['repair_s'], 0.0)
+        self.assertGreaterEqual(
+            result['timing']['total_s'],
+            result['timing']['detection_s'] + result['timing']['repair_s'],
+        )
+
+    def test_jointly_clipped_greens_use_corrected_highlight_level(self):
+        height = 12
+        width = 20
+        data = numpy.zeros((height, width), dtype=numpy.uint16)
+
+        # Build the input one row out of phase, matching the camera failure.
+        # After row restoration, both mapped greens are clipped while the
+        # corrected red/blue pair reaches the uint16 highlight ceiling.
+        for source_row in range(1, height):
+            output_row = source_row - 1
+            if output_row % 2 == 0:
+                data[source_row, 0::2] = 65520
+                data[source_row, 1::2] = 65534
+            else:
+                data[source_row, 0::2] = 65534
+                data[source_row, 1::2] = 65520
+
+        asi676mc.repair_in_place(data)
+
+        self.assertTrue(numpy.all(data[0::2, 1::2] == 65535))
+        self.assertTrue(numpy.all(data[1::2, 0::2] == 65535))
+
+    def test_colored_clipped_highlights_are_not_forced_to_strongest_channel(self):
+        height = 12
+        width = 20
+        data = numpy.zeros((height, width), dtype=numpy.uint16)
+
+        source_red = round(30000 * asi676mc.DEFAULT_SETTINGS['GAIN_R'])
+        source_blue = 65520
+        for source_row in range(1, height):
+            output_row = source_row - 1
+            if output_row % 2 == 0:
+                data[source_row, 0::2] = source_red
+                data[source_row, 1::2] = 65534
+            else:
+                data[source_row, 0::2] = 65534
+                data[source_row, 1::2] = source_blue
+
+        asi676mc.repair_in_place(data)
+
+        expected_green = round(
+            65534 / asi676mc.DEFAULT_SETTINGS['GAIN_G2']
+        )
+        self.assertTrue(numpy.all(data[0::2, 1::2] == expected_green))
+        self.assertTrue(numpy.all(data[1::2, 0::2] == expected_green))
+        self.assertTrue(numpy.all(data[1::2, 1::2] == 65535))
+
+    def test_clipped_highlight_blend_uses_bounded_transition(self):
+        self.assertEqual(
+            asi676mc.highlight_blend_base_boundaries(0.55, 0.75),
+            (719, 775),
+        )
+
+        height = 12
+        width = 20
+        plane_shape = (height // 2, width // 2)
+        clipped = numpy.ones(plane_shape, dtype=numpy.bool_)
+        packed = numpy.packbits(clipped, axis=1)
+
+        cases = (
+            # low/high=0.55: retain the factor-two boundary estimate.
+            (33000, 60000, 53925),
+            # low/high=0.65: produce a bounded intermediate estimate.
+            (39000, 60000, 58429),
+            # low/high=0.75: reach the strongest channel.
+            (45000, 60000, 60000),
+        )
+        for low, high, expected_green in cases:
+            with self.subTest(low=low, high=high):
+                data = numpy.empty((height, width), dtype=numpy.uint16)
+                data[0::2, 0::2] = low
+                data[0::2, 1::2] = 10000
+                data[1::2, 0::2] = 10000
+                data[1::2, 1::2] = high
+
+                asi676mc._reconstruct_clipped_green(
+                    data,
+                    packed,
+                    packed,
+                    chunk_rows=4,
+                )
+
+                self.assertTrue(
+                    numpy.all(data[0::2, 1::2] == expected_green)
+                )
+                self.assertTrue(
+                    numpy.all(data[1::2, 0::2] == expected_green)
+                )
+
+    def test_diagnostic_capture_plan_includes_exclude_only_frames(self):
+        roles, pending_id = asi676mc.diagnostic_capture_plan(
+            None,
+            'excluded',
+            new_capture_id='pair-excluded',
+        )
+        self.assertEqual(
+            roles,
+            [{'capture_id': 'pair-excluded', 'role': 'bad'}],
+        )
+        self.assertEqual(pending_id, 'pair-excluded')
+
+    def test_detect_frame_classifies_without_mutating_source(self):
+        data = numpy.empty((64, 64), dtype=numpy.uint16)
+        data[0::2, 0::2] = 4000
+        data[0::2, 1::2] = 1000
+        data[1::2, 0::2] = 1000
+        data[1::2, 1::2] = 4000
+        original = data.copy()
+
+        result = asi676mc.detect_frame(data)
+
+        self.assertTrue(result['is_bad'])
+        self.assertTrue(result['signature']['is_bad'])
+        self.assertEqual(result['timing']['repair_s'], 0.0)
+        numpy.testing.assert_array_equal(data, original)
+
+    def test_balanced_clipped_highlights_reach_strongest_channel(self):
+        height = 12
+        width = 20
+        data = numpy.empty((height, width), dtype=numpy.uint16)
+        data[0::2, 0::2] = 60000
+        data[0::2, 1::2] = 59992
+        data[1::2, 0::2] = 59992
+        data[1::2, 1::2] = 65535
+
+        plane_shape = (height // 2, width // 2)
+        clipped = numpy.ones(plane_shape, dtype=numpy.bool_)
+        packed = numpy.packbits(clipped, axis=1)
+
+        asi676mc._reconstruct_clipped_green(
+            data,
+            packed,
+            packed,
+            chunk_rows=4,
+        )
+
+        # low/high is above the 0.75 upper blend boundary.
+        self.assertTrue(numpy.all(data[0::2, 1::2] == 65535))
+        self.assertTrue(numpy.all(data[1::2, 0::2] == 65535))
+
+    def test_configured_highlight_blend_boundaries_change_transition(self):
+        height = 12
+        width = 20
+        data = numpy.empty((height, width), dtype=numpy.uint16)
+        data[0::2, 0::2] = 39000
+        data[0::2, 1::2] = 10000
+        data[1::2, 0::2] = 10000
+        data[1::2, 1::2] = 60000
+
+        plane_shape = (height // 2, width // 2)
+        clipped = numpy.ones(plane_shape, dtype=numpy.bool_)
+        packed = numpy.packbits(clipped, axis=1)
+
+        asi676mc._reconstruct_clipped_green(
+            data,
+            packed,
+            packed,
+            chunk_rows=4,
+            highlight_blend_start_ratio=0.65,
+            highlight_blend_end_ratio=0.85,
+        )
+
+        # low/high=0.65 is now the start boundary, so retain factor two.
+        self.assertTrue(numpy.all(data[0::2, 1::2] == 56325))
+        self.assertTrue(numpy.all(data[1::2, 0::2] == 56325))
+
+    def test_configured_threshold_can_leave_frame_untouched(self):
+        data = numpy.empty((64, 64), dtype=numpy.uint16)
+        data[0::2, 0::2] = 4000
+        data[0::2, 1::2] = 1000
+        data[1::2, 0::2] = 1000
+        data[1::2, 1::2] = 4000
+        original = data.copy()
+
+        result = asi676mc.repair_if_needed(
+            data,
+            {'PURPLE_RATIO_THRESHOLD': 10.0},
+        )
+
+        self.assertFalse(result['repaired'])
+        numpy.testing.assert_array_equal(data, original)
+
+    def test_invalid_raw_layout_is_rejected_before_mutation(self):
+        odd_width = numpy.zeros((64, 63), dtype=numpy.uint16)
+        original = odd_width.copy()
+
+        with self.assertRaises(ValueError):
+            asi676mc.repair_if_needed(odd_width)
+
+        numpy.testing.assert_array_equal(odd_width, original)
+
+    def test_failed_validation_retains_original_frame(self):
+        data = numpy.empty((64, 64), dtype=numpy.uint16)
+        data[0::2, 0::2] = 4000
+        data[0::2, 1::2] = 1000
+        data[1::2, 0::2] = 1000
+        data[1::2, 1::2] = 4000
+        original = data.copy()
+
+        with mock.patch.object(asi676mc, 'repair_in_place', side_effect=lambda frame, settings: frame):
+            result = asi676mc.repair_if_needed(data)
+
+        self.assertFalse(result['repaired'])
+        self.assertTrue(result['validation_failed'])
+        numpy.testing.assert_array_equal(data, original)
+
+    def test_chunk_and_sample_sizes_must_preserve_bayer_parity(self):
+        with self.assertRaises(ValueError):
+            asi676mc.normalize_settings({'SAMPLE_STEP': 3})
+
+        with self.assertRaises(ValueError):
+            asi676mc.normalize_settings({'CHUNK_ROWS': 3})
+
+    def test_highlight_blend_ratios_must_be_ordered(self):
+        with self.assertRaises(ValueError):
+            asi676mc.normalize_settings({
+                'HIGHLIGHT_BLEND_START_RATIO': 0.0,
+            })
+
+        with self.assertRaises(ValueError):
+            asi676mc.normalize_settings({
+                'HIGHLIGHT_BLEND_END_RATIO': 1.01,
+            })
+
+        with self.assertRaises(ValueError):
+            asi676mc.normalize_settings({
+                'HIGHLIGHT_BLEND_START_RATIO': 0.75,
+                'HIGHLIGHT_BLEND_END_RATIO': 0.55,
+            })
+
+        with self.assertRaises(ValueError):
+            asi676mc.normalize_settings({
+                'HIGHLIGHT_BLEND_START_RATIO': 0.98,
+                'HIGHLIGHT_BLEND_END_RATIO': 0.99,
+            })
+
+    def test_packed_clipping_mask_preserves_partial_final_byte(self):
+        data = numpy.arange(12 * 20, dtype=numpy.uint16).reshape((12, 20))
+        expected_green1 = data[0::2, 1::2] >= 100
+        expected_both = expected_green1 & (data[1::2, 0::2] >= 100)
+
+        packed, packed_both = asi676mc._pack_clipped_green_masks(
+            data,
+            100,
+            4,
+        )
+        unpacked = numpy.unpackbits(
+            packed,
+            axis=1,
+            count=expected_green1.shape[1],
+        ).view(numpy.bool_)
+
+        self.assertEqual(packed.shape, (6, 2))
+        numpy.testing.assert_array_equal(unpacked, expected_green1)
+
+        unpacked_both = numpy.unpackbits(
+            packed_both,
+            axis=1,
+            count=expected_both.shape[1],
+        ).view(numpy.bool_)
+        numpy.testing.assert_array_equal(unpacked_both, expected_both)
+
+    def test_repair_audit_metadata_is_json_safe(self):
+        signature_before = {
+            'purple_ratio': numpy.float64(2.0),
+            'red_side_ratio': numpy.float64(1.5),
+            'blue_side_ratio': numpy.float64(1.75),
+        }
+        signature_after = {
+            'purple_ratio': numpy.float64(0.9),
+            'red_side_ratio': numpy.float64(1.0),
+            'blue_side_ratio': numpy.float64(1.0),
+        }
+
+        metadata = asi676mc.audit_metadata(
+            'repaired',
+            signature_before=signature_before,
+            signature_after=signature_after,
+            timing={
+                'detection_s': numpy.float64(0.001),
+                'repair_s': numpy.float64(0.010),
+                'total_s': numpy.float64(0.011),
+            },
+        )
+
+        self.assertEqual(metadata['status'], 'repaired')
+        self.assertEqual(metadata['signature_before']['purple_ratio'], 2.0)
+        self.assertEqual(metadata['signature_after']['purple_ratio'], 0.9)
+        self.assertEqual(metadata['timing']['detection_s'], 0.001)
+        self.assertEqual(metadata['timing']['repair_s'], 0.010)
+        self.assertEqual(metadata['timing']['total_s'], 0.011)
+        json.dumps(metadata)
+
+        saved_signature = asi676mc.saved_fits_signature_metadata({
+            'signature_before': signature_before,
+            # The classification is deliberately not persisted because a
+            # later calibration run may use different detector thresholds.
+            'status': 'repaired',
+        })
+        self.assertEqual(saved_signature, {
+            'version': 1,
+            'purple_ratio': 2.0,
+            'red_side_ratio': 1.5,
+            'blue_side_ratio': 1.75,
+        })
+        self.assertNotIn('is_bad', saved_signature)
+        json.dumps(saved_signature)
+
+    def test_low_valid_highlight_boundaries_do_not_overflow(self):
+        data = numpy.array(
+            [[65535, 100], [100, 65535]],
+            dtype=numpy.uint16,
+        )
+        clipped = numpy.packbits(
+            numpy.array([[True]], dtype=numpy.bool_),
+            axis=1,
+        )
+
+        asi676mc._reconstruct_clipped_green(
+            data,
+            clipped,
+            clipped,
+            chunk_rows=2,
+            highlight_blend_start_ratio=0.05,
+            highlight_blend_end_ratio=0.10,
+        )
+
+        self.assertEqual(int(data[0, 1]), 65535)
+        self.assertEqual(int(data[1, 0]), 65535)
+
+    def test_legacy_alias_is_used_as_bound_camera_identity(self):
+        camera = SimpleNamespace(
+            name='Backyard camera',
+            name_alt1='ZWO CCD ASI676MC',
+            name_alt2='',
+            data={},
+        )
+
+        self.assertTrue(asi676mc.camera_record_matches(camera))
+        self.assertEqual(
+            asi676mc.camera_record_identity_name(camera),
+            'ZWO CCD ASI676MC',
+        )
+
+    def test_incompatible_immediate_following_frame_breaks_diagnostic_group(self):
+        pending_context = {
+            'camera_id': 1,
+            'image_shape': (3552, 3552),
+            'exposure': 0.001,
+            'gain': 100.0,
+            'binning': 1,
+            'bayer_pattern': 'RGGB',
+        }
+        pending_state = {
+            'capture_id': 'capture-1',
+            'context': pending_context,
+        }
+        compatible = dict(pending_context)
+        incompatible = dict(pending_context, exposure=0.002)
+
+        self.assertEqual(
+            asi676mc.diagnostic_pending_capture_id(
+                pending_state,
+                compatible,
+            ),
+            'capture-1',
+        )
+        self.assertIsNone(asi676mc.diagnostic_pending_capture_id(
+            pending_state,
+            incompatible,
+        ))
+
+    def test_runtime_invalid_bayer_offsets_are_safely_skipped(self):
+        processing_path = (
+            Path(__file__).resolve().parents[2]
+            / 'indi_allsky'
+            / 'processing.py'
+        )
+        source = processing_path.read_text(encoding='utf-8')
+        tree = ast.parse(source, filename=str(processing_path))
+        image_processor = next(
+            node for node in tree.body
+            if isinstance(node, ast.ClassDef) and node.name == 'ImageProcessor'
+        )
+        method_node = next(
+            node for node in image_processor.body
+            if isinstance(node, ast.FunctionDef)
+            and node.name == 'correct_asi676mc_frame'
+        )
+        method_module = ast.Module(body=[method_node], type_ignores=[])
+        ast.fix_missing_locations(method_module)
+        namespace = {
+            'asi676mc': SimpleNamespace(camera_name_matches=lambda _name: True),
+            'logger': mock.Mock(),
+            'math': __import__('math'),
+        }
+        exec(compile(method_module, str(processing_path), 'exec'), namespace)
+        correct_frame = namespace['correct_asi676mc_frame']
+
+        for offset in ('not-a-number', 0.5, float('nan')):
+            processor = SimpleNamespace(
+                config={'IMAGE_ASI676MC_REPAIR': {'ENABLE': True}},
+                _set_asi676mc_repair_result=(
+                    lambda _i_ref, status, reason=None: {
+                        'status': status,
+                        'reason': reason,
+                    }
+                ),
+            )
+            i_ref = SimpleNamespace(
+                detected_camera_name='ZWO CCD ASI676MC',
+                binning=1,
+                image_bayerpat='RGGB',
+                hdulist=[SimpleNamespace(header={
+                    'XBAYROFF': offset,
+                    'YBAYROFF': 0,
+                })],
+            )
+
+            result = correct_frame(processor, i_ref)
+
+            self.assertEqual(result['status'], 'skipped')
+            self.assertEqual(result['reason'], 'invalid Bayer-offset metadata')
+
+    def test_excluded_frames_do_not_enter_current_or_future_stacks(self):
+        processing_path = (
+            Path(__file__).resolve().parents[2]
+            / 'indi_allsky'
+            / 'processing.py'
+        )
+        source = processing_path.read_text(encoding='utf-8')
+        tree = ast.parse(source, filename=str(processing_path))
+        image_processor = next(
+            node for node in tree.body
+            if isinstance(node, ast.ClassDef) and node.name == 'ImageProcessor'
+        )
+        method = next(
+            node for node in image_processor.body
+            if isinstance(node, ast.FunctionDef) and node.name == 'stack'
+        )
+        namespace = {
+            'asi676mc': asi676mc,
+            'logger': mock.Mock(),
+        }
+        exec(
+            compile(
+                ast.fix_missing_locations(
+                    ast.Module(body=[method], type_ignores=[])
+                ),
+                str(processing_path),
+                'exec',
+            ),
+            namespace,
+        )
+        stack = namespace['stack']
+        excluded = SimpleNamespace(
+            asi676mc_repair_result={'status': 'excluded'},
+            opencv_data=numpy.full((2, 2), 99),
+        )
+        processor = SimpleNamespace(
+            getLatestImage=lambda: excluded,
+            focus_mode=False,
+            image_list=[excluded],
+            image=None,
+        )
+
+        stack(processor)
+
+        numpy.testing.assert_array_equal(processor.image, excluded.opencv_data)
+
+        normal = SimpleNamespace(
+            asi676mc_repair_result={'status': 'normal'},
+            opencv_data=numpy.full((2, 2), 10),
+        )
+        processor = SimpleNamespace(
+            getLatestImage=lambda: normal,
+            focus_mode=False,
+            image_list=[normal, excluded],
+            image=None,
+        )
+
+        stack(processor)
+
+        numpy.testing.assert_array_equal(processor.image, normal.opencv_data)
+
+    def test_downstream_exclusion_statuses_are_narrow(self):
+        for status in ('excluded', 'validation_failed'):
+            self.assertTrue(
+                asi676mc.excluded_from_downstream_measurements({
+                    'status': status,
+                })
+            )
+        for status in ('normal', 'repaired', 'skipped', None):
+            self.assertFalse(
+                asi676mc.excluded_from_downstream_measurements({
+                    'status': status,
+                })
+            )
+
+
+if __name__ == '__main__':
+    unittest.main()
