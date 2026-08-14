@@ -2032,12 +2032,24 @@ class JsonSensorPanelView(JsonView):
             last_update = None
             last_update_age_s = None
 
-        return {
+        from ..sensors_mapping import format_named_sensors
+        named_sensors = format_named_sensors(sensor_temp, sensor_user, getattr(self, 'indi_allsky_config', {}))
+
+        payload = {
             'last_update': last_update,
             'last_update_age_s': last_update_age_s,
             'sensor_user': sensor_user,
             'sensor_temp': sensor_temp,
+            'sensors': named_sensors,
         }
+
+        try:
+            from ..events import event_manager
+            event_manager.broadcast('sensor_update', payload)
+        except Exception:
+            pass
+
+        return payload
 
 
 class SensorPanelView(TemplateView):
@@ -2462,6 +2474,7 @@ class ConfigView(FormView):
             'NIGHT_MOONMODE_PHASE'           : self.indi_allsky_config.get('NIGHT_MOONMODE_PHASE', 50.0),
             'WEB_STATUS_TEMPLATE'            : self.indi_allsky_config.get('WEB_STATUS_TEMPLATE', ''),
             'WEB_EXTRA_TEXT'                 : self.indi_allsky_config.get('WEB_EXTRA_TEXT', ''),
+            'WEBSOCKET_API_KEY'              : self.indi_allsky_config.get('WEBSOCKET_API_KEY', ''),
             'WEB_NONLOCAL_IMAGES'            : self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES', False),
             'WEB_LOCAL_IMAGES_ADMIN'         : self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN', False),
             'IMAGE_STRETCH__CLASSNAME'       : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('CLASSNAME', ''),
@@ -3526,6 +3539,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['NIGHT_MOONMODE_PHASE']                 = float(request.json['NIGHT_MOONMODE_PHASE'])
         self.indi_allsky_config['WEB_STATUS_TEMPLATE']                  = str(request.json['WEB_STATUS_TEMPLATE'])
         self.indi_allsky_config['WEB_EXTRA_TEXT']                       = str(request.json['WEB_EXTRA_TEXT'])
+        self.indi_allsky_config['WEBSOCKET_API_KEY']                    = str(request.json.get('WEBSOCKET_API_KEY', '')).strip()
+        app.config['WEBSOCKET_API_KEY']                                 = self.indi_allsky_config['WEBSOCKET_API_KEY']
         self.indi_allsky_config['WEB_NONLOCAL_IMAGES']                  = bool(request.json['WEB_NONLOCAL_IMAGES'])
         self.indi_allsky_config['WEB_LOCAL_IMAGES_ADMIN']               = bool(request.json['WEB_LOCAL_IMAGES_ADMIN'])
         self.indi_allsky_config['IMAGE_STRETCH']['CLASSNAME']           = str(request.json['IMAGE_STRETCH__CLASSNAME'])
@@ -13457,6 +13472,328 @@ class WsShellView(BaseView):
         return ''
 
 
+class WsEventsView(BaseView):
+    """
+    WebSocket Read-Only Event Stream View (/ws/events).
+    Allows live event subscribers (Home Assistant, web dashboards) to receive push events
+    (exposure_complete, sensor_update, keogram_complete, timelapse_complete).
+    Read-only: Rejects command executions.
+    """
+    decorators = []
+
+    def dispatch_request(self):
+        import simple_websocket
+        from ..events import event_manager
+
+        api_key = request.args.get('api_key') or request.args.get('token') or request.headers.get('X-API-Key')
+        if not api_key and request.headers.get('Authorization'):
+            auth_h = request.headers.get('Authorization', '')
+            if auth_h.startswith('Bearer '):
+                api_key = auth_h[7:].strip()
+
+        auth_required = app.config.get('INDI_ALLSKY_AUTH_ALL_VIEWS', False)
+        if auth_required and not current_user.is_authenticated:
+            valid_keys = set()
+            db_ws_key = str(getattr(self, 'indi_allsky_config', {}).get('WEBSOCKET_API_KEY', '')).strip()
+            if db_ws_key:
+                valid_keys.add(db_ws_key)
+            flask_ws_key = str(app.config.get('WEBSOCKET_API_KEY', '')).strip()
+            if flask_ws_key:
+                valid_keys.add(flask_ws_key)
+            secret_key = str(app.config.get('SECRET_KEY', '')).strip()
+            if secret_key and secret_key != 'CHANGEME':
+                valid_keys.add(secret_key)
+
+            if not api_key or api_key.strip() not in valid_keys:
+                return 'Unauthorized', 401
+
+        ws = simple_websocket.Server.accept(request.environ)
+        event_manager.register(ws)
+
+        try:
+            ws.send(json.dumps({
+                "event": "connected",
+                "timestamp": time.time(),
+                "data": {
+                    "server": "indi-allsky",
+                    "version": str(__version__),
+                    "endpoint": "events",
+                    "mode": "read_only",
+                    "active_clients": event_manager.client_count
+                }
+            }, default=str))
+        except Exception as e:
+            app.logger.error("Failed sending WS connected handshake: %s", e)
+            event_manager.unregister(ws)
+            return ''
+
+        try:
+            while True:
+                message = ws.receive()
+                if message is None:
+                    break
+                try:
+                    msg = json.loads(message)
+                    msg_type = msg.get('type') or msg.get('action') or msg.get('event')
+                    if msg_type == 'ping':
+                        ws.send(json.dumps({
+                            "event": "pong",
+                            "timestamp": time.time(),
+                            "data": {}
+                        }, default=str))
+                    elif msg_type == 'get_status':
+                        ws.send(json.dumps({
+                            "event": "status_response",
+                            "timestamp": time.time(),
+                            "data": {
+                                "active_clients": event_manager.client_count,
+                                "server": "indi-allsky",
+                                "version": str(__version__)
+                            }
+                        }, default=str))
+                    elif msg_type in ('get_sensors', 'sensors'):
+                        from ..sensors_mapping import get_latest_sensors_payload
+                        sensor_payload = get_latest_sensors_payload(getattr(self, 'indi_allsky_config', {}))
+                        ws.send(json.dumps({
+                            "event": "sensor_update",
+                            "timestamp": time.time(),
+                            "data": sensor_payload
+                        }, default=str))
+                    elif msg_type in ('shutdown', 'reboot', 'pause', 'unpause', 'restart_service', 'generate_keogram', 'generate_timelapse', 'generate_startrail', 'trigger_darks'):
+                        ws.send(json.dumps({
+                            "event": "error",
+                            "timestamp": time.time(),
+                            "data": {
+                                "message": f"Action command '{msg_type}' disabled on read-only /ws/events endpoint. Use authenticated /ws/control endpoint."
+                            }
+                        }, default=str))
+                except json.JSONDecodeError:
+                    pass
+                except Exception as e:
+                    app.logger.error("Error handling WS event message: %s", e)
+        except simple_websocket.ConnectionClosed:
+            pass
+        finally:
+            event_manager.unregister(ws)
+            try:
+                ws.close()
+            except Exception:
+                pass
+
+        return ''
+
+
+class WsControlView(BaseView):
+    """
+    WebSocket Authenticated Command & Control View (/ws/control).
+    Allows authorized clients (Home Assistant control entities, admin clients)
+    to execute control commands and receive live event updates.
+    Requires API key or active admin authentication session.
+    """
+    decorators = []
+
+    def rebootSystemd(self):
+        import dbus
+        system_bus = dbus.SystemBus()
+        systemd1 = system_bus.get_object('org.freedesktop.login1', '/org/freedesktop/login1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.login1.Manager')
+        return manager.Reboot(False)
+
+    def poweroffSystemd(self):
+        import dbus
+        system_bus = dbus.SystemBus()
+        systemd1 = system_bus.get_object('org.freedesktop.login1', '/org/freedesktop/login1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.login1.Manager')
+        return manager.PowerOff(False)
+
+    def dispatch_request(self):
+        import simple_websocket
+        from ..events import event_manager
+
+        api_key = request.args.get('api_key') or request.args.get('token') or request.headers.get('X-API-Key')
+        if not api_key and request.headers.get('Authorization'):
+            auth_h = request.headers.get('Authorization', '')
+            if auth_h.startswith('Bearer '):
+                api_key = auth_h[7:].strip()
+
+        # Control endpoint ALWAYS requires authentication
+        valid_keys = set()
+        db_ws_key = str(getattr(self, 'indi_allsky_config', {}).get('WEBSOCKET_API_KEY', '')).strip()
+        if db_ws_key:
+            valid_keys.add(db_ws_key)
+        flask_ws_key = str(app.config.get('WEBSOCKET_API_KEY', '')).strip()
+        if flask_ws_key:
+            valid_keys.add(flask_ws_key)
+        secret_key = str(app.config.get('SECRET_KEY', '')).strip()
+        if secret_key and secret_key != 'CHANGEME':
+            valid_keys.add(secret_key)
+
+        if not current_user.is_authenticated and (not api_key or api_key.strip() not in valid_keys):
+            app.logger.warning("WS control auth failed for client %s (provided: '%s', valid_keys count: %d)", request.remote_addr, api_key, len(valid_keys))
+            return 'Unauthorized - API key or admin session required for /ws/control', 401
+
+        ws = simple_websocket.Server.accept(request.environ)
+        event_manager.register(ws)
+
+        try:
+            ws.send(json.dumps({
+                "event": "connected",
+                "timestamp": time.time(),
+                "data": {
+                    "server": "indi-allsky",
+                    "version": str(__version__),
+                    "endpoint": "control",
+                    "mode": "read_write",
+                    "active_clients": event_manager.client_count
+                }
+            }, default=str))
+        except Exception as e:
+            app.logger.error("Failed sending WS control connected handshake: %s", e)
+            event_manager.unregister(ws)
+            return ''
+
+        try:
+            while True:
+                message = ws.receive()
+                if message is None:
+                    break
+                try:
+                    msg = json.loads(message)
+                    msg_type = msg.get('type') or msg.get('action') or msg.get('event')
+                    if msg_type == 'ping':
+                        ws.send(json.dumps({
+                            "event": "pong",
+                            "timestamp": time.time(),
+                            "data": {}
+                        }, default=str))
+                    elif msg_type == 'get_status':
+                        ws.send(json.dumps({
+                            "event": "status_response",
+                            "timestamp": time.time(),
+                            "data": {
+                                "active_clients": event_manager.client_count,
+                                "server": "indi-allsky",
+                                "version": str(__version__)
+                            }
+                        }, default=str))
+                    elif msg_type in ('get_sensors', 'sensors'):
+                        from ..sensors_mapping import get_latest_sensors_payload
+                        sensor_payload = get_latest_sensors_payload(getattr(self, 'indi_allsky_config', {}))
+                        ws.send(json.dumps({
+                            "event": "sensor_update",
+                            "timestamp": time.time(),
+                            "data": sensor_payload
+                        }, default=str))
+                    elif msg_type in ('reboot', 'shutdown'):
+                        try:
+                            if msg_type == 'reboot':
+                                self.rebootSystemd()
+                            else:
+                                self.poweroffSystemd()
+                            ws.send(json.dumps({
+                                "event": "command_result",
+                                "timestamp": time.time(),
+                                "data": {"action": msg_type, "status": "executed"}
+                            }, default=str))
+                        except Exception as sys_err:
+                            app.logger.warning("DBus system operation failed (%s), queuing task in DB", sys_err)
+                            from .models import IndiAllSkyDbTaskQueueTable, TaskQueueQueue, TaskQueueState
+                            task = IndiAllSkyDbTaskQueueTable(
+                                queue=TaskQueueQueue.MAIN,
+                                state=TaskQueueState.MANUAL,
+                                priority=100,
+                                data={'action': msg_type},
+                            )
+                            db.session.add(task)
+                            db.session.commit()
+                            ws.send(json.dumps({
+                                "event": "command_result",
+                                "timestamp": time.time(),
+                                "data": {"action": msg_type, "status": "queued", "task_id": task.id}
+                            }, default=str))
+                    elif msg_type in ('pause', 'unpause', 'reload_config', 'reload', 'generate_keogram', 'generate_timelapse', 'generate_startrail', 'trigger_darks'):
+                        from .models import IndiAllSkyDbTaskQueueTable, TaskQueueQueue, TaskQueueState
+                        
+                        task_name_map = {
+                            'pause': 'pause',
+                            'unpause': 'unpause',
+                            'reload_config': 'reload',
+                            'reload': 'reload',
+                            'generate_keogram': 'keogram',
+                            'generate_timelapse': 'video',
+                            'generate_startrail': 'startrail',
+                            'trigger_darks': 'darks',
+                        }
+                        
+                        target_action = task_name_map.get(msg_type, msg_type)
+                        task = IndiAllSkyDbTaskQueueTable(
+                            queue=TaskQueueQueue.MAIN,
+                            state=TaskQueueState.MANUAL,
+                            priority=100,
+                            data={'action': target_action},
+                        )
+                        db.session.add(task)
+                        db.session.commit()
+                        ws.send(json.dumps({
+                            "event": "command_result",
+                            "timestamp": time.time(),
+                            "data": {"action": msg_type, "status": "queued", "task_id": task.id}
+                        }, default=str))
+                    elif msg_type in ('restart_service', 'start_service', 'stop_service'):
+                        service_name = msg.get('service', 'indi-allsky')
+                        unit_map = {
+                            'indiserver': app.config.get('INDISERVER_SERVICE_NAME', 'indiserver.service'),
+                            'indi-allsky': app.config.get('ALLSKY_SERVICE_NAME', 'indi-allsky.service'),
+                            'allsky': app.config.get('ALLSKY_SERVICE_NAME', 'indi-allsky.service'),
+                            'gunicorn': app.config.get('GUNICORN_SERVICE_NAME', 'gunicorn-indi-allsky.service'),
+                        }
+                        unit_name = unit_map.get(service_name, service_name)
+                        try:
+                            if msg_type == 'stop_service':
+                                self.stopSystemdUnit(unit_name)
+                            elif msg_type == 'start_service':
+                                self.startSystemdUnit(unit_name)
+                            else:
+                                self.restartSystemdUnit(unit_name)
+                            ws.send(json.dumps({
+                                "event": "command_result",
+                                "timestamp": time.time(),
+                                "data": {"action": msg_type, "service": service_name, "status": "executed"}
+                            }, default=str))
+                        except Exception as sys_err:
+                            app.logger.warning("DBus service operation failed (%s), queuing task in DB", sys_err)
+                            from .models import IndiAllSkyDbTaskQueueTable, TaskQueueQueue, TaskQueueState
+                            task_action_prefix = "restart" if msg_type == "restart_service" else ("start" if msg_type == "start_service" else "stop")
+                            task = IndiAllSkyDbTaskQueueTable(
+                                queue=TaskQueueQueue.MAIN,
+                                state=TaskQueueState.MANUAL,
+                                priority=100,
+                                data={'action': f'{task_action_prefix}_{service_name}'},
+                            )
+                            db.session.add(task)
+                            db.session.commit()
+                            ws.send(json.dumps({
+                                "event": "command_result",
+                                "timestamp": time.time(),
+                                "data": {"action": msg_type, "service": service_name, "status": "queued", "task_id": task.id}
+                            }, default=str))
+                except json.JSONDecodeError:
+                    pass
+                except Exception as e:
+                    app.logger.error("Error handling WS control message: %s", e)
+        except simple_websocket.ConnectionClosed:
+            pass
+        finally:
+            event_manager.unregister(ws)
+            try:
+                ws.close()
+            except Exception:
+                pass
+
+        return ''
+
+
+
 class ESP32ImageView(BaseView):
     decorators = []
 
@@ -13725,6 +14062,8 @@ bp_allsky.add_url_rule('/network', view_func=NetworkManagerView.as_view('network
 bp_allsky.add_url_rule('/ajax/network', view_func=AjaxNetworkManagerView.as_view('ajax_network_manager_view'))
 bp_allsky.add_url_rule('/shell', view_func=ShellView.as_view('shell_view', template_name='shell.html'))
 bp_allsky.add_url_rule('/ws/shell', view_func=WsShellView.as_view('ws_shell_view'), websocket=True)
+bp_allsky.add_url_rule('/ws/events', view_func=WsEventsView.as_view('ws_events_view'), websocket=True)
+bp_allsky.add_url_rule('/ws/control', view_func=WsControlView.as_view('ws_control_view'), websocket=True)
 
 bp_allsky.add_url_rule('/drives', view_func=DriveManagerView.as_view('drive_manager_view', template_name='drive_manager.html'))
 bp_allsky.add_url_rule('/ajax/drives', view_func=AjaxDriveManagerView.as_view('ajax_drive_manager_view'))

@@ -300,6 +300,28 @@ class miscDb(object):
         db.session.add(image)
         db.session.commit()
 
+        try:
+            from ..events import event_manager
+            from ..sensors_mapping import get_latest_sensors_payload
+            event_manager.broadcast('exposure_complete', {
+                'id': image.id,
+                'filename': str(image.filename),
+                'camera_id': image.camera_id,
+                'createDate': str(image.createDate),
+                'dayDate': str(image.dayDate),
+                'exposure': image.exposure,
+                'gain': image.gain,
+                'binmode': image.binmode,
+                'night': image.night,
+                'temp': image.temp,
+                'sqm': image.sqm,
+                'stars': image.stars,
+            })
+            sensor_payload = get_latest_sensors_payload()
+            event_manager.broadcast('sensor_update', sensor_payload)
+        except Exception as ev_err:
+            logger.error('Error broadcasting exposure events: %s', ev_err)
+
         return image
 
 
@@ -690,6 +712,20 @@ class miscDb(object):
         db.session.add(keogram)
         db.session.commit()
 
+        try:
+            from ..events import event_manager
+            event_manager.broadcast('keogram_complete', {
+                'id': keogram.id,
+                'filename': str(keogram.filename),
+                'camera_id': camera_id,
+                'createDate': str(keogram.createDate),
+                'dayDate': str(keogram.dayDate),
+                'night': keogram.night,
+                'frames': keogram.frames,
+            })
+        except Exception as ev_err:
+            logger.error('Error broadcasting keogram_complete event: %s', ev_err)
+
         return keogram
 
 
@@ -746,6 +782,20 @@ class miscDb(object):
 
         db.session.add(startrail)
         db.session.commit()
+
+        try:
+            from ..events import event_manager
+            event_manager.broadcast('startrail_complete', {
+                'id': startrail.id,
+                'filename': str(startrail.filename),
+                'camera_id': camera_id,
+                'createDate': str(startrail.createDate),
+                'dayDate': str(startrail.dayDate),
+                'night': startrail.night,
+                'frames': startrail.frames,
+            })
+        except Exception as ev_err:
+            logger.error('Error broadcasting startrail_complete event: %s', ev_err)
 
         return startrail
 

@@ -1121,6 +1121,15 @@ def WEB_EXTRA_TEXT_validator(form, field):
         raise ValidationError(str(e))
 
 
+def WEBSOCKET_API_KEY_validator(form, field):
+    if not field.data:
+        return
+
+    key_regex = r'^[a-zA-Z0-9_\-]+$'
+    if not re.search(key_regex, field.data):
+        raise ValidationError('API key can only contain letters, numbers, underscores, and hyphens')
+
+
 def IMAGE_STRETCH__CLASSNAME_validator(form, field):
     if not field.data:
         return
@@ -4599,6 +4608,7 @@ class IndiAllskyConfigForm(FlaskForm):
     NIGHT_MOONMODE_PHASE             = FloatField('Moonmode Moon Phase', validators=[NIGHT_MOONMODE_PHASE_validator])
     WEB_STATUS_TEMPLATE              = TextAreaField('Status Template', validators=[DataRequired(), WEB_STATUS_TEMPLATE_validator])
     WEB_EXTRA_TEXT                   = StringField('Extra HTML Info File', validators=[WEB_EXTRA_TEXT_validator])
+    WEBSOCKET_API_KEY                = StringField('WebSocket API Key', validators=[WEBSOCKET_API_KEY_validator])
     WEB_NONLOCAL_IMAGES              = BooleanField('Non-Local Images')
     WEB_LOCAL_IMAGES_ADMIN           = BooleanField('Local Images from Admin Networks')
     IMAGE_STRETCH__CLASSNAME         = SelectField('Stretch Function', choices=IMAGE_STRETCH__CLASSNAME_choices, validators=[IMAGE_STRETCH__CLASSNAME_validator])
