@@ -243,6 +243,16 @@
                             </li>
                             {% endif %}
                             {% endfor %}
+                            {# Availability is computed from Config-save access,
+                               a visible local ASI676MC, and the master switch. #}
+                            {% if group_id == 'tools' and asi676mc_calibration_available %}
+                            <li>
+                                <a href="{{ url_for('indi_allsky.asi676mc_calibration_view') }}"
+                                    class="tw:block tw:py-1.5 tw:px-3 tw:text-sm tw:text-base-content/70 hover:tw:text-base-content hover:tw:bg-base-content/5 tw:rounded-[var(--radius-selector)] tw:transition-all">
+                                    Fix ASI676MC purple frames
+                                </a>
+                            </li>
+                            {% endif %}
                         </ul>
                     </details>
                 </li>

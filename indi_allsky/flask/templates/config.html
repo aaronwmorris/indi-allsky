@@ -353,6 +353,20 @@ const field_names = [
     'CAPTURE_HOOK_PRE',
     'CAPTURE_HOOK_TIMEOUT',
     'IMAGE_SAVE_FITS_PERIOD',
+    // ASI676MC numeric controls remain in the central save list even though
+    // their UI now lives in the section-based Image component.
+    'IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD',
+    'IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD',
+    'IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD',
+    'IMAGE_ASI676MC_REPAIR__SAMPLE_STEP',
+    'IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD',
+    'IMAGE_ASI676MC_REPAIR__GAIN_R',
+    'IMAGE_ASI676MC_REPAIR__GAIN_G1',
+    'IMAGE_ASI676MC_REPAIR__GAIN_G2',
+    'IMAGE_ASI676MC_REPAIR__GAIN_B',
+    'IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO',
+    'IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO',
+    'IMAGE_ASI676MC_REPAIR__CHUNK_ROWS',
     'TIMELAPSE_EXPIRE_DAYS',
     'FFMPEG_FRAMERATE',
     'FFMPEG_FRAMERATE_DAY',
@@ -736,6 +750,12 @@ const checkbox_field_names = [
     'IMAGE_EXPORT_FLIP_H',
     'IMAGE_SAVE_FITS',
     'IMAGE_SAVE_FITS_COMPRESSED',
+    'IMAGE_ASI676MC_REPAIR__ENABLE',
+    'IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY',
+    'IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME',
+    'IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE',
+    'IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS',
+    'IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS',
     'IMAGE_STACK_ALIGN',
     'IMAGE_STACK_SPLIT',
     'IMAGE_STACK_MOONMODE',
@@ -1471,6 +1491,84 @@ $('#FAN__THOLD_ENABLE').on('change', function() {
 });
 
 
+// The section-based UI keeps all model-specific controls together, while the
+// existing dependency helper preserves their disabled state and saved values.
+var group_fields_asi676mc_repair = [
+    'IMAGE_ASI676MC_REPAIR__PURPLE_RATIO_THRESHOLD',
+    'IMAGE_ASI676MC_REPAIR__RED_SIDE_RATIO_THRESHOLD',
+    'IMAGE_ASI676MC_REPAIR__BLUE_SIDE_RATIO_THRESHOLD',
+    'IMAGE_ASI676MC_REPAIR__SAMPLE_STEP',
+    'IMAGE_ASI676MC_REPAIR__SOURCE_SATURATION_THRESHOLD',
+    'IMAGE_ASI676MC_REPAIR__GAIN_R',
+    'IMAGE_ASI676MC_REPAIR__GAIN_G1',
+    'IMAGE_ASI676MC_REPAIR__GAIN_G2',
+    'IMAGE_ASI676MC_REPAIR__GAIN_B',
+    'IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_START_RATIO',
+    'IMAGE_ASI676MC_REPAIR__HIGHLIGHT_BLEND_END_RATIO',
+    'IMAGE_ASI676MC_REPAIR__CHUNK_ROWS',
+];
+
+var group_checkbox_fields_asi676mc_repair = [
+    'IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY',
+    'IMAGE_ASI676MC_REPAIR__LOG_EVERY_FRAME',
+    'IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS',
+    'IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS',
+];
+
+group_on_change(
+    'IMAGE_ASI676MC_REPAIR__ENABLE',
+    group_fields_asi676mc_repair,
+    group_checkbox_fields_asi676mc_repair
+);
+
+// The preceding-frame cache is meaningful only while diagnostic FITS saving
+// is active. Its checked value is retained while the control is disabled.
+function update_asi676mc_preceding_fits_state() {
+    var enable_preceding = (
+        $('#IMAGE_ASI676MC_REPAIR__ENABLE').prop('checked')
+        && $('#IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS').prop('checked')
+    );
+    $('#IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS').prop(
+        'disabled',
+        !enable_preceding
+    );
+}
+
+$('#IMAGE_ASI676MC_REPAIR__ENABLE, #IMAGE_ASI676MC_REPAIR__SAVE_DIAGNOSTIC_FITS').on(
+    'change',
+    update_asi676mc_preceding_fits_state
+);
+
+// Gallery decoration is part of the feature, not an independent preference.
+// Turning the master switch off clears the saved gallery option as well as
+// disabling its control. The gallery view and its data endpoint repeat this
+// master-switch check before showing badges or accepting filters.
+function update_asi676mc_gallery_state() {
+    var repair_enabled = $('#IMAGE_ASI676MC_REPAIR__ENABLE').prop('checked');
+    var gallery_toggle = $('#IMAGE_ASI676MC_REPAIR__GALLERY_ENABLE');
+    if (!repair_enabled) {
+        gallery_toggle.prop('checked', false);
+    }
+    gallery_toggle.prop('disabled', !repair_enabled);
+}
+
+$('#IMAGE_ASI676MC_REPAIR__ENABLE').on(
+    'change',
+    update_asi676mc_gallery_state
+);
+
+// A newly enabled installation starts in detection-only mode. Existing
+// enabled configurations retain the mode the user already selected.
+var asi676mc_repair_was_enabled = $('#IMAGE_ASI676MC_REPAIR__ENABLE').prop('checked');
+$('#IMAGE_ASI676MC_REPAIR__ENABLE').on('change', function() {
+    var repair_enabled = $(this).prop('checked');
+    if (repair_enabled && !asi676mc_repair_was_enabled) {
+        $('#IMAGE_ASI676MC_REPAIR__EXCLUDE_ONLY').prop('checked', true);
+    }
+    asi676mc_repair_was_enabled = repair_enabled;
+});
+
+
 var group_fields_fits = [
     'IMAGE_SAVE_FITS_PERIOD',
     'FITSHEADERS__0__KEY',
@@ -1801,6 +1899,13 @@ $( document ).ready(function() {
     }
 
 
+    group_on_ready(
+        'IMAGE_ASI676MC_REPAIR__ENABLE',
+        group_fields_asi676mc_repair,
+        group_checkbox_fields_asi676mc_repair
+    );
+    update_asi676mc_gallery_state();
+    update_asi676mc_preceding_fits_state();
     group_on_ready('IMAGE_SAVE_FITS', group_fields_fits, group_checkbox_fields_fits);
     group_on_ready('IMAGE_CIRCLE_MASK__ENABLE', group_fields_image_circle_mask, group_checkbox_fields_image_circle_mask);
     group_on_ready('CAMERA_SQM__ENABLE', group_fields_camera_sqm, group_checkbox_fields_camera_sqm);

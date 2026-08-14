@@ -675,5 +675,9 @@
             </div>
         </div>
 
+        {# The camera-specific controls live in their own component so the
+           upstream section-based Config layout remains maintainable. #}
+        {% include 'config/asi676mc.html' %}
+
     </div>
 </div><!-- end image tab -->
