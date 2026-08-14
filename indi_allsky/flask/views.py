@@ -27,6 +27,7 @@ from .. import constants
 from .. import asi676mc
 from .. import asi676mc_calibration
 from ..processing import ImageProcessor
+from ..query_helpers import panorama_source_image_not_excluded_clause
 from ..lens_solver import IndiAllSkyLensSolver
 from ..lens_solver import parseSolverRequestValues
 from ..lens_solver import applySolvedValuesToConfig
@@ -1220,6 +1221,10 @@ class JsonImageLoopView(JsonView):
         return data
 
 
+    def _apply_exclusion_filters(self, query):
+        return query.filter(self.model.exclude == sa_false())
+
+
     def getLoopImages(self, camera_id, loop_dt, history_seconds):
         ts_minus_seconds = loop_dt - timedelta(seconds=history_seconds)
 
@@ -1228,11 +1233,12 @@ class JsonImageLoopView(JsonView):
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == camera_id,
-                    self.model.exclude == sa_false(),
                     self.model.createDate > ts_minus_seconds,
                     self.model.createDate < loop_dt,
                 )
             )
+
+        latest_images_q = self._apply_exclusion_filters(latest_images_q)
 
 
         local = True  # default to local assets
@@ -1457,6 +1463,17 @@ class PanoramaLoopImgView(ImageLoopImgView):
 
 class JsonPanoramaLoopView(JsonImageLoopView):
     model = IndiAllSkyDbPanoramaImageTable
+
+
+    def _apply_exclusion_filters(self, query):
+        query = super(JsonPanoramaLoopView, self)._apply_exclusion_filters(query)
+
+        return query.filter(
+            panorama_source_image_not_excluded_clause(
+                IndiAllSkyDbPanoramaImageTable,
+                IndiAllSkyDbImageTable,
+            )
+        )
 
 
     def getSqmData(self, *args):
