@@ -9,8 +9,6 @@ import traceback
 import argparse
 
 
-from indi_allsky.allsky import IndiAllSky
-
 
 # the flask context cannot created globally
 # it will cause problems with DB connections using TLS/SSL
@@ -54,7 +52,12 @@ if __name__ == "__main__":
     locale.setlocale(locale.LC_ALL, '')
 
     # https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
-    multiprocessing.set_start_method('fork')
+    try:
+        multiprocessing.set_start_method('fork', force=True)
+    except RuntimeError:
+        pass
+
+    from indi_allsky.allsky import IndiAllSky
 
 
     argparser = argparse.ArgumentParser()
