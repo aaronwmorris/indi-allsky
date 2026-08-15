@@ -85,15 +85,12 @@ The status stored under `asi676mc_repair_status` is one of:
 | `validation_failed` | The repair still matched the failure; the original frame was retained and excluded from standard timelapses. |
 | `skipped` | The camera or RAW layout did not meet the safety boundary, or the configuration was invalid. |
 
+Frames with `excluded` or `validation_failed` status are also omitted from
+stacking history and automatic exposure control, so they cannot affect the next
+normal image.
+
 Metadata also retains the available before/after ratios, timing, and reason
 text. Gallery decoration is optional and does not affect processing.
-
-The standard indi-allsky `exclude` flag is not honored by every derived
-timelapse-style output. This feature uses that existing flag without changing
-its wider propagation, so non-standard outputs may still include an
-exclusion-only frame. In the standard image path, excluded and
-validation-failed frames are removed from stacking history and ignored by
-automatic exposure control so they cannot affect the next normal image.
 
 A skipped check or failed post-repair validation creates a Camera
 notification. The first occurrence appears immediately; identical notification

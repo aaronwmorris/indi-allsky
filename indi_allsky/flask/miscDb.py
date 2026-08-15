@@ -1037,6 +1037,7 @@ class miscDb(object):
             fileSize=metadata.get('fileSize'),
             height=metadata['height'],
             width=metadata['width'],
+            exclude=metadata.get('exclude', False),
             data=metadata.get('data', {}),
             remote_url=metadata.get('remote_url'),
             s3_key=metadata.get('s3_key'),

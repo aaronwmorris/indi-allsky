@@ -2497,6 +2497,9 @@ class ImageWorker(Process):
             'height'     : panorama_height,
             'width'      : panorama_width,
             'camera_uuid': i_ref.camera_uuid,
+            'exclude'    : asi676mc.excluded_from_downstream_measurements(
+                i_ref.asi676mc_repair_result
+            ),
         }
 
         panorama_metadata['data'] = {

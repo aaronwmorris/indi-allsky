@@ -10755,6 +10755,19 @@ class AjaxImageExcludeView(BaseView):
 
 
         image.exclude = exclude
+
+        IndiAllSkyDbPanoramaImageTable.query\
+            .filter(
+                and_(
+                    IndiAllSkyDbPanoramaImageTable.camera_id == image.camera_id,
+                    IndiAllSkyDbPanoramaImageTable.createDate == image.createDate,
+                )
+            )\
+            .update(
+                {'exclude': exclude},
+                synchronize_session=False,
+            )
+
         db.session.commit()
 
         data = {
