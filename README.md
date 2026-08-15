@@ -1,7 +1,7 @@
 # indi-allsky
 indi-allsky is software used to manage a Linux-based All Sky Camera using the INDI framework.  Theoretically, any INDI supported CCD/CMOS camera can be functional.
 
-![](./content/20210930_224951.jpg)
+![](content/20210930_224951.jpg)
 *Pictured: SpaceX Cargo Dragon (over Georgia) headed for splashdown off the coast of Florida*
 
 ## New Features
@@ -352,7 +352,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/Keogram-Rotation
 
 Below you can see perodic clouds passed over between 8-9pm and again between 4-5am.  If you look closely enough, you can see the Pleiades star cluster and the Orion constellation as it passed through the meridian in this example keogram.
 
-![](./content/keogram_example.jpg)
+![](content/keogram_example.jpg)
 
 *Note: The horizontal lines are just hot pixels that were subtracted by the dark frame.*
 
@@ -360,7 +360,7 @@ Below you can see perodic clouds passed over between 8-9pm and again between 4-5
 ## Star Trails
 Star trail images stack the stars from each frame to show their progression across the sky.
 
-![](./content/startrails_example.jpg)
+![](content/startrails_example.jpg)
 
 
 ### Star Trails Timelapse
@@ -435,30 +435,30 @@ Most views do not require authentication.  Credentials for accessing the privile
 
 
 ### Home Page
-<img src="./content/screenshots/webui_home.png" width="800" alt="Home Page">
+<img src="content/screenshots/webui_home.png" width="800" alt="Home Page">
 
 
 ### Charts
 Early evening, the sun was still going down, but a cloud passed by, increasing the average brightness and lowering the star count.
-<img src="./content/screenshots/webui_chart01.png" width="800" alt="Charts Scenario 1">
+<img src="content/screenshots/webui_chart01.png" width="800" alt="Charts Scenario 1">
 
 A large cloud passed over significantly increasing the brightness of the sky and blocking out almost all of the stars.
-<img src="./content/screenshots/webui_chart02.png" width="800" alt="Charts Scenario 2">
+<img src="content/screenshots/webui_chart02.png" width="800" alt="Charts Scenario 2">
 
 
 ### Image viewer
 Historical images browsing.
-<img src="./content/screenshots/webui_images.png" width="800" alt="Image Viewer">
+<img src="content/screenshots/webui_images.png" width="800" alt="Image Viewer">
 *Pictured: A small satellite flare.*
 
 
 ### Timelapse viewer
 Historical Star trails and Keograms.  The Keogram image is linked directly to the timelapse video for the night.
-<img src="./content/screenshots/webui_timelapse_mono.png" width="800" alt="Timelapse Viewer">
+<img src="content/screenshots/webui_timelapse_mono.png" width="800" alt="Timelapse Viewer">
 
 
 ### System Info
-<img src="./content/screenshots/webui_systeminfo.png" width="800" alt="System Info">
+<img src="content/screenshots/webui_systeminfo.png" width="800" alt="System Info">
 
 
 ## Database
@@ -596,7 +596,7 @@ ffmpeg video processing is considerably more expensive.  A 2 minute 1920x1080 h.
 
 indi-allsky utilizes python's multiprocessing library to enable parallelizing tasks so that image processing does not interfere with image aquisition, etc.
 
-![](./content/indi-allsky-arch.svg)
+![](content/indi-allsky-arch.svg)
 
 
 ## Configuration
@@ -604,7 +604,7 @@ indi-allsky utilizes python's multiprocessing library to enable parallelizing ta
 All configuration is read from the database.  Almost all of the configuration is managed via the web interface.
 You may use the config.py utility to manipulate the configuration from the command line.
 
-<img src="./content/screenshots/webui_config.png" width="800" alt="Configuration">
+<img src="content/screenshots/webui_config.png" width="800" alt="Configuration">
 
 
 ## Tested Hardware
