@@ -726,11 +726,6 @@ class ImageWorker(Process):
         self.image_processor.realtimeKeogramUpdate()
 
 
-        image_exclude = asi676mc.excluded_from_downstream_measurements(
-            i_ref.asi676mc_repair_result
-        )
-
-
         if self.config.get('FISH2PANO', {}).get('ENABLE'):
             if not self.image_count % self.config.get('FISH2PANO', {}).get('MODULUS', 2):
                 pano_data = self.image_processor.fish2pano(i_ref.binning)
@@ -740,13 +735,7 @@ class ImageWorker(Process):
                     pano_data = self.image_processor.fish2pano_cardinal_dirs_label(pano_data)
 
 
-                self.write_panorama_img(
-                    pano_data,
-                    i_ref,
-                    camera,
-                    image_exclude=image_exclude,
-                    jpeg_exif=jpeg_exif,
-                )
+                self.write_panorama_img(pano_data, i_ref, camera, jpeg_exif=jpeg_exif)
 
 
         if self.config.get('CIRCULAR_DISPLAY', {}).get('ENABLE'):
@@ -865,7 +854,13 @@ class ImageWorker(Process):
             }
 
             asi676mc_repair_result = i_ref.asi676mc_repair_result
-            if image_exclude:
+            if (
+                asi676mc_repair_result
+                and asi676mc_repair_result['status'] in (
+                    'excluded',
+                    'validation_failed',
+                )
+            ):
                 # The processed JPEG has already been written.  Mark its new
                 # database row so existing timelapse queries skip it.
                 image_metadata['exclude'] = True
@@ -2415,14 +2410,7 @@ class ImageWorker(Process):
         return hour_folder
 
 
-    def write_panorama_img(
-        self,
-        pano_data,
-        i_ref,
-        camera,
-        image_exclude=False,
-        jpeg_exif=None,
-    ):
+    def write_panorama_img(self, pano_data, i_ref, camera, jpeg_exif=None):
         panorama_height, panorama_width = pano_data.shape[:2]
 
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
@@ -2509,7 +2497,9 @@ class ImageWorker(Process):
             'height'     : panorama_height,
             'width'      : panorama_width,
             'camera_uuid': i_ref.camera_uuid,
-            'exclude'    : image_exclude,
+            'exclude'    : asi676mc.excluded_from_downstream_measurements(
+                i_ref.asi676mc_repair_result
+            ),
         }
 
         panorama_metadata['data'] = {

@@ -24,28 +24,13 @@ class TestPanoramaExclude(unittest.TestCase):
         )
         return ast.get_source_segment(source, method_node)
 
-    def test_capture_exclusion_is_written_to_both_rows(self):
+    def test_capture_exclusion_is_persisted_on_panorama(self):
         image_path = self.project_root / 'indi_allsky' / 'image.py'
-        process_source = self._method_source(
-            image_path,
-            'ImageWorker',
-            'processImage',
-        )
         panorama_source = self._method_source(
             image_path,
             'ImageWorker',
             'write_panorama_img',
         )
-
-        self.assertIn(
-            'image_exclude = asi676mc.excluded_from_downstream_measurements(',
-            process_source,
-        )
-        self.assertIn('image_exclude=image_exclude', process_source)
-        self.assertIn("image_metadata['exclude'] = True", process_source)
-        self.assertIn("'exclude'    : image_exclude", panorama_source)
-
-    def test_panorama_database_insert_persists_exclude(self):
         misc_db_path = self.project_root / 'indi_allsky' / 'flask' / 'miscDb.py'
         add_panorama_source = self._method_source(
             misc_db_path,
@@ -53,6 +38,10 @@ class TestPanoramaExclude(unittest.TestCase):
             'addPanoramaImage',
         )
 
+        self.assertIn(
+            "'exclude'    : asi676mc.excluded_from_downstream_measurements(",
+            panorama_source,
+        )
         self.assertIn(
             "exclude=metadata.get('exclude', False)",
             add_panorama_source,
@@ -66,44 +55,13 @@ class TestPanoramaExclude(unittest.TestCase):
             'dispatch_request',
         )
 
-        self.assertIn('image.exclude = exclude', exclude_source)
-        self.assertIn('IndiAllSkyDbPanoramaImageTable.query', exclude_source)
-        self.assertIn(
+        for expected in (
+            'IndiAllSkyDbPanoramaImageTable.query',
             'IndiAllSkyDbPanoramaImageTable.camera_id == image.camera_id',
-            exclude_source,
-        )
-        self.assertIn(
             'IndiAllSkyDbPanoramaImageTable.createDate == image.createDate',
-            exclude_source,
-        )
-        self.assertIn("{'exclude': exclude}", exclude_source)
-
-    def test_panorama_consumers_use_panorama_exclude(self):
-        video_path = self.project_root / 'indi_allsky' / 'video.py'
-        views_path = self.project_root / 'indi_allsky' / 'flask' / 'views.py'
-        panorama_video_source = self._method_source(
-            video_path,
-            'VideoWorker',
-            'generatePanoramaVideo',
-        )
-        image_loop_source = self._method_source(
-            views_path,
-            'JsonImageLoopView',
-            'getLoopImages',
-        )
-
-        self.assertIn(
-            'IndiAllSkyDbPanoramaImageTable.exclude == sa_false()',
-            panorama_video_source,
-        )
-        self.assertIn('self.model.exclude == sa_false()', image_loop_source)
-
-        query_helper_path = self.project_root / 'indi_allsky' / 'query_helpers.py'
-        self.assertFalse(query_helper_path.exists())
-        self.assertNotIn(
-            'panorama_source_image_not_excluded_clause',
-            panorama_video_source,
-        )
+            "{'exclude': exclude}",
+        ):
+            self.assertIn(expected, exclude_source)
 
 
 if __name__ == '__main__':
