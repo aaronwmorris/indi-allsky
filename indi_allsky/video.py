@@ -31,7 +31,6 @@ from .smoke import IndiAllskySmokeUpdate
 from .satellite_download import IndiAllskyUpdateSatelliteData
 from .maskProcessing import MaskProcessor
 from .backup import IndiAllskyDatabaseBackup
-from .query_helpers import panorama_source_image_not_excluded_clause
 
 from .flask import create_app
 from .flask import db
@@ -1171,12 +1170,6 @@ class VideoWorker(Process):
             .filter(IndiAllSkyDbPanoramaImageTable.dayDate == d_dayDate)\
             .filter(IndiAllSkyDbPanoramaImageTable.night == night)\
             .filter(IndiAllSkyDbPanoramaImageTable.exclude == sa_false())\
-            .filter(
-                panorama_source_image_not_excluded_clause(
-                    IndiAllSkyDbPanoramaImageTable,
-                    IndiAllSkyDbImageTable,
-                )
-            )\
             .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc())
 
 

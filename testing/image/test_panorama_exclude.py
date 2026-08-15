@@ -1,175 +1,109 @@
 from pathlib import Path
-from types import SimpleNamespace
 import ast
 import unittest
 
 
 class TestPanoramaExclude(unittest.TestCase):
 
-    def test_clause_correlates_camera_timestamp_and_exclusion(self):
-        project_root = Path(__file__).resolve().parents[2]
-        helper_path = project_root / 'indi_allsky' / 'query_helpers.py'
-        helper_source = helper_path.read_text(encoding='utf-8')
-        helper_tree = ast.parse(helper_source, filename=str(helper_path))
-        helper_node = next(
+    @classmethod
+    def setUpClass(cls):
+        cls.project_root = Path(__file__).resolve().parents[2]
+
+    def _method_source(self, path, class_name, method_name):
+        source = path.read_text(encoding='utf-8')
+        tree = ast.parse(source, filename=str(path))
+        class_node = next(
             node
-            for node in helper_tree.body
-            if (
-                isinstance(node, ast.FunctionDef)
-                and node.name == 'panorama_source_image_not_excluded_clause'
-            )
+            for node in tree.body
+            if isinstance(node, ast.ClassDef) and node.name == class_name
         )
-
-        class FakeColumn(object):
-            def __init__(self, name):
-                self.name = name
-
-            def __eq__(self, other):
-                return ('equals', self.name, other.name)
-
-            def is_(self, value):
-                return ('is', self.name, value)
-
-        class FakeExists(object):
-            def where(self, predicate):
-                self.predicate = predicate
-                return self
-
-            def __invert__(self):
-                return ('not_exists', self.predicate)
-
-        namespace = {
-            'and_': lambda *conditions: ('and', conditions),
-            'exists': FakeExists,
-        }
-        isolated_module = ast.Module(body=[helper_node], type_ignores=[])
-        exec(
-            compile(
-                ast.fix_missing_locations(isolated_module),
-                filename=str(helper_path),
-                mode='exec',
-            ),
-            namespace,
-        )
-
-        panorama_model = SimpleNamespace(
-            camera_id=FakeColumn('panorama.camera_id'),
-            createDate=FakeColumn('panorama.createDate'),
-        )
-        image_model = SimpleNamespace(
-            camera_id=FakeColumn('image.camera_id'),
-            createDate=FakeColumn('image.createDate'),
-            exclude=FakeColumn('image.exclude'),
-        )
-        clause = namespace['panorama_source_image_not_excluded_clause'](
-            panorama_model,
-            image_model,
-        )
-
-        self.assertEqual(
-            clause,
-            (
-                'not_exists',
-                (
-                    'and',
-                    (
-                        (
-                            'equals',
-                            'image.camera_id',
-                            'panorama.camera_id',
-                        ),
-                        (
-                            'equals',
-                            'image.createDate',
-                            'panorama.createDate',
-                        ),
-                        ('is', 'image.exclude', True),
-                    ),
-                ),
-            ),
-        )
-
-    def test_panorama_video_and_loop_apply_shared_clause(self):
-        project_root = Path(__file__).resolve().parents[2]
-        video_path = project_root / 'indi_allsky' / 'video.py'
-        views_path = project_root / 'indi_allsky' / 'flask' / 'views.py'
-        video_source = video_path.read_text(encoding='utf-8')
-        views_source = views_path.read_text(encoding='utf-8')
-
-        video_tree = ast.parse(video_source, filename=str(video_path))
-        worker_class = next(
+        method_node = next(
             node
-            for node in video_tree.body
-            if isinstance(node, ast.ClassDef) and node.name == 'VideoWorker'
+            for node in class_node.body
+            if isinstance(node, ast.FunctionDef) and node.name == method_name
         )
-        panorama_video_method = next(
-            node
-            for node in worker_class.body
-            if (
-                isinstance(node, ast.FunctionDef)
-                and node.name == 'generatePanoramaVideo'
-            )
+        return ast.get_source_segment(source, method_node)
+
+    def test_capture_exclusion_is_written_to_both_rows(self):
+        image_path = self.project_root / 'indi_allsky' / 'image.py'
+        process_source = self._method_source(
+            image_path,
+            'ImageWorker',
+            'processImage',
         )
-        panorama_video_source = ast.get_source_segment(
-            video_source,
-            panorama_video_method,
+        panorama_source = self._method_source(
+            image_path,
+            'ImageWorker',
+            'write_panorama_img',
         )
 
-        views_tree = ast.parse(views_source, filename=str(views_path))
-        image_loop_class = next(
-            node
-            for node in views_tree.body
-            if (
-                isinstance(node, ast.ClassDef)
-                and node.name == 'JsonImageLoopView'
-            )
+        self.assertIn(
+            'image_exclude = asi676mc.excluded_from_downstream_measurements(',
+            process_source,
         )
-        image_loop_filter = next(
-            node
-            for node in image_loop_class.body
-            if (
-                isinstance(node, ast.FunctionDef)
-                and node.name == '_apply_exclusion_filters'
-            )
-        )
-        image_loop_source = ast.get_source_segment(
-            views_source,
-            image_loop_filter,
-        )
-        panorama_loop_class = next(
-            node
-            for node in views_tree.body
-            if (
-                isinstance(node, ast.ClassDef)
-                and node.name == 'JsonPanoramaLoopView'
-            )
-        )
-        panorama_loop_filter = next(
-            node
-            for node in panorama_loop_class.body
-            if (
-                isinstance(node, ast.FunctionDef)
-                and node.name == '_apply_exclusion_filters'
-            )
-        )
-        panorama_loop_source = ast.get_source_segment(
-            views_source,
-            panorama_loop_filter,
+        self.assertIn('image_exclude=image_exclude', process_source)
+        self.assertIn("image_metadata['exclude'] = True", process_source)
+        self.assertIn("'exclude'    : image_exclude", panorama_source)
+
+    def test_panorama_database_insert_persists_exclude(self):
+        misc_db_path = self.project_root / 'indi_allsky' / 'flask' / 'miscDb.py'
+        add_panorama_source = self._method_source(
+            misc_db_path,
+            'miscDb',
+            'addPanoramaImage',
         )
 
-        for source in (panorama_video_source, panorama_loop_source):
-            self.assertIn(
-                'panorama_source_image_not_excluded_clause(',
-                source,
-            )
-            self.assertIn('IndiAllSkyDbPanoramaImageTable', source)
-            self.assertIn('IndiAllSkyDbImageTable', source)
+        self.assertIn(
+            "exclude=metadata.get('exclude', False)",
+            add_panorama_source,
+        )
+
+    def test_manual_image_exclusion_updates_matching_panorama(self):
+        views_path = self.project_root / 'indi_allsky' / 'flask' / 'views.py'
+        exclude_source = self._method_source(
+            views_path,
+            'AjaxImageExcludeView',
+            'dispatch_request',
+        )
+
+        self.assertIn('image.exclude = exclude', exclude_source)
+        self.assertIn('IndiAllSkyDbPanoramaImageTable.query', exclude_source)
+        self.assertIn(
+            'IndiAllSkyDbPanoramaImageTable.camera_id == image.camera_id',
+            exclude_source,
+        )
+        self.assertIn(
+            'IndiAllSkyDbPanoramaImageTable.createDate == image.createDate',
+            exclude_source,
+        )
+        self.assertIn("{'exclude': exclude}", exclude_source)
+
+    def test_panorama_consumers_use_panorama_exclude(self):
+        video_path = self.project_root / 'indi_allsky' / 'video.py'
+        views_path = self.project_root / 'indi_allsky' / 'flask' / 'views.py'
+        panorama_video_source = self._method_source(
+            video_path,
+            'VideoWorker',
+            'generatePanoramaVideo',
+        )
+        image_loop_source = self._method_source(
+            views_path,
+            'JsonImageLoopView',
+            'getLoopImages',
+        )
 
         self.assertIn(
             'IndiAllSkyDbPanoramaImageTable.exclude == sa_false()',
             panorama_video_source,
         )
         self.assertIn('self.model.exclude == sa_false()', image_loop_source)
+
+        query_helper_path = self.project_root / 'indi_allsky' / 'query_helpers.py'
+        self.assertFalse(query_helper_path.exists())
+        self.assertNotIn(
+            'panorama_source_image_not_excluded_clause',
+            panorama_video_source,
+        )
 
 
 if __name__ == '__main__':
