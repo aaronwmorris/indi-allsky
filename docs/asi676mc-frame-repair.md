@@ -85,6 +85,10 @@ The status stored under `asi676mc_repair_status` is one of:
 | `validation_failed` | The repair still matched the failure; the original frame was retained and excluded from standard timelapses. |
 | `skipped` | The camera or RAW layout did not meet the safety boundary, or the configuration was invalid. |
 
+Frames with `excluded` or `validation_failed` status are also omitted from
+stacking history and automatic exposure control, so they cannot affect the next
+normal image.
+
 Metadata also retains the available before/after ratios, timing, and reason
 text. Gallery decoration is optional and does not affect processing.
 
