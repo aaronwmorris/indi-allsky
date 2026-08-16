@@ -79,12 +79,14 @@
             min-width: 320px;
         }
 
-        #status-accordion summary .status-chevron {
+        #status-accordion summary .status-chevron,
+        #camera-accordion summary .camera-chevron {
             transition: transform 0.2s ease;
             transform: rotate(180deg);
         }
 
-        #status-accordion[open] summary .status-chevron {
+        #status-accordion[open] summary .status-chevron,
+        #camera-accordion[open] summary .camera-chevron {
             transform: rotate(0deg);
         }
 
@@ -136,7 +138,7 @@
 
 <body class="tw:bg-base-300 tw:min-h-screen tw:flex tw:text-base-content tw:font-sans">
     <!-- Trick Tailwind into including the sidebar icons generated dynamically -->
-    <div class="tw:hidden tw:icon-[lucide--library] tw:icon-[lucide--info] tw:icon-[lucide--wrench] tw:icon-[lucide--settings] tw:icon-[lucide--activity] tw:icon-[lucide--chevron-down]"></div>
+    <div class="tw:hidden tw:icon-[lucide--library] tw:icon-[lucide--info] tw:icon-[lucide--wrench] tw:icon-[lucide--settings] tw:icon-[lucide--activity] tw:icon-[lucide--chevron-down] tw:icon-[lucide--camera]"></div>
 
     <!-- Mobile overlay -->
     <div id="sidebar-overlay" class="tw:fixed tw:inset-0 tw:z-40 tw:bg-black/30 tw:backdrop-blur-sm tw:hidden"></div>
@@ -145,20 +147,11 @@
         class="tw:h-screen tw:sticky tw:top-0 tw:bg-base-200 tw:text-base-content tw:border-r tw:border-base-content/5 tw:flex tw:flex-col tw:overflow-hidden">
 
         <div class="tw:flex-shrink-0">
-            <div class="tw:px-4 tw:pt-3 tw:pb-2 tw:flex tw:items-center tw:justify-center">
+            <div class="tw:px-4 tw:py-3 tw:flex tw:items-center tw:justify-center">
                 <a href="{{ url_for('indi_allsky.index_view') }}" class="tw:no-underline">
                     <img src="{{ url_for('indi_allsky.static', filename='images/logo_outline_full.png') }}"
                         class="tw:w-36 tw:h-auto tw:transition-transform hover:tw:scale-105" alt="indi-allsky">
                 </a>
-            </div>
-
-            <div class="tw:px-4 tw:pb-2">
-                <form id="form_camera_select" onSubmit="return false;">
-                    {{ form_camera_select.CAMERA_SELECT(class='tw:select tw:select-sm tw:w-full tw:font-semibold tw:text-xs tw:bg-base-300 tw:border tw:border-base-content/10 tw:focus:outline-none tw:focus:border-base-content/20 tw:transition-all') }}
-                </form>
-                <div class="tw:text-[0.625rem] tw:uppercase tw:tracking-wider tw:opacity-40 tw:mt-2 tw:px-1 tw:font-semibold tw:whitespace-nowrap">
-                    Cameras Available: {{ camera_count }}
-                </div>
             </div>
         </div>
 
@@ -232,7 +225,7 @@
                 {% if group_id != 'system' or (current_user.is_authenticated or login_disabled) %}
                 <li class="tw:w-full">
                     <details class="tw:w-full tw:group [&_summary::-webkit-details-marker]:tw:hidden"
-                        id="menu-group-{{ group_id }}" name="sidebar-accordion">
+                        id="menu-group-{{ group_id }}" name="sidebar-nav">
                         <summary
                             class="tw:flex tw:items-center tw:justify-between tw:w-full tw:px-4 tw:py-2 tw:bg-base-200/50 hover:tw:bg-base-300/80 tw:rounded-[var(--radius-selector)] tw:cursor-pointer tw:list-none tw:border tw:border-base-content/10 tw:text-base-content/70 hover:tw:text-base-content tw:transition-all">
                             <div class="tw:flex tw:items-center tw:gap-3">
@@ -270,7 +263,25 @@
             </ul>
         </div>
         <div class="tw:px-4 tw:pt-2.5 tw:pb-2.5 tw:bg-base-200/60 tw:border-t tw:border-base-content/10 tw:flex-shrink-0">
-            <details id="status-accordion" class="tw:w-full tw:group [&_summary::-webkit-details-marker]:tw:hidden tw:mb-2.5" open name="sidebar-accordion">
+            <details id="camera-accordion" class="tw:w-full tw:group [&_summary::-webkit-details-marker]:tw:hidden tw:mb-1">
+                <summary
+                    class="tw:flex tw:items-center tw:justify-between tw:w-full tw:px-1 tw:py-1 tw:rounded-[var(--radius-selector)] tw:cursor-pointer tw:list-none tw:text-base-content/70 hover:tw:text-base-content tw:transition-all">
+                    <div class="tw:flex tw:items-center tw:gap-2">
+                        <i class="tw:icon-[lucide--camera] tw:w-3.5 tw:h-3.5 tw:opacity-50"></i>
+                        <span class="tw:font-semibold tw:text-[0.75rem] tw:uppercase tw:tracking-wider">Camera</span>
+                    </div>
+                    <i class="tw:icon-[lucide--chevron-down] camera-chevron tw:w-3.5 tw:h-3.5 tw:opacity-50"></i>
+                </summary>
+                <div class="tw:pt-2 tw:px-1">
+                    <form id="form_camera_select" onSubmit="return false;">
+                        {{ form_camera_select.CAMERA_SELECT(class='tw:select tw:select-sm tw:w-full tw:font-semibold tw:text-xs tw:bg-base-300 tw:border tw:border-base-content/10 tw:focus:outline-none tw:focus:border-base-content/20 tw:transition-all') }}
+                    </form>
+                    <div class="tw:text-[0.625rem] tw:uppercase tw:tracking-wider tw:opacity-40 tw:mt-2 tw:font-semibold tw:whitespace-nowrap">
+                        Cameras Available: {{ camera_count }}
+                    </div>
+                </div>
+            </details>
+            <details id="status-accordion" class="tw:w-full tw:group [&_summary::-webkit-details-marker]:tw:hidden tw:mb-2.5" open>
                 <summary
                     class="tw:flex tw:items-center tw:justify-between tw:w-full tw:px-1 tw:py-1 tw:rounded-[var(--radius-selector)] tw:cursor-pointer tw:list-none tw:text-base-content/70 hover:tw:text-base-content tw:transition-all">
                     <div class="tw:flex tw:items-center tw:gap-2">
@@ -480,27 +491,46 @@
                 });
             });
 
-            // Exclusive sidebar accordion behavior & status accordion auto-collapse
-            const sidebarAccordions = document.querySelectorAll('#sidebar details');
-            sidebarAccordions.forEach(details => {
-                details.addEventListener('toggle', function() {
+            // Exclusive sidebar accordion behavior & status accordion rules
+            const navMenus = document.querySelectorAll('#sidebar details[id^="menu-group-"]');
+            const cameraAccordion = document.getElementById('camera-accordion');
+            const statusAccordion = document.getElementById('status-accordion');
+
+            navMenus.forEach(menu => {
+                menu.addEventListener('toggle', function() {
                     if (this.open) {
-                        sidebarAccordions.forEach(other => {
+                        navMenus.forEach(other => {
                             if (other !== this && other.open) {
                                 other.open = false;
                             }
                         });
-                    } else if (this.id !== 'status-accordion') {
-                        const anyMenuOpen = Array.from(document.querySelectorAll('#sidebar details:not(#status-accordion)')).some(d => d.open);
-                        if (!anyMenuOpen) {
-                            const statusAccordion = document.getElementById('status-accordion');
-                            if (statusAccordion && !statusAccordion.open) {
-                                statusAccordion.open = true;
-                            }
+                        if (statusAccordion && statusAccordion.open) {
+                            statusAccordion.open = false;
+                        }
+                        if (cameraAccordion && cameraAccordion.open) {
+                            cameraAccordion.open = false;
+                        }
+                    } else {
+                        const anyNavOpen = Array.from(navMenus).some(m => m.open);
+                        if (!anyNavOpen && statusAccordion && !statusAccordion.open) {
+                            statusAccordion.open = true;
                         }
                     }
                 });
             });
+
+            if (cameraAccordion) {
+                cameraAccordion.addEventListener('toggle', function() {
+                    if (this.open) {
+                        navMenus.forEach(m => {
+                            if (m.open) m.open = false;
+                        });
+                        if (statusAccordion && !statusAccordion.open) {
+                            statusAccordion.open = true;
+                        }
+                    }
+                });
+            }
 
             loadNotification();
             getStatusText();
