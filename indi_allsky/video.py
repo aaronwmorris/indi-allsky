@@ -23,6 +23,9 @@ from . import asi676mc
 from . import asi676mc_calibration
 
 from .timelapse import TimelapseGenerator
+from .panorama import buildPanoramaCropFilter
+from .panorama import cropPanoramaArray
+from .panorama import validatePanoramaAspectRatio
 from .keogram import KeogramGenerator
 from .starTrails import StarTrailGenerator
 from .miscUpload import miscUpload
@@ -772,6 +775,8 @@ class VideoWorker(Process):
 
     def generateMiniVideo(self, task, **kwargs):
         image_id = kwargs['image_id']
+        panorama_image_id = kwargs.get('panorama_image_id')
+        panorama = panorama_image_id is not None
         camera_id = kwargs['camera_id']
         pre_seconds = int(kwargs['pre_seconds'])
         post_seconds = int(kwargs['post_seconds'])
@@ -798,6 +803,40 @@ class VideoWorker(Process):
             .one()
 
 
+        video_filter = ''
+        if panorama:
+            panorama_image_entry = db.session.query(
+                IndiAllSkyDbPanoramaImageTable,
+            )\
+                .join(IndiAllSkyDbPanoramaImageTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .filter(IndiAllSkyDbPanoramaImageTable.id == panorama_image_id)\
+                .one()
+
+            try:
+                source_width = int(panorama_image_entry.width)
+                source_height = int(panorama_image_entry.height)
+                crop_x = int(kwargs['crop_x'])
+                crop_y = int(kwargs['crop_y'])
+                crop_width = int(kwargs['crop_width'])
+                crop_height = int(kwargs['crop_height'])
+                aspect_ratio = str(kwargs.get('aspect_ratio', 'free'))
+
+                video_filter = buildPanoramaCropFilter(
+                    source_width,
+                    source_height,
+                    crop_x,
+                    crop_y,
+                    crop_width,
+                    crop_height,
+                )
+                validatePanoramaAspectRatio(aspect_ratio, crop_width, crop_height)
+            except (KeyError, TypeError, ValueError) as e:
+                logger.error('Invalid panorama crop: %s', str(e))
+                task.setFailed('Invalid panorama crop: {0:s}'.format(str(e)))
+                return
+
+
         targetDate = image_entry.createDate
         startDate = image_entry.createDate - timedelta(seconds=pre_seconds)
         endDate = image_entry.createDate + timedelta(seconds=post_seconds)
@@ -822,10 +861,18 @@ class VideoWorker(Process):
             return
 
 
+        codec = self.config['FFMPEG_CODEC']
+        if panorama and codec == 'h264_qsv':
+            # QSV does not support the large resolutions commonly used by panoramas.
+            codec = 'libx264'
+
+
         vid_folder = self._getVideoFolder(d_dayDate, camera)
 
+        filename_prefix = 'allsky-panorama_minitimelapse' if panorama else 'allsky-minitimelapse'
         video_file = vid_folder.joinpath(
-            'allsky-minitimelapse_ccd{0:d}_{1:s}_{2:s}_{3:d}.{4:s}'.format(
+            '{0:s}_ccd{1:d}_{2:s}_{3:s}_{4:d}.{5:s}'.format(
+                filename_prefix,
                 camera.id,
                 d_dayDate.strftime('%Y%m%d'),
                 timeofday,
@@ -871,13 +918,14 @@ class VideoWorker(Process):
 
 
         # find all files
-        mini_timelapse_files_entries = IndiAllSkyDbImageTable.query\
-            .join(IndiAllSkyDbImageTable.camera)\
+        mini_timelapse_model = IndiAllSkyDbPanoramaImageTable if panorama else IndiAllSkyDbImageTable
+        mini_timelapse_files_entries = mini_timelapse_model.query\
+            .join(mini_timelapse_model.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
-            .filter(IndiAllSkyDbImageTable.createDate >= startDate)\
-            .filter(IndiAllSkyDbImageTable.createDate <= endDate)\
-            .filter(IndiAllSkyDbImageTable.exclude == sa_false())\
-            .order_by(IndiAllSkyDbImageTable.createDate.asc())
+            .filter(mini_timelapse_model.createDate >= startDate)\
+            .filter(mini_timelapse_model.createDate <= endDate)\
+            .filter(mini_timelapse_model.exclude == sa_false())\
+            .order_by(mini_timelapse_model.createDate.asc())
 
 
         mini_timelapse_files_entries_count = mini_timelapse_files_entries.count()
@@ -941,7 +989,27 @@ class VideoWorker(Process):
             if p_entry.stat().st_size == 0:
                 continue
 
+            if panorama and (entry.width != source_width or entry.height != source_height):
+                message = 'Panorama dimensions changed within the selected time range'
+                logger.error(
+                    '%s: expected %dx%d, found %sx%s',
+                    message,
+                    source_width,
+                    source_height,
+                    entry.width,
+                    entry.height,
+                )
+                task.setFailed(message)
+                return
+
             timelapse_files.append(p_entry)
+
+
+        if panorama and len(timelapse_files) < 2:
+            message = 'Not enough panorama images were found to generate a mini timelapse'
+            logger.error(message)
+            task.setFailed(message)
+            return
 
 
         mini_video_metadata = {
@@ -954,7 +1022,7 @@ class VideoWorker(Process):
             'endDate'       : endDate.timestamp(),
             'night'         : night,
             'framerate'     : framerate,
-            'frames'        : mini_timelapse_files_entries_count,
+            'frames'        : len(timelapse_files) if panorama else mini_timelapse_files_entries_count,
             'note'          : note,
             'camera_uuid'   : camera.uuid,
         }
@@ -968,6 +1036,20 @@ class VideoWorker(Process):
             'max_moonphase'     : max_moonphase,
             'avg_sqm'           : avg_sqm,
         }
+
+        if panorama:
+            mini_video_metadata['width'] = crop_width
+            mini_video_metadata['height'] = crop_height
+            mini_video_metadata['data'].update({
+                'source'        : 'panorama',
+                'source_width'  : source_width,
+                'source_height' : source_height,
+                'crop_x'        : crop_x,
+                'crop_y'        : crop_y,
+                'crop_width'    : crop_width,
+                'crop_height'   : crop_height,
+                'aspect_ratio'  : aspect_ratio,
+            })
 
         # Create DB entry before creating file
         mini_video_entry = self._miscDb.addMiniVideo(
@@ -988,6 +1070,29 @@ class VideoWorker(Process):
         }
 
 
+        thumbnail_data = None
+        thumbnail_image_entry = image_entry
+        if panorama:
+            thumbnail_image_entry = panorama_image_entry
+            if video_filter:
+                panorama_image_path = Path(panorama_image_entry.getFilesystemPath())
+                panorama_image_data = cv2.imread(str(panorama_image_path), cv2.IMREAD_COLOR)
+
+                if panorama_image_data is None:
+                    logger.warning('Unable to read panorama for crop-aware thumbnail: %s', panorama_image_path)
+                else:
+                    try:
+                        thumbnail_data = cropPanoramaArray(
+                            panorama_image_data,
+                            crop_x,
+                            crop_y,
+                            crop_width,
+                            crop_height,
+                        )
+                    except (TypeError, ValueError) as e:
+                        logger.warning('Unable to crop panorama thumbnail: %s', str(e))
+
+
         mini_video_thumbnail_entry = self._miscDb.addThumbnail(
             mini_video_entry,
             mini_video_metadata,
@@ -995,12 +1100,14 @@ class VideoWorker(Process):
             mini_video_thumbnail_metadata,
             new_width=self.thumbnail_mini_timelapse_width,
             opt_height=self.thumbnail_mini_timelapse_height_opt,
-            image_entry=image_entry,  # use target image for thumbnail
+            numpy_data=thumbnail_data,
+            image_entry=thumbnail_image_entry,
         )
 
 
         # populate fileSize
-        mini_video_thumbnail_metadata['fileSize'] = mini_video_thumbnail_entry.fileSize
+        if mini_video_thumbnail_entry:
+            mini_video_thumbnail_metadata['fileSize'] = mini_video_thumbnail_entry.fileSize
 
 
         if self.config.get('TIMELAPSE', {}).get('USE_NIGHT_CONFIG', True):
@@ -1024,10 +1131,13 @@ class VideoWorker(Process):
                 skip_frames=0,
             )
 
-            mini_tg.codec = self.config['FFMPEG_CODEC']
+            mini_tg.codec = codec
             mini_tg.framerate = framerate
             mini_tg.bitrate = bitrate
-            mini_tg.vf_scale = vf_scale
+            if panorama:
+                mini_tg.video_filter = video_filter
+            else:
+                mini_tg.vf_scale = vf_scale
             mini_tg.ffmpeg_extra_options = ffmpeg_extra_options
 
             mini_tg.generate(video_file, timelapse_files)
@@ -1071,6 +1181,11 @@ class VideoWorker(Process):
         self._miscUpload.s3_upload_mini_video(mini_video_entry, mini_video_metadata)
         self._miscUpload.upload_mini_video(mini_video_entry)
         self._miscUpload.youtube_upload_mini_video(mini_video_entry, mini_video_metadata)
+
+
+    def generatePanoramaMiniVideo(self, task, **kwargs):
+        # Preserve the panorama queue action while sharing the standard worker.
+        self.generateMiniVideo(task, **kwargs)
 
 
     def generatePanoramaVideo(self, task, **kwargs):
@@ -2573,5 +2688,3 @@ class VideoWorker(Process):
 
 
         return mask_dict
-
-

@@ -34,6 +34,7 @@ class TimelapseGenerator(object):
         self._framerate = 25
         self._bitrate = '5000k'
         self._vf_scale = ''
+        self._video_filter = ''
         self._ffmpeg_extra_options = ''
 
 
@@ -72,6 +73,14 @@ class TimelapseGenerator(object):
     @vf_scale.setter
     def vf_scale(self, new_vf_scale):
         self._vf_scale = str(new_vf_scale)
+
+    @property
+    def video_filter(self):
+        return self._video_filter
+
+    @video_filter.setter
+    def video_filter(self, new_video_filter):
+        self._video_filter = str(new_video_filter)
 
     @property
     def ffmpeg_extra_options(self):
@@ -142,8 +151,12 @@ class TimelapseGenerator(object):
         ])
 
 
-        # add scaling option if defined
-        if self.vf_scale:
+        # add video filter if defined
+        if self.video_filter:
+            logger.warning('Setting FFMPEG video filter: %s', self.video_filter)
+            cmd.append('-vf')
+            cmd.append(self.video_filter)
+        elif self.vf_scale:
             logger.warning('Setting FFMPEG scaling option: %s', self.vf_scale)
             cmd.append('-vf')
             cmd.append('scale={0:s}'.format(self.vf_scale))
