@@ -2,6 +2,10 @@ name: Build & Package Debian Release (.deb)
 
 on:
   push:
+    branches:
+      - 'feature/deb-packaging'
+      - 'master'
+      - 'main'
     tags:
       - 'v*'
   schedule:
@@ -131,6 +135,15 @@ jobs:
                 libgsl-dev \
                 libboost-dev \
                 libboost-regex-dev \
+                cdbs \
+                liberfa-dev \
+                libtheora-dev \
+                libogg-dev \
+                libfftw3-dev \
+                libev-dev \
+                librtlsdr-dev \
+                libudev-dev \
+                fxload \
                 swig \
                 git \
                 curl \
@@ -141,16 +154,27 @@ jobs:
               echo "=== Building INDI Core (${INDI_CORE_TAG}) ==="
               git clone --depth 1 --branch "${INDI_CORE_TAG}" https://github.com/indilib/indi.git /tmp/indi-core
               cd /tmp/indi-core
-              dpkg-buildpackage -b -us -uc
+              dpkg-buildpackage -b -us -uc -d
               cd /tmp
               dpkg -i libindi*.deb indiserver*.deb 2>/dev/null || true
 
               # 2. Build INDI 3rd-party camera drivers (Consolidated single deb)
               echo "=== Building Consolidated INDI 3rd-Party Drivers (${INDI_3RDPARTY_TAG}) ==="
               git clone --depth 1 --branch "${INDI_3RDPARTY_TAG}" https://github.com/indilib/indi-3rdparty.git /tmp/indi-3rdparty
-              mkdir -p /tmp/indi-3rdparty/build
-              cd /tmp/indi-3rdparty/build
+              
+              # Pass 1: Build vendor SDK shared libraries
+              mkdir -p /tmp/indi-3rdparty/build-libs
+              cd /tmp/indi-3rdparty/build-libs
               cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DBUILD_LIBS=1 /tmp/indi-3rdparty
+              make -j$(nproc)
+              make install
+              DESTDIR=/tmp/pkg-3rdparty make install
+              ldconfig
+
+              # Pass 2: Build camera driver binaries
+              mkdir -p /tmp/indi-3rdparty/build-drivers
+              cd /tmp/indi-3rdparty/build-drivers
+              cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release /tmp/indi-3rdparty
               make -j$(nproc)
               DESTDIR=/tmp/pkg-3rdparty make install
 
