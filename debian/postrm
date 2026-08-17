@@ -33,6 +33,12 @@ case "$1" in
         if getent group indi-allsky >/dev/null 2>&1; then
             delgroup --system --quiet indi-allsky 2>/dev/null || true
         fi
+
+        # Clean up any leftover application directories
+        rm -rf /usr/share/indi-allsky
+    ;;
+    remove)
+        rm -rf /usr/share/indi-allsky 2>/dev/null || true
     ;;
 esac
 

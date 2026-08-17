@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    remove|upgrade|deconfigure)
+        # Clean up Python bytecode files created dynamically at runtime in /usr/share/indi-allsky
+        if [ -d "/usr/share/indi-allsky" ]; then
+            find /usr/share/indi-allsky -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+            find /usr/share/indi-allsky -type f -name "*.pyc" -delete 2>/dev/null || true
+            find /usr/share/indi-allsky -type f -name "*.pyo" -delete 2>/dev/null || true
+        fi
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0
