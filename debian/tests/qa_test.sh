@@ -16,7 +16,7 @@ echo "============================================================"
 echo "=== 3. Testing Database & User Provisioning ==="
 echo "============================================================"
 test -f /var/lib/indi-allsky/indi-allsky.sqlite
-sqlite3 /var/lib/indi-allsky/indi-allsky.sqlite "SELECT username FROM user;" | grep -q "admin"
+/var/lib/indi-allsky/venv/bin/python3 -c "import sqlite3; conn = sqlite3.connect('/var/lib/indi-allsky/indi-allsky.sqlite'); rows = conn.cursor().execute('SELECT username FROM user').fetchall(); print('Provisioned database users:', rows); assert any(r[0] == 'admin' for r in rows)"
 echo "Database verified and admin user provisioned!"
 
 echo "============================================================"
