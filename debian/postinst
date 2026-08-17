@@ -362,12 +362,15 @@ EOF
             systemctl try-restart polkit 2>/dev/null || true
         fi
 
-        # Add indi-allsky user to hardware and journal groups
-        for GRP in dialout video plugdev gpio i2c spi adm systemd-journal; do
+        # Add indi-allsky user to hardware, web, and journal groups
+        for GRP in dialout video plugdev gpio i2c spi adm systemd-journal www-data; do
             if getent group "$GRP" >/dev/null 2>&1; then
                 usermod -a -G "$GRP" indi-allsky 2>/dev/null || true
             fi
         done
+        if getent passwd www-data >/dev/null 2>&1; then
+            usermod -a -G indi-allsky www-data 2>/dev/null || true
+        fi
 
         # Set permissions
         chown -R indi-allsky:indi-allsky /var/lib/indi-allsky /etc/indi-allsky /var/log/indi-allsky /var/www/html/allsky

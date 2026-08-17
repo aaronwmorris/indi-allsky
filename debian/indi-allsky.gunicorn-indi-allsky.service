@@ -6,11 +6,13 @@ After=network.target
 [Service]
 Type=simple
 User=indi-allsky
-Group=indi-allsky
+Group=www-data
+SupplementaryGroups=indi-allsky
 RuntimeDirectory=indi-allsky
+RuntimeDirectoryMode=0755
 WorkingDirectory=/usr/share/indi-allsky
 Environment="PYTHONPATH=/usr/share/indi-allsky"
-ExecStart=/var/lib/indi-allsky/venv/bin/gunicorn --workers 3 --bind unix:/run/indi-allsky/gunicorn-indi-allsky.sock indi_allsky.wsgi:application
+ExecStart=/var/lib/indi-allsky/venv/bin/gunicorn -m 007 --workers 3 --bind unix:/run/indi-allsky/gunicorn-indi-allsky.sock indi_allsky.wsgi:application
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed
 Restart=always
