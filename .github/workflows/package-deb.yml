@@ -244,7 +244,7 @@ jobs:
               chown -R '$(id -u):$(id -g)' /work || true
             '
 
-      - name: 🧪 Run Automated QA on Generated .deb
+      - name: Run Automated QA on Generated .deb
         run: |
           docker run --rm --platform linux/${{ matrix.arch }} \
             -v "$PWD:/work" \
