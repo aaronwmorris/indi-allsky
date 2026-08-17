@@ -77,12 +77,14 @@ jobs:
 
       - name: Generate Release Notes Summary
         run: |
-          cat <<EOF > release_notes.md
-### Bundled INDI & Driver Versions
-* **INDI Core / Server**: \`${{ env.INDI_CORE_TAG }}\`
-* **INDI 3rd-Party Drivers**: \`${{ env.INDI_3RDPARTY_TAG }}\` (ZWO ASI, QHY, Player One, ToupTek, SVBONY, Starlight Xpress, etc.)
----
-EOF
+          {
+            echo "### 🔭 Bundled INDI & Driver Versions"
+            echo "* **INDI Core / Server**: \`${{ env.INDI_CORE_TAG }}\`"
+            echo "* **INDI 3rd-Party Drivers**: \`${{ env.INDI_3RDPARTY_TAG }}\` (ZWO ASI, QHY, Player One, ToupTek, SVBONY, Starlight Xpress, etc.)"
+            echo "* **Supported Architectures**: \`arm64\` (Raspberry Pi 4/5, aarch64), \`amd64\` (x86_64)"
+            echo "* **Distributions**: Debian 12 (Bookworm), Debian 13 (Trixie), Ubuntu 24.04 (Noble)"
+            echo "---"
+          } > release_notes.md
 
       - name: Build Debian Package (.deb) in Native Multi-Arch Container
         run: |
@@ -155,14 +157,14 @@ EOF
               # Construct single consolidated debian package for 3rdparty drivers
               mkdir -p /tmp/pkg-3rdparty/DEBIAN
               ARCH=$(dpkg --print-architecture)
-              cat <<EOF > /tmp/pkg-3rdparty/DEBIAN/control
-Package: indi-3rdparty
-Version: ${INDI_3RDPARTY_VER}
-Architecture: ${ARCH}
-Maintainer: INDI Allsky Maintainers <support@indi-allsky.org>
-Depends: libusb-1.0-0, libcfitsio10 | libcfitsio9 | libcfitsio-dev, libnova-0.16-0 | libnova-dev
-Description: Consolidated 3rd-party INDI camera drivers (ZWO ASI, QHY, PlayerOne, ToupTek, SVBony, SX, etc.)
-EOF
+              {
+                echo "Package: indi-3rdparty"
+                echo "Version: ${INDI_3RDPARTY_VER}"
+                echo "Architecture: ${ARCH}"
+                echo "Maintainer: INDI Allsky Maintainers <support@indi-allsky.org>"
+                echo "Depends: libusb-1.0-0, libcfitsio10 | libcfitsio9 | libcfitsio-dev, libnova-0.16-0 | libnova-dev"
+                echo "Description: Consolidated 3rd-party INDI camera drivers (ZWO ASI, QHY, PlayerOne, ToupTek, SVBony, SX, etc.)"
+              } > /tmp/pkg-3rdparty/DEBIAN/control
               dpkg-deb --build /tmp/pkg-3rdparty /indi-3rdparty_${INDI_3RDPARTY_VER}_${ARCH}.deb
 
               # 3. Build indi-allsky
