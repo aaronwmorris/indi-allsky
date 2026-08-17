@@ -8888,6 +8888,7 @@ class ImageProcessingView(TemplateView):
             'SHARPEN_AMOUNT'                 : self.indi_allsky_config.get('SHARPEN_AMOUNT', 0.0),
             'IMAGE_ROTATE'                   : self.indi_allsky_config.get('IMAGE_ROTATE', ''),
             'IMAGE_ROTATE_ANGLE'             : self.indi_allsky_config.get('IMAGE_ROTATE_ANGLE', 0),
+            'IMAGE_ROTATE_KEEP_SIZE'         : self.indi_allsky_config.get('IMAGE_ROTATE_KEEP_SIZE', False),
             'IMAGE_FLIP_V'                   : self.indi_allsky_config.get('IMAGE_FLIP_V', True),
             'IMAGE_FLIP_H'                   : self.indi_allsky_config.get('IMAGE_FLIP_H', True),
             'IMAGE_COLORMAP'                 : '',
@@ -9159,6 +9160,7 @@ class JsonImageProcessingView(JsonView):
         p_config['SHARPEN_AMOUNT']                       = float(request.json['SHARPEN_AMOUNT'])
         p_config['IMAGE_ROTATE']                         = str(request.json['IMAGE_ROTATE'])
         p_config['IMAGE_ROTATE_ANGLE']                   = int(request.json['IMAGE_ROTATE_ANGLE'])
+        p_config['IMAGE_ROTATE_KEEP_SIZE']               = bool(request.json['IMAGE_ROTATE_KEEP_SIZE'])
         p_config['IMAGE_FLIP_V']                         = bool(request.json['IMAGE_FLIP_V'])
         p_config['IMAGE_FLIP_H']                         = bool(request.json['IMAGE_FLIP_H'])
         p_config['DETECT_MASK']                          = str(request.json['DETECT_MASK'])
