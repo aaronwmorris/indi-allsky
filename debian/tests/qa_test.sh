@@ -10,7 +10,7 @@ apt-get install -y /work/*.deb
 echo "============================================================"
 echo "=== 2. Testing Sandboxed Virtualenv & C-Extensions ==="
 echo "============================================================"
-/var/lib/indi-allsky/venv/bin/python3 -c "import pyindi_client, flask, astropy, cv2, cryptography, dbus, systemd, rawpy, scipy; print('All core Python and C-extension modules verified successfully!')"
+/var/lib/indi-allsky/venv/bin/python3 -c "import PyIndi, flask, astropy, cv2, cryptography, dbus, systemd, rawpy, scipy; print('All core Python and C-extension modules verified successfully!')"
 
 echo "============================================================"
 echo "=== 3. Testing Database & User Provisioning ==="
