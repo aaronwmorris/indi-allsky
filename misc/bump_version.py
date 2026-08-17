@@ -22,14 +22,14 @@ BASE_HTML = ROOT_DIR / "indi_allsky" / "flask" / "templates" / "base.html"
 
 def get_current_version():
     content = VERSION_FILE.read_text()
-    match = re.search(r'__version__\s*=\s*"indi_v([^"]+)"', content)
+    match = re.search(r'__version__\s*=\s*"(?:indi_)?v?([^"]+)"', content)
     if match:
         return match.group(1)
     return "unknown"
 
 
 def set_version(new_version, suite="stable"):
-    clean_ver = new_version.lstrip("v").replace("indi_v", "")
+    clean_ver = re.sub(r'^(indi_)?v?', '', str(new_version).strip())
     print(f"Bumping version to: {clean_ver} (Suite: {suite})")
 
     # 1. Update indi_allsky/version.py
