@@ -43,8 +43,23 @@ Description: Initial web admin username:
 
 Template: indi-allsky/web_pass
 Type: password
-Description: Initial web admin password:
- Password for the administrative account in the indi-allsky web interface.
+Description: Initial web admin password (minimum 8 characters):
+ Enter a password for the administrative account. It must be at least 8 characters long.
+
+Template: indi-allsky/web_pass_confirm
+Type: password
+Description: Confirm web admin password:
+ Please enter the same admin password again to confirm.
+
+Template: indi-allsky/password_too_short
+Type: error
+Description: Password is too short
+ The password must be at least 8 characters long. Please try again.
+
+Template: indi-allsky/password_mismatch
+Type: error
+Description: Passwords do not match
+ The two passwords you entered did not match. Please try again.
 
 Template: indi-allsky/web_email
 Type: string

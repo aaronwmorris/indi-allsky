@@ -227,6 +227,10 @@ with app.app_context():
         ADMIN_PASS="${WEB_PASS:-adminpassword}"
         ADMIN_EMAIL="${WEB_EMAIL:-admin@example.org}"
 
+        if [ "${#ADMIN_PASS}" -lt 8 ]; then
+            ADMIN_PASS="adminpassword"
+        fi
+
         if [ -f "/usr/share/indi-allsky/misc/usertool.py" ]; then
             PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py adduser -u "$ADMIN_USER" -p "$ADMIN_PASS" -f "$ADMIN_USER" -e "$ADMIN_EMAIL" || true
             PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py setadmin -u "$ADMIN_USER" || true
@@ -274,7 +278,7 @@ with app.app_context():
                 chmod 644 "$NGINX_SSL_DIR/indi-allsky_nginx.pem" 2>/dev/null || true
             fi
 
-            systemctl reload nginx 2>/dev/null || true
+            systemctl restart nginx 2>/dev/null || systemctl start nginx 2>/dev/null || true
         elif [ -x "$(command -v a2ensite 2>/dev/null)" ] && [ -f "/usr/share/indi-allsky/service/apache_indi-allsky.conf" ]; then
             # Configure Apache2
             TMP_APACHE=$(mktemp)
@@ -309,9 +313,9 @@ with app.app_context():
                 chmod 644 "$SSL_DIR/indi-allsky_apache.pem" 2>/dev/null || true
             fi
 
-            a2enmod rewrite proxy proxy_http proxy_wstunnel headers ssl 2>/dev/null || true
+            a2enmod rewrite proxy proxy_http proxy_wstunnel headers ssl socache_shmcb 2>/dev/null || true
             a2ensite indi-allsky.conf 2>/dev/null || true
-            systemctl reload apache2 2>/dev/null || true
+            systemctl restart apache2 2>/dev/null || systemctl start apache2 2>/dev/null || true
         fi
 
         # Setup rsyslog logging
