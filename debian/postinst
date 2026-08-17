@@ -222,9 +222,14 @@ with app.app_context():
         fi
         rm -f "$TMP_CFG"
 
-        if [ -n "$WEB_USER" ] && [ -n "$WEB_PASS" ] && [ -f "/usr/share/indi-allsky/misc/usertool.py" ]; then
-            PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py adduser -u "$WEB_USER" -p "$WEB_PASS" -f "$WEB_USER" -e "${WEB_EMAIL:-admin@example.org}" || true
-            PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py setadmin -u "$WEB_USER" || true
+        # Create initial web admin account
+        ADMIN_USER="${WEB_USER:-admin}"
+        ADMIN_PASS="${WEB_PASS:-adminpassword}"
+        ADMIN_EMAIL="${WEB_EMAIL:-admin@example.org}"
+
+        if [ -f "/usr/share/indi-allsky/misc/usertool.py" ]; then
+            PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py adduser -u "$ADMIN_USER" -p "$ADMIN_PASS" -f "$ADMIN_USER" -e "$ADMIN_EMAIL" || true
+            PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py setadmin -u "$ADMIN_USER" || true
         fi
 
         chown -R "$ALLSKY_USER:$ALLSKY_GROUP" "$DB_DIR" "$FLASK_JSON" 2>/dev/null || true
