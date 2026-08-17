@@ -155,6 +155,7 @@ jobs:
                 libavdevice-dev \
                 libdbus-1-dev \
                 libglib2.0-dev \
+                libsystemd-dev \
                 fxload \
                 swig \
                 git \

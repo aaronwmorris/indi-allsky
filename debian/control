@@ -25,6 +25,7 @@ Build-Depends: debhelper-compat (= 13),
  libssl-dev,
  libdbus-1-dev,
  libglib2.0-dev,
+ libsystemd-dev,
  swig,
  git
 Standards-Version: 4.6.2
