@@ -214,8 +214,8 @@ with app.app_context():
             jq \
                 --argjson lat "${LOCATION_LATITUDE:-0.0}" \
                 --argjson lon "${LOCATION_LONGITUDE:-0.0}" \
-                --argjson elev "${LOCATION_ELEVATION:-0.0}" \
-                '.LOCATION_LATITUDE = ($lat | tonumber) | .LOCATION_LONGITUDE = ($lon | tonumber) | .LOCATION_ELEVATION = ($elev | tonumber)' \
+                --argjson elev "${LOCATION_ELEVATION:-0}" \
+                '.LOCATION_LATITUDE = ($lat | tonumber) | .LOCATION_LONGITUDE = ($lon | tonumber) | .LOCATION_ELEVATION = ($elev | tonumber | floor)' \
                 "$TMP_CFG" > "$TMP_UPDATED" 2>/dev/null && \
             PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/config.py load -c "$TMP_UPDATED" --force || true
             rm -f "$TMP_UPDATED"
@@ -243,22 +243,9 @@ with app.app_context():
             TMP_NGINX=$(mktemp)
             sed \
                 -e "s|%ALLSKY_DIRECTORY%|/usr/share/indi-allsky|g" \
-                -e "s|%IMAGE_FOLDER%|/var/www/html/allsky/images|g" \
-                -e "s|%DOCROOT_FOLDER%|/var/www/html|g" \
-                -e "s|%HTTP_PORT%|${HTTP_PORT:-80}|g" \
-                -e "s|%HTTPS_PORT%|${HTTPS_PORT:-443}|g" \
-                -e "s|%UPSTREAM_SERVER%|unix:/run/indi-allsky/gunicorn-indi-allsky.sock|g" \
+                -e "s|%ALLSKY_PORT%|${HTTP_PORT:-80}|g" \
+                -e "s|%ALLSKY_SSL_PORT%|${HTTPS_PORT:-443}|g" \
                 /usr/share/indi-allsky/service/nginx_indi-allsky.conf > "$TMP_NGINX"
-
-            mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
-            cp -f "$TMP_NGINX" /etc/nginx/sites-available/indi-allsky.conf
-            rm -f "$TMP_NGINX"
-            chmod 644 /etc/nginx/sites-available/indi-allsky.conf
-            ln -sf /etc/nginx/sites-available/indi-allsky.conf /etc/nginx/sites-enabled/indi-allsky.conf
-
-            # Generate self-signed SSL certificate for Nginx if none exists
-            NGINX_SSL_DIR="/etc/nginx/ssl"
-            if [ ! -f "$NGINX_SSL_DIR/indi-allsky_nginx.pem" ]; then
                 mkdir -p "$NGINX_SSL_DIR"
                 SHORT_HOSTNAME=$(hostname -s 2>/dev/null || echo "indi-allsky")
                 openssl req \
@@ -329,6 +316,7 @@ with app.app_context():
 
         # Setup sudoers
         if [ -f "/usr/share/indi-allsky/service/sudoers_indi-allsky" ]; then
+            mkdir -p /etc/sudoers.d
             sed -e "s|%ALLSKY_USER%|indi-allsky|g" \
                 /usr/share/indi-allsky/service/sudoers_indi-allsky > /etc/sudoers.d/indi-allsky || true
             chown root:root /etc/sudoers.d/indi-allsky 2>/dev/null || true
