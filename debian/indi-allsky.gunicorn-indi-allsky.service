@@ -9,7 +9,8 @@ User=indi-allsky
 Group=indi-allsky
 RuntimeDirectory=indi-allsky
 WorkingDirectory=/usr/share/indi-allsky
-ExecStart=/var/lib/indi-allsky/venv/bin/gunicorn --workers 3 --bind unix:/run/indi-allsky/gunicorn-indi-allsky.sock indi_allsky.flask:app
+Environment="PYTHONPATH=/usr/share/indi-allsky"
+ExecStart=/var/lib/indi-allsky/venv/bin/gunicorn --workers 3 --bind unix:/run/indi-allsky/gunicorn-indi-allsky.sock indi_allsky.wsgi:application
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed
 Restart=always

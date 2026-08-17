@@ -68,7 +68,8 @@ Recommends: indiserver | indi-bin,
  rpicam-apps | libcamera-apps | libcamera-tools
 Suggests: mosquitto,
  gpsd,
- udiskie
+ udiskie,
+ gsc
 Description: Allsky camera software using INDI framework and Flask web UI
  indi-allsky is a solution for operating an allsky camera using the
  INDI library framework for camera control, keogram generation, startrail

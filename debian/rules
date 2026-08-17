@@ -29,8 +29,8 @@ override_dh_auto_install:
 	ln -sf /var/lib/indi-allsky/venv/bin/python3 debian/indi-allsky/usr/bin/indi-allsky-python
 
 override_dh_installsystemd:
-	# Enable indi-allsky and gunicorn services, but NOT indiserver (conditional on camera interface)
+	# Enable indi-allsky, gunicorn, and indiserver services
 	dh_installsystemd --name=indi-allsky
 	dh_installsystemd --name=gunicorn-indi-allsky
-	dh_installsystemd --name=indiserver --no-enable --no-start
+	dh_installsystemd --name=indiserver
 

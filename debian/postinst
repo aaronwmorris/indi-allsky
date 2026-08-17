@@ -120,12 +120,10 @@ EOFJ
 
         # Generate /etc/indi-allsky/indiserver.env
         INDISERVER_ENV="/etc/indi-allsky/indiserver.env"
-        if [ ! -f "$INDISERVER_ENV" ]; then
-            cat <<EOF > "$INDISERVER_ENV"
+        cat <<EOF > "$INDISERVER_ENV"
 CCD_DRIVER="${CCD_DRIVER:-indi_simulator_ccd}"
 EOF
-            chmod 644 "$INDISERVER_ENV"
-        fi
+        chmod 644 "$INDISERVER_ENV"
 
         # Setup virtualenv at /var/lib/indi-allsky/venv if needed
         VENV="/var/lib/indi-allsky/venv"
@@ -313,7 +311,20 @@ with app.app_context():
                 chmod 644 "$SSL_DIR/indi-allsky_apache.pem" 2>/dev/null || true
             fi
 
-            a2enmod rewrite proxy proxy_http proxy_wstunnel headers ssl socache_shmcb 2>/dev/null || true
+            # Configure Apache listening ports
+            cat <<EOF > /etc/apache2/ports.conf
+Listen ${HTTP_PORT:-80}
+<IfModule ssl_module>
+    Listen ${HTTPS_PORT:-443}
+</IfModule>
+<IfModule mod_gnutls.c>
+    Listen ${HTTPS_PORT:-443}
+</IfModule>
+EOF
+            chmod 644 /etc/apache2/ports.conf
+
+            a2dissite 000-default.conf default-ssl.conf 2>/dev/null || true
+            a2enmod rewrite proxy proxy_http proxy_wstunnel headers ssl socache_shmcb expires http2 proxy_http2 2>/dev/null || true
             a2ensite indi-allsky.conf 2>/dev/null || true
             systemctl restart apache2 2>/dev/null || systemctl start apache2 2>/dev/null || true
         fi
@@ -362,14 +373,16 @@ with app.app_context():
         chown -R indi-allsky:indi-allsky /var/lib/indi-allsky /etc/indi-allsky /var/log/indi-allsky /var/www/html/allsky
         chmod 755 /var/lib/indi-allsky /var/www/html/allsky
 
-        # Conditionally enable indiserver only for INDI camera interfaces
+        # Enable and start indiserver (except for standalone libcamera and mqtt)
         case "$CAMERA_INTERFACE" in
-            indi|indi_accumulator|indi_passive)
-                systemctl enable indiserver.service || true
+            libcamera|mqtt)
+                systemctl stop indiserver.service 2>/dev/null || true
+                systemctl disable indiserver.service 2>/dev/null || true
                 ;;
             *)
-                # Non-INDI camera (libcamera, simulator, mqtt) — keep indiserver disabled
-                systemctl disable indiserver.service 2>/dev/null || true
+                # For 'indi', 'simulator', and all default configurations:
+                systemctl enable indiserver.service 2>/dev/null || true
+                systemctl restart indiserver.service 2>/dev/null || systemctl start indiserver.service 2>/dev/null || true
                 ;;
         esac
 
