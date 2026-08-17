@@ -77,9 +77,9 @@ while [ "$STATE" -ge 1 ] && [ "$STATE" -le 6 ]; do
             ;;
         3)
             # Step 3: Ports
-            db_input medium indi-allsky/http_port || true
-            db_input medium indi-allsky/https_port || true
-            db_input medium indi-allsky/indi_port || true
+            db_input high indi-allsky/http_port || true
+            db_input high indi-allsky/https_port || true
+            db_input high indi-allsky/indi_port || true
             if db_go; then
                 STATE=4
             else
@@ -95,7 +95,7 @@ while [ "$STATE" -ge 1 ] && [ "$STATE" -le 6 ]; do
             # Step 4: Web Admin Credentials
             db_input high indi-allsky/web_user || true
             db_input high indi-allsky/web_pass || true
-            db_input medium indi-allsky/web_email || true
+            db_input high indi-allsky/web_email || true
             if db_go; then
                 STATE=5
             else
@@ -104,9 +104,9 @@ while [ "$STATE" -ge 1 ] && [ "$STATE" -le 6 ]; do
             ;;
         5)
             # Step 5: Observatory Location
-            db_input medium indi-allsky/latitude || true
-            db_input medium indi-allsky/longitude || true
-            db_input medium indi-allsky/elevation || true
+            db_input high indi-allsky/latitude || true
+            db_input high indi-allsky/longitude || true
+            db_input high indi-allsky/elevation || true
             if db_go; then
                 STATE=6
             else
@@ -115,7 +115,7 @@ while [ "$STATE" -ge 1 ] && [ "$STATE" -le 6 ]; do
             ;;
         6)
             # Step 6: OIDC SSO Configuration
-            db_input medium indi-allsky/oidc_enable || true
+            db_input high indi-allsky/oidc_enable || true
             if db_go; then
                 db_get indi-allsky/oidc_enable
                 if [ "$RET" = "true" ]; then

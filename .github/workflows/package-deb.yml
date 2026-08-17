@@ -256,9 +256,79 @@ jobs:
           name: release-notes
           path: release_notes.md
 
+  test-deb:
+    name: Test .deb (${{ matrix.distro.name }} / ${{ matrix.arch }})
+    needs: [build-deb]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        distro:
+          - name: bookworm
+            image: debian:bookworm
+          - name: noble
+            image: ubuntu:noble
+          - name: trixie
+            image: debian:trixie
+        arch: [amd64, arm64]
+    steps:
+      - name: Set up QEMU for Multi-Arch Testing
+        uses: docker/setup-qemu-action@v3
+
+      - name: Download .deb Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: debs-${{ matrix.distro.name }}-${{ matrix.arch }}
+          path: /tmp/test-debs
+
+      - name: Run Automated QA Smoke Test Suite
+        run: |
+          docker run --rm --platform linux/${{ matrix.arch }} \
+            -v /tmp/test-debs:/debs \
+            -e DEBIAN_FRONTEND=noninteractive \
+            ${{ matrix.distro.image }} bash -c '
+              set -e
+              apt-get update
+              
+              echo "=== 1. Testing Non-Interactive Package Installation ==="
+              apt-get install -y /debs/*.deb
+              
+              echo "=== 2. Testing Sandboxed Virtualenv & C-Extensions ==="
+              /var/lib/indi-allsky/venv/bin/python3 -c "
+              import pyindi_client
+              import flask
+              import astropy
+              import cv2
+              import cryptography
+              import dbus
+              import systemd
+              import rawpy
+              import scipy
+              print(\"All core Python and C-extension modules loaded successfully!\")
+              "
+              
+              echo "=== 3. Testing Database & User Provisioning ==="
+              test -f /var/lib/indi-allsky/indi-allsky.sqlite
+              sqlite3 /var/lib/indi-allsky/indi-allsky.sqlite "SELECT username FROM users;" | grep -q "admin"
+              echo "Database verified and admin user provisioned!"
+              
+              echo "=== 4. Testing System Configuration & SSL Certificate ==="
+              test -f /etc/indi-allsky/flask.json
+              test -f /etc/ssl/certs/indi-allsky.crt
+              echo "Configuration and SSL certificate present!"
+              
+              echo "=== 5. Testing Debconf Reconfigure Idempotency ==="
+              dpkg-reconfigure -f noninteractive indi-allsky
+              echo "Debconf reconfiguration passed!"
+              
+              echo "=== 6. Testing Package Purge ==="
+              apt-get purge -y indi-allsky
+              echo "Package purged cleanly!"
+            '
+
   publish:
     name: Publish Releases
-    needs: [build-deb]
+    needs: [build-deb, test-deb]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:

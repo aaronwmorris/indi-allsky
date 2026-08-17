@@ -191,8 +191,16 @@ EOF
             sqlite3 "$DB_FILE" "VACUUM;" 2>/dev/null || true
         fi
 
-        echo "indi-allsky: Running database schema migrations..."
-        PYTHONPATH=/usr/share/indi-allsky FLASK_APP=indi_allsky.flask:app "$VENV/bin/flask" db upgrade -d /usr/share/indi-allsky/migrations || true
+        echo "indi-allsky: Initializing database schema & migrations..."
+        PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" -c '
+from indi_allsky.flask import create_app, db
+app = create_app()
+with app.app_context():
+    db.create_all()
+' || true
+
+        PYTHONPATH=/usr/share/indi-allsky FLASK_APP=indi_allsky.flask:app "$VENV/bin/flask" db stamp head 2>/dev/null || true
+        PYTHONPATH=/usr/share/indi-allsky FLASK_APP=indi_allsky.flask:app "$VENV/bin/flask" db upgrade -d /usr/share/indi-allsky/migrations 2>/dev/null || true
         PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/misc/populate_data.py || true
 
         echo "indi-allsky: Bootstrapping configuration..."
@@ -218,6 +226,8 @@ EOF
             PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py adduser -u "$WEB_USER" -p "$WEB_PASS" -f "$WEB_USER" -e "${WEB_EMAIL:-admin@example.org}" || true
             PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py setadmin -u "$WEB_USER" || true
         fi
+
+        chown -R "$ALLSKY_USER:$ALLSKY_GROUP" "$DB_DIR" "$FLASK_JSON" 2>/dev/null || true
 
         # Configure Web Server (Apache2 or Nginx)
         # Check if Nginx is explicitly active/running, otherwise default to Apache2 if installed
