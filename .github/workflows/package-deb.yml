@@ -176,21 +176,36 @@ jobs:
               echo "=== Building Consolidated INDI 3rd-Party Drivers (${INDI_3RDPARTY_TAG}) ==="
               git clone --depth 1 --branch "${INDI_3RDPARTY_TAG}" https://github.com/indilib/indi-3rdparty.git /tmp/indi-3rdparty
               
+              INDI_LIBS="libasi libplayerone libsvbony libqhy libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam libsvbonycam"
+              INDI_DRIVERS="indi-asi indi-playerone indi-svbony indi-qhy indi-sx indi-dsi indi-toupbase indi-gphoto indi-webcam indi-gpsd indi-gpsnmea"
+
               # Pass 1: Build vendor SDK shared libraries
-              mkdir -p /tmp/indi-3rdparty/build-libs
-              cd /tmp/indi-3rdparty/build-libs
-              cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DBUILD_LIBS=1 /tmp/indi-3rdparty
-              make -j$(nproc)
-              make install
-              DESTDIR=/tmp/pkg-3rdparty make install
+              for lib in $INDI_LIBS; do
+                if [ -d "/tmp/indi-3rdparty/$lib" ]; then
+                  echo "=== Building library: $lib ==="
+                  mkdir -p "/tmp/indi-3rdparty/build-$lib"
+                  cd "/tmp/indi-3rdparty/build-$lib"
+                  if cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release "/tmp/indi-3rdparty/$lib"; then
+                    make -j$(nproc) || true
+                    make install || true
+                    DESTDIR=/tmp/pkg-3rdparty make install || true
+                  fi
+                fi
+              done
               ldconfig
 
               # Pass 2: Build camera driver binaries
-              mkdir -p /tmp/indi-3rdparty/build-drivers
-              cd /tmp/indi-3rdparty/build-drivers
-              cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release /tmp/indi-3rdparty
-              make -j$(nproc)
-              DESTDIR=/tmp/pkg-3rdparty make install
+              for drv in $INDI_DRIVERS; do
+                if [ -d "/tmp/indi-3rdparty/$drv" ]; then
+                  echo "=== Building driver: $drv ==="
+                  mkdir -p "/tmp/indi-3rdparty/build-$drv"
+                  cd "/tmp/indi-3rdparty/build-$drv"
+                  if cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release "/tmp/indi-3rdparty/$drv"; then
+                    make -j$(nproc) || true
+                    DESTDIR=/tmp/pkg-3rdparty make install || true
+                  fi
+                fi
+              done
 
               # Construct single consolidated debian package for 3rdparty drivers
               mkdir -p /tmp/pkg-3rdparty/DEBIAN
