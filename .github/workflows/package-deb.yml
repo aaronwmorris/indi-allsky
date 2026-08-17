@@ -2,10 +2,6 @@ name: Build & Package Debian Release (.deb)
 
 on:
   push:
-    branches:
-      - 'feature/deb-packaging'
-      - 'master'
-      - 'main'
     tags:
       - 'v*'
   schedule:
@@ -28,7 +24,7 @@ jobs:
             image: ubuntu:noble
           - name: trixie
             image: debian:trixie
-        arch: [amd64] # [amd64, arm64]
+        arch: [amd64, arm64]
 
     steps:
       - name: Checkout Code
@@ -82,7 +78,7 @@ jobs:
       - name: Generate Release Notes Summary
         run: |
           {
-            echo "### 🔭 Bundled INDI & Driver Versions"
+            echo "### Bundled INDI & Driver Versions"
             echo "* **INDI Core / Server**: \`${{ env.INDI_CORE_TAG }}\`"
             echo "* **INDI 3rd-Party Drivers**: \`${{ env.INDI_3RDPARTY_TAG }}\` (ZWO ASI, QHY, Player One, ToupTek, SVBONY, Starlight Xpress, etc.)"
             echo "* **Supported Architectures**: \`arm64\` (Raspberry Pi 4/5, aarch64), \`amd64\` (x86_64)"

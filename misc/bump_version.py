@@ -67,7 +67,7 @@ def set_version(new_version, suite="stable"):
 
   * Automatic build for version {clean_ver} ({suite})
 
- -- INDI Allsky Maintainers <support@indi-allsky.org>  {now_str}
+ -- INDI Allsky Maintainers <https://github.com/aaronwmorris/indi-allsky>  {now_str}
 
 """
     if f"indi-allsky ({clean_ver})" not in changelog_content:
