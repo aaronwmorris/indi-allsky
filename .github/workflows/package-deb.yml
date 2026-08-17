@@ -135,6 +135,15 @@ jobs:
                 libgsl-dev \
                 libboost-dev \
                 libboost-regex-dev \
+                libboost-program-options-dev \
+                libzmq3-dev \
+                liblimesuite-dev \
+                libdc1394-dev \
+                libnutclient-dev \
+                libavcodec-dev \
+                libavformat-dev \
+                libavutil-dev \
+                libswscale-dev \
                 cdbs \
                 liberfa-dev \
                 libtheora-dev \
