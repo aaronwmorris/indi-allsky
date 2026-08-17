@@ -9,23 +9,31 @@
                 <!-- Star & Meteor Toggles + Thresholds -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_STARS.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_STARS.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Detect stars in each frame. Uses the Detection Mask when set; otherwise uses the SQM region.</span>
+                        </div>
                         {{ form_config.DETECT_STARS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="DETECT_STARS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_STARS_THOLD.label.text }}</span>
                         {{ form_config.DETECT_STARS_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">0.5 - 0.6 is a good value to start.</span>
                         <div id="DETECT_STARS_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_METEORS.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_METEORS.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Detect meteor-like lines in each frame. Uses the Detection Mask when set; otherwise uses the SQM region.</span>
+                        </div>
                         {{ form_config.DETECT_METEORS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="DETECT_METEORS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_METEORS_THOLD.label.text }}</span>
                         {{ form_config.DETECT_METEORS_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default: 125 - Increase to 250 if too many false detections.</span>
                         <div id="DETECT_METEORS_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -39,7 +47,7 @@
                         </div>
                         {{ form_config.DETECT_MASK(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="DETECT_MASK-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">PNG image mask for star, meteor, and SQM detection</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">PNG mask defining the star, meteor, and SQM detection area. Use the camera's bin-1 dimensions.</span>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_DRAW.label.text }}</span>
@@ -69,6 +77,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__DIAMETER.label.text }}</span>
                         {{ form_config.IMAGE_CIRCLE_MASK__DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Image-circle mask diameter in pixels.</span>
                         <div id="IMAGE_CIRCLE_MASK__DIAMETER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -87,6 +96,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__OFFSET_X.label.text }}</span>
                         {{ form_config.IMAGE_CIRCLE_MASK__OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Horizontal offset in pixels.</span>
                         <div id="IMAGE_CIRCLE_MASK__OFFSET_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -106,20 +116,30 @@
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SQM_FOV_DIV.label.text }}</span>
                         {{ form_config.SQM_FOV_DIV(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Central fraction used for SQM, star detection, meteor detection, and stretching when no ROI is defined.</span>
                         <div id="SQM_FOV_DIV-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">SQM / Star Region of Interest (x1, y1, x2, y2)</span>
                         <div class="tw:grid tw:grid-cols-2 sm:tw:grid-cols-4 tw:gap-2">
-                            {{ form_config.SQM_ROI_X1(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='x1') }}
-                        <div id="SQM_ROI_X1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                            {{ form_config.SQM_ROI_Y1(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='y1') }}
-                        <div id="SQM_ROI_Y1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                            {{ form_config.SQM_ROI_X2(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='x2') }}
-                        <div id="SQM_ROI_X2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                            {{ form_config.SQM_ROI_Y2(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='y2') }}
-                        <div id="SQM_ROI_Y2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div class="tw:flex tw:flex-col">
+                                {{ form_config.SQM_ROI_X1(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='x1') }}
+                                <div id="SQM_ROI_X1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            </div>
+                            <div class="tw:flex tw:flex-col">
+                                {{ form_config.SQM_ROI_Y1(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='y1') }}
+                                <div id="SQM_ROI_Y1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            </div>
+                            <div class="tw:flex tw:flex-col">
+                                {{ form_config.SQM_ROI_X2(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='x2') }}
+                                <div id="SQM_ROI_X2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            </div>
+                            <div class="tw:flex tw:flex-col">
+                                {{ form_config.SQM_ROI_Y2(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='y2') }}
+                                <div id="SQM_ROI_Y2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            </div>
                         </div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Not used if Detection Mask is defined. Coordinates are used before geometry changes (scaling, flipping, etc). Lower-right (x2, y2).</span>
                     </div>
                 </div>
 
@@ -141,15 +161,22 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_METHOD.label.text }}</span>
                         {{ form_config.IMAGE_STACK_METHOD(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Method to use for image stacking. Stacking disabled during daytime and moon mode.</span>
                         <div id="IMAGE_STACK_METHOD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_ALIGN.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_ALIGN.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Align frames before stacking. All-sky distortion can cause occasional registration errors.</span>
+                        </div>
                         {{ form_config.IMAGE_STACK_ALIGN(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_STACK_ALIGN-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_SPLIT.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_SPLIT.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Stacking split screen. Left is original, right is stacked.</span>
+                        </div>
                         {{ form_config.IMAGE_STACK_SPLIT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_STACK_SPLIT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -160,16 +187,19 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ALIGN_DETECTSIGMA.label.text }}</span>
                         {{ form_config.IMAGE_ALIGN_DETECTSIGMA(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Factor of background std-dev above which is considered a detection.</span>
                         <div id="IMAGE_ALIGN_DETECTSIGMA-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ALIGN_POINTS.label.text }}</span>
                         {{ form_config.IMAGE_ALIGN_POINTS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">The maximum number of control point-sources to find the transformation.</span>
                         <div id="IMAGE_ALIGN_POINTS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ALIGN_SOURCEMINAREA.label.text }}</span>
                         {{ form_config.IMAGE_ALIGN_SOURCEMINAREA(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Minimum number of connected pixels to be considered a source.</span>
                         <div id="IMAGE_ALIGN_SOURCEMINAREA-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -182,7 +212,10 @@
                         <div id="IMAGE_STACK_MOONMODE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_DAY.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_DAY.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Do not enable.</span>
+                        </div>
                         {{ form_config.IMAGE_STACK_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_STACK_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -205,6 +238,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.KEOGRAM_ANGLE.label.text }}</span>
                         {{ form_config.KEOGRAM_ANGLE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Min: -180, Max: 180 - Image rotation for Keogram data.</span>
                         <div id="KEOGRAM_ANGLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -220,15 +254,20 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.KEOGRAM_CROP_TOP.label.text }}</span>
                         {{ form_config.KEOGRAM_CROP_TOP(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Percent to trim from top of Keogram. Use this to crop text or trees from the keogram.</span>
                         <div id="KEOGRAM_CROP_TOP-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.KEOGRAM_CROP_BOTTOM.label.text }}</span>
                         {{ form_config.KEOGRAM_CROP_BOTTOM(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Percent to trim from bottom of Keogram.</span>
                         <div id="KEOGRAM_CROP_BOTTOM-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.KEOGRAM_LABEL.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.KEOGRAM_LABEL.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Add keogram time labels.</span>
+                        </div>
                         {{ form_config.KEOGRAM_LABEL(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="KEOGRAM_LABEL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -245,6 +284,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LONGTERM_KEOGRAM__OFFSET_X.label.text }}</span>
                         {{ form_config.LONGTERM_KEOGRAM__OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Horizontal offset in pixels.</span>
                         <div id="LONGTERM_KEOGRAM__OFFSET_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -255,6 +295,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LONGTERM_KEOGRAM__MONTH_LABEL_TEMPLATE.label.text }}</span>
                         {{ form_config.LONGTERM_KEOGRAM__MONTH_LABEL_TEMPLATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Example: {month:%B %Y}. %B is the locale specific name of the month - %b is the shortened version.</span>
                         <div id="LONGTERM_KEOGRAM__MONTH_LABEL_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -265,6 +306,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LONGTERM_KEOGRAM__OPENCV_FONT_SCALE.label.text }}</span>
                         {{ form_config.LONGTERM_KEOGRAM__OPENCV_FONT_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Text scale used when OpenCV renders this label.</span>
                         <div id="LONGTERM_KEOGRAM__OPENCV_FONT_SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -275,15 +317,20 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.REALTIME_KEOGRAM__MAX_ENTRIES.label.text }}</span>
                         {{ form_config.REALTIME_KEOGRAM__MAX_ENTRIES(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">History of images/vertical pixels to retain in the realtime keogram.</span>
                         <div id="REALTIME_KEOGRAM__MAX_ENTRIES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.REALTIME_KEOGRAM__SAVE_INTERVAL.label.text }}</span>
                         {{ form_config.REALTIME_KEOGRAM__SAVE_INTERVAL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Save realtime-keogram data every N images.</span>
                         <div id="REALTIME_KEOGRAM__SAVE_INTERVAL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.REALTIME_KEOGRAM__LABEL.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.REALTIME_KEOGRAM__LABEL.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Add keogram time labels.</span>
+                        </div>
                         {{ form_config.REALTIME_KEOGRAM__LABEL(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="REALTIME_KEOGRAM__LABEL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -305,21 +352,27 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_SUN_ALT_THOLD.label.text }}</span>
                         {{ form_config.STARTRAILS_SUN_ALT_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Sun altitude threshold.</span>
                         <div id="STARTRAILS_SUN_ALT_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MOONMODE_THOLD.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MOONMODE_THOLD.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">When enabled, use the camera moon mode thresholds to exclude images. When disabled, use the custom thresholds below.</span>
+                        </div>
                         {{ form_config.STARTRAILS_MOONMODE_THOLD(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="STARTRAILS_MOONMODE_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MOON_ALT_THOLD.label.text }}</span>
                         {{ form_config.STARTRAILS_MOON_ALT_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Exclude frames when Moon altitude and phase both exceed their limits. Set 91° to disable this altitude check.</span>
                         <div id="STARTRAILS_MOON_ALT_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MOON_PHASE_THOLD.label.text }}</span>
                         {{ form_config.STARTRAILS_MOON_PHASE_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Exclude frames when Moon phase and altitude both exceed their limits. Set 101% to disable this phase check.</span>
                         <div id="STARTRAILS_MOON_PHASE_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -329,21 +382,25 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MAX_ADU.label.text }}</span>
                         {{ form_config.STARTRAILS_MAX_ADU(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Max average image brightness (8-bit) to include in star trails. This should be at least 10 ADUs less than your target ADU.</span>
                         <div id="STARTRAILS_MAX_ADU-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MASK_THOLD.label.text }}</span>
                         {{ form_config.STARTRAILS_MASK_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Pixel ADU threshold used to build the star-trail mask.</span>
                         <div id="STARTRAILS_MASK_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_PIXEL_THOLD.label.text }}</span>
                         {{ form_config.STARTRAILS_PIXEL_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Exclude image for this percentage of pixels above the Mask Threshold ADU.</span>
                         <div id="STARTRAILS_PIXEL_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MIN_STARS.label.text }}</span>
                         {{ form_config.STARTRAILS_MIN_STARS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Minimum detected stars to include image.</span>
                         <div id="STARTRAILS_MIN_STARS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -351,7 +408,10 @@
                 <!-- Database Reuse & Timelapse -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_USE_DB_DATA.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_USE_DB_DATA.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Reuse stored ADU and star data. Disable this after changing the detection mask.</span>
+                        </div>
                         {{ form_config.STARTRAILS_USE_DB_DATA(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="STARTRAILS_USE_DB_DATA-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -371,13 +431,17 @@
                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Star Trails Image Circle Mask</span>
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">This may be used to mask text outside the image circle.</span>
+                        </div>
                         {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER.label.text }}</span>
                         {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Star-trail mask diameter in pixels.</span>
                         <div id="STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -410,11 +474,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__DIAMETER.label.text }}</span>
                         {{ form_config.FISH2PANO__DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Source image-circle diameter in pixels.</span>
                         <div id="FISH2PANO__DIAMETER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__OFFSET_X.label.text }}</span>
                         {{ form_config.FISH2PANO__OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Horizontal offset in pixels.</span>
                         <div id="FISH2PANO__OFFSET_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -425,6 +491,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__ROTATE_ANGLE.label.text }}</span>
                         {{ form_config.FISH2PANO__ROTATE_ANGLE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Panorama start angle from −180° to 180°. Set 90° to place the source image's bottom at the panorama center.</span>
                         <div id="FISH2PANO__ROTATE_ANGLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -439,11 +506,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__SCALE.label.text }}</span>
                         {{ form_config.FISH2PANO__SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Increasing scale increases processing time.</span>
                         <div id="FISH2PANO__SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__MODULUS.label.text }}</span>
                         {{ form_config.FISH2PANO__MODULUS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">The conversion process can be slow. Ensure your system is fast enough if you lower this number. Generate panorama every # images.</span>
                         <div id="FISH2PANO__MODULUS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -451,7 +520,10 @@
                 <!-- Cardinal Directions & Fonts -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__ENABLE_CARDINAL_DIRS.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__ENABLE_CARDINAL_DIRS.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Draw cardinal directions on panoramas. Disabling image cardinal directions also disables this option.</span>
+                        </div>
                         {{ form_config.FISH2PANO__ENABLE_CARDINAL_DIRS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FISH2PANO__ENABLE_CARDINAL_DIRS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -463,6 +535,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FISH2PANO__OPENCV_FONT_SCALE.label.text }}</span>
                         {{ form_config.FISH2PANO__OPENCV_FONT_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Text scale used when OpenCV renders this label.</span>
                         <div id="FISH2PANO__OPENCV_FONT_SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -483,18 +556,23 @@
                 <!-- Circular Display Options -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CIRCULAR_DISPLAY__ENABLE.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CIRCULAR_DISPLAY__ENABLE.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Generate an image formatted for a circular display.</span>
+                        </div>
                         {{ form_config.CIRCULAR_DISPLAY__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="CIRCULAR_DISPLAY__ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CIRCULAR_DISPLAY__RESOLUTION.label.text }}</span>
                         {{ form_config.CIRCULAR_DISPLAY__RESOLUTION(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Output resolution of the circular-display image.</span>
                         <div id="CIRCULAR_DISPLAY__RESOLUTION-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER.label.text }}</span>
                         {{ form_config.CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Source image-circle diameter in pixels; uses the Location-tab circle offsets.</span>
                         <div id="CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -510,6 +588,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAPTURE_HOOK_TIMEOUT.label.text }}</span>
                         {{ form_config.CAPTURE_HOOK_TIMEOUT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Maximum hook runtime in seconds. Long-running hooks delay subsequent captures.</span>
                         <div id="CAPTURE_HOOK_TIMEOUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -518,16 +597,19 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_HOOK_PRE.label.text }}</span>
                         {{ form_config.IMAGE_SAVE_HOOK_PRE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">External script to run before saving image. Runs in IMAGE worker process.</span>
                         <div id="IMAGE_SAVE_HOOK_PRE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_HOOK_POST.label.text }}</span>
                         {{ form_config.IMAGE_SAVE_HOOK_POST(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">External script to run after saving image. The image path is passed as the first parameter when executed.</span>
                         <div id="IMAGE_SAVE_HOOK_POST-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_HOOK_TIMEOUT.label.text }}</span>
                         {{ form_config.IMAGE_SAVE_HOOK_TIMEOUT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Maximum hook runtime in seconds. Long-running hooks slow image processing.</span>
                         <div id="IMAGE_SAVE_HOOK_TIMEOUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>

@@ -31,7 +31,7 @@
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.BACKUP_DB_PERIOD_DAYS.label.text }}</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Period in days (0 = disabled, SQLite only)</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Only valid for SQLite. The database will be automatically backed based on this setting (0 is disabled).</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.BACKUP_DB_PERIOD_DAYS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -44,6 +44,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_EXPIRE_DAYS.label.text }}</span>
                         {{ form_config.IMAGE_EXPIRE_DAYS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Maximum age in days before original timelapse and panorama images are deleted.</span>
                         <div id="IMAGE_EXPIRE_DAYS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -59,6 +60,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE_EXPIRE_DAYS.label.text }}</span>
                         {{ form_config.TIMELAPSE_EXPIRE_DAYS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Maximum age of timelapse, keogram, and star trails before deletion.</span>
                         <div id="TIMELAPSE_EXPIRE_DAYS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -67,7 +69,7 @@
                 <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE_OVERWRITE.label.text }}</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Overwrite existing timelapses instead of skipping execution</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">If a timelapse already exists for a given time, this setting will overwrite the existing entry instead of stopping.</span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
                         {{ form_config.TIMELAPSE_OVERWRITE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -87,7 +89,7 @@
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_FOLDER.label.text }}</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default: /var/www/html/allsky/images</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Folder for captured images. Run setup.sh after changing it so the web-server configuration is updated.</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.IMAGE_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -99,7 +101,7 @@
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VARLIB_FOLDER.label.text }}</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default: /var/lib/indi-allsky</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Folder for persistent data. Run setup.sh after changing it so permissions are updated.</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.VARLIB_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -111,7 +113,7 @@
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WEB_STATUS_TEMPLATE.label.text }}</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">HTML template for status bar (<a href="https://github.com/aaronwmorris/indi-allsky/wiki/Web-Status-Configuration" class="tw:link tw:link-info tw:no-underline" target="_blank">Wiki</a>)</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Status-bar HTML template using Python format syntax. See the Web Status wiki for available variables.</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.WEB_STATUS_TEMPLATE(class='tw:textarea tw:textarea-bordered tw:bg-base-100 tw:text-base-content tw:w-full tw:font-mono tw:text-xs', rows='6') }}
@@ -124,11 +126,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WEBSITE__TITLE.label.text }}</span>
                         {{ form_config.WEBSITE__TITLE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Page title prefix.</span>
                         <div id="WEBSITE__TITLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WEB_EXTRA_TEXT.label.text }}</span>
                         {{ form_config.WEB_EXTRA_TEXT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">File containing extra text to be included in info box.</span>
                         <div id="WEB_EXTRA_TEXT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -139,7 +143,10 @@
         <!-- Custom Charts Slots Grid Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
-                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Custom Charts Sensor Slots (1 to 9)</span>
+                <div class="tw:flex tw:flex-col">
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Custom Charts Sensor Slots (1 to 9)</span>
+                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Changing these settings will require a restart/reload.</span>
+                </div>
 
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
                     <!-- Slot 1 -->
@@ -261,7 +268,7 @@
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ADMIN_NETWORKS_FLASK.label.text }}</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Subnets allowed for administrative requests</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Subnets allowed to make administrative requests. Local interface subnets are added automatically.</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.ADMIN_NETWORKS_FLASK(class='tw:textarea tw:textarea-bordered tw:bg-base-100 tw:text-base-content tw:w-full tw:font-mono tw:text-xs', rows='4') }}
@@ -304,7 +311,7 @@
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <div class="tw:flex tw:flex-col">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WEB_NONLOCAL_IMAGES.label.text }}</span>
-                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Non-local media only</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Serve media only from non-local storage. Restart or reload after changing this setting.</span>
                         </div>
                         {{ form_config.WEB_NONLOCAL_IMAGES(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="WEB_NONLOCAL_IMAGES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -312,7 +319,7 @@
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <div class="tw:flex tw:flex-col">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WEB_LOCAL_IMAGES_ADMIN.label.text }}</span>
-                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Local media for admin</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Serve images/videos locally when coming from an admin network.</span>
                         </div>
                         {{ form_config.WEB_LOCAL_IMAGES_ADMIN(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="WEB_LOCAL_IMAGES_ADMIN-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -320,7 +327,7 @@
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <div class="tw:flex tw:flex-col">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ENCRYPT_PASSWORDS.label.text }}</span>
-                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Encrypt database passwords</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Not recommended unless absolutely necessary. Encrypt passwords in the database.</span>
                         </div>
                         {{ form_config.ENCRYPT_PASSWORDS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="ENCRYPT_PASSWORDS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
