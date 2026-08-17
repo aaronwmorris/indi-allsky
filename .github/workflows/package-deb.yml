@@ -143,6 +143,7 @@ jobs:
                 libev-dev \
                 librtlsdr-dev \
                 libudev-dev \
+                libavdevice-dev \
                 fxload \
                 swig \
                 git \
@@ -155,8 +156,12 @@ jobs:
               git clone --depth 1 --branch "${INDI_CORE_TAG}" https://github.com/indilib/indi.git /tmp/indi-core
               cd /tmp/indi-core
               dpkg-buildpackage -b -us -uc -d
+              
+              # Install all freshly built INDI core deb packages and resolve dependencies
+              echo "=== Installing freshly built INDI Core packages ==="
               cd /tmp
-              dpkg -i libindi*.deb indiserver*.deb 2>/dev/null || true
+              dpkg -i *.deb || apt-get install -f -y
+              ldconfig
 
               # 2. Build INDI 3rd-party camera drivers (Consolidated single deb)
               echo "=== Building Consolidated INDI 3rd-Party Drivers (${INDI_3RDPARTY_TAG}) ==="
