@@ -28,7 +28,7 @@ jobs:
             image: ubuntu:noble
           - name: trixie
             image: debian:trixie
-        arch: [amd64, arm64]
+        arch: [amd64] # [amd64, arm64]
 
     steps:
       - name: Checkout Code
