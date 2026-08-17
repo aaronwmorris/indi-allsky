@@ -1,0 +1,139 @@
+#!/bin/sh
+set -e
+
+. /usr/share/debconf/confmodule
+
+db_capb backup
+
+# Pre-populate debconf answers from existing /etc/indi-allsky/flask.json if present
+FLASK_JSON="/etc/indi-allsky/flask.json"
+if [ -f "$FLASK_JSON" ] && command -v jq >/dev/null 2>&1; then
+    CAMERA_INT=$(jq -r '.CAMERA_INTERFACE // empty' "$FLASK_JSON" 2>/dev/null || true)
+    if [ -n "$CAMERA_INT" ]; then
+        db_set indi-allsky/camera_interface "$CAMERA_INT" || true
+    fi
+
+    CCD_DRV=$(jq -r '.CCD_DRIVER // empty' "$FLASK_JSON" 2>/dev/null || true)
+    if [ -n "$CCD_DRV" ]; then
+        db_set indi-allsky/ccd_driver "$CCD_DRV" || true
+    fi
+
+    HTTP_P=$(jq -r '.HTTP_PORT // empty' "$FLASK_JSON" 2>/dev/null || true)
+    if [ -n "$HTTP_P" ]; then
+        db_set indi-allsky/http_port "$HTTP_P" || true
+    fi
+
+    HTTPS_P=$(jq -r '.HTTPS_PORT // empty' "$FLASK_JSON" 2>/dev/null || true)
+    if [ -n "$HTTPS_P" ]; then
+        db_set indi-allsky/https_port "$HTTPS_P" || true
+    fi
+
+    INDI_P=$(jq -r '.INDI_PORT // empty' "$FLASK_JSON" 2>/dev/null || true)
+    if [ -n "$INDI_P" ]; then
+        db_set indi-allsky/indi_port "$INDI_P" || true
+    fi
+
+    OIDC_EN=$(jq -r '.OIDC_ENABLE // empty' "$FLASK_JSON" 2>/dev/null || true)
+    if [ "$OIDC_EN" = "true" ] || [ "$OIDC_EN" = "false" ]; then
+        db_set indi-allsky/oidc_enable "$OIDC_EN" || true
+    fi
+
+    OIDC_ID=$(jq -r '.OIDC_CLIENT_ID // empty' "$FLASK_JSON" 2>/dev/null || true)
+    if [ -n "$OIDC_ID" ]; then
+        db_set indi-allsky/oidc_client_id "$OIDC_ID" || true
+    fi
+
+    OIDC_DISC=$(jq -r '.OIDC_DISCOVERY_ENDPOINT // empty' "$FLASK_JSON" 2>/dev/null || true)
+    if [ -n "$OIDC_DISC" ]; then
+        db_set indi-allsky/oidc_discovery_url "$OIDC_DISC" || true
+    fi
+fi
+
+STATE=1
+while [ "$STATE" -ge 1 ] && [ "$STATE" -le 6 ]; do
+    case "$STATE" in
+        1)
+            # Step 1: Camera Interface
+            db_input high indi-allsky/camera_interface || true
+            if db_go; then
+                STATE=2
+            else
+                STATE=0
+            fi
+            ;;
+        2)
+            # Step 2: INDI CCD Driver (if camera_interface is indi)
+            db_get indi-allsky/camera_interface
+            if [ "$RET" = "indi" ]; then
+                db_input high indi-allsky/ccd_driver || true
+                if db_go; then
+                    STATE=3
+                else
+                    STATE=1
+                fi
+            else
+                STATE=3
+            fi
+            ;;
+        3)
+            # Step 3: Ports
+            db_input medium indi-allsky/http_port || true
+            db_input medium indi-allsky/https_port || true
+            db_input medium indi-allsky/indi_port || true
+            if db_go; then
+                STATE=4
+            else
+                db_get indi-allsky/camera_interface
+                if [ "$RET" = "indi" ]; then
+                    STATE=2
+                else
+                    STATE=1
+                fi
+            fi
+            ;;
+        4)
+            # Step 4: Web Admin Credentials
+            db_input high indi-allsky/web_user || true
+            db_input high indi-allsky/web_pass || true
+            db_input medium indi-allsky/web_email || true
+            if db_go; then
+                STATE=5
+            else
+                STATE=3
+            fi
+            ;;
+        5)
+            # Step 5: Observatory Location
+            db_input medium indi-allsky/latitude || true
+            db_input medium indi-allsky/longitude || true
+            db_input medium indi-allsky/elevation || true
+            if db_go; then
+                STATE=6
+            else
+                STATE=4
+            fi
+            ;;
+        6)
+            # Step 6: OIDC SSO Configuration
+            db_input medium indi-allsky/oidc_enable || true
+            if db_go; then
+                db_get indi-allsky/oidc_enable
+                if [ "$RET" = "true" ]; then
+                    db_input high indi-allsky/oidc_client_id || true
+                    db_input high indi-allsky/oidc_client_secret || true
+                    db_input high indi-allsky/oidc_discovery_url || true
+                    if ! db_go; then
+                        STATE=6
+                        continue
+                    fi
+                fi
+                STATE=7
+            else
+                STATE=5
+            fi
+            ;;
+    esac
+done
+
+exit 0
+

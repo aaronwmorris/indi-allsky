@@ -1,0 +1,14 @@
+# Configuration File Policy for indi-allsky Debian Package
+#
+# This package does NOT ship static conffiles under /etc/.
+# All configuration files are generated dynamically during postinst:
+#
+#   /etc/indi-allsky/flask.json     - Generated from flask.json_template via jq
+#   /etc/indi-allsky/indiserver.env - Generated from debconf responses
+#
+# On upgrade, flask.json is merged (new template keys added, user values preserved).
+# On purge, all files under /etc/indi-allsky/ are removed by postrm.
+#
+# This approach is intentional: the configuration contains secrets (SECRET_KEY,
+# PASSWORD_KEY, OIDC_CLIENT_SECRET) that must be generated at install time,
+# and user-specific values (camera driver, location) that come from debconf.

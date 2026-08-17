@@ -1,0 +1,92 @@
+Template: indi-allsky/camera_interface
+Type: select
+Choices: indi, libcamera, simulator, mqtt
+Default: indi
+Description: Select primary camera interface:
+ Choose the camera capture subsystem for indi-allsky.
+ .
+  * indi: Standard INDI camera drivers (ZWO ASI, QHY, PlayerOne, ToupTek, SVBony, DSLR)
+  * libcamera: Raspberry Pi native libcamera subsystem
+  * simulator: Simulated test camera for demonstration/testing
+  * mqtt: Remote MQTT camera stream
+
+Template: indi-allsky/ccd_driver
+Type: select
+Choices: indi_simulator_ccd, indi_asi_ccd, indi_playerone_ccd, indi_toupcam_ccd, indi_svbony_ccd, indi_qhy_ccd, indi_gphoto_ccd, indi_v4l2_ccd, indi_webcam_ccd
+Default: indi_simulator_ccd
+Description: Select INDI CCD camera driver:
+ Choose the specific INDI CCD driver for your camera hardware.
+
+Template: indi-allsky/http_port
+Type: string
+Default: 80
+Description: Web server HTTP port:
+ Port number used by the web server (Apache/Nginx) for standard HTTP traffic.
+
+Template: indi-allsky/https_port
+Type: string
+Default: 443
+Description: Web server HTTPS port:
+ Port number used by the web server (Apache/Nginx) for secure HTTPS traffic.
+
+Template: indi-allsky/indi_port
+Type: string
+Default: 7624
+Description: INDI server port:
+ Port number used by the local indiserver daemon to accept camera connections.
+
+Template: indi-allsky/web_user
+Type: string
+Default: admin
+Description: Initial web admin username:
+ Username for the administrative account in the indi-allsky web interface.
+
+Template: indi-allsky/web_pass
+Type: password
+Description: Initial web admin password:
+ Password for the administrative account in the indi-allsky web interface.
+
+Template: indi-allsky/web_email
+Type: string
+Default: admin@example.org
+Description: Web admin contact email address:
+ Contact email address for the initial web administrator account.
+
+Template: indi-allsky/latitude
+Type: string
+Default: 0.0
+Description: Observatory Latitude (-90.0 to 90.0):
+ Geographical latitude in decimal degrees for celestial calculations and solar/lunar ephemeris.
+
+Template: indi-allsky/longitude
+Type: string
+Default: 0.0
+Description: Observatory Longitude (-180.0 to 180.0):
+ Geographical longitude in decimal degrees for celestial calculations and solar/lunar ephemeris.
+
+Template: indi-allsky/elevation
+Type: string
+Default: 0.0
+Description: Observatory Elevation in meters:
+ Height above sea level in meters for the observatory site.
+
+Template: indi-allsky/oidc_enable
+Type: boolean
+Default: false
+Description: Enable OIDC (OpenID Connect) Single Sign-On?
+ Select true to enable OpenID Connect single sign-on authentication for the web interface.
+
+Template: indi-allsky/oidc_client_id
+Type: string
+Description: OIDC Client ID:
+ Client ID configured in your OpenID Connect identity provider (e.g., Keycloak, Authentik, Authelia, Google).
+
+Template: indi-allsky/oidc_client_secret
+Type: password
+Description: OIDC Client Secret:
+ Client Secret configured in your OpenID Connect identity provider.
+
+Template: indi-allsky/oidc_discovery_url
+Type: string
+Description: OIDC Discovery URL (.well-known/openid-configuration):
+ Full OpenID Connect discovery endpoint URL (e.g. https://auth.example.com/.well-known/openid-configuration).

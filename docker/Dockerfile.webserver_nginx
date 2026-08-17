@@ -40,8 +40,12 @@ RUN sed \
     -i \
     -e "s|%INDIALLSKY_IMAGE_FOLDER%|$INDIALLSKY_IMAGE_FOLDER|g" \
     /etc/nginx/conf.d/default.conf
-COPY docker/ssl.crt /etc/ssl/certs/nginx.crt
-COPY docker/ssl.key /etc/ssl/private/nginx.key
-
-RUN chmod 600 /etc/ssl/private/nginx.key
+RUN apt-get -y install --no-install-recommends openssl \
+    && mkdir -p /etc/ssl/certs /etc/ssl/private \
+    && openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 \
+       -subj "/CN=indi-allsky.local" \
+       -keyout /etc/ssl/private/nginx.key \
+       -out /etc/ssl/certs/nginx.crt \
+       -addext "subjectAltName=DNS:indi-allsky.local,DNS:localhost" \
+    && chmod 600 /etc/ssl/private/nginx.key
 

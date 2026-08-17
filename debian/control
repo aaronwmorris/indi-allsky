@@ -1,0 +1,72 @@
+Source: indi-allsky
+Section: science
+Priority: optional
+Maintainer: INDI Allsky Maintainers <support@indi-allsky.org>
+Build-Depends: debhelper-compat (= 13),
+ dh-python,
+ python3-all,
+ python3-setuptools,
+ python3-venv,
+ python3-dev,
+ python3-pip,
+ python3-wheel,
+ libindi-dev,
+ libimath-dev,
+ libopenexr-dev,
+ libcfitsio-dev,
+ libnova-dev,
+ libopencv-dev,
+ libopenblas-dev,
+ libraw-dev,
+ libtiff-dev,
+ libpng-dev,
+ zlib1g-dev,
+ libcurl4-gnutls-dev,
+ libssl-dev,
+ swig,
+ git
+Standards-Version: 4.6.2
+Homepage: https://github.com/aaronwmorris/indi-allsky
+
+Package: indi-allsky
+Architecture: any
+Depends: ${misc:Depends},
+ ${shlibs:Depends},
+ python3 (>= 3.9),
+ python3-venv,
+ python3-pip,
+ ffmpeg,
+ apache2 | nginx,
+ sqlite3,
+ jq,
+ whiptail,
+ debconf,
+ adduser,
+ openssl,
+ bc,
+ procps,
+ rsyslog,
+ logrotate,
+ cron,
+ git,
+ cpio,
+ tzdata,
+ locales,
+ ca-certificates,
+ libcfitsio10 | libcfitsio9 | libcfitsio-dev,
+ libnova-0.16-0 | libnova-dev,
+ libopencv-core406 | libopencv-core406t64 | libopencv-dev,
+ libraw20 | libraw23t64 | libraw-dev,
+ network-manager,
+ udisks2
+Recommends: indiserver | indi-bin,
+ libindi-data,
+ indi-3rdparty | indi-asi | indi-qhy | indi-playerone | indi-svbony | indi-toupbase | indi-toupcam | indi-sx | indi-gphoto | indi-webcam,
+ rpicam-apps | libcamera-apps | libcamera-tools
+Suggests: mosquitto,
+ gpsd,
+ udiskie
+Description: Allsky camera software using INDI framework and Flask web UI
+ indi-allsky is a solution for operating an allsky camera using the
+ INDI library framework for camera control, keogram generation, startrail
+ generation, and web-based monitoring.

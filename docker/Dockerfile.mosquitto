@@ -19,13 +19,17 @@ RUN apk update
 RUN apk upgrade --no-cache
 
 
+RUN apk add --no-cache openssl \
+    && mkdir -p /etc/ssl/certs /etc/ssl/private \
+    && openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 \
+       -subj "/CN=mosquitto.local" \
+       -keyout /etc/ssl/private/mosquitto.key \
+       -out /etc/ssl/certs/mosquitto.crt \
+    && chmod 640 /etc/ssl/private/mosquitto.key \
+    && chown root:mosquitto /etc/ssl/private/mosquitto.key
+
+
 COPY docker/mosquitto.conf /mosquitto/config/mosquitto.conf
-COPY docker/ssl.crt /etc/ssl/certs/mosquitto.crt
-COPY docker/ssl.key /etc/ssl/private/mosquitto.key
-
-RUN chmod 640 /etc/ssl/private/mosquitto.key
-RUN chown root:mosquitto /etc/ssl/private/mosquitto.key
-
 
 RUN mosquitto_passwd -b -c /mosquitto/passwd_file $MOSQUITTO_USER $MOSQUITTO_PASS
 

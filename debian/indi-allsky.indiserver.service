@@ -1,0 +1,15 @@
+[Unit]
+Description=INDI Server for Camera Control
+After=network.target
+
+[Service]
+Type=simple
+User=indi-allsky
+Group=indi-allsky
+EnvironmentFile=-/etc/indi-allsky/indiserver.env
+ExecStart=/usr/bin/indiserver -v -p 7624 $CCD_DRIVER
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -50,15 +50,22 @@ services:
   #    - "localhost:host-gateway"
 
 
-  gunicorn.indi.allsky:
-    image: gunicorn.indi.allsky
+  app.base.indi.allsky:
+    image: indi-allsky:latest
     build:
       context: ..
-      dockerfile: docker/Dockerfile.gunicorn
+      dockerfile: docker/Dockerfile
       args:
         - TZ=${TZ}
     env_file: .env
+
+
+  gunicorn.indi.allsky:
+    image: indi-allsky:latest
+    entrypoint: ["/usr/local/bin/start_gunicorn.sh"]
+    env_file: .env
     depends_on:
+      - app.base.indi.allsky
       - mariadb.indi.allsky
     volumes:
       - images_indi_allsky:/var/www/html/allsky
@@ -68,14 +75,11 @@ services:
 
 
   capture.indi.allsky:
-    image: capture.indi.allsky
-    build:
-      context: ..
-      additional_contexts:
-        indi.base: "service:indi.base"
-      dockerfile: docker/Dockerfile.capture
+    image: indi-allsky:latest
+    entrypoint: ["/usr/local/bin/start_indi_allsky.sh"]
     env_file: .env
     depends_on:
+      - app.base.indi.allsky
       - indi.base
       - mariadb.indi.allsky
       - indiserver.indi.allsky

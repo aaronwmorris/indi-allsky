@@ -1,0 +1,19 @@
+[Unit]
+Description=Indi AllSky Main Service
+After=network.target indiserver.service
+
+[Service]
+Type=simple
+User=indi-allsky
+Group=indi-allsky
+WorkingDirectory=/usr/share/indi-allsky
+ExecStart=/var/lib/indi-allsky/venv/bin/python3 allsky.py --log syslog run
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStop=/bin/kill -TERM $MAINPID
+Restart=always
+RestartSec=5
+PrivateTmp=true
+UMask=0022
+
+[Install]
+WantedBy=multi-user.target
