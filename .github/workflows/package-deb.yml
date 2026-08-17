@@ -163,6 +163,9 @@ jobs:
                 jq \
                 ca-certificates
 
+              # Set Debian build options to disable automatic debug symbol packages
+              export DEB_BUILD_OPTIONS="noautodbgsym noddebs"
+
               # 1. Build INDI Core (indilib/indi)
               echo "=== Building INDI Core (${INDI_CORE_TAG}) ==="
               git clone --depth 1 --branch "${INDI_CORE_TAG}" https://github.com/indilib/indi.git /tmp/indi-core
@@ -227,6 +230,9 @@ jobs:
               echo "=== Building indi-allsky ==="
               cd /work
               dpkg-buildpackage -b -us -uc
+
+              # Clean up any debug symbol packages before packaging
+              rm -f /*-dbgsym*.deb /tmp/*-dbgsym*.deb /*-dbg*.deb /tmp/*-dbg*.deb /work/*-dbgsym*.deb /work/*-dbg*.deb 2>/dev/null || true
 
               # Collect and tag all built .deb packages with distribution suite suffix
               for f in /*.deb /tmp/*.deb; do
