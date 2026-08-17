@@ -536,6 +536,22 @@ var fullscreen = false;  //initial state
                             <!-- Geometry Section -->
                             <div class="tw:flex tw:flex-col tw:gap-4">
                                 <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Geometry Adjustments</span>
+                                <div class="tw:grid tw:gap-4">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                            {{ form_image_processing.IMAGE_FLIP_V(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Flip V</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="tw:grid tw:gap-4">
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
+                                            {{ form_image_processing.IMAGE_FLIP_H(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Flip H</span>
+                                        </label>
+                                    </div>
+                                </div>
                                 <div class="tw:grid tw:grid-cols-2 tw:gap-4">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
@@ -551,16 +567,11 @@ var fullscreen = false;  //initial state
                                     </div>
                                 </div>
                                 <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                    <div></div>
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
-                                            {{ form_image_processing.IMAGE_FLIP_V(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Flip V</span>
-                                        </label>
-                                    </div>
-                                    <div class="tw:form-control">
-                                        <label class="tw:label tw:cursor-pointer tw:justify-start tw:gap-3">
-                                            {{ form_image_processing.IMAGE_FLIP_H(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
-                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Flip H</span>
+                                            {{ form_image_processing.IMAGE_ROTATE_KEEP_SIZE(class='tw:toggle tw:toggle-primary tw:toggle-xs') }}
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Maintain Size After Rotation</span>
                                         </label>
                                     </div>
                                 </div>
@@ -1210,7 +1221,7 @@ const field_names = [
 const checkbox_field_names = [
     'DISABLE_PROCESSING', 'IMAGE_CALIBRATE_DARK', 'IMAGE_CALIBRATE_BPM', 'IMAGE_CALIBRATE_FIX_HOLES',
     'NIGHT_CONTRAST_ENHANCE', 'CONTRAST_ENHANCE_16BIT', 'AUTO_WB', 'IMAGE_STACK_ALIGN',
-    'IMAGE_FLIP_V', 'IMAGE_FLIP_H', 'FISH2PANO__ENABLE', 'FISH2PANO__FLIP_H',
+    'IMAGE_FLIP_V', 'IMAGE_FLIP_H', 'IMAGE_ROTATE_KEEP_SIZE', 'FISH2PANO__ENABLE', 'FISH2PANO__FLIP_H',
     'FISH2PANO__ENABLE_CARDINAL_DIRS', 'TEXT_PROPERTIES__FONT_OUTLINE',
     'MOON_OVERLAY__ENABLE', 'MOON_OVERLAY__FLIP_V', 'MOON_OVERLAY__FLIP_H',
     'LIGHTGRAPH_OVERLAY__ENABLE', 'LIGHTGRAPH_OVERLAY__LABEL', 'LIGHTGRAPH_OVERLAY__HOUR_LINES',
