@@ -1,0 +1,28 @@
+# syntax=docker/dockerfile:1
+# Lightweight INDIServer Container Image using native Debian packages
+
+ARG BASE_IMAGE=debian:bookworm-slim
+FROM ${BASE_IMAGE}
+
+ARG TZ=UTC
+ARG DEBIAN_FRONTEND=noninteractive
+
+USER root
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    indi-bin \
+    libindi-data \
+    libindi-plugins \
+    tzdata \
+    procps \
+    iproute2 \
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+    && dpkg-reconfigure -f noninteractive tzdata \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/*
+
+COPY docker/start_indiserver.sh /usr/local/bin/start_indiserver.sh
+RUN chmod 755 /usr/local/bin/start_indiserver.sh
+
+EXPOSE 7624
+
+ENTRYPOINT ["/usr/local/bin/start_indiserver.sh"]

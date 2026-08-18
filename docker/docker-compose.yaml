@@ -1,19 +1,5 @@
 ---
 services:
-  indi.base:
-    image: indi.base
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.indi_base_debian13
-      #dockerfile: docker/Dockerfile.indi_base_ubuntu2404
-      args:
-        - TZ=${TZ}
-        - INDI_CORE_VERSION=${INDIALLSKY_INDI_CORE_VERSION}
-        - LIBCAMERA_TAG=${INDIALLSKY_LIBCAMERA_TAG}
-        - RPICAM_APPS_TAG=${INDIALLSKY_RPICAM_APPS_TAG}
-    env_file: .env
-
-
   mariadb.indi.allsky:
     image: mariadb.indi.allsky
     build:
@@ -30,24 +16,15 @@ services:
     image: indiserver.indi.allsky
     build:
       context: ..
-      additional_contexts:
-        indi.base: "service:indi.base"
-      dockerfile: docker/Dockerfile.indiserver_debian13
-      #dockerfile: docker/Dockerfile.indiserver_ubuntu2404
+      dockerfile: docker/Dockerfile.indiserver
       args:
-        - INDI_3RDPARTY_VERSION=${INDIALLSKY_INDI_3RDPARTY_VERSION}
-        - INDI_CAMERA_VENDOR=${INDIALLSKY_CAMERA_VENDOR}
+        - TZ=${TZ:-UTC}
     env_file: .env
-    depends_on:
-      - indi.base
     privileged: true
     ports:
       - "17624:7624"
     volumes:
-      - /run/udev:/run/udev:ro  # enable for indi_libcamera_ccd
-  ### Uncomment to connect to gpsd running on the host (listening to all interfaces)
-  #  extra_hosts:
-  #    - "localhost:host-gateway"
+      - /run/udev:/run/udev:ro
 
 
   app.base.indi.allsky:
@@ -56,7 +33,7 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
       args:
-        - TZ=${TZ}
+        - TZ=${TZ:-UTC}
     env_file: .env
 
 
@@ -70,8 +47,6 @@ services:
     volumes:
       - images_indi_allsky:/var/www/html/allsky
       - migrations_indi_allsky:/var/lib/indi-allsky
-  #  ports:
-  #    - "8000:8000"
 
 
   capture.indi.allsky:
@@ -80,13 +55,12 @@ services:
     env_file: .env
     depends_on:
       - app.base.indi.allsky
-      - indi.base
       - mariadb.indi.allsky
       - indiserver.indi.allsky
-    #privileged: true  # enable for libcamera
+    privileged: true
     volumes:
       - images_indi_allsky:/var/www/html/allsky
-      #- /run/udev:/run/udev:ro  # enable for libcamera
+      - /run/udev:/run/udev:ro
 
 
   webserver.indi.allsky:
@@ -96,8 +70,8 @@ services:
       dockerfile: docker/Dockerfile.webserver_apache
       #dockerfile: docker/Dockerfile.webserver_nginx
       args:
-        - TZ=${TZ}
-        - INDIALLSKY_IMAGE_FOLDER=${INDIALLSKY_IMAGE_FOLDER}
+        - TZ=${TZ:-UTC}
+        - INDIALLSKY_IMAGE_FOLDER=${INDIALLSKY_IMAGE_FOLDER:-/var/www/html/allsky/images}
     env_file: .env
     depends_on:
       - gunicorn.indi.allsky
@@ -114,8 +88,8 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.mosquitto
       args:
-        - MOSQUITTO_USER=${INDIALLSKY_MOSQUITTO_USER}
-        - MOSQUITTO_PASS=${INDIALLSKY_MOSQUITTO_PASS}
+        - MOSQUITTO_USER=${INDIALLSKY_MOSQUITTO_USER:-admin}
+        - MOSQUITTO_PASS=${INDIALLSKY_MOSQUITTO_PASS:-adminpassword}
     env_file: .env
     volumes:
       - mosquitto_data_indi_allsky:/mosquitto/data
