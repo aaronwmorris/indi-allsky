@@ -1,0 +1,59 @@
+
+FROM ubuntu:noble AS indi.base
+
+ARG TZ
+ARG INDI_VERSION
+ARG LIBCAMERA_TAG
+ARG RPICAM_APPS_TAG
+ARG DEBIAN_FRONTEND=noninteractive
+
+USER root
+RUN apt-get update
+RUN apt-get -y upgrade
+
+RUN apt-get -y install \
+    build-essential \
+    apt-utils \
+    iproute2 \
+    i2c-tools \
+    usbutils \
+    locales \
+    tzdata \
+    procps \
+    sudo \
+    git \
+    jq \
+    software-properties-common
+
+
+RUN add-apt-repository -y ppa:mutlaqja/ppa
+
+# Only need indi development package here
+RUN apt-get -y install \
+    libindi-dev
+
+
+# cleanup
+RUN apt-get clean
+
+
+# update timezone
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN dpkg-reconfigure -f noninteractive tzdata
+
+
+# need the uid and gid to match in all containers
+RUN groupadd --gid 10001 allsky
+RUN useradd --create-home --no-user-group --uid 10001 --gid allsky --groups dialout,video,adm --home-dir /home/allsky --shell /bin/bash allsky
+RUN if getent group gpio >/dev/null 2>&1; then usermod -a -G gpio allsky; fi
+RUN if getent group i2c >/dev/null 2>&1; then usermod -a -G i2c allsky; fi
+RUN if getent group spi >/dev/null 2>&1; then usermod -a -G spi allsky; fi
+
+RUN echo "allsky ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/allsky
+RUN chmod 0440 /etc/sudoers.d/allsky
+
+
+#USER allsky
+#WORKDIR /home/allsky
+
+#RUN rm -fR /home/allsky/Projects

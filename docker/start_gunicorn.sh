@@ -4,12 +4,12 @@
 set -o errexit
 set -o nounset
 
-ALLSKY_DIRECTORY="${ALLSKY_DIRECTORY:-/usr/share/indi-allsky}"
+ALLSKY_DIRECTORY="/home/allsky/indi-allsky"
 ALLSKY_ETC="/etc/indi-allsky"
 DB_FOLDER="/var/lib/indi-allsky"
 #DB_FILE="${DB_FOLDER}/indi-allsky.sqlite"
 #SQLALCHEMY_DATABASE_URI="sqlite:///${DB_FILE}"
-MIGRATION_FOLDER="${ALLSKY_DIRECTORY}/migrations"
+MIGRATION_FOLDER="$DB_FOLDER/migrations"
 DOCROOT_FOLDER="/var/www/html"
 HTDOCS_FOLDER="${DOCROOT_FOLDER}/allsky"
 INDISERVER_SERVICE_NAME="indiserver"
@@ -18,7 +18,8 @@ GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
 
 
 # ensure correct permissions
-sudo chown -R indi-allsky:indi-allsky "$ALLSKY_ETC" "$DB_FOLDER" "$HTDOCS_FOLDER" 2>/dev/null || true
+sudo chown allsky:allsky "$ALLSKY_ETC"
+sudo chown allsky:allsky "$DB_FOLDER"
 
 
 if [ "${INDIALLSKY_MARIADB_SSL:-false}" == "true" ]; then
@@ -41,28 +42,14 @@ jq \
  --arg indiserver_service_name "${INDISERVER_SERVICE_NAME}.service" \
  --arg indiserver_timer_name "${INDISERVER_SERVICE_NAME}.timer" \
  --arg gunicorn_service_name "${GUNICORN_SERVICE_NAME}.service" \
- --argjson oidc_enable "${INDIALLSKY_OIDC_ENABLE:-false}" \
- --arg oidc_client_id "${INDIALLSKY_OIDC_CLIENT_ID:-}" \
- --arg oidc_client_secret "${INDIALLSKY_OIDC_CLIENT_SECRET:-}" \
- --arg oidc_discovery "${INDIALLSKY_OIDC_DISCOVERY_ENDPOINT:-}" \
- '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri | .INDI_ALLSKY_DOCROOT = $indi_allsky_docroot | .INDI_ALLSKY_AUTH_ALL_VIEWS = $indi_allsky_auth_all_views | .MIGRATION_FOLDER = $migration_folder | .ALLSKY_SERVICE_NAME = $allsky_service_name | .ALLSKY_TIMER_NAME = $allsky_timer_name | .INDISERVER_SERVICE_NAME = $indiserver_service_name | .INDISERVER_TIMER_NAME = $indiserver_timer_name | .GUNICORN_SERVICE_NAME = $gunicorn_service_name | .OIDC_ENABLE = $oidc_enable | .OIDC_CLIENT_ID = $oidc_client_id | .OIDC_CLIENT_SECRET = $oidc_client_secret | .OIDC_DISCOVERY_ENDPOINT = $oidc_discovery' \
+ '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri | .INDI_ALLSKY_DOCROOT = $indi_allsky_docroot | .INDI_ALLSKY_AUTH_ALL_VIEWS = $indi_allsky_auth_all_views | .MIGRATION_FOLDER = $migration_folder | .ALLSKY_SERVICE_NAME = $allsky_service_name | .ALLSKY_TIMER_NAME = $allsky_timer_name | .INDISERVER_SERVICE_NAME = $indiserver_service_name | .INDISERVER_TIMER_NAME = $indiserver_timer_name | .GUNICORN_SERVICE_NAME = $gunicorn_service_name' \
  "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP_FLASK"
  
 
-SECRET_KEY="${INDIALLSKY_FLASK_SECRET_KEY:-}"
-if [ -z "$SECRET_KEY" ] || [ "$SECRET_KEY" = "%INDIALLSKY_FLASK_SECRET_KEY%" ]; then
-    SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(24))')
-fi
-
-PASSWORD_KEY="${INDIALLSKY_FLASK_PASSWORD_KEY:-}"
-if [ -z "$PASSWORD_KEY" ] || [ "$PASSWORD_KEY" = "%INDIALLSKY_FLASK_PASSWORD_KEY%" ]; then
-    PASSWORD_KEY=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())" 2>/dev/null || python3 -c "import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())")
-fi
-
 TMP_FLASK_KEYS=$(mktemp --suffix=.json)
 jq \
- --arg secret_key "$SECRET_KEY" \
- --arg password_key "$PASSWORD_KEY" \
+ --arg secret_key "$INDIALLSKY_FLASK_SECRET_KEY" \
+ --arg password_key "$INDIALLSKY_FLASK_PASSWORD_KEY" \
  '.SECRET_KEY = $secret_key | .PASSWORD_KEY = $password_key' \
  "${TMP_FLASK}" > "$TMP_FLASK_KEYS"
 
@@ -80,11 +67,7 @@ cd "$ALLSKY_DIRECTORY"
 
 
 # shellcheck disable=SC1091
-if [ -f "/var/lib/indi-allsky/venv/bin/activate" ]; then
-    source /var/lib/indi-allsky/venv/bin/activate
-elif [ -f "/home/allsky/venv/bin/activate" ]; then
-    source /home/allsky/venv/bin/activate
-fi
+source /home/allsky/venv/bin/activate
 
 
 if [ -z "${INDIALLSKY_GUNICORN_NO_WAIT:-}" ]; then

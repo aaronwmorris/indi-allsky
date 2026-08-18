@@ -33,7 +33,8 @@ START_TIME=$(date +%s)
 
 docker compose \
     build \
-    app.base.indi.allsky \
+    capture.indi.allsky \
+    gunicorn.indi.allsky \
     webserver.indi.allsky
 
 
