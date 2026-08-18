@@ -115,36 +115,50 @@ while [ "$STATE" -ge 1 ] && [ "$STATE" -le 7 ]; do
             fi
             ;;
         4)
-            # Step 4: Web Auth Scope & Initial Admin Account
+            # Step 4: Web Auth Scope & Initial Admin Account (only prompted on fresh installs)
             db_input high indi-allsky/web_auth_all_views || true
-            db_input high indi-allsky/web_user || true
-            db_input high indi-allsky/web_name || true
-            db_input high indi-allsky/web_pass || true
-            db_input high indi-allsky/web_pass_confirm || true
-            db_input high indi-allsky/web_email || true
-            if db_go; then
-                db_get indi-allsky/web_pass
-                PASS="$RET"
-                db_get indi-allsky/web_pass_confirm
-                PASS_CONFIRM="$RET"
 
-                # If user entered a password interactively, validate length and matching
-                if [ -n "$PASS" ]; then
-                    if [ "${#PASS}" -lt 8 ]; then
-                        db_fset indi-allsky/password_too_short seen false || true
-                        db_input critical indi-allsky/password_too_short || true
-                        db_go || true
-                        db_reset indi-allsky/web_pass || true
-                        db_reset indi-allsky/web_pass_confirm || true
-                        continue
-                    fi
-                    if [ "$PASS" != "$PASS_CONFIRM" ]; then
-                        db_fset indi-allsky/password_mismatch seen false || true
-                        db_input critical indi-allsky/password_mismatch || true
-                        db_go || true
-                        db_reset indi-allsky/web_pass || true
-                        db_reset indi-allsky/web_pass_confirm || true
-                        continue
+            DB_HAS_USERS=0
+            if [ -f "/var/lib/indi-allsky/indi-allsky.sqlite" ] && command -v sqlite3 >/dev/null 2>&1; then
+                USER_COUNT=$(sqlite3 /var/lib/indi-allsky/indi-allsky.sqlite "SELECT count(*) FROM users;" 2>/dev/null || echo "0")
+                if [ "${USER_COUNT:-0}" -gt 0 ]; then
+                    DB_HAS_USERS=1
+                fi
+            fi
+
+            if [ "$DB_HAS_USERS" = "0" ]; then
+                db_input high indi-allsky/web_user || true
+                db_input high indi-allsky/web_name || true
+                db_input high indi-allsky/web_pass || true
+                db_input high indi-allsky/web_pass_confirm || true
+                db_input high indi-allsky/web_email || true
+            fi
+
+            if db_go; then
+                if [ "$DB_HAS_USERS" = "0" ]; then
+                    db_get indi-allsky/web_pass
+                    PASS="$RET"
+                    db_get indi-allsky/web_pass_confirm
+                    PASS_CONFIRM="$RET"
+
+                    # If user entered a password interactively, validate length and matching
+                    if [ -n "$PASS" ]; then
+                        if [ "${#PASS}" -lt 8 ]; then
+                            db_fset indi-allsky/password_too_short seen false || true
+                            db_input critical indi-allsky/password_too_short || true
+                            db_go || true
+                            db_reset indi-allsky/web_pass || true
+                            db_reset indi-allsky/web_pass_confirm || true
+                            continue
+                        fi
+                        if [ "$PASS" != "$PASS_CONFIRM" ]; then
+                            db_fset indi-allsky/password_mismatch seen false || true
+                            db_input critical indi-allsky/password_mismatch || true
+                            db_go || true
+                            db_reset indi-allsky/web_pass || true
+                            db_reset indi-allsky/web_pass_confirm || true
+                            continue
+                        fi
                     fi
                 fi
                 STATE=5

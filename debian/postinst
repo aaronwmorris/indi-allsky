@@ -32,7 +32,7 @@ case "$1" in
         fi
 
         # Migrate from setup.sh user-level services to system-level services
-        # Remove old user-level systemd unit files if they exist
+        # Remove old user-level systemd unit files if they exist and terminate old processes
         for OLD_USER_HOME in /home/*; do
             if [ -d "${OLD_USER_HOME}/.config/systemd/user" ]; then
                 for UNIT in indi-allsky.service indi-allsky.timer indiserver.service indiserver.timer \
@@ -41,6 +41,7 @@ case "$1" in
                 done
             fi
         done
+        pkill -f 'virtualenv/indi-allsky' 2>/dev/null || true
 
         # Fetch debconf responses
         db_get indi-allsky/camera_interface; CAMERA_INTERFACE="$RET"
@@ -121,7 +122,8 @@ case "$1" in
 }
 EOFJ
             fi
-            chmod 600 "$FLASK_JSON"
+            chown "$ALLSKY_USER:www-data" "$FLASK_JSON" 2>/dev/null || true
+            chmod 660 "$FLASK_JSON"
         else
             # Upgrade: merge new template keys into existing config, preserving user values
             if [ -f "$FLASK_TEMPLATE" ] && command -v jq >/dev/null 2>&1; then
@@ -129,7 +131,8 @@ EOFJ
                 # Template provides defaults (.[0]), existing config overrides (.[1])
                 jq -s '.[0] * .[1]' "$FLASK_TEMPLATE" "$FLASK_JSON" > "${FLASK_JSON}.merged" && \
                     mv -f "${FLASK_JSON}.merged" "$FLASK_JSON"
-                chmod 600 "$FLASK_JSON"
+                chown "$ALLSKY_USER:www-data" "$FLASK_JSON" 2>/dev/null || true
+                chmod 660 "$FLASK_JSON"
             fi
         fi
 
@@ -241,22 +244,29 @@ with app.app_context():
         fi
         rm -f "$TMP_CFG"
 
-        # Create initial web admin account
-        ADMIN_USER="${WEB_USER:-admin}"
-        ADMIN_NAME="${WEB_NAME:-Admin User}"
-        ADMIN_PASS="${WEB_PASS:-adminpassword}"
-        ADMIN_EMAIL="${WEB_EMAIL:-admin@example.org}"
-
-        if [ "${#ADMIN_PASS}" -lt 8 ]; then
-            ADMIN_PASS="adminpassword"
+        # Only provision a default admin account on fresh installs (never modify existing accounts during migrations/upgrades)
+        DB_USER_COUNT=0
+        if [ -f "$DB_FILE" ] && command -v sqlite3 >/dev/null 2>&1; then
+            DB_USER_COUNT=$(sqlite3 "$DB_FILE" "SELECT count(*) FROM users;" 2>/dev/null || echo "0")
         fi
 
-        if [ -f "/usr/share/indi-allsky/misc/usertool.py" ]; then
+        if [ "${DB_USER_COUNT:-0}" -eq 0 ] && [ -f "/usr/share/indi-allsky/misc/usertool.py" ]; then
+            ADMIN_USER="${WEB_USER:-admin}"
+            ADMIN_NAME="${WEB_NAME:-Admin User}"
+            ADMIN_PASS="${WEB_PASS:-adminpassword}"
+            ADMIN_EMAIL="${WEB_EMAIL:-admin@example.org}"
+
+            if [ "${#ADMIN_PASS}" -lt 8 ]; then
+                ADMIN_PASS="adminpassword"
+            fi
+
             PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py adduser -u "$ADMIN_USER" -p "$ADMIN_PASS" -f "$ADMIN_NAME" -e "$ADMIN_EMAIL" || true
             PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py setadmin -u "$ADMIN_USER" || true
         fi
 
-        chown -R "$ALLSKY_USER:$ALLSKY_GROUP" "$DB_DIR" "$FLASK_JSON" 2>/dev/null || true
+        chown -R "$ALLSKY_USER:$ALLSKY_GROUP" "$DB_DIR" 2>/dev/null || true
+        chown -R "$ALLSKY_USER:www-data" /etc/indi-allsky 2>/dev/null || true
+        chmod 660 /etc/indi-allsky/flask.json 2>/dev/null || true
 
         # Configure Web Server (Apache2 or Nginx)
         # Check if Nginx is explicitly active/running, otherwise default to Apache2 if installed
