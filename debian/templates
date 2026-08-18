@@ -1,3 +1,13 @@
+Template: indi-allsky/reuse_existing_config
+Type: boolean
+Default: true
+Description: Reuse existing configuration and settings?
+ An existing indi-allsky installation was detected.
+ .
+ If you select 'Yes', your existing configuration, camera drivers, web ports, admin accounts, and observatory settings will be preserved automatically.
+ .
+ If you select 'No', you will be guided through the interactive setup wizard to reconfigure your settings.
+
 Template: indi-allsky/camera_interface
 Type: select
 Choices: indi, libcamera, simulator, test_rotating_stars, test_bubbles, indi_accumulator, indi_passive, pycurl_camera, mqtt_libcamera

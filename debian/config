@@ -79,6 +79,22 @@ if [ -f "$DB_FILE" ] && command -v sqlite3 >/dev/null 2>&1; then
     fi
 fi
 
+# Check if an existing configuration is present and prompt to reuse
+EXISTING_CONFIG=0
+if [ -f "$FLASK_JSON" ] || [ -f "$DB_FILE" ] || [ -f "$INDISERVER_ENV" ]; then
+    EXISTING_CONFIG=1
+fi
+
+if [ "$EXISTING_CONFIG" = "1" ]; then
+    db_input high indi-allsky/reuse_existing_config || true
+    if db_go; then
+        db_get indi-allsky/reuse_existing_config
+        if [ "$RET" = "true" ]; then
+            exit 0
+        fi
+    fi
+fi
+
 STATE=1
 while [ "$STATE" -ge 1 ] && [ "$STATE" -le 7 ]; do
     case "$STATE" in
