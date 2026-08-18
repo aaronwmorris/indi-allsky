@@ -259,7 +259,7 @@ with app.app_context():
         fi
         rm -f "$TMP_CFG"
 
-        # Only provision a default admin account on fresh installs (check if active human admin user already exists)
+        # Only provision a default admin account on fresh installs (check if active admin user already exists)
         DB_ADMIN_COUNT=0
         if [ -f "$DB_FILE" ] && command -v sqlite3 >/dev/null 2>&1; then
             DB_ADMIN_COUNT=$(sqlite3 "$DB_FILE" "SELECT count(*) FROM user WHERE admin = 1 AND username != 'system';" 2>/dev/null || echo "0")
@@ -283,6 +283,31 @@ with app.app_context():
         chown -R "$ALLSKY_USER:www-data" /etc/indi-allsky 2>/dev/null || true
         chmod 660 /etc/indi-allsky/flask.json 2>/dev/null || true
 
+        # Detect and configure IMAGE_FOLDER (supporting custom/non-standard paths)
+        IMAGE_FOLDER="/var/www/html/allsky/images"
+        if [ -f "$DB_FILE" ] && command -v sqlite3 >/dev/null 2>&1; then
+            CFG_JSON=$(sqlite3 "$DB_FILE" "SELECT data FROM config ORDER BY id DESC LIMIT 1;" 2>/dev/null || true)
+            if [ -n "$CFG_JSON" ] && command -v jq >/dev/null 2>&1; then
+                DETECTED_IMG=$(echo "$CFG_JSON" | jq -r '.IMAGE_FOLDER // empty' 2>/dev/null || true)
+                [ -n "$DETECTED_IMG" ] && IMAGE_FOLDER="$DETECTED_IMG"
+            fi
+        fi
+        if [ -f "$FLASK_JSON" ] && command -v jq >/dev/null 2>&1; then
+            FLASK_IMG=$(jq -r '.INDI_ALLSKY_IMAGE_FOLDER // empty' "$FLASK_JSON" 2>/dev/null || true)
+            [ -n "$FLASK_IMG" ] && IMAGE_FOLDER="$FLASK_IMG"
+        fi
+
+        mkdir -p "$IMAGE_FOLDER" "$IMAGE_FOLDER/darks" "$IMAGE_FOLDER/export"
+        chown -R "$ALLSKY_USER:www-data" "$IMAGE_FOLDER" 2>/dev/null || true
+        chmod 775 "$IMAGE_FOLDER" "$IMAGE_FOLDER/darks" "$IMAGE_FOLDER/export" 2>/dev/null || true
+
+        if [ -f "$FLASK_JSON" ] && command -v jq >/dev/null 2>&1; then
+            jq --arg img "$IMAGE_FOLDER" '.INDI_ALLSKY_IMAGE_FOLDER = $img' "$FLASK_JSON" > "${FLASK_JSON}.tmp" && \
+                mv -f "${FLASK_JSON}.tmp" "$FLASK_JSON"
+            chmod 660 "$FLASK_JSON"
+            chown "$ALLSKY_USER:www-data" "$FLASK_JSON" 2>/dev/null || true
+        fi
+
         # Configure Web Server (Apache2 or Nginx)
         # Check if Nginx is explicitly active/running, otherwise default to Apache2 if installed
         USE_NGINX=0
@@ -297,8 +322,11 @@ with app.app_context():
             TMP_NGINX=$(mktemp)
             sed \
                 -e "s|%ALLSKY_DIRECTORY%|/usr/share/indi-allsky|g" \
-                -e "s|%ALLSKY_PORT%|${HTTP_PORT:-80}|g" \
-                -e "s|%ALLSKY_SSL_PORT%|${HTTPS_PORT:-443}|g" \
+                -e "s|%DOCROOT_FOLDER%|/var/www/html/allsky|g" \
+                -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+                -e "s|%HTTP_PORT%|${HTTP_PORT:-80}|g" \
+                -e "s|%HTTPS_PORT%|${HTTPS_PORT:-443}|g" \
+                -e "s|%UPSTREAM_SERVER%|unix:/run/indi-allsky/gunicorn-indi-allsky.sock|g" \
                 /usr/share/indi-allsky/service/nginx_indi-allsky.conf > "$TMP_NGINX"
 
             mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
@@ -330,7 +358,7 @@ with app.app_context():
             sed \
                 -e "s|%ALLSKY_DIRECTORY%|/usr/share/indi-allsky|g" \
                 -e "s|%ALLSKY_ETC%|/etc/indi-allsky|g" \
-                -e "s|%IMAGE_FOLDER%|/var/www/html/allsky/images|g" \
+                -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
                 -e "s|%HTTP_PORT%|${HTTP_PORT:-80}|g" \
                 -e "s|%HTTPS_PORT%|${HTTPS_PORT:-443}|g" \
                 -e "s|%APACHE_ETC%|/etc/apache2|g" \
