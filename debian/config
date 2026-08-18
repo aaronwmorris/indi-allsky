@@ -38,6 +38,8 @@ if [ -f "$FLASK_JSON" ] && command -v jq >/dev/null 2>&1; then
     AUTH_ALL=$(jq -r '.LOCAL_AUTH_ENABLE // empty' "$FLASK_JSON" 2>/dev/null || true)
     if [ "$AUTH_ALL" = "true" ] || [ "$AUTH_ALL" = "false" ]; then
         db_set indi-allsky/web_auth_all_views "$AUTH_ALL" || true
+    else
+        db_set indi-allsky/web_auth_all_views "false" || true
     fi
 
     OIDC_EN=$(jq -r '.OIDC_ENABLE // empty' "$FLASK_JSON" 2>/dev/null || true)
