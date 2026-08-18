@@ -59,6 +59,7 @@ case "$1" in
         pkill -f 'allsky.py' 2>/dev/null || true
 
         # Fetch debconf responses
+        db_get indi-allsky/reuse_existing_config 2>/dev/null; REUSE_CONFIG="$RET" || true
         db_get indi-allsky/camera_interface; CAMERA_INTERFACE="$RET"
         db_get indi-allsky/libcamera_sensor; LIBCAMERA_SENSOR="$RET"
         db_get indi-allsky/ccd_driver; CCD_DRIVER="$RET"
@@ -243,21 +244,23 @@ with app.app_context():
         echo "indi-allsky: Bootstrapping configuration..."
         PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/config.py bootstrap --image_folder /var/www/html/allsky/images || true
 
-        # Apply debconf location & observatory parameters to database configuration
-        TMP_CFG=$(mktemp)
-        PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/config.py dumpfile --outfile "$TMP_CFG" 2>/dev/null || true
-        if [ -f "$TMP_CFG" ] && [ -s "$TMP_CFG" ] && command -v jq >/dev/null 2>&1; then
-            TMP_UPDATED=$(mktemp)
-            jq \
-                --argjson lat "${LOCATION_LATITUDE:-0.0}" \
-                --argjson lon "${LOCATION_LONGITUDE:-0.0}" \
-                --argjson elev "${LOCATION_ELEVATION:-0}" \
-                '.LOCATION_LATITUDE = ($lat | tonumber) | .LOCATION_LONGITUDE = ($lon | tonumber) | .LOCATION_ELEVATION = ($elev | tonumber | floor)' \
-                "$TMP_CFG" > "$TMP_UPDATED" 2>/dev/null && \
-            PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/config.py load -c "$TMP_UPDATED" --force || true
-            rm -f "$TMP_UPDATED"
+        # Apply debconf location & observatory parameters ONLY if not reusing existing config and values were provided
+        if [ "$REUSE_CONFIG" != "true" ] && [ -n "$LOCATION_LATITUDE" ] && [ -n "$LOCATION_LONGITUDE" ]; then
+            TMP_CFG=$(mktemp)
+            PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/config.py dumpfile --outfile "$TMP_CFG" 2>/dev/null || true
+            if [ -f "$TMP_CFG" ] && [ -s "$TMP_CFG" ] && command -v jq >/dev/null 2>&1; then
+                TMP_UPDATED=$(mktemp)
+                jq \
+                    --argjson lat "${LOCATION_LATITUDE}" \
+                    --argjson lon "${LOCATION_LONGITUDE}" \
+                    --argjson elev "${LOCATION_ELEVATION:-0}" \
+                    '.LOCATION_LATITUDE = ($lat | tonumber) | .LOCATION_LONGITUDE = ($lon | tonumber) | .LOCATION_ELEVATION = ($elev | tonumber | floor)' \
+                    "$TMP_CFG" > "$TMP_UPDATED" 2>/dev/null && \
+                PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/config.py load -c "$TMP_UPDATED" --force || true
+                rm -f "$TMP_UPDATED"
+            fi
+            rm -f "$TMP_CFG"
         fi
-        rm -f "$TMP_CFG"
 
         # Only provision a default admin account on fresh installs (check if active admin user already exists)
         DB_ADMIN_COUNT=0
