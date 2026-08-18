@@ -7,6 +7,8 @@ db_capb backup
 
 # Pre-populate debconf answers from existing /etc/indi-allsky/flask.json if present
 FLASK_JSON="/etc/indi-allsky/flask.json"
+INDISERVER_ENV="/etc/indi-allsky/indiserver.env"
+
 if [ -f "$FLASK_JSON" ] && command -v jq >/dev/null 2>&1; then
     CAMERA_INT=$(jq -r '.CAMERA_INTERFACE // empty' "$FLASK_JSON" 2>/dev/null || true)
     if [ -n "$CAMERA_INT" ]; then
@@ -33,6 +35,11 @@ if [ -f "$FLASK_JSON" ] && command -v jq >/dev/null 2>&1; then
         db_set indi-allsky/indi_port "$INDI_P" || true
     fi
 
+    AUTH_ALL=$(jq -r '.LOCAL_AUTH_ENABLE // empty' "$FLASK_JSON" 2>/dev/null || true)
+    if [ "$AUTH_ALL" = "true" ] || [ "$AUTH_ALL" = "false" ]; then
+        db_set indi-allsky/web_auth_all_views "$AUTH_ALL" || true
+    fi
+
     OIDC_EN=$(jq -r '.OIDC_ENABLE // empty' "$FLASK_JSON" 2>/dev/null || true)
     if [ "$OIDC_EN" = "true" ] || [ "$OIDC_EN" = "false" ]; then
         db_set indi-allsky/oidc_enable "$OIDC_EN" || true
@@ -49,8 +56,15 @@ if [ -f "$FLASK_JSON" ] && command -v jq >/dev/null 2>&1; then
     fi
 fi
 
+if [ -f "$INDISERVER_ENV" ]; then
+    GPS_DRV=$(grep -E '^GPS_DRIVER=' "$INDISERVER_ENV" 2>/dev/null | cut -d= -f2- | tr -d '"' || true)
+    if [ -n "$GPS_DRV" ]; then
+        db_set indi-allsky/gps_driver "$GPS_DRV" || true
+    fi
+fi
+
 STATE=1
-while [ "$STATE" -ge 1 ] && [ "$STATE" -le 6 ]; do
+while [ "$STATE" -ge 1 ] && [ "$STATE" -le 7 ]; do
     case "$STATE" in
         1)
             # Step 1: Camera Interface
@@ -62,16 +76,30 @@ while [ "$STATE" -ge 1 ] && [ "$STATE" -le 6 ]; do
             fi
             ;;
         2)
-            # Step 2: INDI CCD Driver (if camera_interface is indi)
+            # Step 2: Camera Sub-Settings (CCD Driver, Sensor Profile, GPS Driver)
             db_get indi-allsky/camera_interface
-            if [ "$RET" = "indi" ]; then
+            CAM_INT="$RET"
+
+            if [ "$CAM_INT" = "libcamera" ]; then
+                db_input high indi-allsky/libcamera_sensor || true
+                if db_go; then
+                    STATE=3
+                else
+                    STATE=1
+                fi
+            elif [ "$CAM_INT" = "indi" ] || [ "$CAM_INT" = "indi_accumulator" ] || [ "$CAM_INT" = "indi_passive" ]; then
                 db_input high indi-allsky/ccd_driver || true
+                db_input high indi-allsky/gps_driver || true
                 if db_go; then
                     STATE=3
                 else
                     STATE=1
                 fi
             else
+                # For simulator, test patterns, pycurl, mqtt
+                if [ "$CAM_INT" = "simulator" ]; then
+                    db_set indi-allsky/ccd_driver "indi_simulator_ccd" || true
+                fi
                 STATE=3
             fi
             ;;
@@ -83,17 +111,14 @@ while [ "$STATE" -ge 1 ] && [ "$STATE" -le 6 ]; do
             if db_go; then
                 STATE=4
             else
-                db_get indi-allsky/camera_interface
-                if [ "$RET" = "indi" ]; then
-                    STATE=2
-                else
-                    STATE=1
-                fi
+                STATE=2
             fi
             ;;
         4)
-            # Step 4: Web Admin Credentials
+            # Step 4: Web Auth Scope & Initial Admin Account
+            db_input high indi-allsky/web_auth_all_views || true
             db_input high indi-allsky/web_user || true
+            db_input high indi-allsky/web_name || true
             db_input high indi-allsky/web_pass || true
             db_input high indi-allsky/web_pass_confirm || true
             db_input high indi-allsky/web_email || true
@@ -128,11 +153,40 @@ while [ "$STATE" -ge 1 ] && [ "$STATE" -le 6 ]; do
             fi
             ;;
         5)
-            # Step 5: Observatory Location
+            # Step 5: Observatory Location with Range Validation
             db_input high indi-allsky/latitude || true
             db_input high indi-allsky/longitude || true
             db_input high indi-allsky/elevation || true
             if db_go; then
+                db_get indi-allsky/latitude
+                LAT="$RET"
+                db_get indi-allsky/longitude
+                LON="$RET"
+
+                # Validate Latitude (-90 to 90)
+                if [ -n "$LAT" ]; then
+                    INVALID_LAT=$(python3 -c "try: lat=float('$LAT'); print('0' if -90.0 <= lat <= 90.0 else '1')
+except: print('1')" 2>/dev/null || echo "0")
+                    if [ "$INVALID_LAT" = "1" ]; then
+                        db_fset indi-allsky/invalid_latitude seen false || true
+                        db_input critical indi-allsky/invalid_latitude || true
+                        db_go || true
+                        continue
+                    fi
+                fi
+
+                # Validate Longitude (-180 to 180)
+                if [ -n "$LON" ]; then
+                    INVALID_LON=$(python3 -c "try: lon=float('$LON'); print('0' if -180.0 <= lon <= 180.0 else '1')
+except: print('1')" 2>/dev/null || echo "0")
+                    if [ "$INVALID_LON" = "1" ]; then
+                        db_fset indi-allsky/invalid_longitude seen false || true
+                        db_input critical indi-allsky/invalid_longitude || true
+                        db_go || true
+                        continue
+                    fi
+                fi
+
                 STATE=6
             else
                 STATE=4
@@ -157,8 +211,19 @@ while [ "$STATE" -ge 1 ] && [ "$STATE" -le 6 ]; do
                 STATE=5
             fi
             ;;
+        7)
+            # Step 7: System Performance & Hardware Tweaks
+            db_input high indi-allsky/install_mosquitto || true
+            db_input high indi-allsky/disable_leds || true
+            db_input high indi-allsky/enable_watchdog || true
+            db_input high indi-allsky/system_optimize || true
+            if db_go; then
+                STATE=8
+            else
+                STATE=6
+            fi
+            ;;
     esac
 done
 
 exit 0
-

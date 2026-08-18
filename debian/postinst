@@ -44,11 +44,15 @@ case "$1" in
 
         # Fetch debconf responses
         db_get indi-allsky/camera_interface; CAMERA_INTERFACE="$RET"
+        db_get indi-allsky/libcamera_sensor; LIBCAMERA_SENSOR="$RET"
         db_get indi-allsky/ccd_driver; CCD_DRIVER="$RET"
+        db_get indi-allsky/gps_driver; GPS_DRIVER="$RET"
         db_get indi-allsky/http_port; HTTP_PORT="$RET"
         db_get indi-allsky/https_port; HTTPS_PORT="$RET"
         db_get indi-allsky/indi_port; INDI_PORT="$RET"
+        db_get indi-allsky/web_auth_all_views; WEB_AUTH_ALL_VIEWS="$RET"
         db_get indi-allsky/web_user; WEB_USER="$RET"
+        db_get indi-allsky/web_name; WEB_NAME="$RET"
         db_get indi-allsky/web_pass; WEB_PASS="$RET"
         db_get indi-allsky/web_email; WEB_EMAIL="$RET"
         db_get indi-allsky/latitude; LOCATION_LATITUDE="$RET"
@@ -58,6 +62,14 @@ case "$1" in
         db_get indi-allsky/oidc_client_id; OIDC_CLIENT_ID="$RET"
         db_get indi-allsky/oidc_client_secret; OIDC_CLIENT_SECRET="$RET"
         db_get indi-allsky/oidc_discovery_url; OIDC_DISCOVERY_URL="$RET"
+        db_get indi-allsky/install_mosquitto; INSTALL_MOSQUITTO="$RET"
+        db_get indi-allsky/disable_leds; DISABLE_LEDS="$RET"
+        db_get indi-allsky/enable_watchdog; ENABLE_WATCHDOG="$RET"
+        db_get indi-allsky/system_optimize; SYSTEM_OPTIMIZE="$RET"
+
+        if [ "$CAMERA_INTERFACE" = "libcamera" ] && [ -n "$LIBCAMERA_SENSOR" ]; then
+            CAMERA_INTERFACE="$LIBCAMERA_SENSOR"
+        fi
 
         # Generate /etc/indi-allsky/flask.json if not present (from shipped template)
         FLASK_JSON="/etc/indi-allsky/flask.json"
@@ -76,6 +88,7 @@ case "$1" in
                     --argjson http_port "${HTTP_PORT:-80}" \
                     --argjson https_port "${HTTPS_PORT:-443}" \
                     --argjson indi_port "${INDI_PORT:-7624}" \
+                    --argjson local_auth "${WEB_AUTH_ALL_VIEWS:-false}" \
                     --argjson oidc_enable "${OIDC_ENABLE:-false}" \
                     --arg oidc_client_id "${OIDC_CLIENT_ID}" \
                     --arg oidc_client_secret "${OIDC_CLIENT_SECRET}" \
@@ -88,6 +101,7 @@ case "$1" in
                     .HTTP_PORT = $http_port |
                     .HTTPS_PORT = $https_port |
                     .INDI_PORT = $indi_port |
+                    .LOCAL_AUTH_ENABLE = $local_auth |
                     .OIDC_ENABLE = $oidc_enable |
                     .OIDC_CLIENT_ID = $oidc_client_id |
                     .OIDC_CLIENT_SECRET = $oidc_client_secret |
@@ -102,6 +116,7 @@ case "$1" in
     "SQLALCHEMY_DATABASE_URI": "sqlite:////var/lib/indi-allsky/indi-allsky.sqlite",
     "CAMERA_INTERFACE": "${CAMERA_INTERFACE}",
     "CCD_DRIVER": "${CCD_DRIVER}",
+    "LOCAL_AUTH_ENABLE": ${WEB_AUTH_ALL_VIEWS:-false},
     "OIDC_ENABLE": ${OIDC_ENABLE:-false}
 }
 EOFJ
@@ -120,8 +135,14 @@ EOFJ
 
         # Generate /etc/indi-allsky/indiserver.env
         INDISERVER_ENV="/etc/indi-allsky/indiserver.env"
+        if [ "$GPS_DRIVER" = "None" ] || [ -z "$GPS_DRIVER" ]; then
+            GPS_ENV_LINE=""
+        else
+            GPS_ENV_LINE="GPS_DRIVER=\"$GPS_DRIVER\""
+        fi
         cat <<EOF > "$INDISERVER_ENV"
 CCD_DRIVER="${CCD_DRIVER:-indi_simulator_ccd}"
+${GPS_ENV_LINE}
 EOF
         chmod 644 "$INDISERVER_ENV"
 
@@ -222,6 +243,7 @@ with app.app_context():
 
         # Create initial web admin account
         ADMIN_USER="${WEB_USER:-admin}"
+        ADMIN_NAME="${WEB_NAME:-Admin User}"
         ADMIN_PASS="${WEB_PASS:-adminpassword}"
         ADMIN_EMAIL="${WEB_EMAIL:-admin@example.org}"
 
@@ -230,7 +252,7 @@ with app.app_context():
         fi
 
         if [ -f "/usr/share/indi-allsky/misc/usertool.py" ]; then
-            PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py adduser -u "$ADMIN_USER" -p "$ADMIN_PASS" -f "$ADMIN_USER" -e "$ADMIN_EMAIL" || true
+            PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py adduser -u "$ADMIN_USER" -p "$ADMIN_PASS" -f "$ADMIN_NAME" -e "$ADMIN_EMAIL" || true
             PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py setadmin -u "$ADMIN_USER" || true
         fi
 
@@ -388,6 +410,46 @@ EOF
                 systemctl restart indiserver.service 2>/dev/null || systemctl start indiserver.service 2>/dev/null || true
                 ;;
         esac
+
+        # Optional System Performance & Hardware Optimizations
+        if [ "$SYSTEM_OPTIMIZE" = "true" ]; then
+            echo "indi-allsky: Applying system performance optimizations (sysctl & journald)..."
+            cat <<EOF > /etc/sysctl.d/90-indi-allsky.conf
+vm.swappiness = 1
+EOF
+            sysctl --system 2>/dev/null || true
+
+            mkdir -p /etc/systemd/journald.conf.d
+            cat <<EOF > /etc/systemd/journald.conf.d/90-indi-allsky.conf
+[Journal]
+Storage=volatile
+Compress=yes
+RateLimitIntervalSec=30s
+RateLimitBurst=10000
+SystemMaxUse=20M
+EOF
+            systemctl restart systemd-journald 2>/dev/null || true
+        fi
+
+        if [ "$ENABLE_WATCHDOG" = "true" ]; then
+            echo "indi-allsky: Enabling systemd watchdog daemon..."
+            mkdir -p /etc/systemd/system.conf.d
+            cat <<EOF > /etc/systemd/system.conf.d/indi-allsky-watchdog.conf
+[Manager]
+RuntimeWatchdogSec=10
+ShutdownWatchdogSec=10min
+EOF
+        fi
+
+        if [ "$DISABLE_LEDS" = "true" ] && [ -f "/usr/share/indi-allsky/misc/setup_disable_leds.sh" ]; then
+            echo "indi-allsky: Disabling hardware activity LEDs..."
+            bash /usr/share/indi-allsky/misc/setup_disable_leds.sh 2>/dev/null || true
+        fi
+
+        if [ "$INSTALL_MOSQUITTO" = "true" ] && [ -f "/usr/share/indi-allsky/misc/setup_mosquitto_mqtt.sh" ]; then
+            echo "indi-allsky: Setting up Mosquitto MQTT broker..."
+            bash /usr/share/indi-allsky/misc/setup_mosquitto_mqtt.sh 2>/dev/null || true
+        fi
 
         # Security: Clear sensitive credentials from debconf database
         db_set indi-allsky/web_pass "" || true
