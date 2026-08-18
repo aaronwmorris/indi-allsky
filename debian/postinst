@@ -259,10 +259,10 @@ with app.app_context():
         fi
         rm -f "$TMP_CFG"
 
-        # Only provision a default admin account on fresh installs (check if admin user already exists)
+        # Only provision a default admin account on fresh installs (check if active human admin user already exists)
         DB_ADMIN_COUNT=0
         if [ -f "$DB_FILE" ] && command -v sqlite3 >/dev/null 2>&1; then
-            DB_ADMIN_COUNT=$(sqlite3 "$DB_FILE" "SELECT count(*) FROM user WHERE admin = 1;" 2>/dev/null || echo "0")
+            DB_ADMIN_COUNT=$(sqlite3 "$DB_FILE" "SELECT count(*) FROM user WHERE admin = 1 AND username != 'system';" 2>/dev/null || echo "0")
         fi
 
         if [ "${DB_ADMIN_COUNT:-0}" -eq 0 ] && [ -f "/usr/share/indi-allsky/misc/usertool.py" ]; then

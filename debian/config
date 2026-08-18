@@ -152,7 +152,7 @@ while [ "$STATE" -ge 1 ] && [ "$STATE" -le 7 ]; do
 
             DB_HAS_ADMIN=0
             if [ -f "$DB_FILE" ] && command -v sqlite3 >/dev/null 2>&1; then
-                ADMIN_COUNT=$(sqlite3 "$DB_FILE" "SELECT count(*) FROM user WHERE admin = 1;" 2>/dev/null || echo "0")
+                ADMIN_COUNT=$(sqlite3 "$DB_FILE" "SELECT count(*) FROM user WHERE admin = 1 AND username != 'system';" 2>/dev/null || echo "0")
                 if [ "${ADMIN_COUNT:-0}" -gt 0 ]; then
                     DB_HAS_ADMIN=1
                 fi
