@@ -31,6 +31,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          fetch-tags: true
 
       - name: Set up QEMU for Multi-Arch Builds
         uses: docker/setup-qemu-action@v3
@@ -89,15 +90,17 @@ jobs:
             echo "* **Distributions**: Debian 12 (Bookworm), Debian 13 (Trixie), Ubuntu 24.04 (Noble)"
             echo ""
             echo "### What's Changed"
-            PREV_TAG=$(git describe --tags --abbrev=0 --match "indi_v*" --match "v*" HEAD^ 2>/dev/null || git describe --tags --abbrev=0 2>/dev/null || true)
+            # Ensure all git tags are fetched locally
+            git fetch --tags --force 2>/dev/null || true
+            PREV_TAG=$(git describe --tags --abbrev=0 --match "indi_v*" --match "v*" HEAD^ 2>/dev/null || git tag -l "indi_v*" "v*" --sort=-creatordate | head -n 1)
             if [ -n "$PREV_TAG" ]; then
               echo "Commits since **${PREV_TAG}**:"
               echo ""
-              git log "${PREV_TAG}..HEAD" --pretty=format:"* %s ([%h](https://github.com/${{ github.repository }}/commit/%H)) - %an"
+              git log --no-merges "${PREV_TAG}..HEAD" --pretty=format:"* %s ([%h](https://github.com/${{ github.repository }}/commit/%H)) - %an"
             else
-              echo "Commits in this build:"
+              echo "Recent commits:"
               echo ""
-              git log --pretty=format:"* %s ([%h](https://github.com/${{ github.repository }}/commit/%H)) - %an"
+              git log --no-merges -n 20 --pretty=format:"* %s ([%h](https://github.com/${{ github.repository }}/commit/%H)) - %an"
             fi
             echo ""
             echo "---"
