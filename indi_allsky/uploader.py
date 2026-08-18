@@ -562,9 +562,6 @@ class FileUploader(Thread):
         logger.info('Upload transaction completed in %0.4f s', upload_elapsed_s)
 
 
-        task.setSuccess('File uploaded')
-
-
         if entry and action == constants.TRANSFER_UPLOAD:
             entry.uploaded = True
             db.session.commit()
@@ -598,6 +595,9 @@ class FileUploader(Thread):
 
         #logger.info('Remove local: %s', str(remove_local))
         self.cleanup(local_file_p, remove_local=remove_local)
+
+
+        task.setSuccess('File uploaded')
 
 
         #raise Exception('Testing uncaught exception')
