@@ -8,7 +8,19 @@ on:
     # Nightly build every night at 02:00 UTC
     - cron: '0 2 * * *'
   workflow_dispatch:
+    inputs:
+      indi_core_tag:
+        description: 'Pinned INDI Core Git Tag'
+        required: false
+        default: 'v2.2.4.2'
+      indi_3rdparty_tag:
+        description: 'Pinned INDI 3rd-Party Git Tag'
+        required: false
+        default: 'v2.2.4.1'
 
+env:
+  INDI_CORE_TAG: 'v2.2.4.2'
+  INDI_3RDPARTY_TAG: 'v2.2.4.1'
 
 jobs:
   build-deb:
@@ -60,12 +72,9 @@ jobs:
             IS_RELEASE="false"
           fi
 
-          # Resolve latest upstream INDI releases dynamically
-          INDI_CORE_TAG=$(curl -s https://api.github.com/repos/indilib/indi/releases/latest | jq -r '.tag_name // empty' 2>/dev/null || true)
-          INDI_CORE_TAG="${INDI_CORE_TAG:-v2.2.4.2}"
-
-          INDI_3RDPARTY_TAG=$(curl -s https://api.github.com/repos/indilib/indi-3rdparty/releases/latest | jq -r '.tag_name // empty' 2>/dev/null || true)
-          INDI_3RDPARTY_TAG="${INDI_3RDPARTY_TAG:-v2.2.4.1}"
+          # Use pinned stable INDI releases (with workflow_dispatch input fallback)
+          INDI_CORE_TAG="${{ inputs.indi_core_tag || env.INDI_CORE_TAG }}"
+          INDI_3RDPARTY_TAG="${{ inputs.indi_3rdparty_tag || env.INDI_3RDPARTY_TAG }}"
           INDI_3RDPARTY_VER="${INDI_3RDPARTY_TAG#v}"
 
           echo "VERSION=$VERSION" >> $GITHUB_ENV
@@ -74,7 +83,7 @@ jobs:
           echo "INDI_CORE_TAG=$INDI_CORE_TAG" >> $GITHUB_ENV
           echo "INDI_3RDPARTY_TAG=$INDI_3RDPARTY_TAG" >> $GITHUB_ENV
           echo "INDI_3RDPARTY_VER=$INDI_3RDPARTY_VER" >> $GITHUB_ENV
-          echo "Building Version: $VERSION | Suite: $SUITE | INDI Core: $INDI_CORE_TAG | INDI 3rdParty: $INDI_3RDPARTY_TAG"
+          echo "Building Version: $VERSION | Suite: $SUITE | Pinned INDI Core: $INDI_CORE_TAG | Pinned INDI 3rdParty: $INDI_3RDPARTY_TAG"
 
       - name: Generate Dynamic Version & debian/changelog
         run: |
