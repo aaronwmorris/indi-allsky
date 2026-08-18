@@ -65,6 +65,20 @@ if [ -f "$INDISERVER_ENV" ]; then
     fi
 fi
 
+# Pre-populate observatory coordinates from SQLite database if present
+DB_FILE="/var/lib/indi-allsky/indi-allsky.sqlite"
+if [ -f "$DB_FILE" ] && command -v sqlite3 >/dev/null 2>&1; then
+    CFG_JSON=$(sqlite3 "$DB_FILE" "SELECT data FROM config ORDER BY id DESC LIMIT 1;" 2>/dev/null || true)
+    if [ -n "$CFG_JSON" ] && command -v jq >/dev/null 2>&1; then
+        DB_LAT=$(echo "$CFG_JSON" | jq -r '.LOCATION_LATITUDE // empty' 2>/dev/null || true)
+        [ -n "$DB_LAT" ] && db_set indi-allsky/latitude "$DB_LAT" || true
+        DB_LON=$(echo "$CFG_JSON" | jq -r '.LOCATION_LONGITUDE // empty' 2>/dev/null || true)
+        [ -n "$DB_LON" ] && db_set indi-allsky/longitude "$DB_LON" || true
+        DB_ELEV=$(echo "$CFG_JSON" | jq -r '.LOCATION_ELEVATION // empty' 2>/dev/null || true)
+        [ -n "$DB_ELEV" ] && db_set indi-allsky/elevation "$DB_ELEV" || true
+    fi
+fi
+
 STATE=1
 while [ "$STATE" -ge 1 ] && [ "$STATE" -le 7 ]; do
     case "$STATE" in
@@ -117,18 +131,18 @@ while [ "$STATE" -ge 1 ] && [ "$STATE" -le 7 ]; do
             fi
             ;;
         4)
-            # Step 4: Web Auth Scope & Initial Admin Account (only prompted on fresh installs)
+            # Step 4: Web Auth Scope & Initial Admin Account (skipped if an admin user already exists)
             db_input high indi-allsky/web_auth_all_views || true
 
-            DB_HAS_USERS=0
-            if [ -f "/var/lib/indi-allsky/indi-allsky.sqlite" ] && command -v sqlite3 >/dev/null 2>&1; then
-                USER_COUNT=$(sqlite3 /var/lib/indi-allsky/indi-allsky.sqlite "SELECT count(*) FROM users;" 2>/dev/null || echo "0")
-                if [ "${USER_COUNT:-0}" -gt 0 ]; then
-                    DB_HAS_USERS=1
+            DB_HAS_ADMIN=0
+            if [ -f "$DB_FILE" ] && command -v sqlite3 >/dev/null 2>&1; then
+                ADMIN_COUNT=$(sqlite3 "$DB_FILE" "SELECT count(*) FROM user WHERE admin = 1;" 2>/dev/null || echo "0")
+                if [ "${ADMIN_COUNT:-0}" -gt 0 ]; then
+                    DB_HAS_ADMIN=1
                 fi
             fi
 
-            if [ "$DB_HAS_USERS" = "0" ]; then
+            if [ "$DB_HAS_ADMIN" = "0" ]; then
                 db_input high indi-allsky/web_user || true
                 db_input high indi-allsky/web_name || true
                 db_input high indi-allsky/web_pass || true
@@ -137,7 +151,7 @@ while [ "$STATE" -ge 1 ] && [ "$STATE" -le 7 ]; do
             fi
 
             if db_go; then
-                if [ "$DB_HAS_USERS" = "0" ]; then
+                if [ "$DB_HAS_ADMIN" = "0" ]; then
                     db_get indi-allsky/web_pass
                     PASS="$RET"
                     db_get indi-allsky/web_pass_confirm

@@ -32,16 +32,31 @@ case "$1" in
         fi
 
         # Migrate from setup.sh user-level services to system-level services
-        # Remove old user-level systemd unit files if they exist and terminate old processes
+        # Disable and remove all legacy user-level systemd units and timers across all user accounts
         for OLD_USER_HOME in /home/*; do
+            [ -d "$OLD_USER_HOME" ] || continue
+            UNAME=$(basename "$OLD_USER_HOME")
+            UID_NUM=$(id -u "$UNAME" 2>/dev/null || true)
             if [ -d "${OLD_USER_HOME}/.config/systemd/user" ]; then
                 for UNIT in indi-allsky.service indi-allsky.timer indiserver.service indiserver.timer \
-                            gunicorn-indi-allsky.service gunicorn-indi-allsky.socket upgrade-indi-allsky.service; do
+                            gunicorn-indi-allsky.service gunicorn-indi-allsky.socket \
+                            upgrade-indi-allsky.service upgrade-indi-allsky.timer; do
+                    if [ -n "$UID_NUM" ] && [ "$UID_NUM" -ge 1000 ]; then
+                        XDG_RUNTIME_DIR="/run/user/${UID_NUM}" su - "$UNAME" -c "systemctl --user stop ${UNIT} 2>/dev/null || true; systemctl --user disable ${UNIT} 2>/dev/null || true" 2>/dev/null || true
+                    fi
                     rm -f "${OLD_USER_HOME}/.config/systemd/user/${UNIT}"
+                    rm -f "${OLD_USER_HOME}/.config/systemd/user/default.target.wants/${UNIT}"
+                    rm -f "${OLD_USER_HOME}/.config/systemd/user/timers.target.wants/${UNIT}"
+                    rm -f "${OLD_USER_HOME}/.config/systemd/user/sockets.target.wants/${UNIT}"
+                    rm -f "${OLD_USER_HOME}/.config/systemd/user/multi-user.target.wants/${UNIT}"
                 done
+                if [ -n "$UID_NUM" ] && [ "$UID_NUM" -ge 1000 ]; then
+                    XDG_RUNTIME_DIR="/run/user/${UID_NUM}" su - "$UNAME" -c "systemctl --user daemon-reload 2>/dev/null || true" 2>/dev/null || true
+                fi
             fi
         done
         pkill -f 'virtualenv/indi-allsky' 2>/dev/null || true
+        pkill -f 'allsky.py' 2>/dev/null || true
 
         # Fetch debconf responses
         db_get indi-allsky/camera_interface; CAMERA_INTERFACE="$RET"
@@ -244,13 +259,13 @@ with app.app_context():
         fi
         rm -f "$TMP_CFG"
 
-        # Only provision a default admin account on fresh installs (never modify existing accounts during migrations/upgrades)
-        DB_USER_COUNT=0
+        # Only provision a default admin account on fresh installs (check if admin user already exists)
+        DB_ADMIN_COUNT=0
         if [ -f "$DB_FILE" ] && command -v sqlite3 >/dev/null 2>&1; then
-            DB_USER_COUNT=$(sqlite3 "$DB_FILE" "SELECT count(*) FROM users;" 2>/dev/null || echo "0")
+            DB_ADMIN_COUNT=$(sqlite3 "$DB_FILE" "SELECT count(*) FROM user WHERE admin = 1;" 2>/dev/null || echo "0")
         fi
 
-        if [ "${DB_USER_COUNT:-0}" -eq 0 ] && [ -f "/usr/share/indi-allsky/misc/usertool.py" ]; then
+        if [ "${DB_ADMIN_COUNT:-0}" -eq 0 ] && [ -f "/usr/share/indi-allsky/misc/usertool.py" ]; then
             ADMIN_USER="${WEB_USER:-admin}"
             ADMIN_NAME="${WEB_NAME:-Admin User}"
             ADMIN_PASS="${WEB_PASS:-adminpassword}"
