@@ -552,30 +552,63 @@ async function downloadImageWithOverlay() {
 
     try {
         const imgElem = document.getElementById('latest-image');
-        const starmapCanvas = document.querySelector('#starmap canvas');
-        const starmapElem = document.getElementById('starmap');
-
         if (!imgElem || !imgElem.src || !imgElem.complete || !imgElem.naturalWidth) {
             console.warn('Image is not loaded yet.');
             return;
         }
 
-        const renderWidth = imgElem.width || imgElem.offsetWidth || imgElem.naturalWidth;
-        const renderHeight = imgElem.height || imgElem.offsetHeight || imgElem.naturalHeight;
+        const fullWidth = imgElem.naturalWidth;
+        const fullHeight = imgElem.naturalHeight;
+        const image_circle_diameter = Number($("#IMAGE_CIRCLE_DIAMETER").val()) || fullWidth;
+        const offset_x = Number($("#OFFSET_X").val()) || 0;
+        const offset_y = Number($("#OFFSET_Y").val()) || 0;
+
+        const full_bias_left = ((( image_circle_diameter - fullWidth ) / 2) - offset_x ) * -1;
+        const full_bias_top = ((( image_circle_diameter - fullHeight ) / 2) + offset_y ) * -1;
 
         const canvas = document.createElement('canvas');
-        canvas.width = renderWidth;
-        canvas.height = renderHeight;
+        canvas.width = fullWidth;
+        canvas.height = fullHeight;
         const ctx = canvas.getContext('2d');
 
-        // Draw camera image
-        ctx.drawImage(imgElem, 0, 0, renderWidth, renderHeight);
+        // Draw camera image at full resolution
+        ctx.drawImage(imgElem, 0, 0, fullWidth, fullHeight);
 
-        // Draw starmap overlay if present
-        if (starmapCanvas && starmapElem) {
-            const left = parseFloat(starmapElem.style.left) || 0;
-            const top = parseFloat(starmapElem.style.top) || 0;
-            ctx.drawImage(starmapCanvas, left, top);
+        // Draw starmap overlay at full resolution if planetarium is active
+        if (planetarium && typeof planetarium.resize === 'function') {
+            const currWidth = planetarium.wide;
+            const currHeight = planetarium.tall;
+
+            // Render VirtualSky at full circle resolution
+            planetarium.resize(image_circle_diameter, image_circle_diameter);
+            if (typeof planetarium.drawImmediate === 'function') {
+                planetarium.drawImmediate();
+            }
+
+            const starmapCanvas = document.querySelector('#starmap canvas');
+            if (starmapCanvas) {
+                ctx.drawImage(starmapCanvas, full_bias_left, full_bias_top, image_circle_diameter, image_circle_diameter);
+            }
+
+            // Restore VirtualSky back to rendered preview size
+            if (currWidth && currHeight) {
+                planetarium.resize(currWidth, currHeight);
+                if (typeof planetarium.drawImmediate === 'function') {
+                    planetarium.drawImmediate();
+                }
+            }
+        } else {
+            const starmapCanvas = document.querySelector('#starmap canvas');
+            const starmapElem = document.getElementById('starmap');
+            if (starmapCanvas && starmapElem) {
+                const renderWidth = $('#latest-image').width() || fullWidth;
+                const scale = fullWidth / renderWidth;
+                const left = (parseFloat(starmapElem.style.left) || 0) * scale;
+                const top = (parseFloat(starmapElem.style.top) || 0) * scale;
+                const sw = (starmapCanvas.width || renderWidth) * scale;
+                const sh = (starmapCanvas.height || renderWidth) * scale;
+                ctx.drawImage(starmapCanvas, left, top, sw, sh);
+            }
         }
 
         canvas.toBlob(blob => {
@@ -595,15 +628,55 @@ async function downloadMapData() {
     $btn.prop('disabled', true);
 
     try {
-        const starmapCanvas = document.querySelector('#starmap canvas');
-        if (!starmapCanvas) {
-            console.warn('Star map canvas is not rendered yet.');
-            return;
-        }
+        const imgElem = document.getElementById('latest-image');
+        const fullWidth = (imgElem && imgElem.naturalWidth) ? imgElem.naturalWidth : 3500;
+        const image_circle_diameter = Number($("#IMAGE_CIRCLE_DIAMETER").val()) || fullWidth;
 
-        starmapCanvas.toBlob(blob => {
-            saveBlob(blob, 'virtualsky_map_' + getDownloadTimestamp() + '.png');
-        }, 'image/png');
+        if (planetarium && typeof planetarium.resize === 'function') {
+            const currWidth = planetarium.wide;
+            const currHeight = planetarium.tall;
+
+            // Render VirtualSky at full circle resolution
+            planetarium.resize(image_circle_diameter, image_circle_diameter);
+            if (typeof planetarium.drawImmediate === 'function') {
+                planetarium.drawImmediate();
+            }
+
+            const starmapCanvas = document.querySelector('#starmap canvas');
+            if (!starmapCanvas) {
+                console.warn('Star map canvas is not rendered yet.');
+                return;
+            }
+
+            // Copy to offscreen canvas before restoring planetarium size
+            const mapCanvas = document.createElement('canvas');
+            mapCanvas.width = image_circle_diameter;
+            mapCanvas.height = image_circle_diameter;
+            const mapCtx = mapCanvas.getContext('2d');
+            mapCtx.drawImage(starmapCanvas, 0, 0);
+
+            // Restore VirtualSky back to rendered preview size
+            if (currWidth && currHeight) {
+                planetarium.resize(currWidth, currHeight);
+                if (typeof planetarium.drawImmediate === 'function') {
+                    planetarium.drawImmediate();
+                }
+            }
+
+            mapCanvas.toBlob(blob => {
+                saveBlob(blob, 'virtualsky_map_' + getDownloadTimestamp() + '.png');
+            }, 'image/png');
+        } else {
+            const starmapCanvas = document.querySelector('#starmap canvas');
+            if (!starmapCanvas) {
+                console.warn('Star map canvas is not rendered yet.');
+                return;
+            }
+
+            starmapCanvas.toBlob(blob => {
+                saveBlob(blob, 'virtualsky_map_' + getDownloadTimestamp() + '.png');
+            }, 'image/png');
+        }
     } catch (err) {
         console.error('Failed to download map data:', err);
     } finally {
