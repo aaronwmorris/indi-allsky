@@ -24,19 +24,20 @@ env:
 
 jobs:
   build-deb:
-    name: Build .deb (${{ matrix.distro.name }} / ${{ matrix.arch }})
+    name: Build .deb (${{ matrix.distro }} / ${{ matrix.arch }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        distro:
-          - name: bookworm
-            image: debian:bookworm
-          - name: noble
-            image: ubuntu:noble
-          - name: trixie
-            image: debian:trixie
+        distro: [bookworm, noble, trixie]
         arch: [amd64, arm64]
+        include:
+          - distro: bookworm
+            image: debian:bookworm
+          - distro: noble
+            image: ubuntu:noble
+          - distro: trixie
+            image: debian:trixie
 
     steps:
       - name: Checkout Code
@@ -118,14 +119,17 @@ jobs:
       - name: Build Debian Package (.deb) in Native Multi-Arch Container
         run: |
           docker run --rm --platform linux/${{ matrix.arch }} \
-            -v "$PWD:/work" \
+            -v "$PWD:/work:z" \
             -w /work \
             -e DEBIAN_FRONTEND=noninteractive \
+            -e VERSION="${{ env.VERSION }}" \
+            -e SUITE="${{ env.SUITE }}" \
             -e INDI_CORE_TAG="${{ env.INDI_CORE_TAG }}" \
             -e INDI_3RDPARTY_TAG="${{ env.INDI_3RDPARTY_TAG }}" \
             -e INDI_3RDPARTY_VER="${{ env.INDI_3RDPARTY_VER }}" \
-            ${{ matrix.distro.image }} bash -c '
+            ${{ matrix.image }} bash -c '
               set -e
+              chmod -R a+rX /work 2>/dev/null || true
               apt-get update
               apt-get install -y --no-install-recommends \
                 build-essential \
@@ -252,8 +256,11 @@ jobs:
               dpkg-deb --build /tmp/pkg-3rdparty /indi-3rdparty_${INDI_3RDPARTY_VER}_${ARCH}.deb
 
               # 3. Build indi-allsky
-              echo "=== Building indi-allsky ==="
+              echo "=== Generating on-the-fly debian/changelog ==="
               cd /work
+              python3 misc/bump_version.py "${VERSION}" "${SUITE}"
+
+              echo "=== Building indi-allsky ==="
               dpkg-buildpackage -b -us -uc
 
               # Clean up any debug symbol packages before packaging
@@ -267,7 +274,7 @@ jobs:
                   ver=$(echo "$fname" | cut -d_ -f2)
                   arch_deb=$(echo "$fname" | cut -d_ -f3)
                   if [ -n "$pkg" ] && [ -n "$ver" ] && [ -n "$arch_deb" ]; then
-                    mv "$f" "/work/${pkg}_${ver}+${{ matrix.distro.name }}_${arch_deb}" 2>/dev/null || true
+                    mv "$f" "/work/${pkg}_${ver}+${{ matrix.distro }}_${arch_deb}" 2>/dev/null || true
                   fi
                 fi
               done
@@ -278,19 +285,19 @@ jobs:
       - name: Run Automated QA on Generated .deb
         run: |
           docker run --rm --platform linux/${{ matrix.arch }} \
-            -v "$PWD:/work" \
+            -v "$PWD:/work:z" \
             -w /work \
             -e DEBIAN_FRONTEND=noninteractive \
-            ${{ matrix.distro.image }} bash /work/debian/tests/qa_test.sh
+            ${{ matrix.image }} bash /work/debian/tests/qa_test.sh
 
       - name: Upload .deb Build Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: debs-${{ matrix.distro.name }}-${{ matrix.arch }}
+          name: debs-${{ matrix.distro }}-${{ matrix.arch }}
           path: "*.deb"
 
       - name: Upload Release Notes
-        if: matrix.distro.name == 'bookworm' && matrix.arch == 'amd64'
+        if: matrix.distro == 'bookworm' && matrix.arch == 'amd64'
         uses: actions/upload-artifact@v4
         with:
           name: release-notes
