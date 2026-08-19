@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 
 import argparse
+import json
 import locale
 import multiprocessing
 import logging
+import signal
+import sys
 
 
 logger = logging.getLogger('indi_allsky')
@@ -27,6 +30,7 @@ if __name__ == "__main__":
     except RuntimeError:
         pass
 
+    from indi_allsky.darks import DarkCapturePlanChanged
     from indi_allsky.darks import IndiAllSkyDarks
 
 
@@ -58,6 +62,13 @@ if __name__ == "__main__":
         required=False,
     )
     argparser.add_argument(
+        '--exposures',
+        help='exact exposure list in seconds [default: generated from the configured maximum]',
+        nargs='+',
+        type=float,
+        required=False,
+    )
+    argparser.add_argument(
         '--Binning',
         '-B',
         help='binning to use with gain list [default: 1]',
@@ -70,6 +81,12 @@ if __name__ == "__main__":
         help='temperature delta between dark frame sets [default: 5.0]',
         type=float,
         default=5.0,
+    )
+    argparser.add_argument(
+        '--temp_target',
+        help='optional final sensor temperature for temperature-series capture',
+        type=float,
+        required=False,
     )
     argparser.add_argument(
         '--Time_delta',
@@ -91,6 +108,24 @@ if __name__ == "__main__":
         help='flush camera id [default: 1]',
         type=int,
         default=1,
+    )
+    argparser.add_argument(
+        '--capture-profile',
+        help='capture only the selected day or night configuration [default: legacy automatic behaviour]',
+        choices=('auto', 'day', 'night'),
+        default='auto',
+    )
+    argparser.add_argument(
+        '--progress-file',
+        help='write machine-readable capture progress to this private file',
+        type=str,
+        required=False,
+    )
+    argparser.add_argument(
+        '--automation-manifest',
+        help='private supervised-job manifest; not required for normal command-line use',
+        type=str,
+        required=False,
     )
 
 
@@ -132,15 +167,31 @@ if __name__ == "__main__":
     iad = IndiAllSkyDarks()
     iad.count = args.Count
     iad.temp_delta = args.temp_delta
+    iad.temperature_target = args.temp_target
     iad.time_delta = args.Time_delta
     iad.bitmax = args.bitmax
     iad.daytime = args.daytime
     iad.reverse = args.reverse
     iad.flush_camera_id = args.flush_id
     iad.gain_list = args.gains
+    iad.exposure_list = args.exposures
     iad.binning = args.Binning
+    iad.capture_profile = args.capture_profile
+    iad.progress_file = args.progress_file
+    if args.automation_manifest:
+        with open(args.automation_manifest, 'r', encoding='utf-8') as manifest_file:
+            iad.automation_manifest = json.load(manifest_file)
+
+    signal.signal(signal.SIGINT, iad.sigint_handler_main)
+    signal.signal(signal.SIGTERM, iad.sigint_handler_main)
 
     action_func = getattr(iad, args.action)
-    action_func()
-
+    try:
+        action_func()
+    except DarkCapturePlanChanged:
+        logger.error('Live camera capabilities changed; plan review required')
+        sys.exit(75)
+    except KeyboardInterrupt:
+        logger.warning('Dark frame capture cancelled')
+        sys.exit(130)
 

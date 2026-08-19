@@ -3,6 +3,12 @@ import logging
 
 from .. import constants
 from .exposureBase import IndiAllSky_Exposure_Base
+from ..gain import EXPOSURE_MODE_DB
+from ..gain import EXPOSURE_MODE_DB_1_10
+from ..gain import EXPOSURE_MODE_ISO
+from ..gain import EXPOSURE_MODE_ISO_1_100
+from ..gain import db_to_gain
+from ..gain import gain_to_db
 
 logger = logging.getLogger('indi_allsky')
 
@@ -239,10 +245,10 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_1_10(IndiAllSky_Exposure_
 
 
     def gain2dB(self, gain) -> float:
-        return gain / 10.0
+        return gain_to_db(EXPOSURE_MODE_DB_1_10, gain)
 
     def dB2gain(self, dB) -> float:
-        return dB * 10.0
+        return db_to_gain(EXPOSURE_MODE_DB_1_10, dB)
 
 
 class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
@@ -251,10 +257,10 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB(IndiAllSky_Exposure_AutoG
 
 
     def gain2dB(self, gain) -> float:
-        return gain
+        return gain_to_db(EXPOSURE_MODE_DB, gain)
 
     def dB2gain(self, dB) -> float:
-        return dB
+        return db_to_gain(EXPOSURE_MODE_DB, dB)
 
 
 class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
@@ -263,10 +269,10 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO(IndiAllSky_Exposure_Auto
 
 
     def gain2dB(self, gain) -> float:
-        return 20 * math.log10(gain / 100)
+        return gain_to_db(EXPOSURE_MODE_ISO, gain)
 
     def dB2gain(self, dB) -> float:
-        return 100 * (10 ** (dB / 20))
+        return db_to_gain(EXPOSURE_MODE_ISO, dB)
 
 
 class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO_1_100(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
@@ -275,7 +281,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO_1_100(IndiAllSky_Exposur
 
 
     def gain2dB(self, gain) -> float:
-        return 20 * math.log10(gain)
+        return gain_to_db(EXPOSURE_MODE_ISO_1_100, gain)
 
     def dB2gain(self, dB) -> float:
-        return 10 ** (dB / 20)
+        return db_to_gain(EXPOSURE_MODE_ISO_1_100, dB)

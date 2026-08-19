@@ -1116,6 +1116,7 @@ class IndiClient(PyIndi.BaseClient):
             'max'     : -1,
             'step'    : 1,
             'format'  : '',
+            'values'  : [],
         }
 
 
@@ -1199,6 +1200,7 @@ class IndiClient(PyIndi.BaseClient):
                     'max'     : max(gain_list),
                     'step'    : None,
                     'format'  : '',
+                    'values'  : gain_list,
                 }
             except ValueError:
                 raise Exception('No available ISO/gain settings for camera.  Make sure your camera is set to Manual/Bulb mode.')
@@ -1239,6 +1241,7 @@ class IndiClient(PyIndi.BaseClient):
             'max'     : gain_ctl[index].max,
             'step'    : gain_ctl[index].step,
             'format'  : gain_ctl[index].format,
+            'values'  : [],
         }
 
         #logger.info('Gain Info: %s', pformat(gain_info))
@@ -1628,6 +1631,13 @@ class IndiClient(PyIndi.BaseClient):
             timeout = self.timeout
 
         while ctl.getState() not in statuses:
+            if self.disconnected:
+                raise CameraException(
+                    'Camera server disconnected while changing property {0}'.format(
+                        ctl.getName(),
+                    )
+                )
+
             #logger.info('%s/%s/%s: %s', ctl.getDeviceName(), ctl.getGroupName(), ctl.getName(), self.__state_to_str_p[ctl.getState()])
             if ctl.getState() == PyIndi.IPS_ALERT and 0.5 > time.time() - started:
                 raise RuntimeError('Error while changing property {0}'.format(ctl.getName()))

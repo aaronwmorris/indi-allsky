@@ -27,6 +27,7 @@ from .version import __config_level__
 from .config import IndiAllSkyConfig
 
 from . import constants
+from . import dark_automation
 
 from .exceptions import TimeOutException
 from .exceptions import ConfigSaveException
@@ -258,6 +259,8 @@ class IndiAllSky(object):
         self._reload = False
         self._shutdown = False
         self._terminate = False
+        self._dark_automation_task_id = None
+        self._dark_restore_audit_complete = False
 
         signal.signal(signal.SIGALRM, self.sigalarm_handler_main)
         signal.signal(signal.SIGHUP, self.sighup_handler_main)
@@ -766,6 +769,11 @@ class IndiAllSky(object):
                     self.reload_handler()
 
 
+            if self._dark_automation_task_id is not None:
+                self._runDarkAutomationTask()
+                continue
+
+
             # do *NOT* start workers inside of a flask context
             # doing so will cause TLS/SSL problems connecting to databases
 
@@ -776,6 +784,19 @@ class IndiAllSky(object):
             self._startSensorWorker()
             self._startFileUploadWorkers()
 
+            if not self._dark_restore_audit_complete:
+                try:
+                    restored_count = dark_automation.mark_pending_capture_restored(app)
+                except Exception as error:
+                    logger.error('Unable to update recovered dark calibration tasks: %s', str(error))
+                else:
+                    if restored_count:
+                        logger.warning(
+                            'Marked %d interrupted dark calibration task(s) as capture restored',
+                            restored_count,
+                        )
+                    self._dark_restore_audit_complete = True
+
 
             # Queue externally defined tasks
             with app.app_context():
@@ -784,6 +805,39 @@ class IndiAllSky(object):
 
 
             time.sleep(13)
+
+
+    def _runDarkAutomationTask(self):
+        task_id = self._dark_automation_task_id
+        logger.warning('Entering dark-library maintenance mode for task %d', task_id)
+
+        self._stopCaptureWorker()
+        self._stopImageWorker()
+        self._stopVideoWorker()
+        self._stopSensorWorker()
+        self._stopFileUploadWorkers()
+
+        try:
+            dark_automation.run_task(
+                app,
+                task_id,
+                Path(__file__).parent.parent,
+                stop_requested=lambda: self._shutdown,
+            )
+        finally:
+            self._dark_automation_task_id = None
+
+        if self._shutdown:
+            return
+
+        # Restore the complete worker set before reporting capture as resumed.
+        self._startCaptureWorker()
+        self._startImageWorker()
+        self._startVideoWorker()
+        self._startSensorWorker()
+        self._startFileUploadWorkers()
+        dark_automation.mark_capture_restored(app, task_id)
+        logger.warning('Normal capture restored after dark-library task %d', task_id)
 
 
     def reload_handler(self):
@@ -1315,6 +1369,37 @@ class IndiAllSky(object):
             .filter(IndiAllSkyDbTaskQueueTable.state.in_(orphaned_statuses))
 
         for task in old_task_list:
+            task_data = dict(task.data or {})
+            if task_data.get('action') == 'dark_automation':
+                if (
+                        task.state == TaskQueueState.MANUAL
+                        and task.createDate > (datetime.now() - timedelta(minutes=30))
+                ):
+                    # A dark job may have been submitted while a native
+                    # service was stopped.  Preserve it so startup can accept
+                    # it without requiring a second click.  Never retain the
+                    # covered-camera confirmation beyond this short window.
+                    continue
+
+                task_data['status'] = (
+                    'cancelled' if task_data.get('cancel_requested') else 'failed'
+                )
+                task_data['completed_utc'] = datetime.now(timezone.utc).isoformat()
+                task_data['error'] = (
+                    None
+                    if task_data.get('cancel_requested')
+                    else 'The capture service restarted during dark calibration.'
+                )
+                progress = dict(task_data.get('progress') or {})
+                progress['phase'] = task_data['status']
+                progress['message'] = (
+                    'Dark calibration was cancelled.'
+                    if task_data['status'] == 'cancelled'
+                    else 'Dark calibration stopped when the capture service restarted.'
+                )
+                task_data['progress'] = progress
+                task.data = task_data
+
             logger.warning('Expiring orphaned task %d', task.id)
             task.state = TaskQueueState.EXPIRED
 
@@ -1419,6 +1504,70 @@ class IndiAllSky(object):
                     self._reload = True
 
                     task.setSuccess('Updated paused status')
+
+                elif action == 'dark_automation':
+                    if self._dark_automation_task_id is not None:
+                        logger.warning('Skipping duplicate dark automation task')
+                        task_data = dict(task.data or {})
+                        task_data['status'] = 'failed'
+                        task_data['completed_utc'] = datetime.now(timezone.utc).isoformat()
+                        task_data['capture_restored'] = True
+                        task_data['error'] = 'Another dark calibration was already accepted.'
+                        progress = dict(task_data.get('progress') or {})
+                        progress.update({
+                            'phase': 'failed',
+                            'message': 'Another dark calibration was already accepted.',
+                        })
+                        task_data['progress'] = progress
+                        task.data = task_data
+                        task.setExpired()
+                        continue
+
+                    task_data = dict(task.data or {})
+                    if task_data.get('cancel_requested'):
+                        task_data['status'] = 'cancelled'
+                        task_data['completed_utc'] = datetime.now(timezone.utc).isoformat()
+                        task.data = task_data
+                        task.setExpired()
+                        continue
+
+                    logger.warning('Dark-library maintenance requested')
+                    try:
+                        capture_status = int(self._miscDb.getState('STATUS'))
+                    except (NoResultFound, TypeError, ValueError):
+                        capture_status = None
+                    night_value = int(self.night_av[0])
+                    night = bool(night_value) if night_value in (0, 1) else None
+                    restore_state = dark_automation.determine_capture_restore_state(
+                        self.config,
+                        status=capture_status,
+                        night=night,
+                    )
+                    task_data['capture_restore_state'] = restore_state
+                    task_data['status'] = 'preparing'
+                    progress = dict(task_data.get('progress') or {})
+                    if restore_state == dark_automation.CAPTURE_RESTORE_PAUSED:
+                        preparing_message = (
+                            'Normal image capture is paused; preparing dark calibration.'
+                        )
+                    elif restore_state == dark_automation.CAPTURE_RESTORE_SLEEPING:
+                        preparing_message = (
+                            'Normal image capture is sleeping; preparing dark calibration.'
+                        )
+                    elif restore_state == dark_automation.CAPTURE_RESTORE_RUNNING:
+                        preparing_message = (
+                            'Finishing the current exposure before dark calibration.'
+                        )
+                    else:
+                        preparing_message = 'Preparing the camera for dark calibration.'
+                    progress.update({
+                        'phase': 'waiting_for_current_exposure',
+                        'message': preparing_message,
+                    })
+                    task_data['progress'] = progress
+                    task.data = task_data
+                    task.setRunning()
+                    self._dark_automation_task_id = task.id
 
                 else:
                     logger.error('Unknown action: %s', action)

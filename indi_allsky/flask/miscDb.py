@@ -360,8 +360,7 @@ class miscDb(object):
         exposure_int = int(metadata['exposure'])
 
 
-        # If temp is 0, write null
-        if metadata['temp']:
+        if metadata.get('temp') is not None:
             temp_val = float(metadata['temp'])
         else:
             logger.warning('Temperature is not defined')
@@ -382,6 +381,7 @@ class miscDb(object):
             height=metadata['height'],
             width=metadata['width'],
             thumbnail_uuid=metadata.get('thumbnail_uuid'),
+            active=bool(metadata.get('active', True)),
             data=metadata.get('data', {}),
         )
 
@@ -426,8 +426,7 @@ class miscDb(object):
         exposure_int = int(metadata['exposure'])
 
 
-        # If temp is 0, write null
-        if metadata['temp']:
+        if metadata.get('temp') is not None:
             temp_val = float(metadata['temp'])
         else:
             logger.warning('Temperature is not defined')
@@ -448,6 +447,7 @@ class miscDb(object):
             height=metadata['height'],
             width=metadata['width'],
             thumbnail_uuid=metadata.get('thumbnail_uuid'),
+            active=bool(metadata.get('active', True)),
             data=metadata.get('data', {}),
         )
 

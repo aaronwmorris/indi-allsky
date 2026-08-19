@@ -33,6 +33,8 @@ from . import camera as camera_module
 
 from . import constants
 from .utils import IndiAllSkyExposureUtils
+from .capture_state import CameraCapabilities
+from .capture_state import build_effective_capture_state
 
 from .flask import create_app
 from .flask import db
@@ -59,6 +61,14 @@ app = create_app()
 logger = logging.getLogger('indi_allsky')
 
 
+class DarkCaptureCancelled(KeyboardInterrupt):
+    pass
+
+
+class DarkCapturePlanChanged(RuntimeError):
+    pass
+
+
 class IndiAllSkyDarks(object):
 
     def __init__(self):
@@ -77,14 +87,32 @@ class IndiAllSkyDarks(object):
         self._daytime = True  # build daytime dark library
 
         self._gain_list = []
+        self._exposure_list = []
         self._binning = 1
         self._count = 10
         self._temp_delta = 5.0
+        self._temperature_target = None
         self._time_delta = 5
 
         self._hotpixel_adu_percent = 90
 
         self._reverse = True  # default high to low exposures
+        self._capture_profile = 'auto'
+        self._progress_file = None
+        self._automation_manifest = {}
+        self._progress_total_master_sets = 0
+        self._progress_completed_master_sets = 0
+        self._progress_current_gain = None
+        self._progress_current_exposure = None
+        self._progress_current_binning = None
+        self._progress_current_temperature = None
+        self._progress_next_temperature = None
+        self._progress_target_temperature = None
+        self._progress_completed_temperature_sets = 0
+        self._progress_temperature_set = None
+        self._progress_planned_temperature_sets = None
+        self._progress_temperature_set_started_utc = None
+        self._progress_activated_master_files = 0
 
         # this is used to set a max value of data returned by the camera
         self._bitmax = 0
@@ -189,6 +217,7 @@ class IndiAllSkyDarks(object):
             self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
 
         self.darks_dir = self.image_dir.joinpath('darks')
+        self.darks_dir.mkdir(mode=0o755, parents=True, exist_ok=True)
 
 
     @property
@@ -227,6 +256,29 @@ class IndiAllSkyDarks(object):
 
 
     @property
+    def exposure_list(self):
+        return self._exposure_list
+
+    @exposure_list.setter
+    def exposure_list(self, new_exposure_list):
+        if new_exposure_list is None:
+            self._exposure_list = []
+            return
+
+        try:
+            exposures = [float(round(value, 6)) for value in new_exposure_list]
+        except (TypeError, ValueError):
+            raise ValueError('Invalid exposure list')
+        if not exposures or any(value <= 0 for value in exposures):
+            raise ValueError('Exposure values must be greater than zero')
+        self._exposure_list = sorted(set(exposures), reverse=self.reverse)
+        logger.warning(
+            'Using exposure list: %s',
+            ', '.join(['{0:g}'.format(value) for value in self._exposure_list]),
+        )
+
+
+    @property
     def binning(self):
         return self._binning
 
@@ -234,7 +286,6 @@ class IndiAllSkyDarks(object):
     def binning(self, new_binning):
         self._binning = int(new_binning)
         assert self._binning >= 1
-        assert self._binning <= 4
 
 
     @property
@@ -245,6 +296,24 @@ class IndiAllSkyDarks(object):
     def temp_delta(self, new_temp_delta):
         self._temp_delta = float(abs(new_temp_delta))
         logger.warning('New Temp delta: %0.1f', self.temp_delta)
+
+
+    @property
+    def temperature_target(self):
+        return self._temperature_target
+
+    @temperature_target.setter
+    def temperature_target(self, new_temperature_target):
+        if new_temperature_target is None:
+            self._temperature_target = None
+            return
+        temperature_target = float(new_temperature_target)
+        if not math.isfinite(temperature_target):
+            raise ValueError('Invalid target sensor temperature')
+        if temperature_target < -100.0 or temperature_target > 100.0:
+            raise ValueError('Target sensor temperature must be between -100 and 100°C')
+        self._temperature_target = float(round(temperature_target, 3))
+        logger.warning('Target sensor temperature: %0.1f', self._temperature_target)
 
 
     @property
@@ -305,12 +374,96 @@ class IndiAllSkyDarks(object):
     def reverse(self, new_reverse):
         self._reverse = bool(new_reverse)
 
+        if self._exposure_list:
+            self._exposure_list = sorted(self._exposure_list, reverse=self._reverse)
+
+
+    @property
+    def capture_profile(self):
+        return self._capture_profile
+
+    @capture_profile.setter
+    def capture_profile(self, new_capture_profile):
+        capture_profile = str(new_capture_profile)
+        if capture_profile not in ('auto', 'day', 'night'):
+            raise ValueError('Invalid capture profile')
+        self._capture_profile = capture_profile
+
+
+    @property
+    def progress_file(self):
+        return self._progress_file
+
+    @progress_file.setter
+    def progress_file(self, new_progress_file):
+        if not new_progress_file:
+            self._progress_file = None
+            return
+        self._progress_file = Path(new_progress_file).resolve()
+
+
+    @property
+    def automation_manifest(self):
+        return self._automation_manifest
+
+    @automation_manifest.setter
+    def automation_manifest(self, new_manifest):
+        if not isinstance(new_manifest, dict):
+            raise ValueError('Invalid automation manifest')
+        self._automation_manifest = dict(new_manifest)
+
 
     def sigint_handler_main(self, signum, frame):
         logger.warning('Caught INT signal, shutting down')
 
         # set flag for program to stop processes
         self._shutdown = True
+        if self.indiclient is not None:
+            try:
+                self.indiclient.abortCcdExposure()
+            except Exception as error:
+                logger.warning('Unable to abort the current camera exposure: %s', str(error))
+
+
+    def _validate_automation_preflight(self, live_capabilities):
+        manifest = self.automation_manifest
+        if not manifest.get('automation'):
+            return
+
+        changes = []
+        expected_name = str(manifest.get('expected_camera_name') or '')
+        expected_driver = str(manifest.get('expected_camera_driver') or '')
+        if expected_name and self.camera_name != expected_name:
+            changes.append('camera identity')
+        if expected_driver and self.camera_server != expected_driver:
+            changes.append('camera driver')
+        if (
+                manifest.get('capability_signature')
+                and live_capabilities.signature != manifest.get('capability_signature')
+        ):
+            changes.append('camera capabilities')
+        live_capture_state = build_effective_capture_state(
+            self.config,
+            live_capabilities,
+            exposure_max=manifest.get('exposure_max'),
+            exposure_step=manifest.get('exposure_step', 5.0),
+        )
+        if (
+                manifest.get('config_signature')
+                and live_capture_state.config_signature != manifest.get('config_signature')
+        ):
+            changes.append('camera settings')
+
+        if not changes:
+            return
+
+        self._publish_progress(
+            'review_required',
+            'Live {0:s} changed after the plan was prepared. Review the revised plan; no dark frames were taken.'.format(
+                ', '.join(changes),
+            ),
+        )
+        raise DarkCapturePlanChanged(', '.join(changes))
 
 
     def _initialize(self):
@@ -372,6 +525,7 @@ class IndiAllSkyDarks(object):
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo()
         self.ccd_info = ccd_info
+        live_capabilities = CameraCapabilities.from_ccd_info(ccd_info)
 
 
         if self.config.get('CFA_PATTERN'):
@@ -427,6 +581,10 @@ class IndiAllSkyDarks(object):
             'alt'             : self.config['LENS_ALTITUDE'],
             'az'              : self.config['LENS_AZIMUTH'],
             'nightSunAlt'     : self.config['NIGHT_SUN_ALT_DEG'],
+
+            'data'            : {
+                'camera_capabilities': live_capabilities.to_dict(),
+            },
         }
 
         db_camera = self._miscDb.addCamera(camera_metadata)
@@ -434,6 +592,8 @@ class IndiAllSkyDarks(object):
 
         self.camera_id = db_camera.id
         self.indiclient.camera_id = db_camera.id
+
+        self._validate_automation_preflight(live_capabilities)
 
 
         try:
@@ -810,16 +970,11 @@ class IndiAllSkyDarks(object):
 
         # sensor worker only need to stop the fan and dew heater
         self._startSensorWorker()
-
-
-        with app.app_context():
-            self._average()
-
-
-        # shutdown
-        self._stopSensorWorker()
-        self.indiclient.disableCcdCooler()
-        self.indiclient.disconnectServer()
+        try:
+            with app.app_context():
+                self._average()
+        finally:
+            self._cleanup_capture()
 
 
     def _average(self):
@@ -837,51 +992,15 @@ class IndiAllSkyDarks(object):
 
         # sensor worker only need to stop the fan and dew heater
         self._startSensorWorker()
-
-
-        with app.app_context():
-            self._tempaverage()
-
-
-        # shutdown
-        self._stopSensorWorker()
-        self.indiclient.disableCcdCooler()
-        self.indiclient.disconnectServer()
+        try:
+            with app.app_context():
+                self._tempaverage()
+        finally:
+            self._cleanup_capture()
 
 
     def _tempaverage(self):
-        # disable daytime darks processing when doing temperature calibrated frames
-        self.daytime = False
-
-        self._initialize()
-
-        self._pre_run_tasks()
-
-        self._pre_temperature_action()
-        self.getCcdTemperature()
-        logger.info('Camera temperature: %0.1f', self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
-
-
-        next_temp_thold = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] - self.temp_delta
-
-        # get first set of images
-        self._run(IndiAllSkyDarksAverage)
-
-        while True:
-            # This loop will run forever, it is up to the user to cancel
-            self._pre_temperature_action()
-            self.getCcdTemperature()
-
-            logger.info('Next temperature threshold: %0.1f (current: %0.1f)', next_temp_thold, self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
-
-            if self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] > next_temp_thold:
-                time.sleep(30.0)
-                continue
-
-            logger.warning('Achieved next temperature threshold: %0.1f | %0.1f', next_temp_thold, self.temp_delta)
-            next_temp_thold -= self.temp_delta
-
-            self._run(IndiAllSkyDarksAverage)
+        self._run_temperature_series(IndiAllSkyDarksAverage)
 
 
     def sigmaclip(self):
@@ -892,16 +1011,11 @@ class IndiAllSkyDarks(object):
 
         # sensor worker only need to stop the fan and dew heater
         self._startSensorWorker()
-
-
-        with app.app_context():
-            self._sigmaclip()
-
-
-        # shutdown
-        self._stopSensorWorker()
-        self.indiclient.disableCcdCooler()
-        self.indiclient.disconnectServer()
+        try:
+            with app.app_context():
+                self._sigmaclip()
+        finally:
+            self._cleanup_capture()
 
 
     def _sigmaclip(self):
@@ -909,6 +1023,26 @@ class IndiAllSkyDarks(object):
         self._pre_run_tasks()
 
         self._run(IndiAllSkyDarksSigmaClip)
+
+
+    def _cleanup_capture(self):
+        try:
+            self._stopSensorWorker()
+        except Exception as e:
+            logger.error('Unable to stop dark-frame sensor worker: %s', str(e))
+
+        if self.indiclient is None:
+            return
+
+        try:
+            self.indiclient.disableCcdCooler()
+        except Exception as e:
+            logger.error('Unable to disable the CCD cooler: %s', str(e))
+
+        try:
+            self.indiclient.disconnectServer()
+        except Exception as e:
+            logger.error('Unable to disconnect the camera server: %s', str(e))
 
 
     def tempsigmaclip(self):
@@ -919,19 +1053,20 @@ class IndiAllSkyDarks(object):
 
         # sensor worker only need to stop the fan and dew heater
         self._startSensorWorker()
-
-
-        with app.app_context():
-            self._tempsigmaclip()
-
-
-        # shutdown
-        self._stopSensorWorker()
-        self.indiclient.disableCcdCooler()
-        self.indiclient.disconnectServer()
+        try:
+            with app.app_context():
+                self._tempsigmaclip()
+        finally:
+            self._cleanup_capture()
 
 
     def _tempsigmaclip(self):
+        self._run_temperature_series(IndiAllSkyDarksSigmaClip)
+
+
+    def _run_temperature_series(self, stacking_class):
+        from .dark_automation import temperature_thresholds
+
         # disable daytime darks processing when doing temperature calibrated frames
         self.daytime = False
 
@@ -939,31 +1074,221 @@ class IndiAllSkyDarks(object):
 
         self._pre_run_tasks()
 
-        self._pre_temperature_action()
-        self.getCcdTemperature()
-        logger.info('Camera temperature: %0.1f', self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
-
-
-        next_temp_thold = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] - self.temp_delta
-
-        # get first set of images
-        self._run(IndiAllSkyDarksSigmaClip)
+        current_temperature = self._read_temperature_series_value()
+        logger.info('Camera temperature: %0.1f', current_temperature)
+        manifest_target = self.automation_manifest.get('temperature_target')
+        if manifest_target is not None:
+            self.temperature_target = manifest_target
+        target_temperature = self.temperature_target
+        self._progress_target_temperature = target_temperature
+        pending_thresholds = list(temperature_thresholds(
+            current_temperature,
+            target_temperature,
+            self.temp_delta,
+        ))
+        self._progress_planned_temperature_sets = (
+            None if target_temperature is None else 1 + len(pending_thresholds)
+        )
+        if target_temperature is None:
+            next_temp_thold = current_temperature - self.temp_delta
+        elif pending_thresholds:
+            next_temp_thold = pending_thresholds[0]
+        else:
+            next_temp_thold = target_temperature
+        temperature_set = 1
 
         while True:
-            # This loop will run forever, it is up to the user to cancel
-            self._pre_temperature_action()
-            self.getCcdTemperature()
+            self._check_shutdown()
+            self._progress_temperature_set = temperature_set
+            if (
+                    self._progress_planned_temperature_sets is not None
+                    and temperature_set > self._progress_planned_temperature_sets
+            ):
+                self._progress_planned_temperature_sets = temperature_set
+            self._progress_temperature_set_started_utc = datetime.now().astimezone().isoformat()
+            self._progress_next_temperature = next_temp_thold
+            if self.automation_manifest.get('temperature_series'):
+                self._revalidate_temperature_series_plan()
+                self._run_automation_temperature_set(stacking_class, temperature_set)
+            else:
+                self._run(stacking_class)
+            self._progress_completed_temperature_sets = temperature_set
+            captured_temperature = self._usable_temperature(
+                self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
+            )
+            self._progress_current_temperature = captured_temperature
+            if (
+                    target_temperature is not None
+                    and captured_temperature is not None
+                    and captured_temperature <= target_temperature + 0.000001
+            ):
+                self._progress_next_temperature = None
+                self._progress_planned_temperature_sets = temperature_set
+                self._publish_progress(
+                    'complete',
+                    'Target sensor temperature {0:0.1f}°C reached after {1:d} temperature set(s).'.format(
+                        target_temperature,
+                        temperature_set,
+                    ),
+                )
+                return
+            self._progress_next_temperature = next_temp_thold
+            self._publish_progress(
+                'temperature_wait',
+                'Temperature set {0:d} complete. Waiting for the camera to cool to {1:0.1f}°C.'.format(
+                    temperature_set,
+                    next_temp_thold,
+                ),
+            )
 
-            logger.info('Next temperature threshold: %0.1f (current: %0.1f)', next_temp_thold, self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
+            while True:
+                # This loop intentionally runs until the operator cancels.
+                self._check_shutdown()
+                current_temperature = self._read_temperature_series_value()
 
-            if self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] > next_temp_thold:
-                time.sleep(30.0)
-                continue
+                logger.info(
+                    'Next temperature threshold: %0.1f (current: %0.1f)',
+                    next_temp_thold,
+                    current_temperature,
+                )
 
-            logger.warning('Achieved next temperature threshold: %0.1f | %0.1f', next_temp_thold, self.temp_delta)
-            next_temp_thold -= self.temp_delta
+                if current_temperature <= next_temp_thold:
+                    break
 
-            self._run(IndiAllSkyDarksSigmaClip)
+                self._publish_progress(
+                    'temperature_wait',
+                    'Waiting for {0:0.1f}°C; camera is {1:0.1f}°C.'.format(
+                        next_temp_thold,
+                        current_temperature,
+                    ),
+                )
+                self._sleep_interruptibly(30.0)
+
+            logger.warning(
+                'Achieved next temperature threshold: %0.1f | %0.1f',
+                next_temp_thold,
+                self.temp_delta,
+            )
+            if target_temperature is None:
+                next_temp_thold -= self.temp_delta
+            elif current_temperature <= target_temperature + 0.000001:
+                pending_thresholds = []
+                next_temp_thold = target_temperature
+            else:
+                if pending_thresholds:
+                    pending_thresholds.pop(0)
+                next_temp_thold = (
+                    pending_thresholds[0]
+                    if pending_thresholds
+                    else target_temperature
+                )
+            temperature_set += 1
+
+
+    def _read_temperature_series_value(self):
+        self._pre_temperature_action()
+        current_temperature = self._usable_temperature(self.getCcdTemperature())
+        if current_temperature is None:
+            raise RuntimeError(
+                'Temperature-series dark capture requires a usable camera or external temperature reading'
+            )
+        self._progress_current_temperature = current_temperature
+        return current_temperature
+
+
+    def _revalidate_temperature_series_plan(self):
+        with app.app_context():
+            self.config = IndiAllSkyConfig().config
+        live_ccd_info = self.indiclient.getCcdInfo()
+        live_capabilities = CameraCapabilities.from_ccd_info(live_ccd_info)
+        self._validate_automation_preflight(live_capabilities)
+
+
+    def _sleep_interruptibly(self, seconds):
+        deadline = time.monotonic() + float(seconds)
+        while time.monotonic() < deadline:
+            self._check_shutdown()
+            time.sleep(min(0.5, max(0.0, deadline - time.monotonic())))
+
+
+    def _run_automation_temperature_set(self, stacking_class, temperature_set):
+        from .dark_automation import STRATEGY_CUSTOM
+        from .dark_automation import _activate_generation
+
+        groups = self.automation_manifest.get('groups')
+        if not isinstance(groups, list) or not groups:
+            raise ValueError('Temperature-series automation requires at least one capture group')
+
+        base_manifest = dict(self.automation_manifest)
+        base_generation_id = str(base_manifest.get('generation_id') or '')
+        generation_id = '{0:s}-temperature-{1:04d}'.format(
+            base_generation_id,
+            int(temperature_set),
+        )
+        total_master_sets = sum(int(group['target_count']) for group in groups)
+        completed_offset = 0
+        self._progress_total_master_sets = total_master_sets
+        self._progress_completed_master_sets = 0
+
+        for group_index, group in enumerate(groups, start=1):
+            self._check_shutdown()
+            group_manifest = dict(base_manifest)
+            group_manifest.update({
+                'generation_id': generation_id,
+                'group_id': str(group['id']),
+                'capture_profile': str(group['capture_profile']),
+                'capture_period': str(group['capture_period']),
+                'binning': int(group['binning']),
+                'bit_depth': group.get('bit_depth'),
+                'width': group.get('width'),
+                'height': group.get('height'),
+                'temperature': group.get('temperature'),
+                'gains': list(group['gains']),
+                'exposures': list(group['exposures']),
+                'temperature_set': int(temperature_set),
+            })
+            self.automation_manifest = group_manifest
+            self.capture_profile = str(group['capture_period'])
+            self.binning = int(group['binning'])
+            self.bitmax = int(group.get('bitmax') or 0)
+            self.gain_list = list(group['gains'])
+            self.exposure_list = list(group['exposures'])
+            self._run_targeted(
+                stacking_class,
+                progress_offset=completed_offset,
+                progress_total=total_master_sets,
+                publish_complete=False,
+            )
+            completed_offset += int(group['target_count'])
+            self._publish_progress(
+                'capturing',
+                'Completed temperature-set group {0:d} of {1:d}.'.format(
+                    group_index,
+                    len(groups),
+                ),
+            )
+
+        self.automation_manifest = base_manifest
+        activation_task = {
+            'generation_id': generation_id,
+            'camera_id': self.camera_id,
+            'target_count': total_master_sets,
+            'groups': groups,
+            'strategy': STRATEGY_CUSTOM,
+        }
+        activation = _activate_generation(
+            db,
+            (IndiAllSkyDbDarkFrameTable, IndiAllSkyDbBadPixelMapTable),
+            activation_task,
+        )
+        self._progress_activated_master_files += int(activation['activated'])
+        self._progress_completed_master_sets = total_master_sets
+        self._publish_progress(
+            'temperature_set_complete',
+            'Temperature set {0:d} was captured and activated safely.'.format(
+                temperature_set,
+            ),
+        )
 
 
     def _pre_run_tasks(self):
@@ -1078,7 +1403,165 @@ class IndiAllSkyDarks(object):
         return total_time
 
 
+    def _check_shutdown(self):
+        if self._shutdown:
+            raise DarkCaptureCancelled()
+
+
+    def _publish_progress(self, phase, message, current_frame=None):
+        if self.progress_file is None:
+            return
+
+        progress_data = {
+            'phase': phase,
+            'message': str(message),
+            'completed_master_sets': self._progress_completed_master_sets,
+            'total_master_sets': self._progress_total_master_sets,
+            'current_gain': self._progress_current_gain,
+            'current_exposure': self._progress_current_exposure,
+            'current_binning': self._progress_current_binning,
+            'current_temperature': self._progress_current_temperature,
+            'next_temperature': self._progress_next_temperature,
+            'target_temperature': self._progress_target_temperature,
+            'temperature_set': self._progress_temperature_set,
+            'planned_temperature_sets': self._progress_planned_temperature_sets,
+            'temperature_set_started_utc': self._progress_temperature_set_started_utc,
+            'completed_temperature_sets': self._progress_completed_temperature_sets,
+            'activated_master_files': self._progress_activated_master_files,
+            'capture_profile': self.capture_profile,
+            'current_frame': current_frame,
+            'current_frame_count': self.count,
+            'updated_utc': datetime.now().astimezone().isoformat(),
+        }
+        self.progress_file.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        temporary_name = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                    mode='w',
+                    encoding='utf-8',
+                    dir=self.progress_file.parent,
+                    prefix='.dark-progress-',
+                    suffix='.tmp',
+                    delete=False,
+            ) as temporary_file:
+                temporary_name = temporary_file.name
+                json.dump(progress_data, temporary_file, sort_keys=True)
+            os.replace(temporary_name, self.progress_file)
+        finally:
+            if temporary_name:
+                try:
+                    Path(temporary_name).unlink()
+                except FileNotFoundError:
+                    pass
+
+
+    def _configure_target_profile(self):
+        daytime = self.capture_profile == 'day'
+        with self.night_av.get_lock():
+            self.night_av[constants.NIGHT_NIGHT] = 0 if daytime else 1
+            self.night_av[constants.NIGHT_MOONMODE] = 0
+
+        if daytime:
+            if (
+                    self.config['CAMERA_INTERFACE'].startswith('libcamera_')
+                    or self.config['CAMERA_INTERFACE'].startswith('mqtt_')
+            ) and self.config.get('LIBCAMERA', {}).get('AWB_ENABLE_DAY'):
+                raise RuntimeError('Daytime AWB must be disabled before capturing daytime darks')
+
+            cooling_enabled = self.config.get('CCD_COOLING_DAY')
+            cooling_temperature = self.config.get('CCD_TEMP_DAY', 35.0)
+            if self.config.get('INDI_CONFIG_DAY', {}):
+                self.indi_config = self.config['INDI_CONFIG_DAY']
+            else:
+                self.indi_config = self.config['INDI_CONFIG_DEFAULTS']
+            image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE_DAY', 'jpg')
+        else:
+            if (
+                    self.config['CAMERA_INTERFACE'].startswith('libcamera_')
+                    or self.config['CAMERA_INTERFACE'].startswith('mqtt_')
+            ) and self.config.get('LIBCAMERA', {}).get('AWB_ENABLE'):
+                raise RuntimeError('Nighttime AWB must be disabled before capturing darks')
+
+            cooling_enabled = self.config.get('CCD_COOLING')
+            cooling_temperature = self.config.get('CCD_TEMP', 15.0)
+            self.indi_config = self.config['INDI_CONFIG_DEFAULTS']
+            image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'jpg')
+
+        if self.config['CAMERA_INTERFACE'].startswith('libcamera_') or self.config['CAMERA_INTERFACE'].startswith('mqtt_'):
+            self.indiclient.libcamera_bit_depth = 16 if image_type == 'dng' else 8
+
+        self.indiclient.configureCcdDevice(self.indi_config)
+        if cooling_enabled:
+            self.indiclient.enableCcdCooler()
+            logger.warning('****** WAITING UP TO 20 MINUTES FOR TARGET TEMPERATURE ******')
+            self.indiclient.setCcdTemperature(cooling_temperature, sync=True, timeout=1200.0)
+        else:
+            self.indiclient.disableCcdCooler()
+            logger.warning('****** IF THE CCD COOLER WAS ENABLED, WAITING FOR THE SENSOR TO SETTLE ******')
+            time.sleep(8.0)
+
+
+    def _run_targeted(
+            self,
+            stacking_class,
+            progress_offset=0,
+            progress_total=None,
+            publish_complete=True,
+    ):
+        if not self.gain_list:
+            raise ValueError('Targeted dark capture requires an explicit gain list')
+        if not self.exposure_list:
+            raise ValueError('Targeted dark capture requires an explicit exposure list')
+
+        self._configure_target_profile()
+
+        bpm_filename_t = 'bpm_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}_{5:d}c_{6:s}.fit'
+        dark_filename_t = 'dark_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}_{5:d}c_{6:s}.fit'
+        group_master_sets = len(self.gain_list) * len(self.exposure_list)
+        self._progress_total_master_sets = (
+            group_master_sets if progress_total is None else int(progress_total)
+        )
+        self._progress_completed_master_sets = int(progress_offset)
+        self._progress_current_binning = self.binning
+        self._publish_progress('capturing', 'Starting targeted dark capture.')
+
+        for gain in self.gain_list:
+            for exposure in self.exposure_list:
+                self._check_shutdown()
+                self._progress_current_gain = gain
+                self._progress_current_exposure = exposure
+                self._publish_progress(
+                    'capturing',
+                    'Capturing gain {0:g}, exposure {1:g}s.'.format(gain, exposure),
+                    current_frame=0,
+                )
+                self._take_exposures(
+                    exposure,
+                    gain,
+                    self.binning,
+                    dark_filename_t,
+                    bpm_filename_t,
+                    stacking_class,
+                )
+                self._progress_completed_master_sets += 1
+                self._publish_progress(
+                    'capturing',
+                    'Completed gain {0:g}, exposure {1:g}s.'.format(gain, exposure),
+                )
+
+        self._progress_current_gain = None
+        self._progress_current_exposure = None
+        self._progress_current_binning = None
+        self._progress_current_temperature = None
+        if publish_complete:
+            self._publish_progress('complete', 'Targeted dark capture complete.')
+
+
     def _run(self, stacking_class):
+        if self.capture_profile in ('day', 'night'):
+            self._run_targeted(stacking_class)
+            return
+
         dark_exposures_set = set()  # prevent duplicate exposures
         dark_exposures_set.add(1.0)  # 1s is the shortest exposure
 
@@ -1305,6 +1788,17 @@ class IndiAllSkyDarks(object):
 
         i = 1
         while i <= self.count:
+            self._check_shutdown()
+            self._publish_progress(
+                'capturing',
+                'Capturing source frame {0:d} of {1:d} at gain {2:g}, exposure {3:g}s.'.format(
+                    i,
+                    self.count,
+                    gain,
+                    exposure,
+                ),
+                current_frame=i,
+            )
             # sometimes image data is bad, take images until we reach the desired number
             logger.info(f"Starting image {i}/{self.count}.")
             start = time.time()
@@ -1352,11 +1846,32 @@ class IndiAllSkyDarks(object):
             m_avg = numpy.mean(hdulist[0].data)
             logger.info('Image average adu: %0.2f', m_avg)
 
-            self.getCcdTemperature()
-            logger.info('Camera temperature: %0.1f', self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
+            measured_temperature = self.getCcdTemperature()
+            self._progress_current_temperature = self._usable_temperature(measured_temperature)
+            logger.info('Camera temperature: %0.1f', measured_temperature)
+            self._publish_progress(
+                'capturing',
+                'Captured source frame {0:d} of {1:d} at gain {2:g}, exposure {3:g}s.'.format(
+                    i,
+                    self.count,
+                    gain,
+                    exposure,
+                ),
+                current_frame=i,
+            )
 
             i += 1  # increment
 
+
+        self._check_shutdown()
+        self._publish_progress(
+            'stacking',
+            'Building the master dark and bad pixel map for gain {0:g}, exposure {1:g}s.'.format(
+                gain,
+                exposure,
+            ),
+            current_frame=self.count,
+        )
 
         # libcamera does not know the temperature until the first exposure is taken
         exp_date = datetime.now()
@@ -1401,7 +1916,9 @@ class IndiAllSkyDarks(object):
             'exposure'   : exposure,
             'gain'       : self._expUtils.GAIN_CURRENT,
             'binmode'    : self._expUtils.BINNING_CURRENT,
-            'temp'       : float(self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]),
+            'temp'       : self._usable_temperature(
+                self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
+            ),
             'adu'        : bpm_adu_avg,
             'fileSize'   : full_bpm_filename_p.stat().st_size,
             'height'     : image_height,
@@ -1411,6 +1928,7 @@ class IndiAllSkyDarks(object):
         bpm_metadata['data'] = {
             'hot_pixels' : int(bpm_hot_pixel_count),
             'count'      : self.count,
+            'method'     : str(s),
         }
 
 
@@ -1421,7 +1939,9 @@ class IndiAllSkyDarks(object):
             'exposure'   : exposure,
             'gain'       : self._expUtils.GAIN_CURRENT,
             'binmode'    : self._expUtils.BINNING_CURRENT,
-            'temp'       : float(self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]),
+            'temp'       : self._usable_temperature(
+                self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
+            ),
             'adu'        : dark_adu_avg,
             'fileSize'   : full_dark_filename_p.stat().st_size,
             'height'     : image_height,
@@ -1434,6 +1954,21 @@ class IndiAllSkyDarks(object):
             #'method'     : stacking_class.__name__,
             'method'     : str(s),
         }
+
+        automation_data = self._automation_frame_data(
+            exposure,
+            gain,
+            binning,
+            image_bitpix,
+            image_width,
+            image_height,
+        )
+        if automation_data:
+            bpm_metadata['data']['dark_automation'] = automation_data
+            dark_metadata['data']['dark_automation'] = automation_data
+            staged_active = not bool(self.automation_manifest.get('stage_inactive'))
+            bpm_metadata['active'] = staged_active
+            dark_metadata['active'] = staged_active
 
 
         self._miscDb.addBadPixelMap(
@@ -1449,6 +1984,57 @@ class IndiAllSkyDarks(object):
         )
 
         tmp_fit_dir.cleanup()
+
+
+    def _automation_frame_data(
+            self,
+            exposure,
+            gain,
+            binning,
+            bit_depth,
+            width,
+            height,
+    ):
+        manifest = self.automation_manifest
+        if not manifest.get('automation'):
+            return {}
+        return {
+            'task_id': manifest.get('task_id'),
+            'generation_id': manifest.get('generation_id'),
+            'group_id': manifest.get('group_id'),
+            'config_signature': manifest.get('config_signature'),
+            'plan_signature': manifest.get('plan_signature'),
+            'capability_signature': manifest.get('capability_signature'),
+            'strategy': manifest.get('strategy'),
+            'quality': manifest.get('quality'),
+            'method': manifest.get('method'),
+            'frame_count': manifest.get('frame_count'),
+            'capture_profile': manifest.get('capture_profile'),
+            'capture_period': manifest.get('capture_period'),
+            'temperature_set': manifest.get('temperature_set'),
+            'target': {
+                'gain': float(gain),
+                'exposure': float(exposure),
+                'binning': int(binning),
+                'bit_depth': int(bit_depth),
+                'width': int(width),
+                'height': int(height),
+                'temperature': manifest.get('temperature'),
+            },
+        }
+
+
+    @staticmethod
+    def _usable_temperature(value):
+        if value is None:
+            return None
+        try:
+            temperature = float(value)
+        except (TypeError, ValueError):
+            return None
+        if not math.isfinite(temperature) or temperature < -100.0:
+            return None
+        return temperature
 
 
     def flush(self):

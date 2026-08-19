@@ -25,6 +25,8 @@ from . import camera as camera_module
 
 from .utils import IndiAllSkyDateCalcs
 from .utils import IndiAllSkyExposureUtils
+from .capture_state import CameraCapabilities
+from .capture_state import build_effective_capture_state
 
 from .flask.models import TaskQueueQueue
 from .flask.models import TaskQueueState
@@ -1075,6 +1077,12 @@ class CaptureWorker(Process):
         }
 
 
+        camera_capabilities = CameraCapabilities.from_ccd_info(ccd_info)
+        effective_capture_state = build_effective_capture_state(self.config, camera_capabilities)
+        camera_metadata['data']['camera_capabilities'] = camera_capabilities.to_dict()
+        camera_metadata['data']['effective_capture_state'] = effective_capture_state.to_dict()
+
+
         # virtualsky
         camera_metadata['data']['vs_magnitude'] = self.config.get('VIRTUALSKY', {}).get('MAGNITUDE', 6.0)
         camera_metadata['data']['vs_constellations'] = self.config.get('VIRTUALSKY', {}).get('CONSTELLATIONS', True)
@@ -1565,7 +1573,10 @@ class CaptureWorker(Process):
     def _pre_run_tasks(self):
         # Tasks that need to be run before the main program loop
 
-        # Update status
+        # Publish a fresh heartbeat with the running state.  A restarted capture
+        # worker may otherwise inherit a watchdog timestamp that expired while a
+        # supervised maintenance task had the camera stopped.
+        self._miscDb.setState('WATCHDOG', int(time.time()))
         self._miscDb.setState('STATUS', constants.STATUS_RUNNING)
 
         if self.camera_server in ['indi_rpicam']:

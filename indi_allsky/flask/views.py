@@ -15,6 +15,7 @@ import socket
 import ipaddress
 import re
 import threading
+import uuid
 import psutil
 import dbus
 import ephem
@@ -26,12 +27,19 @@ from ..version import __version__
 from .. import constants
 from .. import asi676mc
 from .. import asi676mc_calibration
+from .. import dark_automation
 from ..processing import ImageProcessor
 from ..lens_solver import IndiAllSkyLensSolver
 from ..lens_solver import parseSolverRequestValues
 from ..lens_solver import applySolvedValuesToConfig
 from ..panorama import panoramaSourceCircleClipped
 from ..panorama import validatePanoramaMiniTimelapseRequest
+from ..dark_library import DarkInventoryFrame
+from ..dark_library import analysis_context
+from ..dark_library import analyze_dark_plan
+from ..dark_library import build_dark_plan
+from ..capture_state import CameraCapabilities
+from ..capture_state import build_effective_capture_state
 
 from cryptography.fernet import InvalidToken
 
@@ -191,6 +199,17 @@ def _calibration_owner():
     if not owner_token:
         owner_token = os.urandom(16).hex()
         session['asi676mc_calibration_owner'] = owner_token
+    return 'browser:{0}'.format(owner_token)
+
+
+def _dark_automation_owner():
+    """Return the owner allowed to inspect or cancel one dark run."""
+    if current_user.is_authenticated:
+        return 'user:{0}'.format(current_user.username)
+    owner_token = session.get('dark_automation_owner')
+    if not owner_token:
+        owner_token = os.urandom(16).hex()
+        session['dark_automation_owner'] = owner_token
     return 'browser:{0}'.format(owner_token)
 
 
@@ -910,6 +929,255 @@ class CamerasView(TemplateView):
         return context
 
 
+def _dark_inventory_for_camera(camera_id):
+    inventory = []
+    frame_models = (
+        ('dark', IndiAllSkyDbDarkFrameTable),
+        ('bpm', IndiAllSkyDbBadPixelMapTable),
+    )
+    for frame_type, model in frame_models:
+        frames = model.query.filter(model.camera_id == int(camera_id)).all()
+        for frame in frames:
+            try:
+                exists = frame.getFilesystemPath().is_file()
+            except OSError:
+                exists = False
+            inventory.append(DarkInventoryFrame(
+                frame_type=frame_type,
+                frame_id=frame.id,
+                camera_id=frame.camera_id,
+                active=bool(frame.active),
+                exists=exists,
+                bit_depth=frame.bitdepth,
+                exposure=float(frame.exposure),
+                gain=float(frame.gain),
+                binning=int(frame.binmode),
+                temperature=frame.temp,
+                width=frame.width,
+                height=frame.height,
+                create_date=frame.createDate,
+            ))
+    return inventory
+
+
+def _dark_current_temperature(camera_id):
+    latest_image = IndiAllSkyDbImageTable.query\
+        .filter(IndiAllSkyDbImageTable.camera_id == int(camera_id))\
+        .filter(IndiAllSkyDbImageTable.createDate > (datetime.now() - timedelta(minutes=15)))\
+        .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+        .first()
+    if latest_image is None or latest_image.temp is None:
+        return None
+    temperature = float(latest_image.temp)
+    if not math.isfinite(temperature) or temperature < -100.0:
+        return None
+    return temperature
+
+
+def _dark_default_temperature_target(config):
+    if not config.get('CCD_COOLING'):
+        return None
+    try:
+        target = float(config.get('CCD_TEMP', 15.0))
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(target):
+        return None
+    return max(
+        dark_automation.MIN_TEMPERATURE_TARGET,
+        min(dark_automation.MAX_TEMPERATURE_TARGET, target),
+    )
+
+
+def _dark_capture_options(request_data, config, capabilities):
+    configured_maximum = float(config.get('CCD_EXPOSURE_MAX', 15.0))
+    if capabilities.exposure_max is not None:
+        configured_maximum = min(configured_maximum, float(capabilities.exposure_max))
+    configured_maximum = max(1.0, configured_maximum)
+    try:
+        exposure_max = float(request_data.get('exposure_max', configured_maximum))
+        exposure_step = float(request_data.get('exposure_step', 5.0))
+    except (TypeError, ValueError):
+        raise dark_automation.DarkAutomationError('Enter valid exposure maximum and step values')
+    if not math.isfinite(exposure_max) or exposure_max < 1.0:
+        raise dark_automation.DarkAutomationError('The exposure maximum must be at least 1 second')
+    if abs(exposure_max - round(exposure_max)) > 0.000001:
+        raise dark_automation.DarkAutomationError('The exposure maximum must use whole seconds')
+    if exposure_max > configured_maximum + 0.000001:
+        raise dark_automation.DarkAutomationError(
+            'The dark exposure maximum cannot exceed the current configured camera maximum'
+        )
+    if not math.isfinite(exposure_step) or exposure_step < 1.0:
+        raise dark_automation.DarkAutomationError('The exposure step must be at least 1 second')
+
+    capture_order = str(request_data.get('capture_order') or 'long_first')
+    if capture_order not in dark_automation.CAPTURE_ORDERS:
+        raise dark_automation.DarkAutomationError('Select a valid capture order')
+    temperature_policy = str(request_data.get('temperature_policy') or 'recommended')
+    if temperature_policy not in dark_automation.TEMPERATURE_POLICIES:
+        raise dark_automation.DarkAutomationError('Select a valid temperature policy')
+    capture_mode = str(
+        request_data.get('capture_mode') or dark_automation.CAPTURE_MODE_SINGLE
+    )
+    if capture_mode not in dark_automation.CAPTURE_MODES:
+        raise dark_automation.DarkAutomationError('Select a valid dark capture mode')
+    if capture_mode != dark_automation.CAPTURE_MODE_TEMPERATURE_SERIES:
+        temperature_delta = 5.0
+        temperature_target = None
+    else:
+        try:
+            temperature_delta = float(request_data.get('temperature_delta', 5.0))
+        except (TypeError, ValueError):
+            raise dark_automation.DarkAutomationError('Enter a valid temperature step')
+        if (
+                not math.isfinite(temperature_delta)
+                or temperature_delta < dark_automation.MIN_TEMPERATURE_DELTA
+                or temperature_delta > dark_automation.MAX_TEMPERATURE_DELTA
+        ):
+            raise dark_automation.DarkAutomationError(
+                'Choose a temperature step between {0:g} and {1:g}°C.'.format(
+                    dark_automation.MIN_TEMPERATURE_DELTA,
+                    dark_automation.MAX_TEMPERATURE_DELTA,
+                )
+            )
+        temperature_target_value = request_data.get('temperature_target')
+        if temperature_target_value is None or temperature_target_value == '':
+            temperature_target = None
+        else:
+            try:
+                temperature_target = float(temperature_target_value)
+            except (TypeError, ValueError):
+                raise dark_automation.DarkAutomationError('Enter a valid target sensor temperature')
+            if (
+                    not math.isfinite(temperature_target)
+                    or temperature_target < dark_automation.MIN_TEMPERATURE_TARGET
+                    or temperature_target > dark_automation.MAX_TEMPERATURE_TARGET
+            ):
+                raise dark_automation.DarkAutomationError(
+                    'Target sensor temperature must be between {0:g} and {1:g}°C.'.format(
+                        dark_automation.MIN_TEMPERATURE_TARGET,
+                        dark_automation.MAX_TEMPERATURE_TARGET,
+                    )
+                )
+    return {
+        'exposure_max': exposure_max,
+        'exposure_step': exposure_step,
+        'capture_order': capture_order,
+        'temperature_policy': temperature_policy,
+        'capture_mode': capture_mode,
+        'temperature_delta': float(round(temperature_delta, 3)),
+        'temperature_target': (
+            None if temperature_target is None else float(round(temperature_target, 3))
+        ),
+    }
+
+
+def _build_dark_analysis(
+        config,
+        camera,
+        quality='balanced',
+        temperature=None,
+        exposure_max=None,
+        exposure_step=5.0,
+):
+    capabilities = CameraCapabilities.from_camera(camera)
+    capture_state = build_effective_capture_state(
+        config,
+        capabilities,
+        exposure_max=exposure_max,
+        exposure_step=exposure_step,
+    )
+    dark_plan = build_dark_plan(
+        capture_state,
+        capabilities,
+        camera.id,
+        quality=quality,
+    )
+    coverage = analyze_dark_plan(
+        dark_plan,
+        _dark_inventory_for_camera(camera.id),
+        temperature=temperature,
+    )
+    return capabilities, capture_state, coverage
+
+
+def _find_active_dark_task(owner=None, camera_id=None):
+    state_list = (
+        TaskQueueState.MANUAL,
+        TaskQueueState.QUEUED,
+        TaskQueueState.RUNNING,
+    )
+    tasks = IndiAllSkyDbTaskQueueTable.query\
+        .filter(IndiAllSkyDbTaskQueueTable.state.in_(state_list))\
+        .order_by(IndiAllSkyDbTaskQueueTable.createDate.desc())\
+        .all()
+    for task in tasks:
+        task_data = task.data or {}
+        if task_data.get('action') != 'dark_automation':
+            continue
+        if task_data.get('status') not in dark_automation.ACTIVE_STATUSES:
+            continue
+        if owner is not None and task_data.get('owner') != owner:
+            continue
+        if camera_id is not None and int(task_data.get('camera_id', -1)) != int(camera_id):
+            continue
+        return task
+    return None
+
+
+def _dark_capture_controller_available(view):
+    try:
+        watchdog = view._miscDb.getState('WATCHDOG')
+    except NoResultFound:
+        return False
+    try:
+        status = view._miscDb.getState('STATUS')
+    except NoResultFound:
+        status = None
+    return dark_automation.capture_controller_available(watchdog, status=status)
+
+
+def _prepare_dark_capture_service(view, operation='capture'):
+    """Start a native service when possible or return durable queue guidance."""
+    if _dark_capture_controller_available(view):
+        return None
+
+    if view.docker:
+        if operation == 'flush':
+            return (
+                'Library removal is queued, but the capture controller is not running. '
+                'Start the capture service or container within 30 minutes.'
+            )
+        return (
+            'The plan is queued, but the capture controller is not running. '
+            'Start the capture service or container within 30 minutes; otherwise '
+            'the camera-cover confirmation will expire.'
+        )
+
+    try:
+        active_state, _unit_state = view.getSystemdUnitStatus(
+            app.config['ALLSKY_SERVICE_NAME']
+        )
+        if active_state in ('inactive', 'failed'):
+            view.startSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
+            return None
+        if active_state == 'activating':
+            return None
+    except dbus.exceptions.DBusException as error:
+        app.logger.warning('Unable to start capture service for dark-library task: %s', error)
+
+    if operation == 'flush':
+        return (
+            'Library removal is queued, but the capture controller is not responding and '
+            'could not be started automatically. Start it within 30 minutes.'
+        )
+    return (
+        'The plan is queued, but the capture controller is not responding and could not '
+        'be started automatically. Start it within 30 minutes; otherwise the '
+        'camera-cover confirmation will expire.'
+    )
+
+
 class DarkFramesView(TemplateView):
     page_title = 'Dark Frames'
     decorators = [login_required]
@@ -924,7 +1192,8 @@ class DarkFramesView(TemplateView):
                 IndiAllSkyDbCameraTable.id.desc(),
                 IndiAllSkyDbDarkFrameTable.gain.asc(),
                 IndiAllSkyDbDarkFrameTable.exposure.asc(),
-            )
+            )\
+            .all()
 
         bpm_list = IndiAllSkyDbBadPixelMapTable.query\
             .join(IndiAllSkyDbCameraTable)\
@@ -933,17 +1202,23 @@ class DarkFramesView(TemplateView):
                 IndiAllSkyDbCameraTable.id.desc(),
                 IndiAllSkyDbBadPixelMapTable.gain.asc(),
                 IndiAllSkyDbBadPixelMapTable.exposure.asc(),
-            )
+            )\
+            .all()
 
 
         d_info_list = list()
+        dark_inventory = list()
         for d in darkframe_list:
             file_path = d.getFilesystemPath()
 
             try:
                 file_size = file_path.stat().st_size
+                file_exists = file_path.is_file()
             except FileNotFoundError:
                 file_size = 0
+                file_exists = False
+
+            dark_data = d.data or {}
 
             d_info = {
                 'id' : d.id,
@@ -960,22 +1235,43 @@ class DarkFramesView(TemplateView):
                 'adu'          : d.adu,
                 'filename'     : d.filename,
                 'url'          : d.getUrl(),
-                'hot_pixels'   : d.data.get('hot_pixels', -1),
-                'method'       : d.data.get('method', ''),
+                'hot_pixels'   : dark_data.get('hot_pixels', -1),
+                'method'       : dark_data.get('method', ''),
                 'size_mb'      : file_size / 1024 / 1024,
             }
 
             d_info_list.append(d_info)
+            dark_inventory.append(
+                DarkInventoryFrame(
+                    frame_type='dark',
+                    frame_id=d.id,
+                    camera_id=d.camera_id,
+                    active=bool(d.active),
+                    exists=file_exists,
+                    bit_depth=d.bitdepth,
+                    exposure=float(d.exposure),
+                    gain=float(d.gain),
+                    binning=int(d.binmode),
+                    temperature=d.temp,
+                    width=d.width,
+                    height=d.height,
+                    create_date=d.createDate,
+                )
+            )
 
 
         b_info_list = list()
         for b in bpm_list:
-            file_path = d.getFilesystemPath()
+            file_path = b.getFilesystemPath()
 
             try:
                 file_size = file_path.stat().st_size
+                file_exists = file_path.is_file()
             except FileNotFoundError:
                 file_size = 0
+                file_exists = False
+
+            bpm_data = b.data or {}
 
             b_info = {
                 'id' : b.id,
@@ -986,23 +1282,487 @@ class DarkFramesView(TemplateView):
                 'gain'         : b.gain,
                 'exposure'     : b.exposure,
                 'binmode'      : b.binmode,
-                'width'        : d.width,
-                'height'       : d.height,
+                'width'        : b.width,
+                'height'       : b.height,
                 'temp'         : b.temp,
                 'adu'          : b.adu,
                 'filename'     : b.filename,
                 'url'          : b.getUrl(),
-                'hot_pixels'   : d.data.get('hot_pixels', -1),
+                'hot_pixels'   : bpm_data.get('hot_pixels', -1),
                 'size_mb'      : file_size / 1024 / 1024,
             }
 
             b_info_list.append(b_info)
+            dark_inventory.append(
+                DarkInventoryFrame(
+                    frame_type='bpm',
+                    frame_id=b.id,
+                    camera_id=b.camera_id,
+                    active=bool(b.active),
+                    exists=file_exists,
+                    bit_depth=b.bitdepth,
+                    exposure=float(b.exposure),
+                    gain=float(b.gain),
+                    binning=int(b.binmode),
+                    temperature=b.temp,
+                    width=b.width,
+                    height=b.height,
+                    create_date=b.createDate,
+                )
+            )
+
+
+        try:
+            camera_capabilities = CameraCapabilities.from_camera(self.camera)
+            capture_state = build_effective_capture_state(
+                self.indi_allsky_config,
+                camera_capabilities,
+            )
+            dark_plan = build_dark_plan(
+                capture_state,
+                camera_capabilities,
+                self.camera.id,
+                quality='balanced',
+            )
+
+            if self.latest_image_entry and self.latest_image_entry.temp is not None:
+                current_temperature = float(self.latest_image_entry.temp)
+            else:
+                current_temperature = None
+
+            dark_coverage = analyze_dark_plan(
+                dark_plan,
+                dark_inventory,
+                temperature=current_temperature,
+            )
+            dark_analysis = analysis_context(
+                capture_state,
+                camera_capabilities,
+                dark_coverage,
+            )
+            initial_strategy = (
+                dark_coverage.suggested_action
+                if dark_coverage.suggested_action in ('complete', 'rebuild')
+                else 'complete'
+            )
+            dark_execution_preview = dark_automation.execution_preview(
+                dark_coverage,
+                initial_strategy,
+                temperature_target=_dark_default_temperature_target(
+                    self.indi_allsky_config,
+                ),
+            )
+            dark_execution_preview['analysis'] = dark_analysis
+            dark_execution_preview['recommended_method'] = dark_automation.recommended_stacking_method(
+                self.indi_allsky_config,
+                dark_execution_preview['groups'],
+            )
+        except (TypeError, ValueError, KeyError) as e:
+            app.logger.error('Unable to analyse dark library: %s', str(e))
+            dark_analysis = {
+                'available': False,
+                'error': str(e),
+                'warnings': [],
+            }
+            dark_execution_preview = {
+                'strategy': 'complete',
+                'groups': [],
+                'target_count': 0,
+                'frame_count': 10,
+                'estimated_time': '0h 00m 00s',
+                'estimated_library_storage': '0 B',
+                'estimated_peak_storage': '0 B',
+                'exposure_max': 1.0,
+                'exposure_step': 5.0,
+                'capture_order': 'long_first',
+                'temperature_policy': 'recommended',
+                'capture_mode': dark_automation.CAPTURE_MODE_SINGLE,
+                'temperature_delta': 5.0,
+                'temperature_target': _dark_default_temperature_target(
+                    self.indi_allsky_config,
+                ),
+                'temperature_set_count': None,
+                'estimate_scope': 'complete_task',
+                'config_signature': '',
+                'quality': 'balanced',
+                'recommended_method': 'sigmaclip',
+            }
 
 
         context['darkframe_list'] = d_info_list
         context['bpm_list'] = b_info_list
+        context['dark_analysis'] = dark_analysis
+        context['dark_execution_preview'] = dark_execution_preview
+        context['dark_automation_can_run'] = bool(
+            _can_save_standard_configuration()
+            and getattr(self.camera, 'local', False)
+            and dark_analysis.get('available', False)
+        )
+        active_task = _find_active_dark_task(
+            owner=_dark_automation_owner(),
+            camera_id=self.camera.id,
+        )
+        context['dark_automation_task_id'] = active_task.id if active_task else None
+        context['dark_library_can_flush'] = bool(
+            context['dark_automation_can_run']
+            and (len(d_info_list) + len(b_info_list)) > 0
+        )
+        context['camera_name'] = str(self.camera.name)
+        context['dark_library_entry_count'] = len(d_info_list) + len(b_info_list)
 
         return context
+
+
+class AjaxDarkAutomationPlanView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def dispatch_request(self):
+        request_data = request.get_json(silent=True) or {}
+        try:
+            camera_id = int(request_data.get('camera_id'))
+            frame_count = int(request_data.get('frame_count', 10))
+        except (TypeError, ValueError):
+            return jsonify({'error': 'Select a valid camera and source-frame count.'}), 400
+
+        self.cameraSetup(camera_id=camera_id)
+        if not getattr(self.camera, 'local', False):
+            return jsonify({'error': 'Dark capture is only available for a local camera.'}), 400
+
+        quality = str(request_data.get('quality') or 'balanced')
+        strategy = str(request_data.get('strategy') or 'complete')
+        try:
+            capabilities = CameraCapabilities.from_camera(self.camera)
+            options = _dark_capture_options(
+                request_data,
+                self.indi_allsky_config,
+                capabilities,
+            )
+            analysis_temperature = (
+                _dark_current_temperature(self.camera.id)
+                if options['temperature_policy'] == 'recommended'
+                else None
+            )
+            capabilities, capture_state, coverage = _build_dark_analysis(
+                self.indi_allsky_config,
+                self.camera,
+                quality=quality,
+                temperature=analysis_temperature,
+                exposure_max=options['exposure_max'],
+                exposure_step=options['exposure_step'],
+            )
+            preview = dark_automation.execution_preview(
+                coverage,
+                strategy,
+                frame_count=frame_count,
+                capture_order=options['capture_order'],
+                temperature_policy=options['temperature_policy'],
+                capture_mode=options['capture_mode'],
+                temperature_delta=options['temperature_delta'],
+                temperature_target=options['temperature_target'],
+            )
+            preview['recommended_method'] = dark_automation.recommended_stacking_method(
+                self.indi_allsky_config,
+                preview['groups'],
+            )
+        except (dark_automation.DarkAutomationError, KeyError, TypeError, ValueError) as error:
+            return jsonify({'error': str(error)}), 400
+
+        preview['analysis'] = analysis_context(
+            capture_state,
+            capabilities,
+            coverage,
+        )
+        return jsonify(preview)
+
+
+class AjaxDarkAutomationStartView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def dispatch_request(self):
+        if not _can_save_standard_configuration():
+            return jsonify({'error': 'Administrator access is required to start dark calibration.'}), 403
+
+        request_data = request.get_json(silent=True) or {}
+        if request_data.get('camera_covered') is not True:
+            return jsonify({'error': 'Confirm that the camera is fully covered before starting.'}), 400
+
+        try:
+            camera_id = int(request_data.get('camera_id'))
+        except (TypeError, ValueError):
+            return jsonify({'error': 'Select a valid camera.'}), 400
+        self.cameraSetup(camera_id=camera_id)
+        if not getattr(self.camera, 'local', False):
+            return jsonify({'error': 'Dark capture is only available for a local camera.'}), 400
+
+        quality = str(request_data.get('quality') or 'balanced')
+        try:
+            capabilities = CameraCapabilities.from_camera(self.camera)
+            options = _dark_capture_options(
+                request_data,
+                self.indi_allsky_config,
+                capabilities,
+            )
+            analysis_temperature = (
+                _dark_current_temperature(self.camera.id)
+                if options['temperature_policy'] == 'recommended'
+                else None
+            )
+            capabilities, capture_state, coverage = _build_dark_analysis(
+                self.indi_allsky_config,
+                self.camera,
+                quality=quality,
+                temperature=analysis_temperature,
+                exposure_max=options['exposure_max'],
+                exposure_step=options['exposure_step'],
+            )
+            execution = dark_automation.normalize_execution_request(
+                coverage,
+                capabilities,
+                capture_state,
+                request_data,
+            )
+            dark_automation.validate_execution_profiles(self.indi_allsky_config, execution)
+        except (dark_automation.DarkAutomationError, KeyError, TypeError, ValueError) as error:
+            return jsonify({'error': str(error)}), 400
+
+        active_task = _find_active_dark_task()
+        if active_task is not None:
+            return jsonify({
+                'error': 'Another dark calibration is already queued or running.',
+                'task_id': active_task.id,
+            }), 409
+
+        service_start_warning = _prepare_dark_capture_service(self)
+        now_text = datetime.now(timezone.utc).isoformat()
+        task_data = {
+            'action': 'dark_automation',
+            'owner': _dark_automation_owner(),
+            'camera_id': self.camera.id,
+            'camera_uuid': str(getattr(self.camera, 'uuid', '') or ''),
+            'capability_signature': capabilities.signature,
+            'generation_id': str(uuid.uuid4()),
+            'status': 'queued',
+            'cancel_requested': False,
+            'created_utc': now_text,
+            'quality': execution['quality'],
+            'strategy': execution['strategy'],
+            'method': execution['method'],
+            'frame_count': execution['frame_count'],
+            'config_signature': execution['config_signature'],
+            'plan_signature': execution['plan_signature'],
+            'groups': execution['groups'],
+            'target_count': execution['target_count'],
+            'estimated_seconds': execution['estimated_seconds'],
+            'estimated_time': execution['estimated_time'],
+            'estimated_library_bytes': execution['estimated_library_bytes'],
+            'estimated_library_storage': execution['estimated_library_storage'],
+            'estimated_peak_bytes': execution['estimated_peak_bytes'],
+            'estimated_peak_storage': execution['estimated_peak_storage'],
+            'exposure_max': execution['exposure_max'],
+            'exposure_step': execution['exposure_step'],
+            'capture_order': execution['capture_order'],
+            'temperature_policy': execution['temperature_policy'],
+            'capture_mode': execution['capture_mode'],
+            'temperature_delta': execution['temperature_delta'],
+            'temperature_target': execution['temperature_target'],
+            'temperature_set_count': execution['temperature_set_count'],
+            'estimate_scope': execution['estimate_scope'],
+            'camera_covered_confirmed_utc': now_text,
+            'capture_restored': False,
+            'error': None,
+            'progress': {
+                'phase': 'queued',
+                'message': service_start_warning or 'Waiting for the capture controller.',
+                'completed_master_sets': 0,
+                'total_master_sets': execution['target_count'],
+                'heartbeat_utc': now_text,
+            },
+        }
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.MAIN,
+            state=TaskQueueState.MANUAL,
+            priority=10,
+            data=task_data,
+        )
+        db.session.add(task)
+        try:
+            db.session.commit()
+        except SQLAlchemyError:
+            db.session.rollback()
+            app.logger.exception('Unable to queue dark-library calibration')
+            return jsonify({
+                'error': 'Dark calibration could not be queued. Wait a moment and try again.',
+            }), 500
+
+        response = dark_automation.task_public_status(task)
+        response['service_start_warning'] = service_start_warning
+        return jsonify(response)
+
+
+class AjaxDarkLibraryFlushView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def dispatch_request(self):
+        if not _can_save_standard_configuration():
+            return jsonify({'error': 'Administrator access is required to remove a dark library.'}), 403
+
+        request_data = request.get_json(silent=True) or {}
+        try:
+            camera_id = int(request_data.get('camera_id'))
+        except (TypeError, ValueError):
+            return jsonify({'error': 'Select a valid camera.'}), 400
+        self.cameraSetup(camera_id=camera_id)
+        confirmation = str(request_data.get('confirmation') or '')
+        if confirmation != str(self.camera.name):
+            return jsonify({
+                'error': 'Enter the camera name exactly to confirm permanent library removal.',
+            }), 400
+
+        entry_count = (
+            IndiAllSkyDbDarkFrameTable.query.filter_by(camera_id=self.camera.id).count()
+            + IndiAllSkyDbBadPixelMapTable.query.filter_by(camera_id=self.camera.id).count()
+        )
+        if entry_count < 1:
+            return jsonify({'error': 'This camera has no dark frames or bad-pixel maps to remove.'}), 400
+
+        active_task = _find_active_dark_task()
+        if active_task is not None:
+            return jsonify({
+                'error': 'Another dark-library task is already queued or running.',
+                'task_id': active_task.id,
+            }), 409
+
+        service_start_warning = _prepare_dark_capture_service(self, operation='flush')
+        now_text = datetime.now(timezone.utc).isoformat()
+        task_data = {
+            'action': 'dark_automation',
+            'operation': 'flush',
+            'owner': _dark_automation_owner(),
+            'camera_id': self.camera.id,
+            'camera_uuid': str(getattr(self.camera, 'uuid', '') or ''),
+            'status': 'queued',
+            'cancel_requested': False,
+            'created_utc': now_text,
+            'capture_mode': dark_automation.CAPTURE_MODE_SINGLE,
+            'target_count': 0,
+            'estimated_seconds': 0,
+            'estimated_time': '0h 00m 00s',
+            'capture_restored': False,
+            'error': None,
+            'progress': {
+                'phase': 'queued',
+                'message': service_start_warning or (
+                    'Waiting for the capture controller before removing the library.'
+                ),
+                'completed_master_sets': 0,
+                'total_master_sets': 0,
+                'heartbeat_utc': now_text,
+            },
+        }
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.MAIN,
+            state=TaskQueueState.MANUAL,
+            priority=10,
+            data=task_data,
+        )
+        db.session.add(task)
+        try:
+            db.session.commit()
+        except SQLAlchemyError:
+            db.session.rollback()
+            app.logger.exception('Unable to queue dark-library removal')
+            return jsonify({
+                'error': 'Library removal could not be queued. Wait a moment and try again.',
+            }), 500
+
+        response = dark_automation.task_public_status(task)
+        response['service_start_warning'] = service_start_warning
+        return jsonify(response)
+
+
+class AjaxDarkAutomationStatusView(BaseView):
+    methods = ['GET']
+    decorators = [login_required]
+
+    def dispatch_request(self, task_id):
+        task = IndiAllSkyDbTaskQueueTable.query.filter_by(id=int(task_id)).first()
+        if task is None or (task.data or {}).get('action') != 'dark_automation':
+            return jsonify({'error': 'This dark-calibration run is no longer available.'}), 404
+        task_data = dict(task.data or {})
+        if task_data.get('owner') != _dark_automation_owner():
+            return jsonify({'error': 'This dark-calibration run is not available to this user.'}), 403
+
+        if (
+                task_data.get('status') == 'queued'
+                and task.createDate < (datetime.now() - timedelta(minutes=30))
+        ):
+            task_data['status'] = 'failed'
+            task_data['completed_utc'] = datetime.now(timezone.utc).isoformat()
+            task_data['capture_restored'] = True
+            if task_data.get('operation') == 'flush':
+                task_data['error'] = (
+                    'The capture controller did not accept library removal within 30 minutes. '
+                    'Check that capture is running and try again.'
+                )
+            else:
+                task_data['error'] = (
+                    'The capture controller did not accept the plan within 30 minutes. '
+                    'Check that capture is running, uncover the camera, and start again when ready.'
+                )
+            progress = dict(task_data.get('progress') or {})
+            progress['phase'] = 'failed'
+            progress['message'] = (
+                'Library removal was not accepted.'
+                if task_data.get('operation') == 'flush'
+                else 'The covered-camera confirmation expired before capture started.'
+            )
+            task_data['progress'] = progress
+            task.data = task_data
+            task.state = TaskQueueState.FAILED
+            task.result = 'Dark calibration queue timeout'
+            db.session.commit()
+
+        return jsonify(dark_automation.task_public_status(task))
+
+
+class AjaxDarkAutomationCancelView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def dispatch_request(self, task_id):
+        if not _can_save_standard_configuration():
+            return jsonify({'error': 'Administrator access is required to cancel dark calibration.'}), 403
+
+        task = IndiAllSkyDbTaskQueueTable.query.filter_by(id=int(task_id)).first()
+        if task is None or (task.data or {}).get('action') != 'dark_automation':
+            return jsonify({'error': 'This dark-calibration run is no longer available.'}), 404
+        task_data = dict(task.data or {})
+        if task_data.get('owner') != _dark_automation_owner():
+            return jsonify({'error': 'This dark-calibration run is not available to this user.'}), 403
+        if task_data.get('status') in dark_automation.TERMINAL_STATUSES:
+            return jsonify(dark_automation.task_public_status(task))
+
+        task_data['cancel_requested'] = True
+        progress = dict(task_data.get('progress') or {})
+        if task.state == TaskQueueState.MANUAL:
+            task_data['status'] = 'cancelled'
+            task_data['completed_utc'] = datetime.now(timezone.utc).isoformat()
+            task_data['capture_restored'] = True
+            progress['phase'] = 'cancelled'
+            progress['message'] = 'Dark calibration was cancelled before capture paused.'
+            task.state = TaskQueueState.EXPIRED
+            task.result = 'Dark calibration cancelled'
+        else:
+            task_data['status'] = 'cancel_requested'
+            progress['phase'] = 'cancel_requested'
+            progress['message'] = 'Cancellation requested; finishing the current camera operation.'
+        task_data['progress'] = progress
+        task.data = task_data
+        db.session.commit()
+        return jsonify(dark_automation.task_public_status(task))
 
 
 class ImageLagView(TemplateView):
@@ -14604,6 +15364,11 @@ bp_allsky.add_url_rule('/camera', view_func=CameraLensView.as_view('camera_lens_
 bp_allsky.add_url_rule('/lag', view_func=ImageLagView.as_view('image_lag_view', template_name='lag.html'))
 bp_allsky.add_url_rule('/adu', view_func=RollingAduView.as_view('rolling_adu_view', template_name='adu.html'))
 bp_allsky.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
+bp_allsky.add_url_rule('/ajax/darks/plan', view_func=AjaxDarkAutomationPlanView.as_view('ajax_darks_plan_view'))
+bp_allsky.add_url_rule('/ajax/darks/start', view_func=AjaxDarkAutomationStartView.as_view('ajax_darks_start_view'))
+bp_allsky.add_url_rule('/ajax/darks/flush', view_func=AjaxDarkLibraryFlushView.as_view('ajax_darks_flush_view'))
+bp_allsky.add_url_rule('/ajax/darks/status/<int:task_id>', view_func=AjaxDarkAutomationStatusView.as_view('ajax_darks_status_view'))
+bp_allsky.add_url_rule('/ajax/darks/cancel/<int:task_id>', view_func=AjaxDarkAutomationCancelView.as_view('ajax_darks_cancel_view'))
 bp_allsky.add_url_rule('/mask', view_func=MaskView.as_view('mask_view', template_name='mask.html'))
 bp_allsky.add_url_rule('/camerasimulator', view_func=CameraSimulatorView.as_view('camera_simulator_view', template_name='camera_simulator.html'))
 bp_allsky.add_url_rule('/imagecirclehelper', view_func=ImageCircleHelperView.as_view('image_circle_helper_view', template_name='imagecirclehelper.html'))
