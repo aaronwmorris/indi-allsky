@@ -1169,7 +1169,7 @@ class IndiClient(PyIndi.BaseClient):
             'indi_canon_ccd',
             'indi_nikon_ccd',
             'indi_pentax_ccd',
-            'indin_sony_ccd',
+            'indi_sony_ccd',
         ]:
             gain_ctl = self.get_control(self.ccd_device, 'CCD_ISO', 'switch')
 

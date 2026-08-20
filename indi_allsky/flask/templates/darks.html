@@ -7,10 +7,119 @@
 <script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
 
 <style>
+.dark-section-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dark-section-tab {
+    width: 100%;
+    min-width: 0;
+}
+
+.dark-section-tab span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dark-fact-card,
+.dark-coverage-card,
+.dark-progress-fact {
+    min-width: 0;
+}
+
+.dark-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.dark-library-card .dt-layout-row {
+    gap: 0.75rem;
+}
+
+.dark-library-card .dt-layout-start,
+.dark-library-card .dt-layout-end {
+    min-width: 0;
+}
+
+.dark-library-card .dt-layout-start > div,
+.dark-library-card .dt-layout-end > div {
+    max-width: 100%;
+}
+
+#dark-capture-controls label.tw\:form-control {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+#dark-capture-controls label.tw\:form-control > .tw\:label-text,
+#dark-capture-controls label.tw\:form-control > .tw\:label-text-alt {
+    display: block;
+}
+
+#dark-capture-controls label.tw\:form-control > .tw\:select,
+#dark-capture-controls label.tw\:form-control > .tw\:input,
+#dark-capture-controls label.tw\:form-control > .tw\:join {
+    width: 100%;
+    min-width: 0;
+}
+
+#dark-cover-confirmation {
+    color: var(--color-warning-content);
+    border-color: color-mix(in oklab, var(--color-warning-content) 40%, transparent);
+    background-color: color-mix(in oklab, var(--color-warning-content) 8%, transparent);
+}
+
+#dark-cover-confirmation:hover {
+    background-color: color-mix(in oklab, var(--color-warning-content) 14%, transparent);
+}
+
+#dark-camera-covered {
+    color: var(--color-warning-content) !important;
+    background-color: color-mix(in oklab, var(--color-warning-content) 5%, transparent) !important;
+    border: 2px solid var(--color-warning-content) !important;
+    border-radius: 0.25rem !important;
+    opacity: 1 !important;
+}
+
+#dark-camera-covered:checked {
+    color: var(--color-success-content) !important;
+    background-color: var(--color-success) !important;
+}
+
+@media (max-width: 768px) {
+    .dark-library-card .dt-layout-row {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+    .dark-library-card .dt-layout-cell {
+        width: 100%;
+        min-width: 0;
+    }
+    .dark-library-card .dt-layout-start,
+    .dark-library-card .dt-layout-end {
+        flex-wrap: wrap !important;
+    }
+    .dark-library-card .dt-search {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .dark-library-card .dt-search input {
+        width: 100%;
+        min-width: 0;
+        margin: 0;
+    }
+}
+
 @media (max-width: 640px) {
     #dark-page-content { padding: 0.5rem; }
     #dark-advisor-body { padding: 0.75rem; }
     #dark-capture-controls { padding: 0.5rem; }
+    .dark-section-tabs { grid-template-columns: 1fr; }
+    .dark-library-card .tw\:card-body { padding: 0.75rem; }
     #dark-cover-warning {
         display: flex;
         flex-direction: column;
@@ -48,18 +157,37 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
 {% endblock %}
 
 {% block content %}
-<div id="dark-page-content" class="tw:p-4 tw:flex tw:flex-col tw:gap-6 tw:w-full">
+<div id="dark-page-content" class="tw:container tw:mx-auto tw:w-full tw:px-4 tw:py-6 tw:flex tw:flex-col tw:gap-4">
+
+    <nav aria-label="Dark library sections">
+        <div class="dark-section-tabs tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm" role="tablist">
+            <button id="dark-tab-darks" type="button" role="tab" aria-controls="tab-darks" aria-selected="true" class="dark-tab-btn dark-section-tab tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:uppercase tw:tracking-wider tw:gap-1.5" data-target="tab-darks">
+                <i class="tw:icon-[lucide--layers-3] tw:w-3.5 tw:h-3.5 tw:shrink-0"></i>
+                <span>Dark Library</span>
+            </button>
+            <button id="dark-tab-bpm" type="button" role="tab" aria-controls="tab-bpm" aria-selected="false" class="dark-tab-btn dark-section-tab tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:hover:text-base-content tw:gap-1.5" data-target="tab-bpm">
+                <i class="tw:icon-[lucide--grid-2x2-check] tw:w-3.5 tw:h-3.5 tw:shrink-0"></i>
+                <span>Bad Pixel Maps</span>
+            </button>
+            <button id="dark-tab-tool" type="button" role="tab" aria-controls="tab-tool" aria-selected="false" class="dark-tab-btn dark-section-tab tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:hover:text-base-content tw:gap-1.5" data-target="tab-tool">
+                <i class="tw:icon-[lucide--wand-sparkles] tw:w-3.5 tw:h-3.5 tw:shrink-0"></i>
+                <span>Library Builder</span>
+            </button>
+        </div>
+    </nav>
+
+    <div id="tab-tool" class="dark-tab-pane tw:flex tw:flex-col tw:gap-4" role="tabpanel" aria-labelledby="dark-tab-tool" style="display: none;">
 
     <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
-        <div id="dark-advisor-body" class="tw:card-body tw:p-6 tw:gap-5">
+        <div id="dark-advisor-body" class="tw:card-body tw:p-4 tw:sm:p-6 tw:gap-4">
             <div class="tw:flex tw:flex-wrap tw:items-start tw:justify-between tw:gap-3">
                 <div>
                     <div class="tw:flex tw:items-center tw:gap-2">
-                        <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50">Dark Library Advisor</h4>
+                        <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50">Dark Library Builder</h4>
                         <span class="tw:badge tw:badge-outline tw:badge-sm">Guided capture</span>
                     </div>
                     <p class="tw:text-sm tw:text-base-content/60 tw:mt-2 tw:max-w-3xl">
-                        Checks the current camera settings against the active dark frames and bad pixel maps, then prepares an adjustable capture plan.
+                        Checks the current camera settings and both calibration libraries, then prepares an adjustable capture plan.
                     </p>
                 </div>
                 {% if dark_analysis.available %}
@@ -69,6 +197,39 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 {% endif %}
             </div>
 
+            <details id="dark-quick-guide" class="tw:collapse tw:collapse-arrow tw:border tw:border-info/30 tw:rounded-[var(--radius-box)] tw:bg-info/5">
+                <summary class="tw:collapse-title tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:pr-10">
+                    <i class="tw:icon-[lucide--circle-help] tw:w-5 tw:h-5 tw:text-info tw:shrink-0"></i>
+                    <span class="tw:font-semibold tw:text-sm">New here? Start with the recommendation</span>
+                    <span class="tw:badge tw:badge-info tw:badge-outline tw:badge-sm">Quick guide</span>
+                    <span class="tw:basis-full tw:text-xs tw:text-base-content/60">The safe default is to leave the prepared values unchanged.</span>
+                </summary>
+                <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-3">
+                    <ol class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-4 tw:gap-2">
+                        <li class="tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:gap-3">
+                            <span class="tw:badge tw:badge-info tw:badge-sm tw:shrink-0" aria-hidden="true">1</span>
+                            <div><div class="tw:font-semibold tw:text-sm">Review the recommendation</div><div class="tw:text-xs tw:text-base-content/60 tw:mt-1">The banner tells you whether the current library should be completed, refreshed or rebuilt.</div></div>
+                        </li>
+                        <li class="tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:gap-3">
+                            <span class="tw:badge tw:badge-info tw:badge-sm tw:shrink-0" aria-hidden="true">2</span>
+                            <div><div class="tw:font-semibold tw:text-sm">Keep the suggested settings</div><div class="tw:text-xs tw:text-base-content/60 tw:mt-1">Camera limits and capture profiles are already included. Advanced options are optional.</div></div>
+                        </li>
+                        <li class="tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:gap-3">
+                            <span class="tw:badge tw:badge-info tw:badge-sm tw:shrink-0" aria-hidden="true">3</span>
+                            <div><div class="tw:font-semibold tw:text-sm">Block every source of light</div><div class="tw:text-xs tw:text-base-content/60 tw:mt-1">Run day or night, but fit a lens cap or cover the enclosure before confirming.</div></div>
+                        </li>
+                        <li class="tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:gap-3">
+                            <span class="tw:badge tw:badge-info tw:badge-sm tw:shrink-0" aria-hidden="true">4</span>
+                            <div><div class="tw:font-semibold tw:text-sm">Start and monitor</div><div class="tw:text-xs tw:text-base-content/60 tw:mt-1">Normal capture resumes automatically. Existing masters stay active until replacements succeed.</div></div>
+                        </li>
+                    </ol>
+                    <div class="tw:alert tw:alert-info tw:py-2 tw:text-xs tw:items-start">
+                        <i class="tw:icon-[lucide--lightbulb] tw:w-4 tw:h-4 tw:mt-0.5 tw:shrink-0"></i>
+                        <span><strong>Most users:</strong> choose <strong>One library run</strong>, keep the suggested plan and use <strong>Balanced</strong> gain coverage. Use a falling-temperature series only when a covered camera will cool through several temperatures.</span>
+                    </div>
+                </div>
+            </details>
+
             {% if dark_analysis.available %}
             <div class="tw:alert {% if dark_analysis.suggested_action == 'none' %}tw:alert-success{% else %}tw:alert-info{% endif %} tw:items-start">
                 <i class="tw:icon-[lucide--scan-search] tw:w-5 tw:h-5 tw:mt-0.5"></i>
@@ -77,83 +238,92 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     <div class="tw:text-sm">{{ dark_analysis.suggested_action_description }}</div>
                     {% if dark_analysis.suggested_target_count %}
                     <div class="tw:text-xs tw:mt-1 tw:opacity-75">
-                        {{ dark_analysis.suggested_target_count }} master sets · approximately {{ dark_analysis.estimated_time }} using 10 source frames per master
+                        {{ dark_analysis.suggested_target_count }} master set{% if dark_analysis.suggested_target_count != 1 %}s{% endif %} · approximately {{ dark_analysis.estimated_time }} using 10 source frames per master
                     </div>
                     {% endif %}
                 </div>
             </div>
 
-            <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 xl:tw:grid-cols-4 tw:gap-3">
-                <div class="tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4">
+            <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-4 tw:gap-3">
+                <div class="dark-fact-card tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4">
                     <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Exposure mode</div>
                     <div class="tw:font-semibold tw:mt-1">{{ dark_analysis.mode }}</div>
                     <div class="tw:text-xs tw:text-base-content/50 tw:mt-1">{{ dark_analysis.gain_policy_summary }}</div>
                 </div>
-                <div class="tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4">
+                <div class="dark-fact-card tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4">
                     <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Recommended plan</div>
-                    <div class="tw:font-semibold tw:mt-1">{{ dark_analysis.target_count }} master sets</div>
+                    <div class="tw:font-semibold tw:mt-1">{{ dark_analysis.target_count }} master set{% if dark_analysis.target_count != 1 %}s{% endif %}</div>
                     <div class="tw:text-xs tw:text-base-content/50 tw:mt-1">Bins {{ dark_analysis.binnings | join(', ') }}{% if dark_analysis.bit_depths %} · {{ dark_analysis.bit_depths | join('/') }} bit{% endif %}</div>
                 </div>
-                <div class="tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4">
+                <div class="dark-fact-card tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4">
                     <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Gain coverage</div>
                     <div class="tw:font-mono tw:text-sm tw:mt-1 tw:break-words">{{ dark_analysis.gain_summary }}</div>
                 </div>
-                <div class="tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4">
+                <div class="dark-fact-card tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4">
                     <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Temperature check</div>
                     {% if dark_analysis.target_temperatures %}
-                    <div class="tw:font-semibold tw:mt-1">Cooled targets: {{ dark_analysis.target_temperatures | join(', ') }}°C</div>
-                    <div class="tw:text-xs tw:text-base-content/50 tw:mt-1">Target to +5°C matching</div>
+                    <div id="dark-temperature-check-value" class="tw:font-semibold tw:mt-1">Cooled targets: {{ dark_analysis.target_temperatures | join(', ') }}°C</div>
+                    <div id="dark-temperature-check-note" class="tw:text-xs tw:text-base-content/50 tw:mt-1">Target to +5°C matching</div>
                     {% elif dark_analysis.temperature_checked %}
-                    <div class="tw:font-semibold tw:mt-1">Latest image: {{ "%0.1f"|format(dark_analysis.temperature) }}°C</div>
-                    <div class="tw:text-xs tw:text-base-content/50 tw:mt-1">Current to +5°C matching</div>
+                    <div id="dark-temperature-check-value" class="tw:font-semibold tw:mt-1">{{ dark_analysis.temperature_reading.label if dark_analysis.temperature_reading else 'Latest image' }}: {{ "%0.1f"|format(dark_analysis.temperature) }}°C</div>
+                    <div id="dark-temperature-check-note" class="tw:text-xs tw:text-base-content/50 tw:mt-1">Latest image · current to +5°C matching</div>
                     {% else %}
-                    <div class="tw:font-semibold tw:mt-1">Not available</div>
-                    <div class="tw:text-xs tw:text-warning tw:mt-1">Coverage shown without temperature filtering</div>
+                    <div id="dark-temperature-check-value" class="tw:font-semibold tw:mt-1">Not available</div>
+                    <div id="dark-temperature-check-note" class="tw:text-xs tw:text-warning tw:mt-1">Coverage shown without temperature filtering</div>
                     {% endif %}
                 </div>
             </div>
 
-            <div class="tw:grid tw:grid-cols-2 md:tw:grid-cols-3 xl:tw:grid-cols-6 tw:gap-2">
-                <div class="tw:bg-success/10 tw:border tw:border-success/20 tw:rounded-[var(--radius-box)] tw:p-3">
+            <div class="tw:grid tw:grid-cols-2 tw:sm:grid-cols-3 tw:xl:grid-cols-6 tw:gap-2">
+                <div class="dark-coverage-card tw:bg-success/10 tw:border tw:border-success/20 tw:rounded-[var(--radius-box)] tw:p-3">
                     <div class="tw:text-2xl tw:font-bold tw:text-success">{{ dark_analysis.counts.exact }}</div>
                     <div class="tw:text-xs tw:text-base-content/60">Exact</div>
                 </div>
-                <div class="tw:bg-info/10 tw:border tw:border-info/20 tw:rounded-[var(--radius-box)] tw:p-3">
+                <div class="dark-coverage-card tw:bg-info/10 tw:border tw:border-info/20 tw:rounded-[var(--radius-box)] tw:p-3">
                     <div class="tw:text-2xl tw:font-bold tw:text-info">{{ dark_analysis.counts.acceptable }}</div>
                     <div class="tw:text-xs tw:text-base-content/60">Acceptable</div>
                 </div>
-                <div class="tw:bg-warning/10 tw:border tw:border-warning/20 tw:rounded-[var(--radius-box)] tw:p-3">
+                <div class="dark-coverage-card tw:bg-warning/10 tw:border tw:border-warning/20 tw:rounded-[var(--radius-box)] tw:p-3">
                     <div class="tw:text-2xl tw:font-bold tw:text-warning">{{ dark_analysis.counts.coarse }}</div>
                     <div class="tw:text-xs tw:text-base-content/60">Coarse</div>
                 </div>
-                <div class="tw:bg-warning/10 tw:border tw:border-warning/20 tw:rounded-[var(--radius-box)] tw:p-3">
+                <div class="dark-coverage-card tw:bg-warning/10 tw:border tw:border-warning/20 tw:rounded-[var(--radius-box)] tw:p-3">
                     <div class="tw:text-2xl tw:font-bold tw:text-warning">{{ dark_analysis.counts.temperature }}</div>
                     <div class="tw:text-xs tw:text-base-content/60">Temperature fallback</div>
                 </div>
-                <div class="tw:bg-error/10 tw:border tw:border-error/20 tw:rounded-[var(--radius-box)] tw:p-3">
+                <div class="dark-coverage-card tw:bg-error/10 tw:border tw:border-error/20 tw:rounded-[var(--radius-box)] tw:p-3">
                     <div class="tw:text-2xl tw:font-bold tw:text-error">{{ dark_analysis.counts.incompatible }}</div>
                     <div class="tw:text-xs tw:text-base-content/60">Incompatible</div>
                 </div>
-                <div class="tw:bg-error/10 tw:border tw:border-error/20 tw:rounded-[var(--radius-box)] tw:p-3">
+                <div class="dark-coverage-card tw:bg-error/10 tw:border tw:border-error/20 tw:rounded-[var(--radius-box)] tw:p-3">
                     <div class="tw:text-2xl tw:font-bold tw:text-error">{{ dark_analysis.counts.missing }}</div>
                     <div class="tw:text-xs tw:text-base-content/60">Missing</div>
                 </div>
             </div>
 
-            <div>
+            <details id="dark-recommendation-details" class="tw:collapse tw:collapse-arrow tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-100">
+                <summary class="tw:collapse-title tw:text-sm tw:font-semibold tw:flex tw:flex-wrap tw:items-center tw:gap-2">
+                    Why this recommendation?
+                    <span class="tw:badge tw:badge-ghost tw:badge-sm">{{ dark_analysis.target_count }} planned master{% if dark_analysis.target_count != 1 %}s{% endif %}</span>
+                </summary>
+                <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-4">
+                <p class="tw:text-xs tw:text-base-content/70">
+                    Coverage requires a matching dark frame and bad-pixel map. Exact and acceptable cells are ready to use; coarse and temperature fallbacks may work but are less ideal. Incompatible and missing cells need new masters.
+                </p>
+                <div>
                 <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50 tw:mb-2">Available plan strategies</div>
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 xl:tw:grid-cols-4 tw:gap-2">
+                <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-4 tw:gap-2">
                     <div class="tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3">
                         <div class="tw:font-semibold tw:text-sm">Complete gaps</div>
-                        <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">{{ dark_analysis.completion_target_count }} master sets; keep compatible existing masters.</div>
+                        <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">{{ dark_analysis.completion_target_count }} master set{% if dark_analysis.completion_target_count != 1 %}s{% endif %}; keep compatible existing masters.</div>
                     </div>
                     <div class="tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3">
                         <div class="tw:font-semibold tw:text-sm">Refresh recommendation</div>
-                        <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">{{ dark_analysis.refresh_target_count }} master sets; recapture the recommended grid.</div>
+                        <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">{{ dark_analysis.refresh_target_count }} master set{% if dark_analysis.refresh_target_count != 1 %}s{% endif %}; recapture the recommended grid.</div>
                     </div>
                     <div class="tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3">
                         <div class="tw:font-semibold tw:text-sm">Rebuild current library</div>
-                        <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">{{ dark_analysis.rebuild_target_count }} master sets; replace all older active masters for this camera after success.</div>
+                        <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">{{ dark_analysis.rebuild_target_count }} master set{% if dark_analysis.rebuild_target_count != 1 %}s{% endif %}; replace all older active masters for this camera after success.</div>
                     </div>
                     <div class="tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3">
                         <div class="tw:font-semibold tw:text-sm">Custom expansion</div>
@@ -206,6 +376,8 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     </tbody>
                 </table>
             </div>
+                </div>
+            </details>
 
             {% if dark_automation_can_run %}
             <div id="dark-capture-controls" class="tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-100 tw:p-4 tw:flex tw:flex-col tw:gap-4">
@@ -214,16 +386,23 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                         <h5 class="tw:font-bold tw:text-sm">Prepare dark calibration</h5>
                         <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">Choose a plan, adjust its exact gain and exposure lists, cover the camera, and start. Normal capture resumes automatically.</p>
                     </div>
-                    <span class="tw:badge tw:badge-info tw:badge-outline">No command line required</span>
+                    <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-2">
+                        <span id="dark-plan-refresh-status" class="tw:badge tw:badge-ghost tw:hidden" role="status" aria-live="polite">
+                            <span class="tw:loading tw:loading-spinner tw:loading-xs"></span>
+                            Updating plan
+                        </span>
+                        <span class="tw:badge tw:badge-info tw:badge-outline">No command line required</span>
+                    </div>
                 </div>
 
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-3">
+                <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-3 tw:gap-3">
                     <label class="tw:form-control">
                         <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Capture mode</span>
                         <select id="dark-capture-mode" class="tw:select tw:select-bordered tw:select-sm">
                             <option value="single" selected>One library run</option>
                             <option value="temperature_series">Falling-temperature series</option>
                         </select>
+                        <span id="dark-capture-mode-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">Usual choice. A series repeats the library as a covered sensor cools.</span>
                     </label>
                     <label class="tw:form-control">
                         <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Plan</span>
@@ -233,6 +412,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                             <option value="rebuild" {% if dark_execution_preview.strategy == 'rebuild' %}selected{% endif %}>Rebuild complete library</option>
                             <option value="custom" {% if dark_execution_preview.strategy == 'custom' %}selected{% endif %}>Custom expansion</option>
                         </select>
+                        <span id="dark-strategy-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">Prefilled from current gaps and usable existing masters.</span>
                     </label>
                     <label class="tw:form-control">
                         <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Gain coverage</span>
@@ -241,28 +421,41 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                             <option value="balanced" selected>Balanced · 3 dB</option>
                             <option value="fast">Fast · 6 dB</option>
                         </select>
+                        <span id="dark-quality-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">Balanced is recommended. Precise captures more masters; Fast captures fewer.</span>
                     </label>
                 </div>
 
-                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-3">
-                    <div class="tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3">
-                        <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Capture</div>
+                <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-3 tw:gap-3">
+                    <div class="dark-fact-card tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3">
+                        <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Planned output</div>
                         <div id="dark-primary-targets" class="tw:font-semibold tw:mt-1">—</div>
                     </div>
-                    <div class="tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3">
+                    <div class="dark-fact-card tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3">
                         <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Estimated time</div>
                         <div id="dark-primary-time" class="tw:font-semibold tw:mt-1">{{ dark_execution_preview.estimated_time }}</div>
                     </div>
-                    <div class="tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3">
+                    <div class="dark-fact-card tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3">
                         <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Estimated storage</div>
                         <div id="dark-primary-storage" class="tw:font-semibold tw:mt-1">{{ dark_execution_preview.estimated_library_storage }}</div>
                     </div>
                 </div>
 
+                <div id="dark-plan-impact-note" class="tw:hidden tw:flex tw:items-start tw:gap-2 tw:text-xs tw:text-base-content/60" aria-live="polite">
+                    <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4 tw:mt-0.5 tw:shrink-0"></i>
+                    <span></span>
+                </div>
+
                 <details id="dark-advanced-options" class="tw:collapse tw:collapse-arrow tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]">
-                    <summary class="tw:collapse-title tw:text-sm tw:font-semibold">Advanced options</summary>
+                    <summary class="tw:collapse-title tw:text-sm tw:font-semibold tw:flex tw:items-center tw:gap-2">
+                        Advanced options
+                        <span class="tw:badge tw:badge-ghost tw:badge-sm">Optional</span>
+                    </summary>
                     <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-4">
-                        <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 xl:tw:grid-cols-3 tw:gap-3">
+                        <div class="tw:alert tw:alert-info tw:py-2 tw:text-xs tw:items-start">
+                            <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4 tw:mt-0.5 tw:shrink-0"></i>
+                            <span>These values come from the camera and capture configuration. Change them only for a specific calibration need; <strong>Reset groups from config</strong> restores the generated groups.</span>
+                        </div>
+                        <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:lg:grid-cols-3 tw:gap-3">
                             <label class="tw:form-control">
                                 <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Stacking method</span>
                                 <select id="dark-method" class="tw:select tw:select-bordered tw:select-sm">
@@ -289,12 +482,30 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                 </div>
                             </label>
                             <label class="tw:form-control">
-                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Temperature matching</span>
+                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Temperature</span>
                                 <select id="dark-temperature-policy" class="tw:select tw:select-bordered tw:select-sm">
                                     <option value="recommended" selected>Configured or current temperature</option>
                                     <option value="ignore">Ignore uncooled temperature when filling gaps</option>
                                 </select>
+                                <select id="dark-temperature-source" aria-label="Temperature source" class="tw:select tw:select-bordered tw:select-sm tw:mt-2">
+                                    {% for source in dark_temperature_sources %}
+                                    <option value="{{ source.key }}" {% if source.key == dark_execution_preview.temperature_source %}selected{% endif %}>{{ source.label }}</option>
+                                    {% endfor %}
+                                </select>
+                                <span id="dark-temperature-source-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">
+                                    {% if dark_analysis.temperature_reading %}Using {{ dark_analysis.temperature_reading.label }} at {{ "%0.1f"|format(dark_analysis.temperature_reading.value) }}°C from the latest image.{% else %}No usable recent temperature is available; coverage is shown without temperature filtering.{% endif %}
+                                </span>
                             </label>
+                            <label class="tw:form-control">
+                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Capture order</span>
+                                <select id="dark-capture-order" class="tw:select tw:select-bordered tw:select-sm">
+                                    <option value="long_first" selected>Longest exposures first</option>
+                                    <option value="short_first">Shortest exposures first</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-3">
                             <label id="dark-temperature-delta-control" class="tw:form-control tw:hidden">
                                 <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Temperature-series step</span>
                                 <div class="tw:join">
@@ -311,14 +522,11 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                 </div>
                                 <span class="tw:label-text-alt tw:text-base-content/50 tw:mt-1">Blank runs until cancelled. A target stops automatically after the final complete set.</span>
                             </label>
-                            <label class="tw:form-control">
-                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Capture order</span>
-                                <select id="dark-capture-order" class="tw:select tw:select-bordered tw:select-sm">
-                                    <option value="long_first" selected>Longest exposures first</option>
-                                    <option value="short_first">Shortest exposures first</option>
-                                </select>
-                            </label>
                         </div>
+
+                        <p class="tw:text-xs tw:text-base-content/60">
+                            Each checked row mirrors a configured day, night, moon or SQM capture profile. Gains and exposure lengths are comma-separated lists; the master count updates as you edit them.
+                        </p>
 
                         <div class="tw:overflow-x-auto tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]">
                             <table class="tw:table tw:table-sm tw:w-full tw:m-0">
@@ -355,7 +563,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     <i class="tw:icon-[lucide--circle-alert] tw:w-5 tw:h-5 tw:mt-0.5"></i>
                     <div class="tw:w-full">
                         <div class="tw:font-semibold">Block all light before starting</div>
-                        <div class="tw:text-sm">The capture controller will finish its current exposure, release the camera, run this plan, and restore normal capture even if calibration fails.</div>
+                        <div class="tw:text-sm">Daylight is fine if no light reaches the sensor. The capture controller will finish its current exposure, release the camera, run this plan, and restore normal capture even if calibration fails.</div>
                         <label id="dark-cover-confirmation" for="dark-camera-covered" class="tw:btn tw:btn-outline tw:justify-start tw:gap-3 tw:mt-3 tw:h-auto tw:py-3 tw:px-4 tw:w-full tw:cursor-pointer">
                             <input id="dark-camera-covered" type="checkbox" class="tw:checkbox tw:checkbox-primary tw:shrink-0">
                             <span class="tw:text-sm tw:font-semibold">I confirm that the camera is fully covered</span>
@@ -381,18 +589,25 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     <span id="dark-progress-status" class="tw:badge tw:badge-info">Queued</span>
                 </div>
                 <progress id="dark-progress-bar" class="tw:progress tw:progress-primary tw:w-full" value="0" max="100"></progress>
-                <div class="tw:grid tw:grid-cols-2 md:tw:grid-cols-4 xl:tw:grid-cols-11 tw:gap-3 tw:text-sm">
-                    <div><span class="tw:text-base-content/50">Masters</span><div id="dark-progress-masters" class="tw:font-semibold">0 / 0</div></div>
-                    <div><span class="tw:text-base-content/50">Gain</span><div id="dark-progress-gain" class="tw:font-mono">—</div></div>
-                    <div><span class="tw:text-base-content/50">Exposure</span><div id="dark-progress-exposure" class="tw:font-mono">—</div></div>
-                    <div><span class="tw:text-base-content/50">Binning</span><div id="dark-progress-binning" class="tw:font-mono">—</div></div>
-                    <div><span class="tw:text-base-content/50">Source frame</span><div id="dark-progress-frame" class="tw:font-mono">—</div></div>
-                    <div><span class="tw:text-base-content/50">Temperature</span><div id="dark-progress-temperature" class="tw:font-mono">—</div></div>
-                    <div><span class="tw:text-base-content/50">Temperature sets</span><div id="dark-progress-temperature-sets" class="tw:font-mono">—</div></div>
-                    <div><span class="tw:text-base-content/50">Next threshold</span><div id="dark-progress-next-temperature" class="tw:font-mono">—</div></div>
-                    <div><span class="tw:text-base-content/50">Final target</span><div id="dark-progress-target-temperature" class="tw:font-mono">—</div></div>
-                    <div><span class="tw:text-base-content/50">Elapsed</span><div id="dark-progress-elapsed" class="tw:font-mono">0h 00m 00s</div></div>
-                    <div><span class="tw:text-base-content/50">Remaining</span><div id="dark-progress-remaining" class="tw:font-mono">—</div></div>
+                <div class="tw:grid tw:grid-cols-2 tw:sm:grid-cols-3 tw:xl:grid-cols-6 tw:gap-2 tw:text-sm">
+                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Masters</span><div id="dark-progress-masters" class="tw:font-semibold">0 / 0</div></div>
+                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Gain</span><div id="dark-progress-gain" class="tw:font-mono">—</div></div>
+                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Exposure</span><div id="dark-progress-exposure" class="tw:font-mono">—</div></div>
+                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Binning</span><div id="dark-progress-binning" class="tw:font-mono">—</div></div>
+                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Source frame</span><div id="dark-progress-frame" class="tw:font-mono">—</div></div>
+                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Temperature</span><div id="dark-progress-temperature" class="tw:font-mono">—</div></div>
+                </div>
+                <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-4 tw:gap-2 tw:text-sm">
+                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Temperature sets</span><div id="dark-progress-temperature-sets" class="tw:font-mono">—</div></div>
+                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Next threshold</span><div id="dark-progress-next-temperature" class="tw:font-mono">—</div></div>
+                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Final target</span><div id="dark-progress-target-temperature" class="tw:font-mono">—</div></div>
+                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3">
+                        <span class="tw:text-base-content/50">Time</span>
+                        <div class="tw:flex tw:flex-wrap tw:gap-x-3 tw:gap-y-1 tw:font-mono">
+                            <span><span class="tw:text-base-content/50">Elapsed</span> <span id="dark-progress-elapsed">0h 00m 00s</span></span>
+                            <span><span class="tw:text-base-content/50">Left</span> <span id="dark-progress-remaining">—</span></span>
+                        </div>
+                    </div>
                 </div>
                 <div id="dark-progress-error" class="tw:alert tw:alert-error tw:hidden"></div>
                 <details id="dark-progress-diagnostics" class="tw:collapse tw:collapse-arrow tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:hidden">
@@ -427,7 +642,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
     <details id="dark-library-maintenance" class="tw:collapse tw:collapse-arrow tw:border tw:border-error/40 tw:bg-error/5 tw:rounded-[var(--radius-box)]">
         <summary class="tw:collapse-title tw:text-sm tw:font-semibold tw:text-error">Permanent library removal</summary>
         <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-3">
-            <div class="tw:flex tw:flex-col sm:tw:flex-row tw:items-start sm:tw:items-center tw:justify-between tw:gap-3">
+            <div class="tw:flex tw:flex-col tw:sm:flex-row tw:items-start tw:sm:items-center tw:justify-between tw:gap-3">
                 <div class="tw:text-sm">
                     This is the guided equivalent of the legacy <span class="tw:font-mono">darks.py flush</span> action. It permanently removes all {{ dark_library_entry_count }} dark-frame and bad-pixel-map records and files for this camera.
                 </div>
@@ -451,24 +666,23 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
         </div>
     </details>
     {% endif %}
-
-    <!-- Tab Selection Header -->
-    <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm">
-        <button type="button" class="dark-tab-btn tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:uppercase tw:tracking-wider" data-target="tab-darks">Dark Frames</button>
-        <button type="button" class="dark-tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content" data-target="tab-bpm">Bad Pixel Maps</button>
     </div>
 
     <div class="tw:w-full">
         
         <!-- Dark Frames Tab Panel -->
-        <div id="tab-darks" class="dark-tab-pane">
-            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+        <div id="tab-darks" class="dark-tab-pane" role="tabpanel" aria-labelledby="dark-tab-darks">
+            <div class="dark-library-card tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
                 <div class="tw:card-body tw:p-6">
-                    <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:mb-6">
-                        Dark Frame Library
-                    </h4>
+                    <div class="tw:border-b tw:border-base-content/10 tw:pb-3 tw:mb-4">
+                        <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2">
+                            <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50">Dark Library</h4>
+                            <span class="tw:badge tw:badge-ghost tw:badge-sm">{{ darkframe_list | length }} entries</span>
+                        </div>
+                        <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">Master dark frames remove repeatable sensor noise. Active entries are matched automatically by camera settings and temperature.</p>
+                    </div>
                     
-                    <div class="tw:overflow-x-auto tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
+                    <div class="dark-table-wrap tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
                         <table id="darks-table" class="tw:table tw:table-zebra tw:table-xs tw:w-full tw:m-0">
                             <thead>
                                 <tr class="tw:bg-base-300/60 tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
@@ -491,7 +705,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                             </thead>
                             <tbody class="tw:divide-y tw:divide-base-content/5">
                                 {% for dark in darkframe_list %}
-                                <tr class="hover:tw:bg-base-content/5 tw:transition-colors tw:text-xs">
+                                <tr class="tw:hover:bg-base-content/5 tw:transition-colors tw:text-xs">
                                     <td class="tw:pl-4 tw:font-mono tw:text-base-content/70">{{ dark.id }}</td>
                                     <td class="tw:whitespace-nowrap tw:text-base-content/90">{{ dark.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                                     <td>
@@ -531,14 +745,18 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
         </div>
 
         <!-- Bad Pixel Maps Tab Panel -->
-        <div id="tab-bpm" class="dark-tab-pane" style="display: none;">
-            <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
+        <div id="tab-bpm" class="dark-tab-pane" role="tabpanel" aria-labelledby="dark-tab-bpm" style="display: none;">
+            <div class="dark-library-card tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
                 <div class="tw:card-body tw:p-6">
-                    <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50 tw:border-b tw:border-base-content/10 tw:pb-3 tw:mb-6">
-                        Bad Pixel Maps Library
-                    </h4>
+                    <div class="tw:border-b tw:border-base-content/10 tw:pb-3 tw:mb-4">
+                        <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2">
+                            <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50">Bad Pixel Map Library</h4>
+                            <span class="tw:badge tw:badge-ghost tw:badge-sm">{{ bpm_list | length }} entries</span>
+                        </div>
+                        <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">Bad-pixel maps identify persistent hot and dead pixels. They are generated alongside masters and matched using the same capture settings.</p>
+                    </div>
                     
-                    <div class="tw:overflow-x-auto tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
+                    <div class="dark-table-wrap tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
                         <table id="bpm-table" class="tw:table tw:table-zebra tw:table-xs tw:w-full tw:m-0">
                             <thead>
                                 <tr class="tw:bg-base-300/60 tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
@@ -560,7 +778,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                             </thead>
                             <tbody class="tw:divide-y tw:divide-base-content/5">
                                 {% for bpm in bpm_list %}
-                                <tr class="hover:tw:bg-base-content/5 tw:transition-colors tw:text-xs">
+                                <tr class="tw:hover:bg-base-content/5 tw:transition-colors tw:text-xs">
                                     <td class="tw:pl-4 tw:font-mono tw:text-base-content/70">{{ bpm.id }}</td>
                                     <td class="tw:whitespace-nowrap tw:text-base-content/90">{{ bpm.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                                     <td>
@@ -606,12 +824,42 @@ let currentDarkPlan = initialDarkPlan;
 let activeDarkTaskId = initialDarkTaskId;
 let darkPollTimer = null;
 let darkMethodTouched = false;
+let darkFramesDataTable = null;
+let badPixelDataTable = null;
+let darkPlanRequestRevision = 0;
+let darkPlanRefreshTimer = null;
 let darkSingleStrategy = initialDarkPlan.capture_mode === 'temperature_series'
     ? 'complete'
     : (initialDarkPlan.strategy || 'complete');
 
 function darkEndpoint(template, taskId) {
     return template.replace(/\/0$/, '/' + taskId);
+}
+
+function selectDarkSection(target, updateHash) {
+    if (!['tab-darks', 'tab-bpm', 'tab-tool'].includes(target)) target = 'tab-darks';
+
+    $('.dark-tab-btn')
+        .removeClass('tw:btn-primary')
+        .addClass('tw:btn-ghost tw:text-base-content/60 tw:hover:text-base-content')
+        .attr('aria-selected', 'false');
+    $('.dark-tab-btn[data-target="' + target + '"]')
+        .removeClass('tw:btn-ghost tw:text-base-content/60 tw:hover:text-base-content')
+        .addClass('tw:btn-primary')
+        .attr('aria-selected', 'true');
+
+    $('.dark-tab-pane').hide();
+    if (target === 'tab-tool') {
+        $('#' + target).css('display', 'flex');
+    } else {
+        $('#' + target).show();
+    }
+
+    if (updateHash) history.replaceState(null, '', '#' + target);
+    window.requestAnimationFrame(function() {
+        if (target === 'tab-darks' && darkFramesDataTable) darkFramesDataTable.columns.adjust();
+        if (target === 'tab-bpm' && badPixelDataTable) badPixelDataTable.columns.adjust();
+    });
 }
 
 function darkEscape(value) {
@@ -678,13 +926,97 @@ function updateDarkCaptureModeControls() {
         : '<i class="tw:icon-[lucide--aperture] tw:w-5 tw:h-5"></i> Start dark calibration');
 }
 
+function setDarkPlanRefreshing(refreshing) {
+    $('#dark-plan-refresh-status').toggleClass('tw:hidden', !refreshing);
+    $('#dark-capture-controls').attr('aria-busy', refreshing ? 'true' : 'false');
+    $('#dark-primary-targets, #dark-primary-time, #dark-primary-storage')
+        .toggleClass('tw:opacity-50', refreshing);
+}
+
+function updateDarkOptionGuidance(plan) {
+    const temperatureSeries = $('#dark-capture-mode').val() === 'temperature_series';
+    const strategy = $('#dark-strategy').val();
+    const quality = $('#dark-quality').val();
+    const analysis = (plan || {}).analysis || {};
+    const hasContinuousGain = Boolean(analysis.continuous_gain);
+    const temperatureReading = analysis.temperature_reading || null;
+
+    $('#dark-capture-mode-help').text(temperatureSeries
+        ? 'Repeats the complete night plan whenever the covered sensor falls by the configured temperature step.'
+        : 'Recommended for normal calibration: capture one library at the current or configured temperature.');
+
+    const strategyHelp = {
+        complete: 'Captures only uncovered cells and keeps compatible existing masters active.',
+        refresh: 'Recaptures the recommended grid; matching older masters retire only after success.',
+        rebuild: 'Captures the full recommendation; older masters in scope retire only after success.',
+        custom: 'Starts from the recommendation; open Advanced options to edit or disable groups.',
+    };
+    $('#dark-strategy-help').text(temperatureSeries
+        ? 'Temperature series uses a custom night-only plan at every completed temperature step.'
+        : (strategyHelp[strategy] || 'The plan is generated from current coverage.'));
+
+    $('#dark-temperature-source-help').text(temperatureReading
+        ? 'Using ' + temperatureReading.label + ' at ' + Number(temperatureReading.value).toFixed(1) + '°C from the latest image.'
+        : 'No usable recent reading from this source; coverage is shown without temperature filtering. Capture will recheck the source live.');
+    if (!((analysis.target_temperatures || []).length)) {
+        $('#dark-temperature-check-value').text(temperatureReading
+            ? temperatureReading.label + ': ' + Number(temperatureReading.value).toFixed(1) + '°C'
+            : 'Not available');
+        $('#dark-temperature-check-note')
+            .toggleClass('tw:text-warning', !temperatureReading)
+            .toggleClass('tw:text-base-content/50', Boolean(temperatureReading))
+            .text(temperatureReading
+                ? 'Latest image · current to +5°C matching'
+                : 'Coverage shown without temperature filtering');
+    }
+
+    if (!hasContinuousGain) {
+        $('#dark-quality').val('balanced').prop('disabled', true);
+        $('#dark-quality-help').text('Not applicable: fixed, discrete or gainless cameras use their exact configured values.');
+    } else {
+        $('#dark-quality').prop('disabled', false);
+        const qualityHelp = {
+            precise: 'Smallest gain gaps and the most masters; best coverage with the highest time and storage cost.',
+            balanced: 'Recommended default: meaningful gain coverage with moderate time and storage.',
+            fast: 'Largest gain gaps and the fewest masters; fastest, but with coarser calibration coverage.',
+        };
+        $('#dark-quality-help').text(qualityHelp[quality] || qualityHelp.balanced);
+    }
+
+    const counts = analysis.counts || {};
+    const reusableCount = ['exact', 'acceptable', 'coarse', 'temperature']
+        .reduce((total, key) => total + (Number(counts[key]) || 0), 0);
+    const missingCount = Number(counts.missing) || 0;
+    const impactNotes = [];
+    if (analysis.available && !hasContinuousGain) {
+        impactNotes.push('Gain spacing does not change this camera\'s plan.');
+    }
+    if (!temperatureSeries && missingCount > 0 && reusableCount === 0) {
+        impactNotes.push('No usable masters exist yet, so the plan choices currently begin with the same number of master sets.');
+    }
+    $('#dark-plan-impact-note')
+        .toggleClass('tw:hidden', impactNotes.length === 0)
+        .find('span')
+        .text(impactNotes.join(' '));
+}
+
+function scheduleDarkPlanRefresh(delay) {
+    if (darkPlanRefreshTimer) clearTimeout(darkPlanRefreshTimer);
+    darkPlanRefreshTimer = setTimeout(function() {
+        darkPlanRefreshTimer = null;
+        refreshDarkPlan();
+    }, delay || 350);
+}
+
 function renderDarkPlan(plan) {
     currentDarkPlan = plan;
     if (plan.exposure_max !== undefined) $('#dark-exposure-max').val(plan.exposure_max);
     if (plan.exposure_step !== undefined) $('#dark-exposure-step').val(plan.exposure_step);
     if (plan.capture_order) $('#dark-capture-order').val(plan.capture_order);
     if (plan.temperature_policy) $('#dark-temperature-policy').val(plan.temperature_policy);
+    if (plan.temperature_source) $('#dark-temperature-source').val(plan.temperature_source);
     if (plan.capture_mode) $('#dark-capture-mode').val(plan.capture_mode);
+    if (plan.quality) $('#dark-quality').val(plan.quality);
     if (plan.temperature_delta !== undefined) $('#dark-temperature-delta').val(plan.temperature_delta);
     if (plan.temperature_target !== undefined) {
         $('#dark-temperature-target').val(
@@ -695,6 +1027,7 @@ function renderDarkPlan(plan) {
         $('#dark-method').val(plan.recommended_method || 'sigmaclip');
     }
     updateDarkCaptureModeControls();
+    updateDarkOptionGuidance(plan);
     const body = $('#dark-plan-groups');
     body.empty();
 
@@ -808,16 +1141,18 @@ function updateDarkPlanSummary() {
     const estimateMultiplier = temperatureSetCount || 1;
     const estimateSuffix = temperatureSeries && !temperatureSetCount ? ' per temperature set' : '';
     const totalMasterCount = masterCount * estimateMultiplier;
+    const totalSourceFrameCount = totalMasterCount * frameCount;
     const totalLibraryBytes = libraryBytes * estimateMultiplier;
     const totalPeakBytes = totalLibraryBytes + largestTemporaryCell;
     const masterSetText = (count) => count + ' master set' + (count === 1 ? '' : 's');
+    const sourceFrameText = (count) => count + ' source frame' + (count === 1 ? '' : 's');
     const temperatureText = (count) => count + ' temperature' + (count === 1 ? '' : 's');
     $('#dark-plan-summary').text(temperatureSetCount
         ? masterSetText(masterCount) + ' per temperature · ' + masterSetText(totalMasterCount) + ' across ' + temperatureSetCount + ' sets · ' + frameCount + ' source frames each'
         : masterSetText(masterCount) + estimateSuffix + ' · ' + frameCount + ' source frames each');
     $('#dark-primary-targets').text(temperatureSetCount
-        ? masterSetText(totalMasterCount) + ' across ' + temperatureText(temperatureSetCount)
-        : masterSetText(masterCount) + estimateSuffix);
+        ? masterSetText(totalMasterCount) + ' · ' + sourceFrameText(totalSourceFrameCount) + ' across ' + temperatureText(temperatureSetCount)
+        : masterSetText(masterCount) + ' · ' + sourceFrameText(masterCount * frameCount) + estimateSuffix);
     $('#dark-primary-time').text(darkFormatDuration(estimatedSeconds * estimateMultiplier) + estimateSuffix);
     $('#dark-primary-storage').text(storageKnown ? darkFormatBytes(totalLibraryBytes) + estimateSuffix : 'Unavailable');
     $('#dark-storage-note').text(storageKnown
@@ -874,7 +1209,14 @@ async function darkJsonRequest(url, options) {
 }
 
 async function refreshDarkPlan() {
+    if (darkPlanRefreshTimer) {
+        clearTimeout(darkPlanRefreshTimer);
+        darkPlanRefreshTimer = null;
+    }
+    const requestRevision = ++darkPlanRequestRevision;
     showDarkActionError('');
+    setDarkPlanRefreshing(true);
+    updateDarkOptionGuidance(currentDarkPlan);
     $('#dark-refresh-plan').prop('disabled', true).addClass('tw:loading');
     try {
         const plan = await darkJsonRequest(darkPlanUrl, {
@@ -887,18 +1229,24 @@ async function refreshDarkPlan() {
                 exposure_max: Number($('#dark-exposure-max').val()),
                 exposure_step: Number($('#dark-exposure-step').val()),
                 temperature_policy: $('#dark-temperature-policy').val(),
+                temperature_source: $('#dark-temperature-source').val(),
                 capture_order: $('#dark-capture-order').val(),
                 capture_mode: $('#dark-capture-mode').val(),
                 temperature_delta: Number($('#dark-temperature-delta').val()),
                 temperature_target: darkOptionalNumber('#dark-temperature-target'),
             }),
         });
+        if (requestRevision !== darkPlanRequestRevision) return;
         $('#dark-camera-covered').prop('checked', false);
         renderDarkPlan(plan);
     } catch (error) {
+        if (requestRevision !== darkPlanRequestRevision) return;
         showDarkActionError(error.message);
     } finally {
-        $('#dark-refresh-plan').prop('disabled', false).removeClass('tw:loading');
+        if (requestRevision === darkPlanRequestRevision) {
+            setDarkPlanRefreshing(false);
+            $('#dark-refresh-plan').prop('disabled', false).removeClass('tw:loading');
+        }
     }
 }
 
@@ -917,6 +1265,7 @@ async function startDarkCalibration() {
                 exposure_max: Number($('#dark-exposure-max').val()),
                 exposure_step: Number($('#dark-exposure-step').val()),
                 temperature_policy: $('#dark-temperature-policy').val(),
+                temperature_source: $('#dark-temperature-source').val(),
                 capture_order: $('#dark-capture-order').val(),
                 capture_mode: $('#dark-capture-mode').val(),
                 temperature_delta: Number($('#dark-temperature-delta').val()),
@@ -1021,7 +1370,8 @@ function renderDarkProgress(status) {
         : status.current_frame + ' / ' + status.current_frame_count);
     $('#dark-progress-temperature').text(status.current_temperature === null || status.current_temperature === undefined
         ? 'Not reported'
-        : Number(status.current_temperature).toFixed(1) + '°C');
+        : Number(status.current_temperature).toFixed(1) + '°C'
+            + (status.temperature_source_label ? ' · ' + status.temperature_source_label : ''));
     $('#dark-progress-temperature-sets').text(status.capture_mode === 'temperature_series'
         ? String(status.completed_temperature_sets || 0)
             + (status.planned_temperature_sets ? ' / ' + status.planned_temperature_sets : '')
@@ -1103,7 +1453,7 @@ async function cancelDarkCalibration() {
 }
 
 function init() {
-    new DataTable('#darks-table', {
+    darkFramesDataTable = new DataTable('#darks-table', {
         searching: true,
         order: [[5, 'desc'], [6, 'desc'], [1, 'desc']],
         layout: {
@@ -1117,7 +1467,7 @@ function init() {
         ]
     });
 
-    new DataTable('#bpm-table', {
+    badPixelDataTable = new DataTable('#bpm-table', {
         searching: true,
         order: [[5, 'desc'], [6, 'desc'], [1, 'desc']],
         layout: {
@@ -1135,14 +1485,11 @@ function init() {
 
 $( document ).ready(function() {
     $('.dark-tab-btn').on('click', function() {
-        var target = $(this).data('target');
-        
-        $('.dark-tab-btn').removeClass('tw:btn-primary').addClass('tw:btn-ghost tw:text-base-content/60 hover:tw:text-base-content');
-        $(this).removeClass('tw:btn-ghost tw:text-base-content/60 hover:tw:text-base-content').addClass('tw:btn-primary');
-
-        $('.dark-tab-pane').hide();
-        $('#' + target).show();
+        selectDarkSection($(this).data('target'), true);
     });
+
+    const requestedSection = window.location.hash.replace('#', '');
+    selectDarkSection(activeDarkTaskId ? 'tab-tool' : requestedSection, false);
 
     if (darkAutomationCanRun) {
         renderDarkPlan(initialDarkPlan);
@@ -1150,10 +1497,26 @@ $( document ).ready(function() {
         $('#dark-method').on('change', function() { darkMethodTouched = true; });
         $('#dark-capture-mode').on('change', function() {
             updateDarkCaptureModeControls();
+            updateDarkOptionGuidance(currentDarkPlan);
             refreshDarkPlan();
         });
-        $('#dark-strategy, #dark-quality').on('change', refreshDarkPlan);
-        $('#dark-frame-count, #dark-exposure-max, #dark-exposure-step, #dark-temperature-policy, #dark-temperature-delta, #dark-temperature-target, #dark-capture-order').on('change', refreshDarkPlan);
+        $('#dark-strategy, #dark-quality').on('change', function() {
+            updateDarkOptionGuidance(currentDarkPlan);
+            refreshDarkPlan();
+        });
+        $('#dark-frame-count').on('input', function() {
+            if (!this.checkValidity()) return;
+            updateDarkPlanSummary();
+            scheduleDarkPlanRefresh(350);
+        }).on('change', function() {
+            if (this.checkValidity()) refreshDarkPlan();
+        });
+        $('#dark-exposure-max, #dark-exposure-step, #dark-temperature-delta, #dark-temperature-target').on('input', function() {
+            if (this.checkValidity()) scheduleDarkPlanRefresh(350);
+        }).on('change', function() {
+            if (this.checkValidity()) refreshDarkPlan();
+        });
+        $('#dark-temperature-policy, #dark-temperature-source, #dark-capture-order').on('change', refreshDarkPlan);
         $('#dark-refresh-plan').on('click', refreshDarkPlan);
         $('#dark-start').on('click', startDarkCalibration);
         $('#dark-cancel').on('click', cancelDarkCalibration);

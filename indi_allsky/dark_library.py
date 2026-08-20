@@ -310,6 +310,7 @@ def analysis_context(capture_state, capabilities, analysis):
         'mode': capture_state.exposure_mode_label,
         'quality': analysis.plan.quality.label,
         'gain_step_db': analysis.plan.quality.gain_step_db,
+        'continuous_gain': continuous_gain,
         'gain_policy_summary': gain_policy_summary,
         'gain_values': gain_values,
         'gain_summary': _number_list_summary(gain_values),

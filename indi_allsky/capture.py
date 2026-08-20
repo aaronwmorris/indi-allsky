@@ -1435,7 +1435,11 @@ class CaptureWorker(Process):
                 last_camera_sqm_adu = last_image.data.get('sensor_user_9', 0.0)
 
 
-                if not isinstance(last_image.temp, type(None)):
+                if (
+                        last_image.temp is not None
+                        and math.isfinite(float(last_image.temp))
+                        and -100.0 <= float(last_image.temp) <= 100.0
+                ):
                     # some cameras only report temperature after taking an exposure
                     # seed the temperature before an exposure is taken
                     self.indiclient.ccd_temp = last_image.temp
@@ -1614,8 +1618,9 @@ class CaptureWorker(Process):
         temp_c = self.indiclient.getCcdTemperature()
 
 
-        # query external temperature if defined
-        if self.config.get('CCD_TEMP_SCRIPT'):
+        # Preserve a real camera reading. The external script is a fallback for
+        # cameras and interfaces that do not report a usable temperature.
+        if temp_c < -100.0 and self.config.get('CCD_TEMP_SCRIPT'):
             try:
                 ext_temp_c = self.getExternalTemperature(self.config.get('CCD_TEMP_SCRIPT'))
                 temp_c = ext_temp_c

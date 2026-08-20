@@ -401,10 +401,13 @@ def test_plan_is_unavailable_when_camera_has_no_supported_whole_second_exposure(
 
 
 def test_zwo_balanced_plan_uses_three_db_gain_steps():
-    state = build_effective_capture_state(_config(EXPOSURE_MODE_DB_1_10), _capabilities())
-    plan = build_dark_plan(state, _capabilities(), camera_id=7)
+    capabilities = _capabilities()
+    state = build_effective_capture_state(_config(EXPOSURE_MODE_DB_1_10), capabilities)
+    plan = build_dark_plan(state, capabilities, camera_id=7)
+    analysis = analyze_dark_plan(plan, (), temperature=20)
 
     assert state.profiles[0].gain_kind == GAIN_KIND_CONTINUOUS
+    assert analysis_context(state, capabilities, analysis)['continuous_gain'] is True
     assert sorted(set(target.gain for target in plan.targets)) == [
         0.0,
         30.0,
@@ -464,8 +467,10 @@ def test_discrete_camera_values_are_used_instead_of_interpolated_gains():
 
     state = build_effective_capture_state(config, capabilities)
     plan = build_dark_plan(state, capabilities, camera_id=1)
+    analysis = analyze_dark_plan(plan, (), temperature=20)
 
     assert all(profile.gain_kind == GAIN_KIND_DISCRETE for profile in state.profiles)
+    assert analysis_context(state, capabilities, analysis)['continuous_gain'] is False
     assert sorted(set(target.gain for target in plan.targets)) == [100.0, 200.0, 400.0, 800.0]
 
 
@@ -628,6 +633,7 @@ def test_adjusted_execution_plan_is_validated_and_counted():
         'strategy': 'refresh',
         'method': 'sigmaclip',
         'frame_count': 12,
+        'temperature_source': 'sensor_user_10',
         'config_signature': plan.config_signature,
         'groups': [{
             'id': source_group['id'],
@@ -646,6 +652,7 @@ def test_adjusted_execution_plan_is_validated_and_counted():
 
     assert execution['target_count'] == 6
     assert execution['frame_count'] == 12
+    assert execution['temperature_source'] == 'sensor_user_10'
     assert execution['groups'][0]['gains'] == [0.0, 100.0, 300.0]
     assert len(execution['plan_signature']) == 64
 

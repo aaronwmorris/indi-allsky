@@ -40,6 +40,10 @@ from ..dark_library import analyze_dark_plan
 from ..dark_library import build_dark_plan
 from ..capture_state import CameraCapabilities
 from ..capture_state import build_effective_capture_state
+from ..camera_profiles import test_camera_profile_config_defaults
+from ..temperature import resolve_temperature
+from ..temperature import temperature_source_choices
+from ..temperature import temperature_source_signature
 
 from cryptography.fernet import InvalidToken
 
@@ -960,18 +964,31 @@ def _dark_inventory_for_camera(camera_id):
     return inventory
 
 
-def _dark_current_temperature(camera_id):
+def _dark_temperature_reading(camera_id, config, source='auto'):
     latest_image = IndiAllSkyDbImageTable.query\
         .filter(IndiAllSkyDbImageTable.camera_id == int(camera_id))\
         .filter(IndiAllSkyDbImageTable.createDate > (datetime.now() - timedelta(minutes=15)))\
         .order_by(IndiAllSkyDbImageTable.createDate.desc())\
         .first()
-    if latest_image is None or latest_image.temp is None:
+    if latest_image is None:
         return None
-    temperature = float(latest_image.temp)
-    if not math.isfinite(temperature) or temperature < -100.0:
-        return None
-    return temperature
+    sensor_values = dict(latest_image.data or {})
+    if config.get('CCD_TEMP_SCRIPT'):
+        # Older image rows do not identify whether their main temperature came
+        # from the camera or the configured script. It is still the best recent
+        # value for an explicit script selection.
+        sensor_values['external_script'] = latest_image.temp
+    return resolve_temperature(
+        config,
+        camera_temperature=latest_image.temp,
+        sensor_values=sensor_values,
+        source=source,
+    )
+
+
+def _dark_current_temperature(camera_id, config, source='auto'):
+    reading = _dark_temperature_reading(camera_id, config, source=source)
+    return reading.value if reading is not None else None
 
 
 def _dark_default_temperature_target(config):
@@ -1016,6 +1033,14 @@ def _dark_capture_options(request_data, config, capabilities):
     temperature_policy = str(request_data.get('temperature_policy') or 'recommended')
     if temperature_policy not in dark_automation.TEMPERATURE_POLICIES:
         raise dark_automation.DarkAutomationError('Select a valid temperature policy')
+    temperature_source = str(request_data.get('temperature_source') or 'auto')
+    available_temperature_sources = {
+        choice['key'] for choice in temperature_source_choices(config)
+    }
+    if temperature_source not in available_temperature_sources:
+        raise dark_automation.DarkAutomationError(
+            'The selected temperature source is no longer configured'
+        )
     capture_mode = str(
         request_data.get('capture_mode') or dark_automation.CAPTURE_MODE_SINGLE
     )
@@ -1064,6 +1089,7 @@ def _dark_capture_options(request_data, config, capabilities):
         'exposure_step': exposure_step,
         'capture_order': capture_order,
         'temperature_policy': temperature_policy,
+        'temperature_source': temperature_source,
         'capture_mode': capture_mode,
         'temperature_delta': float(round(temperature_delta, 3)),
         'temperature_target': (
@@ -1325,10 +1351,13 @@ class DarkFramesView(TemplateView):
                 quality='balanced',
             )
 
-            if self.latest_image_entry and self.latest_image_entry.temp is not None:
-                current_temperature = float(self.latest_image_entry.temp)
-            else:
-                current_temperature = None
+            temperature_reading = _dark_temperature_reading(
+                self.camera.id,
+                self.indi_allsky_config,
+            )
+            current_temperature = (
+                temperature_reading.value if temperature_reading is not None else None
+            )
 
             dark_coverage = analyze_dark_plan(
                 dark_plan,
@@ -1339,6 +1368,9 @@ class DarkFramesView(TemplateView):
                 capture_state,
                 camera_capabilities,
                 dark_coverage,
+            )
+            dark_analysis['temperature_reading'] = (
+                temperature_reading.to_dict() if temperature_reading is not None else None
             )
             initial_strategy = (
                 dark_coverage.suggested_action
@@ -1376,6 +1408,7 @@ class DarkFramesView(TemplateView):
                 'exposure_step': 5.0,
                 'capture_order': 'long_first',
                 'temperature_policy': 'recommended',
+                'temperature_source': 'auto',
                 'capture_mode': dark_automation.CAPTURE_MODE_SINGLE,
                 'temperature_delta': 5.0,
                 'temperature_target': _dark_default_temperature_target(
@@ -1393,6 +1426,9 @@ class DarkFramesView(TemplateView):
         context['bpm_list'] = b_info_list
         context['dark_analysis'] = dark_analysis
         context['dark_execution_preview'] = dark_execution_preview
+        context['dark_temperature_sources'] = temperature_source_choices(
+            self.indi_allsky_config,
+        )
         context['dark_automation_can_run'] = bool(
             _can_save_standard_configuration()
             and getattr(self.camera, 'local', False)
@@ -1438,10 +1474,18 @@ class AjaxDarkAutomationPlanView(BaseView):
                 self.indi_allsky_config,
                 capabilities,
             )
+            temperature_reading = _dark_temperature_reading(
+                self.camera.id,
+                self.indi_allsky_config,
+                source=options['temperature_source'],
+            )
             analysis_temperature = (
-                _dark_current_temperature(self.camera.id)
-                if options['temperature_policy'] == 'recommended'
-                else None
+                (
+                    temperature_reading.value
+                    if temperature_reading is not None
+                    else None
+                )
+                if options['temperature_policy'] == 'recommended' else None
             )
             capabilities, capture_state, coverage = _build_dark_analysis(
                 self.indi_allsky_config,
@@ -1457,6 +1501,7 @@ class AjaxDarkAutomationPlanView(BaseView):
                 frame_count=frame_count,
                 capture_order=options['capture_order'],
                 temperature_policy=options['temperature_policy'],
+                temperature_source=options['temperature_source'],
                 capture_mode=options['capture_mode'],
                 temperature_delta=options['temperature_delta'],
                 temperature_target=options['temperature_target'],
@@ -1472,6 +1517,12 @@ class AjaxDarkAutomationPlanView(BaseView):
             capture_state,
             capabilities,
             coverage,
+        )
+        preview['analysis']['temperature_reading'] = (
+            temperature_reading.to_dict() if temperature_reading is not None else None
+        )
+        preview['temperature_sources'] = temperature_source_choices(
+            self.indi_allsky_config,
         )
         return jsonify(preview)
 
@@ -1504,10 +1555,18 @@ class AjaxDarkAutomationStartView(BaseView):
                 self.indi_allsky_config,
                 capabilities,
             )
+            temperature_reading = _dark_temperature_reading(
+                self.camera.id,
+                self.indi_allsky_config,
+                source=options['temperature_source'],
+            )
             analysis_temperature = (
-                _dark_current_temperature(self.camera.id)
-                if options['temperature_policy'] == 'recommended'
-                else None
+                (
+                    temperature_reading.value
+                    if temperature_reading is not None
+                    else None
+                )
+                if options['temperature_policy'] == 'recommended' else None
             )
             capabilities, capture_state, coverage = _build_dark_analysis(
                 self.indi_allsky_config,
@@ -1564,6 +1623,10 @@ class AjaxDarkAutomationStartView(BaseView):
             'exposure_step': execution['exposure_step'],
             'capture_order': execution['capture_order'],
             'temperature_policy': execution['temperature_policy'],
+            'temperature_source': execution['temperature_source'],
+            'temperature_source_signature': temperature_source_signature(
+                self.indi_allsky_config,
+            ),
             'capture_mode': execution['capture_mode'],
             'temperature_delta': execution['temperature_delta'],
             'temperature_target': execution['temperature_target'],
@@ -3764,6 +3827,9 @@ class ConfigView(FormView):
             'ACCUM_CAMERA__SUB_EXPOSURE_MAX' : self.indi_allsky_config.get('ACCUM_CAMERA', {}).get('SUB_EXPOSURE_MAX', 1.0),
             'ACCUM_CAMERA__EVEN_EXPOSURES'   : self.indi_allsky_config.get('ACCUM_CAMERA', {}).get('EVEN_EXPOSURES', True),
             'ACCUM_CAMERA__CLAMP_16BIT'      : self.indi_allsky_config.get('ACCUM_CAMERA', {}).get('CLAMP_16BIT', False),
+            'TEST_CAMERA__PROFILE'           : self.indi_allsky_config.get('TEST_CAMERA', {}).get('PROFILE', 'legacy'),
+            'TEST_CAMERA__COOLING'           : self.indi_allsky_config.get('TEST_CAMERA', {}).get('COOLING', False),
+            'TEST_CAMERA__TEMPERATURE'       : self.indi_allsky_config.get('TEST_CAMERA', {}).get('TEMPERATURE', 20.0),
             'TEST_CAMERA__WIDTH'             : self.indi_allsky_config.get('TEST_CAMERA', {}).get('WIDTH', 4056),
             'TEST_CAMERA__HEIGHT'            : self.indi_allsky_config.get('TEST_CAMERA', {}).get('HEIGHT', 3040),
             'TEST_CAMERA__IMAGE_CIRCLE_DIAMETER': self.indi_allsky_config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_DIAMETER', 3500),
@@ -4228,6 +4294,7 @@ class ConfigView(FormView):
         form_data['ADMIN_NETWORKS_FLASK'] = admin_network_text
 
         context['form_config'] = IndiAllskyConfigForm(data=form_data)
+        context['test_camera_profile_defaults'] = test_camera_profile_config_defaults()
 
         return context
 
@@ -4847,6 +4914,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['ACCUM_CAMERA']['SUB_EXPOSURE_MAX']     = float(request.json['ACCUM_CAMERA__SUB_EXPOSURE_MAX'])
         self.indi_allsky_config['ACCUM_CAMERA']['EVEN_EXPOSURES']       = bool(request.json['ACCUM_CAMERA__EVEN_EXPOSURES'])
         self.indi_allsky_config['ACCUM_CAMERA']['CLAMP_16BIT']          = bool(request.json['ACCUM_CAMERA__CLAMP_16BIT'])
+        self.indi_allsky_config['TEST_CAMERA']['PROFILE']               = str(request.json['TEST_CAMERA__PROFILE'])
+        self.indi_allsky_config['TEST_CAMERA']['COOLING']               = bool(request.json['TEST_CAMERA__COOLING'])
+        self.indi_allsky_config['TEST_CAMERA']['TEMPERATURE']           = float(request.json['TEST_CAMERA__TEMPERATURE'])
         self.indi_allsky_config['TEST_CAMERA']['WIDTH']                 = int(request.json['TEST_CAMERA__WIDTH'])
         self.indi_allsky_config['TEST_CAMERA']['HEIGHT']                = int(request.json['TEST_CAMERA__HEIGHT'])
         self.indi_allsky_config['TEST_CAMERA']['IMAGE_CIRCLE_DIAMETER'] = int(request.json['TEST_CAMERA__IMAGE_CIRCLE_DIAMETER'])

@@ -21,6 +21,7 @@ from passlib.hash import argon2
 from .. import constants
 from .. import asi676mc
 from .. import asi676mc_calibration
+from ..camera_profiles import test_camera_profile_choices
 
 from flask_wtf import FlaskForm
 from wtforms import IntegerField
@@ -3013,6 +3014,19 @@ def PYCURL_CAMERA__IMAGE_FILE_TYPE_validator(form, field):
         raise ValidationError('Please select a valid file type')
 
 
+def TEST_CAMERA__PROFILE_validator(form, field):
+    if field.data not in list(zip(*form.TEST_CAMERA__PROFILE_choices))[0]:
+        raise ValidationError('Please select a valid synthetic camera profile')
+
+
+def TEST_CAMERA__TEMPERATURE_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter a valid temperature')
+
+    if field.data < -100.0 or field.data > 100.0:
+        raise ValidationError('Temperature must be between -100 and 100°C')
+
+
 def TEST_CAMERA__WIDTH_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter a valid number')
@@ -3704,6 +3718,8 @@ class IndiAllskyConfigForm(FlaskForm):
         ('5', '5'),
         ('4', '4'),
     )
+
+    TEST_CAMERA__PROFILE_choices = test_camera_profile_choices()
 
     CCD_BIT_DEPTH_choices = (
         ('0', 'Auto Detect'),
@@ -5010,6 +5026,9 @@ class IndiAllskyConfigForm(FlaskForm):
     ACCUM_CAMERA__SUB_EXPOSURE_MAX   = FloatField('Accumulator Max Sub-exposure', validators=[DataRequired(), ACCUM_CAMERA__SUB_EXPOSURE_MAX_validator])
     ACCUM_CAMERA__EVEN_EXPOSURES     = BooleanField('Accumulator Even Exposures')
     ACCUM_CAMERA__CLAMP_16BIT        = BooleanField('Accumulator Clamp 16-bit')
+    TEST_CAMERA__PROFILE                = SelectField('Capability profile', choices=TEST_CAMERA__PROFILE_choices, validators=[DataRequired(), TEST_CAMERA__PROFILE_validator])
+    TEST_CAMERA__COOLING                = BooleanField('Simulate cooler')
+    TEST_CAMERA__TEMPERATURE            = FloatField('Starting temperature (°C)', validators=[TEST_CAMERA__TEMPERATURE_validator])
     TEST_CAMERA__WIDTH                  = IntegerField('Test Camera - Width', validators=[DataRequired(), TEST_CAMERA__WIDTH_validator])
     TEST_CAMERA__HEIGHT                 = IntegerField('Test Camera - Height', validators=[DataRequired(), TEST_CAMERA__HEIGHT_validator])
     TEST_CAMERA__IMAGE_CIRCLE_DIAMETER  = IntegerField('Test Camera - Image Circle Diameter', validators=[TEST_CAMERA__IMAGE_CIRCLE_DIAMETER_validator])

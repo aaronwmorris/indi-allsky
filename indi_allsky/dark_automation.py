@@ -201,6 +201,7 @@ def execution_preview(
         frame_count=10,
         capture_order='long_first',
         temperature_policy='recommended',
+        temperature_source='auto',
         capture_mode=CAPTURE_MODE_SINGLE,
         temperature_delta=5.0,
         temperature_target=None,
@@ -216,6 +217,7 @@ def execution_preview(
         TEMPERATURE_POLICIES,
         'Select a valid temperature policy',
     )
+    temperature_source = str(temperature_source or 'auto')
     capture_mode = _validate_choice(
         capture_mode,
         CAPTURE_MODES,
@@ -273,6 +275,7 @@ def execution_preview(
         'exposure_step': analysis.plan.exposure_step,
         'capture_order': capture_order,
         'temperature_policy': temperature_policy,
+        'temperature_source': temperature_source,
         'capture_mode': capture_mode,
         'temperature_delta': temperature_delta,
         'temperature_target': temperature_target,
@@ -309,6 +312,7 @@ def normalize_execution_request(analysis, capabilities, capture_state, request_d
         TEMPERATURE_POLICIES,
         'Select a valid temperature policy',
     )
+    temperature_source = str(request_data.get('temperature_source') or 'auto')
     capture_mode = _validate_choice(
         request_data.get('capture_mode', CAPTURE_MODE_SINGLE),
         CAPTURE_MODES,
@@ -337,6 +341,7 @@ def normalize_execution_request(analysis, capabilities, capture_state, request_d
         frame_count=frame_count,
         capture_order=capture_order,
         temperature_policy=temperature_policy,
+        temperature_source=temperature_source,
         capture_mode=capture_mode,
         temperature_delta=temperature_delta,
         temperature_target=temperature_target,
@@ -444,6 +449,7 @@ def normalize_execution_request(analysis, capabilities, capture_state, request_d
         'exposure_step': analysis.plan.exposure_step,
         'capture_order': capture_order,
         'temperature_policy': temperature_policy,
+        'temperature_source': temperature_source,
         'capture_mode': capture_mode,
         'temperature_delta': temperature_delta,
         'temperature_target': temperature_target,
@@ -518,6 +524,7 @@ def _execution_signature(execution):
         'exposure_step': execution['exposure_step'],
         'capture_order': execution['capture_order'],
         'temperature_policy': execution['temperature_policy'],
+        'temperature_source': execution.get('temperature_source', 'auto'),
         'capture_mode': execution['capture_mode'],
         'temperature_delta': execution['temperature_delta'],
         'temperature_target': execution['temperature_target'],
@@ -667,6 +674,8 @@ def task_public_status(task):
         'completed_temperature_sets': progress.get('completed_temperature_sets', 0),
         'planned_temperature_sets': planned_temperature_sets,
         'temperature_delta': data.get('temperature_delta'),
+        'temperature_source': data.get('temperature_source', 'auto'),
+        'temperature_source_label': progress.get('temperature_source'),
         'estimated_time': data.get('estimated_time'),
         'estimated_library_storage': data.get('estimated_library_storage'),
         'estimated_peak_storage': data.get('estimated_peak_storage'),
@@ -699,6 +708,7 @@ def run_task(app, task_id, repository_root, stop_requested=None):
     from .capture_state import CameraCapabilities
     from .capture_state import build_effective_capture_state
     from .config import IndiAllSkyConfig
+    from .temperature import temperature_source_signature
     from .flask import db
     from .flask.models import IndiAllSkyDbBadPixelMapTable
     from .flask.models import IndiAllSkyDbCameraTable
@@ -792,6 +802,15 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                     'The selected camera changed before capture started. Review the revised plan.'
                 )
             config = IndiAllSkyConfig().config
+            if (
+                    task_data.get('temperature_source_signature')
+                    and temperature_source_signature(config)
+                    != task_data.get('temperature_source_signature')
+            ):
+                raise DarkAutomationReviewRequired(
+                    'The configured temperature sources changed before capture started. '
+                    'Review the revised plan; no dark frames were taken.'
+                )
             capabilities = CameraCapabilities.from_camera(camera)
             if (
                     task_data.get('capability_signature')
@@ -828,6 +847,7 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                 'frame_count': int(task_data['frame_count']),
                 'exposure_max': float(task_data['exposure_max']),
                 'exposure_step': float(task_data['exposure_step']),
+                'temperature_source': str(task_data.get('temperature_source') or 'auto'),
                 'stage_inactive': True,
             }
 
@@ -1391,6 +1411,7 @@ def _overall_progress(child_progress, offset, total, group_index, group_count):
         'current_frame_count': child_progress.get('current_frame_count'),
         'current_binning': child_progress.get('current_binning'),
         'current_temperature': child_progress.get('current_temperature'),
+        'temperature_source': child_progress.get('temperature_source'),
         'next_temperature': child_progress.get('next_temperature'),
         'target_temperature': child_progress.get('target_temperature'),
         'temperature_set': child_progress.get('temperature_set'),

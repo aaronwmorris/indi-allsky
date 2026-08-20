@@ -35,6 +35,11 @@ from . import constants
 from .utils import IndiAllSkyExposureUtils
 from .capture_state import CameraCapabilities
 from .capture_state import build_effective_capture_state
+from .temperature import TEMPERATURE_SOURCE_AUTO
+from .temperature import TEMPERATURE_SOURCE_CAMERA
+from .temperature import TEMPERATURE_SOURCE_SCRIPT
+from .temperature import configured_temperature_sources
+from .temperature import resolve_temperature
 
 from .flask import create_app
 from .flask import db
@@ -106,6 +111,7 @@ class IndiAllSkyDarks(object):
         self._progress_current_exposure = None
         self._progress_current_binning = None
         self._progress_current_temperature = None
+        self._progress_temperature_source = None
         self._progress_next_temperature = None
         self._progress_target_temperature = None
         self._progress_completed_temperature_sets = 0
@@ -174,7 +180,9 @@ class IndiAllSkyDarks(object):
 
 
         self.sensors_temp_av = Array('f', [0.0 for x in range(60)])
-        self.sensors_user_av = Array('f', [0.0 for x in range(110)])
+        # NaN distinguishes an unread configured sensor from a legitimate 0°C
+        # reading while the dark-capture sensor worker is starting.
+        self.sensors_user_av = Array('f', [float('nan') for x in range(110)])
 
 
         # These shared values are to indicate when the camera is in night/moon modes
@@ -1186,14 +1194,28 @@ class IndiAllSkyDarks(object):
 
 
     def _read_temperature_series_value(self):
-        self._pre_temperature_action()
-        current_temperature = self._usable_temperature(self.getCcdTemperature())
-        if current_temperature is None:
-            raise RuntimeError(
-                'Temperature-series dark capture requires a usable camera or external temperature reading'
+        wait_for_sensor = bool(
+            self.automation_manifest.get('automation')
+            and self.automation_manifest.get('temperature_source', TEMPERATURE_SOURCE_AUTO)
+            != TEMPERATURE_SOURCE_CAMERA
+        )
+        deadline = time.monotonic() + (30.0 if wait_for_sensor else 0.0)
+        while True:
+            self._pre_temperature_action()
+            current_temperature = self._usable_temperature(self.getCcdTemperature())
+            if current_temperature is not None:
+                self._progress_current_temperature = current_temperature
+                return current_temperature
+            if time.monotonic() >= deadline:
+                raise RuntimeError(
+                    'Temperature-series dark capture requires a usable selected temperature source'
+                )
+            self._check_shutdown()
+            self._publish_progress(
+                'temperature_wait',
+                'Waiting for the selected temperature sensor to report a usable reading.',
             )
-        self._progress_current_temperature = current_temperature
-        return current_temperature
+            time.sleep(1.0)
 
 
     def _revalidate_temperature_series_plan(self):
@@ -1421,6 +1443,7 @@ class IndiAllSkyDarks(object):
             'current_exposure': self._progress_current_exposure,
             'current_binning': self._progress_current_binning,
             'current_temperature': self._progress_current_temperature,
+            'temperature_source': self._progress_temperature_source,
             'next_temperature': self._progress_next_temperature,
             'target_temperature': self._progress_target_temperature,
             'temperature_set': self._progress_temperature_set,
@@ -2012,6 +2035,8 @@ class IndiAllSkyDarks(object):
             'capture_profile': manifest.get('capture_profile'),
             'capture_period': manifest.get('capture_period'),
             'temperature_set': manifest.get('temperature_set'),
+            'temperature_source': manifest.get('temperature_source', TEMPERATURE_SOURCE_AUTO),
+            'temperature_source_label': self._progress_temperature_source,
             'target': {
                 'gain': float(gain),
                 'exposure': float(exposure),
@@ -2032,7 +2057,7 @@ class IndiAllSkyDarks(object):
             temperature = float(value)
         except (TypeError, ValueError):
             return None
-        if not math.isfinite(temperature) or temperature < -100.0:
+        if not math.isfinite(temperature) or temperature < -100.0 or temperature > 100.0:
             return None
         return temperature
 
@@ -2098,19 +2123,52 @@ class IndiAllSkyDarks(object):
 
 
     def getCcdTemperature(self):
-        temp_val = self.indiclient.getCcdTemperature()
-
-
-        # query external temperature if camera does not return temperature
-        if temp_val < -100.0 and self.config.get('CCD_TEMP_SCRIPT'):
+        camera_temp = self.indiclient.getCcdTemperature()
+        selected_source = str(
+            self.automation_manifest.get('temperature_source')
+            or TEMPERATURE_SOURCE_AUTO
+        )
+        sensor_values = {}
+        for source in configured_temperature_sources(self.config):
+            if not source.slot:
+                continue
             try:
-                ext_temp_val = self.getExternalTemperature(self.config.get('CCD_TEMP_SCRIPT'))
-                temp_val = ext_temp_val
+                sensor_index = int(source.slot.rsplit('_', 1)[1])
+                sensor_values[source.slot] = self.sensors_user_av[sensor_index]
+            except (IndexError, ValueError):
+                continue
+
+        reading = resolve_temperature(
+            self.config,
+            camera_temperature=camera_temp,
+            sensor_values=sensor_values,
+            source=selected_source,
+        )
+
+        if (
+                reading is None
+                and selected_source in (TEMPERATURE_SOURCE_AUTO, TEMPERATURE_SOURCE_SCRIPT)
+                and self.config.get('CCD_TEMP_SCRIPT')
+        ):
+            try:
+                sensor_values[TEMPERATURE_SOURCE_SCRIPT] = self.getExternalTemperature(
+                    self.config.get('CCD_TEMP_SCRIPT'),
+                )
             except TemperatureException as e:
                 logger.error('Exception querying external temperature: %s', str(e))
+            reading = resolve_temperature(
+                self.config,
+                camera_temperature=camera_temp,
+                sensor_values=sensor_values,
+                source=selected_source,
+            )
 
-
-        temp_val_f = float(temp_val)
+        if reading is None:
+            temp_val_f = float(camera_temp)
+            self._progress_temperature_source = None
+        else:
+            temp_val_f = reading.value
+            self._progress_temperature_source = reading.source.label
 
         with self.sensors_temp_av.get_lock():
             self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] = temp_val_f

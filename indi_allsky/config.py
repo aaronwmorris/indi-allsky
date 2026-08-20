@@ -667,6 +667,9 @@ class IndiAllSkyConfigBase(object):
             "CLAMP_16BIT"            : False,
         },
         "TEST_CAMERA" : {
+            "PROFILE"                : "legacy",
+            "COOLING"                : False,
+            "TEMPERATURE"            : 20.0,
             "WIDTH"                  : 4056,
             "HEIGHT"                 : 3040,
             "IMAGE_CIRCLE_DIAMETER"  : 3500,
