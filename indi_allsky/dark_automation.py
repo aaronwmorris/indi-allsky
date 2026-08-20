@@ -729,7 +729,7 @@ def run_task(app, task_id, repository_root, stop_requested=None):
     from .flask.models import TaskQueueState
 
     repository_root = Path(repository_root).resolve()
-    child_script = repository_root.joinpath('darks.py')
+    child_script = repository_root.joinpath('darks_automation.py')
     stop_requested = stop_requested or (lambda: False)
     def load_task():
         db.session.expire_all()
@@ -897,7 +897,6 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                 command = build_dark_command(
                     sys.executable,
                     child_script,
-                    'temp{0:s}'.format(str(task_data['method'])),
                     manifest_path,
                 )
 
@@ -1025,7 +1024,6 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                 command = build_dark_command(
                     sys.executable,
                     child_script,
-                    str(task_data['method']),
                     manifest_path,
                 )
 
@@ -1339,14 +1337,12 @@ def flush_camera_library(db, models, camera_id):
 def build_dark_command(
         python_executable,
         child_script,
-        action,
         manifest_path,
 ):
     return [
         str(python_executable),
         str(child_script),
-        str(action),
-        '--automation-manifest',
+        '--manifest',
         str(manifest_path),
     ]
 

@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 
 import argparse
-import json
 import locale
 import multiprocessing
 import logging
-import signal
-import sys
 
 
 logger = logging.getLogger('indi_allsky')
@@ -19,7 +16,20 @@ LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
 logger.addHandler(LOG_HANDLER_STREAM)
 
 
-def build_arg_parser():
+
+if __name__ == "__main__":
+    # should be inherited by all of the sub-processes
+    locale.setlocale(locale.LC_ALL, '')
+
+    # https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
+    try:
+        multiprocessing.set_start_method('fork', force=True)
+    except RuntimeError:
+        pass
+
+    from indi_allsky.darks import IndiAllSkyDarks
+
+
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         'action',
@@ -82,12 +92,7 @@ def build_arg_parser():
         type=int,
         default=1,
     )
-    argparser.add_argument(
-        '--automation-manifest',
-        help=argparse.SUPPRESS,
-        type=str,
-        required=False,
-    )
+
 
     reverse_group = argparser.add_mutually_exclusive_group(required=False)
     reverse_group.add_argument(
@@ -104,8 +109,9 @@ def build_arg_parser():
     )
     reverse_group.set_defaults(reverse=True)
 
+
     daytime_group = argparser.add_mutually_exclusive_group(required=False)
-    daytime_group.add_argument(
+    daytime_group .add_argument(
         '--daytime',
         help='enable daytime darks (default)',
         dest='daytime',
@@ -118,81 +124,23 @@ def build_arg_parser():
         action='store_false',
     )
     daytime_group.set_defaults(daytime=True)
-    return argparser
 
 
-def configure_legacy_capture(capture, args):
-    capture.count = args.Count
-    capture.temp_delta = args.temp_delta
-    capture.time_delta = args.Time_delta
-    capture.bitmax = args.bitmax
-    capture.daytime = args.daytime
-    capture.reverse = args.reverse
-    capture.flush_camera_id = args.flush_id
-    capture.gain_list = args.gains
-    capture.binning = args.Binning
+    args = argparser.parse_args()
 
 
-def configure_automation_capture(capture, manifest):
-    if not isinstance(manifest, dict) or not manifest.get('automation'):
-        raise ValueError('Invalid automation manifest')
+    iad = IndiAllSkyDarks()
+    iad.count = args.Count
+    iad.temp_delta = args.temp_delta
+    iad.time_delta = args.Time_delta
+    iad.bitmax = args.bitmax
+    iad.daytime = args.daytime
+    iad.reverse = args.reverse
+    iad.flush_camera_id = args.flush_id
+    iad.gain_list = args.gains
+    iad.binning = args.Binning
 
-    capture.automation_manifest = manifest
-    capture.count = manifest['frame_count']
-    capture.reverse = manifest.get('capture_order', 'long_first') != 'short_first'
-    capture.progress_file = manifest['progress_file']
-
-    if manifest.get('temperature_series'):
-        capture.temp_delta = manifest['temperature_delta']
-        capture.temperature_target = manifest.get('temperature_target')
-        return
-
-    capture.capture_profile = manifest['capture_period']
-    capture.binning = manifest['binning']
-    capture.bitmax = manifest.get('bitmax') or 0
-    capture.gain_list = manifest['gains']
-    capture.exposure_list = manifest['exposures']
+    action_func = getattr(iad, args.action)
+    action_func()
 
 
-def main(argv=None):
-    # should be inherited by all of the sub-processes
-    locale.setlocale(locale.LC_ALL, '')
-
-    # https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
-    try:
-        multiprocessing.set_start_method('fork', force=True)
-    except RuntimeError:
-        pass
-
-    args = build_arg_parser().parse_args(argv)
-
-    from indi_allsky.darks import DarkCapturePlanChanged
-    from indi_allsky.darks import IndiAllSkyDarks
-
-    capture = IndiAllSkyDarks()
-    action_func = getattr(capture, args.action)
-
-    if not args.automation_manifest:
-        configure_legacy_capture(capture, args)
-        action_func()
-        return 0
-
-    with open(args.automation_manifest, 'r', encoding='utf-8') as manifest_file:
-        configure_automation_capture(capture, json.load(manifest_file))
-
-    signal.signal(signal.SIGINT, capture.sigint_handler_main)
-    signal.signal(signal.SIGTERM, capture.sigint_handler_main)
-
-    try:
-        action_func()
-    except DarkCapturePlanChanged:
-        logger.error('Live camera capabilities changed; plan review required')
-        return 75
-    except KeyboardInterrupt:
-        logger.warning('Dark frame capture cancelled')
-        return 130
-    return 0
-
-
-if __name__ == '__main__':
-    sys.exit(main())

@@ -1,5 +1,0 @@
-*.sh text eol=lf
-/allsky.py text eol=lf
-/config.py text eol=lf
-/darks.py text eol=lf
-/misc/usertool.py text eol=lf

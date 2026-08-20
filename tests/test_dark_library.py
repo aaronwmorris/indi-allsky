@@ -855,36 +855,17 @@ def test_adjusted_gain_must_match_camera_step():
         )
 
 
-def test_supervised_dark_command_uses_only_private_manifest():
+def test_supervised_dark_command_uses_only_private_launcher_and_manifest():
     command = build_dark_command(
         '/venv/bin/python',
-        Path('/app/darks.py'),
-        'sigmaclip',
+        Path('/app/darks_automation.py'),
         Path('/tmp/manifest.json'),
     )
 
     assert command == [
         '/venv/bin/python',
-        str(Path('/app/darks.py')),
-        'sigmaclip',
-        '--automation-manifest',
-        str(Path('/tmp/manifest.json')),
-    ]
-
-
-def test_temperature_series_uses_same_private_command_path():
-    command = build_dark_command(
-        '/venv/bin/python',
-        Path('/app/darks.py'),
-        'tempsigmaclip',
-        Path('/tmp/manifest.json'),
-    )
-
-    assert command == [
-        '/venv/bin/python',
-        str(Path('/app/darks.py')),
-        'tempsigmaclip',
-        '--automation-manifest',
+        str(Path('/app/darks_automation.py')),
+        '--manifest',
         str(Path('/tmp/manifest.json')),
     ]
 

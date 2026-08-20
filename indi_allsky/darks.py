@@ -68,10 +68,6 @@ app = create_app()
 logger = logging.getLogger('indi_allsky')
 
 
-class DarkCaptureCancelled(KeyboardInterrupt):
-    pass
-
-
 class DarkCapturePlanChanged(RuntimeError):
     pass
 
@@ -1429,7 +1425,7 @@ class IndiAllSkyDarks(object):
 
     def _check_shutdown(self):
         if self._shutdown:
-            raise DarkCaptureCancelled()
+            raise KeyboardInterrupt()
 
 
     def _publish_progress(self, phase, message, current_frame=None):
@@ -2118,14 +2114,15 @@ class IndiAllSkyDarks(object):
             or TEMPERATURE_SOURCE_AUTO
         )
         sensor_values = {}
-        for source in configured_temperature_sources(self.config):
-            if not source.slot:
-                continue
-            try:
-                sensor_index = int(source.slot.rsplit('_', 1)[1])
-                sensor_values[source.slot] = self.sensors_user_av[sensor_index]
-            except (IndexError, ValueError):
-                continue
+        if self.automation_manifest.get('automation'):
+            for source in configured_temperature_sources(self.config):
+                if not source.slot:
+                    continue
+                try:
+                    sensor_index = int(source.slot.rsplit('_', 1)[1])
+                    sensor_values[source.slot] = self.sensors_user_av[sensor_index]
+                except (IndexError, ValueError):
+                    continue
 
         reading = resolve_temperature(
             self.config,
