@@ -86,7 +86,6 @@ if [ -f "$FLASK_JSON" ] || [ -f "$DB_FILE" ] || [ -f "$INDISERVER_ENV" ]; then
 fi
 
 if [ "$EXISTING_CONFIG" = "1" ]; then
-    db_fset indi-allsky/reuse_existing_config seen false || true
     db_input high indi-allsky/reuse_existing_config || true
     if db_go; then
         db_get indi-allsky/reuse_existing_config

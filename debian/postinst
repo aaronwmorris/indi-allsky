@@ -512,6 +512,10 @@ EOF
         db_set indi-allsky/oidc_client_secret "" || true
         db_reset indi-allsky/web_pass || true
         db_reset indi-allsky/oidc_client_secret || true
+
+        # Reset reuse_existing_config seen flag so subsequent upgrades will prompt anew
+        db_fset indi-allsky/reuse_existing_config seen false || true
+        db_reset indi-allsky/reuse_existing_config || true
     ;;
 esac
 
