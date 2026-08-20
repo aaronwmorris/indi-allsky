@@ -259,17 +259,13 @@ with app.app_context():
                 TMP_UPDATED=$(mktemp)
                 jq \
                     --arg camera_interface "${CAMERA_INTERFACE:-indi}" \
-                    --arg ccd_driver "${CCD_DRIVER:-indi_simulator_ccd}" \
-                    --arg gps_driver "${GPS_DRIVER:-None}" \
                     --arg indi_port "${INDI_PORT:-7624}" \
                     --arg lat "${LOCATION_LATITUDE:-}" \
                     --arg lon "${LOCATION_LONGITUDE:-}" \
                     --arg elev "${LOCATION_ELEVATION:-0}" \
                     '
                     .CAMERA_INTERFACE = $camera_interface |
-                    .CCD_DRIVER = $ccd_driver |
                     .INDI_PORT = ($indi_port | tonumber) |
-                    (if $gps_driver != "None" and $gps_driver != "" then .GPS_DRIVER = $gps_driver else . end) |
                     (if $lat != "" then .LOCATION_LATITUDE = ($lat | tonumber) else . end) |
                     (if $lon != "" then .LOCATION_LONGITUDE = ($lon | tonumber) else . end) |
                     (if $elev != "" then .LOCATION_ELEVATION = ($elev | tonumber | floor) else . end)
