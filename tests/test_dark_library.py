@@ -23,7 +23,6 @@ from indi_allsky.dark_automation import _log_error_summary
 from indi_allsky.dark_automation import _mark_task_capture_restored
 from indi_allsky.dark_automation import activation_changes
 from indi_allsky.dark_automation import build_dark_command
-from indi_allsky.dark_automation import build_temperature_dark_command
 from indi_allsky.dark_automation import build_execution_groups
 from indi_allsky.dark_automation import capture_controller_available
 from indi_allsky.dark_automation import determine_capture_restore_state
@@ -856,75 +855,28 @@ def test_adjusted_gain_must_match_camera_step():
         )
 
 
-def test_dark_command_contains_only_normalised_exact_targets():
+def test_supervised_dark_command_uses_only_private_manifest():
     command = build_dark_command(
         '/venv/bin/python',
         Path('/app/darks.py'),
-        {'method': 'sigmaclip', 'frame_count': 10},
-        {
-            'capture_period': 'night',
-            'binning': 2,
-            'bit_depth': 16,
-            'gains': [0.0, 30.0],
-            'exposures': [1.0, 5.0],
-        },
-        Path('/tmp/progress.json'),
+        'sigmaclip',
+        Path('/tmp/manifest.json'),
     )
 
     assert command == [
         '/venv/bin/python',
         str(Path('/app/darks.py')),
         'sigmaclip',
-        '--Count',
-        '10',
-        '--Binning',
-        '2',
-        '--capture-profile',
-        'night',
-        '--progress-file',
-        str(Path('/tmp/progress.json')),
-        '--gains',
-        '0',
-        '30',
-        '--exposures',
-        '1',
-        '5',
-        '--bitmax',
-        '16',
-        '--reverse',
+        '--automation-manifest',
+        str(Path('/tmp/manifest.json')),
     ]
 
 
-def test_supervised_command_carries_manifest_and_capture_order():
+def test_temperature_series_uses_same_private_command_path():
     command = build_dark_command(
         '/venv/bin/python',
         Path('/app/darks.py'),
-        {'method': 'average', 'frame_count': 3, 'capture_order': 'short_first'},
-        {
-            'capture_period': 'day',
-            'binning': 1,
-            'bit_depth': 8,
-            'gains': [0],
-            'exposures': [1, 5],
-        },
-        Path('/tmp/progress.json'),
-        Path('/tmp/manifest.json'),
-    )
-
-    assert command[-3:] == ['--automation-manifest', str(Path('/tmp/manifest.json')), '--no-reverse']
-
-
-def test_temperature_series_command_uses_legacy_temperature_action_safely():
-    command = build_temperature_dark_command(
-        '/venv/bin/python',
-        Path('/app/darks.py'),
-        {
-            'method': 'sigmaclip',
-            'frame_count': 7,
-            'temperature_delta': 2.5,
-            'capture_order': 'short_first',
-        },
-        Path('/tmp/progress.json'),
+        'tempsigmaclip',
         Path('/tmp/manifest.json'),
     )
 
@@ -932,33 +884,9 @@ def test_temperature_series_command_uses_legacy_temperature_action_safely():
         '/venv/bin/python',
         str(Path('/app/darks.py')),
         'tempsigmaclip',
-        '--Count',
-        '7',
-        '--temp_delta',
-        '2.5',
-        '--progress-file',
-        str(Path('/tmp/progress.json')),
         '--automation-manifest',
         str(Path('/tmp/manifest.json')),
-        '--no-reverse',
     ]
-
-
-def test_temperature_series_command_includes_optional_finish_temperature():
-    command = build_temperature_dark_command(
-        '/venv/bin/python',
-        Path('/app/darks.py'),
-        {
-            'method': 'average',
-            'frame_count': 3,
-            'temperature_delta': 5,
-            'temperature_target': -12.5,
-        },
-        Path('/tmp/progress.json'),
-        Path('/tmp/manifest.json'),
-    )
-
-    assert command[-3:] == ['--temp_target', '-12.5', '--reverse']
 
 
 @pytest.mark.parametrize(

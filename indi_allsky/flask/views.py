@@ -40,7 +40,6 @@ from ..dark_library import analyze_dark_plan
 from ..dark_library import build_dark_plan
 from ..capture_state import CameraCapabilities
 from ..capture_state import build_effective_capture_state
-from ..camera_profiles import test_camera_profile_config_defaults
 from ..temperature import resolve_temperature
 from ..temperature import temperature_source_choices
 from ..temperature import temperature_source_signature
@@ -3827,9 +3826,6 @@ class ConfigView(FormView):
             'ACCUM_CAMERA__SUB_EXPOSURE_MAX' : self.indi_allsky_config.get('ACCUM_CAMERA', {}).get('SUB_EXPOSURE_MAX', 1.0),
             'ACCUM_CAMERA__EVEN_EXPOSURES'   : self.indi_allsky_config.get('ACCUM_CAMERA', {}).get('EVEN_EXPOSURES', True),
             'ACCUM_CAMERA__CLAMP_16BIT'      : self.indi_allsky_config.get('ACCUM_CAMERA', {}).get('CLAMP_16BIT', False),
-            'TEST_CAMERA__PROFILE'           : self.indi_allsky_config.get('TEST_CAMERA', {}).get('PROFILE', 'legacy'),
-            'TEST_CAMERA__COOLING'           : self.indi_allsky_config.get('TEST_CAMERA', {}).get('COOLING', False),
-            'TEST_CAMERA__TEMPERATURE'       : self.indi_allsky_config.get('TEST_CAMERA', {}).get('TEMPERATURE', 20.0),
             'TEST_CAMERA__WIDTH'             : self.indi_allsky_config.get('TEST_CAMERA', {}).get('WIDTH', 4056),
             'TEST_CAMERA__HEIGHT'            : self.indi_allsky_config.get('TEST_CAMERA', {}).get('HEIGHT', 3040),
             'TEST_CAMERA__IMAGE_CIRCLE_DIAMETER': self.indi_allsky_config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_DIAMETER', 3500),
@@ -4294,7 +4290,6 @@ class ConfigView(FormView):
         form_data['ADMIN_NETWORKS_FLASK'] = admin_network_text
 
         context['form_config'] = IndiAllskyConfigForm(data=form_data)
-        context['test_camera_profile_defaults'] = test_camera_profile_config_defaults()
 
         return context
 
@@ -4914,9 +4909,6 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['ACCUM_CAMERA']['SUB_EXPOSURE_MAX']     = float(request.json['ACCUM_CAMERA__SUB_EXPOSURE_MAX'])
         self.indi_allsky_config['ACCUM_CAMERA']['EVEN_EXPOSURES']       = bool(request.json['ACCUM_CAMERA__EVEN_EXPOSURES'])
         self.indi_allsky_config['ACCUM_CAMERA']['CLAMP_16BIT']          = bool(request.json['ACCUM_CAMERA__CLAMP_16BIT'])
-        self.indi_allsky_config['TEST_CAMERA']['PROFILE']               = str(request.json['TEST_CAMERA__PROFILE'])
-        self.indi_allsky_config['TEST_CAMERA']['COOLING']               = bool(request.json['TEST_CAMERA__COOLING'])
-        self.indi_allsky_config['TEST_CAMERA']['TEMPERATURE']           = float(request.json['TEST_CAMERA__TEMPERATURE'])
         self.indi_allsky_config['TEST_CAMERA']['WIDTH']                 = int(request.json['TEST_CAMERA__WIDTH'])
         self.indi_allsky_config['TEST_CAMERA']['HEIGHT']                = int(request.json['TEST_CAMERA__HEIGHT'])
         self.indi_allsky_config['TEST_CAMERA']['IMAGE_CIRCLE_DIAMETER'] = int(request.json['TEST_CAMERA__IMAGE_CIRCLE_DIAMETER'])

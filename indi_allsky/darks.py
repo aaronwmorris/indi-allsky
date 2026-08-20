@@ -41,6 +41,7 @@ from .temperature import TEMPERATURE_SOURCE_CAMERA
 from .temperature import TEMPERATURE_SOURCE_SCRIPT
 from .temperature import configured_temperature_sources
 from .temperature import resolve_temperature
+from .temperature import usable_temperature
 
 from .flask import create_app
 from .flask import db
@@ -1122,7 +1123,7 @@ class IndiAllSkyDarks(object):
             else:
                 self._run(stacking_class)
             self._progress_completed_temperature_sets = temperature_set
-            captured_temperature = self._usable_temperature(
+            captured_temperature = usable_temperature(
                 self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
             )
             self._progress_current_temperature = captured_temperature
@@ -1203,7 +1204,7 @@ class IndiAllSkyDarks(object):
         deadline = time.monotonic() + (30.0 if wait_for_sensor else 0.0)
         while True:
             self._pre_temperature_action()
-            current_temperature = self._usable_temperature(self.getCcdTemperature())
+            current_temperature = usable_temperature(self.getCcdTemperature())
             if current_temperature is not None:
                 self._progress_current_temperature = current_temperature
                 return current_temperature
@@ -1871,7 +1872,7 @@ class IndiAllSkyDarks(object):
             logger.info('Image average adu: %0.2f', m_avg)
 
             measured_temperature = self.getCcdTemperature()
-            self._progress_current_temperature = self._usable_temperature(measured_temperature)
+            self._progress_current_temperature = usable_temperature(measured_temperature)
             logger.info('Camera temperature: %0.1f', measured_temperature)
             self._publish_progress(
                 'capturing',
@@ -1940,7 +1941,7 @@ class IndiAllSkyDarks(object):
             'exposure'   : exposure,
             'gain'       : self._expUtils.GAIN_CURRENT,
             'binmode'    : self._expUtils.BINNING_CURRENT,
-            'temp'       : self._usable_temperature(
+            'temp'       : usable_temperature(
                 self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
             ),
             'adu'        : bpm_adu_avg,
@@ -1963,7 +1964,7 @@ class IndiAllSkyDarks(object):
             'exposure'   : exposure,
             'gain'       : self._expUtils.GAIN_CURRENT,
             'binmode'    : self._expUtils.BINNING_CURRENT,
-            'temp'       : self._usable_temperature(
+            'temp'       : usable_temperature(
                 self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
             ),
             'adu'        : dark_adu_avg,
@@ -2048,19 +2049,6 @@ class IndiAllSkyDarks(object):
                 'temperature': manifest.get('temperature'),
             },
         }
-
-
-    @staticmethod
-    def _usable_temperature(value):
-        if value is None:
-            return None
-        try:
-            temperature = float(value)
-        except (TypeError, ValueError):
-            return None
-        if not math.isfinite(temperature) or temperature < -100.0 or temperature > 100.0:
-            return None
-        return temperature
 
 
     def flush(self):

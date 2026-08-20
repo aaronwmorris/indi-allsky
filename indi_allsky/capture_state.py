@@ -385,6 +385,12 @@ def build_effective_capture_state(
     )
 
 
+def binned_dimension(dimension, binning):
+    if dimension is None:
+        return None
+    return max(1, int(int(dimension) / int(binning)))
+
+
 def _fixed_profile(name, label, binning, gain, exposure_mode, bit_depth, temperature):
     gain_kind = GAIN_KIND_FIXED
     if gain < 0:

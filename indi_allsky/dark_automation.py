@@ -12,6 +12,7 @@ from datetime import timezone
 from pathlib import Path
 
 from . import constants
+from .capture_state import binned_dimension
 
 
 STRATEGY_COMPLETE = 'complete'
@@ -396,8 +397,8 @@ def normalize_execution_request(analysis, capabilities, capture_state, request_d
 
         normalised_group = dict(source_group)
         normalised_group['binning'] = binning
-        normalised_group['width'] = _binned_dimension(capabilities.width, binning)
-        normalised_group['height'] = _binned_dimension(capabilities.height, binning)
+        normalised_group['width'] = binned_dimension(capabilities.width, binning)
+        normalised_group['height'] = binned_dimension(capabilities.height, binning)
         normalised_group['bitmax'] = bitmax
         normalised_group['gains'] = gains
         normalised_group['exposures'] = exposures
@@ -856,6 +857,7 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                 'quality': str(task_data['quality']),
                 'method': str(task_data['method']),
                 'frame_count': int(task_data['frame_count']),
+                'capture_order': str(task_data.get('capture_order') or 'long_first'),
                 'exposure_max': float(task_data['exposure_max']),
                 'exposure_step': float(task_data['exposure_step']),
                 'temperature_source': str(task_data.get('temperature_source') or 'auto'),
@@ -888,14 +890,14 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                     'temperature_series': True,
                     'temperature_delta': float(task_data['temperature_delta']),
                     'temperature_target': task_data.get('temperature_target'),
+                    'progress_file': str(progress_path),
                     'groups': list(task_data['groups']),
                 })
                 _write_json_file(manifest_path, manifest)
-                command = build_temperature_dark_command(
+                command = build_dark_command(
                     sys.executable,
                     child_script,
-                    task_data,
-                    progress_path,
+                    'temp{0:s}'.format(str(task_data['method'])),
                     manifest_path,
                 )
 
@@ -1017,14 +1019,13 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                     'bitmax': int(group.get('bitmax') or 0),
                     'gains': list(group['gains']),
                     'exposures': list(group['exposures']),
+                    'progress_file': str(progress_path),
                 })
                 _write_json_file(manifest_path, manifest)
                 command = build_dark_command(
                     sys.executable,
                     child_script,
-                    task_data,
-                    group,
-                    progress_path,
+                    str(task_data['method']),
                     manifest_path,
                 )
 
@@ -1338,71 +1339,16 @@ def flush_camera_library(db, models, camera_id):
 def build_dark_command(
         python_executable,
         child_script,
-        task_data,
-        group,
-        progress_path,
-        manifest_path=None,
-):
-    command = [
-        str(python_executable),
-        str(child_script),
-        str(task_data['method']),
-        '--Count',
-        str(int(task_data['frame_count'])),
-        '--Binning',
-        str(int(group['binning'])),
-        '--capture-profile',
-        str(group['capture_period']),
-        '--progress-file',
-        str(progress_path),
-        '--gains',
-    ]
-    command.extend(_format_number(value) for value in group['gains'])
-    command.append('--exposures')
-    command.extend(_format_number(value) for value in group['exposures'])
-
-    bitmax = int(group.get('bitmax', group.get('bit_depth') or 0) or 0)
-    if bitmax in BITMAX_VALUES and bitmax > 0:
-        command.extend(('--bitmax', str(bitmax)))
-    if manifest_path is not None:
-        command.extend(('--automation-manifest', str(manifest_path)))
-    if task_data.get('capture_order', 'long_first') == 'short_first':
-        command.append('--no-reverse')
-    else:
-        command.append('--reverse')
-    return command
-
-
-def build_temperature_dark_command(
-        python_executable,
-        child_script,
-        task_data,
-        progress_path,
+        action,
         manifest_path,
 ):
-    command = [
+    return [
         str(python_executable),
         str(child_script),
-        'temp{0:s}'.format(str(task_data['method'])),
-        '--Count',
-        str(int(task_data['frame_count'])),
-        '--temp_delta',
-        _format_number(task_data['temperature_delta']),
-        '--progress-file',
-        str(progress_path),
+        str(action),
         '--automation-manifest',
         str(manifest_path),
     ]
-    if task_data.get('temperature_target') is not None:
-        command.extend((
-            '--temp_target',
-            _format_number(task_data['temperature_target']),
-        ))
-    if task_data.get('capture_order', 'long_first') == 'short_first':
-        command.append('--no-reverse')
-    else:
-        command.append('--reverse')
-    return command
 
 
 def _overall_progress(child_progress, offset, total, group_index, group_count):
@@ -1863,18 +1809,8 @@ def _validate_unique_targets(groups):
                 seen.add(target)
 
 
-def _binned_dimension(dimension, binning):
-    if dimension is None:
-        return None
-    return max(1, int(int(dimension) / int(binning)))
-
-
 def _capture_period(capture_profile):
     return 'day' if capture_profile in ('day', 'sqm_day') else 'night'
-
-
-def _format_number(value):
-    return '{0:g}'.format(float(value))
 
 
 def _utc_now_text():

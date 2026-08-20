@@ -531,8 +531,6 @@ const field_names = [
     'PYCURL_CAMERA__USERNAME',
     'PYCURL_CAMERA__PASSWORD',
     'ACCUM_CAMERA__SUB_EXPOSURE_MAX',
-    'TEST_CAMERA__PROFILE',
-    'TEST_CAMERA__TEMPERATURE',
     'TEST_CAMERA__WIDTH',
     'TEST_CAMERA__HEIGHT',
     'TEST_CAMERA__IMAGE_CIRCLE_DIAMETER',
@@ -712,7 +710,6 @@ const checkbox_field_names = [
     'AUTO_WB_DAY',
     'CCD_COOLING',
     'CCD_COOLING_DAY',
-    'TEST_CAMERA__COOLING',
     'GPS_ENABLE',
     'DETECT_STARS',
     'DETECT_METEORS',
@@ -1939,35 +1936,6 @@ $( document ).ready(function() {
     $('#TEMP_SENSOR__A_CLASSNAME, #TEMP_SENSOR__B_CLASSNAME, #TEMP_SENSOR__C_CLASSNAME, #TEMP_SENSOR__D_CLASSNAME, #TEMP_SENSOR__E_CLASSNAME, #TEMP_SENSOR__F_CLASSNAME').on('change', updateFc37ActiveLowState);
 
     updateFc37ActiveLowState();
-
-
-    const testCameraProfileDefaults = {{ test_camera_profile_defaults | tojson }};
-    const testCameraProfileSelect = document.getElementById('TEST_CAMERA__PROFILE');
-    if (testCameraProfileSelect) {
-        testCameraProfileSelect.addEventListener('change', function() {
-            const defaults = testCameraProfileDefaults[this.value];
-            if (!defaults) {
-                return;
-            }
-
-            const fieldValues = {
-                'CCD_CONFIG__EXPOSURE_CLASSNAME': defaults.exposure_mode,
-                'CCD_CONFIG__DAY__GAIN': defaults.day_gain,
-                'CCD_CONFIG__MOONMODE__GAIN': defaults.moon_gain,
-                'CCD_CONFIG__NIGHT__GAIN': defaults.night_gain,
-                'CAMERA_SQM__GAIN': defaults.sqm_gain,
-                'CCD_BIT_DEPTH': String(defaults.bit_depth),
-                'CCD_CONFIG__AUTO_GAIN_LEVELS': String(defaults.auto_gain_levels),
-            };
-            Object.entries(fieldValues).forEach(function([fieldId, value]) {
-                const field = document.getElementById(fieldId);
-                if (field) {
-                    field.value = value;
-                    field.dispatchEvent(new Event('change', {bubbles: true}));
-                }
-            });
-        });
-    }
 
 
     // Open the camera settings accordion section that matches the selected

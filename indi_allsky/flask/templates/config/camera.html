@@ -549,27 +549,6 @@
                     Synthetic Test Camera Settings
                 </div>
                 <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-4 tw:pt-2">
-                    <div class="tw:alert tw:alert-info tw:items-start tw:text-sm">
-                        <span>Selecting a capability profile fills the matching exposure mode and gain defaults. It only affects the synthetic test cameras and can be adjusted before saving.</span>
-                    </div>
-                    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
-                        <div class="tw:flex tw:flex-col tw:gap-1">
-                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEST_CAMERA__PROFILE.label.text }}</span>
-                            {{ form_config.TEST_CAMERA__PROFILE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                            <div id="TEST_CAMERA__PROFILE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                        </div>
-                        <div class="tw:flex tw:flex-col tw:gap-1">
-                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEST_CAMERA__TEMPERATURE.label.text }}</span>
-                            {{ form_config.TEST_CAMERA__TEMPERATURE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                            <div id="TEST_CAMERA__TEMPERATURE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                        </div>
-                        <div class="tw:flex tw:flex-col tw:gap-2 tw:justify-center">
-                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEST_CAMERA__COOLING.label.text }}</span>
-                            {{ form_config.TEST_CAMERA__COOLING(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
-                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Reaches configured cooling targets immediately</span>
-                            <div id="TEST_CAMERA__COOLING-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                        </div>
-                    </div>
                     <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4">
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEST_CAMERA__WIDTH.label.text }}</span>

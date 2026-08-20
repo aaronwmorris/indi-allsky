@@ -178,15 +178,15 @@ def resolve_temperature(config, camera_temperature=None, sensor_values=None, sou
 
     for candidate in candidates:
         if candidate.key == TEMPERATURE_SOURCE_CAMERA:
-            value = _usable_temperature(camera_temperature)
+            value = usable_temperature(camera_temperature)
         elif candidate.key == TEMPERATURE_SOURCE_SCRIPT:
-            value = _usable_temperature(sensor_values.get(TEMPERATURE_SOURCE_SCRIPT))
+            value = usable_temperature(sensor_values.get(TEMPERATURE_SOURCE_SCRIPT))
         else:
             value = _display_temperature_to_celsius(
                 sensor_values.get(candidate.slot),
                 config.get('TEMP_DISPLAY'),
             )
-            value = _usable_temperature(value)
+            value = usable_temperature(value)
         if value is not None:
             return TemperatureReading(
                 value=float(round(value, 3)),
@@ -207,7 +207,7 @@ def _display_temperature_to_celsius(value, display_unit):
     return temperature
 
 
-def _usable_temperature(value):
+def usable_temperature(value):
     try:
         temperature = float(value)
     except (TypeError, ValueError):

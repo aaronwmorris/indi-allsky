@@ -9,10 +9,6 @@ import logging
 
 from .indi import IndiClient
 from .fake_indi import FakeIndiCcd
-from ..exceptions import CameraException
-from ..camera_profiles import DEFAULT_TEST_CAMERA_PROFILE
-from ..camera_profiles import get_test_camera_profile
-from ..camera_profiles import normalize_test_camera_gain
 
 #from .. import constants
 
@@ -38,44 +34,31 @@ class IndiClientTestCameraBase(IndiClient):
         self.active_exposure = False
 
 
-        test_camera_config = self.config.get('TEST_CAMERA', {}) or {}
-        self.test_camera_profile_name = str(
-            test_camera_config.get('PROFILE', DEFAULT_TEST_CAMERA_PROFILE)
-        )
-        self.test_camera_profile = get_test_camera_profile(self.test_camera_profile_name)
-
-        self.ccd_device_name = self.test_camera_profile.camera_name
+        self.ccd_device_name = 'OVERRIDE'
         self.ccd_driver_exec = 'OVERRIDE'
 
 
-        self._width = test_camera_config.get('WIDTH', 4056)
-        self._height = test_camera_config.get('HEIGHT', 3040)
-        self._image_circle_diameter = test_camera_config.get('IMAGE_CIRCLE_DIAMETER', 3500)
-        self._image_circle_offset_x = (test_camera_config.get('IMAGE_CIRCLE_OFFSET_X', 0) * -1)  # reverse offsets because image will be flipped
-        self._image_circle_offset_y = (test_camera_config.get('IMAGE_CIRCLE_OFFSET_Y', 0) * -1)
+        self._width = self.config.get('TEST_CAMERA', {}).get('WIDTH', 4056)
+        self._height = self.config.get('TEST_CAMERA', {}).get('HEIGHT', 3040)
+        self._image_circle_diameter = self.config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_DIAMETER', 3500)
+        self._image_circle_offset_x = (self.config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_OFFSET_X', 0) * -1)  # reverse offsets because image will be flipped
+        self._image_circle_offset_y = (self.config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_OFFSET_Y', 0) * -1)
 
 
+        # bogus info for now
         self.camera_info = {
             'width'         : self.width,
             'height'        : self.height,
             'pixel'         : 2.0,
-            'min_gain'      : self.test_camera_profile.gain_min,
-            'max_gain'      : self.test_camera_profile.gain_max,
-            'gain_step'     : self.test_camera_profile.gain_step,
-            'gain_format'   : self.test_camera_profile.gain_format,
-            'gain_values'   : self.test_camera_profile.gain_values,
-            'min_exposure'  : self.test_camera_profile.exposure_min,
-            'max_exposure'  : self.test_camera_profile.exposure_max,
-            'min_binning'   : self.test_camera_profile.binning_min,
-            'max_binning'   : self.test_camera_profile.binning_max,
+            'min_gain'      : 0.0,
+            'max_gain'      : 0.0,
+            'min_exposure'  : 0.000032,
+            'max_exposure'  : 60.0,
+            'min_binning'   : 1,
+            'max_binning'   : 4,
             'cfa'           : None,
-            'bit_depth'     : self.test_camera_profile.bit_depth,
+            'bit_depth'     : 16,
         }
-
-        self.image_bit_depth = self.test_camera_profile.bit_depth
-        self.cooling_supported = bool(test_camera_config.get('COOLING', False))
-        self.cooler_enabled = False
-        self.ccd_temp = float(test_camera_config.get('TEMPERATURE', 20.0))
 
 
         self._last_exposure_time = time.time()
@@ -113,14 +96,6 @@ class IndiClientTestCameraBase(IndiClient):
 
 
     def setCcdGain(self, new_gain):
-        try:
-            new_gain = normalize_test_camera_gain(
-                self.test_camera_profile,
-                new_gain,
-            )
-        except ValueError as error:
-            raise CameraException(str(error)) from error
-
         # Update shared gain value
         self._expUtils.GAIN_CURRENT = new_gain
 
@@ -133,16 +108,6 @@ class IndiClientTestCameraBase(IndiClient):
             return
 
 
-        bin_value = int(bin_value)
-        if bin_value < self.test_camera_profile.binning_min or bin_value > self.test_camera_profile.binning_max:
-            raise CameraException(
-                'Synthetic camera binning {0:d} is outside the supported range {1:d}-{2:d}'.format(
-                    bin_value,
-                    self.test_camera_profile.binning_min,
-                    self.test_camera_profile.binning_max,
-                )
-            )
-
         # Update shared bin value
         self._expUtils.BINNING_CURRENT = bin_value
 
@@ -154,16 +119,6 @@ class IndiClientTestCameraBase(IndiClient):
         if self.active_exposure:
             return
 
-
-        exposure = float(exposure)
-        if exposure < self.test_camera_profile.exposure_min or exposure > self.test_camera_profile.exposure_max:
-            raise CameraException(
-                'Synthetic camera exposure {0:g}s is outside the supported range {1:g}-{2:g}s'.format(
-                    exposure,
-                    self.test_camera_profile.exposure_min,
-                    self.test_camera_profile.exposure_max,
-                )
-            )
 
         self.exposure = exposure
         self.sqm_exposure = sqm_exposure
@@ -371,12 +326,11 @@ class IndiClientTestCameraBase(IndiClient):
         }
 
         ccdinfo['GAIN_INFO'] = {
-            'current' : self.gain,
+            'current' : self.ccd_device.min_gain,
             'min'     : self.ccd_device.min_gain,
             'max'     : self.ccd_device.max_gain,
-            'step'    : self.camera_info['gain_step'],
-            'format'  : self.camera_info['gain_format'],
-            'values'  : list(self.camera_info['gain_values']),
+            'step'    : None,
+            'format'  : None,
         }
 
         ccdinfo['BINNING_INFO'] = {
@@ -391,28 +345,22 @@ class IndiClientTestCameraBase(IndiClient):
 
 
     def enableCcdCooler(self):
-        if not self.cooling_supported:
-            return False
-
-        self.cooler_enabled = True
-        return True
+        # not supported
+        pass
 
 
     def disableCcdCooler(self):
-        self.cooler_enabled = False
-        return True
+        # not supported
+        pass
 
 
     def getCcdTemperature(self):
         return self.ccd_temp
 
 
-    def setCcdTemperature(self, temp_val, *args, **kwargs):
-        if not self.cooling_supported:
-            return False
-
-        self.ccd_temp = float(temp_val)
-        return True
+    def setCcdTemperature(self, *args, **kwargs):
+        # not supported
+        pass
 
 
     def setCcdScopeInfo(self, *args):
@@ -442,10 +390,10 @@ class IndiClientTestCameraBase(IndiClient):
 
 
         hdulist[0].header['IMAGETYP'] = 'Light Frame'
-        hdulist[0].header['INSTRUME'] = self.ccd_device_name
+        hdulist[0].header['INSTRUME'] = 'Test Camera'
         hdulist[0].header['EXPTIME'] = float(self.exposure)
-        hdulist[0].header['XBINNING'] = int(self.binning)
-        hdulist[0].header['YBINNING'] = int(self.binning)
+        hdulist[0].header['XBINNING'] = 1
+        hdulist[0].header['YBINNING'] = 1
         hdulist[0].header['GAIN'] = float(self.gain)
         hdulist[0].header['CCD-TEMP'] = self.ccd_temp
         #hdulist[0].header['SITELAT'] =
@@ -516,8 +464,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
     def __init__(self, *args, **kwargs):
         super(IndiClientTestCameraBubbles, self).__init__(*args, **kwargs)
 
-        if self.test_camera_profile_name == DEFAULT_TEST_CAMERA_PROFILE:
-            self.ccd_device_name = 'Bubbles Test Camera'
+        self.ccd_device_name = 'Bubbles Test Camera'
         self.ccd_driver_exec = 'test_bubbles'
 
 
@@ -671,8 +618,7 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
     def __init__(self, *args, **kwargs):
         super(IndiClientTestCameraRotatingStars, self).__init__(*args, **kwargs)
 
-        if self.test_camera_profile_name == DEFAULT_TEST_CAMERA_PROFILE:
-            self.ccd_device_name = 'Rotating Stars Test Camera'
+        self.ccd_device_name = 'Rotating Stars Test Camera'
         self.ccd_driver_exec = 'test_rotating_stars'
 
 
