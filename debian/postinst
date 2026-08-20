@@ -244,17 +244,29 @@ with app.app_context():
         echo "indi-allsky: Bootstrapping configuration..."
         PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/config.py bootstrap --image_folder /var/www/html/allsky/images || true
 
-        # Apply debconf location & observatory parameters ONLY if not reusing existing config and values were provided
-        if [ "$REUSE_CONFIG" != "true" ] && [ -n "$LOCATION_LATITUDE" ] && [ -n "$LOCATION_LONGITUDE" ]; then
+        # Apply debconf camera, driver, port & location parameters ONLY if not reusing existing config
+        if [ "$REUSE_CONFIG" != "true" ]; then
             TMP_CFG=$(mktemp)
             PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/config.py dumpfile --outfile "$TMP_CFG" 2>/dev/null || true
             if [ -f "$TMP_CFG" ] && [ -s "$TMP_CFG" ] && command -v jq >/dev/null 2>&1; then
                 TMP_UPDATED=$(mktemp)
                 jq \
-                    --argjson lat "${LOCATION_LATITUDE}" \
-                    --argjson lon "${LOCATION_LONGITUDE}" \
-                    --argjson elev "${LOCATION_ELEVATION:-0}" \
-                    '.LOCATION_LATITUDE = ($lat | tonumber) | .LOCATION_LONGITUDE = ($lon | tonumber) | .LOCATION_ELEVATION = ($elev | tonumber | floor)' \
+                    --arg camera_interface "${CAMERA_INTERFACE:-indi}" \
+                    --arg ccd_driver "${CCD_DRIVER:-indi_simulator_ccd}" \
+                    --arg gps_driver "${GPS_DRIVER:-None}" \
+                    --arg indi_port "${INDI_PORT:-7624}" \
+                    --arg lat "${LOCATION_LATITUDE:-}" \
+                    --arg lon "${LOCATION_LONGITUDE:-}" \
+                    --arg elev "${LOCATION_ELEVATION:-0}" \
+                    '
+                    .CAMERA_INTERFACE = $camera_interface |
+                    .CCD_DRIVER = $ccd_driver |
+                    .INDI_PORT = ($indi_port | tonumber) |
+                    (if $gps_driver != "None" and $gps_driver != "" then .GPS_DRIVER = $gps_driver else . end) |
+                    (if $lat != "" then .LOCATION_LATITUDE = ($lat | tonumber) else . end) |
+                    (if $lon != "" then .LOCATION_LONGITUDE = ($lon | tonumber) else . end) |
+                    (if $elev != "" then .LOCATION_ELEVATION = ($elev | tonumber | floor) else . end)
+                    ' \
                     "$TMP_CFG" > "$TMP_UPDATED" 2>/dev/null && \
                 PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/config.py load -c "$TMP_UPDATED" --force || true
                 rm -f "$TMP_UPDATED"
@@ -455,9 +467,9 @@ EOF
         chown -R indi-allsky:indi-allsky /var/lib/indi-allsky /etc/indi-allsky /var/log/indi-allsky /var/www/html/allsky
         chmod 755 /var/lib/indi-allsky /var/www/html/allsky
 
-        # Enable and start indiserver (except for standalone libcamera and mqtt)
+        # Enable and start indiserver (except for standalone libcamera, test patterns, and mqtt)
         case "$CAMERA_INTERFACE" in
-            libcamera|mqtt)
+            libcamera*|mqtt*|test_*|pycurl_*|indi_passive)
                 systemctl stop indiserver.service 2>/dev/null || true
                 systemctl disable indiserver.service 2>/dev/null || true
                 ;;
