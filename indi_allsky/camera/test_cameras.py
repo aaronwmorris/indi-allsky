@@ -12,6 +12,7 @@ from .fake_indi import FakeIndiCcd
 from ..exceptions import CameraException
 from ..camera_profiles import DEFAULT_TEST_CAMERA_PROFILE
 from ..camera_profiles import get_test_camera_profile
+from ..camera_profiles import normalize_test_camera_gain
 
 #from .. import constants
 
@@ -112,32 +113,13 @@ class IndiClientTestCameraBase(IndiClient):
 
 
     def setCcdGain(self, new_gain):
-        new_gain = float(new_gain)
-        profile = self.test_camera_profile
-
-        if not profile.gain_supported:
-            if abs(new_gain - (-1.0)) > 0.000001:
-                raise CameraException('Synthetic camera profile does not support gain control')
-        else:
-            if new_gain < profile.gain_min or new_gain > profile.gain_max:
-                raise CameraException(
-                    'Synthetic camera gain {0:g} is outside the supported range {1:g}-{2:g}'.format(
-                        new_gain,
-                        profile.gain_min,
-                        profile.gain_max,
-                    )
-                )
-
-            if profile.gain_values and not any(
-                    abs(new_gain - supported_gain) <= 0.000001
-                    for supported_gain in profile.gain_values
-            ):
-                raise CameraException('Synthetic camera gain is not one of the supported discrete values')
-
-            if profile.gain_step and not profile.gain_values:
-                step_count = (new_gain - profile.gain_min) / profile.gain_step
-                if abs(step_count - round(step_count)) > 0.000001:
-                    raise CameraException('Synthetic camera gain does not match the supported gain step')
+        try:
+            new_gain = normalize_test_camera_gain(
+                self.test_camera_profile,
+                new_gain,
+            )
+        except ValueError as error:
+            raise CameraException(str(error)) from error
 
         # Update shared gain value
         self._expUtils.GAIN_CURRENT = new_gain

@@ -472,6 +472,11 @@ def estimate_execution_seconds(groups, frame_count, overhead_seconds=30.0):
 
 def recommended_stacking_method(config, groups):
     camera_interface = str(config.get('CAMERA_INTERFACE', ''))
+    if camera_interface.startswith('test_'):
+        # The rotating-stars and bubbles cameras produce RGB frames.  The
+        # legacy sigma-clip path expects a single image plane, so make the
+        # simulator-safe method the default for guided capture.
+        return 'average'
     if not (
             camera_interface.startswith('libcamera_')
             or camera_interface.startswith('mqtt_')
@@ -490,12 +495,18 @@ def recommended_stacking_method(config, groups):
 
 def validate_execution_profiles(config, execution):
     camera_interface = str(config.get('CAMERA_INTERFACE', ''))
+    groups = execution.get('groups') or ()
+    if camera_interface.startswith('test_'):
+        if execution.get('method') != 'average':
+            raise DarkAutomationError(
+                'Average stacking is required for RGB test-camera frames'
+            )
+        return
     if not (
             camera_interface.startswith('libcamera_')
             or camera_interface.startswith('mqtt_')
     ):
         return
-    groups = execution.get('groups') or ()
     libcamera_config = config.get('LIBCAMERA', {}) or {}
     if (
             any(group.get('capture_period') == 'night' for group in groups)

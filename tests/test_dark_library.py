@@ -235,6 +235,18 @@ def test_libcamera_rgb_requires_average_but_raw_dng_allows_either_method():
         validate_execution_profiles(config, {'groups': mixed_groups, 'method': 'sigmaclip'})
 
 
+@pytest.mark.parametrize('camera_interface', ('test_bubbles', 'test_rotating_stars'))
+def test_rgb_test_cameras_require_average_stacking(camera_interface):
+    config = _config()
+    config['CAMERA_INTERFACE'] = camera_interface
+    groups = [{'capture_period': 'night'}]
+
+    assert recommended_stacking_method(config, groups) == 'average'
+    validate_execution_profiles(config, {'groups': groups, 'method': 'average'})
+    with pytest.raises(DarkAutomationError, match='RGB test-camera frames'):
+        validate_execution_profiles(config, {'groups': groups, 'method': 'sigmaclip'})
+
+
 def test_legacy_state_matches_capture_gain_levels():
     state = build_effective_capture_state(_config(EXPOSURE_MODE_LEGACY), _capabilities())
 

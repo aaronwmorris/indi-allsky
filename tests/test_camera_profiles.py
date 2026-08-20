@@ -2,6 +2,7 @@ import pytest
 
 from indi_allsky.camera_profiles import TEST_CAMERA_PROFILES
 from indi_allsky.camera_profiles import get_test_camera_profile
+from indi_allsky.camera_profiles import normalize_test_camera_gain
 from indi_allsky.camera_profiles import test_camera_profile_choices as _profile_choices
 from indi_allsky.camera_profiles import test_camera_profile_config_defaults as _profile_config_defaults
 from indi_allsky.capture_state import CameraCapabilities
@@ -123,3 +124,37 @@ def test_profile_choices_and_browser_defaults_cover_every_profile():
     assert set(browser_defaults) == set(TEST_CAMERA_PROFILES)
     assert all(label for name, label in _profile_choices())
     assert get_test_camera_profile('unknown') is TEST_CAMERA_PROFILES['legacy']
+
+
+@pytest.mark.parametrize(
+    'profile_name,requested_gain,expected_gain',
+    (
+        ('touptek', 9999.4, 9999.0),
+        ('libcamera', 22.259, 22.26),
+        ('qhy', 18.549, 18.5),
+        ('discrete_iso', 750.0, 800.0),
+        ('no_gain', -1.0, -1.0),
+    ),
+)
+def test_synthetic_camera_gain_is_normalized_like_a_driver(
+        profile_name,
+        requested_gain,
+        expected_gain,
+):
+    profile = get_test_camera_profile(profile_name)
+
+    assert normalize_test_camera_gain(profile, requested_gain) == expected_gain
+
+
+def test_synthetic_camera_gain_still_rejects_out_of_range_values():
+    profile = get_test_camera_profile('zwo_playerone')
+
+    with pytest.raises(ValueError, match='outside the supported range'):
+        normalize_test_camera_gain(profile, 301.0)
+
+
+def test_synthetic_camera_without_gain_rejects_a_numeric_gain():
+    profile = get_test_camera_profile('no_gain')
+
+    with pytest.raises(ValueError, match='does not support gain control'):
+        normalize_test_camera_gain(profile, 0.0)

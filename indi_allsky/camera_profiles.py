@@ -214,6 +214,39 @@ def get_test_camera_profile(profile_name):
     )
 
 
+def normalize_test_camera_gain(profile, gain):
+    """Emulate how a camera driver applies its advertised gain controls."""
+    gain = float(gain)
+
+    if not profile.gain_supported:
+        if abs(gain - (-1.0)) > 0.000001:
+            raise ValueError('Synthetic camera profile does not support gain control')
+        return -1.0
+
+    if gain < profile.gain_min or gain > profile.gain_max:
+        raise ValueError(
+            'Synthetic camera gain {0:g} is outside the supported range {1:g}-{2:g}'.format(
+                gain,
+                profile.gain_min,
+                profile.gain_max,
+            )
+        )
+
+    if profile.gain_values:
+        return float(min(
+            profile.gain_values,
+            key=lambda supported_gain: abs(gain - supported_gain),
+        ))
+
+    if profile.gain_step:
+        step_count = round((gain - profile.gain_min) / profile.gain_step)
+        gain = profile.gain_min + (step_count * profile.gain_step)
+        gain = min(max(gain, profile.gain_min), profile.gain_max)
+        return float(round(gain, 9))
+
+    return gain
+
+
 def test_camera_profile_choices():
     return tuple(
         (profile_name, profile.label)
