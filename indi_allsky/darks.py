@@ -35,6 +35,7 @@ from . import constants
 from .utils import IndiAllSkyExposureUtils
 from .capture_state import CameraCapabilities
 from .capture_state import build_effective_capture_state
+from .dark_validation import validate_dark_master_data
 from .temperature import TEMPERATURE_SOURCE_AUTO
 from .temperature import TEMPERATURE_SOURCE_CAMERA
 from .temperature import TEMPERATURE_SOURCE_SCRIPT
@@ -533,7 +534,10 @@ class IndiAllSkyDarks(object):
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo()
         self.ccd_info = ccd_info
-        live_capabilities = CameraCapabilities.from_ccd_info(ccd_info)
+        live_capabilities = CameraCapabilities.from_ccd_info(
+            ccd_info,
+            camera_driver=self.camera_server,
+        )
 
 
         if self.config.get('CFA_PATTERN'):
@@ -1222,7 +1226,10 @@ class IndiAllSkyDarks(object):
         with app.app_context():
             self.config = IndiAllSkyConfig().config
         live_ccd_info = self.indiclient.getCcdInfo()
-        live_capabilities = CameraCapabilities.from_ccd_info(live_ccd_info)
+        live_capabilities = CameraCapabilities.from_ccd_info(
+            live_ccd_info,
+            camera_driver=self.camera_server,
+        )
         self._validate_automation_preflight(live_capabilities)
 
 
@@ -2521,6 +2528,8 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
         avg_data = (numpy.sum(dark_data_list, axis=0) / len(dark_data_list)).astype(numpy_type)
         #logger.info('Avg dims: %s', str(avg_data.shape))
 
+        validate_dark_master_data(avg_data)
+
         elapsed_s = time.time() - start
         logger.info('Exposure average stacked in %0.4f s', elapsed_s)
 
@@ -2624,6 +2633,8 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
 
 
         combined_dark.meta['combined'] = True
+
+        validate_dark_master_data(combined_dark[0].data)
 
 
         dark_adu_avg = numpy.mean(combined_dark[0].data)

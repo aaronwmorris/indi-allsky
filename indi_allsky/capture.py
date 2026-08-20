@@ -1077,7 +1077,10 @@ class CaptureWorker(Process):
         }
 
 
-        camera_capabilities = CameraCapabilities.from_ccd_info(ccd_info)
+        camera_capabilities = CameraCapabilities.from_ccd_info(
+            ccd_info,
+            camera_driver=self.camera_server,
+        )
         effective_capture_state = build_effective_capture_state(self.config, camera_capabilities)
         camera_metadata['data']['camera_capabilities'] = camera_capabilities.to_dict()
         camera_metadata['data']['effective_capture_state'] = effective_capture_state.to_dict()

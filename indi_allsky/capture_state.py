@@ -19,6 +19,12 @@ GAIN_KIND_CONTINUOUS = 'continuous'
 GAIN_KIND_NONE = 'none'
 
 
+FRAME_ALIGNMENT_BY_DRIVER = {
+    # The INDI PlayerOne driver applies these constraints after binning.
+    'indi_playerone_ccd': (4, 2),
+}
+
+
 @dataclass(frozen=True)
 class CameraCapabilities:
     gain_min: Optional[float] = None
@@ -34,6 +40,8 @@ class CameraCapabilities:
     width: Optional[int] = None
     height: Optional[int] = None
     bit_depth: Optional[int] = None
+    frame_width_multiple: int = 1
+    frame_height_multiple: int = 1
 
     @property
     def gain_supported(self):
@@ -43,12 +51,13 @@ class CameraCapabilities:
         return not (self.gain_min < 0 and self.gain_max < 0)
 
     @classmethod
-    def from_ccd_info(cls, ccd_info):
+    def from_ccd_info(cls, ccd_info, camera_driver=None):
         gain_info = ccd_info.get('GAIN_INFO', {}) or {}
         binning_info = ccd_info.get('BINNING_INFO', {}) or {}
         exposure_info = ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}) or {}
         ccd_frame = ccd_info.get('CCD_FRAME', {}) or {}
         ccd_sensor_info = ccd_info.get('CCD_INFO', {}) or {}
+        frame_width_multiple, frame_height_multiple = _frame_alignment(camera_driver)
 
         return cls(
             gain_min=_optional_float(gain_info.get('min')),
@@ -64,6 +73,8 @@ class CameraCapabilities:
             width=_optional_int((ccd_frame.get('WIDTH') or {}).get('max')),
             height=_optional_int((ccd_frame.get('HEIGHT') or {}).get('max')),
             bit_depth=_optional_int((ccd_sensor_info.get('CCD_BITSPERPIXEL') or {}).get('current')),
+            frame_width_multiple=frame_width_multiple,
+            frame_height_multiple=frame_height_multiple,
         )
 
     @classmethod
@@ -76,6 +87,9 @@ class CameraCapabilities:
             binning_data = capability_data.get('binning', {}) or {}
             exposure_data = capability_data.get('exposure', {}) or {}
             frame_data = capability_data.get('frame', {}) or {}
+            driver_width_multiple, driver_height_multiple = _frame_alignment(
+                getattr(camera, 'driver', None),
+            )
 
             return cls(
                 gain_min=_optional_float(gain_data.get('min')),
@@ -91,8 +105,19 @@ class CameraCapabilities:
                 width=_optional_int(frame_data.get('width')),
                 height=_optional_int(frame_data.get('height')),
                 bit_depth=_optional_int(frame_data.get('bit_depth')),
+                frame_width_multiple=_positive_int(
+                    frame_data.get('width_multiple'),
+                    default=driver_width_multiple,
+                ),
+                frame_height_multiple=_positive_int(
+                    frame_data.get('height_multiple'),
+                    default=driver_height_multiple,
+                ),
             )
 
+        frame_width_multiple, frame_height_multiple = _frame_alignment(
+            getattr(camera, 'driver', None),
+        )
         return cls(
             gain_min=_optional_float(getattr(camera, 'minGain', None)),
             gain_max=_optional_float(getattr(camera, 'maxGain', None)),
@@ -103,6 +128,8 @@ class CameraCapabilities:
             width=_optional_int(getattr(camera, 'width', None)),
             height=_optional_int(getattr(camera, 'height', None)),
             bit_depth=_optional_int(getattr(camera, 'bits', None)),
+            frame_width_multiple=frame_width_multiple,
+            frame_height_multiple=frame_height_multiple,
         )
 
     def to_dict(self):
@@ -128,6 +155,8 @@ class CameraCapabilities:
                 'width': self.width,
                 'height': self.height,
                 'bit_depth': self.bit_depth,
+                'width_multiple': self.frame_width_multiple,
+                'height_multiple': self.frame_height_multiple,
             },
         }
 
@@ -174,6 +203,12 @@ class CameraCapabilities:
             binning = min(binning, self.binning_max)
 
         return binning
+
+    def binned_width(self, binning):
+        return _binned_dimension(self.width, binning, self.frame_width_multiple)
+
+    def binned_height(self, binning):
+        return _binned_dimension(self.height, binning, self.frame_height_multiple)
 
 
 @dataclass(frozen=True)
@@ -487,6 +522,28 @@ def _optional_int(value):
     if value is None:
         return None
     return int(value)
+
+
+def _positive_int(value, default=1):
+    if value is None:
+        value = default
+    return max(1, int(value))
+
+
+def _frame_alignment(camera_driver):
+    driver_name = str(camera_driver or '').replace('\\', '/').rsplit('/', 1)[-1]
+    return FRAME_ALIGNMENT_BY_DRIVER.get(driver_name, (1, 1))
+
+
+def _binned_dimension(dimension, binning, multiple):
+    if dimension is None:
+        return None
+
+    dimension = max(1, int(int(dimension) / int(binning)))
+    multiple = _positive_int(multiple)
+    if dimension >= multiple:
+        dimension -= dimension % multiple
+    return max(1, dimension)
 
 
 def _normalise_float_values(values: Sequence[float]):

@@ -551,6 +551,47 @@ class IndiClient(PyIndi.BaseClient):
         self.configureDevice(self.ccd_device, reset_config)
 
 
+    def resetPlayerOneCcdFrame(self):
+        try:
+            ccd_frame = self.get_control(self.ccd_device, 'CCD_FRAME', 'number', timeout=2.0)
+        except TimeOutException:
+            logger.warning('Unable to reset PlayerOne CCD frame geometry')
+            return
+
+
+        frame_config = dict()
+        for frame_control in ccd_frame:
+            control_name = frame_control.getName()
+
+            if control_name in ('X', 'Y'):
+                frame_config[control_name] = frame_control.min
+            elif control_name in ('WIDTH', 'HEIGHT'):
+                frame_config[control_name] = frame_control.max
+
+
+        if set(frame_config) != {'X', 'Y', 'WIDTH', 'HEIGHT'}:
+            logger.warning('Incomplete PlayerOne CCD frame geometry; bypassing reset')
+            return
+
+
+        logger.warning(
+            'Resetting PlayerOne CCD frame to %dx%d at (%d, %d)',
+            frame_config['WIDTH'],
+            frame_config['HEIGHT'],
+            frame_config['X'],
+            frame_config['Y'],
+        )
+
+        self.configureDevice(
+            self.ccd_device,
+            {
+                'PROPERTIES' : {
+                    'CCD_FRAME' : frame_config,
+                },
+            },
+        )
+
+
     def setCcdFrameType(self, frame_type):
         frame_config = {
             "SWITCHES" : {
@@ -1484,6 +1525,12 @@ class IndiClient(PyIndi.BaseClient):
 
 
             self.configureDevice(self.ccd_device, binning_config)
+
+
+            if indi_exec == 'indi_playerone_ccd':
+                # PlayerOne keeps the source ROI from the previous binning
+                # mode.  Restore the advertised full frame before capturing.
+                self.resetPlayerOneCcdFrame()
 
 
             # Update shared bin value

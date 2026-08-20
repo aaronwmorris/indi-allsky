@@ -1054,7 +1054,7 @@ function renderDarkPlan(plan) {
         const binningMin = Number(binningCapabilities.min) || 1;
         const binningMax = Number(binningCapabilities.max) || Math.max(binningMin, Number(group.binning) || 1);
         const bitmaxOptions = [0, 8, 10, 12, 14, 16].map((value) =>
-            `<option value="${value}" ${Number(group.bitmax || 0) === value ? 'selected' : ''}>${value === 0 ? 'Container default' : value + ' bit'}</option>`
+            `<option value="${value}" ${Number(group.bitmax || 0) === value ? 'selected' : ''}>${value === 0 ? 'Automatic' : value + '-bit ceiling'}</option>`
         ).join('');
         body.append(`
             <tr class="dark-plan-row" data-group-id="${darkEscape(group.id)}">
@@ -1070,8 +1070,9 @@ function renderDarkPlan(plan) {
                             <input class="dark-group-binning tw:input tw:input-bordered tw:input-sm tw:w-20" type="number" min="${darkEscape(binningMin)}" max="${darkEscape(binningMax)}" step="1" value="${darkEscape(group.binning)}" aria-label="Binning for ${darkEscape(group.source_label)}">
                         </label>
                         <label class="tw:form-control">
-                            <span class="tw:label-text tw:text-[0.625rem]">Bit max</span>
-                            <select class="dark-group-bitmax tw:select tw:select-bordered tw:select-sm tw:min-w-36" aria-label="Maximum data bits for ${darkEscape(group.source_label)}">${bitmaxOptions}</select>
+                            <span class="tw:label-text tw:text-[0.625rem]">BPM threshold</span>
+                            <select class="dark-group-bitmax tw:select tw:select-bordered tw:select-sm tw:min-w-36" aria-label="Bad-pixel-map threshold data ceiling for ${darkEscape(group.source_label)}">${bitmaxOptions}</select>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/50 tw:max-w-44 tw:leading-tight tw:mt-1">Detection only; camera output stays ${darkEscape(bitDepth)}.</span>
                         </label>
                     </div>
                 </td>
