@@ -534,10 +534,7 @@ class IndiAllSkyDarks(object):
         # get CCD information
         ccd_info = self.indiclient.getCcdInfo()
         self.ccd_info = ccd_info
-        live_capabilities = CameraCapabilities.from_ccd_info(
-            ccd_info,
-            camera_driver=self.camera_server,
-        )
+        live_capabilities = CameraCapabilities.from_ccd_info(ccd_info)
 
 
         if self.config.get('CFA_PATTERN'):
@@ -1226,10 +1223,7 @@ class IndiAllSkyDarks(object):
         with app.app_context():
             self.config = IndiAllSkyConfig().config
         live_ccd_info = self.indiclient.getCcdInfo()
-        live_capabilities = CameraCapabilities.from_ccd_info(
-            live_ccd_info,
-            camera_driver=self.camera_server,
-        )
+        live_capabilities = CameraCapabilities.from_ccd_info(live_ccd_info)
         self._validate_automation_preflight(live_capabilities)
 
 

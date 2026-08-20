@@ -396,8 +396,8 @@ def normalize_execution_request(analysis, capabilities, capture_state, request_d
 
         normalised_group = dict(source_group)
         normalised_group['binning'] = binning
-        normalised_group['width'] = capabilities.binned_width(binning)
-        normalised_group['height'] = capabilities.binned_height(binning)
+        normalised_group['width'] = _binned_dimension(capabilities.width, binning)
+        normalised_group['height'] = _binned_dimension(capabilities.height, binning)
         normalised_group['bitmax'] = bitmax
         normalised_group['gains'] = gains
         normalised_group['exposures'] = exposures
@@ -1861,6 +1861,12 @@ def _validate_unique_targets(groups):
                         'Two enabled groups contain the same gain, exposure, binning, and profile target'
                     )
                 seen.add(target)
+
+
+def _binned_dimension(dimension, binning):
+    if dimension is None:
+        return None
+    return max(1, int(int(dimension) / int(binning)))
 
 
 def _capture_period(capture_profile):

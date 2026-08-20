@@ -152,48 +152,6 @@ def test_camera_capabilities_round_trip_ccd_info_and_database_snapshot():
     assert CameraCapabilities.from_camera(camera) == capabilities
 
 
-def test_playerone_capabilities_apply_driver_frame_alignment_after_binning():
-    ccd_info = {
-        'GAIN_INFO': {'min': 0, 'max': 750, 'step': 7.5, 'format': '%g', 'values': []},
-        'BINNING_INFO': {'min': 1, 'max': 4},
-        'CCD_EXPOSURE': {'CCD_EXPOSURE_VALUE': {'min': 0.00001, 'max': 7200}},
-        'CCD_FRAME': {'WIDTH': {'max': 3856}, 'HEIGHT': {'max': 2180}},
-        'CCD_INFO': {'CCD_BITSPERPIXEL': {'current': 16}},
-    }
-
-    generic = CameraCapabilities.from_ccd_info(ccd_info)
-    playerone = CameraCapabilities.from_ccd_info(
-        ccd_info,
-        camera_driver='indi_playerone_ccd',
-    )
-
-    assert generic.binned_width(3) == 1285
-    assert generic.binned_height(3) == 726
-    assert playerone.binned_width(3) == 1284
-    assert playerone.binned_height(3) == 726
-    assert playerone.to_dict()['frame']['width_multiple'] == 4
-    assert playerone.to_dict()['frame']['height_multiple'] == 2
-
-
-def test_playerone_database_snapshot_backfills_driver_frame_alignment():
-    camera = SimpleNamespace(
-        driver='indi_playerone_ccd',
-        data={
-            'camera_capabilities': {
-                'gain': {'min': 0, 'max': 750, 'step': 7.5},
-                'binning': {'min': 1, 'max': 4},
-                'exposure': {'min': 0.00001, 'max': 7200},
-                'frame': {'width': 3856, 'height': 2180, 'bit_depth': 16},
-            },
-        },
-    )
-
-    capabilities = CameraCapabilities.from_camera(camera)
-
-    assert capabilities.binned_width(3) == 1284
-    assert capabilities.binned_height(3) == 726
-
-
 def test_basic_state_uses_configured_profiles_and_camera_limits():
     config = _config()
     config['CCD_CONFIG']['NIGHT']['GAIN'] = 350

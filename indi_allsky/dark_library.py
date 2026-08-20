@@ -191,8 +191,8 @@ def build_dark_plan(capture_state, capabilities, camera_id, quality='balanced'):
 
     for profile in capture_state.profiles:
         gains = _profile_gains(profile, capabilities, quality_policy, warnings)
-        width = capabilities.binned_width(profile.binning)
-        height = capabilities.binned_height(profile.binning)
+        width = _binned_dimension(capabilities.width, profile.binning)
+        height = _binned_dimension(capabilities.height, profile.binning)
 
         for gain in gains:
             for exposure in exposures:
@@ -746,6 +746,12 @@ def _format_duration(seconds):
     hours, remainder = divmod(seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
     return '{0:d}h {1:02d}m {2:02d}s'.format(hours, minutes, seconds)
+
+
+def _binned_dimension(dimension, binning):
+    if dimension is None:
+        return None
+    return max(1, int(dimension / binning))
 
 
 def _optional_float(value):
