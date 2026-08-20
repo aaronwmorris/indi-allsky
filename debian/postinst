@@ -105,7 +105,7 @@ case "$1" in
                     --argjson http_port "${HTTP_PORT:-80}" \
                     --argjson https_port "${HTTPS_PORT:-443}" \
                     --argjson indi_port "${INDI_PORT:-7624}" \
-                    --argjson local_auth "${WEB_AUTH_ALL_VIEWS:-false}" \
+                    --argjson auth_all_views "${WEB_AUTH_ALL_VIEWS:-false}" \
                     --argjson oidc_enable "${OIDC_ENABLE:-false}" \
                     --arg oidc_client_id "${OIDC_CLIENT_ID}" \
                     --arg oidc_client_secret "${OIDC_CLIENT_SECRET}" \
@@ -118,7 +118,8 @@ case "$1" in
                     .HTTP_PORT = $http_port |
                     .HTTPS_PORT = $https_port |
                     .INDI_PORT = $indi_port |
-                    .LOCAL_AUTH_ENABLE = $local_auth |
+                    .INDI_ALLSKY_AUTH_ALL_VIEWS = $auth_all_views |
+                    .LOCAL_AUTH_ENABLE = true |
                     .OIDC_ENABLE = $oidc_enable |
                     .OIDC_CLIENT_ID = $oidc_client_id |
                     .OIDC_CLIENT_SECRET = $oidc_client_secret |
@@ -133,7 +134,8 @@ case "$1" in
     "SQLALCHEMY_DATABASE_URI": "sqlite:////var/lib/indi-allsky/indi-allsky.sqlite",
     "CAMERA_INTERFACE": "${CAMERA_INTERFACE}",
     "CCD_DRIVER": "${CCD_DRIVER}",
-    "LOCAL_AUTH_ENABLE": ${WEB_AUTH_ALL_VIEWS:-false},
+    "INDI_ALLSKY_AUTH_ALL_VIEWS": ${WEB_AUTH_ALL_VIEWS:-false},
+    "LOCAL_AUTH_ENABLE": true,
     "OIDC_ENABLE": ${OIDC_ENABLE:-false}
 }
 EOFJ
@@ -213,6 +215,11 @@ EOF
         DB_FILE="${DB_DIR}/indi-allsky.sqlite"
         DB_BACKUP_DIR="${DB_DIR}/backup"
 
+        FRESH_DB=0
+        if [ ! -f "$DB_FILE" ]; then
+            FRESH_DB=1
+        fi
+
         mkdir -p "$DB_BACKUP_DIR"
         chmod 775 "$DB_BACKUP_DIR" 2>/dev/null || true
 
@@ -244,8 +251,8 @@ with app.app_context():
         echo "indi-allsky: Bootstrapping configuration..."
         PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/config.py bootstrap --image_folder /var/www/html/allsky/images || true
 
-        # Apply debconf camera, driver, port & location parameters ONLY if not reusing existing config
-        if [ "$REUSE_CONFIG" != "true" ]; then
+        # Apply debconf camera, driver, port & location parameters on fresh install OR if user chose not to reuse existing config
+        if [ "$FRESH_DB" = "1" ] || [ "$REUSE_CONFIG" != "true" ]; then
             TMP_CFG=$(mktemp)
             PYTHONPATH=/usr/share/indi-allsky "$VENV/bin/python3" /usr/share/indi-allsky/config.py dumpfile --outfile "$TMP_CFG" 2>/dev/null || true
             if [ -f "$TMP_CFG" ] && [ -s "$TMP_CFG" ] && command -v jq >/dev/null 2>&1; then
