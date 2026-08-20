@@ -337,6 +337,7 @@ with app.app_context():
             rm -f "$TMP_NGINX"
             chmod 644 /etc/nginx/sites-available/indi-allsky.conf
             ln -sf /etc/nginx/sites-available/indi-allsky.conf /etc/nginx/sites-enabled/indi-allsky.conf
+            rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
 
             # Generate self-signed SSL certificate for Nginx if none exists
             NGINX_SSL_DIR="/etc/nginx/ssl"
