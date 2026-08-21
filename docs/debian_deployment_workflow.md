@@ -114,6 +114,7 @@ indi-allsky indi-allsky/http_port string 80
 indi-allsky indi-allsky/https_port string 443
 indi-allsky indi-allsky/web_user string admin
 indi-allsky indi-allsky/web_pass password secretpassword
+indi-allsky indi-allsky/web_pass_confirm password secretpassword
 indi-allsky indi-allsky/latitude string 40.7128
 indi-allsky indi-allsky/longitude string -74.0060
 indi-allsky indi-allsky/timezone string America/New_York

@@ -176,6 +176,15 @@ while [ "$STATE" -ge 1 ] && [ "$STATE" -le 7 ]; do
                     db_get indi-allsky/web_pass_confirm
                     PASS_CONFIRM="$RET"
 
+                    # If preseeded with web_pass but web_pass_confirm is empty, copy web_pass to confirm
+                    if [ -n "$PASS" ] && [ -z "$PASS_CONFIRM" ]; then
+                        db_fget indi-allsky/web_pass_confirm seen
+                        if [ "$RET" = "false" ]; then
+                            PASS_CONFIRM="$PASS"
+                            db_set indi-allsky/web_pass_confirm "$PASS" || true
+                        fi
+                    fi
+
                     # If user entered a password interactively, validate length and matching
                     if [ -n "$PASS" ]; then
                         if [ "${#PASS}" -lt 8 ]; then
@@ -214,8 +223,7 @@ while [ "$STATE" -ge 1 ] && [ "$STATE" -le 7 ]; do
 
                 # Validate Latitude (-90 to 90)
                 if [ -n "$LAT" ]; then
-                    INVALID_LAT=$(python3 -c "try: lat=float('$LAT'); print('0' if -90.0 <= lat <= 90.0 else '1')
-except: print('1')" 2>/dev/null || echo "0")
+                    INVALID_LAT=$(python3 -c 'import sys; v=float(sys.argv[1]); print("0" if -90.0 <= v <= 90.0 else "1")' "$LAT" 2>/dev/null) || INVALID_LAT=1
                     if [ "$INVALID_LAT" = "1" ]; then
                         db_fset indi-allsky/invalid_latitude seen false || true
                         db_input critical indi-allsky/invalid_latitude || true
@@ -226,8 +234,7 @@ except: print('1')" 2>/dev/null || echo "0")
 
                 # Validate Longitude (-180 to 180)
                 if [ -n "$LON" ]; then
-                    INVALID_LON=$(python3 -c "try: lon=float('$LON'); print('0' if -180.0 <= lon <= 180.0 else '1')
-except: print('1')" 2>/dev/null || echo "0")
+                    INVALID_LON=$(python3 -c 'import sys; v=float(sys.argv[1]); print("0" if -180.0 <= v <= 180.0 else "1")' "$LON" 2>/dev/null) || INVALID_LON=1
                     if [ "$INVALID_LON" = "1" ]; then
                         db_fset indi-allsky/invalid_longitude seen false || true
                         db_input critical indi-allsky/invalid_longitude || true
