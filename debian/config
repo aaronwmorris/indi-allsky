@@ -223,7 +223,10 @@ while [ "$STATE" -ge 1 ] && [ "$STATE" -le 7 ]; do
 
                 # Validate Latitude (-90 to 90)
                 if [ -n "$LAT" ]; then
-                    INVALID_LAT=$(python3 -c 'import sys; v=float(sys.argv[1]); print("0" if -90.0 <= v <= 90.0 else "1")' "$LAT" 2>/dev/null) || INVALID_LAT=1
+                    INVALID_LAT=$(awk -v lat="$LAT" 'BEGIN {
+                        if (lat ~ /^-?[0-9]+(\.[0-9]+)?$/ && (lat + 0) >= -90.0 && (lat + 0) <= 90.0) exit 0;
+                        exit 1;
+                    }' 2>/dev/null && echo "0" || echo "1")
                     if [ "$INVALID_LAT" = "1" ]; then
                         db_fset indi-allsky/invalid_latitude seen false || true
                         db_input critical indi-allsky/invalid_latitude || true
@@ -234,7 +237,10 @@ while [ "$STATE" -ge 1 ] && [ "$STATE" -le 7 ]; do
 
                 # Validate Longitude (-180 to 180)
                 if [ -n "$LON" ]; then
-                    INVALID_LON=$(python3 -c 'import sys; v=float(sys.argv[1]); print("0" if -180.0 <= v <= 180.0 else "1")' "$LON" 2>/dev/null) || INVALID_LON=1
+                    INVALID_LON=$(awk -v lon="$LON" 'BEGIN {
+                        if (lon ~ /^-?[0-9]+(\.[0-9]+)?$/ && (lon + 0) >= -180.0 && (lon + 0) <= 180.0) exit 0;
+                        exit 1;
+                    }' 2>/dev/null && echo "0" || echo "1")
                     if [ "$INVALID_LON" = "1" ]; then
                         db_fset indi-allsky/invalid_longitude seen false || true
                         db_input critical indi-allsky/invalid_longitude || true
