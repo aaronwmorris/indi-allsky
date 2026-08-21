@@ -167,7 +167,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
 {% endblock %}
 
 {% block content %}
-{% set dark_builder_preview_version = '2026.08.21.9' %}
+{% set dark_builder_preview_version = '2026.08.21.11' %}
 <div id="dark-page-content" class="tw:container tw:mx-auto tw:w-full tw:px-4 tw:py-6 tw:flex tw:flex-col tw:gap-4">
 
     <nav aria-label="Dark library sections">
@@ -199,7 +199,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                         <span class="tw:badge tw:badge-warning tw:badge-outline tw:badge-sm tw:shrink-0">Preview {{ dark_builder_preview_version }}</span>
                     </div>
                     <p class="tw:text-sm tw:text-base-content/60 tw:mt-2 tw:max-w-3xl">
-                        Checks this camera and its calibration files, then prepares the safest next step.
+                        Checks this camera and its stored calibration files, then prepares only what is needed.
                     </p>
                 </div>
             </div>
@@ -218,7 +218,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                 {% elif dark_analysis.suggested_action == 'temperature' %}
                                 Your library is complete
                                 {% elif dark_analysis.suggested_action == 'complete' %}
-                                Add the missing dark settings
+                                Add the missing master darks and maps
                                 {% elif dark_library_empty %}
                                 Build your first dark library
                                 {% else %}
@@ -227,19 +227,19 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                             </h5>
                             <p class="tw:text-sm tw:text-base-content/70 tw:mt-1 tw:max-w-3xl">
                                 {% if dark_analysis.suggested_action == 'none' %}
-                                All {{ dark_analysis.target_count }} settings recommended for this camera are covered at the configured or current temperature. Nothing needs to be captured now.
+                                All {{ dark_analysis.target_count }} recommended master sets are covered at the configured or current temperature. Nothing needs to be captured now.
                                 {% elif dark_analysis.suggested_action == 'temperature' %}
-                                All {{ dark_analysis.target_count }} recommended camera settings are covered. An additional layer at the configured or current temperature would improve matching, but the existing library remains complete and usable.
+                                All {{ dark_analysis.target_count }} recommended master sets are covered. An additional layer at the configured or current temperature would improve matching, but the existing library remains complete and usable.
                                 {% elif dark_analysis.suggested_action == 'complete' %}
                                 {% if dark_analysis.temperature_checked %}
-                                Across all stored temperature layers, compatible dark-and-map pairs cover {{ dark_analysis.structural_ready_target_count }} of {{ dark_analysis.target_count }} recommended camera settings. At the configured or current temperature, {{ dark_analysis.temperature_ready_target_count }} of {{ dark_analysis.target_count }} are ready, so the prepared job contains {{ dark_analysis.suggested_target_count }} new master set{% if dark_analysis.suggested_target_count != 1 %}s{% endif %} for this temperature layer. Every stored master is kept.
+                                Across all stored temperature layers, compatible dark-and-map pairs cover {{ dark_analysis.structural_ready_target_count }} of {{ dark_analysis.target_count }} recommended master sets. At the configured or current temperature, {{ dark_analysis.temperature_ready_target_count }} of {{ dark_analysis.target_count }} are ready, so the prepared job contains {{ dark_analysis.suggested_target_count }} new master set{% if dark_analysis.suggested_target_count != 1 %}s{% endif %} for this temperature layer. Every stored master is kept.
                                 {% else %}
-                                Your library already covers {{ dark_analysis.structural_ready_target_count }} of {{ dark_analysis.target_count }} recommended camera settings. The prepared job adds only the {{ dark_analysis.suggested_target_count }} sets needed now and keeps every stored master.
+                                Your library already covers {{ dark_analysis.structural_ready_target_count }} of {{ dark_analysis.target_count }} recommended master sets. The prepared job adds only the {{ dark_analysis.suggested_target_count }} sets needed now and keeps every stored master.
                                 {% endif %}
                                 {% elif dark_library_empty %}
-                                No master-dark and bad-pixel-map pairs are stored for this camera. The prepared job creates the full {{ dark_analysis.target_count }}-setting recommendation.
+                                No master-dark and bad-pixel-map pairs are stored for this camera. The prepared job creates all {{ dark_analysis.target_count }} recommended master sets.
                                 {% else %}
-                                Calibration files are stored, but none form a compatible dark-and-map pair for the current camera settings. The prepared job creates {{ dark_analysis.target_count }} compatible sets without deleting the existing files.
+                                Calibration files are stored, but none form a compatible dark-and-map pair for the current camera configuration. The prepared job creates {{ dark_analysis.target_count }} compatible master sets without deleting the existing files.
                                 {% endif %}
                             </p>
                         </div>
@@ -265,14 +265,14 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     </div>
                     <div class="tw:p-3">
                         <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Library coverage</div>
-                        <div class="tw:font-semibold tw:mt-1">{{ dark_analysis.structural_ready_target_count }} of {{ dark_analysis.target_count }} settings covered across all temperatures</div>
+                        <div class="tw:font-semibold tw:mt-1">{{ dark_analysis.structural_ready_target_count }} of {{ dark_analysis.target_count }} master sets covered across all temperatures</div>
                         {% if dark_analysis.temperature_checked %}
                         <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">{{ dark_analysis.temperature_ready_target_count }} of {{ dark_analysis.target_count }} are ready at the configured or current temperature.</div>
                         {% endif %}
-                        <div class="tw:text-xs tw:text-base-content/50 tw:mt-1">A setting combines gain, exposure, binning and data depth.</div>
+                        <div class="tw:text-xs tw:text-base-content/50 tw:mt-1">One master set is a master dark and matching bad-pixel map for one gain, exposure, binning, image format and temperature target.</div>
                     </div>
                     <div class="tw:p-3">
-                        <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Prepared capture</div>
+                        <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">New master sets planned</div>
                         {% if dark_analysis.suggested_target_count %}
                         <div class="tw:font-semibold tw:mt-1">{{ dark_analysis.suggested_target_count }} new master set{% if dark_analysis.suggested_target_count != 1 %}s{% endif %}</div>
                         <div class="tw:text-xs tw:text-base-content/50 tw:mt-1">About {{ dark_analysis.estimated_time }} with the recommended defaults.</div>
@@ -305,7 +305,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 </summary>
                 <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-4">
                 <p class="tw:text-sm tw:text-base-content/70">
-                    The recommendation contains {{ dark_analysis.target_count }} camera settings. Each setting is covered only when both a compatible master dark and bad-pixel map exist. Stored files outside this recommendation remain in the library and are not counted below.
+                    The recommendation requires {{ dark_analysis.target_count }} master sets. Each requires both a compatible master dark and bad-pixel map. Stored files outside this recommendation remain in the library and are not counted below.
                 </p>
                 <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-3">
                     <div class="tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3">
@@ -315,56 +315,57 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                         <div id="dark-camera-strategy-meta" class="tw:text-xs tw:text-base-content/50 tw:mt-2">{{ dark_analysis.gain_policy_summary }} · bins {{ dark_analysis.binnings | join(', ') }}{% if dark_analysis.bit_depths %} · {{ dark_analysis.bit_depths | join('/') }} bit{% endif %}</div>
                     </div>
                     <div class="tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3">
-                        <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Temperature check</div>
+                        <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Temperature coverage</div>
                         {% if dark_analysis.target_temperatures %}
                         <div id="dark-temperature-check-value" class="tw:font-semibold tw:mt-1">{{ dark_analysis.temperature_ready_target_count }} of {{ dark_analysis.target_count }} ready</div>
                         <div id="dark-temperature-check-note" class="tw:text-xs tw:text-base-content/70 tw:mt-1 tw:leading-relaxed">
-                            Cooled targets: {{ dark_analysis.target_temperatures | join(', ') }}°C. Each target has its own ±{{ "%g"|format(dark_analysis.temperature_range) }}°C window; for example, the {{ "%0.1f"|format(dark_analysis.target_temperatures[0]) }}°C target accepts masters from {{ "%0.1f"|format(dark_analysis.target_temperatures[0] - dark_analysis.temperature_range) }}°C through {{ "%0.1f"|format(dark_analysis.target_temperatures[0] + dark_analysis.temperature_range) }}°C. The ±{{ "%g"|format(dark_analysis.temperature_range) }}°C value is a distance from that target, not an absolute sensor temperature. Temperature is checked separately for each gain/exposure setting against the reading stored on its own master dark and map. Normal drift during capture can therefore leave only some settings needing another master set; the prepared job includes only those settings and keeps every existing layer.
+                            Cooler targets: {{ dark_analysis.target_temperatures | join(', ') }}°C. Each accepts masters within ±{{ "%g"|format(dark_analysis.temperature_range) }}°C; for example, {{ "%0.1f"|format(dark_analysis.target_temperatures[0]) }}°C accepts {{ "%0.1f"|format(dark_analysis.target_temperatures[0] - dark_analysis.temperature_range) }}°C to {{ "%0.1f"|format(dark_analysis.target_temperatures[0] + dark_analysis.temperature_range) }}°C. Every required master set is checked separately, so capture drift may leave only some to add. Existing layers are kept.
                         </div>
                         {% elif dark_analysis.temperature_checked %}
                         <div id="dark-temperature-check-value" class="tw:font-semibold tw:mt-1">{{ dark_analysis.temperature_ready_target_count }} of {{ dark_analysis.target_count }} ready at {{ "%0.1f"|format(dark_analysis.temperature) }}°C</div>
                         <div id="dark-temperature-check-note" class="tw:text-xs tw:text-base-content/70 tw:mt-1 tw:leading-relaxed">
-                            {{ dark_analysis.temperature_status_label }}. At this {{ "%0.1f"|format(dark_analysis.temperature) }}°C reference reading, masters captured from {{ "%0.1f"|format(dark_analysis.temperature - dark_analysis.temperature_range) }}°C through {{ "%0.1f"|format(dark_analysis.temperature + dark_analysis.temperature_range) }}°C count as temperature matched. The ±{{ "%g"|format(dark_analysis.temperature_range) }}°C value is a distance from this reading, not an absolute sensor temperature. Temperature is checked separately for each gain/exposure setting against the reading stored on its own master dark and map. Normal drift during capture can therefore leave only some settings needing another master set; the prepared job includes only those settings and keeps every existing layer.
+                            At {{ "%0.1f"|format(dark_analysis.temperature) }}°C, masters from {{ "%0.1f"|format(dark_analysis.temperature - dark_analysis.temperature_range) }}°C to {{ "%0.1f"|format(dark_analysis.temperature + dark_analysis.temperature_range) }}°C count as matched. Every required master set is checked separately, so capture drift may leave only some to add. Existing layers are kept.
                         </div>
                         {% else %}
-                        <div id="dark-temperature-check-value" class="tw:font-semibold tw:mt-1">Not available</div>
-                        <div id="dark-temperature-check-note" class="tw:text-xs tw:text-warning tw:mt-1">Coverage shown without temperature filtering</div>
+                        <div id="dark-temperature-check-value" class="tw:font-semibold tw:mt-1">Not checked</div>
+                        <div id="dark-temperature-check-note" class="tw:text-xs tw:text-warning tw:mt-1">No unique recent sensor reading is available.</div>
                         {% endif %}
                     </div>
                 </div>
 
                 <div>
-                    <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50 tw:mb-1">Match quality for the {{ dark_analysis.target_count }} recommended settings</div>
-                    <div class="tw:text-xs tw:text-base-content/60 tw:mb-2">Temperature is evaluated separately from basic gain/exposure completeness.</div>
+                    <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50 tw:mb-1">How the {{ dark_analysis.target_count }} recommended master sets are covered</div>
+                    <div class="tw:text-xs tw:text-base-content/60 tw:mb-2">Exact and nearby-gain matches are ready. Incompatible means files exist for the same gain/exposure but cannot be used; no pair means a dark or map is absent.</div>
                     <div class="tw:grid tw:grid-cols-2 tw:sm:grid-cols-3 tw:xl:grid-cols-6 tw:gap-2">
-                        <div class="dark-coverage-card tw:bg-success/10 tw:border tw:border-success/20 tw:rounded-[var(--radius-box)] tw:p-3"><div class="tw:text-xl tw:font-bold tw:text-success">{{ dark_analysis.counts.exact }}</div><div class="tw:text-xs tw:text-base-content/60">Exact match</div></div>
-                        <div class="dark-coverage-card tw:bg-info/10 tw:border tw:border-info/20 tw:rounded-[var(--radius-box)] tw:p-3"><div class="tw:text-xl tw:font-bold tw:text-info">{{ dark_analysis.counts.acceptable }}</div><div class="tw:text-xs tw:text-base-content/60">Close match</div></div>
-                        <div class="dark-coverage-card tw:bg-warning/10 tw:border tw:border-warning/20 tw:rounded-[var(--radius-box)] tw:p-3"><div class="tw:text-xl tw:font-bold tw:text-warning">{{ dark_analysis.counts.coarse }}</div><div class="tw:text-xs tw:text-base-content/60">Coarse match</div></div>
-                        <div class="dark-coverage-card tw:bg-warning/10 tw:border tw:border-warning/20 tw:rounded-[var(--radius-box)] tw:p-3"><div class="tw:text-xl tw:font-bold tw:text-warning">{{ dark_analysis.counts.temperature }}</div><div class="tw:text-xs tw:text-base-content/60">Other temperature</div></div>
-                        <div class="dark-coverage-card tw:bg-error/10 tw:border tw:border-error/20 tw:rounded-[var(--radius-box)] tw:p-3"><div class="tw:text-xl tw:font-bold tw:text-error">{{ dark_analysis.counts.incompatible }}</div><div class="tw:text-xs tw:text-base-content/60">Not compatible</div></div>
-                        <div class="dark-coverage-card tw:bg-error/10 tw:border tw:border-error/20 tw:rounded-[var(--radius-box)] tw:p-3"><div class="tw:text-xl tw:font-bold tw:text-error">{{ dark_analysis.counts.missing }}</div><div class="tw:text-xs tw:text-base-content/60">No match</div></div>
+                        <div class="dark-coverage-card tw:bg-success/10 tw:border tw:border-success/20 tw:rounded-[var(--radius-box)] tw:p-3"><div class="tw:text-xl tw:font-bold tw:text-success">{{ dark_analysis.counts.exact }}</div><div class="tw:text-xs tw:text-base-content/60">Exact dark and map</div></div>
+                        <div class="dark-coverage-card tw:bg-info/10 tw:border tw:border-info/20 tw:rounded-[var(--radius-box)] tw:p-3"><div class="tw:text-xl tw:font-bold tw:text-info">{{ dark_analysis.counts.acceptable }}</div><div class="tw:text-xs tw:text-base-content/60">Nearby gain · ready</div></div>
+                        <div class="dark-coverage-card tw:bg-warning/10 tw:border tw:border-warning/20 tw:rounded-[var(--radius-box)] tw:p-3"><div class="tw:text-xl tw:font-bold tw:text-warning">{{ dark_analysis.counts.coarse }}</div><div class="tw:text-xs tw:text-base-content/60">Gain/exposure too far</div></div>
+                        <div class="dark-coverage-card tw:bg-warning/10 tw:border tw:border-warning/20 tw:rounded-[var(--radius-box)] tw:p-3"><div class="tw:text-xl tw:font-bold tw:text-warning">{{ dark_analysis.counts.temperature }}</div><div class="tw:text-xs tw:text-base-content/60">Outside temperature range</div></div>
+                        <div class="dark-coverage-card tw:bg-error/10 tw:border tw:border-error/20 tw:rounded-[var(--radius-box)] tw:p-3"><div class="tw:text-xl tw:font-bold tw:text-error">{{ dark_analysis.counts.incompatible }}</div><div class="tw:text-xs tw:text-base-content/60">Incompatible files</div></div>
+                        <div class="dark-coverage-card tw:bg-error/10 tw:border tw:border-error/20 tw:rounded-[var(--radius-box)] tw:p-3"><div class="tw:text-xl tw:font-bold tw:text-error">{{ dark_analysis.counts.missing }}</div><div class="tw:text-xs tw:text-base-content/60">No dark/map pair</div></div>
                     </div>
                 </div>
                 <div>
-                <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50 tw:mb-2">Available plan strategies</div>
+                <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50 tw:mb-2">Ways to update the library</div>
                 <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-4 tw:gap-2">
                     <div class="tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3">
-                        <div class="tw:font-semibold tw:text-sm">Complete gaps</div>
-                        <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">{{ dark_analysis.completion_target_count }} master set{% if dark_analysis.completion_target_count != 1 %}s{% endif %}; keep compatible existing masters.</div>
+                        <div class="tw:font-semibold tw:text-sm">Fill gaps only</div>
+                        <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">Capture {{ dark_analysis.completion_target_count }} uncovered set{% if dark_analysis.completion_target_count != 1 %}s{% endif %}. Existing masters keep their active/inactive status.</div>
                     </div>
                     <div class="tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3">
-                        <div class="tw:font-semibold tw:text-sm">Refresh recommendation</div>
-                        <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">{{ dark_analysis.refresh_target_count }} master set{% if dark_analysis.refresh_target_count != 1 %}s{% endif %}; recapture the recommended grid.</div>
+                        <div class="tw:font-semibold tw:text-sm">Refresh recommended master sets</div>
+                        <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">Capture all {{ dark_analysis.refresh_target_count }} recommended master sets. After success, mark only older copies for the same gain/exposure combination and temperature range inactive.</div>
                     </div>
                     <div class="tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3">
-                        <div class="tw:font-semibold tw:text-sm">Rebuild current library</div>
-                        <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">{{ dark_analysis.rebuild_target_count }} master set{% if dark_analysis.rebuild_target_count != 1 %}s{% endif %}; replace older masters in the same capture and temperature scope after success.</div>
+                        <div class="tw:font-semibold tw:text-sm">Rebuild selected profiles</div>
+                        <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">Capture all {{ dark_analysis.rebuild_target_count }} recommended master sets. After success, also mark older master sets no longer recommended inactive in the same profile and temperature range.</div>
                     </div>
                     <div class="tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3">
-                        <div class="tw:font-semibold tw:text-sm">Custom expansion</div>
-                        <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">Select gains, exposures and binnings without replacing unrelated masters.</div>
+                        <div class="tw:font-semibold tw:text-sm">Edit capture groups</div>
+                        <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">Start with all recommended master sets, then edit the rows. Existing masters keep their active/inactive status.</div>
                     </div>
                 </div>
+                <div class="tw:text-xs tw:text-base-content/50 tw:mt-2">Inactive masters stay stored but are not used for calibration. Remove them later only if you want to reclaim space.</div>
             </div>
 
             {% if dark_analysis.warnings %}
@@ -383,15 +384,15 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 <table class="tw:table tw:table-sm tw:w-full tw:m-0">
                     <thead>
                         <tr class="tw:bg-base-300/60 tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60">
-                            <th>Used by</th>
+                            <th>Profile</th>
                             <th>Bin</th>
                             <th>Bits</th>
-                            <th>Temperature</th>
-                            <th>Recommended gains</th>
-                            <th>Suggested capture gains</th>
-                            <th>Exposures</th>
-                            <th>Master sets</th>
-                            <th>Suggested capture</th>
+                            <th>Target temperature</th>
+                            <th>All recommended gains</th>
+                            <th>Gains to capture now</th>
+                            <th>Exposure lengths</th>
+                            <th>All sets</th>
+                            <th>Sets to capture now</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -400,7 +401,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                             <td>{{ group.sources }}</td>
                             <td>{{ group.binning }}</td>
                             <td>{{ group.bit_depth if group.bit_depth is not none else 'Unknown' }}</td>
-                            <td>{% if group.temperature is not none %}{{ "%0.1f"|format(group.temperature) }}°C{% else %}Current{% endif %}</td>
+                            <td>{% if group.temperature is not none %}{{ "%0.1f"|format(group.temperature) }}°C{% else %}Current sensor reading{% endif %}</td>
                             <td class="tw:font-mono tw:text-xs tw:max-w-xl tw:whitespace-normal">{{ group.gains }}</td>
                             <td class="tw:font-mono tw:text-xs tw:max-w-xl tw:whitespace-normal">{{ group.suggested_gains }}</td>
                             <td class="tw:font-mono tw:text-xs tw:whitespace-normal">{{ group.exposures }}</td>
@@ -418,8 +419,8 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
             <div id="dark-capture-controls" class="tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-100 tw:p-4 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:flex-wrap tw:items-start tw:justify-between tw:gap-3">
                     <div>
-                        <h5 class="tw:font-bold tw:text-sm">Prepared capture</h5>
-                        <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">This job is ready to use. Leave Advanced options closed for the recommended result.</p>
+                        <h5 class="tw:font-bold tw:text-sm">Ready to capture</h5>
+                        <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">The recommended plan is already selected. Leave Advanced options closed unless you need a different result.</p>
                     </div>
                     <span id="dark-plan-refresh-status" class="tw:badge tw:badge-ghost tw:hidden" role="status" aria-live="polite">
                         <span class="tw:loading tw:loading-spinner tw:loading-xs"></span>
@@ -445,37 +446,37 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 <section id="dark-temperature-workflow" class="tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/40 tw:p-4 tw:flex tw:flex-col tw:gap-4" aria-labelledby="dark-temperature-workflow-title">
                     <div>
                         <h5 id="dark-temperature-workflow-title" class="tw:font-bold tw:text-sm">Temperature matching</h5>
-                        <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">The standard job captures one library run. Choose the reading used for uncooled settings and how close an existing temperature layer must be.</p>
+                        <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">Choose the sensor used for uncooled profiles and how far a stored master may differ. Cooled profiles use their configured target temperatures.</p>
                     </div>
 
                     <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-3 tw:min-w-0">
                         <label class="tw:form-control tw:min-w-0">
-                            <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Temperature reading</span>
-                            <select id="dark-temperature-source" aria-label="Temperature source" class="tw:select tw:select-bordered tw:select-sm tw:w-full tw:max-w-full tw:min-w-0">
+                            <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Temperature sensor</span>
+                            <select id="dark-temperature-source" aria-label="Temperature sensor" class="tw:select tw:select-bordered tw:select-sm tw:w-full tw:max-w-full tw:min-w-0">
                                 {% for source in dark_temperature_sources %}
                                 <option value="{{ source.key }}" {% if source.key == dark_execution_preview.temperature_source %}selected{% endif %}>{{ source.label }}</option>
                                 {% endfor %}
                             </select>
                             <span id="dark-temperature-source-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">
-                                Automatic always prefers a valid camera reading. It uses another sensor only when its role is explicit or there is one unambiguous fallback. {% if dark_analysis.temperature_reading %}Currently using {{ dark_analysis.temperature_reading.label }} at {{ "%0.1f"|format(dark_analysis.temperature_reading.value) }}°C from the latest image.{% else %}Automatic could not choose one unique usable reading; select a specific sensor if one is available.{% endif %}
+                                Automatic uses the camera first. If unavailable, it selects one unambiguous configured sensor; otherwise you must choose one. Sensor names are never used to guess placement. {% if dark_analysis.temperature_reading %}Using {{ dark_analysis.temperature_reading.label }} at {{ "%0.1f"|format(dark_analysis.temperature_reading.value) }}°C from the latest image.{% else %}No unique recent reading is available; choose a named sensor if possible.{% endif %}
                             </span>
                         </label>
                         <label class="tw:form-control tw:min-w-0">
-                            <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Temperature matching distance</span>
+                            <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Allowed temperature difference</span>
                             <div class="tw:join tw:max-w-xs">
                                 <span class="tw:btn tw:btn-sm tw:join-item tw:pointer-events-none">±</span>
                                 <input id="dark-temperature-range" class="tw:input tw:input-bordered tw:input-sm tw:join-item tw:w-full" type="number" min="0.1" max="50" step="0.1" value="{{ dark_execution_preview.temperature_range }}">
                                 <span class="tw:btn tw:btn-sm tw:join-item tw:pointer-events-none">°C</span>
                             </div>
                             <span id="dark-temperature-range-help" class="tw:label-text-alt tw:text-base-content/60 tw:mt-1 tw:leading-snug">
-                                A dark-and-map pair counts as temperature matched this far warmer or colder; beyond it, the builder recommends another layer. Changing this value updates the recommendation immediately but does not save anything by itself. It is saved for this camera only when you start a dark run. This is separate from the falling-temperature capture interval.
+                                Existing darks and maps within this difference count as matched. A larger value accepts temperatures farther away and recommends fewer new layers. Changes update the recommendation now and are saved for this camera only when a run starts. This does not set the cooling interval.
                             </span>
                         </label>
                     </div>
 
                     <div id="dark-temperature-evaluation-summary" class="tw:alert tw:alert-info tw:py-2 tw:text-xs tw:items-start" aria-live="polite">
                         <i class="tw:icon-[lucide--thermometer] tw:w-4 tw:h-4 tw:mt-0.5 tw:shrink-0"></i>
-                        <span>{% if dark_analysis.temperature_reading %}Recommendation evaluated at {{ "%0.1f"|format(dark_analysis.temperature_reading.value) }}°C using {{ dark_analysis.temperature_reading.label }}, with a ±{{ "%g"|format(dark_analysis.temperature_range) }}°C matching distance.{% else %}No unique recent temperature reading is available, so uncooled coverage is currently shown without temperature filtering.{% endif %}</span>
+                        <span>{% if dark_analysis.temperature_reading %}Using {{ dark_analysis.temperature_reading.label }} at {{ "%0.1f"|format(dark_analysis.temperature_reading.value) }}°C. Stored masters from {{ "%0.1f"|format(dark_analysis.temperature_reading.value - dark_analysis.temperature_range) }}°C to {{ "%0.1f"|format(dark_analysis.temperature_reading.value + dark_analysis.temperature_range) }}°C count as matched.{% else %}No unique recent reading is available, so uncooled coverage is shown without a temperature check.{% endif %}</span>
                     </div>
                 </section>
 
@@ -487,67 +488,67 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-4 tw:min-w-0 tw:max-w-full">
                         <div class="tw:alert tw:alert-info tw:py-2 tw:text-xs tw:items-start">
                             <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4 tw:mt-0.5 tw:shrink-0"></i>
-                            <span>These values come from the camera and capture configuration. Change them only for a specific calibration need; <strong>Reset groups from config</strong> restores the generated groups.</span>
+                            <span>Defaults follow the camera and capture configuration. Change them only when you need a different library; <strong>Reset capture groups</strong> restores the generated rows.</span>
                         </div>
                         <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-3 tw:min-w-0">
                             <label id="dark-strategy-control" class="tw:form-control tw:min-w-0">
-                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Plan override</span>
+                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Library update</span>
                                 <select id="dark-strategy" class="tw:select tw:select-bordered tw:select-sm tw:w-full tw:max-w-full tw:min-w-0">
-                                    <option value="complete" {% if dark_execution_preview.strategy == 'complete' %}selected{% endif %}>Add only missing settings</option>
-                                    <option value="refresh" {% if dark_execution_preview.strategy == 'refresh' %}selected{% endif %}>Recapture recommended settings</option>
-                                    <option value="rebuild" {% if dark_execution_preview.strategy == 'rebuild' %}selected{% endif %}>Rebuild this library</option>
-                                    <option value="custom" {% if dark_execution_preview.strategy == 'custom' %}selected{% endif %}>Custom plan</option>
+                                    <option value="complete" {% if dark_execution_preview.strategy == 'complete' %}selected{% endif %}>Fill gaps only</option>
+                                    <option value="refresh" {% if dark_execution_preview.strategy == 'refresh' %}selected{% endif %}>Refresh all recommended master sets</option>
+                                    <option value="rebuild" {% if dark_execution_preview.strategy == 'rebuild' %}selected{% endif %}>Rebuild selected profiles</option>
+                                    <option value="custom" {% if dark_execution_preview.strategy == 'custom' %}selected{% endif %}>Edit capture groups manually</option>
                                 </select>
-                                <span id="dark-strategy-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">Prefilled from current gaps and usable existing masters.</span>
+                                <span id="dark-strategy-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">Capture only uncovered master sets. Existing masters keep their active/inactive status.</span>
                             </label>
                             <label class="tw:form-control tw:min-w-0">
-                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Gain spacing</span>
+                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Auto-gain coverage</span>
                                 <select id="dark-quality" class="tw:select tw:select-bordered tw:select-sm tw:w-full tw:max-w-full tw:min-w-0">
-                                    <option value="precise">Precise · 1.5 dB</option>
-                                    <option value="balanced" selected>Balanced · 3 dB</option>
-                                    <option value="fast">Fast · 6 dB</option>
+                                    <option value="precise">Fine · 1.5 dB</option>
+                                    <option value="balanced" selected>Balanced · 3 dB · recommended</option>
+                                    <option value="fast">Coarse · 6 dB</option>
                                 </select>
-                                <span id="dark-quality-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">Balanced is recommended. Precise captures more masters; Fast captures fewer.</span>
+                                <span id="dark-quality-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">For continuous auto-gain only. Finer coverage captures more gain levels, taking longer and using more space.</span>
                             </label>
                             <label id="dark-temperature-policy-control" class="tw:form-control tw:min-w-0">
-                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Temperature use for this one run</span>
+                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">If the temperature does not match</span>
                                 <select id="dark-temperature-policy" class="tw:select tw:select-bordered tw:select-sm tw:w-full tw:max-w-full tw:min-w-0">
-                                    <option value="recommended" selected>Require a temperature match · recommended</option>
-                                    <option value="ignore">Fill gain/exposure gaps only</option>
+                                    <option value="recommended" selected>Capture a new dark and map · recommended</option>
+                                    <option value="ignore">Use the existing dark and map</option>
                                 </select>
-                                <span id="dark-temperature-policy-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">For uncooled settings, a pair counts as ready only within the matching distance. Configured cooler targets always keep their own temperature check.</span>
+                                <span id="dark-temperature-policy-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">For profiles without a cooler target, capture a new dark-and-map pair when none is within the allowed difference. Cooled profiles always use their target temperature.</span>
                             </label>
                             <label id="dark-capture-mode-control" class="tw:form-control tw:min-w-0">
-                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Capture pattern</span>
+                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Run pattern</span>
                                 <select id="dark-capture-mode" class="tw:select tw:select-bordered tw:select-sm tw:w-full tw:max-w-full tw:min-w-0">
-                                    <option value="single" selected>One library run · standard</option>
-                                    <option value="temperature_series">Falling-temperature series · preparation required</option>
+                                    <option value="single" selected>Capture once · standard</option>
+                                    <option value="temperature_series">Repeat as temperature falls · advanced</option>
                                 </select>
-                                <span id="dark-capture-mode-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">The standard job captures once at the configured or current temperature.</span>
+                                <span id="dark-capture-mode-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">Capture the selected plan once at the current temperature or configured cooler target.</span>
                             </label>
                         </div>
 
                         <div id="dark-temperature-series-controls" class="tw:hidden tw:flex tw:flex-col tw:gap-3 tw:min-w-0">
                             <div class="tw:alert tw:alert-warning tw:py-2 tw:text-xs tw:items-start">
                                 <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4 tw:mt-0.5 tw:shrink-0"></i>
-                                <span><strong>Prepare this manually:</strong> fully cover the camera, then arrange stepped cooling for a cooled camera or controlled external cooling such as a refrigerator or freezer. The builder cannot cover the camera and does not command the cooler.</span>
+                                <span><strong>Manual preparation required:</strong> fully cover the camera and arrange controlled cooling, such as manual or external cooler steps or a refrigerator/freezer. The builder cannot cover the camera or control the cooler.</span>
                             </div>
                             <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-3 tw:min-w-0">
                                 <label id="dark-temperature-delta-control" class="tw:form-control tw:min-w-0">
-                                    <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Capture another set after cooling by</span>
+                                    <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Temperature drop between sets</span>
                                     <div class="tw:join">
                                         <input id="dark-temperature-delta" class="tw:input tw:input-bordered tw:input-sm tw:join-item tw:w-full" type="number" min="0.1" max="50" step="0.1" value="{{ dark_execution_preview.temperature_delta }}">
                                         <span class="tw:btn tw:btn-sm tw:join-item tw:pointer-events-none">°C</span>
                                     </div>
-                                    <span class="tw:label-text-alt tw:text-base-content/50 tw:mt-1">Controls only when the next complete set is captured as the sensor cools. It is independent of the matching distance and does not control the cooler.</span>
+                                    <span class="tw:label-text-alt tw:text-base-content/50 tw:mt-1">Repeat the full night plan after this sensor drop. This is separate from the allowed matching difference and does not control the cooler.</span>
                                 </label>
                                 <label id="dark-temperature-target-control" class="tw:form-control tw:min-w-0">
-                                    <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Finish at sensor temperature</span>
+                                    <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Stop at sensor temperature</span>
                                     <div class="tw:join">
-                                        <input id="dark-temperature-target" class="tw:input tw:input-bordered tw:input-sm tw:join-item tw:w-full" type="number" min="-100" max="100" step="0.1" value="{% if dark_execution_preview.temperature_target is not none %}{{ dark_execution_preview.temperature_target }}{% endif %}" placeholder="Keep running">
+                                        <input id="dark-temperature-target" class="tw:input tw:input-bordered tw:input-sm tw:join-item tw:w-full" type="number" min="-100" max="100" step="0.1" value="{% if dark_execution_preview.temperature_target is not none %}{{ dark_execution_preview.temperature_target }}{% endif %}" placeholder="No automatic stop">
                                         <span class="tw:btn tw:btn-sm tw:join-item tw:pointer-events-none">°C</span>
                                     </div>
-                                    <span class="tw:label-text-alt tw:text-base-content/50 tw:mt-1">Blank runs until cancelled. A target stops automatically after the final complete set.</span>
+                                    <span class="tw:label-text-alt tw:text-base-content/50 tw:mt-1">Stop after completing a set at or below this reading. Leave blank to repeat until cancelled.</span>
                                 </label>
                             </div>
                         </div>
@@ -559,59 +560,59 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
 
                         <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-3 tw:min-w-0">
                             <label class="tw:form-control tw:min-w-0">
-                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Stacking method</span>
+                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Combine captured images</span>
                                 <select id="dark-method" class="tw:select tw:select-bordered tw:select-sm tw:w-full tw:max-w-full tw:min-w-0">
-                                    <option value="sigmaclip" selected>Sigma clipping</option>
-                                    <option value="average">Average</option>
+                                    <option value="sigmaclip" selected>Reject outliers, then average · recommended</option>
+                                    <option value="average">Simple average</option>
                                 </select>
-                                <span id="dark-method-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">Sigma clipping rejects one-off outliers before averaging. The builder selects Average automatically when the camera output requires it.</span>
+                                <span id="dark-method-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">Outlier rejection removes one-off defects before averaging. The builder selects a simple average when the camera output requires it.</span>
                             </label>
                             <label class="tw:form-control tw:min-w-0">
-                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Source frames per master</span>
+                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Captured images per master set</span>
                                 <input id="dark-frame-count" class="tw:input tw:input-bordered tw:input-sm tw:w-full tw:max-w-full tw:min-w-0" type="number" min="3" max="50" step="1" value="10">
-                                <span class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">More frames reduce random noise, but every master takes longer and needs more temporary space. Ten is the normal balance.</span>
+                                <span class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">Each master set uses this many images to build one dark and one bad-pixel map. More images reduce noise but take longer; 10 is the normal balance.</span>
                             </label>
                             <label class="tw:form-control tw:min-w-0">
-                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Maximum exposure</span>
+                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Longest exposure to include</span>
                                 <div class="tw:join">
                                     <input id="dark-exposure-max" class="tw:input tw:input-bordered tw:input-sm tw:join-item tw:w-full" type="number" min="1" max="{{ dark_execution_preview.exposure_max }}" step="1" value="{{ dark_execution_preview.exposure_max }}">
                                     <span class="tw:btn tw:btn-sm tw:join-item tw:pointer-events-none">seconds</span>
                                 </div>
-                                <span class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">Longest image exposure the library should cover. Normally leave this at the configured or camera-limited maximum.</span>
+                                <span class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">Sets the top of the generated exposure list. Normally keep the configured or camera-limited maximum.</span>
                             </label>
                             <label class="tw:form-control tw:min-w-0">
-                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Exposure step</span>
+                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Exposure interval</span>
                                 <div class="tw:join">
                                     <input id="dark-exposure-step" class="tw:input tw:input-bordered tw:input-sm tw:join-item tw:w-full" type="number" min="1" step="1" value="{{ dark_execution_preview.exposure_step }}">
                                     <span class="tw:btn tw:btn-sm tw:join-item tw:pointer-events-none">seconds</span>
                                 </div>
-                                <span class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">Starting at the maximum, adds another exposure length at this interval, plus a 1-second master. A smaller step creates more masters.</span>
+                                <span class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">Step down from the longest exposure by this amount; 1 second is always included. A smaller interval creates more master sets.</span>
                             </label>
                             <label class="tw:form-control tw:min-w-0">
-                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Capture order</span>
+                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Exposure order</span>
                                 <select id="dark-capture-order" class="tw:select tw:select-bordered tw:select-sm tw:w-full tw:max-w-full tw:min-w-0">
-                                    <option value="long_first" selected>Longest exposures first</option>
-                                    <option value="short_first">Shortest exposures first</option>
+                                    <option value="long_first" selected>Longest first · recommended</option>
+                                    <option value="short_first">Shortest first</option>
                                 </select>
-                                <span id="dark-capture-order-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">Only changes the order, not the finished library. Longest first makes the most broadly reusable masters available first if a run is interrupted.</span>
+                                <span id="dark-capture-order-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">Changes order only. Longest first finishes maximum-exposure masters sooner if the run is interrupted.</span>
                             </label>
                         </div>
 
                         <p class="tw:text-xs tw:text-base-content/60">
-                            Each checked row mirrors a configured day, night, moon or SQM profile. Leave the generated rows unchanged unless you deliberately need different coverage. Binning must match the images being calibrated; gains use the camera's native units and exposure lengths are seconds. Comma-separated gain or exposure lists create every combination, and the master count updates as you edit them.
+                            Each checked row comes from a configured day, night, moon or SQM profile. Binning must match the images being calibrated. Gains use the camera's own units; exposures use seconds. Comma-separated lists capture every gain/exposure combination.
                         </p>
 
                         <div class="tw:overflow-x-auto tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]">
                             <table class="tw:table tw:table-sm tw:w-full tw:m-0">
                                 <thead>
                                     <tr class="tw:bg-base-300/60 tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60">
-                                        <th>Use</th>
-                                        <th>Profile</th>
-                                        <th>Binning / data bits</th>
-                                        <th>Output / temperature</th>
-                                        <th>Gains</th>
+                                        <th>Capture</th>
+                                        <th>Used for</th>
+                                        <th>Binning / bad-pixel range</th>
+                                        <th>Image output / target</th>
+                                        <th>Gain values</th>
                                         <th>Exposure lengths</th>
-                                        <th>Masters</th>
+                                        <th>Master sets</th>
                                     </tr>
                                 </thead>
                                 <tbody id="dark-plan-groups"></tbody>
@@ -624,9 +625,9 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                 <div id="dark-plan-note" class="tw:text-xs tw:text-base-content/60 tw:mt-1"></div>
                                 <div id="dark-storage-note" class="tw:text-xs tw:text-base-content/60 tw:mt-1"></div>
                             </div>
-                            <button id="dark-refresh-plan" type="button" class="tw:btn tw:btn-sm tw:btn-outline tw:gap-2" title="Discard manual group edits and reload the groups from the current camera configuration">
+                            <button id="dark-refresh-plan" type="button" class="tw:btn tw:btn-sm tw:btn-outline tw:gap-2" title="Discard row edits and restore groups from the current camera configuration">
                                 <i class="tw:icon-[lucide--refresh-cw] tw:w-4 tw:h-4"></i>
-                                Reset groups from config
+                                Reset capture groups
                             </button>
                         </div>
                     </div>
@@ -672,17 +673,17 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 </div>
                 <progress id="dark-progress-bar" class="tw:progress tw:progress-primary tw:w-full" value="0" max="100"></progress>
                 <div class="tw:grid tw:grid-cols-2 tw:sm:grid-cols-3 tw:xl:grid-cols-6 tw:gap-2 tw:text-sm">
-                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Masters</span><div id="dark-progress-masters" class="tw:font-semibold">0 / 0</div></div>
+                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Master sets</span><div id="dark-progress-masters" class="tw:font-semibold">0 / 0</div></div>
                     <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Gain</span><div id="dark-progress-gain" class="tw:font-mono">—</div></div>
                     <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Exposure</span><div id="dark-progress-exposure" class="tw:font-mono">—</div></div>
                     <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Binning</span><div id="dark-progress-binning" class="tw:font-mono">—</div></div>
-                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Source frame</span><div id="dark-progress-frame" class="tw:font-mono">—</div></div>
+                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Captured image</span><div id="dark-progress-frame" class="tw:font-mono">—</div></div>
                     <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Temperature</span><div id="dark-progress-temperature" class="tw:font-mono">—</div></div>
                 </div>
                 <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-4 tw:gap-2 tw:text-sm">
-                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Temperature sets</span><div id="dark-progress-temperature-sets" class="tw:font-mono">—</div></div>
-                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Next threshold</span><div id="dark-progress-next-temperature" class="tw:font-mono">—</div></div>
-                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Final target</span><div id="dark-progress-target-temperature" class="tw:font-mono">—</div></div>
+                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Completed temperature sets</span><div id="dark-progress-temperature-sets" class="tw:font-mono">—</div></div>
+                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Next set at</span><div id="dark-progress-next-temperature" class="tw:font-mono">—</div></div>
+                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Stop at</span><div id="dark-progress-target-temperature" class="tw:font-mono">—</div></div>
                     <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3">
                         <span class="tw:text-base-content/50">Time</span>
                         <div class="tw:flex tw:flex-wrap tw:gap-x-3 tw:gap-y-1 tw:font-mono">
@@ -879,7 +880,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                             <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50">Dark Library</h4>
                             <span class="tw:badge tw:badge-ghost tw:badge-sm">{{ darkframe_list | length }} entries</span>
                         </div>
-                        <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">Master dark frames remove repeatable sensor noise. Active entries are matched automatically by camera settings and temperature.</p>
+                        <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">Master dark frames remove repeatable sensor noise. Active entries are matched automatically by gain, exposure, binning, image format and temperature.</p>
                     </div>
                     
                     <div class="dark-table-wrap tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
@@ -953,7 +954,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                             <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50">Bad Pixel Map Library</h4>
                             <span class="tw:badge tw:badge-ghost tw:badge-sm">{{ bpm_list | length }} entries</span>
                         </div>
-                        <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">Bad-pixel maps identify persistent hot and dead pixels. They are generated alongside masters and matched using the same capture settings.</p>
+                        <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">Bad-pixel maps identify persistent hot and dead pixels. They are generated alongside master darks and matched using the same gain, exposure, binning, image format and temperature.</p>
                     </div>
                     
                     <div class="dark-table-wrap tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
@@ -1435,69 +1436,70 @@ function updateDarkOptionGuidance(plan) {
     }
 
     $('#dark-capture-mode-help').text(temperatureSeries
-        ? 'Advanced: captures the complete night plan, waits for manual or external cooling by each interval, then repeats until the target or cancellation. It cannot cover the camera or control the cooler.'
-        : 'Standard: captures one set at the configured cooler target or current reference temperature.');
+        ? 'Repeat the full night plan whenever the selected sensor falls by the chosen interval. Stop at the target or when cancelled. The builder cannot cover the camera or control the cooler.'
+        : 'Capture the selected plan once at the current temperature or configured cooler target.');
 
     const strategyHelp = {
-        complete: 'Captures only uncovered settings and keeps compatible existing masters active.',
-        refresh: 'Recaptures the recommended grid; matching older masters retire only after success.',
-        rebuild: 'Captures the full recommendation; older masters in scope retire only after success.',
-        custom: 'Starts from the recommendation, then lets you edit or disable individual capture groups below.',
+        complete: 'Capture only uncovered master sets. Existing masters keep their active/inactive status.',
+        refresh: 'Capture every recommended master set. After success, mark older masters inactive only for the same gain/exposure combination and temperature range; leave all others unchanged.',
+        rebuild: 'Capture every recommended master set. After success, mark all older masters inactive in the selected profiles and temperature range, including master sets no longer recommended.',
+        custom: 'Start with every recommended master set, then edit or disable rows. Existing masters keep their active/inactive status.',
     };
     $('#dark-strategy-help').text(temperatureSeries
         ? 'Temperature series uses a custom night-only plan at every completed temperature step.'
         : (strategyHelp[strategy] || 'The plan is generated from current coverage.'));
 
     $('#dark-temperature-policy-help').text(temperaturePolicy === 'ignore'
-        ? 'For uncooled settings, any usable temperature layer may fill an existing gain/exposure pair, so this run will not add a seasonal layer just because the sensor temperature changed. Configured cooler targets are still checked, and new masters still record their measured temperature.'
-        : 'For uncooled settings, each gain/exposure pair must have a dark and map within ±' + temperatureRangeLabel + '°C of the selected reading. Configured cooler targets always use their own target temperature.');
+        ? 'For profiles without a cooler target, an existing dark and map at any temperature count as covered; only missing pairs are captured. New masters still record temperature. Cooled profiles still use their target temperature.'
+        : 'For profiles without a cooler target, capture a new dark and map when no pair is within ±' + temperatureRangeLabel + '°C of the selected reading. Cooled profiles use their target temperature.');
     $('#dark-temperature-range-help').text(
-        'A dark-and-map pair counts as temperature matched this far warmer or colder; beyond it, the builder recommends another layer. '
-        + 'Changing the value updates this recommendation immediately but does not save anything by itself. '
-        + 'It is separate from the falling-temperature capture interval. Existing masters record measured temperatures, not the user\'s original interval, so their spacing is not treated as a saved preference. '
+        'Existing darks and maps within ±' + temperatureRangeLabel + '°C count as matched; a larger value accepts temperatures farther away and recommends fewer new layers. '
+        + 'Changes update the recommendation now and are saved for this camera only when a run starts. '
+        + 'This does not set the cooling interval, and existing master temperatures do not change it. '
         + (temperatureRangeSource === 'saved_camera'
-            ? 'The displayed value is saved for this camera; a change replaces it only when you start a dark run.'
+            ? 'This value is currently saved for this camera.'
             : (temperatureRangeSource === 'advanced_override'
-                ? 'This changed value is still unsaved; it is saved for this camera only when you start a dark run.'
-                : 'The initial 5°C value is the legacy fallback; your choice is saved for this camera only when you start a dark run.'))
+                ? 'This change is not saved yet.'
+                : 'The initial 5°C value is the legacy default.'))
     );
     const temperatureSourcePurpose = temperatureSeries
-        ? 'This reading measures cooling between complete temperature sets and is recorded with each master. '
+        ? 'This sensor measures the drop between complete temperature sets and is recorded with each master. '
         : (targetTemperatures.length
-            ? 'Configured cooler targets define matching for cooled profiles; this reading supplies uncooled profiles. '
-            : 'This reading establishes the relative temperature window. ');
+            ? 'This sensor supplies uncooled profiles; cooled profiles use their configured targets. '
+            : 'This sensor sets the current temperature used for matching. ');
     const automaticSource = temperatureSource === 'auto';
     $('#dark-temperature-source-help').text(temperatureReading
         ? temperatureSourcePurpose
             + (automaticSource ? 'Automatic selected ' : 'Selected ')
             + temperatureReading.label + ' at ' + Number(temperatureReading.value).toFixed(1)
-            + '°C from the latest image. Automatic always prefers the camera, then uses only a unique structurally identified fallback; labels never determine placement.'
+            + '°C from the latest image. Automatic uses the camera first; if unavailable, it selects one unambiguous configured sensor. It never guesses from names.'
         : temperatureSourcePurpose + (automaticSource
-            ? 'Automatic could not choose one unique usable recent reading. It does not guess from sensor names; select a specific sensor to resolve an ambiguous fallback.'
-            : 'The selected sensor has no usable recent reading. Capture will check it again live.'));
+            ? 'Automatic found no unique recent reading. Choose a named sensor if possible.'
+            : 'The selected sensor has no recent reading. It will be checked again when capture starts.'));
 
     let temperatureEvaluationText;
     if (!temperatureSeries && temperaturePolicy === 'ignore') {
         temperatureEvaluationText = targetTemperatures.length
-            ? 'Uncooled settings are being checked for gain/exposure coverage only; configured cooler targets still require their own temperature match.'
-            : 'This recommendation checks gain/exposure coverage only and will not add a seasonal layer because the current sensor temperature changed.';
+            ? 'For uncooled profiles, any temperature counts as covered; cooled profiles still use their target temperatures.'
+            : 'An existing dark and map at any temperature count as covered, so this recommendation adds only missing pairs.';
     } else if (temperatureReading) {
         const readingValue = Number(temperatureReading.value).toFixed(1);
         const automaticSuffix = automaticSource ? ' (selected automatically)' : '';
         if (targetTemperatures.length) {
-            temperatureEvaluationText = 'Configured cooler targets keep their own temperature checks. Uncooled settings are evaluated at '
-                + readingValue + '°C using ' + temperatureReading.label
-                + automaticSuffix + ', with a ±' + temperatureRangeLabel
-                + '°C matching distance.';
+            temperatureEvaluationText = 'Cooled profiles use their target temperatures. Uncooled profiles use '
+                + temperatureReading.label + automaticSuffix + ' at ' + readingValue + '°C; stored masters from '
+                + (Number(readingValue) - temperatureRange).toFixed(1) + '°C to '
+                + (Number(readingValue) + temperatureRange).toFixed(1) + '°C count as matched.';
         } else {
-            temperatureEvaluationText = 'Recommendation evaluated at ' + readingValue
-                + '°C using ' + temperatureReading.label + automaticSuffix
-                + ', with a ±' + temperatureRangeLabel + '°C matching distance.';
+            temperatureEvaluationText = 'Using ' + temperatureReading.label + automaticSuffix
+                + ' at ' + readingValue + '°C. Stored masters from '
+                + (Number(readingValue) - temperatureRange).toFixed(1) + '°C to '
+                + (Number(readingValue) + temperatureRange).toFixed(1) + '°C count as matched.';
         }
     } else {
         temperatureEvaluationText = automaticSource
-            ? 'Automatic has no unique usable recent reading, so uncooled coverage is shown without temperature filtering. Select a specific sensor if one is available.'
-            : 'The selected sensor has no usable recent reading, so uncooled coverage is shown without temperature filtering.';
+            ? 'Automatic found no unique recent reading. Uncooled coverage is shown without a temperature check; choose a named sensor if possible.'
+            : 'The selected sensor has no recent reading, so uncooled coverage is shown without a temperature check.';
     }
     $('#dark-temperature-evaluation-summary span').text(temperatureEvaluationText);
 
@@ -1511,13 +1513,12 @@ function updateDarkOptionGuidance(plan) {
             .removeClass('tw:text-warning tw:text-base-content/50')
             .addClass('tw:text-base-content/70')
             .text(
-                'Cooled targets: ' + targetTemperatures.map(value => value.toFixed(1)).join(', ')
-                + '°C. Each target has its own ±' + temperatureRangeLabel
-                + '°C window; for example, the ' + exampleTarget.toFixed(1)
-                + '°C target accepts masters from '
-                + (exampleTarget - temperatureRange).toFixed(1) + '°C through '
-                + (exampleTarget + temperatureRange).toFixed(1) + '°C. The ±'
-                + temperatureRangeLabel + '°C value is a distance from that target, not an absolute sensor temperature. Temperature is checked separately for each gain/exposure setting against the reading stored on its own master dark and map. Normal drift during capture can therefore leave only some settings needing another master set; the prepared job includes only those settings and keeps every existing layer.'
+                'Cooler targets: ' + targetTemperatures.map(value => value.toFixed(1)).join(', ')
+                + '°C. Each accepts masters within ±' + temperatureRangeLabel
+                + '°C; for example, ' + exampleTarget.toFixed(1) + '°C accepts '
+                + (exampleTarget - temperatureRange).toFixed(1) + '°C to '
+                + (exampleTarget + temperatureRange).toFixed(1)
+                + '°C. Every required master set is checked separately, so capture drift may leave only some to add. Existing layers are kept.'
             );
     } else {
         const parsedReferenceTemperature = Number(analysis.temperature);
@@ -1527,42 +1528,40 @@ function updateDarkOptionGuidance(plan) {
             ? String(Number(analysis.temperature_ready_target_count) || 0)
                 + ' of ' + String(Number(analysis.target_count) || 0)
                 + ' ready at ' + parsedReferenceTemperature.toFixed(1) + '°C'
-            : 'Not applied');
+            : 'Not checked');
         $('#dark-temperature-check-note')
             .toggleClass('tw:text-warning', !hasReferenceTemperature)
             .toggleClass('tw:text-base-content/50', !hasReferenceTemperature)
             .toggleClass('tw:text-base-content/70', hasReferenceTemperature)
             .text(hasReferenceTemperature
-                ? (analysis.temperature_status_label || 'Temperature checked') + '. At this '
-                    + parsedReferenceTemperature.toFixed(1)
-                    + '°C reference reading, masters captured from '
+                ? 'At ' + parsedReferenceTemperature.toFixed(1)
+                    + '°C, masters from '
                     + (parsedReferenceTemperature - temperatureRange).toFixed(1) + '°C through '
                     + (parsedReferenceTemperature + temperatureRange).toFixed(1)
-                    + '°C count as temperature matched. The ±' + temperatureRangeLabel
-                    + '°C value is a distance from this reading, not an absolute sensor temperature. Temperature is checked separately for each gain/exposure setting against the reading stored on its own master dark and map. Normal drift during capture can therefore leave only some settings needing another master set; the prepared job includes only those settings and keeps every existing layer.'
-                : 'Temperature is not being used to decide which gain/exposure settings are missing.');
+                    + '°C count as matched. Every required master set is checked separately, so capture drift may leave only some to add. Existing layers are kept.'
+                : 'No unique recent sensor reading is available.');
     }
 
     const recommendedMethod = (plan || {}).recommended_method || 'sigmaclip';
     $('#dark-method-help').text(method === 'average'
         ? (recommendedMethod === 'average'
-            ? 'Averages every source frame without outlier rejection. This is required for the selected RGB/JPEG camera output and was chosen automatically.'
-            : 'Averages every source frame without outlier rejection. Use this only when sigma clipping is unsuitable for the camera output.')
-        : 'Rejects one-off outliers before averaging. Recommended for compatible raw or monochrome camera data.');
+            ? 'Simple average is required for this RGB/JPEG camera output and was selected automatically.'
+            : 'Average all captured images without rejecting outliers. Use only when outlier rejection is unsuitable.')
+        : 'Reject one-off defects before averaging. Recommended for compatible raw or monochrome output.');
 
     $('#dark-capture-order-help').text(captureOrder === 'short_first'
-        ? 'Only changes the order, not the finished library. Shortest first produces the quickest masters first.'
-        : 'Only changes the order, not the finished library. Longest first makes the most broadly reusable masters available first if a run is interrupted.');
+        ? 'Changes order only. Shortest first completes the quickest individual master sets first.'
+        : 'Changes order only. Longest first completes maximum-exposure masters sooner if the run is interrupted.');
 
     if (!hasContinuousGain) {
         $('#dark-quality').val('balanced').prop('disabled', true);
-        $('#dark-quality-help').text('Not applicable: fixed, discrete or gainless cameras use their exact configured values.');
+        $('#dark-quality-help').text('Not used for this camera: its gains are fixed, discrete or not adjustable.');
     } else {
         $('#dark-quality').prop('disabled', false);
         const qualityHelp = {
-            precise: 'Continuous auto-gain only: samples maximum-exposure gain values no more than 1.5 dB apart. Most masters and the finest coverage.',
-            balanced: 'Continuous auto-gain only: keeps maximum-exposure gain layers within 3 dB. Recommended balance of coverage, time and storage.',
-            fast: 'Continuous auto-gain only: allows up to 6 dB between maximum-exposure gain layers. Fewest masters, with coarser coverage.',
+            precise: 'Continuous auto-gain only. Gain layers are at most 1.5 dB apart: best matching, most master sets.',
+            balanced: 'Continuous auto-gain only. Gain layers are at most 3 dB apart: recommended balance of matching, time and storage.',
+            fast: 'Continuous auto-gain only. Gain layers are at most 6 dB apart: fewest master sets, coarsest matching.',
         };
         $('#dark-quality-help').text(qualityHelp[quality] || qualityHelp.balanced);
     }
@@ -1571,14 +1570,14 @@ function updateDarkOptionGuidance(plan) {
     const temperatureAdditionCount = Number(analysis.temperature_addition_target_count) || 0;
     const impactNotes = [];
     if (analysis.available && !hasContinuousGain) {
-        impactNotes.push('Gain spacing does not change this camera\'s plan.');
+        impactNotes.push('Auto-gain coverage does not change this camera\'s plan.');
     }
     if (!temperatureSeries && structuralMissingCount > 0
             && Number(analysis.structural_ready_target_count) === 0) {
-        impactNotes.push('No usable masters exist yet, so the plan choices currently begin with the same number of master sets.');
+        impactNotes.push('No usable masters exist yet, so Fill gaps, Refresh and Rebuild currently capture the same number of sets. Their treatment of future existing masters still differs.');
     }
     if (!temperatureSeries && structuralMissingCount === 0 && temperatureAdditionCount > 0) {
-        impactNotes.push('The gain/exposure library is already complete; Complete gaps adds only the recommended temperature layer and keeps every existing layer active.');
+        impactNotes.push('Gain/exposure coverage is complete. Fill gaps captures only the recommended temperature layer and leaves every existing layer unchanged.');
     }
     $('#dark-plan-impact-note')
         .toggleClass('tw:hidden', impactNotes.length === 0)
@@ -1630,7 +1629,7 @@ function renderDarkPlan(plan) {
         const binningMin = Number(binningCapabilities.min) || 1;
         const binningMax = Number(binningCapabilities.max) || Math.max(binningMin, Number(group.binning) || 1);
         const bitmaxOptions = [0, 8, 10, 12, 14, 16].map((value) =>
-            `<option value="${value}" ${Number(group.bitmax || 0) === value ? 'selected' : ''}>${value === 0 ? 'Automatic' : value + '-bit ceiling'}</option>`
+            `<option value="${value}" ${Number(group.bitmax || 0) === value ? 'selected' : ''}>${value === 0 ? 'Use image depth · automatic' : 'Assume ' + value + '-bit maximum'}</option>`
         ).join('');
         body.append(`
             <tr class="dark-plan-row" data-group-id="${darkEscape(group.id)}">
@@ -1642,13 +1641,13 @@ function renderDarkPlan(plan) {
                 <td>
                     <div class="tw:flex tw:gap-2">
                         <label class="tw:form-control">
-                            <span class="tw:label-text tw:text-[0.625rem]">Bin</span>
+                            <span class="tw:label-text tw:text-[0.625rem]">Binning</span>
                             <input class="dark-group-binning tw:input tw:input-bordered tw:input-sm tw:w-20" type="number" min="${darkEscape(binningMin)}" max="${darkEscape(binningMax)}" step="1" value="${darkEscape(group.binning)}" aria-label="Binning for ${darkEscape(group.source_label)}">
                         </label>
                         <label class="tw:form-control">
-                            <span class="tw:label-text tw:text-[0.625rem]">BPM threshold</span>
+                            <span class="tw:label-text tw:text-[0.625rem]">Bad-pixel detection range</span>
                             <select class="dark-group-bitmax tw:select tw:select-bordered tw:select-sm tw:min-w-36" aria-label="Bad-pixel-map threshold data ceiling for ${darkEscape(group.source_label)}">${bitmaxOptions}</select>
-                            <span class="tw:text-[0.625rem] tw:text-base-content/50 tw:max-w-44 tw:leading-tight tw:mt-1">Detection only; camera output stays ${darkEscape(bitDepth)}.</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/50 tw:max-w-44 tw:leading-tight tw:mt-1">Sets detection thresholds only; captured output stays ${darkEscape(bitDepth)}.</span>
                         </label>
                     </div>
                 </td>
@@ -1752,13 +1751,13 @@ function updateDarkPlanSummary() {
         : 'Reconnect the camera to refresh its dimensions before storage can be estimated.');
     const strategy = $('#dark-strategy').val();
     const notes = {
-        complete: 'Compatible existing masters stay active; only uncovered settings are offered.',
-        refresh: 'The recommendation is recaptured; superseded equivalents are retired only after success.',
-        rebuild: 'The complete recommendation is staged first; older active masters in the displayed scope are retired only after success.',
-        custom: 'The complete recommendation is the starting point. Edit or disable groups to expand or narrow it.',
+        complete: 'Capture only uncovered master sets. Existing masters keep their active/inactive status.',
+        refresh: 'Capture every recommended master set. After success, only older masters for the same gain/exposure combination and temperature range become inactive.',
+        rebuild: 'Capture every recommended master set. After success, all older masters in the selected profiles and temperature range become inactive, including master sets no longer recommended.',
+        custom: 'Start with every recommended master set. Edit or disable rows; existing masters keep their active/inactive status.',
     };
     $('#dark-plan-note').text(temperatureSeries
-        ? 'Can start at any time of day. It captures the complete night recommendation now, then waits for the reported sensor temperature to fall by each step. Complete sets activate safely; a final target stops automatically, while a blank target runs until cancelled.'
+        ? 'Capture the full night plan now, then repeat after each selected sensor drop. A stop temperature ends the series after a complete set; a blank value repeats until cancelled.'
         : (notes[strategy] || ''));
     updateDarkStartButton(masterCount);
 }

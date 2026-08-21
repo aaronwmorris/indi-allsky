@@ -190,7 +190,7 @@ def test_external_script_is_last_automatic_fallback():
 def test_source_choices_and_signature_follow_configuration():
     config = temperature_config()
     choices = temperature_source_choices(config)
-    assert choices[0]['label'] == 'Automatic (camera first; unambiguous fallback only)'
+    assert choices[0]['label'] == 'Automatic (camera first)'
     assert [choice['key'] for choice in choices] == [
         'auto',
         'camera',

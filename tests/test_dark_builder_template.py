@@ -118,7 +118,7 @@ def _render_builder(
     'action, stored_dark_count, stored_bpm_count, ready_count, suggested_count, title',
     (
         ('rebuild', 0, 0, 0, 17, 'Build your first dark library'),
-        ('complete', 20, 20, 5, 12, 'Add the missing dark settings'),
+        ('complete', 20, 20, 5, 12, 'Add the missing master darks and maps'),
         ('temperature', 20, 20, 17, 17, 'Your library is complete'),
         ('none', 20, 20, 17, 0, 'Your dark library is ready'),
         ('rebuild', 20, 0, 0, 17, 'Build a compatible dark library'),
@@ -141,17 +141,15 @@ def test_builder_explains_each_library_state(
     )
 
     assert title in html
-    assert 'A setting combines gain, exposure, binning and data depth.' in html
+    assert 'One master set is a master dark and matching bad-pixel map' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.21.9' in html
+    assert 'Preview 2026.08.21.11' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
-    assert 'masters captured from 15.0°C through 25.0°C' in html
-    assert 'The ±5°C value is a distance from this reading' in html
-    assert 'Temperature is checked separately for each gain/exposure setting' in html
-    assert 'Normal drift during capture can therefore leave only some settings' in html
-    assert 'More frames reduce random noise' in html
-    assert 'Starting at the maximum, adds another exposure length' in html
+    assert 'masters from 15.0°C to 25.0°C count as matched' in html
+    assert 'Every required master set is checked separately, so capture drift may leave only some' in html
+    assert 'Each master set uses this many images to build one dark and one bad-pixel map.' in html
+    assert 'Step down from the longest exposure by this amount' in html
     if suggested_count:
         assert 'id="dark-run-instructions" class="tw:flex tw:flex-col tw:gap-4"' in html
     else:
@@ -170,13 +168,13 @@ def test_partial_library_separates_structural_and_temperature_coverage():
 
     assert (
         'Across all stored temperature layers, compatible dark-and-map pairs cover '
-        '5 of 17 recommended camera settings.'
+        '5 of 17 recommended master sets.'
     ) in html
     assert (
         'At the configured or current temperature, 0 of 17 are ready, so the '
         'prepared job contains 17 new master sets for this temperature layer.'
     ) in html
-    assert '5 of 17 settings covered across all temperatures' in html
+    assert '5 of 17 master sets covered across all temperatures' in html
     assert '0 of 17 are ready at the configured or current temperature.' in html
 
 
@@ -198,6 +196,71 @@ def test_advanced_options_use_width_safe_two_column_layout():
     assert 'tw:lg:grid-cols-3' not in advanced
     assert 'tw:w-full tw:max-w-full tw:min-w-0' in advanced
     assert 'target cells' not in advanced
+
+
+def test_library_update_choices_have_distinct_capture_and_retirement_outcomes():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=20,
+        stored_bpm_count=20,
+        ready_count=5,
+        suggested_count=12,
+    )
+
+    assert 'Library update' in html
+    assert '>Fill gaps only</option>' in html
+    assert '>Refresh all recommended master sets</option>' in html
+    assert '>Rebuild selected profiles</option>' in html
+    assert '>Edit capture groups manually</option>' in html
+    assert (
+        "complete: 'Capture only uncovered master sets. Existing masters keep their active/inactive status.'"
+    ) in html
+    assert 'same gain/exposure combination and temperature range' in html
+    assert 'including master sets no longer recommended' in html
+    assert 'Inactive masters stay stored but are not used for calibration.' in html
+    assert 'setting' not in html.lower()
+
+
+def test_advanced_fields_and_options_describe_user_visible_outcomes():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=20,
+        stored_bpm_count=20,
+        ready_count=5,
+        suggested_count=12,
+    )
+
+    expected_copy = (
+        'Auto-gain coverage',
+        'Fine · 1.5 dB',
+        'Balanced · 3 dB · recommended',
+        'Coarse · 6 dB',
+        'If the temperature does not match',
+        'Run pattern',
+        'Combine captured images',
+        'Reject outliers, then average · recommended',
+        'Simple average',
+        'Captured images per master set',
+        'Longest exposure to include',
+        'Exposure interval',
+        'Exposure order',
+        'Longest first · recommended',
+        'Reset capture groups',
+        'Bad-pixel detection range',
+        'Use image depth · automatic',
+    )
+    for copy in expected_copy:
+        assert copy in html
+
+    for obsolete_copy in (
+        'Plan override',
+        'Recapture recommended settings',
+        'Rebuild this library',
+        'Temperature use for this one run',
+        'Gain spacing',
+        'Source frames per master',
+    ):
+        assert obsolete_copy not in html
 
 
 def test_advanced_plan_validation_blocks_invalid_capture_requests():
@@ -253,37 +316,37 @@ def test_primary_temperature_matching_and_advanced_series_are_separated():
     )[0]
 
     assert 'id="dark-temperature-range"' in workflow
-    assert 'Temperature matching distance' in workflow
-    assert 'Changing this value updates the recommendation immediately' in workflow
-    assert 'does not save anything by itself' in workflow
-    assert 'saved for this camera only when you start a dark run' in workflow
+    assert 'Allowed temperature difference' in workflow
+    assert 'A larger value accepts temperatures farther away' in workflow
+    assert 'saved for this camera only when a run starts' in workflow
     assert 'id="dark-temperature-range"' not in advanced
     assert 'id="dark-temperature-source"' in workflow
+    assert 'Temperature sensor' in workflow
     assert 'id="dark-temperature-evaluation-summary"' in workflow
     assert 'id="dark-capture-mode"' not in workflow
     assert 'id="dark-temperature-policy"' not in workflow
     assert 'id="dark-temperature-delta"' not in workflow
     assert 'id="dark-temperature-target"' not in workflow
-    assert 'The initial 5°C value is the legacy fallback' in html
-    assert 'their spacing is not treated as a saved preference' in html
+    assert 'The initial 5°C value is the legacy default' in html
+    assert 'existing master temperatures do not change it' in html
     assert 'id="dark-capture-mode"' in advanced
-    assert 'One library run · standard' in advanced
-    assert 'Falling-temperature series · preparation required' in advanced
+    assert 'Capture once · standard' in advanced
+    assert 'Repeat as temperature falls · advanced' in advanced
     assert 'id="dark-temperature-series-controls" class="tw:hidden' in advanced
     assert 'id="dark-temperature-delta"' in advanced
-    assert 'Capture another set after cooling by' in advanced
-    assert 'independent of the matching distance' in advanced
+    assert 'Temperature drop between sets' in advanced
+    assert 'separate from the allowed matching difference' in advanced
     assert 'id="dark-temperature-target"' in advanced
-    assert 'Prepare this manually:' in advanced
-    assert 'The builder cannot cover the camera and does not command the cooler.' in advanced
+    assert 'Manual preparation required:' in advanced
+    assert 'The builder cannot cover the camera or control the cooler.' in advanced
     assert 'id="dark-temperature-policy"' in advanced
-    assert 'Require a temperature match · recommended' in advanced
-    assert 'Fill gain/exposure gaps only' in advanced
+    assert 'Capture a new dark and map · recommended' in advanced
+    assert 'Use the existing dark and map' in advanced
     assert 'id="dark-strategy-control"' in advanced
     assert "$('#dark-temperature-series-controls').toggleClass('tw:hidden', !temperatureSeries);" in html
     assert "$('#dark-temperature-policy-control').toggleClass('tw:hidden', temperatureSeries);" in html
     assert "$('#dark-strategy-control').toggleClass('tw:hidden', temperatureSeries);" in html
-    assert 'This changed value is still unsaved' in html
+    assert 'This change is not saved yet' in html
 
 
 def test_temperature_guidance_explains_automatic_and_both_one_run_policies():
@@ -295,12 +358,12 @@ def test_temperature_guidance_explains_automatic_and_both_one_run_policies():
         suggested_count=12,
     )
 
-    assert 'Automatic always prefers a valid camera reading.' in html
-    assert 'labels never determine placement' in html
-    assert 'Automatic could not choose one unique usable recent reading.' in html
-    assert 'any usable temperature layer may fill an existing gain/exposure pair' in html
-    assert 'Configured cooler targets are still checked' in html
-    assert 'Recommendation evaluated at ' in html
+    assert 'Automatic uses the camera first.' in html
+    assert 'Sensor names are never used to guess placement.' in html
+    assert 'Automatic found no unique recent reading.' in html
+    assert 'an existing dark and map at any temperature count as covered; only missing pairs are captured' in html
+    assert 'Cooled profiles still use their target temperature.' in html
+    assert 'Stored masters from ' in html
 
 
 def test_stale_service_configuration_explains_why_capture_is_unavailable():

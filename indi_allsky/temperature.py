@@ -145,7 +145,7 @@ def configured_temperature_sources(config):
 def temperature_source_choices(config):
     choices = [{
         'key': TEMPERATURE_SOURCE_AUTO,
-        'label': 'Automatic (camera first; unambiguous fallback only)',
+        'label': 'Automatic (camera first)',
         'category': 'automatic',
         'slot': None,
     }]
