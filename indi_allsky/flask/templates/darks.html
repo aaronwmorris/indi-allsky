@@ -167,6 +167,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
 {% endblock %}
 
 {% block content %}
+{% set dark_builder_preview_version = '2026.08.21.1' %}
 <div id="dark-page-content" class="tw:container tw:mx-auto tw:w-full tw:px-4 tw:py-6 tw:flex tw:flex-col tw:gap-4">
 
     <nav aria-label="Dark library sections">
@@ -195,6 +196,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-2">
                         <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50">Dark Library Builder</h4>
                         <span class="tw:badge tw:badge-outline tw:badge-sm tw:shrink-0">Guided capture</span>
+                        <span class="tw:badge tw:badge-warning tw:badge-outline tw:badge-sm tw:shrink-0">Preview {{ dark_builder_preview_version }}</span>
                     </div>
                     <p class="tw:text-sm tw:text-base-content/60 tw:mt-2 tw:max-w-3xl">
                         Checks the current camera settings and both calibration libraries, then prepares an adjustable capture plan.
@@ -248,27 +250,59 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     <div class="tw:text-sm">{{ dark_analysis.suggested_action_description }}</div>
                     {% if dark_analysis.suggested_target_count %}
                     <div class="tw:text-xs tw:mt-1 tw:opacity-75">
-                        {{ dark_analysis.suggested_target_count }} master set{% if dark_analysis.suggested_target_count != 1 %}s{% endif %} · approximately {{ dark_analysis.estimated_time }} using 10 source frames per master
+                        New capture: {{ dark_analysis.suggested_target_count }} master set{% if dark_analysis.suggested_target_count != 1 %}s{% endif %} · approximately {{ dark_analysis.estimated_time }} using 10 source frames per master
                     </div>
+                    {% else %}
+                    <div class="tw:text-xs tw:mt-1 tw:opacity-75">New capture: none recommended.</div>
                     {% endif %}
                 </div>
             </div>
 
             <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-4 tw:gap-3">
                 <div class="dark-fact-card tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4">
-                    <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Exposure mode</div>
-                    <div class="tw:font-semibold tw:mt-1">{{ dark_analysis.mode }}</div>
-                    <div class="tw:text-xs tw:text-base-content/50 tw:mt-1">{{ dark_analysis.gain_policy_summary }}</div>
+                    <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Stored library</div>
+                    <div class="tw:font-semibold tw:mt-1">{{ dark_analysis.stored_dark_count }} master dark{% if dark_analysis.stored_dark_count != 1 %}s{% endif %}</div>
+                    <div class="tw:text-xs tw:text-base-content/50 tw:mt-1">
+                        {{ dark_analysis.stored_bpm_count }} bad-pixel map{% if dark_analysis.stored_bpm_count != 1 %}s{% endif %}
+                        {% if dark_analysis.usable_dark_count != dark_analysis.stored_dark_count or dark_analysis.usable_bpm_count != dark_analysis.stored_bpm_count %}
+                        · usable now: {{ dark_analysis.usable_dark_count }} dark{% if dark_analysis.usable_dark_count != 1 %}s{% endif %} + {{ dark_analysis.usable_bpm_count }} map{% if dark_analysis.usable_bpm_count != 1 %}s{% endif %}
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="dark-fact-card tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4">
-                    <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Recommended plan</div>
-                    <div class="tw:font-semibold tw:mt-1">{{ dark_analysis.target_count }} master set{% if dark_analysis.target_count != 1 %}s{% endif %}</div>
+                    <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Recommendation target</div>
+                    <div class="tw:font-semibold tw:mt-1">{{ dark_analysis.target_count }} gain/exposure cell{% if dark_analysis.target_count != 1 %}s{% endif %}</div>
                     <div class="tw:text-xs tw:text-base-content/50 tw:mt-1">Bins {{ dark_analysis.binnings | join(', ') }}{% if dark_analysis.bit_depths %} · {{ dark_analysis.bit_depths | join('/') }} bit{% endif %}</div>
                 </div>
                 <div class="dark-fact-card tw:bg-base-100 tw:border {% if dark_analysis.structurally_complete %}tw:border-success/20{% else %}tw:border-warning/20{% endif %} tw:rounded-[var(--radius-box)] tw:p-4">
-                    <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Gain / exposure library</div>
-                    <div class="tw:font-semibold tw:mt-1">{{ dark_analysis.structural_status_label }}</div>
-                    <div class="tw:text-xs tw:text-base-content/50 tw:mt-1">{{ dark_analysis.structural_ready_target_count }} of {{ dark_analysis.target_count }} recommended pairs present</div>
+                    <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Already covered</div>
+                    <div class="tw:font-semibold tw:mt-1">{{ dark_analysis.structural_ready_target_count }} of {{ dark_analysis.target_count }} cells</div>
+                    <div class="tw:text-xs tw:text-base-content/50 tw:mt-1">
+                        {% if dark_analysis.structural_missing_target_count %}
+                        {{ dark_analysis.structural_missing_target_count }} recommended cell{% if dark_analysis.structural_missing_target_count != 1 %}s{% endif %} still missing
+                        {% else %}
+                        All recommended gain/exposure cells are present
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="dark-fact-card tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4">
+                    <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">New capture</div>
+                    <div class="tw:font-semibold tw:mt-1">{{ dark_analysis.suggested_target_count }} master set{% if dark_analysis.suggested_target_count != 1 %}s{% endif %}</div>
+                    <div class="tw:text-xs tw:text-base-content/50 tw:mt-1">
+                        {% if dark_analysis.suggested_target_count %}
+                        Approximately {{ dark_analysis.estimated_time }}; stored masters remain
+                        {% else %}
+                        Nothing additional is recommended now
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-3">
+                <div class="dark-fact-card tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4">
+                    <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Exposure and gain policy</div>
+                    <div class="tw:font-semibold tw:mt-1">{{ dark_analysis.mode }}</div>
+                    <div class="tw:text-xs tw:text-base-content/50 tw:mt-1">{{ dark_analysis.gain_policy_summary }}</div>
                 </div>
                 <div class="dark-fact-card tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-4">
                     <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Temperature readiness</div>
@@ -285,37 +319,42 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 </div>
             </div>
 
+            <div class="tw:flex tw:flex-col tw:gap-1">
+                <div class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Classification of the {{ dark_analysis.target_count }} recommended cells</div>
+                <div class="tw:text-xs tw:text-base-content/60">These counts describe the recommendation grid, not the {{ dark_analysis.stored_dark_count }} master dark{% if dark_analysis.stored_dark_count != 1 %}s{% endif %} stored for this camera. Masters outside the current grid remain in the library.</div>
+            </div>
+
             <div class="tw:grid tw:grid-cols-2 tw:sm:grid-cols-3 tw:xl:grid-cols-6 tw:gap-2">
                 <div class="dark-coverage-card tw:bg-success/10 tw:border tw:border-success/20 tw:rounded-[var(--radius-box)] tw:p-3">
                     <div class="tw:text-2xl tw:font-bold tw:text-success">{{ dark_analysis.counts.exact }}</div>
-                    <div class="tw:text-xs tw:text-base-content/60">Exact</div>
+                    <div class="tw:text-xs tw:text-base-content/60">Exact cells</div>
                 </div>
                 <div class="dark-coverage-card tw:bg-info/10 tw:border tw:border-info/20 tw:rounded-[var(--radius-box)] tw:p-3">
                     <div class="tw:text-2xl tw:font-bold tw:text-info">{{ dark_analysis.counts.acceptable }}</div>
-                    <div class="tw:text-xs tw:text-base-content/60">Acceptable</div>
+                    <div class="tw:text-xs tw:text-base-content/60">Acceptable cells</div>
                 </div>
                 <div class="dark-coverage-card tw:bg-warning/10 tw:border tw:border-warning/20 tw:rounded-[var(--radius-box)] tw:p-3">
                     <div class="tw:text-2xl tw:font-bold tw:text-warning">{{ dark_analysis.counts.coarse }}</div>
-                    <div class="tw:text-xs tw:text-base-content/60">Coarse</div>
+                    <div class="tw:text-xs tw:text-base-content/60">Coarse cells</div>
                 </div>
                 <div class="dark-coverage-card tw:bg-warning/10 tw:border tw:border-warning/20 tw:rounded-[var(--radius-box)] tw:p-3">
                     <div class="tw:text-2xl tw:font-bold tw:text-warning">{{ dark_analysis.counts.temperature }}</div>
-                    <div class="tw:text-xs tw:text-base-content/60">At other temperatures</div>
+                    <div class="tw:text-xs tw:text-base-content/60">Other-temperature cells</div>
                 </div>
                 <div class="dark-coverage-card tw:bg-error/10 tw:border tw:border-error/20 tw:rounded-[var(--radius-box)] tw:p-3">
                     <div class="tw:text-2xl tw:font-bold tw:text-error">{{ dark_analysis.counts.incompatible }}</div>
-                    <div class="tw:text-xs tw:text-base-content/60">Incompatible</div>
+                    <div class="tw:text-xs tw:text-base-content/60">Incompatible cells</div>
                 </div>
                 <div class="dark-coverage-card tw:bg-error/10 tw:border tw:border-error/20 tw:rounded-[var(--radius-box)] tw:p-3">
                     <div class="tw:text-2xl tw:font-bold tw:text-error">{{ dark_analysis.counts.missing }}</div>
-                    <div class="tw:text-xs tw:text-base-content/60">Missing</div>
+                    <div class="tw:text-xs tw:text-base-content/60">Missing cells</div>
                 </div>
             </div>
 
             <details id="dark-recommendation-details" class="tw:collapse tw:collapse-arrow tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-100">
                 <summary class="tw:collapse-title tw:text-sm tw:font-semibold tw:flex tw:flex-wrap tw:items-center tw:gap-2">
                     Why this recommendation?
-                    <span class="tw:badge tw:badge-ghost tw:badge-sm">{{ dark_analysis.target_count }} planned master{% if dark_analysis.target_count != 1 %}s{% endif %}</span>
+                    <span class="tw:badge tw:badge-ghost tw:badge-sm">{{ dark_analysis.target_count }} recommendation cell{% if dark_analysis.target_count != 1 %}s{% endif %}</span>
                 </summary>
                 <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-4">
                 <p class="tw:text-xs tw:text-base-content/70">

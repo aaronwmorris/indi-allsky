@@ -1486,6 +1486,24 @@ class DarkFramesView(TemplateView):
             }
 
 
+        stored_dark_frames = tuple(
+            frame for frame in dark_inventory if frame.frame_type == 'dark'
+        )
+        stored_bpm_frames = tuple(
+            frame for frame in dark_inventory if frame.frame_type == 'bpm'
+        )
+        dark_analysis.update({
+            'stored_dark_count': len(stored_dark_frames),
+            'stored_bpm_count': len(stored_bpm_frames),
+            'usable_dark_count': sum(
+                1 for frame in stored_dark_frames if frame.active and frame.exists
+            ),
+            'usable_bpm_count': sum(
+                1 for frame in stored_bpm_frames if frame.active and frame.exists
+            ),
+        })
+
+
         context['darkframe_list'] = d_info_list
         context['bpm_list'] = b_info_list
         context['dark_analysis'] = dark_analysis
