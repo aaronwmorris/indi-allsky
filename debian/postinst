@@ -162,6 +162,7 @@ EOFJ
             GPS_ENV_LINE="GPS_DRIVER=\"$GPS_DRIVER\""
         fi
         cat <<EOF > "$INDISERVER_ENV"
+INDI_PORT="${INDI_PORT:-7624}"
 CCD_DRIVER="${CCD_DRIVER:-indi_simulator_ccd}"
 ${GPS_ENV_LINE}
 EOF
@@ -370,6 +371,8 @@ with app.app_context():
                 chmod 644 "$NGINX_SSL_DIR/indi-allsky_nginx.pem" 2>/dev/null || true
             fi
 
+            systemctl stop apache2 2>/dev/null || true
+            systemctl disable apache2 2>/dev/null || true
             systemctl restart nginx 2>/dev/null || systemctl start nginx 2>/dev/null || true
         elif [ -x "$(command -v a2ensite 2>/dev/null)" ] && [ -f "/usr/share/indi-allsky/service/apache_indi-allsky.conf" ]; then
             # Configure Apache2
@@ -420,6 +423,8 @@ EOF
             a2dissite 000-default.conf default-ssl.conf 2>/dev/null || true
             a2enmod rewrite proxy proxy_http proxy_wstunnel headers ssl socache_shmcb expires http2 proxy_http2 2>/dev/null || true
             a2ensite indi-allsky.conf 2>/dev/null || true
+            systemctl stop nginx 2>/dev/null || true
+            systemctl disable nginx 2>/dev/null || true
             systemctl restart apache2 2>/dev/null || systemctl start apache2 2>/dev/null || true
         fi
 
