@@ -13,7 +13,7 @@
                 <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__ENABLE.label.text }}</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Enable SyncAPI service for remote instance synchronization</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Enable synchronization with a remote indi-allsky instance.</span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
                         {{ form_config.SYNCAPI__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -93,7 +93,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SYNCAPI__TIMEOUT.label.text }}</span>
                         {{ form_config.SYNCAPI__TIMEOUT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Total transfer timeout (seconds)</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Maximum seconds for the entire transfer; allow enough time for video files.</span>
                         <div id="SYNCAPI__TIMEOUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>

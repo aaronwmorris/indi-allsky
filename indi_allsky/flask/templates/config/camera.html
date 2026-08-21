@@ -13,7 +13,7 @@
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAMERA_INTERFACE.label.text }}</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Select primary capture interface</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Select the capture interface. Change the INDI camera driver on the System page.</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.CAMERA_INTERFACE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -38,7 +38,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.INDI_CAMERA_NAME.label.text }}</span>
                         {{ form_config.INDI_CAMERA_NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Blank for first detected camera</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Leave blank to use the first detected camera. Set this only to select a specific INDI device.</span>
                         <div id="INDI_CAMERA_NAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -59,12 +59,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_CONFIG__EXPOSURE_CLASSNAME.label.text }}</span>
                         {{ form_config.CCD_CONFIG__EXPOSURE_CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Select the exposure-control mode. Restart the capture service after changing it.</span>
                         <div id="CCD_CONFIG__EXPOSURE_CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_CONFIG__AUTO_GAIN_LEVELS.label.text }}</span>
                         {{ form_config.CCD_CONFIG__AUTO_GAIN_LEVELS(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Used with Legacy Auto-Gain</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Legacy Auto-Gain only. Divides the camera's gain range into this many equal levels.</span>
                         <div id="CCD_CONFIG__AUTO_GAIN_LEVELS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -102,19 +103,19 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.EXPOSURE_PERIOD.label.text }}</span>
                         {{ form_config.EXPOSURE_PERIOD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Night period (secs between frames)</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Seconds between night frames. Values below the maximum exposure start the next frame immediately; use 5 seconds or more.</span>
                         <div id="EXPOSURE_PERIOD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.EXPOSURE_PERIOD_DAY.label.text }}</span>
                         {{ form_config.EXPOSURE_PERIOD_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Day period (secs between frames)</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Seconds between daytime frames. Use 5 seconds or more.</span>
                         <div id="EXPOSURE_PERIOD_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_EXPOSURE_TIMEOUT.label.text }}</span>
                         {{ form_config.CCD_EXPOSURE_TIMEOUT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Max seconds to wait before abort</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Maximum seconds before aborting a stalled exposure.</span>
                         <div id="CCD_EXPOSURE_TIMEOUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -135,10 +136,10 @@
                     <!-- Night -->
                     <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/70">Night Profile</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Max Gain: {{ "%0.3f"|format(camera_maxGain | float) }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Night gain, up to the camera maximum. Restart capture after changing it; avoid values beyond the camera's analog-gain range.</span>
                         {{ form_config.CCD_CONFIG__NIGHT__GAIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CCD_CONFIG__NIGHT__GAIN-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Binning ({{ camera_minBinning }}-{{ camera_maxBinning }})</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/50 tw:mt-1">Night binning within the camera-supported range. Restart capture after changing gain or binning controls.</span>
                         {{ form_config.CCD_CONFIG__NIGHT__BINNING(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                         <div id="CCD_CONFIG__NIGHT__BINNING-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
                     </div>
@@ -190,7 +191,7 @@
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <div class="tw:flex tw:flex-col">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAMERA_SQM__ENABLE_DAY.label.text }}</span>
-                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Daytime SQM (Testing)</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Testing only; do not enable for normal daytime capture.</span>
                         </div>
                         {{ form_config.CAMERA_SQM__ENABLE_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="CAMERA_SQM__ENABLE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -202,21 +203,25 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAMERA_SQM__EXPOSURE.label.text }}</span>
                         {{ form_config.CAMERA_SQM__EXPOSURE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Exposure time in seconds for periodic SQM measurements.</span>
                         <div id="CAMERA_SQM__EXPOSURE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAMERA_SQM__GAIN.label.text }}</span>
                         {{ form_config.CAMERA_SQM__GAIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Gain used for periodic SQM measurements. Unity gain is recommended.</span>
                         <div id="CAMERA_SQM__GAIN-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAMERA_SQM__BINNING.label.text }}</span>
                         {{ form_config.CAMERA_SQM__BINNING(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Binning used for periodic SQM measurements.</span>
                         <div id="CAMERA_SQM__BINNING-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CAMERA_SQM__EXPOSURE_PERIOD.label.text }}</span>
                         {{ form_config.CAMERA_SQM__EXPOSURE_PERIOD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Seconds between periodic SQM exposures.</span>
                         <div id="CAMERA_SQM__EXPOSURE_PERIOD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -239,9 +244,12 @@
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-3 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <div class="tw:flex tw:items-center tw:justify-between">
-                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_COOLING.label.text }}</span>
+                            <div class="tw:flex tw:flex-col">
+                                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_COOLING.label.text }}</span>
+                                <span class="tw:text-[0.625rem] tw:text-base-content/40">Activate CCD Cooling at night (requires hardware support).</span>
+                            </div>
                             {{ form_config.CCD_COOLING(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
-                        <div id="CCD_COOLING-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="CCD_COOLING-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/50">{{ form_config.CCD_TEMP.label.text }}</span>
@@ -251,9 +259,12 @@
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-3 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <div class="tw:flex tw:items-center tw:justify-between">
-                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_COOLING_DAY.label.text }}</span>
+                            <div class="tw:flex tw:flex-col">
+                                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_COOLING_DAY.label.text }}</span>
+                                <span class="tw:text-[0.625rem] tw:text-base-content/40">Activate CCD Cooling during the day (requires hardware support).</span>
+                            </div>
                             {{ form_config.CCD_COOLING_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
-                        <div id="CCD_COOLING_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="CCD_COOLING_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/50">{{ form_config.CCD_TEMP_DAY.label.text }}</span>
@@ -283,6 +294,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_TEMP_SCRIPT.label.text }}</span>
                         {{ form_config.CCD_TEMP_SCRIPT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">External script used for CCD temperature. Used when a camera does not support temperature measurements.</span>
                         <div id="CCD_TEMP_SCRIPT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -300,16 +312,19 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_QUEUE_MAX.label.text }}</span>
                         {{ form_config.IMAGE_QUEUE_MAX(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Delay is added when maximum queue depth is hit.</span>
                         <div id="IMAGE_QUEUE_MAX-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_QUEUE_MIN.label.text }}</span>
                         {{ form_config.IMAGE_QUEUE_MIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Delay is removed when minimum queue depth is hit.</span>
                         <div id="IMAGE_QUEUE_MIN-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_QUEUE_BACKOFF.label.text }}</span>
                         {{ form_config.IMAGE_QUEUE_BACKOFF(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Additional exposure delay applied when the image queue reaches its maximum depth.</span>
                         <div id="IMAGE_QUEUE_BACKOFF-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -319,6 +334,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_BIT_DEPTH.label.text }}</span>
                         {{ form_config.CCD_BIT_DEPTH(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Bit depth returned by the camera. Change this only if the camera does not scale its data to the full 16-bit range.</span>
                         <div id="CCD_BIT_DEPTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
@@ -332,6 +348,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FOCUS_DELAY.label.text }}</span>
                         {{ form_config.FOCUS_DELAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Seconds between focus frames. Set this slightly above the camera's image-download time.</span>
                         <div id="FOCUS_DELAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -353,35 +370,46 @@
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__CAMERA_ID.label.text }}</span>
                             {{ form_config.LIBCAMERA__CAMERA_ID(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="LIBCAMERA__CAMERA_ID-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Select the correct CSI port on your system.</span>
+                            <div id="LIBCAMERA__CAMERA_ID-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__IMAGE_FILE_TYPE.label.text }}</span>
                             {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="LIBCAMERA__IMAGE_FILE_TYPE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Image format returned by libcamera at night. This does not affect INDI capture; DNG disables automatic white balance.</span>
+                            <div id="LIBCAMERA__IMAGE_FILE_TYPE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__IMAGE_FILE_TYPE_DAY.label.text }}</span>
                             {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="LIBCAMERA__IMAGE_FILE_TYPE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="LIBCAMERA__IMAGE_FILE_TYPE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                     </div>
 
                     <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4">
                         <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__AWB_ENABLE.label.text }}</span>
+                            <div class="tw:flex tw:flex-col">
+                                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__AWB_ENABLE.label.text }}</span>
+                                <span class="tw:text-[0.625rem] tw:text-base-content/40">Enable libcamera automatic white balance. At night this can create long gaps between exposures.</span>
+                            </div>
                             {{ form_config.LIBCAMERA__AWB_ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
-                        <div id="LIBCAMERA__AWB_ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="LIBCAMERA__AWB_ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__CCM_DISABLE.label.text }}</span>
+                            <div class="tw:flex tw:flex-col">
+                                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__CCM_DISABLE.label.text }}</span>
+                                <span class="tw:text-[0.625rem] tw:text-base-content/40">CCM may only be disabled when AWB is disabled [Default: Enabled]. Disabling CCM requires rpicam-apps 1.9.0 (released Sept 2025).</span>
+                            </div>
                             {{ form_config.LIBCAMERA__CCM_DISABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
-                        <div id="LIBCAMERA__CCM_DISABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="LIBCAMERA__CCM_DISABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__IMMEDIATE.label.text }}</span>
+                            <div class="tw:flex tw:flex-col">
+                                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__IMMEDIATE.label.text }}</span>
+                                <span class="tw:text-[0.625rem] tw:text-base-content/40">Enable --immediate flag [Default: Enabled]. The --immediate flag may interfere with auto-focus functions.</span>
+                            </div>
                             {{ form_config.LIBCAMERA__IMMEDIATE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
-                        <div id="LIBCAMERA__IMMEDIATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="LIBCAMERA__IMMEDIATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                     </div>
 
@@ -389,17 +417,23 @@
                         <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__AWB_ENABLE_DAY.label.text }}</span>
                             {{ form_config.LIBCAMERA__AWB_ENABLE_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
-                        <div id="LIBCAMERA__AWB_ENABLE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="LIBCAMERA__AWB_ENABLE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__CCM_DISABLE_DAY.label.text }}</span>
+                            <div class="tw:flex tw:flex-col">
+                                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__CCM_DISABLE_DAY.label.text }}</span>
+                                <span class="tw:text-[0.625rem] tw:text-base-content/40">CCM may only be disabled when AWB is disabled. Disabling CCM requires rpicam-apps 1.9.0 (released Sept 2025).</span>
+                            </div>
                             {{ form_config.LIBCAMERA__CCM_DISABLE_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
-                        <div id="LIBCAMERA__CCM_DISABLE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="LIBCAMERA__CCM_DISABLE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__IMMEDIATE_DAY.label.text }}</span>
+                            <div class="tw:flex tw:flex-col">
+                                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__IMMEDIATE_DAY.label.text }}</span>
+                                <span class="tw:text-[0.625rem] tw:text-base-content/40">Enable --immediate flag [Default: Enabled]. The --immediate flag may interfere with auto-focus functions.</span>
+                            </div>
                             {{ form_config.LIBCAMERA__IMMEDIATE_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
-                        <div id="LIBCAMERA__IMMEDIATE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="LIBCAMERA__IMMEDIATE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                     </div>
 
@@ -407,12 +441,13 @@
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__AWB.label.text }}</span>
                             {{ form_config.LIBCAMERA__AWB(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="LIBCAMERA__AWB-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Automatic white-balance preset used for night capture.</span>
+                            <div id="LIBCAMERA__AWB-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__AWB_DAY.label.text }}</span>
                             {{ form_config.LIBCAMERA__AWB_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="LIBCAMERA__AWB_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="LIBCAMERA__AWB_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                     </div>
 
@@ -420,12 +455,14 @@
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__EXTRA_OPTIONS.label.text }}</span>
                             {{ form_config.LIBCAMERA__EXTRA_OPTIONS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="LIBCAMERA__EXTRA_OPTIONS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Extra options for libcamera-still. Options are passed through without validation.</span>
+                            <div id="LIBCAMERA__EXTRA_OPTIONS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__EXTRA_OPTIONS_DAY.label.text }}</span>
                             {{ form_config.LIBCAMERA__EXTRA_OPTIONS_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="LIBCAMERA__EXTRA_OPTIONS_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Additional daytime libcamera arguments. They are passed through without validation.</span>
+                            <div id="LIBCAMERA__EXTRA_OPTIONS_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                     </div>
 
@@ -435,17 +472,18 @@
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_HOST.label.text }}</span>
                             {{ form_config.LIBCAMERA__MQTT_HOST(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="LIBCAMERA__MQTT_HOST-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="LIBCAMERA__MQTT_HOST-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_PORT.label.text }}</span>
                             {{ form_config.LIBCAMERA__MQTT_PORT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="LIBCAMERA__MQTT_PORT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">MQTT port - 8883 = TLS, 1883 = standard.</span>
+                            <div id="LIBCAMERA__MQTT_PORT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_QOS.label.text }}</span>
                             {{ form_config.LIBCAMERA__MQTT_QOS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="LIBCAMERA__MQTT_QOS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="LIBCAMERA__MQTT_QOS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                     </div>
 
@@ -453,12 +491,12 @@
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_TRANSPORT.label.text }}</span>
                             {{ form_config.LIBCAMERA__MQTT_TRANSPORT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="LIBCAMERA__MQTT_TRANSPORT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="LIBCAMERA__MQTT_TRANSPORT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_PROTOCOL.label.text }}</span>
                             {{ form_config.LIBCAMERA__MQTT_PROTOCOL(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="LIBCAMERA__MQTT_PROTOCOL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="LIBCAMERA__MQTT_PROTOCOL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                     </div>
 
@@ -466,12 +504,12 @@
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_USERNAME.label.text }}</span>
                             {{ form_config.LIBCAMERA__MQTT_USERNAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="LIBCAMERA__MQTT_USERNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="LIBCAMERA__MQTT_USERNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_PASSWORD.label.text }}</span>
                             {{ form_config.LIBCAMERA__MQTT_PASSWORD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="LIBCAMERA__MQTT_PASSWORD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="LIBCAMERA__MQTT_PASSWORD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                     </div>
 
@@ -479,12 +517,12 @@
                         <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_TLS.label.text }}</span>
                             {{ form_config.LIBCAMERA__MQTT_TLS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
-                        <div id="LIBCAMERA__MQTT_TLS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="LIBCAMERA__MQTT_TLS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_CERT_BYPASS.label.text }}</span>
                             {{ form_config.LIBCAMERA__MQTT_CERT_BYPASS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
-                        <div id="LIBCAMERA__MQTT_CERT_BYPASS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="LIBCAMERA__MQTT_CERT_BYPASS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                     </div>
 
@@ -492,17 +530,20 @@
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_EXPOSURE_TOPIC.label.text }}</span>
                             {{ form_config.LIBCAMERA__MQTT_EXPOSURE_TOPIC(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="LIBCAMERA__MQTT_EXPOSURE_TOPIC-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">MQTT topic used to publish exposure commands.</span>
+                            <div id="LIBCAMERA__MQTT_EXPOSURE_TOPIC-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_IMAGE_TOPIC.label.text }}</span>
                             {{ form_config.LIBCAMERA__MQTT_IMAGE_TOPIC(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="LIBCAMERA__MQTT_IMAGE_TOPIC-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">MQTT topic that receives captured images.</span>
+                            <div id="LIBCAMERA__MQTT_IMAGE_TOPIC-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIBCAMERA__MQTT_METADATA_TOPIC.label.text }}</span>
                             {{ form_config.LIBCAMERA__MQTT_METADATA_TOPIC(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="LIBCAMERA__MQTT_METADATA_TOPIC-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">MQTT topic that receives image metadata.</span>
+                            <div id="LIBCAMERA__MQTT_METADATA_TOPIC-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                     </div>
                 </div>
@@ -590,7 +631,8 @@
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEST_CAMERA__ROTATING_STAR_FACTOR.label.text }}</span>
                             {{ form_config.TEST_CAMERA__ROTATING_STAR_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="TEST_CAMERA__ROTATING_STAR_FACTOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">1.0 = 0.25 degrees/minute [sidereal rate].</span>
+                            <div id="TEST_CAMERA__ROTATING_STAR_FACTOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                     </div>
                 </div>
@@ -607,12 +649,13 @@
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.INDI_CONFIG_DEFAULTS.label.text }}</span>
                             {{ form_config.INDI_CONFIG_DEFAULTS(class='tw:textarea tw:textarea-bordered tw:bg-base-100 tw:text-base-content tw:w-full tw:font-mono tw:text-xs', rows='4') }}
-                        <div id="INDI_CONFIG_DEFAULTS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="INDI_CONFIG_DEFAULTS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.INDI_CONFIG_DAY.label.text }}</span>
                             {{ form_config.INDI_CONFIG_DAY(class='tw:textarea tw:textarea-bordered tw:bg-base-100 tw:text-base-content tw:w-full tw:font-mono tw:text-xs', rows='4') }}
-                        <div id="INDI_CONFIG_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Day specific configuration. If no config is defined, the night config is used.</span>
+                            <div id="INDI_CONFIG_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                     </div>
 
@@ -620,15 +663,22 @@
                         <div class="tw:flex tw:flex-col tw:gap-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ACCUM_CAMERA__SUB_EXPOSURE_MAX.label.text }}</span>
                             {{ form_config.ACCUM_CAMERA__SUB_EXPOSURE_MAX(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Maximum accumulator sub-exposure. Total exposure is divided into equal sub-exposures and summed into an unsigned 32-bit result.</span>
                         <div id="ACCUM_CAMERA__SUB_EXPOSURE_MAX-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ACCUM_CAMERA__EVEN_EXPOSURES.label.text }}</span>
+                            <div class="tw:flex tw:flex-col">
+                                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ACCUM_CAMERA__EVEN_EXPOSURES.label.text }}</span>
+                                <span class="tw:text-[0.625rem] tw:text-base-content/40">Ensure each sub-exposure is the same interval.</span>
+                            </div>
                             {{ form_config.ACCUM_CAMERA__EVEN_EXPOSURES(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="ACCUM_CAMERA__EVEN_EXPOSURES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                         <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ACCUM_CAMERA__CLAMP_16BIT.label.text }}</span>
+                            <div class="tw:flex tw:flex-col">
+                                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ACCUM_CAMERA__CLAMP_16BIT.label.text }}</span>
+                                <span class="tw:text-[0.625rem] tw:text-base-content/40">Clamp FITS to 16-bits. FITS and Dark images will be clamped to uint16 (50% smaller than uint32).</span>
+                            </div>
                             {{ form_config.ACCUM_CAMERA__CLAMP_16BIT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="ACCUM_CAMERA__CLAMP_16BIT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>

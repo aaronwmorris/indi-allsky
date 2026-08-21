@@ -28,16 +28,19 @@
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__A_CLASSNAME.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__A_CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Select the driver used for Sensor A.</span>
                                     <div id="TEMP_SENSOR__A_CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__A_LABEL.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__A_LABEL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Short name used for Sensor A in charts, labels, and overlays.</span>
                                     <div id="TEMP_SENSOR__A_LABEL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__A_I2C_ADDRESS.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__A_I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Hexadecimal I²C address, for example 0x77.</span>
                                     <div id="TEMP_SENSOR__A_I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                             </div>
@@ -45,6 +48,7 @@
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__A_PIN_1.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__A_PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Example: D5 (GPIO5 / Pin 29 Raspberry Pi). Example: P0 - Pin for ADS1x15 ADC.</span>
                                     <div id="TEMP_SENSOR__A_PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1">
@@ -55,11 +59,13 @@
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__A_USER_VAR_SLOT.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__A_USER_VAR_SLOT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">First user-variable slot populated or read by this device.</span>
                                     <div id="TEMP_SENSOR__A_USER_VAR_SLOT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__A_TITLE_TEMPLATE.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__A_TITLE_TEMPLATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Display-title template. Supports the documented name, label, and probe variables.</span>
                                     <div id="TEMP_SENSOR__A_TITLE_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                             </div>
@@ -83,11 +89,13 @@
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__B_LABEL.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__B_LABEL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Short name used for Sensor B in charts, labels, and overlays.</span>
                                     <div id="TEMP_SENSOR__B_LABEL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__B_I2C_ADDRESS.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__B_I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Hexadecimal I²C address, for example 0x76.</span>
                                     <div id="TEMP_SENSOR__B_I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                             </div>
@@ -95,6 +103,7 @@
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__B_PIN_1.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__B_PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Example: D6 (GPIO6 / Pin 31 Raspberry Pi). Example: P0 - Pin for ADS1x15 ADC.</span>
                                     <div id="TEMP_SENSOR__B_PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1">
@@ -105,11 +114,13 @@
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__B_USER_VAR_SLOT.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__B_USER_VAR_SLOT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">First user-variable slot populated or read by this device.</span>
                                     <div id="TEMP_SENSOR__B_USER_VAR_SLOT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__B_TITLE_TEMPLATE.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__B_TITLE_TEMPLATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Display-title template. Supports the documented name, label, and probe variables.</span>
                                     <div id="TEMP_SENSOR__B_TITLE_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                             </div>
@@ -133,11 +144,13 @@
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__C_LABEL.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__C_LABEL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Short name used for Sensor C in charts, labels, and overlays.</span>
                                     <div id="TEMP_SENSOR__C_LABEL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__C_I2C_ADDRESS.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__C_I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Hexadecimal I²C address, for example 0x77.</span>
                                     <div id="TEMP_SENSOR__C_I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                             </div>
@@ -145,6 +158,7 @@
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__C_PIN_1.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__C_PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Example: D16 (GPIO16 / Pin 36 Raspberry Pi). Example: P0 - Pin for ADS1x15 ADC.</span>
                                     <div id="TEMP_SENSOR__C_PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1">
@@ -155,11 +169,13 @@
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__C_USER_VAR_SLOT.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__C_USER_VAR_SLOT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">First user-variable slot populated or read by this device.</span>
                                     <div id="TEMP_SENSOR__C_USER_VAR_SLOT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__C_TITLE_TEMPLATE.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__C_TITLE_TEMPLATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Display-title template. Supports the documented name, label, and probe variables.</span>
                                     <div id="TEMP_SENSOR__C_TITLE_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                             </div>
@@ -183,11 +199,13 @@
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__D_LABEL.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__D_LABEL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Short name used for Sensor D in charts, labels, and overlays.</span>
                                     <div id="TEMP_SENSOR__D_LABEL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__D_I2C_ADDRESS.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__D_I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Hexadecimal I²C address, for example 0x76.</span>
                                     <div id="TEMP_SENSOR__D_I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                             </div>
@@ -195,6 +213,7 @@
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__D_PIN_1.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__D_PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Example: D26 (GPIO26 / Pin 37 Raspberry Pi). Example: P0 - Pin for ADS1x15 ADC.</span>
                                     <div id="TEMP_SENSOR__D_PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1">
@@ -205,11 +224,13 @@
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__D_USER_VAR_SLOT.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__D_USER_VAR_SLOT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">First user-variable slot populated or read by this device.</span>
                                     <div id="TEMP_SENSOR__D_USER_VAR_SLOT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__D_TITLE_TEMPLATE.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__D_TITLE_TEMPLATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Display-title template. Supports the documented name, label, and probe variables.</span>
                                     <div id="TEMP_SENSOR__D_TITLE_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                             </div>
@@ -233,11 +254,13 @@
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__E_LABEL.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__E_LABEL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Short name used for Sensor E in charts, labels, and overlays.</span>
                                     <div id="TEMP_SENSOR__E_LABEL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__E_I2C_ADDRESS.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__E_I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Hexadecimal I²C address, for example 0x77.</span>
                                     <div id="TEMP_SENSOR__E_I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                             </div>
@@ -245,6 +268,7 @@
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__E_PIN_1.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__E_PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Example: D25 (GPIO25 / Pin 22 Raspberry Pi). Example: P0 - Pin for ADS1x15 ADC.</span>
                                     <div id="TEMP_SENSOR__E_PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1">
@@ -255,11 +279,13 @@
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__E_USER_VAR_SLOT.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__E_USER_VAR_SLOT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">First user-variable slot populated or read by this device.</span>
                                     <div id="TEMP_SENSOR__E_USER_VAR_SLOT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__E_TITLE_TEMPLATE.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__E_TITLE_TEMPLATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Display-title template. Supports the documented name, label, and probe variables.</span>
                                     <div id="TEMP_SENSOR__E_TITLE_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                             </div>
@@ -283,11 +309,13 @@
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__F_LABEL.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__F_LABEL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Short name used for Sensor F in charts, labels, and overlays.</span>
                                     <div id="TEMP_SENSOR__F_LABEL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__F_I2C_ADDRESS.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__F_I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Hexadecimal I²C address, for example 0x77.</span>
                                     <div id="TEMP_SENSOR__F_I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                             </div>
@@ -295,6 +323,7 @@
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__F_PIN_1.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__F_PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Example: D27 (GPIO27 / Pin 13 Raspberry Pi). Example: P0 - Pin for ADS1x15 ADC.</span>
                                     <div id="TEMP_SENSOR__F_PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1">
@@ -305,11 +334,13 @@
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__F_USER_VAR_SLOT.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__F_USER_VAR_SLOT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">First user-variable slot populated or read by this device.</span>
                                     <div id="TEMP_SENSOR__F_USER_VAR_SLOT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                                 <div class="tw:flex tw:flex-col tw:gap-1">
                                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__F_TITLE_TEMPLATE.label.text }}</span>
                                     {{ form_config.TEMP_SENSOR__F_TITLE_TEMPLATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
+                                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Display-title template. Supports the documented name, label, and probe variables.</span>
                                     <div id="TEMP_SENSOR__F_TITLE_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
                             </div>
@@ -395,7 +426,10 @@
                 <!-- FC37 & DHT PulseIO -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__FC37_ACTIVE_LOW.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__FC37_ACTIVE_LOW.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Invert the digital signal (default: 0 = no rain, 1 = rain). Use {rain_status:s} in overlay templates for text output.</span>
+                        </div>
                         {{ form_config.TEMP_SENSOR__FC37_ACTIVE_LOW(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="TEMP_SENSOR__FC37_ACTIVE_LOW-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -409,7 +443,10 @@
                 <!-- SHT3x, HTU31D Heaters & SHT4x, Si7021, HDC302x -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__SHT3X_HEATER_NIGHT.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__SHT3X_HEATER_NIGHT.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Only enabled when RH >80%.</span>
+                        </div>
                         {{ form_config.TEMP_SENSOR__SHT3X_HEATER_NIGHT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="TEMP_SENSOR__SHT3X_HEATER_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -419,7 +456,10 @@
                         <div id="TEMP_SENSOR__SHT3X_HEATER_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__HTU31D_HEATER_NIGHT.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__HTU31D_HEATER_NIGHT.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Only enabled when RH >80%.</span>
+                        </div>
                         {{ form_config.TEMP_SENSOR__HTU31D_HEATER_NIGHT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="TEMP_SENSOR__HTU31D_HEATER_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -577,6 +617,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__LUX_MAGNITUDE_OFFSET.label.text }}</span>
                         {{ form_config.TEMP_SENSOR__LUX_MAGNITUDE_OFFSET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Offset added when converting lux readings to sky magnitude.</span>
                         <div id="TEMP_SENSOR__LUX_MAGNITUDE_OFFSET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -617,7 +658,10 @@
 
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__AS3935_OUTDOOR_MODE.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__AS3935_OUTDOOR_MODE.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Disable for Indoor mode (for more noisy environments).</span>
+                        </div>
                         {{ form_config.TEMP_SENSOR__AS3935_OUTDOOR_MODE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="TEMP_SENSOR__AS3935_OUTDOOR_MODE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -629,11 +673,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__AS3935_NOISE_LEVEL.label.text }}</span>
                         {{ form_config.TEMP_SENSOR__AS3935_NOISE_LEVEL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default: 2.</span>
                         <div id="TEMP_SENSOR__AS3935_NOISE_LEVEL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__AS3935_SPIKE_REJECTION.label.text }}</span>
                         {{ form_config.TEMP_SENSOR__AS3935_SPIKE_REJECTION(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default: 2.</span>
                         <div id="TEMP_SENSOR__AS3935_SPIKE_REJECTION-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -655,6 +701,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__MQTT_PORT.label.text }}</span>
                         {{ form_config.TEMP_SENSOR__MQTT_PORT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">MQTT port - 8883 = TLS, 1883 = standard.</span>
                         <div id="TEMP_SENSOR__MQTT_PORT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">

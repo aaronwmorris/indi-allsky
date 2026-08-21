@@ -63,7 +63,7 @@
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LOCATION_LATITUDE.label.text }}</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Min: -90, Max: 90 [+ Northern / - Southern]</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Min: -90, Max: 90 [Positive = Northern Hemisphere / Negative = Southern Hemisphere].</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.LOCATION_LATITUDE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -75,7 +75,7 @@
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LOCATION_LONGITUDE.label.text }}</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Min: -180, Max: 180 [+ Eastern / - Western]</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Min: -180, Max: 180 [Positive = Eastern Hemisphere / Negative = Western Hemisphere].</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.LOCATION_LONGITUDE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -127,7 +127,7 @@
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.OWNER.label.text }}</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Copyright owner tag</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Owner information for copyright tags. Restricted to simplified characters.</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.OWNER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -165,7 +165,7 @@
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_IMAGE_CIRCLE.label.text }}</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Image circle in pixels (<a href="{{ url_for('indi_allsky.image_circle_helper_view') }}" class="tw:link tw:link-info tw:no-underline" target="_blank">Helper</a>)</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Image-circle diameter in pixels. If the edge is outside the frame, use a value larger than the image diagonal.</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.LENS_IMAGE_CIRCLE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -178,6 +178,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_OFFSET_X.label.text }}</span>
                         {{ form_config.LENS_OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Horizontal offset in pixels.</span>
                         <div id="LENS_OFFSET_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -192,11 +193,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_ALTITUDE.label.text }}</span>
                         {{ form_config.LENS_ALTITUDE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Lens elevation in degrees; 90° points at the zenith.</span>
                         <div id="LENS_ALTITUDE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_AZIMUTH.label.text }}</span>
                         {{ form_config.LENS_AZIMUTH(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">This affects Cardinal directions and VirtualSky.</span>
                         <div id="LENS_AZIMUTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -218,11 +221,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.NIGHT_MOONMODE_ALT_DEG.label.text }}</span>
                         {{ form_config.NIGHT_MOONMODE_ALT_DEG(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Moon altitude to enable Moon Mode (91 will disable).</span>
                         <div id="NIGHT_MOONMODE_ALT_DEG-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.NIGHT_MOONMODE_PHASE.label.text }}</span>
                         {{ form_config.NIGHT_MOONMODE_PHASE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Moon illumnation percentage to enable Moon Mode.</span>
                         <div id="NIGHT_MOONMODE_PHASE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -242,11 +247,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__LATITUDE_OFFSET.label.text }}</span>
                         {{ form_config.VIRTUALSKY__LATITUDE_OFFSET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Latitude offset in degrees applied only to VirtualSky.</span>
                         <div id="VIRTUALSKY__LATITUDE_OFFSET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__LONGITUDE_OFFSET.label.text }}</span>
                         {{ form_config.VIRTUALSKY__LONGITUDE_OFFSET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Longitude offset in degrees applied only to VirtualSky. Reload to apply the change.</span>
                         <div id="VIRTUALSKY__LONGITUDE_OFFSET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -271,6 +278,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__MAGNITUDE.label.text }}</span>
                         {{ form_config.VIRTUALSKY__MAGNITUDE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default: 6.0.</span>
                         <div id="VIRTUALSKY__MAGNITUDE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -298,7 +306,10 @@
                         <div id="VIRTUALSKY__SHOWSTARLABELS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__SHOWPLANETS.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__SHOWPLANETS.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Disabling planets will also disable planet labels.</span>
+                        </div>
                         {{ form_config.VIRTUALSKY__SHOWPLANETS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="VIRTUALSKY__SHOWPLANETS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
