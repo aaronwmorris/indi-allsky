@@ -30,6 +30,28 @@
                     </div>
                 </div>
 
+                <!-- Star Detection Method & SEP Threshold -->
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_STARS_METHOD.label.text }}</span>
+                        {{ form_config.DETECT_STARS_METHOD(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DETECT_STARS_METHOD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Template matches a synthetic star shape, SEP subtracts the sky background</span>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_STARS_SEP_THOLD.label.text }}</span>
+                        {{ form_config.DETECT_STARS_SEP_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DETECT_STARS_SEP_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Detection level above background noise, 3 (faint) to 10 (bright only)</span>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_STARS_SEP_MAX_RADIUS.label.text }}</span>
+                        {{ form_config.DETECT_STARS_SEP_MAX_RADIUS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="DETECT_STARS_SEP_MAX_RADIUS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Rejects blooming and artifacts wider than this, about half the visible radius</span>
+                    </div>
+                </div>
+
                 <!-- Detection Mask File & Draw Toggle -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4 tw:pt-2 tw:items-center">
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col tw:gap-1">

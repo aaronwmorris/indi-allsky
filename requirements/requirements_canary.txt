@@ -1,6 +1,7 @@
 # This file is for GitHub Dependabot to find security vulnerabilities
 astropy == 6.1.0
 photutils == 1.5.0
+sep == 1.4.1
 pyerfa == 2.0.1.4
 numpy == 2.1.0
 opencv-python-headless == 4.10.0.84
