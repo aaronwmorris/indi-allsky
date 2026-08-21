@@ -19,6 +19,7 @@ from pprint import pformat  # noqa: F401
 import logging
 
 import ephem
+from sqlalchemy import func
 
 from . import constants
 from . import asi676mc
@@ -60,6 +61,16 @@ except ImportError:
 
 
 logger = logging.getLogger('indi_allsky')
+
+
+def _dark_fallback_order(current_temperature):
+    return (
+        IndiAllSkyDbDarkFrameTable.gain.asc(),
+        IndiAllSkyDbDarkFrameTable.exposure.asc(),
+        IndiAllSkyDbDarkFrameTable.temp.is_(None).asc(),
+        func.abs(IndiAllSkyDbDarkFrameTable.temp - float(current_temperature)).asc(),
+        IndiAllSkyDbDarkFrameTable.createDate.desc(),
+    )
 
 
 class ImageProcessor(object):
@@ -1378,7 +1389,9 @@ class ImageProcessor(object):
         if not dark_frame_entry:
             #logger.warning('Temperature matched dark not found: %0.2fc', self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
 
-            # pick a dark frame that matches the exposure at the hightest temperature found
+            # Preserve the existing gain/exposure priorities, then use the
+            # closest available temperature when no in-range dark exists.
+            current_temperature = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]
             dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
                 .filter(IndiAllSkyDbDarkFrameTable.camera_id == i_ref.camera_id)\
                 .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
@@ -1386,12 +1399,7 @@ class ImageProcessor(object):
                 .filter(IndiAllSkyDbDarkFrameTable.binmode == i_ref.binning)\
                 .filter(IndiAllSkyDbDarkFrameTable.gain >= i_ref.gain)\
                 .filter(IndiAllSkyDbDarkFrameTable.exposure >= i_ref.exposure)\
-                .order_by(
-                    IndiAllSkyDbDarkFrameTable.gain.asc(),
-                    IndiAllSkyDbDarkFrameTable.exposure.asc(),
-                    IndiAllSkyDbDarkFrameTable.temp.desc(),
-                    IndiAllSkyDbDarkFrameTable.createDate.desc(),
-                )\
+                .order_by(*_dark_fallback_order(current_temperature))\
                 .first()
 
 

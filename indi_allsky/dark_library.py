@@ -128,15 +128,32 @@ class TargetCoverage:
 class DarkCoverageAnalysis:
     plan: DarkPlan
     target_coverages: Tuple[TargetCoverage, ...]
+    structural_target_coverages: Tuple[TargetCoverage, ...]
     suggested_action: str
     suggested_targets: Tuple[DarkTarget, ...]
     completion_targets: Tuple[DarkTarget, ...]
+    structural_completion_targets: Tuple[DarkTarget, ...]
     temperature: Optional[float]
 
     @property
     def counts(self):
         status_counts = Counter(coverage.status for coverage in self.target_coverages)
         return {status: status_counts.get(status, 0) for status in COVERAGE_STATUSES}
+
+    @property
+    def structural_counts(self):
+        status_counts = Counter(
+            coverage.status for coverage in self.structural_target_coverages
+        )
+        return {status: status_counts.get(status, 0) for status in COVERAGE_STATUSES}
+
+    @property
+    def structurally_complete(self):
+        return not self.structural_completion_targets
+
+    @property
+    def temperature_ready(self):
+        return not self.completion_targets
 
     @property
     def estimated_seconds(self):
@@ -253,17 +270,37 @@ def analyze_dark_plan(plan, inventory, temperature=None):
         _coverage_for_target(plan, target, inventory, temperature)
         for target in plan.targets
     )
+    structural_target_coverages = tuple(
+        _coverage_for_target(
+            plan,
+            target,
+            inventory,
+            temperature=None,
+            ignore_temperature=True,
+        )
+        for target in plan.targets
+    )
 
     complete_targets = _build_complete_targets(plan, inventory, temperature, target_coverages)
-    usable_count = sum(
-        1 for coverage in target_coverages
+    structural_complete_targets = _build_complete_targets(
+        plan,
+        inventory,
+        temperature=None,
+        target_coverages=structural_target_coverages,
+        ignore_temperature=True,
+    )
+    structurally_usable_count = sum(
+        1 for coverage in structural_target_coverages
         if coverage.status in (COVERAGE_EXACT, COVERAGE_ACCEPTABLE)
     )
 
     if not complete_targets:
         suggested_action = 'none'
         suggested_targets = ()
-    elif usable_count:
+    elif not structural_complete_targets:
+        suggested_action = 'temperature'
+        suggested_targets = complete_targets
+    elif structurally_usable_count:
         suggested_action = 'complete'
         suggested_targets = complete_targets
     else:
@@ -273,9 +310,11 @@ def analyze_dark_plan(plan, inventory, temperature=None):
     return DarkCoverageAnalysis(
         plan=plan,
         target_coverages=target_coverages,
+        structural_target_coverages=structural_target_coverages,
         suggested_action=suggested_action,
         suggested_targets=tuple(suggested_targets),
         completion_targets=tuple(complete_targets),
+        structural_completion_targets=tuple(structural_complete_targets),
         temperature=_optional_float(temperature),
     )
 
@@ -283,13 +322,27 @@ def analyze_dark_plan(plan, inventory, temperature=None):
 def analysis_context(capture_state, capabilities, analysis):
     action_labels = {
         'none': 'Library covers the recommendation',
+        'temperature': 'Library complete; add a temperature layer',
         'complete': 'Complete the recommended library',
         'rebuild': 'Build the recommended library',
     }
     action_descriptions = {
-        'none': 'No missing gain or exposure coverage was found for the current settings.',
-        'complete': 'Keep compatible existing masters and capture only the remaining gaps.',
-        'rebuild': 'No useful coverage was found for the current settings; capture the complete recommendation.',
+        'none': (
+            'All recommended gain and exposure pairs are present and suitable for the '
+            'configured or current temperature.'
+        ),
+        'temperature': (
+            'The gain and exposure library is complete. Capture another temperature layer '
+            'for better seasonal matching; existing layers remain active.'
+        ),
+        'complete': (
+            'Some recommended gain or exposure pairs are genuinely missing. Keep compatible '
+            'masters and capture the remaining structural and current-temperature gaps.'
+        ),
+        'rebuild': (
+            'No useful gain and exposure coverage was found for the current settings; '
+            'capture the complete recommendation.'
+        ),
     }
 
     gain_values = sorted(set(round(target.gain, 6) for target in analysis.plan.targets))
@@ -303,6 +356,17 @@ def analysis_context(capture_state, capabilities, analysis):
         if target.temperature is not None
     ))
     continuous_gain = any(target.continuous_gain for target in analysis.plan.targets)
+    target_count = len(analysis.plan.targets)
+    structural_missing_count = len(analysis.structural_completion_targets)
+    temperature_addition_count = len(analysis.completion_targets)
+    structural_ready_count = sum(
+        1 for coverage in analysis.structural_target_coverages
+        if coverage.status in (COVERAGE_EXACT, COVERAGE_ACCEPTABLE)
+    )
+    temperature_ready_count = sum(
+        1 for coverage in analysis.target_coverages
+        if coverage.status in (COVERAGE_EXACT, COVERAGE_ACCEPTABLE)
+    )
     if continuous_gain:
         gain_policy_summary = '{0:s} · maximum {1:g} dB gain gap'.format(
             analysis.plan.quality.label,
@@ -326,12 +390,27 @@ def analysis_context(capture_state, capabilities, analysis):
         'exposure_summary': _number_list_summary(analysis.plan.exposures, suffix='s'),
         'binnings': binnings,
         'bit_depths': bit_depths,
-        'target_count': len(analysis.plan.targets),
+        'target_count': target_count,
         'suggested_target_count': len(analysis.suggested_targets),
         'completion_target_count': len(analysis.completion_targets),
+        'structural_missing_target_count': structural_missing_count,
+        'structural_ready_target_count': structural_ready_count,
+        'structurally_complete': analysis.structurally_complete,
+        'structural_status_label': (
+            'Complete' if analysis.structurally_complete else 'Incomplete'
+        ),
+        'temperature_addition_target_count': temperature_addition_count,
+        'temperature_ready_target_count': temperature_ready_count,
+        'temperature_ready': analysis.temperature_ready,
+        'temperature_status_label': (
+            'Covered'
+            if analysis.temperature_ready
+            else 'Additional layer recommended'
+        ),
         'refresh_target_count': len(analysis.plan.targets),
         'rebuild_target_count': len(analysis.plan.targets),
         'counts': analysis.counts,
+        'structural_counts': analysis.structural_counts,
         'suggested_action': analysis.suggested_action,
         'suggested_action_label': action_labels[analysis.suggested_action],
         'suggested_action_description': action_descriptions[analysis.suggested_action],
@@ -465,8 +544,11 @@ def _snap_continuous_gain(gain, capabilities):
     return capabilities.snap_gain(gain)
 
 
-def _coverage_for_target(plan, target, inventory, temperature):
-    target_temperature = target.temperature if target.temperature is not None else temperature
+def _coverage_for_target(plan, target, inventory, temperature, ignore_temperature=False):
+    if ignore_temperature:
+        target_temperature = None
+    else:
+        target_temperature = target.temperature if target.temperature is not None else temperature
     dark_coverage = _coverage_for_frame_type(plan, target, inventory, 'dark', target_temperature)
     bpm_coverage = _coverage_for_frame_type(plan, target, inventory, 'bpm', target_temperature)
     combined_status = _combine_statuses(dark_coverage.status, bpm_coverage.status)
@@ -527,7 +609,13 @@ def _coverage_for_frame_type(plan, target, inventory, frame_type, temperature):
     )
 
 
-def _build_complete_targets(plan, inventory, temperature, target_coverages):
+def _build_complete_targets(
+        plan,
+        inventory,
+        temperature,
+        target_coverages,
+        ignore_temperature=False,
+):
     suggested_targets = []
     continuous_groups = {}
 
@@ -563,9 +651,12 @@ def _build_complete_targets(plan, inventory, temperature, target_coverages):
         template_target = grouped_targets[0]
         gain_min = grouped_targets[0].gain
         gain_max = grouped_targets[-1].gain
-        target_temperature = template_target.temperature
-        if target_temperature is None:
-            target_temperature = temperature
+        if ignore_temperature:
+            target_temperature = None
+        else:
+            target_temperature = template_target.temperature
+            if target_temperature is None:
+                target_temperature = temperature
         existing_gains = _paired_existing_gains(
             plan,
             template_target,

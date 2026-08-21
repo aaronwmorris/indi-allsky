@@ -33,6 +33,8 @@ from ..lens_solver import IndiAllSkyLensSolver
 from ..lens_solver import parseSolverRequestValues
 from ..lens_solver import applySolvedValuesToConfig
 from ..dark_library import DarkInventoryFrame
+from ..dark_library import COVERAGE_ACCEPTABLE
+from ..dark_library import COVERAGE_EXACT
 from ..dark_library import analysis_context
 from ..dark_library import analyze_dark_plan
 from ..dark_library import build_dark_plan
@@ -1124,6 +1126,83 @@ def _build_dark_analysis(
     return capabilities, capture_state, coverage
 
 
+def _dark_library_removal_coverage(camera, config, selection):
+    selected_ids = {
+        ('dark', int(frame_id)) for frame_id in selection.get('dark_ids', ())
+    }
+    selected_ids.update(
+        ('bpm', int(frame_id)) for frame_id in selection.get('bpm_ids', ())
+    )
+    inventory = tuple(_dark_inventory_for_camera(camera.id))
+    remaining_inventory = tuple(
+        frame for frame in inventory
+        if (frame.frame_type, int(frame.frame_id)) not in selected_ids
+    )
+    capabilities = CameraCapabilities.from_camera(camera)
+    capture_state = build_effective_capture_state(config, capabilities)
+    plan = build_dark_plan(capture_state, capabilities, camera.id, quality='balanced')
+    current_temperature = _dark_current_temperature(camera.id, config)
+    before = analyze_dark_plan(plan, inventory, temperature=current_temperature)
+    after = analyze_dark_plan(plan, remaining_inventory, temperature=current_temperature)
+
+    target_count = len(plan.targets)
+    before_structural_missing = len(before.structural_completion_targets)
+    after_structural_missing = len(after.structural_completion_targets)
+    before_temperature_additions = len(before.completion_targets)
+    after_temperature_additions = len(after.completion_targets)
+    after_structural_ready = sum(
+        1 for coverage in after.structural_target_coverages
+        if coverage.status in (COVERAGE_EXACT, COVERAGE_ACCEPTABLE)
+    )
+    temperature_checked = bool(
+        current_temperature is not None
+        or any(target.temperature is not None for target in plan.targets)
+    )
+
+    if after_structural_missing > before_structural_missing:
+        level = 'danger'
+        message = (
+            'This would add {0:d} master set{1:s} to the structural completion plan. '
+            'After removal, {2:d} of {3:d} recommended gain/exposure cells remain ready.'
+        ).format(
+            after_structural_missing - before_structural_missing,
+            '' if after_structural_missing - before_structural_missing == 1 else 's',
+            after_structural_ready,
+            target_count,
+        )
+    elif temperature_checked and after_temperature_additions > before_temperature_additions:
+        level = 'warning'
+        message = (
+            'Gain/exposure completeness remains unchanged, but {0:d} additional master '
+            'set{1:s} would be recommended for the configured or current temperature.'
+        ).format(
+            after_temperature_additions - before_temperature_additions,
+            '' if after_temperature_additions - before_temperature_additions == 1 else 's',
+        )
+    else:
+        level = 'safe'
+        message = (
+            'This selection does not reduce recommended gain/exposure coverage'
+            + (
+                ' or configured/current-temperature readiness.'
+                if temperature_checked
+                else '. Temperature readiness is not currently available to evaluate.'
+            )
+        )
+
+    return {
+        'evaluated': True,
+        'level': level,
+        'message': message,
+        'target_count': target_count,
+        'before_structural_missing': before_structural_missing,
+        'after_structural_missing': after_structural_missing,
+        'before_temperature_additions': before_temperature_additions,
+        'after_temperature_additions': after_temperature_additions,
+        'temperature_checked': temperature_checked,
+    }
+
+
 def _find_active_dark_task(owner=None, camera_id=None):
     state_list = (
         TaskQueueState.MANUAL,
@@ -1424,10 +1503,21 @@ class DarkFramesView(TemplateView):
             camera_id=self.camera.id,
         )
         context['dark_automation_task_id'] = active_task.id if active_task else None
-        context['dark_library_can_flush'] = bool(
-            context['dark_automation_can_run']
-            and (len(d_info_list) + len(b_info_list)) > 0
+        dark_library_catalog = dark_automation.build_library_catalog(
+            IndiAllSkyDbCameraTable.query.all(),
+            IndiAllSkyDbDarkFrameTable.query.all(),
+            IndiAllSkyDbBadPixelMapTable.query.all(),
+            current_camera_id=self.camera.id,
         )
+        maintenance_task = _find_active_dark_task()
+        context['dark_library_catalog'] = dark_library_catalog
+        context['dark_library_task_active'] = maintenance_task is not None
+        context['dark_library_can_manage'] = bool(
+            context['dark_automation_can_run']
+            and dark_library_catalog['entry_count'] > 0
+        )
+        # Retain the old context name for extensions that still inspect it.
+        context['dark_library_can_flush'] = context['dark_library_can_manage']
         context['camera_name'] = str(self.camera.name)
         context['dark_library_entry_count'] = len(d_info_list) + len(b_info_list)
 
@@ -1663,18 +1753,86 @@ class AjaxDarkLibraryFlushView(BaseView):
         except (TypeError, ValueError):
             return jsonify({'error': 'Select a valid camera.'}), 400
         self.cameraSetup(camera_id=camera_id)
+        if getattr(self.camera, 'id', None) != camera_id:
+            return jsonify({'error': 'The selected camera is no longer available.'}), 404
+
+        selection = request_data.get('selection')
+        if request_data.get('scope') == 'all':
+            selection = None
+        try:
+            resolved = dark_automation.select_camera_library_entries(
+                (IndiAllSkyDbDarkFrameTable, IndiAllSkyDbBadPixelMapTable),
+                self.camera.id,
+                selection=selection,
+            )
+        except dark_automation.DarkAutomationError as error:
+            return jsonify({'error': str(error)}), 400
+        entry_count = resolved['dark_frames'] + resolved['bad_pixel_maps']
+        if entry_count < 1:
+            return jsonify({
+                'error': 'The selected dark frames or bad-pixel maps are no longer available.',
+            }), 400
+
+        removal_label = str(request_data.get('label') or 'selected library records').strip()
+        removal_label = removal_label[:160] or 'selected library records'
+        if str(request_data.get('mode') or 'remove') == 'preview':
+            try:
+                page_camera_id = int(request_data.get('page_camera_id'))
+            except (TypeError, ValueError):
+                page_camera_id = -1
+            if page_camera_id == self.camera.id:
+                try:
+                    coverage_impact = _dark_library_removal_coverage(
+                        self.camera,
+                        self.indi_allsky_config,
+                        resolved['selection'],
+                    )
+                except (KeyError, TypeError, ValueError) as error:
+                    app.logger.warning('Unable to preview dark-library coverage impact: %s', error)
+                    coverage_impact = {
+                        'evaluated': False,
+                        'level': 'unknown',
+                        'message': (
+                            'Coverage impact could not be evaluated. Review the selected '
+                            'camera and records carefully.'
+                        ),
+                    }
+            else:
+                coverage_impact = {
+                    'evaluated': False,
+                    'level': 'other_camera',
+                    'message': (
+                        'This is another camera’s library. Its files are isolated from the '
+                        'current camera, so current-camera coverage is unaffected.'
+                    ),
+                }
+            return jsonify({
+                'camera_id': self.camera.id,
+                'camera_name': str(self.camera.name),
+                'label': removal_label,
+                'dark_frames': resolved['dark_frames'],
+                'bad_pixel_maps': resolved['bad_pixel_maps'],
+                'entry_count': entry_count,
+                'size_bytes': resolved['size_bytes'],
+                'size': resolved['size'],
+                'selection': resolved['selection'],
+                'selection_signature': resolved['signature'],
+                'coverage_impact': coverage_impact,
+            })
+
+        preview_signature = str(request_data.get('selection_signature') or '')
+        if selection is not None and preview_signature != resolved['signature']:
+            return jsonify({
+                'error': (
+                    'The selected library records changed after review. Preview the '
+                    'removal again before confirming.'
+                ),
+            }), 409
         confirmation = str(request_data.get('confirmation') or '')
         if confirmation != str(self.camera.name):
             return jsonify({
                 'error': 'Enter the camera name exactly to confirm permanent library removal.',
             }), 400
-
-        entry_count = (
-            IndiAllSkyDbDarkFrameTable.query.filter_by(camera_id=self.camera.id).count()
-            + IndiAllSkyDbBadPixelMapTable.query.filter_by(camera_id=self.camera.id).count()
-        )
-        if entry_count < 1:
-            return jsonify({'error': 'This camera has no dark frames or bad-pixel maps to remove.'}), 400
 
         active_task = _find_active_dark_task()
         if active_task is not None:
@@ -1691,6 +1849,11 @@ class AjaxDarkLibraryFlushView(BaseView):
             'owner': _dark_automation_owner(),
             'camera_id': self.camera.id,
             'camera_uuid': str(getattr(self.camera, 'uuid', '') or ''),
+            'removal_selection': resolved['selection'],
+            'removal_selection_signature': resolved['signature'],
+            'removal_label': removal_label,
+            'removal_entry_count': entry_count,
+            'removal_size_bytes': resolved['size_bytes'],
             'status': 'queued',
             'cancel_requested': False,
             'created_utc': now_text,
@@ -1703,7 +1866,9 @@ class AjaxDarkLibraryFlushView(BaseView):
             'progress': {
                 'phase': 'queued',
                 'message': service_start_warning or (
-                    'Waiting for the capture controller before removing the library.'
+                    'Waiting for the capture controller before removing {0:s}.'.format(
+                        removal_label,
+                    )
                 ),
                 'completed_master_sets': 0,
                 'total_master_sets': 0,

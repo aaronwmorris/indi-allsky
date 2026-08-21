@@ -22,6 +22,7 @@ from indi_allsky.dark_automation import DarkAutomationError
 from indi_allsky.dark_automation import _log_error_summary
 from indi_allsky.dark_automation import _mark_task_capture_restored
 from indi_allsky.dark_automation import activation_changes
+from indi_allsky.dark_automation import build_library_catalog
 from indi_allsky.dark_automation import build_dark_command
 from indi_allsky.dark_automation import build_execution_groups
 from indi_allsky.dark_automation import capture_controller_available
@@ -31,6 +32,7 @@ from indi_allsky.dark_automation import estimate_execution_storage
 from indi_allsky.dark_automation import flush_camera_library
 from indi_allsky.dark_automation import normalize_execution_request
 from indi_allsky.dark_automation import recommended_stacking_method
+from indi_allsky.dark_automation import select_camera_library_entries
 from indi_allsky.dark_automation import task_public_status
 from indi_allsky.dark_automation import temperature_thresholds
 from indi_allsky.dark_automation import validate_execution_profiles
@@ -766,6 +768,34 @@ def test_temperature_direction_matches_runtime_selection():
     assert analysis.target_coverages[0].status == COVERAGE_TEMPERATURE
 
 
+def test_warm_seasonal_library_is_covered_through_five_degree_boundary():
+    config = _config(EXPOSURE_MODE_BASIC, exposure_max=1)
+    config['DAYTIME_CAPTURE'] = False
+    config['CCD_CONFIG']['NIGHT'] = {'GAIN': 100, 'BINNING': 1}
+    config['CCD_CONFIG']['MOONMODE'] = {'GAIN': 100, 'BINNING': 1}
+    capabilities = _capabilities()
+    state = build_effective_capture_state(config, capabilities)
+    plan = build_dark_plan(state, capabilities, camera_id=5)
+    inventory = _inventory_pair(plan.targets[0], temperature=40)
+
+    boundary = analyze_dark_plan(plan, inventory, temperature=35)
+    colder = analyze_dark_plan(plan, inventory, temperature=34.9)
+
+    assert boundary.target_coverages[0].status == COVERAGE_EXACT
+    assert boundary.suggested_action == 'none'
+    assert colder.target_coverages[0].status == COVERAGE_TEMPERATURE
+    assert colder.structurally_complete is True
+    assert colder.temperature_ready is False
+    assert colder.suggested_action == 'temperature'
+    assert colder.completion_targets == plan.targets
+
+    context = analysis_context(state, capabilities, colder)
+    assert context['structural_status_label'] == 'Complete'
+    assert context['structural_missing_target_count'] == 0
+    assert context['temperature_addition_target_count'] == 1
+    assert context['suggested_action_label'] == 'Library complete; add a temperature layer'
+
+
 def test_configured_cooling_target_takes_priority_over_latest_image_temperature():
     config = _config(EXPOSURE_MODE_BASIC, exposure_max=1)
     config['DAYTIME_CAPTURE'] = False
@@ -1367,6 +1397,174 @@ def test_flush_keeps_files_when_database_commit_fails():
         assert session.rolled_back is True
         assert dark_path.read_bytes() == b'dark'
         assert not list(temporary_path.glob('.*.dark-flush-*'))
+
+
+def _catalog_frame(
+        frame_id,
+        camera_id,
+        create_date,
+        active=True,
+        generation_id=None,
+        temperature=20.0,
+        file_size=1024,
+):
+    automation_data = {}
+    if generation_id:
+        automation_data = {
+            'dark_automation': {
+                'generation_id': generation_id,
+                'group_id': 'group-1',
+            },
+        }
+    return SimpleNamespace(
+        id=frame_id,
+        camera_id=camera_id,
+        active=active,
+        bitdepth=16,
+        exposure=30,
+        gain=100.0,
+        binmode=1,
+        temp=temperature,
+        width=3840,
+        height=2160,
+        createDate=create_date,
+        fileSize=file_size,
+        data=automation_data,
+    )
+
+
+def test_library_catalog_groups_cameras_profiles_layers_and_pairs():
+    current_camera = SimpleNamespace(id=1, name='Current camera', friendlyName='Current')
+    old_camera = SimpleNamespace(id=2, name='Old camera', friendlyName=None)
+    recent_date = datetime(2026, 8, 21, 12, 0, 0)
+    old_date = datetime(2025, 1, 1, 12, 0, 0)
+    dark_frames = [
+        _catalog_frame(1, 1, recent_date, generation_id='summer'),
+        _catalog_frame(3, 1, old_date, active=False, temperature=5.0),
+        _catalog_frame(5, 2, old_date, temperature=-10.0),
+    ]
+    bad_pixel_maps = [
+        _catalog_frame(2, 1, recent_date, generation_id='summer'),
+        _catalog_frame(4, 1, old_date, active=False, temperature=5.0),
+        _catalog_frame(6, 2, old_date, temperature=-10.0),
+    ]
+
+    catalog = build_library_catalog(
+        (old_camera, current_camera),
+        dark_frames,
+        bad_pixel_maps,
+        current_camera_id=1,
+    )
+
+    assert catalog['camera_count'] == 2
+    assert catalog['entry_count'] == 6
+    assert catalog['size_bytes'] == 6 * 1024
+    assert [camera['id'] for camera in catalog['cameras']] == [1, 2]
+    current = catalog['cameras'][0]
+    assert current['current'] is True
+    assert current['inactive_selection'] == {'dark_ids': [3], 'bpm_ids': [4]}
+    assert len(current['profiles']) == 1
+    assert len(current['profiles'][0]['layers']) == 2
+    assert all(
+        layer['paired_set_count'] == 1
+        for layer in current['profiles'][0]['layers']
+    )
+
+
+def test_selected_library_entries_never_cross_camera_boundary():
+    dark_entries = [
+        SimpleNamespace(id=1, camera_id=1, fileSize=10),
+        SimpleNamespace(id=2, camera_id=2, fileSize=20),
+    ]
+    bpm_entries = [
+        SimpleNamespace(id=3, camera_id=1, fileSize=30),
+        SimpleNamespace(id=4, camera_id=2, fileSize=40),
+    ]
+    dark_model = _flush_model('IndiAllSkyDbDarkFrameTable', dark_entries)
+    bpm_model = _flush_model('IndiAllSkyDbBadPixelMapTable', bpm_entries)
+
+    selected = select_camera_library_entries(
+        (dark_model, bpm_model),
+        camera_id=1,
+        selection={'dark_ids': [1, 2], 'bpm_ids': [3, 4]},
+    )
+
+    assert selected['dark_frames'] == 1
+    assert selected['bad_pixel_maps'] == 1
+    assert selected['size_bytes'] == 40
+    assert selected['selection'] == {'dark_ids': [1], 'bpm_ids': [3]}
+
+
+def test_flush_removes_only_explicitly_selected_records():
+    with tempfile.TemporaryDirectory(dir=Path(__file__).parent) as temporary_dir:
+        temporary_path = Path(temporary_dir)
+        selected_path = temporary_path.joinpath('selected.fit')
+        retained_path = temporary_path.joinpath('retained.fit')
+        selected_path.write_bytes(b'selected')
+        retained_path.write_bytes(b'retained')
+        selected_entry = SimpleNamespace(
+            id=1,
+            camera_id=1,
+            fileSize=8,
+            getFilesystemPath=lambda: selected_path,
+        )
+        retained_entry = SimpleNamespace(
+            id=2,
+            camera_id=1,
+            fileSize=8,
+            getFilesystemPath=lambda: retained_path,
+        )
+        dark_model = _flush_model(
+            'IndiAllSkyDbDarkFrameTable',
+            [selected_entry, retained_entry],
+        )
+        bpm_model = _flush_model('IndiAllSkyDbBadPixelMapTable', [])
+        session = _FakeSession()
+
+        result = flush_camera_library(
+            SimpleNamespace(session=session),
+            (dark_model, bpm_model),
+            camera_id=1,
+            selection={'dark_ids': [1], 'bpm_ids': []},
+        )
+
+        assert session.deleted == [selected_entry]
+        assert not selected_path.exists()
+        assert retained_path.read_bytes() == b'retained'
+        assert result['dark_frames'] == 1
+        assert result['bad_pixel_maps'] == 0
+
+
+def test_flush_requires_a_fresh_selection_signature():
+    selected_entry = SimpleNamespace(
+        id=1,
+        camera_id=1,
+        filename='original.fit',
+        createDate=datetime(2026, 8, 21, 12, 0, 0),
+        fileSize=8,
+        getFilesystemPath=lambda: Path('original.fit'),
+    )
+    dark_model = _flush_model('IndiAllSkyDbDarkFrameTable', [selected_entry])
+    bpm_model = _flush_model('IndiAllSkyDbBadPixelMapTable', [])
+    selection = {'dark_ids': [1], 'bpm_ids': []}
+    preview = select_camera_library_entries(
+        (dark_model, bpm_model),
+        camera_id=1,
+        selection=selection,
+    )
+    selected_entry.filename = 'replacement.fit'
+    session = _FakeSession()
+
+    with pytest.raises(DarkAutomationError, match='changed after review'):
+        flush_camera_library(
+            SimpleNamespace(session=session),
+            (dark_model, bpm_model),
+            camera_id=1,
+            selection=selection,
+            expected_signature=preview['signature'],
+        )
+
+    assert session.deleted == []
 
 
 def _generation_frame(

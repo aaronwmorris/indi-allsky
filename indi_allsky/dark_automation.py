@@ -607,6 +607,363 @@ def format_bytes(byte_count):
         value /= 1024.0
 
 
+def build_library_catalog(cameras, dark_frames, bad_pixel_maps, current_camera_id=None):
+    """Group calibration files into camera, sensor-profile, and temperature layers."""
+    camera_frames = {}
+    for frame_type, frames in (('dark', dark_frames), ('bpm', bad_pixel_maps)):
+        for frame in frames:
+            camera_frames.setdefault(int(frame.camera_id), []).append((frame_type, frame))
+
+    catalog = []
+    total_bytes = 0
+    total_entries = 0
+    for camera in cameras:
+        typed_frames = camera_frames.get(int(camera.id), [])
+        if not typed_frames:
+            continue
+
+        profiles = {}
+        inactive_selection = {'dark_ids': [], 'bpm_ids': []}
+        camera_selection = {'dark_ids': [], 'bpm_ids': []}
+        camera_bytes = 0
+        camera_latest = None
+        for frame_type, frame in typed_frames:
+            frame_id = int(frame.id)
+            selection_key = '{0:s}_ids'.format(frame_type)
+            camera_selection[selection_key].append(frame_id)
+
+            frame_bytes = _library_frame_bytes(frame)
+            camera_bytes += frame_bytes
+            create_date = getattr(frame, 'createDate', None)
+            if create_date is not None and (
+                    camera_latest is None or create_date > camera_latest
+            ):
+                camera_latest = create_date
+
+            profile_key = (
+                getattr(frame, 'bitdepth', None),
+                int(getattr(frame, 'binmode', 1)),
+                getattr(frame, 'width', None),
+                getattr(frame, 'height', None),
+            )
+            profile = profiles.setdefault(profile_key, {
+                'entries': [],
+                'layers': {},
+                'selection': {'dark_ids': [], 'bpm_ids': []},
+                'size_bytes': 0,
+            })
+            profile['entries'].append((frame_type, frame))
+            profile['selection'][selection_key].append(frame_id)
+            profile['size_bytes'] += frame_bytes
+
+            automation_data = _frame_automation_data(frame)
+            generation_id = str(automation_data.get('generation_id') or '')
+            if generation_id:
+                layer_key = ('generation', generation_id)
+            else:
+                layer_key = ('temperature', _library_temperature_bucket(frame.temp))
+            layer = profile['layers'].setdefault(layer_key, {
+                'entries': [],
+                'master_sets': {},
+                'selection': {'dark_ids': [], 'bpm_ids': []},
+                'size_bytes': 0,
+                'temperatures': [],
+                'latest_date': None,
+                'automation': bool(generation_id),
+            })
+            layer['entries'].append((frame_type, frame))
+            layer['selection'][selection_key].append(frame_id)
+            layer['size_bytes'] += frame_bytes
+            if frame.temp is not None:
+                layer['temperatures'].append(float(frame.temp))
+            if create_date is not None and (
+                    layer['latest_date'] is None or create_date > layer['latest_date']
+            ):
+                layer['latest_date'] = create_date
+
+            master_key = _library_master_key(frame, automation_data)
+            master = layer['master_sets'].setdefault(master_key, {
+                'entries': [],
+                'selection': {'dark_ids': [], 'bpm_ids': []},
+                'size_bytes': 0,
+                'gain': float(frame.gain),
+                'exposure': float(frame.exposure),
+                'temperature': frame.temp,
+                'active': False,
+                'latest_date': None,
+            })
+            master['entries'].append((frame_type, frame))
+            master['selection'][selection_key].append(frame_id)
+            master['size_bytes'] += frame_bytes
+            master['active'] = master['active'] or bool(frame.active)
+            if create_date is not None and (
+                    master['latest_date'] is None or create_date > master['latest_date']
+            ):
+                master['latest_date'] = create_date
+
+        context_profiles = []
+        for profile_key, profile in profiles.items():
+            bit_depth, binning, width, height = profile_key
+            context_layers = []
+            for layer in profile['layers'].values():
+                master_sets = []
+                for master in layer['master_sets'].values():
+                    dark_count = len(master['selection']['dark_ids'])
+                    bpm_count = len(master['selection']['bpm_ids'])
+                    master_sets.append({
+                        'gain': master['gain'],
+                        'exposure': master['exposure'],
+                        'temperature': master['temperature'],
+                        'active': master['active'],
+                        'paired': dark_count > 0 and bpm_count > 0,
+                        'dark_count': dark_count,
+                        'bpm_count': bpm_count,
+                        'entry_count': dark_count + bpm_count,
+                        'size_bytes': master['size_bytes'],
+                        'size': format_bytes(master['size_bytes']),
+                        'latest_date': master['latest_date'],
+                        'selection': _sorted_library_selection(master['selection']),
+                    })
+                master_sets.sort(key=lambda item: (
+                    item['gain'],
+                    item['exposure'],
+                    float('inf') if item['temperature'] is None else item['temperature'],
+                ))
+                for master in master_sets:
+                    if master['active']:
+                        continue
+                    inactive_selection['dark_ids'].extend(
+                        master['selection']['dark_ids']
+                    )
+                    inactive_selection['bpm_ids'].extend(
+                        master['selection']['bpm_ids']
+                    )
+                temperatures = layer['temperatures']
+                context_layers.append({
+                    'temperature_label': _library_temperature_label(temperatures),
+                    'automation': layer['automation'],
+                    'active_count': sum(
+                        1 for _frame_type, frame in layer['entries'] if bool(frame.active)
+                    ),
+                    'entry_count': len(layer['entries']),
+                    'master_set_count': len(master_sets),
+                    'paired_set_count': sum(1 for item in master_sets if item['paired']),
+                    'size_bytes': layer['size_bytes'],
+                    'size': format_bytes(layer['size_bytes']),
+                    'latest_date': layer['latest_date'],
+                    'selection': _sorted_library_selection(layer['selection']),
+                    'master_sets': master_sets,
+                })
+            context_layers.sort(key=lambda item: (
+                -_library_datetime_timestamp(item['latest_date']),
+                item['temperature_label'],
+            ))
+            context_profiles.append({
+                'bit_depth': bit_depth,
+                'binning': binning,
+                'width': width,
+                'height': height,
+                'entry_count': len(profile['entries']),
+                'size_bytes': profile['size_bytes'],
+                'size': format_bytes(profile['size_bytes']),
+                'selection': _sorted_library_selection(profile['selection']),
+                'layers': context_layers,
+            })
+        context_profiles.sort(key=lambda item: (
+            item['binning'],
+            -int(item['bit_depth'] or 0),
+            -(item['width'] or 0),
+            -(item['height'] or 0),
+        ))
+
+        inactive_selection = _sorted_library_selection(inactive_selection)
+        camera_selection = _sorted_library_selection(camera_selection)
+        total_bytes += camera_bytes
+        total_entries += len(typed_frames)
+        catalog.append({
+            'id': int(camera.id),
+            'name': str(camera.name),
+            'friendly_name': str(getattr(camera, 'friendlyName', None) or camera.name),
+            'current': int(camera.id) == int(current_camera_id or -1),
+            'entry_count': len(typed_frames),
+            'dark_count': len(camera_selection['dark_ids']),
+            'bpm_count': len(camera_selection['bpm_ids']),
+            'active_count': sum(1 for _frame_type, frame in typed_frames if bool(frame.active)),
+            'inactive_count': (
+                len(inactive_selection['dark_ids']) + len(inactive_selection['bpm_ids'])
+            ),
+            'size_bytes': camera_bytes,
+            'size': format_bytes(camera_bytes),
+            'latest_date': camera_latest,
+            'selection': camera_selection,
+            'inactive_selection': inactive_selection,
+            'profiles': context_profiles,
+        })
+
+    catalog.sort(key=lambda item: (
+        not item['current'],
+        -_library_datetime_timestamp(item['latest_date']),
+        item['name'].lower(),
+    ))
+    return {
+        'cameras': catalog,
+        'camera_count': len(catalog),
+        'entry_count': total_entries,
+        'size_bytes': total_bytes,
+        'size': format_bytes(total_bytes),
+    }
+
+
+def select_camera_library_entries(models, camera_id, selection=None):
+    """Resolve an explicit selection without ever crossing camera boundaries."""
+    camera_id = int(camera_id)
+    requested = None
+    if selection is not None:
+        if not isinstance(selection, dict):
+            raise DarkAutomationError('The selected library records are invalid')
+        requested = {}
+        for key in ('dark_ids', 'bpm_ids'):
+            values = selection.get(key, ())
+            if not isinstance(values, (list, tuple)):
+                raise DarkAutomationError('The selected library records are invalid')
+            try:
+                requested[key] = {int(value) for value in values if int(value) > 0}
+            except (TypeError, ValueError):
+                raise DarkAutomationError('The selected library records are invalid')
+            if len(requested[key]) > 100000:
+                raise DarkAutomationError('The selected library contains too many records')
+
+    entries = []
+    identities = []
+    counts = {'dark_frames': 0, 'bad_pixel_maps': 0}
+    resolved_selection = {'dark_ids': [], 'bpm_ids': []}
+    for model in models:
+        model_entries = model.query.filter(model.camera_id == camera_id).all()
+        model_entries = [
+            entry for entry in model_entries
+            if int(getattr(entry, 'camera_id', camera_id)) == camera_id
+        ]
+        is_dark = 'DarkFrame' in model.__name__
+        selection_key = 'dark_ids' if is_dark else 'bpm_ids'
+        if requested is not None:
+            model_entries = [
+                entry for entry in model_entries
+                if int(getattr(entry, 'id', 0)) in requested[selection_key]
+            ]
+        entries.extend(model_entries)
+        identities.extend(
+            _library_entry_identity(entry, selection_key) for entry in model_entries
+        )
+        resolved_selection[selection_key].extend(
+            int(entry.id) for entry in model_entries if getattr(entry, 'id', None) is not None
+        )
+        count_key = 'dark_frames' if is_dark else 'bad_pixel_maps'
+        counts[count_key] += len(model_entries)
+
+    counts['entries'] = entries
+    counts['selection'] = _sorted_library_selection(resolved_selection)
+    counts['size_bytes'] = sum(_library_frame_bytes(entry) for entry in entries)
+    counts['size'] = format_bytes(counts['size_bytes'])
+    counts['signature'] = hashlib.sha256(
+        json.dumps(
+            sorted(identities, key=lambda item: (item['type'], item['id'])),
+            sort_keys=True,
+            separators=(',', ':'),
+        ).encode('utf-8')
+    ).hexdigest()
+    return counts
+
+
+def _library_frame_bytes(frame):
+    try:
+        file_path = Path(frame.getFilesystemPath())
+    except (AttributeError, TypeError, ValueError):
+        file_path = None
+    if file_path is not None:
+        try:
+            if not file_path.is_file():
+                return 0
+            return max(0, int(file_path.stat().st_size))
+        except OSError:
+            return 0
+
+    try:
+        stored_size = int(getattr(frame, 'fileSize', None) or 0)
+    except (TypeError, ValueError):
+        stored_size = 0
+    return max(0, stored_size)
+
+
+def _library_temperature_bucket(temperature):
+    if temperature is None:
+        return None
+    return int(math.floor((float(temperature) + 2.5) / 5.0)) * 5
+
+
+def _library_temperature_label(temperatures):
+    if not temperatures:
+        return 'Temperature not recorded'
+    minimum = min(temperatures)
+    maximum = max(temperatures)
+    if abs(maximum - minimum) <= 0.05:
+        return '{0:0.1f}°C'.format(minimum)
+    return '{0:0.1f} to {1:0.1f}°C'.format(minimum, maximum)
+
+
+def _library_master_key(frame, automation_data):
+    generation_id = str(automation_data.get('generation_id') or '')
+    common = (
+        getattr(frame, 'bitdepth', None),
+        int(getattr(frame, 'binmode', 1)),
+        getattr(frame, 'width', None),
+        getattr(frame, 'height', None),
+        round(float(frame.gain), 6),
+        round(float(frame.exposure), 6),
+    )
+    if generation_id:
+        return ('automation', generation_id) + common
+    create_date = getattr(frame, 'createDate', None)
+    create_key = create_date.isoformat() if create_date is not None else ''
+    temperature = getattr(frame, 'temp', None)
+    temperature_key = None if temperature is None else round(float(temperature), 3)
+    return ('legacy', create_key, temperature_key) + common
+
+
+def _sorted_library_selection(selection):
+    return {
+        'dark_ids': sorted(set(int(value) for value in selection.get('dark_ids', ()))),
+        'bpm_ids': sorted(set(int(value) for value in selection.get('bpm_ids', ()))),
+    }
+
+
+def _library_datetime_timestamp(value):
+    if value is None:
+        return 0.0
+    try:
+        return float(value.timestamp())
+    except (AttributeError, OSError, OverflowError, ValueError):
+        return 0.0
+
+
+def _library_entry_identity(entry, selection_key):
+    create_date = getattr(entry, 'createDate', None)
+    return {
+        'type': selection_key,
+        'id': int(getattr(entry, 'id', 0)),
+        'camera_id': int(getattr(entry, 'camera_id', 0)),
+        'filename': str(getattr(entry, 'filename', '') or ''),
+        'create_date': create_date.isoformat() if create_date is not None else '',
+        'active': bool(getattr(entry, 'active', False)),
+        'bit_depth': getattr(entry, 'bitdepth', None),
+        'gain': float(getattr(entry, 'gain', 0.0)),
+        'exposure': float(getattr(entry, 'exposure', 0.0)),
+        'binning': int(getattr(entry, 'binmode', 1)),
+        'temperature': getattr(entry, 'temp', None),
+        'width': getattr(entry, 'width', None),
+        'height': getattr(entry, 'height', None),
+    }
+
+
 def task_public_status(task):
     data = dict(task.data or {})
     progress = dict(data.get('progress') or {})
@@ -665,6 +1022,9 @@ def task_public_status(task):
         'quality': data.get('quality'),
         'method': data.get('method'),
         'operation': data.get('operation', 'capture'),
+        'removal_label': data.get('removal_label'),
+        'removal_entry_count': data.get('removal_entry_count'),
+        'removal_size_bytes': data.get('removal_size_bytes'),
         'capture_mode': data.get('capture_mode', CAPTURE_MODE_SINGLE),
         'frame_count': data.get('frame_count'),
         'target_count': total,
@@ -758,6 +1118,9 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                 raise DarkAutomationCancelled('Dark calibration was cancelled before capture started')
 
             if task_data.get('operation') == 'flush':
+                removal_label = str(
+                    task_data.get('removal_label') or 'selected dark-library records'
+                )
                 update_data(
                     changes={
                         'status': 'running',
@@ -766,7 +1129,9 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                     },
                     progress={
                         'phase': 'removing_library',
-                        'message': 'Normal capture is paused; removing this camera’s dark library.',
+                        'message': 'Normal capture is paused; removing {0:s}.'.format(
+                            removal_label,
+                        ),
                     },
                     state=TaskQueueState.RUNNING,
                 )
@@ -774,6 +1139,8 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                     db,
                     (IndiAllSkyDbDarkFrameTable, IndiAllSkyDbBadPixelMapTable),
                     int(task_data['camera_id']),
+                    selection=task_data.get('removal_selection'),
+                    expected_signature=task_data.get('removal_selection_signature'),
                 )
                 update_data(
                     changes={
@@ -787,10 +1154,10 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                     },
                     progress={
                         'phase': 'restoring_capture',
-                        'message': 'Dark library removed; restarting normal capture.',
+                        'message': 'Selected library records removed; restarting normal capture.',
                     },
                     state=TaskQueueState.SUCCESS,
-                    result='Dark library removed',
+                    result='Selected dark-library records removed',
                 )
                 return 'success'
 
@@ -1155,6 +1522,8 @@ def run_task(app, task_id, repository_root, stop_requested=None):
         return 'cancelled'
     except DarkAutomationReviewRequired as error:
         with app.app_context():
+            _review_task, review_data = load_task()
+            removal_review = review_data.get('operation') == 'flush'
             update_data(
                 changes={
                     'status': 'review_required',
@@ -1164,10 +1533,18 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                 },
                 progress={
                     'phase': 'restoring_capture',
-                    'message': 'The camera changed; restarting normal capture before you review the plan.',
+                    'message': (
+                        'The selected library records changed; restarting normal capture '
+                        'before you review the removal again.'
+                        if removal_review else
+                        'The camera changed; restarting normal capture before you review the plan.'
+                    ),
                 },
                 state=TaskQueueState.EXPIRED,
-                result='Dark calibration plan requires review',
+                result=(
+                    'Dark-library removal requires review'
+                    if removal_review else 'Dark calibration plan requires review'
+                ),
             )
         return 'review_required'
     except Exception as error:
@@ -1245,7 +1622,9 @@ def _mark_task_capture_restored(task):
         restore_phrase = 'normal capture has resumed'
     if data.get('status') == 'success':
         if data.get('operation') == 'flush':
-            progress['message'] = 'Dark library removed; {0:s}.'.format(restore_phrase)
+            progress['message'] = 'Selected library records removed; {0:s}.'.format(
+                restore_phrase,
+            )
         elif (
                 data.get('capture_mode') == CAPTURE_MODE_TEMPERATURE_SERIES
                 and data.get('temperature_target') is not None
@@ -1265,11 +1644,18 @@ def _mark_task_capture_restored(task):
         else:
             progress['message'] = 'Dark calibration cancelled; {0:s}.'.format(restore_phrase)
     elif data.get('status') == 'review_required':
-        progress['message'] = (
-            '{0:s}. Review the revised camera plan before retrying.'.format(
-                restore_phrase.capitalize(),
+        if data.get('operation') == 'flush':
+            progress['message'] = (
+                '{0:s}. Preview the library removal again before retrying.'.format(
+                    restore_phrase.capitalize(),
+                )
             )
-        )
+        else:
+            progress['message'] = (
+                '{0:s}. Review the revised camera plan before retrying.'.format(
+                    restore_phrase.capitalize(),
+                )
+            )
     else:
         progress['message'] = '{0:s} after the calibration error.'.format(
             restore_phrase.capitalize(),
@@ -1279,22 +1665,30 @@ def _mark_task_capture_restored(task):
     task.data = data
 
 
-def flush_camera_library(db, models, camera_id):
+def flush_camera_library(
+        db,
+        models,
+        camera_id,
+        selection=None,
+        expected_signature=None,
+):
     """Remove one camera's dark/BPM rows before unlinking their files.
 
     Committing the database first avoids leaving live calibration rows pointing
     at missing files after a transaction failure or process interruption.  A
     later file error can only leave an unused orphan, which is reported.
     """
-    entries = []
-    counts = {'dark_frames': 0, 'bad_pixel_maps': 0}
-    for model in models:
-        model_entries = model.query.filter(model.camera_id == int(camera_id)).all()
-        entries.extend(model_entries)
-        if 'DarkFrame' in model.__name__:
-            counts['dark_frames'] += len(model_entries)
-        else:
-            counts['bad_pixel_maps'] += len(model_entries)
+    resolved = select_camera_library_entries(models, camera_id, selection=selection)
+    if expected_signature is not None and resolved['signature'] != str(expected_signature):
+        raise DarkAutomationReviewRequired(
+            'The selected library records changed after review. Preview the removal again.'
+        )
+    entries = resolved.pop('entries')
+    resolved.pop('selection')
+    resolved.pop('size_bytes')
+    resolved.pop('size')
+    resolved.pop('signature')
+    counts = resolved
 
     file_paths = []
     seen_paths = set()
