@@ -1538,11 +1538,13 @@ class _FakeColumn:
 class _FakeQuery:
     def __init__(self, entries):
         self.entries = entries
+        self.all_calls = 0
 
     def filter(self, _condition):
         return self
 
     def all(self):
+        self.all_calls += 1
         return list(self.entries)
 
 
@@ -1928,6 +1930,8 @@ def test_master_set_selection_expands_to_matching_dark_and_map_only():
     )
 
     assert selected['selection'] == {'dark_ids': [1], 'bpm_ids': [101]}
+    assert dark_model.query.all_calls == 1
+    assert bpm_model.query.all_calls == 1
 
 
 def test_manual_eligibility_changes_are_reversible_and_recorded():

@@ -985,7 +985,12 @@ def build_library_partner_index(dark_frames, bad_pixel_maps):
     return partner_index
 
 
-def select_camera_library_entries(models, camera_id, selection=None):
+def select_camera_library_entries(
+        models,
+        camera_id,
+        selection=None,
+        expand_master_sets=False,
+):
     """Resolve an explicit selection without ever crossing camera boundaries."""
     camera_id = int(camera_id)
     requested = None
@@ -1004,10 +1009,7 @@ def select_camera_library_entries(models, camera_id, selection=None):
             if len(requested[key]) > 100000:
                 raise DarkAutomationError('The selected library contains too many records')
 
-    entries = []
-    identities = []
-    counts = {'dark_frames': 0, 'bad_pixel_maps': 0}
-    resolved_selection = {'dark_ids': [], 'bpm_ids': []}
+    model_entries_by_type = []
     for model in models:
         model_entries = model.query.filter(model.camera_id == camera_id).all()
         model_entries = [
@@ -1016,11 +1018,38 @@ def select_camera_library_entries(models, camera_id, selection=None):
         ]
         is_dark = 'DarkFrame' in model.__name__
         selection_key = 'dark_ids' if is_dark else 'bpm_ids'
-        if requested is not None:
-            model_entries = [
-                entry for entry in model_entries
+        count_key = 'dark_frames' if is_dark else 'bad_pixel_maps'
+        model_entries_by_type.append((selection_key, count_key, model_entries))
+
+    selected_master_keys = None
+    if expand_master_sets and requested is not None:
+        selected_master_keys = set()
+        for selection_key, _count_key, model_entries in model_entries_by_type:
+            selected_master_keys.update(
+                _library_master_key(entry, _frame_automation_data(entry))
+                for entry in model_entries
                 if int(getattr(entry, 'id', 0)) in requested[selection_key]
-            ]
+            )
+
+    entries = []
+    identities = []
+    counts = {'dark_frames': 0, 'bad_pixel_maps': 0}
+    resolved_selection = {'dark_ids': [], 'bpm_ids': []}
+    for selection_key, count_key, model_entries in model_entries_by_type:
+        if requested is not None:
+            if selected_master_keys is None:
+                model_entries = [
+                    entry for entry in model_entries
+                    if int(getattr(entry, 'id', 0)) in requested[selection_key]
+                ]
+            else:
+                model_entries = [
+                    entry for entry in model_entries
+                    if _library_master_key(
+                        entry,
+                        _frame_automation_data(entry),
+                    ) in selected_master_keys
+                ]
         entries.extend(model_entries)
         identities.extend(
             _library_entry_identity(entry, selection_key) for entry in model_entries
@@ -1028,7 +1057,6 @@ def select_camera_library_entries(models, camera_id, selection=None):
         resolved_selection[selection_key].extend(
             int(entry.id) for entry in model_entries if getattr(entry, 'id', None) is not None
         )
-        count_key = 'dark_frames' if is_dark else 'bad_pixel_maps'
         counts[count_key] += len(model_entries)
 
     counts['entries'] = entries
@@ -1047,27 +1075,12 @@ def select_camera_library_entries(models, camera_id, selection=None):
 
 def select_camera_master_sets(models, camera_id, selection):
     """Expand any selected file to its complete camera-scoped master set."""
-    selected = select_camera_library_entries(models, camera_id, selection=selection)
-    if not selected['entries']:
-        return selected
-
-    selected_keys = {
-        _library_master_key(frame, _frame_automation_data(frame))
-        for frame in selected['entries']
-    }
-    expanded = {'dark_ids': [], 'bpm_ids': []}
-    camera_id = int(camera_id)
-    for model in models:
-        is_dark = 'DarkFrame' in model.__name__
-        selection_key = 'dark_ids' if is_dark else 'bpm_ids'
-        camera_frames = model.query.filter(model.camera_id == camera_id).all()
-        for frame in camera_frames:
-            if int(getattr(frame, 'camera_id', camera_id)) != camera_id:
-                continue
-            master_key = _library_master_key(frame, _frame_automation_data(frame))
-            if master_key in selected_keys:
-                expanded[selection_key].append(int(frame.id))
-    return select_camera_library_entries(models, camera_id, selection=expanded)
+    return select_camera_library_entries(
+        models,
+        camera_id,
+        selection=selection,
+        expand_master_sets=True,
+    )
 
 
 def library_entry_eligibility(frame):

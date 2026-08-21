@@ -517,6 +517,9 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert 'background-color: color-mix(in oklab, var(--color-warning) 12%, var(--color-base-100));' in html
     assert 'id="dark-removal-confirmation-input" class="tw:input tw:input-bordered tw:input-error' in html
     assert 'function updateDarkMarkedSelection(cameraId)' in html
+    assert 'const hasStagedSelection' in html
+    assert 'const canRestore = !hasStagedSelection' in html
+    assert 'function renderDarkCoverageImpact(selector, impact, fallbackMessage)' in html
     assert 'const darkIds = new Set();' in html
     assert 'const bpmIds = new Set();' in html
     assert "if (darkLibraryCanManage) {" in html

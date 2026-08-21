@@ -1165,18 +1165,17 @@ def _build_dark_analysis(
     return capabilities, capture_state, coverage
 
 
-def _dark_library_removal_coverage(camera, config, selection):
+def _dark_library_selection_ids(selection):
     selected_ids = {
         ('dark', int(frame_id)) for frame_id in selection.get('dark_ids', ())
     }
     selected_ids.update(
         ('bpm', int(frame_id)) for frame_id in selection.get('bpm_ids', ())
     )
-    inventory = tuple(_dark_inventory_for_camera(camera.id))
-    remaining_inventory = tuple(
-        frame for frame in inventory
-        if (frame.frame_type, int(frame.frame_id)) not in selected_ids
-    )
+    return selected_ids
+
+
+def _dark_library_coverage_comparison(camera, config, before_inventory, after_inventory):
     capabilities = CameraCapabilities.from_camera(camera)
     capture_state = build_effective_capture_state(config, capabilities)
     temperature_preferences = camera_temperature_preferences(camera)
@@ -1188,22 +1187,43 @@ def _dark_library_removal_coverage(camera, config, selection):
         temperature_range=temperature_preferences['temperature_range'],
     )
     current_temperature = _dark_current_temperature(camera.id, config)
-    before = analyze_dark_plan(plan, inventory, temperature=current_temperature)
-    after = analyze_dark_plan(plan, remaining_inventory, temperature=current_temperature)
+    before = analyze_dark_plan(plan, before_inventory, temperature=current_temperature)
+    after = analyze_dark_plan(plan, after_inventory, temperature=current_temperature)
+    return {
+        'target_count': len(plan.targets),
+        'before_structural_missing': len(before.structural_completion_targets),
+        'after_structural_missing': len(after.structural_completion_targets),
+        'before_temperature_additions': len(before.completion_targets),
+        'after_temperature_additions': len(after.completion_targets),
+        'after_structural_ready': sum(
+            1 for coverage in after.structural_target_coverages
+            if coverage.status in (COVERAGE_EXACT, COVERAGE_ACCEPTABLE)
+        ),
+        'temperature_checked': bool(
+            current_temperature is not None
+            or any(target.temperature is not None for target in plan.targets)
+        ),
+    }
 
-    target_count = len(plan.targets)
-    before_structural_missing = len(before.structural_completion_targets)
-    after_structural_missing = len(after.structural_completion_targets)
-    before_temperature_additions = len(before.completion_targets)
-    after_temperature_additions = len(after.completion_targets)
-    after_structural_ready = sum(
-        1 for coverage in after.structural_target_coverages
-        if coverage.status in (COVERAGE_EXACT, COVERAGE_ACCEPTABLE)
+
+def _dark_library_removal_coverage(camera, config, selection):
+    selected_ids = _dark_library_selection_ids(selection)
+    inventory = tuple(_dark_inventory_for_camera(camera.id))
+    remaining_inventory = tuple(
+        frame for frame in inventory
+        if (frame.frame_type, int(frame.frame_id)) not in selected_ids
     )
-    temperature_checked = bool(
-        current_temperature is not None
-        or any(target.temperature is not None for target in plan.targets)
+    comparison = _dark_library_coverage_comparison(
+        camera,
+        config,
+        inventory,
+        remaining_inventory,
     )
+    before_structural_missing = comparison['before_structural_missing']
+    after_structural_missing = comparison['after_structural_missing']
+    before_temperature_additions = comparison['before_temperature_additions']
+    after_temperature_additions = comparison['after_temperature_additions']
+    temperature_checked = comparison['temperature_checked']
 
     if after_structural_missing > before_structural_missing:
         level = 'danger'
@@ -1213,8 +1233,8 @@ def _dark_library_removal_coverage(camera, config, selection):
         ).format(
             after_structural_missing - before_structural_missing,
             '' if after_structural_missing - before_structural_missing == 1 else 's',
-            after_structural_ready,
-            target_count,
+            comparison['after_structural_ready'],
+            comparison['target_count'],
         )
     elif temperature_checked and after_temperature_additions > before_temperature_additions:
         level = 'warning'
@@ -1240,7 +1260,7 @@ def _dark_library_removal_coverage(camera, config, selection):
         'evaluated': True,
         'level': level,
         'message': message,
-        'target_count': target_count,
+        'target_count': comparison['target_count'],
         'before_structural_missing': before_structural_missing,
         'after_structural_missing': after_structural_missing,
         'before_temperature_additions': before_temperature_additions,
@@ -1250,40 +1270,24 @@ def _dark_library_removal_coverage(camera, config, selection):
 
 
 def _dark_library_eligibility_coverage(camera, config, selection, active):
-    selected_ids = {
-        ('dark', int(frame_id)) for frame_id in selection.get('dark_ids', ())
-    }
-    selected_ids.update(
-        ('bpm', int(frame_id)) for frame_id in selection.get('bpm_ids', ())
-    )
+    selected_ids = _dark_library_selection_ids(selection)
     inventory = tuple(_dark_inventory_for_camera(camera.id))
     revised_inventory = tuple(
         replace(frame, active=bool(active))
         if (frame.frame_type, int(frame.frame_id)) in selected_ids else frame
         for frame in inventory
     )
-    capabilities = CameraCapabilities.from_camera(camera)
-    capture_state = build_effective_capture_state(config, capabilities)
-    temperature_preferences = camera_temperature_preferences(camera)
-    plan = build_dark_plan(
-        capture_state,
-        capabilities,
-        camera.id,
-        quality='balanced',
-        temperature_range=temperature_preferences['temperature_range'],
+    comparison = _dark_library_coverage_comparison(
+        camera,
+        config,
+        inventory,
+        revised_inventory,
     )
-    current_temperature = _dark_current_temperature(camera.id, config)
-    before = analyze_dark_plan(plan, inventory, temperature=current_temperature)
-    after = analyze_dark_plan(plan, revised_inventory, temperature=current_temperature)
-
-    before_structural_missing = len(before.structural_completion_targets)
-    after_structural_missing = len(after.structural_completion_targets)
-    before_temperature_additions = len(before.completion_targets)
-    after_temperature_additions = len(after.completion_targets)
-    temperature_checked = bool(
-        current_temperature is not None
-        or any(target.temperature is not None for target in plan.targets)
-    )
+    before_structural_missing = comparison['before_structural_missing']
+    after_structural_missing = comparison['after_structural_missing']
+    before_temperature_additions = comparison['before_temperature_additions']
+    after_temperature_additions = comparison['after_temperature_additions']
+    temperature_checked = comparison['temperature_checked']
     structural_change = after_structural_missing - before_structural_missing
     temperature_change = after_temperature_additions - before_temperature_additions
 
@@ -1327,7 +1331,7 @@ def _dark_library_eligibility_coverage(camera, config, selection, active):
         'evaluated': True,
         'level': level,
         'message': message,
-        'target_count': len(plan.targets),
+        'target_count': comparison['target_count'],
         'before_structural_missing': before_structural_missing,
         'after_structural_missing': after_structural_missing,
         'before_temperature_additions': before_temperature_additions,
@@ -2281,7 +2285,6 @@ class AjaxDarkLibraryEligibilityView(BaseView):
                         'This is another camera’s library. Current-camera coverage is unaffected.'
                     ),
                 }
-            changed_ids = {id(frame) for frame in changing_entries}
             return jsonify({
                 'camera_id': self.camera.id,
                 'camera_name': str(self.camera.name),
@@ -2293,7 +2296,7 @@ class AjaxDarkLibraryEligibilityView(BaseView):
                 'bad_pixel_maps': sum(
                     1 for frame in changing_entries if 'BadPixelMap' in type(frame).__name__
                 ),
-                'entry_count': len(changed_ids),
+                'entry_count': len(changing_entries),
                 'selection': resolved['selection'],
                 'selection_signature': resolved['signature'],
                 'coverage_impact': coverage_impact,

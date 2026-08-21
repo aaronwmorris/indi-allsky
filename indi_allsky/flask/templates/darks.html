@@ -2401,10 +2401,12 @@ function updateDarkMarkedSelection(cameraId) {
         const status = $(this).attr('data-status');
         return status === 'active' || status === 'mixed';
     }).length > 0;
-    const canRestore = selected.filter(function() {
+    const hasStagedSelection = selected.filter(function() {
+        return $(this).attr('data-staged') === 'true';
+    }).length > 0;
+    const canRestore = !hasStagedSelection && selected.filter(function() {
         const status = $(this).attr('data-status');
-        return $(this).attr('data-staged') !== 'true'
-            && (status === 'inactive' || status === 'mixed');
+        return status === 'inactive' || status === 'mixed';
     }).length > 0;
 
     checkboxes.each(function() {
@@ -2439,6 +2441,17 @@ function hideDarkEligibilityConfirmation() {
     showDarkActionError('');
 }
 
+function renderDarkCoverageImpact(selector, impact, fallbackMessage) {
+    $(selector)
+        .removeClass('tw:alert-success tw:alert-warning tw:alert-error tw:alert-info')
+        .addClass(
+            impact.level === 'danger' ? 'tw:alert-error'
+                : (impact.level === 'warning' ? 'tw:alert-warning'
+                    : (impact.level === 'safe' ? 'tw:alert-success' : 'tw:alert-info'))
+        )
+        .text(impact.message || fallbackMessage);
+}
+
 async function previewDarkEligibility(button) {
     if (!darkLibraryCanManage || activeDarkTaskId || button.prop('disabled')) return;
     showDarkActionError('');
@@ -2467,14 +2480,11 @@ async function previewDarkEligibility(button) {
             + (preview.bad_pixel_maps === 1 ? '' : 's') + ' will change'
         );
         const impact = preview.coverage_impact || {};
-        $('#dark-eligibility-coverage-impact')
-            .removeClass('tw:alert-success tw:alert-warning tw:alert-error tw:alert-info')
-            .addClass(
-                impact.level === 'danger' ? 'tw:alert-error'
-                    : (impact.level === 'warning' ? 'tw:alert-warning'
-                        : (impact.level === 'safe' ? 'tw:alert-success' : 'tw:alert-info'))
-            )
-            .text(impact.message || 'Review the selected master sets carefully.');
+        renderDarkCoverageImpact(
+            '#dark-eligibility-coverage-impact',
+            impact,
+            'Review the selected master sets carefully.'
+        );
         $('#dark-eligibility-confirm')
             .removeClass('tw:btn-warning tw:btn-success')
             .addClass(preview.active ? 'tw:btn-success' : 'tw:btn-warning')
@@ -2541,14 +2551,11 @@ async function previewDarkRemoval(button) {
         );
         $('#dark-removal-camera-name').text(preview.camera_name);
         const impact = preview.coverage_impact || {};
-        $('#dark-removal-coverage-impact')
-            .removeClass('tw:alert-success tw:alert-warning tw:alert-error tw:alert-info')
-            .addClass(
-                impact.level === 'danger' ? 'tw:alert-error'
-                    : (impact.level === 'warning' ? 'tw:alert-warning'
-                        : (impact.level === 'safe' ? 'tw:alert-success' : 'tw:alert-info'))
-            )
-            .text(impact.message || 'Review the selected records carefully.');
+        renderDarkCoverageImpact(
+            '#dark-removal-coverage-impact',
+            impact,
+            'Review the selected records carefully.'
+        );
         $('#dark-removal-confirmation').removeClass('tw:hidden');
         $('#dark-removal-confirmation-input').val('').trigger('focus');
         updateDarkRemovalConfirmation();
