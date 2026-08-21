@@ -5,10 +5,9 @@
 {% block head %}
 <meta charset="UTF-8">
 <script type="text/javascript">
+var img;
 var camera_id = {{ camera_id }};
 var timestamp = {{ timestamp | int }};
-var panorama_data = {{ panorama | tojson }};
-var source_type = {{ source_type | tojson }};
 var endDate_timestamp;  // set later
 var history_seconds;  // set later
 var framerate;  // set later
@@ -16,1155 +15,73 @@ var json_data = {
     'image_list' : [],
     'message' : '',
 };
-var panorama_image = new Image();
-var panorama_preview_image = null;
-var panorama_preview_entry = null;
-var panorama_selection = {
-    'x' : 0,
-    'y' : 0,
-    'width' : panorama_data['width'],
-    'height' : panorama_data['height'],
+var fullscreen = false;  //initial state
+
+var framerate_delay_lut = {
+    '0.25' : 4000,
+    '0.5'  : 2000,
+    '0.75' : 1333,
+    '1'    : 1000,
+    '2'    : 500,
+    '5'    : 200,
+    '10'   : 100,
+    '25'   : 40,
 };
-var panorama_start_selection = Object.assign({}, panorama_selection);
-var panorama_end_selection = Object.assign({}, panorama_selection);
-var panorama_edit_frame = 'start';
-var panorama_pan_initialized = false;
-var panorama_pan_positions_linked = true;
-var panorama_start_image = null;
-var panorama_end_image = null;
-var panorama_preview_progress = 0;
-var panorama_drag = null;
-var preview_revision = 0;  // invalidates old requests, delays, and image loads
-var preview_resize_observer = null;
-// The animation preview stays bounded, while preflight checks the complete
-// generation period on the server.
-var preview_history_limit_seconds = 14400;
-
-function fitVideoPreview() {
-    var container = document.getElementById('preview-container');
-    var create_row = document.getElementById('create-video-row');
-    var preview = document.getElementById(
-        source_type === 'panorama' ? 'panorama-output-preview' : 'loop-image'
-    );
-    if(!container || !create_row || !preview || !container.offsetParent || !create_row.offsetParent) {
-        return;
-    }
-
-    preview.style.maxHeight = 'none';
-
-    var root_gap = parseFloat(window.getComputedStyle(container.parentElement).rowGap) || 16;
-    var success_message = document.getElementById('success_message');
-    var success_space = success_message && success_message.offsetParent
-        ? success_message.offsetHeight + root_gap
-        : 0;
-    var available_height = (
-        window.innerHeight
-        - container.getBoundingClientRect().top
-        - create_row.offsetHeight
-        - success_space
-        - root_gap
-        - Math.max(0, container.offsetHeight - preview.offsetHeight)
-        - 16
-    );
-
-    preview.style.maxHeight = Math.max(180, Math.floor(available_height)) + 'px';
-}
 
 function init() {
-    if(source_type !== 'panorama') {
-        source_type = 'standard';
-    }
-
-    $('#SOURCE_TYPE').val(source_type);
-    updateSourceDisplay();
-
-    if(panorama_data['available']) {
-        panorama_image.onload = function() {
-            configurePanoramaEditor();
-            drawPanoramaEditor();
-        };
-        panorama_image.src = panorama_data['url'];
-    }
-
     loadImages();
-    loop(preview_revision);
+    loop();
 }
 
-async function loop(revision) {
+async function loop() {
+    console.log('Starting loop');
+
     while(json_data['image_list'].length == 0) {
-        if(revision !== preview_revision) {
-            return;
-        }
         await sleep(100);
     }
 
-    if(revision !== preview_revision) {
-        return;
-    }
 
     // prevent concurrent updates to list
-    var image_list_copy = json_data['image_list'].slice();
+    var image_list_copy = JSON.parse(JSON.stringify(json_data['image_list']));
+
 
     for (var i = image_list_copy.length - 1; i >= 0; i--) {
-        if(revision !== preview_revision) {
-            return;
-        }
+        showImage(image_list_copy[i]);
+        await sleep(framerate_delay_lut[framerate]);
+    };
 
-        showImage(image_list_copy[i], revision);
-        await sleep(1000 / parseFloat(framerate));
-    }
-
-    setTimeout(function() {
-        if(revision === preview_revision) {
-            loop(revision);
-        }
-    }, 3000);
+    setTimeout(loop, 3000);
 }
 
 
-function showImage(entry, revision) {
-    if(source_type === 'panorama') {
-        var preview_image = new Image();
-        preview_image.onload = function() {
-            if(
-                revision !== preview_revision
-                || source_type !== 'panorama'
-                || this.naturalWidth !== panorama_data['width']
-                || this.naturalHeight !== panorama_data['height']
-            ) {
-                return;
-            }
+function showImage(entry) {
+    console.log('Showing image ' + entry["url"]);
 
-            panorama_preview_image = this;
-            panorama_preview_entry = entry;
-            panorama_preview_progress = panoramaFrameProgress(entry);
-            drawPanoramaOutputPreview();
-        };
-        preview_image.src = entry["url"];
-        return;
-    }
-
-    if(source_type !== 'standard') {
-        return;
-    }
-
-    var image = new Image();
-    image.onload = function() {
-        if(revision !== preview_revision || source_type !== 'standard') {
-            return;
-        }
-
+    img = new Image();
+    img.onload = function() {
         $('#loop-image').attr({
             'src': this.src,
         });
     };
 
 
-    image.src = entry["url"];
+    img.src = entry["url"];
 }
 
 
 function loadImages() {
-    var image_loop_url = "{{ url_for(image_loop_view) }}";
-    var request_data = {
-        'camera_id' : camera_id,
-        'limit_s' : history_seconds,
-        'timestamp' : endDate_timestamp,
-    };
-    if(source_type === 'panorama') {
-        if(!panorama_data['available']) {
-            $('#loader_generate').hide();
-            $('#message, #video_length').empty();
-            updatePanoramaNotices();
-            return;
-        }
-
-        image_loop_url = "{{ url_for(panorama_image_loop_view) }}";
-        request_data['source_width'] = panorama_data['width'];
-        request_data['source_height'] = panorama_data['height'];
-    } else {
-        request_data['mini_preflight'] = 1;
-    }
-
-    loadJS(image_loop_url, request_data, preview_revision);
+    console.log('Loading next images');
+    loadJS("{{ url_for(image_loop_view) }}", {'camera_id' : camera_id, 'limit_s' : history_seconds, 'timestamp' : endDate_timestamp}, function() {});
 }
 
 function sleep(time) {
     return new Promise(resolve => setTimeout(resolve, time));
 }
 
-function clamp(value, minimum, maximum) {
-    return Math.min(Math.max(value, minimum), maximum);
-}
+function loadJS(url, data, onDone, onError) {
+    if(!onDone)onDone=function(){};
+    if(!onError)onError=function(){};
 
-function evenPixel(value) {
-    return Math.round(value / 2) * 2;
-}
-
-function wrapPixel(value) {
-    var width = panorama_data['width'];
-    return ((value % width) + width) % width;
-}
-
-function copyPanoramaSelection(selection) {
-    return Object.assign({}, selection);
-}
-
-function panoramaPanMode() {
-    return $('#PAN_MODE').val() || 'static';
-}
-
-function saveActivePanoramaSelection() {
-    if(panorama_edit_frame === 'end') {
-        panorama_end_selection = copyPanoramaSelection(panorama_selection);
-    } else {
-        panorama_start_selection = copyPanoramaSelection(panorama_selection);
-    }
-}
-
-function syncPanoramaSelectionSize() {
-    if(panoramaPanMode() !== 'linear') {
-        return;
-    }
-
-    // Initial endpoint crops act as one box until either is deliberately moved.
-    if(panorama_pan_positions_linked) {
-        if(panorama_edit_frame === 'end') {
-            panorama_start_selection = copyPanoramaSelection(panorama_selection);
-        } else {
-            panorama_end_selection = copyPanoramaSelection(panorama_selection);
-        }
-        return;
-    }
-
-    var other_selection = panorama_edit_frame === 'end'
-        ? panorama_start_selection
-        : panorama_end_selection;
-    var resized_selection = resizePanoramaSelectionAroundCenter(
-        other_selection,
-        panorama_selection['width'],
-        panorama_selection['height']
-    );
-    Object.assign(other_selection, resized_selection);
-}
-
-function panoramaHorizontalDelta(start_x, end_x, direction) {
-    var source_width = panorama_data['width'];
-    var direct_delta = end_x - start_x;
-
-    var left_to_right = direction.indexOf('left_to_right') !== -1;
-    if(left_to_right || direction.indexOf('right_to_left') !== -1) {
-        var delta = left_to_right ? wrapPixel(direct_delta) : -wrapPixel(-direct_delta);
-        return delta + (direction.indexOf('full_') === 0 ? (left_to_right ? source_width : -source_width) : 0);
-    }
-
-    if(direct_delta > source_width / 2) {
-        return direct_delta - source_width;
-    }
-    if(direct_delta < -(source_width / 2)) {
-        return direct_delta + source_width;
-    }
-
-    return direct_delta;
-}
-
-function panoramaOutputSelection() {
-    if(panoramaPanMode() !== 'linear') {
-        return copyPanoramaSelection(panorama_selection);
-    }
-
-    var progress = clamp(panorama_preview_progress, 0, 1);
-    var delta_x = panoramaHorizontalDelta(
-        panorama_start_selection['x'],
-        panorama_end_selection['x'],
-        $('#PAN_DIRECTION').val() || 'shortest'
-    );
-    var delta_y = panorama_end_selection['y'] - panorama_start_selection['y'];
-    var wrapped_x = wrapPixel(panorama_start_selection['x'] + delta_x * progress);
-
-    return {
-        'x' : Math.trunc(wrapped_x / 2) * 2,
-        'y' : Math.trunc((panorama_start_selection['y'] + delta_y * progress) / 2) * 2,
-        'width' : panorama_start_selection['width'],
-        'height' : panorama_start_selection['height'],
-    };
-}
-
-function panoramaFrameProgress(entry) {
-    if(panoramaPanMode() !== 'linear') {
-        return 0;
-    }
-
-    var preflight = json_data['panorama_preflight'];
-    if(!preflight || !preflight['start_reference'] || !preflight['end_reference']) {
-        return 0;
-    }
-
-    // The preview may contain only the final four hours, so place its frames
-    // between the full-period endpoints instead of restarting the pan at zero.
-    var start_timestamp = preflight['start_reference']['timestamp'];
-    var end_timestamp = preflight['end_reference']['timestamp'];
-    if(end_timestamp <= start_timestamp) {
-        return 0;
-    }
-
-    return clamp((entry['timestamp'] - start_timestamp) / (end_timestamp - start_timestamp), 0, 1);
-}
-
-function updatePanoramaPanReferences() {
-    panorama_start_image = null;
-    panorama_end_image = null;
-
-    if(
-        source_type !== 'panorama'
-        || panoramaPanMode() !== 'linear'
-        || !json_data['panorama_preflight']
-    ) {
-        return;
-    }
-
-    var revision = preview_revision;
-    ['start', 'end'].forEach(function(frame_name) {
-        var reference = json_data['panorama_preflight'][frame_name + '_reference'];
-        if(!reference) {
-            return;
-        }
-
-        var reference_image = new Image();
-        reference_image.onload = function() {
-            if(
-                revision !== preview_revision
-                || source_type !== 'panorama'
-                || panoramaPanMode() !== 'linear'
-                || this.naturalWidth !== panorama_data['width']
-                || this.naturalHeight !== panorama_data['height']
-            ) {
-                return;
-            }
-
-            if(frame_name === 'start') {
-                panorama_start_image = this;
-            } else {
-                panorama_end_image = this;
-            }
-            drawPanoramaEditor();
-        };
-        reference_image.src = reference['url'];
-    });
-}
-
-function selectPanoramaEditFrame(frame_name) {
-    saveActivePanoramaSelection();
-    panorama_edit_frame = frame_name;
-    panorama_selection = copyPanoramaSelection(
-        frame_name === 'end' ? panorama_end_selection : panorama_start_selection
-    );
-    updatePanoramaPanControls();
-    drawPanoramaEditor();
-}
-
-function updatePanoramaPanMode() {
-    saveActivePanoramaSelection();
-
-    if(panoramaPanMode() === 'linear') {
-        if(!panorama_pan_initialized) {
-            panorama_end_selection = copyPanoramaSelection(panorama_start_selection);
-            panorama_pan_initialized = true;
-            panorama_pan_positions_linked = true;
-        }
-        panorama_edit_frame = 'start';
-        panorama_selection = copyPanoramaSelection(panorama_start_selection);
-        syncPanoramaSelectionSize();
-        panorama_preview_progress = panorama_preview_entry
-            ? panoramaFrameProgress(panorama_preview_entry)
-            : 0;
-    } else {
-        panorama_edit_frame = 'start';
-        panorama_selection = copyPanoramaSelection(panorama_start_selection);
-        panorama_preview_progress = 0;
-    }
-
-    updatePanoramaPanControls();
-    updatePanoramaPanReferences();
-    drawPanoramaEditor();
-    updatePanoramaNotices();
-}
-
-function updatePanoramaPanControls() {
-    var linear_pan = panoramaPanMode() === 'linear';
-    $('#panorama-pan-editors').css('display', linear_pan ? 'grid' : 'none');
-    $('#panorama-manual-target').toggle(linear_pan);
-    $('#panorama-static-editor').toggle(!linear_pan);
-    $('#panorama-static-hint').toggle(!linear_pan);
-    $('#panorama-pan-hint').toggle(linear_pan);
-    $('#panorama-start-editor-panel')
-        .toggleClass('tw:ring-2 tw:ring-primary', linear_pan && panorama_edit_frame === 'start');
-    $('#panorama-end-editor-panel')
-        .toggleClass('tw:ring-2 tw:ring-primary', linear_pan && panorama_edit_frame === 'end');
-    $('#panorama-start-active').toggle(linear_pan && panorama_edit_frame === 'start');
-    $('#panorama-end-active').toggle(linear_pan && panorama_edit_frame === 'end');
-
-    if(!linear_pan) {
-        $('#panorama-direction-control, #panorama-pan-summary').hide();
-        $('#panorama-editor-title').text('Choose the area to show');
-        return;
-    }
-
-    $('#panorama-manual-target-name').text(
-        panorama_edit_frame === 'end' ? 'last frame' : 'first frame'
-    );
-    $('#panorama-pan-hint').text(
-        panorama_pan_positions_linked
-            ? 'The frames start aligned. Resize either frame to change both. Drag a frame to position it separately.'
-            : 'The frame positions are independent. Resize either frame to keep both crops the same size.'
-    );
-
-    var horizontal_movement = panorama_start_selection['x'] !== panorama_end_selection['x'];
-    var direction = $('#PAN_DIRECTION').val() || 'shortest';
-    var full_rotation = direction === 'full_left_to_right'
-        || direction === 'full_right_to_left';
-    $('#panorama-direction-control').show();
-
-    var summary;
-    if(full_rotation) {
-        summary = direction === 'full_right_to_left'
-            ? 'The view will make a full turn from right to left.'
-            : 'The view will make a full turn from left to right.';
-        if(horizontal_movement) {
-            summary += ' It will continue to the ending area.';
-        }
-        if(panorama_end_selection['y'] > panorama_start_selection['y']) {
-            summary += ' It will also move from top to bottom.';
-        } else if(panorama_end_selection['y'] < panorama_start_selection['y']) {
-            summary += ' It will also move from bottom to top.';
-        }
-    } else if(
-        panorama_start_selection['x'] === panorama_end_selection['x']
-        && panorama_start_selection['y'] === panorama_end_selection['y']
-    ) {
-        summary = 'The starting and ending areas match, so the view will not move.';
-    } else if(horizontal_movement && direction === 'right_to_left') {
-        summary = 'The view will move from right to left.';
-    } else if(horizontal_movement && direction === 'left_to_right') {
-        summary = 'The view will move from left to right.';
-    } else if(horizontal_movement) {
-        summary = 'The view will follow the shortest route across the panorama.';
-    } else if(panorama_end_selection['y'] > panorama_start_selection['y']) {
-        summary = 'The view will move from top to bottom.';
-    } else if(panorama_end_selection['y'] < panorama_start_selection['y']) {
-        summary = 'The view will move from bottom to top.';
-    }
-    $('#panorama-pan-summary').text(summary).show();
-}
-
-function selectedAspectUnits() {
-    var aspect_ratio = $('#ASPECT_RATIO').val() || 'free';
-    if(aspect_ratio === 'free') {
-        return null;
-    }
-
-    var ratio = aspect_ratio.split(':').map(Number);
-    var decimal_scale = 1;
-    while(
-        (!Number.isInteger(ratio[0] * decimal_scale) || !Number.isInteger(ratio[1] * decimal_scale))
-        && decimal_scale < 1000
-    ) {
-        decimal_scale *= 10;
-    }
-
-    var ratio_width = Math.round(ratio[0] * decimal_scale);
-    var ratio_height = Math.round(ratio[1] * decimal_scale);
-    var divisor = ratio_width;
-    var remainder = ratio_height;
-    while(remainder) {
-        var next_remainder = divisor % remainder;
-        divisor = remainder;
-        remainder = next_remainder;
-    }
-    ratio_width /= divisor;
-    ratio_height /= divisor;
-
-    // yuv420 video requires even dimensions, so every resizing unit must be even.
-    var multiplier = (ratio_width % 2 === 0 && ratio_height % 2 === 0) ? 1 : 2;
-    return {
-        'width' : ratio_width * multiplier,
-        'height' : ratio_height * multiplier,
-    };
-}
-
-function maximumAspectScale(units, maximum_height) {
-    return Math.floor(Math.min(
-        panorama_data['width'] / units['width'],
-        maximum_height / units['height']
-    ));
-}
-
-function resizePanoramaSelectionAroundCenter(selection, new_width, new_height) {
-    var center_x = selection['x'] + selection['width'] / 2;
-    var center_y = selection['y'] + selection['height'] / 2;
-
-    return {
-        'x' : wrapPixel(evenPixel(center_x - new_width / 2)),
-        'y' : evenPixel(clamp(center_y - new_height / 2, 0, panorama_data['height'] - new_height)),
-        'width' : new_width,
-        'height' : new_height,
-    };
-}
-
-function applyAspectRatioPreset() {
-    var units = selectedAspectUnits();
-    if(!units) {
-        drawPanoramaEditor();
-        return;
-    }
-
-    var scale = maximumAspectScale(units, panorama_data['height']);
-    var new_width = units['width'] * scale;
-    var new_height = units['height'] * scale;
-    saveActivePanoramaSelection();
-
-    if(panoramaPanMode() === 'linear') {
-        // A ratio is shared by both endpoints. Resize each around its own
-        // center so changing the ratio does not create unintended movement.
-        panorama_start_selection = resizePanoramaSelectionAroundCenter(
-            panorama_start_selection,
-            new_width,
-            new_height
-        );
-        panorama_end_selection = resizePanoramaSelectionAroundCenter(
-            panorama_end_selection,
-            new_width,
-            new_height
-        );
-        panorama_selection = copyPanoramaSelection(
-            panorama_edit_frame === 'end' ? panorama_end_selection : panorama_start_selection
-        );
-    } else {
-        panorama_selection = resizePanoramaSelectionAroundCenter(
-            panorama_selection,
-            new_width,
-            new_height
-        );
-    }
-    drawPanoramaEditor();
-}
-
-function panoramaSegments(selection) {
-    selection = selection || panorama_selection;
-    var end_x = selection['x'] + selection['width'];
-    if(end_x <= panorama_data['width']) {
-        return [{
-            'x' : selection['x'],
-            'width' : selection['width'],
-        }];
-    }
-
-    return [
-        {
-            'x' : selection['x'],
-            'width' : panorama_data['width'] - selection['x'],
-        },
-        {
-            'x' : 0,
-            'width' : end_x - panorama_data['width'],
-        },
-    ];
-}
-
-function configurePanoramaEditor() {
-    var maximum_width = 1600;
-    ['panorama-editor', 'panorama-start-editor', 'panorama-end-editor'].forEach(function(canvas_id) {
-        var canvas = document.getElementById(canvas_id);
-        canvas.width = Math.min(panorama_data['width'], maximum_width);
-        canvas.height = Math.round(canvas.width * panorama_data['height'] / panorama_data['width']);
-    });
-
-    $('#CROP_X').attr('max', panorama_data['width'] - 2);
-    $('#CROP_Y').attr('max', panorama_data['height'] - 2);
-    $('#CROP_WIDTH').attr('max', panorama_data['width']);
-    $('#CROP_HEIGHT').attr('max', panorama_data['height']);
-}
-
-function drawPanoramaSelectionEditor(canvas_id, selection, editor_image) {
-    if(!editor_image.complete || !editor_image.naturalWidth) {
-        return;
-    }
-
-    var canvas = document.getElementById(canvas_id);
-    var context = canvas.getContext('2d');
-    var scale_x = canvas.width / panorama_data['width'];
-    var scale_y = canvas.height / panorama_data['height'];
-
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.drawImage(editor_image, 0, 0, canvas.width, canvas.height);
-    context.fillStyle = 'rgba(0, 0, 0, 0.58)';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-
-    var segments = panoramaSegments(selection);
-    segments.forEach(function(segment) {
-        context.drawImage(
-            editor_image,
-            segment['x'],
-            selection['y'],
-            segment['width'],
-            selection['height'],
-            segment['x'] * scale_x,
-            selection['y'] * scale_y,
-            segment['width'] * scale_x,
-            selection['height'] * scale_y
-        );
-
-        context.strokeStyle = '#111827';
-        context.lineWidth = 7;
-        context.strokeRect(
-            segment['x'] * scale_x,
-            selection['y'] * scale_y,
-            segment['width'] * scale_x,
-            selection['height'] * scale_y
-        );
-        context.strokeStyle = '#ff4fd8';
-        context.lineWidth = 3;
-        context.strokeRect(
-            segment['x'] * scale_x,
-            selection['y'] * scale_y,
-            segment['width'] * scale_x,
-            selection['height'] * scale_y
-        );
-    });
-
-    var right_x = selection['x'] + selection['width'];
-    if(right_x > panorama_data['width']) {
-        right_x -= panorama_data['width'];
-    }
-    var handle_points = [
-        [selection['x'] * scale_x, selection['y'] * scale_y],
-        [right_x * scale_x, selection['y'] * scale_y],
-        [selection['x'] * scale_x, (selection['y'] + selection['height']) * scale_y],
-        [right_x * scale_x, (selection['y'] + selection['height']) * scale_y],
-    ];
-    handle_points.forEach(function(point) {
-        context.fillStyle = '#111827';
-        context.fillRect(point[0] - 7, point[1] - 7, 14, 14);
-        context.fillStyle = '#ff4fd8';
-        context.fillRect(point[0] - 5, point[1] - 5, 10, 10);
-    });
-}
-
-function drawPanoramaEditor() {
-    saveActivePanoramaSelection();
-    syncPanoramaSelectionSize();
-
-    if(panoramaPanMode() === 'linear') {
-        drawPanoramaSelectionEditor(
-            'panorama-start-editor',
-            panorama_start_selection,
-            panorama_start_image || panorama_image
-        );
-        drawPanoramaSelectionEditor(
-            'panorama-end-editor',
-            panorama_end_selection,
-            panorama_end_image || panorama_image
-        );
-    } else {
-        drawPanoramaSelectionEditor('panorama-editor', panorama_selection, panorama_image);
-    }
-
-    drawPanoramaOutputPreview();
-    updatePanoramaFields();
-}
-
-function drawPanoramaOutputPreview() {
-    var source_image = panorama_preview_image || panorama_image;
-    if(!source_image.complete || !source_image.naturalWidth) {
-        return;
-    }
-
-    var output_selection = panoramaOutputSelection();
-    var canvas = document.getElementById('panorama-output-preview');
-    var maximum_width = 1200;
-    var preview_width = Math.min(output_selection['width'], maximum_width);
-    var preview_height = Math.max(1, Math.round(preview_width * output_selection['height'] / output_selection['width']));
-    if(canvas.width !== preview_width || canvas.height !== preview_height) {
-        canvas.width = preview_width;
-        canvas.height = preview_height;
-    }
-
-    var context = canvas.getContext('2d');
-    context.clearRect(0, 0, canvas.width, canvas.height);
-
-    var segments = panoramaSegments(output_selection);
-    var source_width_drawn = 0;
-    var destination_x = 0;
-    segments.forEach(function(segment, index) {
-        source_width_drawn += segment['width'];
-
-        // Give adjacent sections one shared whole-pixel boundary. Drawing
-        // each section at its fractional width can leave a dark sub-pixel gap
-        // in the canvas even though the generated video has no gap.
-        var destination_end = index === segments.length - 1
-            ? canvas.width
-            : Math.round(canvas.width * source_width_drawn / output_selection['width']);
-        var destination_width = destination_end - destination_x;
-        context.drawImage(
-            source_image,
-            segment['x'],
-            output_selection['y'],
-            segment['width'],
-            output_selection['height'],
-            destination_x,
-            0,
-            destination_width,
-            canvas.height
-        );
-        destination_x = destination_end;
-    });
-
-    fitVideoPreview();
-}
-
-function updatePanoramaFields() {
-    $('#CROP_X').val(panorama_selection['x']);
-    $('#CROP_Y').val(panorama_selection['y']);
-    $('#CROP_WIDTH').val(panorama_selection['width']);
-    $('#CROP_HEIGHT').val(panorama_selection['height']);
-
-    if(panorama_selection['x'] + panorama_selection['width'] > panorama_data['width']) {
-        $('#panorama-wrap-state').text('The selected area continues from the right edge to the left').show();
-    } else if(panorama_selection['width'] === panorama_data['width'] && panorama_selection['x'] !== 0) {
-        $('#panorama-wrap-state').text('The panorama starts at a new horizontal position').show();
-    } else {
-        $('#panorama-wrap-state').hide();
-    }
-
-    updatePanoramaPanControls();
-}
-
-function pointerToPanorama(event) {
-    var canvas = event.currentTarget;
-    var bounds = canvas.getBoundingClientRect();
-    return {
-        'x' : (event.clientX - bounds.left) * panorama_data['width'] / bounds.width,
-        'y' : (event.clientY - bounds.top) * panorama_data['height'] / bounds.height,
-    };
-}
-
-function circularDistance(a, b) {
-    var distance = Math.abs(a - b);
-    return Math.min(distance, panorama_data['width'] - distance);
-}
-
-function pointInsideSelection(point) {
-    var inside_x = panoramaSegments().some(function(segment) {
-        return point['x'] >= segment['x'] && point['x'] <= segment['x'] + segment['width'];
-    });
-
-    return inside_x
-        && point['y'] >= panorama_selection['y']
-        && point['y'] <= panorama_selection['y'] + panorama_selection['height'];
-}
-
-function panoramaPointerDown(event) {
-    if(source_type !== 'panorama') {
-        return;
-    }
-
-    var frame_name = event.currentTarget.getAttribute('data-panorama-frame');
-    if(panoramaPanMode() === 'linear' && frame_name && frame_name !== panorama_edit_frame) {
-        selectPanoramaEditFrame(frame_name);
-    }
-
-    var point = pointerToPanorama(event);
-    var tolerance = Math.max(10, panorama_data['width'] * 0.012);
-    var right_x = wrapPixel(panorama_selection['x'] + panorama_selection['width']);
-    var near_left = circularDistance(point['x'], panorama_selection['x']) <= tolerance;
-    var near_right = circularDistance(point['x'], right_x) <= tolerance;
-
-    if(panorama_selection['width'] === panorama_data['width'] && panorama_selection['x'] === 0) {
-        near_left = point['x'] <= tolerance;
-        near_right = point['x'] >= panorama_data['width'] - tolerance;
-    }
-
-    var vertical_tolerance = Math.max(6, panorama_data['height'] * 0.035);
-    var near_top = Math.abs(point['y'] - panorama_selection['y']) <= vertical_tolerance;
-    var near_bottom = Math.abs(point['y'] - panorama_selection['y'] - panorama_selection['height']) <= vertical_tolerance;
-    var mode = '';
-
-    if(near_left) {
-        mode += 'left';
-    } else if(near_right) {
-        mode += 'right';
-    }
-
-    if(near_top) {
-        mode += 'top';
-    } else if(near_bottom) {
-        mode += 'bottom';
-    }
-
-    if(!mode && pointInsideSelection(point)) {
-        mode = 'move';
-    }
-
-    if(!mode) {
-        return;
-    }
-
-    event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    panorama_drag = {
-        'mode' : mode,
-        'pointer_x' : point['x'],
-        'pointer_y' : point['y'],
-        'selection' : Object.assign({}, panorama_selection),
-    };
-}
-
-function resizeFixedAspectSelection(start, mode, delta_x, delta_y) {
-    var units = selectedAspectUnits();
-    var current_scale = Math.round(start['width'] / units['width']);
-    var scale_candidates = [];
-
-    if(mode.indexOf('left') !== -1) {
-        scale_candidates.push(Math.round((start['width'] - delta_x) / units['width']));
-    } else if(mode.indexOf('right') !== -1) {
-        scale_candidates.push(Math.round((start['width'] + delta_x) / units['width']));
-    }
-
-    if(mode.indexOf('top') !== -1) {
-        scale_candidates.push(Math.round((start['height'] - delta_y) / units['height']));
-    } else if(mode.indexOf('bottom') !== -1) {
-        scale_candidates.push(Math.round((start['height'] + delta_y) / units['height']));
-    }
-
-    var new_scale = current_scale;
-    scale_candidates.forEach(function(candidate) {
-        if(Math.abs(candidate - current_scale) > Math.abs(new_scale - current_scale)) {
-            new_scale = candidate;
-        }
-    });
-
-    var maximum_height = panorama_data['height'];
-    if(mode.indexOf('top') !== -1) {
-        maximum_height = start['y'] + start['height'];
-    } else if(mode.indexOf('bottom') !== -1) {
-        maximum_height = panorama_data['height'] - start['y'];
-    }
-
-    new_scale = clamp(new_scale, 1, maximumAspectScale(units, maximum_height));
-    var new_width = units['width'] * new_scale;
-    var new_height = units['height'] * new_scale;
-    var new_x;
-    var new_y;
-
-    if(mode.indexOf('left') !== -1) {
-        new_x = wrapPixel(start['x'] + start['width'] - new_width);
-    } else if(mode.indexOf('right') !== -1) {
-        new_x = start['x'];
-    } else {
-        new_x = wrapPixel(evenPixel(start['x'] + (start['width'] - new_width) / 2));
-    }
-
-    if(mode.indexOf('top') !== -1) {
-        new_y = start['y'] + start['height'] - new_height;
-    } else if(mode.indexOf('bottom') !== -1) {
-        new_y = start['y'];
-    } else {
-        new_y = evenPixel(clamp(
-            start['y'] + (start['height'] - new_height) / 2,
-            0,
-            panorama_data['height'] - new_height
-        ));
-    }
-
-    panorama_selection = {
-        'x' : new_x,
-        'y' : new_y,
-        'width' : new_width,
-        'height' : new_height,
-    };
-}
-
-function panoramaPointerMove(event) {
-    if(!panorama_drag) {
-        return;
-    }
-
-    event.preventDefault();
-    var point = pointerToPanorama(event);
-    var delta_x = point['x'] - panorama_drag['pointer_x'];
-    // Free resizing must keep its direction when the pointer crosses the panorama midpoint.
-    if(panorama_drag['mode'] === 'move' || selectedAspectUnits()) {
-        if(delta_x > panorama_data['width'] / 2) {
-            delta_x -= panorama_data['width'];
-        } else if(delta_x < -panorama_data['width'] / 2) {
-            delta_x += panorama_data['width'];
-        }
-    }
-    var delta_y = point['y'] - panorama_drag['pointer_y'];
-    var start = panorama_drag['selection'];
-
-    if(panorama_drag['mode'] === 'move') {
-        var moved_x = wrapPixel(evenPixel(start['x'] + delta_x));
-        var moved_y = evenPixel(clamp(
-            start['y'] + delta_y,
-            0,
-            panorama_data['height'] - start['height']
-        ));
-        if(
-            panoramaPanMode() === 'linear'
-            && (moved_x !== start['x'] || moved_y !== start['y'])
-        ) {
-            panorama_pan_positions_linked = false;
-        }
-        panorama_selection['x'] = moved_x;
-        panorama_selection['y'] = moved_y;
-    } else if(selectedAspectUnits()) {
-        resizeFixedAspectSelection(start, panorama_drag['mode'], delta_x, delta_y);
-    } else {
-        if(panorama_drag['mode'].indexOf('left') !== -1) {
-            var left_width = evenPixel(clamp(start['width'] - delta_x, 2, panorama_data['width']));
-            panorama_selection['width'] = left_width;
-            panorama_selection['x'] = wrapPixel(evenPixel(start['x'] + start['width'] - left_width));
-        } else if(panorama_drag['mode'].indexOf('right') !== -1) {
-            panorama_selection['width'] = evenPixel(clamp(start['width'] + delta_x, 2, panorama_data['width']));
-        }
-
-        if(panorama_drag['mode'].indexOf('top') !== -1) {
-            var top_height = evenPixel(clamp(start['height'] - delta_y, 2, start['y'] + start['height']));
-            panorama_selection['height'] = top_height;
-            panorama_selection['y'] = evenPixel(start['y'] + start['height'] - top_height);
-        } else if(panorama_drag['mode'].indexOf('bottom') !== -1) {
-            panorama_selection['height'] = evenPixel(clamp(start['height'] + delta_y, 2, panorama_data['height'] - start['y']));
-        }
-    }
-
-    drawPanoramaEditor();
-}
-
-function panoramaPointerUp(event) {
-    if(panorama_drag && event.currentTarget.hasPointerCapture(event.pointerId)) {
-        event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-    panorama_drag = null;
-}
-
-function applyPanoramaFields(changed_field) {
-    var new_x = evenPixel(clamp(parseInt($('#CROP_X').val()) || 0, 0, panorama_data['width'] - 2));
-    var new_y = evenPixel(clamp(parseInt($('#CROP_Y').val()) || 0, 0, panorama_data['height'] - 2));
-    var new_width;
-    var new_height;
-    var units = selectedAspectUnits();
-
-    if(
-        panoramaPanMode() === 'linear'
-        && (
-            (changed_field === 'CROP_X' && new_x !== panorama_selection['x'])
-            || (changed_field === 'CROP_Y' && new_y !== panorama_selection['y'])
-        )
-    ) {
-        panorama_pan_positions_linked = false;
-    }
-
-    if(units) {
-        new_y = evenPixel(clamp(new_y, 0, panorama_data['height'] - units['height']));
-        var maximum_scale = maximumAspectScale(units, panorama_data['height'] - new_y);
-        var requested_scale;
-
-        if(changed_field === 'CROP_HEIGHT') {
-            requested_scale = Math.round((parseInt($('#CROP_HEIGHT').val()) || units['height']) / units['height']);
-        } else if(changed_field === 'CROP_WIDTH') {
-            requested_scale = Math.round((parseInt($('#CROP_WIDTH').val()) || units['width']) / units['width']);
-        } else {
-            requested_scale = Math.round(panorama_selection['width'] / units['width']);
-        }
-
-        requested_scale = clamp(requested_scale, 1, maximum_scale);
-        new_width = units['width'] * requested_scale;
-        new_height = units['height'] * requested_scale;
-    } else {
-        new_width = evenPixel(clamp(parseInt($('#CROP_WIDTH').val()) || 2, 2, panorama_data['width']));
-        new_height = evenPixel(clamp(parseInt($('#CROP_HEIGHT').val()) || 2, 2, panorama_data['height'] - new_y));
-    }
-
-    panorama_selection = {
-        'x' : new_x,
-        'y' : new_y,
-        'width' : new_width,
-        'height' : new_height,
-    };
-    drawPanoramaEditor();
-}
-
-function resetPanoramaSelection() {
-    panorama_selection = {
-        'x' : 0,
-        'y' : 0,
-        'width' : panorama_data['width'],
-        'height' : panorama_data['height'],
-    };
-    panorama_start_selection = copyPanoramaSelection(panorama_selection);
-    panorama_end_selection = copyPanoramaSelection(panorama_selection);
-    panorama_pan_positions_linked = true;
-
-    if(selectedAspectUnits()) {
-        applyAspectRatioPreset();
-    } else {
-        drawPanoramaEditor();
-    }
-}
-
-function updateSourceDisplay() {
-    source_type = $('#SOURCE_TYPE').val() || source_type;
-    $('#panorama-unavailable').hide();
-
-    if(source_type === 'panorama') {
-        $('#standard-preview').hide();
-
-        if(panorama_data['available']) {
-            $('#generation-controls, #generation-status, #create-video-row').show();
-            $('#preview-container').show();
-            $('#panorama-preview').show();
-            $('#panorama-mode-control').show();
-            $('#panorama-controls').css('display', 'flex');
-            updatePanoramaPanControls();
-            drawPanoramaEditor();
-        } else {
-            $('#generation-controls, #generation-status, #create-video-row').hide();
-            $('#preview-container').hide();
-            $('#panorama-preview').hide();
-            $('#panorama-mode-control, #panorama-controls').hide();
-            $('#panorama-unavailable').show();
-        }
-    } else {
-        source_type = 'standard';
-        $('#SOURCE_TYPE').val('standard');
-        $('#generation-controls, #generation-status, #create-video-row').show();
-        $('#preview-container').show();
-        $('#panorama-preview').hide();
-        $('#panorama-mode-control, #panorama-controls').hide();
-        $('#standard-preview').show();
-    }
-
-    updatePanoramaNotices();
-    fitVideoPreview();
-}
-
-function updatePanoramaNotices() {
-    var notice_container = $('#panorama-notices');
-    var notice_list = $('#panorama-notices-list');
-    notice_list.empty();
-
-    var notices = [];
-    var blocking_problem = false;
-    var preflight_pending;
-
-    if(history_seconds > preview_history_limit_seconds) {
-        notices.push('The preview shows up to 4 hours. The finished video will still use the full selected period.');
-    }
-
-    if(source_type === 'panorama') {
-        preflight_pending = !json_data['panorama_preflight'];
-
-        if(panorama_data['circle_clipped']) {
-            notices.push('Part of the round sky view falls outside the image. The horizon may look incomplete or distorted.');
-        }
-
-        var panorama_preflight = json_data['panorama_preflight'];
-        if(panorama_preflight && !panorama_preflight['dimensions_match']) {
-            notices.push('Some panorama images in this period have a different size. Choose another period before creating the video.');
-            blocking_problem = true;
-        }
-
-        if(panorama_preflight && !panorama_preflight['has_enough_local_frames']) {
-            notices.push('At least two panorama images stored on this device are needed. Choose a longer period or another image.');
-            blocking_problem = true;
-        }
-
-        if(
-            panorama_preflight
-            && panoramaPanMode() === 'linear'
-            && (
-                !panorama_preflight['start_reference']
-                || !panorama_preflight['end_reference']
-                || panorama_preflight['start_reference']['id'] === panorama_preflight['end_reference']['id']
-            )
-        ) {
-            notices.push('The first and last panorama images are unavailable for setting the pan.');
-            blocking_problem = true;
-        }
-    } else {
-        var standard_preflight = json_data['standard_preflight'];
-        preflight_pending = !standard_preflight;
-        if(standard_preflight && !standard_preflight['has_enough_local_frames']) {
-            notices.push('At least two all-sky images stored on this device are needed. Choose a longer period or another image.');
-            blocking_problem = true;
-        }
-    }
-
-    if(!notices.length) {
-        notice_container.hide();
-        $('#create-video').prop('disabled', preflight_pending);
-        return;
-    }
-
-    notices.forEach(function(notice) {
-        $('<li />', { 'text' : notice }).appendTo(notice_list);
-    });
-
-    notice_container
-        .removeClass('tw:alert-warning tw:alert-error')
-        .addClass(blocking_problem ? 'tw:alert-error' : 'tw:alert-warning')
-        .show();
-    $('#create-video').prop('disabled', blocking_problem || preflight_pending);
-}
-
-function generationPreflight() {
-    return source_type === 'panorama'
-        ? json_data['panorama_preflight']
-        : json_data['standard_preflight'];
-}
-
-function generationFrameCount() {
-    // The preview may be capped, so duration uses the full-period count.
-    var preflight = generationPreflight();
-    if(preflight && typeof preflight['frame_count'] !== 'undefined') {
-        return preflight['frame_count'];
-    }
-
-    return json_data['image_list'].length;
-}
-
-function generationFrameRange() {
-    var preflight = generationPreflight();
-    if(!preflight || !preflight['start_reference'] || !preflight['end_reference']) {
-        return '';
-    }
-
-    var start_datetime = preflight['start_reference']['datetime'];
-    var end_datetime = preflight['end_reference']['datetime'];
-    if(!start_datetime || !end_datetime) {
-        return '';
-    }
-
-    if(start_datetime.slice(0, 10) === end_datetime.slice(0, 10)) {
-        return start_datetime + '–' + end_datetime.slice(11);
-    }
-
-    return start_datetime + ' – ' + end_datetime;
-}
-
-function updateVideoLength() {
-    var image_count = generationFrameCount();
-    var duration_seconds = Math.round((image_count / parseFloat(framerate)) * 10) / 10;
-    var frame_range = generationFrameRange();
-    var length_text = image_count + ' frames';
-    if(frame_range) {
-        length_text += ' · ' + frame_range;
-    }
-    $('#video_length').text(length_text + ' · about ' + duration_seconds + ' seconds');
-}
-
-function loadJS(url, data, revision) {
     $("#loader_generate").show();
 
     $.ajax({
@@ -1173,37 +90,19 @@ function loadJS(url, data, revision) {
         contentType: "application/json",
         data: data,
         success: function(rdata){
-            if(revision !== preview_revision) {
-                return;
-            }
-
             $("#loader_generate").hide();
-            json_data = rdata;
-            if(panorama_preview_entry) {
-                panorama_preview_progress = panoramaFrameProgress(panorama_preview_entry);
-            }
-            updatePanoramaPanReferences();
+            json_data = rdata
 
-            updateVideoLength();
+            var image_count = rdata['image_list'].length;
+            $('#video_length').html(image_count + ' Frames - Approximately ' + image_count / parseFloat(framerate) + 's');
 
-            if(rdata['image_list'].length) {
-                $('#message').html(json_data['message']);
-            } else if(generationFrameCount()) {
-                $('#message').text('No images are available in the preview window.');
-            } else {
-                $('#message').text('No images are available for the selected time range.');
-            }
-            updatePanoramaNotices();
+            $('#message').html(json_data['message']);
         },
         error: function(rdata){
-            if(revision !== preview_revision) {
-                return;
-            }
-
             $("#loader_generate").hide();
-            $('#message').text('Could not load the preview images. Try again or check the logs.');
+            onError(rdata.status);
+            $('#message').text('Error loading data.  Please check the logs.');
             $('#video_length').html('');
-            updatePanoramaNotices();
         },
     });
 
@@ -1211,33 +110,40 @@ function loadJS(url, data, revision) {
 
 
 function goFullscreen(elem) {
-    if(
-        document.fullscreenElement
-        || document.webkitFullscreenElement
-        || document.msFullscreenElement
-    ) {
-        if(document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if(document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-        } else if(document.msExitFullscreen) {
-            document.msExitFullscreen();
-        }
-        return;
+    if(fullscreen) {
+        closeFullscreen();
+    } else {
+        openFullscreen(elem);
     }
+}
 
-    if(elem.requestFullscreen) {
+function openFullscreen(elem) {
+    if (elem.requestFullscreen) {
         elem.requestFullscreen();
-    } else if(elem.webkitRequestFullscreen) {
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
         elem.webkitRequestFullscreen();
-    } else if(elem.msRequestFullscreen) {
+    } else if (elem.msRequestFullscreen) { /* IE11 */
         elem.msRequestFullscreen();
     }
+
+    fullscreen = true;
+}
+
+function closeFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+        document.msExitFullscreen();
+    }
+
+    fullscreen = false;
 }
 
 $( document ).ready(function() {
     var pre_seconds = parseInt($('#PRE_SECONDS_SELECT').val());
-    var post_seconds = parseInt($('#POST_SECONDS_SELECT').val());
+    var post_seconds = parseInt($('#PRE_SECONDS_SELECT').val());
     endDate_timestamp = timestamp + post_seconds;
     history_seconds = pre_seconds + post_seconds;
     framerate = $('#FRAMERATE_SELECT').val();
@@ -1246,23 +152,6 @@ $( document ).ready(function() {
         goFullscreen(this);
     });
 
-    $('#panorama-output-preview').on("click", function() {
-        goFullscreen(this);
-    });
-
-    $('#panorama-editor, #panorama-start-editor, #panorama-end-editor')
-        .on('pointerdown', panoramaPointerDown)
-        .on('pointermove', panoramaPointerMove)
-        .on('pointerup pointercancel', panoramaPointerUp);
-
-    $(window).on('resize', fitVideoPreview);
-    if(window.ResizeObserver) {
-        preview_resize_observer = new ResizeObserver(fitVideoPreview);
-        $('#form_mini_timelapse, #generation-status, #success_message').each(function() {
-            preview_resize_observer.observe(this);
-        });
-    }
-
     init();
 });
 
@@ -1270,263 +159,84 @@ $( document ).ready(function() {
 {% endblock %}
 
 {% block content %}
-<div class="tw:w-full tw:flex tw:flex-col tw:gap-4">
+<div class="tw:w-full tw:h-full tw:flex tw:flex-col tw:gap-4">
 
     <div class="tw:bg-base-200/50 tw:p-4 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-        <form id="form_mini_timelapse" autocomplete="off" class="tw:flex tw:flex-col tw:gap-4">
+        <form id="form_mini_timelapse" onSubmit="return false;" autocomplete="off" class="tw:flex tw:flex-col tw:gap-4">
             {{ form_mini_timelapse.CAMERA_ID() }}
             {{ form_mini_timelapse.IMAGE_ID() }}
 
-            {% if panorama_enabled %}
-            <div class="tw:flex tw:flex-col tw:gap-2 tw:max-w-3xl">
-                <label for="SOURCE_TYPE" class="tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
-                    Images to use
-                </label>
-                <select id="SOURCE_TYPE" class="tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm tw:focus:outline-none tw:focus:border-primary">
-                    <option value="standard">All-sky images</option>
-                    <option value="panorama">Panorama images</option>
-                </select>
-                <div class="tw:text-xs tw:text-base-content/60">
-                    All-sky images show the usual full-sky view. Panorama images let you choose the part shown in the video.
-                </div>
-            </div>
-            {% endif %}
-
-            {% if panorama_enabled and not panorama.available %}
-            <div id="panorama-unavailable" class="tw:alert tw:alert-info tw:flex tw:flex-col tw:items-start tw:gap-3 tw:text-xs" style="display: none;" role="status">
-                <i class="tw:icon-[lucide--image-off] tw:w-4 tw:h-4 tw:shrink-0"></i>
-                <div class="tw:flex-1">
-                    <div class="tw:font-bold">No panorama was saved for this image.</div>
-                    {% if panorama_suggestions %}
-                    <div>Choose a nearby panorama to use as the base image.</div>
-                    {% endif %}
-                </div>
-                {% if panorama_suggestions %}
-                <div class="tw:flex tw:flex-wrap tw:gap-2">
-                    {% for suggestion in panorama_suggestions %}
-                    <a href="{{ suggestion.url }}" class="tw:btn tw:btn-neutral tw:btn-xs tw:no-underline">
-                        {{ suggestion.label }} · {{ suggestion.datetime }}
-                    </a>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-            {% endif %}
-
-            <div id="generation-controls" class="tw:flex tw:flex-col tw:gap-4">
-                <div id="panorama-mode-control" class="tw:pt-2 tw:border-t tw:border-base-300" style="display: none;">
-                    <div class="tw:form-control tw:w-full tw:max-w-md">
-                        <label for="PAN_MODE" class="tw:label tw:pb-1"><span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60">View movement</span></label>
-                        <select id="PAN_MODE" class="tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:w-full tw:text-sm">
-                            <option value="static">Keep the view still</option>
-                            <option value="linear">Pan between two areas</option>
-                        </select>
-                        <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">
-                            Keep one view throughout the video, or choose where a moving view starts and ends.
-                        </div>
-                    </div>
-                </div>
-
-                <div id="timing-controls" class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-3 tw:gap-3 tw:items-end">
-                    <div class="tw:form-control tw:w-full">
-                        <label class="tw:label tw:pb-1">
-                            <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
-                                {{ form_mini_timelapse.PRE_SECONDS_SELECT.label.text }}
-                            </span>
-                        </label>
-                        {{ form_mini_timelapse.PRE_SECONDS_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm tw:focus:outline-none tw:focus:border-primary') }}
-                    </div>
-
-                    <div class="tw:form-control tw:w-full">
-                        <label class="tw:label tw:pb-1">
-                            <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
-                                {{ form_mini_timelapse.POST_SECONDS_SELECT.label.text }}
-                            </span>
-                        </label>
-                        {{ form_mini_timelapse.POST_SECONDS_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm tw:focus:outline-none tw:focus:border-primary') }}
-                    </div>
-
-                    <div class="tw:form-control tw:w-full">
-                        <label class="tw:label tw:pb-1">
-                            <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
-                                {{ form_mini_timelapse.FRAMERATE_SELECT.label.text }}
-                            </span>
-                        </label>
-                        {{ form_mini_timelapse.FRAMERATE_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm tw:focus:outline-none tw:focus:border-primary') }}
-                    </div>
-                </div>
-                <div class="tw:text-xs tw:text-base-content/60">
-                    Before and after set the time range around the selected image. Speed controls how quickly those images play.
-                </div>
-
-                <div id="panorama-controls" class="tw:flex tw:flex-col tw:gap-3 tw:pt-2 tw:border-t tw:border-base-300" style="display: none;">
-                    <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:lg:grid-cols-3 tw:gap-3 tw:items-end">
-                        <div class="tw:form-control">
-                            <label for="ASPECT_RATIO" class="tw:label tw:pb-1"><span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60">Aspect ratio</span></label>
-                            <select id="ASPECT_RATIO" class="tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:w-full tw:text-sm">
-                                <option value="free">Free size</option>
-                                <optgroup label="Social and video">
-                                    <option value="16:9">16:9 — Landscape video</option>
-                                    <option value="9:16">9:16 — Reels / Stories</option>
-                                    <option value="1:1">1:1 — Square post</option>
-                                    <option value="4:5">4:5 — Portrait post</option>
-                                </optgroup>
-                                <optgroup label="Phone screens">
-                                    <option value="18:9">18:9 — Mobile landscape</option>
-                                    <option value="9:18">9:18 — Mobile portrait</option>
-                                    <option value="19.5:9">19.5:9 — Mobile landscape</option>
-                                    <option value="9:19.5">9:19.5 — Mobile portrait</option>
-                                    <option value="20:9">20:9 — Mobile landscape</option>
-                                    <option value="9:20">9:20 — Mobile portrait</option>
-                                    <option value="21:9">21:9 — Ultrawide landscape</option>
-                                    <option value="9:21">9:21 — Ultrawide portrait</option>
-                                </optgroup>
-                                <optgroup label="Classic">
-                                    <option value="4:3">4:3 — Landscape</option>
-                                    <option value="3:4">3:4 — Portrait</option>
-                                </optgroup>
-                            </select>
-                        </div>
-
-                        <div id="panorama-direction-control" class="tw:form-control" style="display: none;">
-                            <label for="PAN_DIRECTION" class="tw:label tw:pb-1"><span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60">Horizontal route</span></label>
-                            <select id="PAN_DIRECTION" class="tw:select tw:select-bordered tw:select-sm tw:h-9 tw:bg-base-100 tw:w-full tw:text-sm">
-                                <option value="shortest">Shortest route</option>
-                                <option value="left_to_right">Left to right</option>
-                                <option value="right_to_left">Right to left</option>
-                                <option value="full_left_to_right">Full turn left to right</option>
-                                <option value="full_right_to_left">Full turn right to left</option>
-                            </select>
-                        </div>
-
-                        <button id="panorama-reset" type="button" class="tw:btn tw:btn-outline tw:btn-sm tw:h-9 tw:w-full">Reset area</button>
-                    </div>
-
-                    <div id="panorama-pan-summary" class="tw:text-xs tw:text-base-content/60" style="display: none;"></div>
-
-                    <div id="panorama-static-editor">
-                        <div id="panorama-editor-title" class="tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider tw:mb-2">Choose the area to show</div>
-                        <canvas id="panorama-editor" class="tw:w-full tw:h-auto tw:block tw:rounded-[var(--radius-box)] tw:shadow-inner tw:cursor-move" style="touch-action: none;"></canvas>
-                    </div>
-
-                    <div id="panorama-pan-editors" class="tw:grid tw:grid-cols-1 tw:lg:grid-cols-2 tw:gap-3 tw:items-start" style="display: none;">
-                        <div id="panorama-start-editor-panel" class="tw:bg-base-200/50 tw:p-2 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                            <div class="tw:flex tw:items-center tw:justify-between tw:gap-2 tw:mb-2">
-                                <div class="tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">First frame</div>
-                                <span id="panorama-start-active" class="tw:badge tw:badge-primary tw:badge-sm">Editing</span>
-                            </div>
-                            <canvas id="panorama-start-editor" data-panorama-frame="start" class="tw:w-full tw:h-auto tw:block tw:rounded-[var(--radius-box)] tw:shadow-inner tw:cursor-move" style="touch-action: none;"></canvas>
-                        </div>
-                        <div id="panorama-end-editor-panel" class="tw:bg-base-200/50 tw:p-2 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                            <div class="tw:flex tw:items-center tw:justify-between tw:gap-2 tw:mb-2">
-                                <div class="tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">Last frame</div>
-                                <span id="panorama-end-active" class="tw:badge tw:badge-primary tw:badge-sm" style="display: none;">Editing</span>
-                            </div>
-                            <canvas id="panorama-end-editor" data-panorama-frame="end" class="tw:w-full tw:h-auto tw:block tw:rounded-[var(--radius-box)] tw:shadow-inner tw:cursor-move" style="touch-action: none;"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="tw:flex tw:flex-col tw:gap-1 tw:text-xs tw:text-base-content/60">
-                        <div id="panorama-static-hint">
-                            Drag the frame to position it. Drag an edge or corner to resize it. An aspect-ratio preset keeps the selected shape.
-                        </div>
-                        <div id="panorama-pan-hint" style="display: none;">
-                            The frames start aligned. Resize either frame to change both. Drag a frame to position it separately.
-                        </div>
-                        <span id="panorama-wrap-state" class="tw:badge tw:badge-info tw:badge-sm" style="display: none;"></span>
-                    </div>
-
-                    <details id="panorama-manual-options" class="tw:bg-base-200/40 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3">
-                        <summary class="tw:cursor-pointer tw:text-xs tw:font-bold tw:text-base-content/70">Manual position and size</summary>
-                        <div class="tw:text-xs tw:text-base-content/60 tw:mt-2">
-                            Use these fields only when you need exact pixel values.
-                        </div>
-                        <div id="panorama-manual-target" class="tw:text-xs tw:text-base-content/60 tw:mt-3" style="display: none;">
-                            These values adjust the <span id="panorama-manual-target-name" class="tw:font-bold">first frame</span>. Click or drag either image to switch frames.
-                        </div>
-                        <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:lg:grid-cols-4 tw:gap-3 tw:mt-3">
-                            <div class="tw:form-control">
-                                <label for="CROP_X" class="tw:label tw:pb-1"><span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60">Horizontal position</span></label>
-                                <input id="CROP_X" type="number" min="0" step="2" value="0" class="tw:input tw:input-bordered tw:input-sm tw:h-9 tw:w-full tw:font-mono">
-                            </div>
-                            <div class="tw:form-control">
-                                <label for="CROP_Y" class="tw:label tw:pb-1"><span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60">Vertical position</span></label>
-                                <input id="CROP_Y" type="number" min="0" step="2" value="0" class="tw:input tw:input-bordered tw:input-sm tw:h-9 tw:w-full tw:font-mono">
-                            </div>
-                            <div class="tw:form-control">
-                                <label for="CROP_WIDTH" class="tw:label tw:pb-1"><span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60">Selected width</span></label>
-                                <input id="CROP_WIDTH" type="number" min="2" step="2" value="{{ panorama.width }}" class="tw:input tw:input-bordered tw:input-sm tw:h-9 tw:w-full tw:font-mono">
-                            </div>
-                            <div class="tw:form-control">
-                                <label for="CROP_HEIGHT" class="tw:label tw:pb-1"><span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60">Selected height</span></label>
-                                <input id="CROP_HEIGHT" type="number" min="2" step="2" value="{{ panorama.height }}" class="tw:input tw:input-bordered tw:input-sm tw:h-9 tw:w-full tw:font-mono">
-                            </div>
-                        </div>
-                    </details>
-                </div>
-
-                <div id="panorama-notices" class="tw:alert tw:py-2.5 tw:text-xs" style="display: none;" role="alert">
-                    <i class="tw:icon-[lucide--triangle-alert] tw:w-4 tw:h-4 tw:self-start tw:mt-0.5"></i>
-                    <ul id="panorama-notices-list" class="tw:list-disc tw:pl-4 tw:space-y-1"></ul>
-                </div>
-
-                <div class="tw:form-control tw:pt-2 tw:border-t tw:border-base-300">
-                    <label for="NOTE" class="tw:label tw:pb-1">
+            <div class="tw:flex tw:flex-wrap md:tw:flex-nowrap tw:items-end tw:gap-4">
+                
+                <div class="tw:form-control tw:w-full md:tw:w-1/4">
+                    <label class="tw:label tw:pb-1">
                         <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
-                            {{ form_mini_timelapse.NOTE.label.text }} <span class="tw:text-error" aria-hidden="true">*</span>
+                            {{ form_mini_timelapse.PRE_SECONDS_SELECT.label.text }}
                         </span>
-                        <span class="tw:label-text-alt tw:text-xs tw:text-base-content/60">Required</span>
                     </label>
-                    {{ form_mini_timelapse.NOTE(class='tw:input tw:input-bordered tw:input-sm tw:h-9 allsky-input-dark tw:w-full tw:text-xs', placeholder='Add a short description for this video', required=True, aria_required='true', maxlength=255) }}
+                    {{ form_mini_timelapse.PRE_SECONDS_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary') }}
                 </div>
 
+                <div class="tw:form-control tw:w-full md:tw:w-1/4">
+                    <label class="tw:label tw:pb-1">
+                        <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
+                            {{ form_mini_timelapse.POST_SECONDS_SELECT.label.text }}
+                        </span>
+                    </label>
+                    {{ form_mini_timelapse.POST_SECONDS_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary') }}
+                </div>
+
+                <div class="tw:form-control tw:w-full md:tw:w-1/4">
+                    <label class="tw:label tw:pb-1">
+                        <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
+                            {{ form_mini_timelapse.FRAMERATE_SELECT.label.text }}
+                        </span>
+                    </label>
+                    {{ form_mini_timelapse.FRAMERATE_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm focus:tw:outline-none focus:tw:border-primary') }}
+                </div>
+
+                <div class="tw:flex tw:items-center tw:gap-3 tw:w-full md:tw:w-1/4">
+                    <button class="tw:btn tw:btn-success tw:btn-sm tw:h-10 tw:flex-1 tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:gap-2">
+                        <i class="tw:icon-[lucide--video] tw:w-4 tw:h-4"></i>
+                        Create
+                    </button>
+                    
+                    <div id="loader_generate" class="tw:flex tw:items-center tw:justify-center tw:w-10 tw:h-10 tw:bg-base-300/50 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300" style="display: none;">
+                        <span class="tw:loading tw:loading-spinner tw:loading-sm tw:text-success"></span>
+                    </div>
+                </div>
             </div>
 
+            <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-12 tw:gap-3 tw:items-center tw:pt-2 tw:border-t tw:border-base-300">
+                <label class="md:tw:col-span-1 tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
+                    {{ form_mini_timelapse.NOTE.label.text }}
+                </label>
+                <div class="md:tw:col-span-11 tw:w-full">
+                    {{ form_mini_timelapse.NOTE(class='tw:input tw:input-bordered tw:input-sm tw:h-9 allsky-input-dark tw:w-full tw:text-xs tw:font-mono', placeholder='Attach local rendering tags or contextual references...') }}
+                </div>
+            </div>
         </form>
     </div>
 
-    <div id="generation-status" class="tw:bg-black/10 tw:px-4 tw:rounded-[var(--radius-box)] tw:flex tw:flex-col tw:gap-2">
+    <div class="tw:bg-black/10 tw:px-4 tw:rounded-[var(--radius-box)] tw:flex tw:flex-col tw:gap-2">
         <div class="tw:alert tw:alert-error tw:py-2.5 tw:rounded-[var(--radius-box)] tw:text-xs tw:font-medium" id="failure_message" style="display: none;">
             <i class="tw:icon-[lucide--alert-octagon] tw:w-4 tw:h-4"></i>
             <span class="tw:text-center tw:w-full"></span>
         </div>
 
-        <div class="tw:flex tw:flex-col tw:items-center tw:gap-2 tw:text-[0.6875rem] tw:font-semibold tw:tracking-wide tw:uppercase tw:text-base-content/40">
+        <div class="tw:alert tw:alert-success tw:py-2.5 tw:rounded-[var(--radius-box)] tw:text-xs tw:font-medium" id="success_message" style="display: none;">
+            <i class="tw:icon-[lucide--check-circle] tw:w-4 tw:h-4"></i>
+            <span class="tw:text-center tw:w-full"></span>
+        </div>
+
+        <div class="tw:flex tw:flex-col sm:tw:flex-row tw:justify-between tw:items-center tw:gap-2 tw:text-[0.6875rem] tw:font-semibold tw:tracking-wide tw:uppercase tw:text-base-content/40">
             <div id="message" class="tw:truncate"></div>
             <div id="video_length" class="tw:font-mono tw:bg-base-200/60 tw:px-2 tw:py-0.5 tw:rounded tw:border tw:border-base-300"></div>
         </div>
     </div>
 
-    <div id="preview-container" class="tw:w-full tw:bg-base-300/20 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:p-2 tw:overflow-hidden">
-        <div id="standard-preview" class="tw:w-full tw:flex tw:items-center tw:justify-center">
-            <img id="loop-image" class="tw:max-w-full tw:object-contain tw:rounded-[var(--radius-box)] tw:shadow-inner" alt="Mini timelapse preview">
-        </div>
-
-        <div id="panorama-preview" class="tw:w-full tw:flex tw:flex-col tw:gap-4" style="display: none;">
-            <div>
-                <div class="tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider tw:mb-2">Video preview</div>
-                <canvas id="panorama-output-preview" class="tw:max-w-full tw:h-auto tw:block tw:mx-auto tw:rounded-[var(--radius-box)] tw:shadow-inner tw:cursor-zoom-in"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <div class="tw:alert tw:alert-success tw:py-2.5 tw:rounded-[var(--radius-box)] tw:text-xs tw:font-medium" id="success_message" style="display: none;">
-        <i class="tw:icon-[lucide--check-circle] tw:w-4 tw:h-4"></i>
-        <span class="tw:text-center tw:w-full">
-            <span id="success_message_text"></span>
-            <a href="{{ url_for('indi_allsky.mini_videoviewer_view') }}" class="tw:link tw:font-bold tw:ml-1">Open Mini Timelapses</a>
-        </span>
-    </div>
-
-    <div id="create-video-row" class="tw:flex tw:items-center tw:gap-3 tw:w-full">
-        <button id="create-video" type="submit" form="form_mini_timelapse" class="tw:btn tw:btn-success tw:btn-sm tw:h-10 tw:flex-1 tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:gap-2">
-            <i class="tw:icon-[lucide--video] tw:w-4 tw:h-4"></i>
-            Create video
-        </button>
-
-        <div id="loader_generate" class="tw:flex tw:items-center tw:justify-center tw:w-10 tw:h-10 tw:bg-base-300/50 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300" style="display: none;">
-            <span class="tw:loading tw:loading-spinner tw:loading-sm tw:text-success"></span>
-        </div>
+    <div class="tw:flex-1 tw:bg-base-300/20 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:p-2 tw:flex tw:items-center tw:justify-center tw:overflow-hidden tw:min-h-[350px]">
+        <img id="loop-image" class="tw:max-w-full tw:max-h-[65vh] tw:object-contain tw:rounded-[var(--radius-box)] tw:shadow-inner" alt="Timelapse rendering array frame preview loop">
     </div>
 
 </div>
@@ -1539,53 +249,9 @@ function updateImages() {
     endDate_timestamp = timestamp + post_seconds;
     history_seconds = pre_seconds + post_seconds;
     framerate = $('#FRAMERATE_SELECT').val();
-    preview_revision += 1;
-    json_data['image_list'] = [];
-    panorama_start_image = null;
-    panorama_end_image = null;
-
-    // Do not leave a stale pass/fail result visible while the new period loads.
-    delete json_data['standard_preflight'];
-    delete json_data['panorama_preflight'];
-    updatePanoramaNotices();
 
     loadImages();
-    loop(preview_revision);
 }
-
-$('#SOURCE_TYPE').on('change', function() {
-    preview_revision += 1;
-    json_data = {
-        'image_list' : [],
-        'message' : '',
-    };
-    panorama_start_image = null;
-    panorama_end_image = null;
-    updateSourceDisplay();
-    loadImages();
-    loop(preview_revision);
-});
-
-$('#ASPECT_RATIO').on('change', function() {
-    applyAspectRatioPreset();
-});
-
-$('#PAN_MODE').on('change', function() {
-    updatePanoramaPanMode();
-});
-
-$('#PAN_DIRECTION').on('change', function() {
-    updatePanoramaPanControls();
-    drawPanoramaOutputPreview();
-});
-
-$('#CROP_X, #CROP_Y, #CROP_WIDTH, #CROP_HEIGHT').on('change', function() {
-    applyPanoramaFields(this.id);
-});
-
-$('#panorama-reset').on('click', function() {
-    resetPanoramaSelection();
-});
 
 $("#PRE_SECONDS_SELECT").on("change", function() {
     updateImages();
@@ -1597,37 +263,21 @@ $("#POST_SECONDS_SELECT").on("change", function() {
 
 $("#FRAMERATE_SELECT").on("change", function() {
     framerate = $('#FRAMERATE_SELECT').val();
-    updateVideoLength();
+
+    var image_count = json_data['image_list'].length;
+    $('#video_length').html(image_count + ' frames - Approximately ' + image_count / parseFloat(framerate) + 's');
 });
 
 
-$('#form_mini_timelapse').on('submit', function(event) {
-    event.preventDefault();
-    saveActivePanoramaSelection();
-
+$('#form_mini_timelapse').on('submit', function() {
     var form_data = {
-        'SOURCE_TYPE' : source_type,
         'IMAGE_ID' : $('#IMAGE_ID').val(),
-        'PANORAMA_IMAGE_ID' : panorama_data['id'],
         'CAMERA_ID' : $('#CAMERA_ID').val(),
         'PRE_SECONDS' : parseInt($('#PRE_SECONDS_SELECT').val()),
         'POST_SECONDS' : parseInt($('#POST_SECONDS_SELECT').val()),
         'FRAMERATE' : $('#FRAMERATE_SELECT').val(),
         'NOTE' : $('#NOTE').val(),
-        'CROP_X' : panorama_start_selection['x'],
-        'CROP_Y' : panorama_start_selection['y'],
-        'CROP_WIDTH' : panorama_start_selection['width'],
-        'CROP_HEIGHT' : panorama_start_selection['height'],
-        'ASPECT_RATIO' : $('#ASPECT_RATIO').val(),
-        'PAN_MODE' : panoramaPanMode(),
-        'END_CROP_X' : panorama_end_selection['x'],
-        'END_CROP_Y' : panorama_end_selection['y'],
-        'PAN_DIRECTION' : $('#PAN_DIRECTION').val() || 'shortest',
     }
-
-    $('#failure_message, #success_message').hide();
-    $('#create-video').prop('disabled', true);
-    $('#loader_generate').show();
 
     $.ajax({
         type: "POST",
@@ -1637,21 +287,16 @@ $('#form_mini_timelapse').on('submit', function(event) {
         success: function(rdata){
             $("#loader_generate").hide();
             $('#NOTE').val('');
-            updatePanoramaNotices();
 
-            $('#success_message_text').text(rdata['success-message']);
-            $('#success_message').show();
+            $('#success_message').html(rdata['success-message']).show();
             setTimeout(function() { $('#success_message').fadeOut(); }, 15000);
         },
         error: function(rdata){
             $("#loader_generate").hide();
-            updatePanoramaNotices();
 
-            var errors = rdata.responseJSON || {};
-            var failure_message = errors['failure-message'] || 'Could not create the mini timelapse. Try again or check the logs.';
+            var errors = JSON.parse(rdata.responseText);
 
-            $('#failure_message span').text(failure_message);
-            $('#failure_message').show();
+            $('#failure_message').html(errors['failure-message']).show();
             setTimeout(function() { $('#failure_message').fadeOut(); }, 15000);
         },
     });

@@ -34,7 +34,6 @@ class TimelapseGenerator(object):
         self._framerate = 25
         self._bitrate = '5000k'
         self._vf_scale = ''
-        self._video_filter = ''
         self._ffmpeg_extra_options = ''
 
 
@@ -75,14 +74,6 @@ class TimelapseGenerator(object):
         self._vf_scale = str(new_vf_scale)
 
     @property
-    def video_filter(self):
-        return self._video_filter
-
-    @video_filter.setter
-    def video_filter(self, new_video_filter):
-        self._video_filter = str(new_video_filter)
-
-    @property
     def ffmpeg_extra_options(self):
         return self._ffmpeg_extra_options
 
@@ -96,17 +87,14 @@ class TimelapseGenerator(object):
         return self._pre_processor
 
 
-    def generate(self, video_file, file_list, preserve_order=False):
+    def generate(self, video_file, file_list):
         video_file_p = Path(video_file)
 
-        if preserve_order:
-            file_list_ordered = list(file_list)
-        else:
-            # Exclude empty files
-            file_list_nonzero = filter(lambda p: p.stat().st_size != 0, file_list)
+        # Exclude empty files
+        file_list_nonzero = filter(lambda p: p.stat().st_size != 0, file_list)
 
-            # Sort by timestamp
-            file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
+        # Sort by timestamp
+        file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
 
 
         if self.skip_frames:
@@ -154,12 +142,8 @@ class TimelapseGenerator(object):
         ])
 
 
-        # add video filter if defined
-        if self.video_filter:
-            logger.warning('Setting FFMPEG video filter: %s', self.video_filter)
-            cmd.append('-vf')
-            cmd.append(self.video_filter)
-        elif self.vf_scale:
+        # add scaling option if defined
+        if self.vf_scale:
             logger.warning('Setting FFMPEG scaling option: %s', self.vf_scale)
             cmd.append('-vf')
             cmd.append('scale={0:s}'.format(self.vf_scale))

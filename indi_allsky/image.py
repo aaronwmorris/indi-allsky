@@ -33,7 +33,6 @@ from . import constants
 from . import asi676mc
 
 from .processing import ImageProcessor
-from .panorama import panoramaSourceCircleClipped
 from .miscUpload import miscUpload
 from .adsb import AdsbAircraftHttpWorker
 
@@ -2414,20 +2413,6 @@ class ImageWorker(Process):
     def write_panorama_img(self, pano_data, i_ref, camera, jpeg_exif=None):
         panorama_height, panorama_width = pano_data.shape[:2]
 
-        # Store the result so later configuration changes do not alter the warning.
-        source_height, source_width = self.image_processor.image.shape[:2]
-        binning = max(int(i_ref.binning), 1)
-        circle_diameter = int(self.config.get('FISH2PANO', {}).get('DIAMETER', 3000) / binning)
-        circle_offset_x = int(self.config.get('LENS_OFFSET_X', 0) / binning)
-        circle_offset_y = int(self.config.get('LENS_OFFSET_Y', 0) / binning)
-        circle_clipped = panoramaSourceCircleClipped(
-            source_width,
-            source_height,
-            circle_diameter,
-            circle_offset_x,
-            circle_offset_y,
-        )
-
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
         f_tmpfile.close()
 
@@ -2534,7 +2519,6 @@ class ImageWorker(Process):
             'aurora_n_hemi_gw'      : i_ref.aurora_n_hemi_gw,
             'aurora_s_hemi_gw'      : i_ref.aurora_s_hemi_gw,
             'camera_sqm_raw_mag'    : self.image_processor.camera_sqm_raw_mag,
-            'fish2pano_circle_clipped'  : circle_clipped,
         }
 
 

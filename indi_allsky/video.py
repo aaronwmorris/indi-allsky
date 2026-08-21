@@ -23,11 +23,6 @@ from . import asi676mc
 from . import asi676mc_calibration
 
 from .timelapse import TimelapseGenerator
-from .panorama import buildPanoramaCropFilter
-from .panorama import buildPanoramaPanFilter
-from .panorama import buildPanoramaTimedPanFilter
-from .panorama import cropPanoramaArray
-from .panorama import validatePanoramaAspectRatio
 from .keogram import KeogramGenerator
 from .starTrails import StarTrailGenerator
 from .miscUpload import miscUpload
@@ -777,8 +772,6 @@ class VideoWorker(Process):
 
     def generateMiniVideo(self, task, **kwargs):
         image_id = kwargs['image_id']
-        panorama_image_id = kwargs.get('panorama_image_id')
-        panorama = panorama_image_id is not None
         camera_id = kwargs['camera_id']
         pre_seconds = int(kwargs['pre_seconds'])
         post_seconds = int(kwargs['post_seconds'])
@@ -805,57 +798,6 @@ class VideoWorker(Process):
             .one()
 
 
-        video_filter = ''
-        pan_mode = 'static'
-        if panorama:
-            panorama_image_entry = db.session.query(
-                IndiAllSkyDbPanoramaImageTable,
-            )\
-                .join(IndiAllSkyDbPanoramaImageTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-                .filter(IndiAllSkyDbPanoramaImageTable.id == panorama_image_id)\
-                .one()
-
-            try:
-                source_width = int(panorama_image_entry.width)
-                source_height = int(panorama_image_entry.height)
-                crop_x = int(kwargs['crop_x'])
-                crop_y = int(kwargs['crop_y'])
-                crop_width = int(kwargs['crop_width'])
-                crop_height = int(kwargs['crop_height'])
-                aspect_ratio = str(kwargs.get('aspect_ratio', 'free'))
-                pan_mode = str(kwargs.get('pan_mode', 'static'))
-                end_crop_x = int(kwargs.get('end_crop_x', crop_x))
-                end_crop_y = int(kwargs.get('end_crop_y', crop_y))
-                pan_direction = str(kwargs.get('pan_direction', 'shortest'))
-
-                video_filter = buildPanoramaCropFilter(
-                    source_width,
-                    source_height,
-                    crop_x,
-                    crop_y,
-                    crop_width,
-                    crop_height,
-                )
-                validatePanoramaAspectRatio(aspect_ratio, crop_width, crop_height)
-                if pan_mode == 'linear':
-                    buildPanoramaCropFilter(
-                        source_width,
-                        source_height,
-                        end_crop_x,
-                        end_crop_y,
-                        crop_width,
-                        crop_height,
-                    )
-                    video_filter = ''  # final filter depends on the usable frame count
-                elif pan_mode != 'static':
-                    raise ValueError('Unsupported panorama pan mode')
-            except (KeyError, TypeError, ValueError) as e:
-                logger.error('Invalid panorama crop: %s', str(e))
-                task.setFailed('Invalid panorama crop: {0:s}'.format(str(e)))
-                return
-
-
         targetDate = image_entry.createDate
         startDate = image_entry.createDate - timedelta(seconds=pre_seconds)
         endDate = image_entry.createDate + timedelta(seconds=post_seconds)
@@ -880,18 +822,10 @@ class VideoWorker(Process):
             return
 
 
-        codec = self.config['FFMPEG_CODEC']
-        if panorama and codec == 'h264_qsv':
-            # QSV does not support the large resolutions commonly used by panoramas.
-            codec = 'libx264'
-
-
         vid_folder = self._getVideoFolder(d_dayDate, camera)
 
-        filename_prefix = 'allsky-panorama_minitimelapse' if panorama else 'allsky-minitimelapse'
         video_file = vid_folder.joinpath(
-            '{0:s}_ccd{1:d}_{2:s}_{3:s}_{4:d}.{5:s}'.format(
-                filename_prefix,
+            'allsky-minitimelapse_ccd{0:d}_{1:s}_{2:s}_{3:d}.{4:s}'.format(
                 camera.id,
                 d_dayDate.strftime('%Y%m%d'),
                 timeofday,
@@ -937,18 +871,17 @@ class VideoWorker(Process):
 
 
         # find all files
-        mini_timelapse_model = IndiAllSkyDbPanoramaImageTable if panorama else IndiAllSkyDbImageTable
-        mini_timelapse_files_entries = mini_timelapse_model.query\
-            .join(mini_timelapse_model.camera)\
+        mini_timelapse_files_entries = IndiAllSkyDbImageTable.query\
+            .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
-            .filter(mini_timelapse_model.createDate >= startDate)\
-            .filter(mini_timelapse_model.createDate <= endDate)\
-            .filter(mini_timelapse_model.exclude == sa_false())\
-            .order_by(
-                mini_timelapse_model.createDate.asc(),
-                mini_timelapse_model.id.asc(),
-            )\
-            .yield_per(100)
+            .filter(IndiAllSkyDbImageTable.createDate >= startDate)\
+            .filter(IndiAllSkyDbImageTable.createDate <= endDate)\
+            .filter(IndiAllSkyDbImageTable.exclude == sa_false())\
+            .order_by(IndiAllSkyDbImageTable.createDate.asc())
+
+
+        mini_timelapse_files_entries_count = mini_timelapse_files_entries.count()
+        logger.info('Found %d images for mini timelapse', mini_timelapse_files_entries_count)
 
 
         timelapse_data = IndiAllSkyDbImageTable.query\
@@ -998,63 +931,17 @@ class VideoWorker(Process):
 
 
         timelapse_files = list()
-        panorama_frame_timestamps = list()
         for entry in mini_timelapse_files_entries:
-            try:
-                p_entry = Path(entry.getFilesystemPath())
-                if not p_entry.stat().st_size:
-                    continue
-            except (OSError, ValueError):
-                logger.error('File not found: %s', entry.filename)
+            p_entry = Path(entry.getFilesystemPath())
+
+            if not p_entry.exists():
+                logger.error('File not found: %s', p_entry)
                 continue
 
-            if panorama and (entry.width != source_width or entry.height != source_height):
-                message = 'Panorama dimensions changed within the selected time range'
-                logger.error(
-                    '%s: expected %dx%d, found %sx%s',
-                    message,
-                    source_width,
-                    source_height,
-                    entry.width,
-                    entry.height,
-                )
-                task.setFailed(message)
-                return
+            if p_entry.stat().st_size == 0:
+                continue
 
             timelapse_files.append(p_entry)
-            if panorama:
-                panorama_frame_timestamps.append(entry.createDate.timestamp())
-
-
-        logger.info('Found %d usable images for mini timelapse', len(timelapse_files))
-
-
-        if len(timelapse_files) < 2:
-            source_label = 'panorama' if panorama else 'all-sky'
-            message = 'Not enough {0:s} images were found to generate a mini timelapse'.format(source_label)
-            logger.error(message)
-            task.setFailed(message)
-            return
-
-
-        if panorama and pan_mode == 'linear':
-            try:
-                video_filter = buildPanoramaPanFilter(
-                    source_width,
-                    source_height,
-                    crop_x,
-                    crop_y,
-                    end_crop_x,
-                    end_crop_y,
-                    crop_width,
-                    crop_height,
-                    len(timelapse_files),
-                    direction=pan_direction,
-                )
-            except ValueError as e:
-                logger.error('Invalid panorama pan: %s', str(e))
-                task.setFailed('Invalid panorama pan: {0:s}'.format(str(e)))
-                return
 
 
         mini_video_metadata = {
@@ -1067,14 +954,12 @@ class VideoWorker(Process):
             'endDate'       : endDate.timestamp(),
             'night'         : night,
             'framerate'     : framerate,
-            'frames'        : len(timelapse_files),
+            'frames'        : mini_timelapse_files_entries_count,
             'note'          : note,
             'camera_uuid'   : camera.uuid,
         }
 
         mini_video_metadata['data'] = {
-            'generation_task_id' : task.id,
-            'generation_task_created' : task.createDate.isoformat(),
             'max_kpindex'       : max_kpindex,
             'max_ovation_max'   : max_ovation_max,
             'max_smoke_rating'  : max_smoke_rating,
@@ -1083,24 +968,6 @@ class VideoWorker(Process):
             'max_moonphase'     : max_moonphase,
             'avg_sqm'           : avg_sqm,
         }
-
-        if panorama:
-            mini_video_metadata['width'] = crop_width
-            mini_video_metadata['height'] = crop_height
-            mini_video_metadata['data'].update({
-                'source'        : 'panorama',
-                'source_width'  : source_width,
-                'source_height' : source_height,
-                'crop_x'        : crop_x,
-                'crop_y'        : crop_y,
-                'crop_width'    : crop_width,
-                'crop_height'   : crop_height,
-                'aspect_ratio'  : aspect_ratio,
-                'pan_mode'      : pan_mode,
-                'end_crop_x'    : end_crop_x,
-                'end_crop_y'    : end_crop_y,
-                'pan_direction' : pan_direction,
-            })
 
         # Create DB entry before creating file
         mini_video_entry = self._miscDb.addMiniVideo(
@@ -1121,32 +988,6 @@ class VideoWorker(Process):
         }
 
 
-        thumbnail_data = None
-        thumbnail_image_entry = image_entry
-        if panorama:
-            thumbnail_image_entry = panorama_image_entry
-            if video_filter:
-                if pan_mode == 'linear':
-                    panorama_image_path = timelapse_files[0]
-                else:
-                    panorama_image_path = Path(panorama_image_entry.getFilesystemPath())
-                panorama_image_data = cv2.imread(str(panorama_image_path), cv2.IMREAD_COLOR)
-
-                if panorama_image_data is None:
-                    logger.warning('Unable to read panorama for crop-aware thumbnail: %s', panorama_image_path)
-                else:
-                    try:
-                        thumbnail_data = cropPanoramaArray(
-                            panorama_image_data,
-                            crop_x,
-                            crop_y,
-                            crop_width,
-                            crop_height,
-                        )
-                    except (TypeError, ValueError) as e:
-                        logger.warning('Unable to crop panorama thumbnail: %s', str(e))
-
-
         mini_video_thumbnail_entry = self._miscDb.addThumbnail(
             mini_video_entry,
             mini_video_metadata,
@@ -1154,14 +995,12 @@ class VideoWorker(Process):
             mini_video_thumbnail_metadata,
             new_width=self.thumbnail_mini_timelapse_width,
             opt_height=self.thumbnail_mini_timelapse_height_opt,
-            numpy_data=thumbnail_data,
-            image_entry=thumbnail_image_entry,
+            image_entry=image_entry,  # use target image for thumbnail
         )
 
 
         # populate fileSize
-        if mini_video_thumbnail_entry:
-            mini_video_thumbnail_metadata['fileSize'] = mini_video_thumbnail_entry.fileSize
+        mini_video_thumbnail_metadata['fileSize'] = mini_video_thumbnail_entry.fileSize
 
 
         if self.config.get('TIMELAPSE', {}).get('USE_NIGHT_CONFIG', True):
@@ -1179,54 +1018,19 @@ class VideoWorker(Process):
                 ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS_DAY', '')
 
 
-        pan_command_file = None
-        if panorama and pan_mode == 'linear':
-            try:
-                with tempfile.NamedTemporaryFile(
-                    suffix='_panorama_pan.txt',
-                    delete=False,
-                ) as pan_command_f:
-                    pan_command_file = Path(pan_command_f.name)
-                video_filter = buildPanoramaTimedPanFilter(
-                    source_width,
-                    source_height,
-                    crop_x,
-                    crop_y,
-                    end_crop_x,
-                    end_crop_y,
-                    crop_width,
-                    crop_height,
-                    panorama_frame_timestamps,
-                    framerate,
-                    pan_command_file,
-                    direction=pan_direction,
-                )
-            except (OSError, ValueError) as e:
-                if pan_command_file:
-                    try:
-                        pan_command_file.unlink()
-                    except FileNotFoundError:
-                        pass
-                logger.error('Invalid panorama pan: %s', str(e))
-                task.setFailed('Invalid panorama pan: {0:s}'.format(str(e)))
-                return
-
         try:
             mini_tg = TimelapseGenerator(
                 self.config,
                 skip_frames=0,
             )
 
-            mini_tg.codec = codec
+            mini_tg.codec = self.config['FFMPEG_CODEC']
             mini_tg.framerate = framerate
             mini_tg.bitrate = bitrate
-            if panorama:
-                mini_tg.video_filter = video_filter
-            else:
-                mini_tg.vf_scale = vf_scale
+            mini_tg.vf_scale = vf_scale
             mini_tg.ffmpeg_extra_options = ffmpeg_extra_options
 
-            mini_tg.generate(video_file, timelapse_files, preserve_order=True)
+            mini_tg.generate(video_file, timelapse_files)
 
 
             try:
@@ -1251,13 +1055,9 @@ class VideoWorker(Process):
 
             task.setFailed('Failed to generate mini timelapse: {0:s}'.format(str(video_file)))
             return
-        finally:
-            if pan_command_file:
-                try:
-                    pan_command_file.unlink()
-                except FileNotFoundError:
-                    pass
 
+
+        task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
 
         ### Upload ###
 
@@ -1271,14 +1071,6 @@ class VideoWorker(Process):
         self._miscUpload.s3_upload_mini_video(mini_video_entry, mini_video_metadata)
         self._miscUpload.upload_mini_video(mini_video_entry)
         self._miscUpload.youtube_upload_mini_video(mini_video_entry, mini_video_metadata)
-
-
-        task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
-
-
-    def generatePanoramaMiniVideo(self, task, **kwargs):
-        # Preserve the panorama queue action while sharing the standard worker.
-        self.generateMiniVideo(task, **kwargs)
 
 
     def generatePanoramaVideo(self, task, **kwargs):
@@ -2781,3 +2573,5 @@ class VideoWorker(Process):
 
 
         return mask_dict
+
+
