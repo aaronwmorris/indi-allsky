@@ -356,6 +356,10 @@ def normalize_execution_request(analysis, capabilities, capture_state, request_d
 
     normalised_groups = []
     seen_group_ids = set()
+    planned_exposure_max = max(
+        (target.exposure for target in analysis.plan.targets),
+        default=capture_state.exposure_max,
+    )
     for requested_group in requested_groups:
         if not isinstance(requested_group, dict):
             raise DarkAutomationError('The selected capture groups are invalid')
@@ -385,7 +389,12 @@ def normalize_execution_request(analysis, capabilities, capture_state, request_d
         for gain in gains:
             _validate_gain(gain, capabilities)
         for exposure in exposures:
-            _validate_exposure(exposure, capture_state, capabilities)
+            _validate_exposure(
+                exposure,
+                capture_state,
+                capabilities,
+                planned_exposure_max,
+            )
 
         binning = _validate_binning(
             requested_group.get('binning', source_group['binning']),
@@ -1661,18 +1670,24 @@ def _validate_gain(gain, capabilities):
     if capabilities.gain_values:
         if not any(abs(gain - value) <= 0.000001 for value in capabilities.gain_values):
             raise DarkAutomationError('A selected gain is not supported by this camera')
-    elif capabilities.gain_step and capabilities.gain_min is not None:
+    elif (
+            capabilities.gain_step_is_quantum
+            and capabilities.gain_step
+            and capabilities.gain_min is not None
+    ):
         step_count = (gain - capabilities.gain_min) / capabilities.gain_step
         if abs(step_count - round(step_count)) > 0.0001:
             raise DarkAutomationError('A selected gain does not match the camera gain step')
 
 
-def _validate_exposure(exposure, capture_state, capabilities):
-    if exposure < 1.0:
-        raise DarkAutomationError('Dark exposure lengths must be at least 1 second')
-    if abs(exposure - round(exposure)) > 0.000001:
-        raise DarkAutomationError('Dark exposure lengths must use whole seconds')
-    maximum = max(1.0, float(capture_state.exposure_max))
+def _validate_exposure(exposure, capture_state, capabilities, planned_maximum=None):
+    if exposure <= 0:
+        raise DarkAutomationError('Dark exposure lengths must be greater than zero')
+    if capabilities.exposure_min is not None and exposure < capabilities.exposure_min - 0.000001:
+        raise DarkAutomationError('A selected exposure is below the camera minimum')
+    maximum = float(math.ceil(capture_state.exposure_max))
+    if planned_maximum is not None:
+        maximum = max(maximum, float(planned_maximum))
     if capabilities.exposure_max is not None:
         maximum = min(maximum, float(capabilities.exposure_max))
     if exposure > maximum + 0.000001:

@@ -11,6 +11,8 @@ from .gain import db_to_gain
 from .gain import gain_to_db
 from .capture_state import GAIN_KIND_CONTINUOUS
 from .capture_state import GAIN_KIND_NONE
+from .capture_state import CALIBRATION_MODE_EXPOSURE_PRIORITY
+from .capture_state import CALIBRATION_MODE_FIXED_EXPOSURES
 from .capture_state import binned_dimension
 
 
@@ -169,19 +171,23 @@ def build_dark_plan(capture_state, capabilities, camera_id, quality='balanced'):
         capture_state.exposure_max,
         capture_state.exposure_step,
     )
-    minimum_exposure = 1.0
+    minimum_exposure = 0.000001
     if capabilities.exposure_min is not None:
-        minimum_exposure = max(minimum_exposure, float(math.ceil(capabilities.exposure_min)))
-    maximum_exposure = float(math.floor(capture_state.exposure_max))
-    if capabilities.exposure_max is not None:
+        minimum_exposure = max(minimum_exposure, float(capabilities.exposure_min))
+    maximum_exposure = float(math.ceil(capture_state.exposure_max))
+    if capabilities.exposure_max is not None and maximum_exposure > capabilities.exposure_max:
         maximum_exposure = min(
-            maximum_exposure,
-            float(math.floor(capabilities.exposure_max)),
+            float(capture_state.exposure_max),
+            float(capabilities.exposure_max),
         )
     exposures = tuple(
         exposure for exposure in requested_exposures
         if exposure >= minimum_exposure and exposure <= maximum_exposure
     )
+    if maximum_exposure >= minimum_exposure:
+        # Targeted automation accepts fractional exposures.  Retain the exact
+        # reachable maximum when a camera cannot accept its rounded-up value.
+        exposures = tuple(sorted(set(exposures + (float(round(maximum_exposure, 6)),))))
     if exposures != requested_exposures:
         warnings.append('Exposure lengths outside the camera range were omitted')
     if not exposures:
@@ -192,32 +198,32 @@ def build_dark_plan(capture_state, capabilities, camera_id, quality='balanced'):
 
     for profile in capture_state.profiles:
         gains = _profile_gains(profile, capabilities, quality_policy, warnings)
+        pairs = _profile_gain_exposure_pairs(profile, gains, exposures, capabilities, warnings)
         width = binned_dimension(capabilities.width, profile.binning)
         height = binned_dimension(capabilities.height, profile.binning)
 
-        for gain in gains:
-            for exposure in exposures:
-                target = DarkTarget(
-                    camera_id=int(camera_id),
-                    sources=(profile.label,),
-                    capture_profile=profile.name,
-                    exposure_mode=profile.exposure_mode,
-                    continuous_gain=profile.gain_kind == GAIN_KIND_CONTINUOUS,
-                    gain=float(gain),
-                    exposure=float(exposure),
-                    binning=int(profile.binning),
-                    bit_depth=profile.bit_depth,
-                    width=width,
-                    height=height,
-                    temperature=profile.temperature,
-                )
+        for gain, exposure in pairs:
+            target = DarkTarget(
+                camera_id=int(camera_id),
+                sources=(profile.label,),
+                capture_profile=profile.name,
+                exposure_mode=profile.exposure_mode,
+                continuous_gain=profile.gain_kind == GAIN_KIND_CONTINUOUS,
+                gain=float(gain),
+                exposure=float(exposure),
+                binning=int(profile.binning),
+                bit_depth=profile.bit_depth,
+                width=width,
+                height=height,
+                temperature=profile.temperature,
+            )
 
-                old_target = targets_by_key.get(target.key)
-                if old_target:
-                    sources = tuple(sorted(set(old_target.sources + target.sources)))
-                    targets_by_key[target.key] = replace(old_target, sources=sources)
-                else:
-                    targets_by_key[target.key] = target
+            old_target = targets_by_key.get(target.key)
+            if old_target:
+                sources = tuple(sorted(set(old_target.sources + target.sources)))
+                targets_by_key[target.key] = replace(old_target, sources=sources)
+            else:
+                targets_by_key[target.key] = target
 
     targets = tuple(sorted(
         targets_by_key.values(),
@@ -228,13 +234,14 @@ def build_dark_plan(capture_state, capabilities, camera_id, quality='balanced'):
             target.exposure,
         ),
     ))
+    target_exposures = tuple(sorted(set(target.exposure for target in targets)))
 
     return DarkPlan(
         quality=quality_policy,
         config_signature=capture_state.config_signature,
         exposure_max=capture_state.exposure_max,
         exposure_step=capture_state.exposure_step,
-        exposures=exposures,
+        exposures=target_exposures,
         targets=targets,
         warnings=tuple(dict.fromkeys(warnings)),
     )
@@ -401,6 +408,55 @@ def _profile_gains(profile, capabilities, quality_policy, warnings):
             break
 
     return gain_values
+
+
+def _profile_gain_exposure_pairs(profile, gains, exposures, capabilities, warnings):
+    """Return only gain/exposure combinations the configured controller can use."""
+    if profile.calibration_mode == CALIBRATION_MODE_FIXED_EXPOSURES:
+        fixed_exposures = _supported_fixed_exposures(
+            profile.calibration_exposures,
+            capabilities,
+        )
+        if fixed_exposures != profile.calibration_exposures:
+            warnings.append(
+                '{0:s} exposure lengths outside the camera range were omitted'.format(profile.label)
+            )
+        return tuple(
+            (float(gain), float(exposure))
+            for gain in gains
+            for exposure in fixed_exposures
+        )
+
+    if profile.calibration_mode == CALIBRATION_MODE_EXPOSURE_PRIORITY:
+        if not exposures:
+            return ()
+        maximum_exposure = max(exposures)
+        pairs = {
+            (float(profile.gain_min), float(exposure))
+            for exposure in exposures
+        }
+        pairs.update((float(gain), float(maximum_exposure)) for gain in gains)
+        return tuple(sorted(pairs, key=lambda pair: (pair[0], pair[1])))
+
+    return tuple(
+        (float(gain), float(exposure))
+        for gain in gains
+        for exposure in exposures
+    )
+
+
+def _supported_fixed_exposures(exposures, capabilities):
+    result = []
+    for exposure in exposures:
+        exposure = float(round(exposure, 6))
+        if exposure <= 0:
+            continue
+        if capabilities.exposure_min is not None and exposure < capabilities.exposure_min:
+            continue
+        if capabilities.exposure_max is not None and exposure > capabilities.exposure_max:
+            continue
+        result.append(exposure)
+    return tuple(sorted(set(result)))
 
 
 def _snap_continuous_gain(gain, capabilities):
@@ -674,52 +730,55 @@ def _combine_statuses(*statuses):
 
 
 def _analysis_groups(analysis):
-    groups = {}
-    suggested_keys = {target.key for target in analysis.suggested_targets}
-    planned_keys = {target.key for target in analysis.plan.targets}
+    cells = {}
 
-    for target in analysis.plan.targets:
-        group_key = (target.binning, target.bit_depth, target.temperature, target.sources)
-        group = groups.setdefault(group_key, {
-            'sources': target.sources,
-            'binning': target.binning,
-            'bit_depth': target.bit_depth,
-            'temperature': target.temperature,
-            'gains': set(),
-            'suggested_gains': set(),
-            'exposures': set(),
-            'target_count': 0,
-            'suggested_target_count': 0,
-        })
-        group['gains'].add(target.gain)
-        group['exposures'].add(target.exposure)
-        group['target_count'] += 1
-        if target.key in suggested_keys:
-            group['suggested_gains'].add(target.gain)
-            group['suggested_target_count'] += 1
+    for target_kind, targets in (
+            ('planned', analysis.plan.targets),
+            ('suggested', analysis.suggested_targets),
+    ):
+        for target in targets:
+            structural_key = (
+                target.binning,
+                target.bit_depth,
+                target.temperature,
+                target.sources,
+            )
+            gains = cells.setdefault(structural_key, {})
+            gain_cells = gains.setdefault(target.gain, {
+                'planned': set(),
+                'suggested': set(),
+            })
+            gain_cells[target_kind].add(target.exposure)
 
-    for target in analysis.suggested_targets:
-        if target.key in planned_keys:
-            continue
-        group_key = (target.binning, target.bit_depth, target.temperature, target.sources)
-        group = groups.setdefault(group_key, {
-            'sources': target.sources,
-            'binning': target.binning,
-            'bit_depth': target.bit_depth,
-            'temperature': target.temperature,
-            'gains': set(),
-            'suggested_gains': set(),
-            'exposures': set(),
-            'target_count': 0,
-            'suggested_target_count': 0,
-        })
-        group['gains'].add(target.gain)
-        group['suggested_gains'].add(target.gain)
-        group['exposures'].add(target.exposure)
-        group['suggested_target_count'] += 1
+    groups = []
+    for structural_key, gains in cells.items():
+        binning, bit_depth, temperature, sources = structural_key
+        matching_gain_shapes = {}
+        for gain, gain_cells in gains.items():
+            shape = (
+                tuple(sorted(gain_cells['planned'])),
+                tuple(sorted(gain_cells['suggested'])),
+            )
+            matching_gain_shapes.setdefault(shape, []).append(gain)
+
+        for shape, shape_gains in matching_gain_shapes.items():
+            planned_exposures, suggested_exposures = shape
+            groups.append({
+                'sources': sources,
+                'binning': binning,
+                'bit_depth': bit_depth,
+                'temperature': temperature,
+                'gains': set(shape_gains),
+                'suggested_gains': {
+                    gain for gain in shape_gains if suggested_exposures
+                },
+                'exposures': set(planned_exposures + suggested_exposures),
+                'target_count': len(shape_gains) * len(planned_exposures),
+                'suggested_target_count': len(shape_gains) * len(suggested_exposures),
+            })
 
     context_groups = []
-    for group in groups.values():
+    for group in groups:
         gains = sorted(group['gains'])
         suggested_gains = sorted(group['suggested_gains'])
         exposures = sorted(group['exposures'])

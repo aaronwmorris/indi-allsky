@@ -18,6 +18,10 @@ GAIN_KIND_DISCRETE = 'discrete'
 GAIN_KIND_CONTINUOUS = 'continuous'
 GAIN_KIND_NONE = 'none'
 
+CALIBRATION_MODE_ALL_EXPOSURES = 'all_exposures'
+CALIBRATION_MODE_EXPOSURE_PRIORITY = 'exposure_priority'
+CALIBRATION_MODE_FIXED_EXPOSURES = 'fixed_exposures'
+
 
 @dataclass(frozen=True)
 class CameraCapabilities:
@@ -34,6 +38,7 @@ class CameraCapabilities:
     width: Optional[int] = None
     height: Optional[int] = None
     bit_depth: Optional[int] = None
+    gain_step_is_quantum: bool = False
 
     @property
     def gain_supported(self):
@@ -54,6 +59,7 @@ class CameraCapabilities:
             gain_min=_optional_float(gain_info.get('min')),
             gain_max=_optional_float(gain_info.get('max')),
             gain_step=_positive_optional_float(gain_info.get('step')),
+            gain_step_is_quantum=bool(gain_info.get('step_is_quantum', False)),
             gain_format=_optional_string(gain_info.get('format')),
             gain_values=_normalise_float_values(gain_info.get('values', ())),
             gain_values_known='values' in gain_info,
@@ -81,6 +87,7 @@ class CameraCapabilities:
                 gain_min=_optional_float(gain_data.get('min')),
                 gain_max=_optional_float(gain_data.get('max')),
                 gain_step=_positive_optional_float(gain_data.get('step')),
+                gain_step_is_quantum=bool(gain_data.get('step_is_quantum', False)),
                 gain_format=_optional_string(gain_data.get('format')),
                 gain_values=_normalise_float_values(gain_data.get('values', ())),
                 gain_values_known=bool(gain_data.get('values_known', False)),
@@ -111,6 +118,7 @@ class CameraCapabilities:
                 'min': self.gain_min,
                 'max': self.gain_max,
                 'step': self.gain_step,
+                'step_is_quantum': self.gain_step_is_quantum,
                 'format': self.gain_format,
                 'values': list(self.gain_values),
                 'values_known': self.gain_values_known,
@@ -157,7 +165,7 @@ class CameraCapabilities:
 
         if self.gain_values:
             gain = min(self.gain_values, key=lambda value: abs(value - gain))
-        elif self.gain_step and self.gain_min is not None:
+        elif self.gain_step_is_quantum and self.gain_step and self.gain_min is not None:
             step_count = (gain - self.gain_min) / self.gain_step
             step_count = math.floor(step_count + 0.5)
             gain = self.gain_min + (step_count * self.gain_step)
@@ -188,10 +196,13 @@ class EffectiveGainProfile:
     exposure_mode: str
     bit_depth: Optional[int]
     temperature: Optional[float]
+    calibration_mode: str = CALIBRATION_MODE_ALL_EXPOSURES
+    calibration_exposures: Tuple[float, ...] = ()
 
     def to_dict(self):
         data = asdict(self)
         data['gain_values'] = list(self.gain_values)
+        data['calibration_exposures'] = list(self.calibration_exposures)
         return data
 
 
@@ -351,16 +362,29 @@ def build_effective_capture_state(
                     exposure_mode=exposure_mode,
                     bit_depth=bit_depth,
                     temperature=temperature,
+                    calibration_mode=CALIBRATION_MODE_EXPOSURE_PRIORITY,
                 )
             )
 
+    sqm_exposure = ()
+    if sqm_config.get('ENABLE') or sqm_config.get('ENABLE_DAY'):
+        sqm_exposure = _fixed_calibration_exposure(
+            sqm_config.get('EXPOSURE', 10.0),
+            capabilities,
+            'SQM',
+            warnings,
+        )
     if sqm_config.get('ENABLE'):
         profiles.append(_fixed_profile(
             'sqm_night', 'Camera SQM (night)', bin_sqm, gain_sqm, exposure_mode, bit_depth_night, temperature_night,
+            calibration_mode=CALIBRATION_MODE_FIXED_EXPOSURES,
+            calibration_exposures=sqm_exposure,
         ))
     if sqm_config.get('ENABLE_DAY') and daytime_profiles_enabled:
         profiles.append(_fixed_profile(
             'sqm_day', 'Camera SQM (day)', bin_sqm, gain_sqm, exposure_mode, bit_depth_day, temperature_day,
+            calibration_mode=CALIBRATION_MODE_FIXED_EXPOSURES,
+            calibration_exposures=sqm_exposure,
         ))
 
     signature_data = {
@@ -391,7 +415,17 @@ def binned_dimension(dimension, binning):
     return max(1, int(int(dimension) / int(binning)))
 
 
-def _fixed_profile(name, label, binning, gain, exposure_mode, bit_depth, temperature):
+def _fixed_profile(
+        name,
+        label,
+        binning,
+        gain,
+        exposure_mode,
+        bit_depth,
+        temperature,
+        calibration_mode=CALIBRATION_MODE_ALL_EXPOSURES,
+        calibration_exposures=(),
+):
     gain_kind = GAIN_KIND_FIXED
     if gain < 0:
         gain_kind = GAIN_KIND_NONE
@@ -407,7 +441,28 @@ def _fixed_profile(name, label, binning, gain, exposure_mode, bit_depth, tempera
         exposure_mode=exposure_mode,
         bit_depth=bit_depth,
         temperature=temperature,
+        calibration_mode=calibration_mode,
+        calibration_exposures=tuple(calibration_exposures),
     )
+
+
+def _fixed_calibration_exposure(value, capabilities, label, warnings):
+    """Choose one executable dark exposure that covers a fixed capture exposure."""
+    configured_exposure = max(0.000001, _ceil_precision(value, 1000000))
+    exposure = float(math.ceil(configured_exposure))
+
+    if capabilities.exposure_max is not None and exposure > capabilities.exposure_max:
+        if configured_exposure <= capabilities.exposure_max:
+            exposure = configured_exposure
+        else:
+            exposure = float(capabilities.exposure_max)
+            warnings.append('{0:s} exposure was limited to the camera maximum'.format(label))
+
+    if capabilities.exposure_min is not None and exposure < capabilities.exposure_min:
+        exposure = float(capabilities.exposure_min)
+        warnings.append('{0:s} exposure was limited to the camera minimum'.format(label))
+
+    return (float(round(exposure, 6)),)
 
 
 def _effective_gain(capabilities, value, label, warnings, round_up):

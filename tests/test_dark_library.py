@@ -71,11 +71,18 @@ def _config(exposure_mode=EXPOSURE_MODE_BASIC, exposure_max=30.0):
     }
 
 
-def _capabilities(gain_min=0, gain_max=300, gain_step=1, gain_values=()):
+def _capabilities(
+        gain_min=0,
+        gain_max=300,
+        gain_step=1,
+        gain_values=(),
+        gain_step_is_quantum=False,
+):
     return CameraCapabilities(
         gain_min=gain_min,
         gain_max=gain_max,
         gain_step=gain_step,
+        gain_step_is_quantum=gain_step_is_quantum,
         gain_format='%0.0f',
         gain_values=tuple(gain_values),
         gain_values_known=True,
@@ -240,15 +247,15 @@ def test_legacy_state_matches_capture_gain_levels():
     assert all(profile.gain_kind == GAIN_KIND_DISCRETE for profile in state.profiles)
     assert state.profiles[0].gain_values == (
         0.0,
-        43.0,
-        86.0,
-        129.0,
-        171.0,
-        214.0,
-        257.0,
+        42.857,
+        85.714,
+        128.571,
+        171.429,
+        214.286,
+        257.143,
         300.0,
     )
-    assert any('Legacy auto-gain levels were adjusted' in warning for warning in state.warnings)
+    assert not any('Legacy auto-gain levels were adjusted' in warning for warning in state.warnings)
 
 
 @pytest.mark.parametrize(
@@ -381,7 +388,7 @@ def test_plan_omits_exposures_outside_the_camera_whole_second_range():
     assert any('outside the camera range' in warning for warning in plan.warnings)
 
 
-def test_plan_is_unavailable_when_camera_has_no_supported_whole_second_exposure():
+def test_subsecond_only_camera_uses_its_maximum_supported_exposure():
     capabilities = _capabilities()
     capabilities = CameraCapabilities(
         **{
@@ -393,10 +400,21 @@ def test_plan_is_unavailable_when_camera_has_no_supported_whole_second_exposure(
     plan = build_dark_plan(state, capabilities, camera_id=1)
     analysis = analyze_dark_plan(plan, (), temperature=20)
 
-    assert plan.exposures == ()
-    assert plan.targets == ()
-    assert not analysis_context(state, capabilities, analysis)['available']
-    assert any('whole-second dark exposure' in warning for warning in plan.warnings)
+    assert plan.exposures == (0.5,)
+    assert plan.targets
+    assert analysis_context(state, capabilities, analysis)['available']
+
+
+def test_fractional_configured_max_is_retained_when_rounded_value_is_unsupported():
+    capabilities = replace(_capabilities(), exposure_max=30.5)
+    state = build_effective_capture_state(
+        _config(EXPOSURE_MODE_DB_1_10, exposure_max=30.2),
+        capabilities,
+    )
+    plan = build_dark_plan(state, capabilities, camera_id=1)
+
+    assert plan.exposures[-1] == 30.2
+    assert all(target.exposure == 30.2 for target in plan.targets if target.gain > 0)
 
 
 def test_zwo_balanced_plan_uses_three_db_gain_steps():
@@ -421,7 +439,120 @@ def test_zwo_balanced_plan_uses_three_db_gain_steps():
         300.0,
     ]
     assert plan.exposures == (1.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0)
-    assert len(plan.targets) == 11 * 7 * 2  # two distinct configured binnings
+    # At shorter exposures only minimum gain is reachable.  The complete gain
+    # ladder is needed only where exposure has already reached its maximum.
+    assert len(plan.targets) == 17 * 2  # two distinct configured binnings
+    assert sorted(group['target_count'] for group in analysis_context(
+        state,
+        capabilities,
+        analysis,
+    )['groups']) == [7, 7, 10, 10]
+
+
+def test_exposure_priority_plan_matches_reachable_controller_states_and_existing_library():
+    config = _config(EXPOSURE_MODE_DB_1_10, exposure_max=30)
+    config['CCD_CONFIG']['MOONMODE']['BINNING'] = 1
+    capabilities = _capabilities(
+        gain_min=0,
+        gain_max=600,
+        gain_step=60,
+    )
+
+    state = build_effective_capture_state(config, capabilities)
+    plan = build_dark_plan(state, capabilities, camera_id=7)
+
+    assert capabilities.snap_gain(76) == 76.0
+    assert sorted(set(target.gain for target in plan.targets)) == [
+        0.0,
+        30.0,
+        60.0,
+        90.0,
+        120.0,
+        150.0,
+        180.0,
+        210.0,
+        240.0,
+        270.0,
+        300.0,
+    ]
+    assert len(plan.targets) == 17
+    assert all(target.gain == 0.0 for target in plan.targets if target.exposure < 30)
+    assert sorted(target.exposure for target in plan.targets if target.gain == 0.0) == [
+        1.0,
+        5.0,
+        10.0,
+        15.0,
+        20.0,
+        25.0,
+        30.0,
+    ]
+
+    template = plan.targets[0]
+    inventory = []
+    for gain in (0, 10, 100, 220):
+        for exposure in (1, 5, 10, 15, 20):
+            inventory.extend(
+                _inventory_pair(
+                    template,
+                    gain=gain,
+                    exposure=exposure,
+                    temperature=42,
+                )
+            )
+
+    analysis = analyze_dark_plan(plan, inventory, temperature=38)
+    preview = execution_preview(analysis, 'complete')
+    execution = normalize_execution_request(
+        analysis,
+        capabilities,
+        state,
+        {
+            'strategy': 'complete',
+            'method': 'average',
+            'frame_count': 10,
+            'config_signature': plan.config_signature,
+            'groups': preview['groups'],
+        },
+    )
+
+    assert analysis.counts[COVERAGE_EXACT] == 5
+    assert len(analysis.completion_targets) == 12
+    assert preview['target_count'] == 12
+    assert execution['target_count'] == 12
+
+
+def test_advertised_gain_step_is_advisory_for_advanced_overrides():
+    config = _config(EXPOSURE_MODE_DB_1_10, exposure_max=30)
+    config['CCD_CONFIG']['MOONMODE']['BINNING'] = 1
+    capabilities = _capabilities(gain_max=600, gain_step=60)
+    state = build_effective_capture_state(config, capabilities)
+    plan = build_dark_plan(state, capabilities, camera_id=1)
+    analysis = analyze_dark_plan(plan, (), temperature=20)
+    source_group = next(
+        group for group in execution_preview(analysis, 'refresh')['groups']
+        if group['exposures'] == [30.0] and 30.0 in group['gains']
+    )
+
+    execution = normalize_execution_request(
+        analysis,
+        capabilities,
+        state,
+        {
+            'strategy': 'refresh',
+            'method': 'average',
+            'frame_count': 3,
+            'config_signature': plan.config_signature,
+            'groups': [{
+                'id': source_group['id'],
+                'enabled': True,
+                'gains': [76, 219],
+                'exposures': [30],
+            }],
+        },
+    )
+
+    assert execution['groups'][0]['gains'] == [76.0, 219.0]
+    assert execution['target_count'] == 2
 
 
 @pytest.mark.parametrize(
@@ -473,6 +604,41 @@ def test_discrete_camera_values_are_used_instead_of_interpolated_gains():
     assert sorted(set(target.gain for target in plan.targets)) == [100.0, 200.0, 400.0, 800.0]
 
 
+@pytest.mark.parametrize(
+    'exposure_mode,gain_values',
+    (
+        (EXPOSURE_MODE_LEGACY, None),
+        (EXPOSURE_MODE_ISO, (100, 200, 400, 800)),
+    ),
+)
+def test_discrete_auto_gain_modes_only_expand_gain_at_maximum_exposure(
+        exposure_mode,
+        gain_values,
+):
+    config = _config(exposure_mode, exposure_max=5)
+    config['CCD_CONFIG']['MOONMODE']['BINNING'] = 1
+    if gain_values:
+        config['CCD_CONFIG']['DAY']['GAIN'] = 100
+        config['CCD_CONFIG']['NIGHT']['GAIN'] = 800
+        capabilities = _capabilities(
+            gain_min=100,
+            gain_max=800,
+            gain_step=None,
+            gain_values=gain_values,
+        )
+    else:
+        capabilities = _capabilities()
+
+    state = build_effective_capture_state(config, capabilities)
+    plan = build_dark_plan(state, capabilities, camera_id=1)
+
+    minimum_gain = min(target.gain for target in plan.targets)
+    assert all(target.gain == minimum_gain for target in plan.targets if target.exposure < 5)
+    assert sorted(set(target.gain for target in plan.targets if target.exposure == 5)) == sorted(
+        set(state.profiles[0].gain_values)
+    )
+
+
 def test_camera_without_gain_control_uses_one_gain_state_per_binning():
     capabilities = _capabilities(gain_min=-1, gain_max=-1, gain_step=1)
     state = build_effective_capture_state(_config(EXPOSURE_MODE_DB_1_10, exposure_max=1), capabilities)
@@ -483,10 +649,10 @@ def test_camera_without_gain_control_uses_one_gain_state_per_binning():
     assert len(plan.targets) == 2
 
 
-def test_fixed_gain_profiles_snap_to_the_reported_camera_step():
+def test_fixed_gain_profiles_snap_to_an_explicit_camera_gain_quantum():
     config = _config(EXPOSURE_MODE_BASIC, exposure_max=1)
     config['CCD_CONFIG']['MOONMODE']['GAIN'] = 75
-    capabilities = _capabilities(gain_step=10)
+    capabilities = _capabilities(gain_step=10, gain_step_is_quantum=True)
 
     state = build_effective_capture_state(config, capabilities)
     plan = build_dark_plan(state, capabilities, camera_id=1)
@@ -509,6 +675,63 @@ def test_fixed_gain_profiles_snap_to_the_reported_camera_step():
     assert moon_profile.gain_values == (80.0,)
     assert any('Moon gain was adjusted' in warning for warning in state.warnings)
     assert any(80.0 in group['gains'] for group in execution['groups'])
+
+
+def test_basic_mode_keeps_each_fixed_gain_across_the_exposure_ladder():
+    config = _config(EXPOSURE_MODE_BASIC, exposure_max=5)
+    config['CCD_CONFIG']['MOONMODE']['BINNING'] = 1
+    capabilities = _capabilities()
+    state = build_effective_capture_state(config, capabilities)
+    plan = build_dark_plan(state, capabilities, camera_id=1)
+
+    assert {
+        (target.gain, target.exposure)
+        for target in plan.targets
+    } == {
+        (0.0, 1.0),
+        (0.0, 5.0),
+        (200.0, 1.0),
+        (200.0, 5.0),
+        (300.0, 1.0),
+        (300.0, 5.0),
+    }
+
+
+def test_camera_sqm_uses_one_covering_exposure_even_above_normal_capture_maximum():
+    config = _config(EXPOSURE_MODE_BASIC, exposure_max=1)
+    config['CAMERA_SQM'].update({
+        'ENABLE': True,
+        'ENABLE_DAY': True,
+        'EXPOSURE': 7.2,
+        'GAIN': 100,
+        'BINNING': 1,
+    })
+    capabilities = _capabilities()
+    state = build_effective_capture_state(config, capabilities)
+    plan = build_dark_plan(state, capabilities, camera_id=1)
+    analysis = analyze_dark_plan(plan, (), temperature=20)
+
+    sqm_targets = [target for target in plan.targets if 'Camera SQM (night)' in target.sources]
+    assert len(sqm_targets) == 1
+    assert sqm_targets[0].gain == 100.0
+    assert sqm_targets[0].exposure == 8.0
+    assert set(sqm_targets[0].sources) == {'Camera SQM (day)', 'Camera SQM (night)'}
+    assert plan.exposures == (1.0, 8.0)
+
+    preview = execution_preview(analysis, 'refresh', frame_count=3)
+    execution = normalize_execution_request(
+        analysis,
+        capabilities,
+        state,
+        {
+            'strategy': 'refresh',
+            'method': 'average',
+            'frame_count': 3,
+            'config_signature': plan.config_signature,
+            'groups': preview['groups'],
+        },
+    )
+    assert execution['target_count'] == len(plan.targets)
 
 
 def test_exact_pair_is_covered_but_missing_bpm_requires_capture():
@@ -606,7 +829,7 @@ def test_execution_groups_preserve_irregular_completion_cells():
     selected = (
         targets[(0.0, 1.0)],
         targets[(0.0, 5.0)],
-        targets[(30.0, 1.0)],
+        targets[(30.0, 5.0)],
     )
     analysis = SimpleNamespace(completion_targets=selected, plan=plan)
 
@@ -615,7 +838,7 @@ def test_execution_groups_preserve_irregular_completion_cells():
     assert sum(group['target_count'] for group in groups) == 3
     assert sorted((group['gains'], group['exposures']) for group in groups) == [
         ([0.0], [1.0, 5.0]),
-        ([30.0], [1.0]),
+        ([30.0], [5.0]),
     ]
 
 
@@ -817,7 +1040,7 @@ def test_single_capture_ignores_hidden_temperature_series_values():
 
 def test_adjusted_gain_must_match_camera_step():
     config = _config(EXPOSURE_MODE_DB_1_10, exposure_max=1)
-    capabilities = _capabilities(gain_step=5)
+    capabilities = _capabilities(gain_step=5, gain_step_is_quantum=True)
     state = build_effective_capture_state(config, capabilities)
     plan = build_dark_plan(state, capabilities, camera_id=1)
     analysis = analyze_dark_plan(plan, (), temperature=20)
