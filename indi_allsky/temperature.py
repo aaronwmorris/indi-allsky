@@ -43,9 +43,10 @@ def configured_temperature_sources(config):
     """Return the temperature inputs that indi-allsky can identify safely.
 
     The camera is always offered. Configured sensor devices contribute their
-    first value explicitly declared as a temperature. Physical enclosure
-    sensors take precedence over other physical sensors, followed by weather
-    or remote API values and finally the legacy external-temperature script.
+    first value explicitly declared as a temperature. A physical sensor is
+    considered an enclosure sensor only when its value slot is explicitly used
+    by the configured fan or dew-heater controller. Labels are display text and
+    are never used to guess physical placement.
     """
     sources = [TemperatureSource(
         key=TEMPERATURE_SOURCE_CAMERA,
@@ -58,7 +59,9 @@ def configured_temperature_sources(config):
     for controller_name in ('DEW_HEATER', 'FAN'):
         controller = config.get(controller_name, {}) or {}
         if controller.get('CLASSNAME') or controller.get('THOLD_ENABLE'):
-            enclosure_slots.add(str(controller.get('TEMP_USER_VAR_SLOT') or ''))
+            controller_slot = str(controller.get('TEMP_USER_VAR_SLOT') or '')
+            if controller_slot:
+                enclosure_slots.add(controller_slot)
 
     try:
         from .devices import sensors as sensor_devices
@@ -111,20 +114,14 @@ def configured_temperature_sources(config):
             else 'Temperature'
         )
         label = '{0:s}: {1:s}'.format(sensor_label, probe_label)
-        label_lower = label.lower()
-        if classname.startswith('temp_api_') or classname == 'mqtt_broker_sensor':
-            category = 'inferred'
-            priority = 3
-        elif (
-                slot in enclosure_slots
-                or any(word in label_lower for word in (
-                    'camera', 'enclosure', 'housing', 'inside', 'internal',
-                ))
-        ):
+        if slot in enclosure_slots:
             category = 'enclosure'
             priority = 1
+        elif classname.startswith('temp_api_') or classname == 'mqtt_broker_sensor':
+            category = 'inferred'
+            priority = 3
         else:
-            category = 'outside'
+            category = 'local'
             priority = 2
         sources.append(TemperatureSource(
             key=slot,
@@ -148,7 +145,7 @@ def configured_temperature_sources(config):
 def temperature_source_choices(config):
     choices = [{
         'key': TEMPERATURE_SOURCE_AUTO,
-        'label': 'Automatic (camera, enclosure, outside, API)',
+        'label': 'Automatic (camera first; unambiguous fallback only)',
         'category': 'automatic',
         'slot': None,
     }]
@@ -169,30 +166,57 @@ def resolve_temperature(config, camera_temperature=None, sensor_values=None, sou
     source_map = {candidate.key: candidate for candidate in sources}
     source_key = str(source or TEMPERATURE_SOURCE_AUTO)
     if source_key == TEMPERATURE_SOURCE_AUTO:
-        candidates = sources
+        for priority in sorted(set(candidate.priority for candidate in sources)):
+            readings = tuple(
+                reading
+                for reading in (
+                    _reading_for_source(
+                        candidate,
+                        config,
+                        camera_temperature,
+                        sensor_values,
+                    )
+                    for candidate in sources
+                    if candidate.priority == priority
+                )
+                if reading is not None
+            )
+            if not readings:
+                continue
+            # Multiple equally plausible readings cannot be disambiguated from
+            # arbitrary user labels. Require an explicit source selection.
+            return readings[0] if len(readings) == 1 else None
+        return None
     else:
         try:
-            candidates = (source_map[source_key],)
+            candidate = source_map[source_key]
         except KeyError:
             raise ValueError('The selected temperature source is no longer configured')
+        return _reading_for_source(
+            candidate,
+            config,
+            camera_temperature,
+            sensor_values,
+        )
 
-    for candidate in candidates:
-        if candidate.key == TEMPERATURE_SOURCE_CAMERA:
-            value = usable_temperature(camera_temperature)
-        elif candidate.key == TEMPERATURE_SOURCE_SCRIPT:
-            value = usable_temperature(sensor_values.get(TEMPERATURE_SOURCE_SCRIPT))
-        else:
-            value = _display_temperature_to_celsius(
-                sensor_values.get(candidate.slot),
-                config.get('TEMP_DISPLAY'),
-            )
-            value = usable_temperature(value)
-        if value is not None:
-            return TemperatureReading(
-                value=float(round(value, 3)),
-                source=candidate,
-            )
-    return None
+
+def _reading_for_source(source, config, camera_temperature, sensor_values):
+    if source.key == TEMPERATURE_SOURCE_CAMERA:
+        value = usable_temperature(camera_temperature)
+    elif source.key == TEMPERATURE_SOURCE_SCRIPT:
+        value = usable_temperature(sensor_values.get(TEMPERATURE_SOURCE_SCRIPT))
+    else:
+        value = _display_temperature_to_celsius(
+            sensor_values.get(source.slot),
+            config.get('TEMP_DISPLAY'),
+        )
+        value = usable_temperature(value)
+    if value is None:
+        return None
+    return TemperatureReading(
+        value=float(round(value, 3)),
+        source=source,
+    )
 
 
 def _display_temperature_to_celsius(value, display_unit):

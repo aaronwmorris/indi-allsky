@@ -22,8 +22,14 @@ def temperature_config(display='c'):
             'C_LABEL': 'Weather service',
             'C_USER_VAR_SLOT': 'sensor_user_30',
         },
-        'DEW_HEATER': {'TEMP_USER_VAR_SLOT': 'sensor_user_10'},
-        'FAN': {'TEMP_USER_VAR_SLOT': 'sensor_user_10'},
+        'DEW_HEATER': {
+            'CLASSNAME': 'gpio_standard',
+            'TEMP_USER_VAR_SLOT': 'sensor_user_10',
+        },
+        'FAN': {
+            'CLASSNAME': 'gpio_standard',
+            'TEMP_USER_VAR_SLOT': 'sensor_user_10',
+        },
         'CCD_TEMP_SCRIPT': '',
     }
 
@@ -47,12 +53,77 @@ def test_automatic_temperature_priority():
     values['sensor_user_10'] = math.nan
     reading = resolve_temperature(config, -273.15, values)
     assert reading.value == 6.0
-    assert reading.source.category == 'outside'
+    assert reading.source.category == 'local'
 
     values['sensor_user_20'] = math.nan
     reading = resolve_temperature(config, -273.15, values)
     assert reading.value == 4.0
     assert reading.source.category == 'inferred'
+
+
+def test_automatic_never_guesses_sensor_placement_from_labels():
+    config = temperature_config()
+    config['DEW_HEATER'] = {}
+    config['FAN'] = {}
+    config['TEMP_SENSOR']['A_LABEL'] = 'Case'
+    config['TEMP_SENSOR']['B_LABEL'] = 'Box'
+    values = {
+        'sensor_user_10': 8.0,
+        'sensor_user_20': 6.0,
+        'sensor_user_30': 4.0,
+    }
+
+    sources = {
+        source.key: source for source in configured_temperature_sources(config)
+    }
+
+    assert sources['sensor_user_10'].category == 'local'
+    assert sources['sensor_user_20'].category == 'local'
+    assert resolve_temperature(config, -273.15, values) is None
+    explicit = resolve_temperature(
+        config,
+        -273.15,
+        values,
+        source='sensor_user_10',
+    )
+    assert explicit.value == 8.0
+    assert explicit.source.label == 'Case: Temperature'
+
+
+def test_automatic_uses_a_unique_local_sensor_regardless_of_its_name():
+    config = temperature_config()
+    config['DEW_HEATER'] = {}
+    config['FAN'] = {}
+    config['TEMP_SENSOR']['A_LABEL'] = 'Whatever the user calls it'
+    config['TEMP_SENSOR']['B_CLASSNAME'] = ''
+
+    reading = resolve_temperature(
+        config,
+        camera_temperature=-273.15,
+        sensor_values={
+            'sensor_user_10': 8.0,
+            'sensor_user_30': 4.0,
+        },
+    )
+
+    assert reading.value == 8.0
+    assert reading.source.key == 'sensor_user_10'
+
+
+def test_controller_link_is_an_explicit_enclosure_signal_with_arbitrary_label():
+    config = temperature_config()
+    config['TEMP_SENSOR']['A_LABEL'] = 'Box'
+    values = {
+        'sensor_user_10': 8.0,
+        'sensor_user_20': 6.0,
+        'sensor_user_30': 4.0,
+    }
+
+    reading = resolve_temperature(config, -273.15, values)
+
+    assert reading.value == 8.0
+    assert reading.source.category == 'enclosure'
+    assert reading.source.label == 'Box: Temperature'
 
 
 @pytest.mark.parametrize(
@@ -119,6 +190,7 @@ def test_external_script_is_last_automatic_fallback():
 def test_source_choices_and_signature_follow_configuration():
     config = temperature_config()
     choices = temperature_source_choices(config)
+    assert choices[0]['label'] == 'Automatic (camera first; unambiguous fallback only)'
     assert [choice['key'] for choice in choices] == [
         'auto',
         'camera',

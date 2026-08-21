@@ -144,7 +144,7 @@ def test_builder_explains_each_library_state(
     assert 'A setting combines gain, exposure, binning and data depth.' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.21.8' in html
+    assert 'Preview 2026.08.21.9' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'masters captured from 15.0°C through 25.0°C' in html
     assert 'The ±5°C value is a distance from this reading' in html
@@ -234,7 +234,7 @@ def test_temperature_series_summary_pluralizes_one_set():
     assert "' across ' + temperatureSetCount + ' sets'" not in html
 
 
-def test_primary_temperature_workflow_distinguishes_matching_from_capture_step():
+def test_primary_temperature_matching_and_advanced_series_are_separated():
     html = _render_builder(
         'complete',
         stored_dark_count=20,
@@ -258,19 +258,49 @@ def test_primary_temperature_workflow_distinguishes_matching_from_capture_step()
     assert 'does not save anything by itself' in workflow
     assert 'saved for this camera only when you start a dark run' in workflow
     assert 'id="dark-temperature-range"' not in advanced
+    assert 'id="dark-temperature-source"' in workflow
+    assert 'id="dark-temperature-evaluation-summary"' in workflow
+    assert 'id="dark-capture-mode"' not in workflow
+    assert 'id="dark-temperature-policy"' not in workflow
+    assert 'id="dark-temperature-delta"' not in workflow
+    assert 'id="dark-temperature-target"' not in workflow
     assert 'The initial 5°C value is the legacy fallback' in html
     assert 'their spacing is not treated as a saved preference' in html
-    assert 'id="dark-temperature-series-controls" class="tw:hidden' in workflow
-    assert 'id="dark-temperature-delta"' in workflow
-    assert 'Capture another set after cooling by' in workflow
-    assert 'independent of the matching distance above' in workflow
-    assert 'id="dark-temperature-target"' in workflow
-    assert 'id="dark-single-temperature-controls"' in workflow
+    assert 'id="dark-capture-mode"' in advanced
+    assert 'One library run · standard' in advanced
+    assert 'Falling-temperature series · preparation required' in advanced
+    assert 'id="dark-temperature-series-controls" class="tw:hidden' in advanced
+    assert 'id="dark-temperature-delta"' in advanced
+    assert 'Capture another set after cooling by' in advanced
+    assert 'independent of the matching distance' in advanced
+    assert 'id="dark-temperature-target"' in advanced
+    assert 'Prepare this manually:' in advanced
+    assert 'The builder cannot cover the camera and does not command the cooler.' in advanced
+    assert 'id="dark-temperature-policy"' in advanced
+    assert 'Require a temperature match · recommended' in advanced
+    assert 'Fill gain/exposure gaps only' in advanced
     assert 'id="dark-strategy-control"' in advanced
     assert "$('#dark-temperature-series-controls').toggleClass('tw:hidden', !temperatureSeries);" in html
-    assert "$('#dark-single-temperature-controls').toggleClass('tw:hidden', temperatureSeries);" in html
+    assert "$('#dark-temperature-policy-control').toggleClass('tw:hidden', temperatureSeries);" in html
     assert "$('#dark-strategy-control').toggleClass('tw:hidden', temperatureSeries);" in html
     assert 'This changed value is still unsaved' in html
+
+
+def test_temperature_guidance_explains_automatic_and_both_one_run_policies():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=20,
+        stored_bpm_count=20,
+        ready_count=5,
+        suggested_count=12,
+    )
+
+    assert 'Automatic always prefers a valid camera reading.' in html
+    assert 'labels never determine placement' in html
+    assert 'Automatic could not choose one unique usable recent reading.' in html
+    assert 'any usable temperature layer may fill an existing gain/exposure pair' in html
+    assert 'Configured cooler targets are still checked' in html
+    assert 'Recommendation evaluated at ' in html
 
 
 def test_stale_service_configuration_explains_why_capture_is_unavailable():
