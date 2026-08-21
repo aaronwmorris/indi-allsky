@@ -25,6 +25,7 @@ from indi_allsky.dark_library import validate_temperature_range
 from indi_allsky.dark_automation import DarkAutomationError
 from indi_allsky.dark_automation import _log_error_summary
 from indi_allsky.dark_automation import _mark_task_capture_restored
+from indi_allsky.dark_automation import _activate_generation
 from indi_allsky.dark_automation import activation_changes
 from indi_allsky.dark_automation import build_library_catalog
 from indi_allsky.dark_automation import build_library_partner_index
@@ -39,9 +40,12 @@ from indi_allsky.dark_automation import normalize_execution_request
 from indi_allsky.dark_automation import recommended_stacking_method
 from indi_allsky.dark_automation import reject_task_for_config_drift
 from indi_allsky.dark_automation import select_camera_library_entries
+from indi_allsky.dark_automation import select_camera_master_sets
 from indi_allsky.dark_automation import task_public_status
 from indi_allsky.dark_automation import temperature_thresholds
 from indi_allsky.dark_automation import validate_execution_profiles
+from indi_allsky.dark_automation import library_entry_eligibility
+from indi_allsky.dark_automation import update_library_entries_eligibility
 from indi_allsky.gain import EXPOSURE_MODE_BASIC
 from indi_allsky.gain import EXPOSURE_MODE_DB
 from indi_allsky.gain import EXPOSURE_MODE_DB_1_10
@@ -1902,6 +1906,69 @@ def test_selected_library_entries_never_cross_camera_boundary():
     assert selected['selection'] == {'dark_ids': [1], 'bpm_ids': [3]}
 
 
+def test_master_set_selection_expands_to_matching_dark_and_map_only():
+    create_date = datetime(2026, 8, 21, 12, 0, 0)
+    dark_entries = [
+        _catalog_frame(1, 1, create_date, generation_id='first', gain=100),
+        _catalog_frame(2, 1, create_date, generation_id='second', gain=200),
+        _catalog_frame(3, 2, create_date, generation_id='first', gain=100),
+    ]
+    bpm_entries = [
+        _catalog_frame(101, 1, create_date, generation_id='first', gain=100),
+        _catalog_frame(102, 1, create_date, generation_id='second', gain=200),
+        _catalog_frame(103, 2, create_date, generation_id='first', gain=100),
+    ]
+    dark_model = _flush_model('IndiAllSkyDbDarkFrameTable', dark_entries)
+    bpm_model = _flush_model('IndiAllSkyDbBadPixelMapTable', bpm_entries)
+
+    selected = select_camera_master_sets(
+        (dark_model, bpm_model),
+        camera_id=1,
+        selection={'dark_ids': [1, 3], 'bpm_ids': []},
+    )
+
+    assert selected['selection'] == {'dark_ids': [1], 'bpm_ids': [101]}
+
+
+def test_manual_eligibility_changes_are_reversible_and_recorded():
+    frames = [
+        SimpleNamespace(active=True, data={}),
+        SimpleNamespace(active=True, data={}),
+    ]
+
+    excluded = update_library_entries_eligibility(frames, False, changed_utc='now')
+
+    assert excluded == tuple(frames)
+    assert all(frame.active is False for frame in frames)
+    assert all(
+        library_entry_eligibility(frame)['reason_label'] == 'Manually excluded'
+        for frame in frames
+    )
+    restored = update_library_entries_eligibility(frames, True, changed_utc='later')
+    assert restored == tuple(frames)
+    assert all(frame.active is True for frame in frames)
+    assert all(
+        library_entry_eligibility(frame)['reason_label'] == 'Manually restored'
+        for frame in frames
+    )
+
+
+def test_capture_staging_cannot_be_manually_activated():
+    frame = SimpleNamespace(active=False, data={
+        'dark_automation': {
+            'eligibility': {
+                'state': 'staged',
+                'reason': 'capture_staging',
+            },
+        },
+    })
+
+    with pytest.raises(DarkAutomationError, match='staging files'):
+        update_library_entries_eligibility([frame], True)
+
+    assert frame.active is False
+
+
 def test_flush_removes_only_explicitly_selected_records():
     with tempfile.TemporaryDirectory(dir=Path(__file__).parent) as temporary_dir:
         temporary_path = Path(temporary_dir)
@@ -2050,6 +2117,42 @@ def test_refresh_retires_only_equivalent_temperature_generation():
     )
 
     assert deactivate == (equivalent,)
+
+
+def test_successful_refresh_records_activation_and_retirement_reasons():
+    new_dark = _generation_frame('new')
+    new_map = _generation_frame('new')
+    old_dark = _generation_frame('old-dark', active=True)
+    old_map = _generation_frame('old-map', active=True)
+    dark_model = _flush_model(
+        'IndiAllSkyDbDarkFrameTable',
+        [new_dark, old_dark],
+    )
+    bpm_model = _flush_model(
+        'IndiAllSkyDbBadPixelMapTable',
+        [new_map, old_map],
+    )
+    session = _FakeSession()
+
+    result = _activate_generation(
+        SimpleNamespace(session=session),
+        (dark_model, bpm_model),
+        {
+            'generation_id': 'new',
+            'camera_id': 1,
+            'target_count': 1,
+            'strategy': 'refresh',
+            'temperature_range': 5.0,
+            'groups': [_activation_group()],
+        },
+    )
+
+    assert result == {'activated': 2, 'deactivated': 2}
+    assert session.committed is True
+    assert library_entry_eligibility(new_dark)['reason_label'] == 'Activated after capture'
+    assert library_entry_eligibility(new_map)['reason_label'] == 'Activated after capture'
+    assert library_entry_eligibility(old_dark)['reason_label'] == 'Retired by a refresh run'
+    assert library_entry_eligibility(old_map)['reason_label'] == 'Retired by a refresh run'
 
 
 def test_refresh_uses_selected_temperature_distance_for_equivalent_layers():

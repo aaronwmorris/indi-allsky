@@ -16,6 +16,7 @@ import ipaddress
 import re
 import threading
 import uuid
+from dataclasses import replace
 import psutil
 import dbus
 import ephem
@@ -1248,6 +1249,93 @@ def _dark_library_removal_coverage(camera, config, selection):
     }
 
 
+def _dark_library_eligibility_coverage(camera, config, selection, active):
+    selected_ids = {
+        ('dark', int(frame_id)) for frame_id in selection.get('dark_ids', ())
+    }
+    selected_ids.update(
+        ('bpm', int(frame_id)) for frame_id in selection.get('bpm_ids', ())
+    )
+    inventory = tuple(_dark_inventory_for_camera(camera.id))
+    revised_inventory = tuple(
+        replace(frame, active=bool(active))
+        if (frame.frame_type, int(frame.frame_id)) in selected_ids else frame
+        for frame in inventory
+    )
+    capabilities = CameraCapabilities.from_camera(camera)
+    capture_state = build_effective_capture_state(config, capabilities)
+    temperature_preferences = camera_temperature_preferences(camera)
+    plan = build_dark_plan(
+        capture_state,
+        capabilities,
+        camera.id,
+        quality='balanced',
+        temperature_range=temperature_preferences['temperature_range'],
+    )
+    current_temperature = _dark_current_temperature(camera.id, config)
+    before = analyze_dark_plan(plan, inventory, temperature=current_temperature)
+    after = analyze_dark_plan(plan, revised_inventory, temperature=current_temperature)
+
+    before_structural_missing = len(before.structural_completion_targets)
+    after_structural_missing = len(after.structural_completion_targets)
+    before_temperature_additions = len(before.completion_targets)
+    after_temperature_additions = len(after.completion_targets)
+    temperature_checked = bool(
+        current_temperature is not None
+        or any(target.temperature is not None for target in plan.targets)
+    )
+    structural_change = after_structural_missing - before_structural_missing
+    temperature_change = after_temperature_additions - before_temperature_additions
+
+    if active:
+        if structural_change < 0:
+            level = 'safe'
+            message = (
+                'This restores {0:d} recommended camera setting{1:s} to structural coverage.'
+            ).format(-structural_change, '' if structural_change == -1 else 's')
+        elif temperature_checked and temperature_change < 0:
+            level = 'safe'
+            message = (
+                'Gain/exposure completeness is unchanged, and {0:d} fewer master set{1:s} '
+                'would be recommended for the configured or current temperature.'
+            ).format(-temperature_change, '' if temperature_change == -1 else 's')
+        else:
+            level = 'safe'
+            message = (
+                'These master sets become eligible again, but they do not change the current '
+                'camera recommendation. They may still match another temperature or future configuration.'
+            )
+    elif structural_change > 0:
+        level = 'danger'
+        message = (
+            'This would add {0:d} master set{1:s} to the structural completion plan.'
+        ).format(structural_change, '' if structural_change == 1 else 's')
+    elif temperature_checked and temperature_change > 0:
+        level = 'warning'
+        message = (
+            'Gain/exposure completeness remains unchanged, but {0:d} additional master set{1:s} '
+            'would be recommended for the configured or current temperature.'
+        ).format(temperature_change, '' if temperature_change == 1 else 's')
+    else:
+        level = 'safe'
+        message = (
+            'Excluding these master sets does not reduce the current recommended coverage. '
+            'The files remain stored and can be made eligible again later.'
+        )
+
+    return {
+        'evaluated': True,
+        'level': level,
+        'message': message,
+        'target_count': len(plan.targets),
+        'before_structural_missing': before_structural_missing,
+        'after_structural_missing': after_structural_missing,
+        'before_temperature_additions': before_temperature_additions,
+        'after_temperature_additions': after_temperature_additions,
+        'temperature_checked': temperature_checked,
+    }
+
+
 def _find_active_dark_task(owner=None, camera_id=None):
     state_list = (
         TaskQueueState.MANUAL,
@@ -1392,12 +1480,15 @@ class DarkFramesView(TemplateView):
                 file_exists = False
 
             dark_data = d.data or {}
+            eligibility = dark_automation.library_entry_eligibility(d)
 
             d_info = {
                 'id' : d.id,
                 'camera_name'  : d.camera.name,
                 'createDate'   : d.createDate,
                 'active'       : d.active,
+                'eligibility_reason_label': eligibility['reason_label'],
+                'eligibility_staged': eligibility['staged'],
                 'bitdepth'     : d.bitdepth,
                 'gain'         : d.gain,
                 'exposure'     : d.exposure,
@@ -1453,12 +1544,15 @@ class DarkFramesView(TemplateView):
                 file_exists = False
 
             bpm_data = b.data or {}
+            eligibility = dark_automation.library_entry_eligibility(b)
 
             b_info = {
                 'id' : b.id,
                 'camera_name'  : b.camera.name,
                 'createDate'   : b.createDate,
                 'active'       : b.active,
+                'eligibility_reason_label': eligibility['reason_label'],
+                'eligibility_staged': eligibility['staged'],
                 'bitdepth'     : b.bitdepth,
                 'gain'         : b.gain,
                 'exposure'     : b.exposure,
@@ -2093,6 +2187,151 @@ class AjaxDarkLibraryFlushView(BaseView):
         response = dark_automation.task_public_status(task)
         response['service_start_warning'] = service_start_warning
         return jsonify(response)
+
+
+class AjaxDarkLibraryEligibilityView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def dispatch_request(self):
+        if not _can_save_standard_configuration():
+            return jsonify({
+                'error': 'Administrator access is required to change dark-library eligibility.',
+            }), 403
+
+        request_data = request.get_json(silent=True) or {}
+        try:
+            camera_id = int(request_data.get('camera_id'))
+        except (TypeError, ValueError):
+            return jsonify({'error': 'Select a valid camera.'}), 400
+        active = request_data.get('active')
+        if not isinstance(active, bool):
+            return jsonify({'error': 'Choose whether the selected master sets are eligible.'}), 400
+
+        self.cameraSetup(camera_id=camera_id)
+        if getattr(self.camera, 'id', None) != camera_id:
+            return jsonify({'error': 'The selected camera is no longer available.'}), 404
+        if _find_active_dark_task() is not None:
+            return jsonify({
+                'error': 'Wait for the current dark-library task to finish before changing eligibility.',
+            }), 409
+
+        try:
+            resolved = dark_automation.select_camera_master_sets(
+                (IndiAllSkyDbDarkFrameTable, IndiAllSkyDbBadPixelMapTable),
+                self.camera.id,
+                request_data.get('selection'),
+            )
+        except dark_automation.DarkAutomationError as error:
+            return jsonify({'error': str(error)}), 400
+        entry_count = resolved['dark_frames'] + resolved['bad_pixel_maps']
+        if entry_count < 1:
+            return jsonify({'error': 'The selected master sets are no longer available.'}), 400
+
+        changing_entries = [
+            frame for frame in resolved['entries']
+            if bool(getattr(frame, 'active', False)) != active
+        ]
+        if not changing_entries:
+            return jsonify({
+                'error': (
+                    'The selected master sets are already eligible.' if active
+                    else 'The selected master sets are already excluded.'
+                ),
+            }), 409
+        if active and any(
+                dark_automation.library_entry_eligibility(frame)['staged']
+                for frame in resolved['entries']
+        ):
+            return jsonify({
+                'error': (
+                    'Capture staging files cannot be made eligible manually. '
+                    'Finish or remove the staged run first.'
+                ),
+            }), 409
+
+        label = str(request_data.get('label') or 'selected master sets').strip()
+        label = label[:160] or 'selected master sets'
+        mode = str(request_data.get('mode') or 'preview')
+        if mode == 'preview':
+            try:
+                page_camera_id = int(request_data.get('page_camera_id'))
+            except (TypeError, ValueError):
+                page_camera_id = -1
+            if page_camera_id == self.camera.id:
+                try:
+                    coverage_impact = _dark_library_eligibility_coverage(
+                        self.camera,
+                        self.indi_allsky_config,
+                        resolved['selection'],
+                        active,
+                    )
+                except (KeyError, TypeError, ValueError) as error:
+                    app.logger.warning('Unable to preview eligibility coverage impact: %s', error)
+                    coverage_impact = {
+                        'evaluated': False,
+                        'level': 'unknown',
+                        'message': 'Coverage impact could not be evaluated. Review the selection carefully.',
+                    }
+            else:
+                coverage_impact = {
+                    'evaluated': False,
+                    'level': 'other_camera',
+                    'message': (
+                        'This is another camera’s library. Current-camera coverage is unaffected.'
+                    ),
+                }
+            changed_ids = {id(frame) for frame in changing_entries}
+            return jsonify({
+                'camera_id': self.camera.id,
+                'camera_name': str(self.camera.name),
+                'label': label,
+                'active': active,
+                'dark_frames': sum(
+                    1 for frame in changing_entries if 'DarkFrame' in type(frame).__name__
+                ),
+                'bad_pixel_maps': sum(
+                    1 for frame in changing_entries if 'BadPixelMap' in type(frame).__name__
+                ),
+                'entry_count': len(changed_ids),
+                'selection': resolved['selection'],
+                'selection_signature': resolved['signature'],
+                'coverage_impact': coverage_impact,
+            })
+
+        if mode != 'apply':
+            return jsonify({'error': 'The requested eligibility action is invalid.'}), 400
+        if str(request_data.get('selection_signature') or '') != resolved['signature']:
+            return jsonify({
+                'error': (
+                    'The selected master sets changed after review. Preview the action again.'
+                ),
+            }), 409
+
+        try:
+            changed = dark_automation.update_library_entries_eligibility(
+                resolved['entries'],
+                active,
+            )
+            db.session.commit()
+        except dark_automation.DarkAutomationError as error:
+            db.session.rollback()
+            return jsonify({'error': str(error)}), 409
+        except SQLAlchemyError:
+            db.session.rollback()
+            app.logger.exception('Unable to update dark-library eligibility')
+            return jsonify({
+                'error': 'Dark-library eligibility could not be changed. Try again.',
+            }), 500
+        return jsonify({
+            'success': True,
+            'active': active,
+            'changed_entry_count': len(changed),
+            'message': (
+                'The selected master sets are eligible for calibration again.' if active
+                else 'The selected master sets are excluded from calibration but remain stored.'
+            ),
+        })
 
 
 class AjaxDarkAutomationStatusView(BaseView):
@@ -15243,6 +15482,7 @@ bp_allsky.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', 
 bp_allsky.add_url_rule('/ajax/darks/plan', view_func=AjaxDarkAutomationPlanView.as_view('ajax_darks_plan_view'))
 bp_allsky.add_url_rule('/ajax/darks/start', view_func=AjaxDarkAutomationStartView.as_view('ajax_darks_start_view'))
 bp_allsky.add_url_rule('/ajax/darks/flush', view_func=AjaxDarkLibraryFlushView.as_view('ajax_darks_flush_view'))
+bp_allsky.add_url_rule('/ajax/darks/eligibility', view_func=AjaxDarkLibraryEligibilityView.as_view('ajax_darks_eligibility_view'))
 bp_allsky.add_url_rule('/ajax/darks/status/<int:task_id>', view_func=AjaxDarkAutomationStatusView.as_view('ajax_darks_status_view'))
 bp_allsky.add_url_rule('/ajax/darks/cancel/<int:task_id>', view_func=AjaxDarkAutomationCancelView.as_view('ajax_darks_cancel_view'))
 bp_allsky.add_url_rule('/mask', view_func=MaskView.as_view('mask_view', template_name='mask.html'))

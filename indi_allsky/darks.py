@@ -2019,6 +2019,7 @@ class IndiAllSkyDarks(object):
         manifest = self.automation_manifest
         if not manifest.get('automation'):
             return {}
+        staged = bool(manifest.get('stage_inactive'))
         return {
             'task_id': manifest.get('task_id'),
             'generation_id': manifest.get('generation_id'),
@@ -2037,6 +2038,11 @@ class IndiAllSkyDarks(object):
             'temperature_set': manifest.get('temperature_set'),
             'temperature_source': manifest.get('temperature_source', TEMPERATURE_SOURCE_AUTO),
             'temperature_source_label': self._progress_temperature_source,
+            'eligibility': {
+                'state': 'staged' if staged else 'active',
+                'reason': 'capture_staging' if staged else 'capture_completed',
+                'source': 'automation',
+            },
             'target': {
                 'gain': float(gain),
                 'exposure': float(exposure),

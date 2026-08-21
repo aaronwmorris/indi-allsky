@@ -55,6 +55,25 @@ CAPTURE_RESTORE_PAUSED = 'paused'
 CAPTURE_RESTORE_SLEEPING = 'sleeping'
 CAPTURE_RESTORE_CONTROLLER = 'controller'
 
+ELIGIBILITY_STATE_ACTIVE = 'active'
+ELIGIBILITY_STATE_INACTIVE = 'inactive'
+ELIGIBILITY_STATE_STAGED = 'staged'
+ELIGIBILITY_REASON_CAPTURE_COMPLETED = 'capture_completed'
+ELIGIBILITY_REASON_CAPTURE_STAGING = 'capture_staging'
+ELIGIBILITY_REASON_REFRESH_REPLACED = 'refresh_replaced'
+ELIGIBILITY_REASON_REBUILD_REPLACED = 'rebuild_replaced'
+ELIGIBILITY_REASON_MANUAL_EXCLUSION = 'manual_exclusion'
+ELIGIBILITY_REASON_MANUAL_RESTORE = 'manual_restore'
+
+ELIGIBILITY_REASON_LABELS = {
+    ELIGIBILITY_REASON_CAPTURE_COMPLETED: 'Activated after capture',
+    ELIGIBILITY_REASON_CAPTURE_STAGING: 'Capture staging',
+    ELIGIBILITY_REASON_REFRESH_REPLACED: 'Retired by a refresh run',
+    ELIGIBILITY_REASON_REBUILD_REPLACED: 'Retired by a rebuild run',
+    ELIGIBILITY_REASON_MANUAL_EXCLUSION: 'Manually excluded',
+    ELIGIBILITY_REASON_MANUAL_RESTORE: 'Manually restored',
+}
+
 
 class DarkAutomationError(RuntimeError):
     pass
@@ -750,6 +769,8 @@ def build_library_catalog(cameras, dark_frames, bad_pixel_maps, current_camera_i
                 'temperature': frame.temp,
                 'active': False,
                 'active_entry_count': 0,
+                'eligibility_reasons': set(),
+                'staged_entry_count': 0,
                 'latest_date': None,
             })
             master['entries'].append((frame_type, frame))
@@ -758,6 +779,11 @@ def build_library_catalog(cameras, dark_frames, bad_pixel_maps, current_camera_i
             master['active'] = master['active'] or bool(frame.active)
             if bool(frame.active):
                 master['active_entry_count'] += 1
+            eligibility = library_entry_eligibility(frame)
+            if eligibility['reason']:
+                master['eligibility_reasons'].add(eligibility['reason'])
+            if eligibility['staged']:
+                master['staged_entry_count'] += 1
             if create_date is not None and (
                     master['latest_date'] is None or create_date > master['latest_date']
             ):
@@ -779,12 +805,28 @@ def build_library_catalog(cameras, dark_frames, bad_pixel_maps, current_camera_i
                         status = 'active'
                     else:
                         status = 'mixed'
+                    eligibility_reasons = sorted(master['eligibility_reasons'])
+                    if len(eligibility_reasons) == 1:
+                        eligibility_reason = eligibility_reasons[0]
+                        eligibility_reason_label = ELIGIBILITY_REASON_LABELS.get(
+                            eligibility_reason,
+                            'Eligibility changed',
+                        )
+                    elif eligibility_reasons:
+                        eligibility_reason = 'mixed'
+                        eligibility_reason_label = 'Mixed eligibility history'
+                    else:
+                        eligibility_reason = None
+                        eligibility_reason_label = None
                     master_sets.append({
                         'gain': master['gain'],
                         'exposure': master['exposure'],
                         'temperature': master['temperature'],
                         'active': master['active'],
                         'status': status,
+                        'staged': master['staged_entry_count'] > 0,
+                        'eligibility_reason': eligibility_reason,
+                        'eligibility_reason_label': eligibility_reason_label,
                         'paired': dark_count > 0 and bpm_count > 0,
                         'dark_count': dark_count,
                         'bpm_count': bpm_count,
@@ -1001,6 +1043,74 @@ def select_camera_library_entries(models, camera_id, selection=None):
         ).encode('utf-8')
     ).hexdigest()
     return counts
+
+
+def select_camera_master_sets(models, camera_id, selection):
+    """Expand any selected file to its complete camera-scoped master set."""
+    selected = select_camera_library_entries(models, camera_id, selection=selection)
+    if not selected['entries']:
+        return selected
+
+    selected_keys = {
+        _library_master_key(frame, _frame_automation_data(frame))
+        for frame in selected['entries']
+    }
+    expanded = {'dark_ids': [], 'bpm_ids': []}
+    camera_id = int(camera_id)
+    for model in models:
+        is_dark = 'DarkFrame' in model.__name__
+        selection_key = 'dark_ids' if is_dark else 'bpm_ids'
+        camera_frames = model.query.filter(model.camera_id == camera_id).all()
+        for frame in camera_frames:
+            if int(getattr(frame, 'camera_id', camera_id)) != camera_id:
+                continue
+            master_key = _library_master_key(frame, _frame_automation_data(frame))
+            if master_key in selected_keys:
+                expanded[selection_key].append(int(frame.id))
+    return select_camera_library_entries(models, camera_id, selection=expanded)
+
+
+def library_entry_eligibility(frame):
+    """Return explicit eligibility history while preserving legacy records."""
+    automation_data = _frame_automation_data(frame)
+    eligibility = dict(automation_data.get('eligibility') or {})
+    state = str(eligibility.get('state') or '')
+    reason = str(eligibility.get('reason') or '')
+    return {
+        'state': state or (
+            ELIGIBILITY_STATE_ACTIVE if bool(getattr(frame, 'active', False))
+            else ELIGIBILITY_STATE_INACTIVE
+        ),
+        'reason': reason or None,
+        'reason_label': ELIGIBILITY_REASON_LABELS.get(reason),
+        'source': eligibility.get('source'),
+        'changed_utc': eligibility.get('changed_utc'),
+        'staged': state == ELIGIBILITY_STATE_STAGED,
+    }
+
+
+def update_library_entries_eligibility(entries, active, changed_utc=None):
+    """Apply a manual, reversible eligibility change to resolved master sets."""
+    active = bool(active)
+    entries = tuple(entries)
+    if active and any(library_entry_eligibility(frame)['staged'] for frame in entries):
+        raise DarkAutomationError(
+            'Capture staging files cannot be made eligible manually. Finish or remove the staged run first.'
+        )
+    changed_utc = changed_utc or _utc_now_text()
+    changed = []
+    for frame in entries:
+        if bool(getattr(frame, 'active', False)) == active:
+            continue
+        _set_frame_eligibility(
+            frame,
+            active,
+            ELIGIBILITY_REASON_MANUAL_RESTORE if active else ELIGIBILITY_REASON_MANUAL_EXCLUSION,
+            source='manual',
+            changed_utc=changed_utc,
+        )
+        changed.append(frame)
+    return tuple(changed)
 
 
 def _library_frame_bytes(frame):
@@ -2033,9 +2143,24 @@ def _activate_generation(db, models, task_data):
             ),
         )
         for frame in to_activate:
-            frame.active = True
+            _set_frame_eligibility(
+                frame,
+                True,
+                ELIGIBILITY_REASON_CAPTURE_COMPLETED,
+                source='automation',
+            )
+        retirement_reason = (
+            ELIGIBILITY_REASON_REFRESH_REPLACED
+            if task_data['strategy'] == STRATEGY_REFRESH
+            else ELIGIBILITY_REASON_REBUILD_REPLACED
+        )
         for frame in to_deactivate:
-            frame.active = False
+            _set_frame_eligibility(
+                frame,
+                False,
+                retirement_reason,
+                source='automation',
+            )
         db.session.commit()
     except Exception:
         db.session.rollback()
@@ -2129,6 +2254,20 @@ def _frame_matches_approved_target(frame, group):
 
 def _frame_automation_data(frame):
     return dict((getattr(frame, 'data', None) or {}).get('dark_automation') or {})
+
+
+def _set_frame_eligibility(frame, active, reason, source, changed_utc=None):
+    frame_data = dict(getattr(frame, 'data', None) or {})
+    automation_data = dict(frame_data.get('dark_automation') or {})
+    automation_data['eligibility'] = {
+        'state': ELIGIBILITY_STATE_ACTIVE if active else ELIGIBILITY_STATE_INACTIVE,
+        'reason': str(reason),
+        'source': str(source),
+        'changed_utc': changed_utc or _utc_now_text(),
+    }
+    frame_data['dark_automation'] = automation_data
+    frame.data = frame_data
+    frame.active = bool(active)
 
 
 def _frames_equivalent(left, right, temperature_range):

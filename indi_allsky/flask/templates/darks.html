@@ -211,6 +211,11 @@
     background-color: color-mix(in oklab, var(--color-error) 6%, var(--color-base-100));
 }
 
+#dark-eligibility-confirmation {
+    border-color: color-mix(in oklab, var(--color-info) 40%, var(--color-base-300));
+    background-color: color-mix(in oklab, var(--color-info) 6%, var(--color-base-100));
+}
+
 .dark-library-scope-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(13rem, 16rem);
@@ -231,7 +236,8 @@
     min-width: 0;
 }
 
-.dark-library-action-column > .dark-remove-selection {
+.dark-library-action-column > .dark-remove-selection,
+.dark-library-action-column > .dark-eligibility-selection {
     width: 100%;
     justify-content: flex-start;
     text-align: left;
@@ -383,6 +389,7 @@ var camera_id = {{ camera_id }};
 const darkPlanUrl = "{{ url_for('indi_allsky.ajax_darks_plan_view') }}";
 const darkStartUrl = "{{ url_for('indi_allsky.ajax_darks_start_view') }}";
 const darkFlushUrl = "{{ url_for('indi_allsky.ajax_darks_flush_view') }}";
+const darkEligibilityUrl = "{{ url_for('indi_allsky.ajax_darks_eligibility_view') }}";
 const darkStatusUrlTemplate = "{{ url_for('indi_allsky.ajax_darks_status_view', task_id=0) }}";
 const darkCancelUrlTemplate = "{{ url_for('indi_allsky.ajax_darks_cancel_view', task_id=0) }}";
 const darkCsrfToken = "{{ csrf_token() }}";
@@ -394,7 +401,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
 {% endblock %}
 
 {% block content %}
-{% set dark_builder_preview_version = '2026.08.21.16' %}
+{% set dark_builder_preview_version = '2026.08.22.1' %}
 <div id="dark-page-content" class="tw:container tw:mx-auto tw:w-full tw:px-4 tw:py-6 tw:flex tw:flex-col tw:gap-4">
 
     <nav aria-label="Dark library sections">
@@ -950,16 +957,16 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
         <summary class="tw:collapse-title tw:pr-10">
             <span class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:text-sm tw:font-semibold">
                 <i class="tw:icon-[lucide--trash-2] tw:w-4 tw:h-4 tw:text-error tw:shrink-0"></i>
-                <span>Library storage and removal</span>
-                <span class="tw:badge tw:badge-error tw:badge-outline tw:badge-sm">Permanent actions</span>
+                <span>Library maintenance</span>
+                <span class="tw:badge tw:badge-error tw:badge-outline tw:badge-sm">Eligibility and removal</span>
             </span>
         </summary>
         <div class="dark-library-maintenance-body tw:collapse-content tw:flex tw:flex-col tw:gap-4">
             <div class="tw:alert tw:alert-warning tw:items-start tw:text-sm">
                 <i class="tw:icon-[lucide--shield-alert] tw:w-5 tw:h-5 tw:mt-0.5 tw:shrink-0"></i>
                 <div>
-                    <div class="tw:font-semibold">Every removal is permanent</div>
-                    <div class="tw:text-xs tw:mt-1">Dark frames and bad-pixel maps are selected together where possible. You will see storage and coverage impact before anything is queued.</div>
+                    <div class="tw:font-semibold">Exclude safely or remove permanently</div>
+                    <div class="tw:text-xs tw:mt-1">Excluding a master set is reversible and leaves its files stored. Removal deletes files permanently. A dark and its matching map are changed together, and you will see the coverage impact first.</div>
                 </div>
             </div>
 
@@ -1017,12 +1024,24 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                         <div class="dark-library-batch-toolbar dark-library-scope-row tw:border tw:rounded-[var(--radius-box)] tw:p-3" data-camera-id="{{ library.id }}">
                             <div class="dark-library-scope-copy">
                                 <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Select several master sets</div>
-                                <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">Open <strong>Individual master sets</strong> below and tick any combination for this camera. Each selection keeps its dark and matching map together where possible.</div>
+                                <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">Open <strong>Individual master sets</strong> below and tick any combination for this camera. Each selection keeps its dark and matching map together.</div>
                             </div>
                             <div class="dark-library-action-column">
                                 <span class="dark-library-marked-summary tw:text-xs tw:text-base-content/60" aria-live="polite">No master sets selected</span>
-                                <div class="tw:flex tw:flex-wrap tw:gap-2">
+                                <div class="tw:grid tw:grid-cols-1 tw:gap-2">
                                     <button type="button" class="dark-library-clear-selection tw:btn tw:btn-xs tw:btn-ghost" data-camera-id="{{ library.id }}" disabled>Clear</button>
+                                    <button type="button" class="dark-exclude-marked dark-eligibility-selection tw:btn tw:btn-sm tw:btn-warning tw:btn-outline"
+                                        data-camera-id="{{ library.id }}" data-camera-name="{{ library.name }}" data-active="false"
+                                        data-label="selected master sets for {{ library.name }}"
+                                        data-selection='{"dark_ids":[],"bpm_ids":[]}' disabled>
+                                        Exclude selected from calibration…
+                                    </button>
+                                    <button type="button" class="dark-restore-marked dark-eligibility-selection tw:btn tw:btn-sm tw:btn-success tw:btn-outline"
+                                        data-camera-id="{{ library.id }}" data-camera-name="{{ library.name }}" data-active="true"
+                                        data-label="selected master sets for {{ library.name }}"
+                                        data-selection='{"dark_ids":[],"bpm_ids":[]}' disabled>
+                                        Make selected eligible again…
+                                    </button>
                                     <button type="button" class="dark-remove-marked dark-remove-selection tw:btn tw:btn-sm tw:btn-error tw:btn-outline tw:flex-1"
                                         data-camera-id="{{ library.id }}" data-camera-name="{{ library.name }}"
                                         data-label="selected master sets for {{ library.name }}"
@@ -1087,17 +1106,38 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                                 <label class="dark-library-master-choice dark-library-scope-copy">
                                                     <input type="checkbox" class="dark-library-master-checkbox tw:checkbox tw:checkbox-error tw:checkbox-sm tw:mt-0.5 tw:shrink-0"
                                                         data-camera-id="{{ library.id }}"
+                                                        data-status="{{ master.status }}"
+                                                        data-staged="{{ master.staged | default(false) | tojson }}"
                                                         data-selection='{{ master.selection | tojson | forceescape }}'
                                                         aria-label="Select gain {{ '%g'|format(master.gain) }}, {{ '%g'|format(master.exposure) }} second master set"
                                                         {% if dark_library_task_active %}disabled{% endif %}>
                                                     <span class="tw:font-mono tw:min-w-0">
                                                         gain {{ "%g"|format(master.gain) }} · {{ "%g"|format(master.exposure) }}s · {% if master.temperature is not none %}{{ "%0.1f"|format(master.temperature) }}°C{% else %}no temperature{% endif %}
                                                         <span class="tw:font-sans tw:ml-2 {% if master.paired %}tw:text-success{% else %}tw:text-warning{% endif %}">{% if master.paired %}dark + map{% else %}unpaired{% endif %}</span>
-                                                        {% if master.status == 'active' %}<span class="tw:badge tw:badge-success tw:badge-outline tw:badge-sm tw:font-sans tw:ml-2">Active</span>{% elif master.status == 'inactive' %}<span class="tw:badge tw:badge-warning tw:badge-sm tw:font-sans tw:ml-2">Inactive</span>{% else %}<span class="tw:badge tw:badge-warning tw:badge-outline tw:badge-sm tw:font-sans tw:ml-2">Mixed status</span>{% endif %}
+                                                        {% if master.staged %}<span class="tw:badge tw:badge-info tw:badge-sm tw:font-sans tw:ml-2">Capture staging</span>{% elif master.status == 'active' %}<span class="tw:badge tw:badge-success tw:badge-outline tw:badge-sm tw:font-sans tw:ml-2">Active</span>{% elif master.status == 'inactive' %}<span class="tw:badge tw:badge-warning tw:badge-sm tw:font-sans tw:ml-2">Inactive</span>{% else %}<span class="tw:badge tw:badge-warning tw:badge-outline tw:badge-sm tw:font-sans tw:ml-2">Mixed status</span>{% endif %}
+                                                        {% if master.eligibility_reason_label and not master.staged %}<span class="tw:block tw:font-sans tw:text-[0.625rem] tw:text-base-content/50 tw:mt-1">{{ master.eligibility_reason_label }}</span>{% endif %}
                                                     </span>
                                                 </label>
                                                 <div class="dark-library-action-column">
                                                     <span class="tw:text-base-content/50">{{ master.size }}</span>
+                                                    {% if master.status in ('active', 'mixed') and not master.staged %}
+                                                    <button type="button" class="dark-eligibility-selection tw:btn tw:btn-xs tw:btn-warning tw:btn-ghost"
+                                                        data-camera-id="{{ library.id }}" data-camera-name="{{ library.name }}" data-active="false"
+                                                        data-label="gain {{ '%g'|format(master.gain) }}, {{ '%g'|format(master.exposure) }}s master set for {{ library.name }}"
+                                                        data-selection='{{ master.selection | tojson | forceescape }}'
+                                                        {% if dark_library_task_active %}disabled{% endif %}>
+                                                        Exclude…
+                                                    </button>
+                                                    {% endif %}
+                                                    {% if master.status in ('inactive', 'mixed') and not master.staged %}
+                                                    <button type="button" class="dark-eligibility-selection tw:btn tw:btn-xs tw:btn-success tw:btn-ghost"
+                                                        data-camera-id="{{ library.id }}" data-camera-name="{{ library.name }}" data-active="true"
+                                                        data-label="gain {{ '%g'|format(master.gain) }}, {{ '%g'|format(master.exposure) }}s master set for {{ library.name }}"
+                                                        data-selection='{{ master.selection | tojson | forceescape }}'
+                                                        {% if dark_library_task_active %}disabled{% endif %}>
+                                                        Make eligible…
+                                                    </button>
+                                                    {% endif %}
                                                     <button type="button" class="dark-remove-selection tw:btn tw:btn-xs tw:btn-error tw:btn-ghost"
                                                         data-camera-id="{{ library.id }}" data-camera-name="{{ library.name }}"
                                                         data-label="{% if master.status == 'inactive' %}inactive {% endif %}gain {{ '%g'|format(master.gain) }}, {{ '%g'|format(master.exposure) }}s master set for {{ library.name }}"
@@ -1118,6 +1158,19 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     </div>
                 </details>
             {% endfor %}
+            </div>
+
+            <div id="dark-eligibility-confirmation" class="tw:hidden tw:border tw:rounded-[var(--radius-box)] tw:p-4 tw:flex tw:flex-col tw:gap-3">
+                <div>
+                    <div id="dark-eligibility-preview-title" class="tw:font-semibold tw:text-sm"></div>
+                    <div id="dark-eligibility-preview-summary" class="tw:text-xs tw:text-base-content/60 tw:mt-1"></div>
+                </div>
+                <div id="dark-eligibility-coverage-impact" class="tw:alert tw:items-start tw:text-sm"></div>
+                <div class="tw:text-xs tw:text-base-content/60">This changes only calibration eligibility. No files are deleted, and you can reverse it later.</div>
+                <div class="tw:flex tw:flex-wrap tw:justify-end tw:gap-2">
+                    <button id="dark-eligibility-confirm-cancel" type="button" class="tw:btn tw:btn-sm tw:btn-ghost">Cancel</button>
+                    <button id="dark-eligibility-confirm" type="button" class="tw:btn tw:btn-sm"></button>
+                </div>
             </div>
 
             <div id="dark-removal-confirmation" class="tw:hidden tw:border tw:rounded-[var(--radius-box)] tw:p-4 tw:flex tw:flex-col tw:gap-3">
@@ -1218,6 +1271,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                         {% else %}
                                             <span class="tw:badge tw:badge-ghost tw:badge-sm tw:text-base-content/40 tw:font-semibold tw:rounded-[var(--radius-box)]">Inactive</span>
                                         {% endif %}
+                                        {% if dark.eligibility_reason_label %}<span class="tw:block tw:text-[0.625rem] tw:text-base-content/50 tw:mt-1">{{ dark.eligibility_reason_label }}</span>{% endif %}
                                     </td>
                                     <td data-search="{% if dark.partner_id is none %}unpaired{% else %}paired{% endif %}">
                                         {% if dark.partner_id is none %}
@@ -1352,6 +1406,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                         {% else %}
                                             <span class="tw:badge tw:badge-ghost tw:badge-sm tw:text-base-content/40 tw:font-semibold tw:rounded-[var(--radius-box)]">Inactive</span>
                                         {% endif %}
+                                        {% if bpm.eligibility_reason_label %}<span class="tw:block tw:text-[0.625rem] tw:text-base-content/50 tw:mt-1">{{ bpm.eligibility_reason_label }}</span>{% endif %}
                                     </td>
                                     <td data-search="{% if bpm.partner_id is none %}unpaired{% else %}paired{% endif %}">
                                         {% if bpm.partner_id is none %}
@@ -1423,6 +1478,7 @@ let badPixelDataTable = null;
 let darkPlanRequestRevision = 0;
 let darkPlanRefreshTimer = null;
 let pendingDarkRemoval = null;
+let pendingDarkEligibility = null;
 let darkSingleStrategy = initialDarkPlan.capture_mode === 'temperature_series'
     ? 'complete'
     : (initialDarkPlan.strategy || 'complete');
@@ -2320,6 +2376,8 @@ function updateDarkMarkedSelection(cameraId) {
     const selected = checkboxes.filter(':checked');
     const toolbar = $('.dark-library-batch-toolbar' + cameraSelector);
     const button = toolbar.find('.dark-remove-marked');
+    const excludeButton = toolbar.find('.dark-exclude-marked');
+    const restoreButton = toolbar.find('.dark-restore-marked');
     const clearButton = toolbar.find('.dark-library-clear-selection');
     const darkIds = new Set();
     const bpmIds = new Set();
@@ -2339,6 +2397,15 @@ function updateDarkMarkedSelection(cameraId) {
     const blocked = Boolean(activeDarkTaskId) || checkboxes.filter(':disabled').length > 0;
     const cameraName = button.attr('data-camera-name') || 'this camera';
     const masterLabel = masterCount === 1 ? 'master set' : 'master sets';
+    const canExclude = selected.filter(function() {
+        const status = $(this).attr('data-status');
+        return status === 'active' || status === 'mixed';
+    }).length > 0;
+    const canRestore = selected.filter(function() {
+        const status = $(this).attr('data-status');
+        return $(this).attr('data-staged') !== 'true'
+            && (status === 'inactive' || status === 'mixed');
+    }).length > 0;
 
     checkboxes.each(function() {
         $(this).closest('.dark-library-master-row')
@@ -2354,7 +2421,98 @@ function updateDarkMarkedSelection(cameraId) {
         .attr('data-label', masterCount + ' selected ' + masterLabel + ' for ' + cameraName)
         .prop('disabled', !masterCount || blocked)
         .text(masterCount ? 'Review ' + masterCount + ' selected…' : 'Review selected master sets…');
+    excludeButton
+        .attr('data-selection', JSON.stringify(selection))
+        .attr('data-label', masterCount + ' selected ' + masterLabel + ' for ' + cameraName)
+        .prop('disabled', !masterCount || !canExclude || blocked);
+    restoreButton
+        .attr('data-selection', JSON.stringify(selection))
+        .attr('data-label', masterCount + ' selected ' + masterLabel + ' for ' + cameraName)
+        .prop('disabled', !masterCount || !canRestore || blocked);
     clearButton.prop('disabled', !masterCount || blocked);
+}
+
+function hideDarkEligibilityConfirmation() {
+    pendingDarkEligibility = null;
+    $('#dark-eligibility-confirmation').addClass('tw:hidden');
+    $('#dark-eligibility-confirm').prop('disabled', true);
+    showDarkActionError('');
+}
+
+async function previewDarkEligibility(button) {
+    if (!darkLibraryCanManage || activeDarkTaskId || button.prop('disabled')) return;
+    showDarkActionError('');
+    button.prop('disabled', true).addClass('tw:loading');
+    try {
+        const targetActive = button.attr('data-active') === 'true';
+        const preview = await darkJsonRequest(darkEligibilityUrl, {
+            method: 'POST',
+            body: JSON.stringify({
+                mode: 'preview',
+                camera_id: Number(button.attr('data-camera-id')),
+                page_camera_id: camera_id,
+                label: button.attr('data-label') || 'selected master sets',
+                active: targetActive,
+                selection: JSON.parse(button.attr('data-selection') || '{}'),
+            }),
+        });
+        pendingDarkEligibility = preview;
+        $('#dark-eligibility-preview-title').text(
+            (preview.active ? 'Make ' : 'Exclude ') + preview.label
+            + (preview.active ? ' eligible again?' : ' from calibration?')
+        );
+        $('#dark-eligibility-preview-summary').text(
+            preview.dark_frames + ' dark frame' + (preview.dark_frames === 1 ? '' : 's')
+            + ' + ' + preview.bad_pixel_maps + ' bad-pixel map'
+            + (preview.bad_pixel_maps === 1 ? '' : 's') + ' will change'
+        );
+        const impact = preview.coverage_impact || {};
+        $('#dark-eligibility-coverage-impact')
+            .removeClass('tw:alert-success tw:alert-warning tw:alert-error tw:alert-info')
+            .addClass(
+                impact.level === 'danger' ? 'tw:alert-error'
+                    : (impact.level === 'warning' ? 'tw:alert-warning'
+                        : (impact.level === 'safe' ? 'tw:alert-success' : 'tw:alert-info'))
+            )
+            .text(impact.message || 'Review the selected master sets carefully.');
+        $('#dark-eligibility-confirm')
+            .removeClass('tw:btn-warning tw:btn-success')
+            .addClass(preview.active ? 'tw:btn-success' : 'tw:btn-warning')
+            .text(preview.active ? 'Make eligible again' : 'Exclude from calibration')
+            .prop('disabled', false);
+        $('#dark-eligibility-confirmation').removeClass('tw:hidden');
+        document.getElementById('dark-eligibility-confirmation').scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+        });
+    } catch (error) {
+        showDarkActionError(error.message);
+    } finally {
+        button.prop('disabled', Boolean(activeDarkTaskId)).removeClass('tw:loading');
+    }
+}
+
+async function applyDarkEligibility() {
+    if (!darkLibraryCanManage || activeDarkTaskId || !pendingDarkEligibility) return;
+    showDarkActionError('');
+    $('#dark-eligibility-confirm').prop('disabled', true).addClass('tw:loading');
+    try {
+        await darkJsonRequest(darkEligibilityUrl, {
+            method: 'POST',
+            body: JSON.stringify({
+                mode: 'apply',
+                camera_id: pendingDarkEligibility.camera_id,
+                label: pendingDarkEligibility.label,
+                active: pendingDarkEligibility.active,
+                selection: pendingDarkEligibility.selection,
+                selection_signature: pendingDarkEligibility.selection_signature,
+            }),
+        });
+        window.location.reload();
+    } catch (error) {
+        showDarkActionError(error.message);
+        $('#dark-eligibility-confirm').prop('disabled', false).removeClass('tw:loading');
+    }
 }
 
 async function previewDarkRemoval(button) {
@@ -2732,6 +2890,11 @@ $( document ).ready(function() {
         $('.dark-remove-selection').on('click', function() {
             previewDarkRemoval($(this));
         });
+        $('.dark-eligibility-selection').on('click', function() {
+            previewDarkEligibility($(this));
+        });
+        $('#dark-eligibility-confirm-cancel').on('click', hideDarkEligibilityConfirmation);
+        $('#dark-eligibility-confirm').on('click', applyDarkEligibility);
         $('#dark-removal-confirmation-input').on('input', updateDarkRemovalConfirmation);
         $('#dark-removal-confirm-cancel').on('click', hideDarkRemovalConfirmation);
         $('#dark-removal-confirm').on('click', removeDarkLibrarySelection);
