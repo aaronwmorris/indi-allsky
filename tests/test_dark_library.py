@@ -1627,6 +1627,8 @@ def _catalog_frame(
         generation_id=None,
         temperature=20.0,
         file_size=1024,
+        gain=100.0,
+        exposure=30.0,
 ):
     automation_data = {}
     if generation_id:
@@ -1641,8 +1643,8 @@ def _catalog_frame(
         camera_id=camera_id,
         active=active,
         bitdepth=16,
-        exposure=30,
-        gain=100.0,
+        exposure=exposure,
+        gain=gain,
         binmode=1,
         temp=temperature,
         width=3840,
@@ -1689,6 +1691,119 @@ def test_library_catalog_groups_cameras_profiles_layers_and_pairs():
         layer['paired_set_count'] == 1
         for layer in current['profiles'][0]['layers']
     )
+    assert current['active_master_set_count'] == 1
+    assert current['inactive_master_set_count'] == 1
+
+
+def test_library_catalog_groups_nearby_legacy_temperatures_across_old_bucket_boundary():
+    camera = SimpleNamespace(
+        id=1,
+        name='Camera',
+        friendlyName=None,
+        data={
+            'dark_library': {
+                'temperature_matching_distance': 5.0,
+            },
+        },
+    )
+    temperatures = (42.1, 42.3, 42.5, 43.2)
+    dark_frames = []
+    bad_pixel_maps = []
+    for index, temperature in enumerate(temperatures, start=1):
+        create_date = datetime(2026, 8, 21, 12, index, 0)
+        frame_kwargs = {
+            'camera_id': 1,
+            'create_date': create_date,
+            'temperature': temperature,
+            'gain': index * 10,
+        }
+        dark_frames.append(_catalog_frame(index, **frame_kwargs))
+        bad_pixel_maps.append(_catalog_frame(index + 100, **frame_kwargs))
+
+    catalog = build_library_catalog(
+        (camera,),
+        dark_frames,
+        bad_pixel_maps,
+        current_camera_id=1,
+    )
+
+    layers = catalog['cameras'][0]['profiles'][0]['layers']
+    assert len(layers) == 1
+    assert layers[0]['temperature_label'] == '42.1 to 43.2°C'
+    assert layers[0]['master_set_count'] == 4
+
+
+def test_library_catalog_starts_a_new_group_at_saved_matching_distance():
+    camera = SimpleNamespace(
+        id=1,
+        name='Camera',
+        friendlyName=None,
+        data={
+            'dark_library': {
+                'temperature_matching_distance': 5.0,
+            },
+        },
+    )
+    first_date = datetime(2026, 8, 21, 12, 0, 0)
+    second_date = datetime(2026, 8, 21, 13, 0, 0)
+    dark_frames = [
+        _catalog_frame(1, 1, first_date, generation_id='warm', temperature=42.5),
+        _catalog_frame(2, 1, second_date, generation_id='cool', temperature=37.5),
+    ]
+    bad_pixel_maps = [
+        _catalog_frame(101, 1, first_date, generation_id='warm', temperature=42.5),
+        _catalog_frame(102, 1, second_date, generation_id='cool', temperature=37.5),
+    ]
+
+    catalog = build_library_catalog(
+        (camera,),
+        dark_frames,
+        bad_pixel_maps,
+        current_camera_id=1,
+    )
+
+    layers = catalog['cameras'][0]['profiles'][0]['layers']
+    assert len(layers) == 2
+    assert {layer['temperature_label'] for layer in layers} == {'37.5°C', '42.5°C'}
+
+
+def test_library_catalog_reports_active_inactive_and_mixed_master_sets():
+    camera = SimpleNamespace(id=1, name='Camera', friendlyName=None)
+    create_dates = [
+        datetime(2026, 8, 21, 12, minute, 0)
+        for minute in range(3)
+    ]
+    dark_frames = [
+        _catalog_frame(1, 1, create_dates[0], active=True, gain=10),
+        _catalog_frame(2, 1, create_dates[1], active=False, gain=20),
+        _catalog_frame(3, 1, create_dates[2], active=True, gain=30),
+    ]
+    bad_pixel_maps = [
+        _catalog_frame(101, 1, create_dates[0], active=True, gain=10),
+        _catalog_frame(102, 1, create_dates[1], active=False, gain=20),
+        _catalog_frame(103, 1, create_dates[2], active=False, gain=30),
+    ]
+
+    catalog = build_library_catalog(
+        (camera,),
+        dark_frames,
+        bad_pixel_maps,
+        current_camera_id=1,
+    )
+
+    library = catalog['cameras'][0]
+    assert library['active_master_set_count'] == 1
+    assert library['inactive_master_set_count'] == 1
+    assert library['mixed_master_set_count'] == 1
+    assert library['inactive_selection'] == {
+        'dark_ids': [2],
+        'bpm_ids': [102, 103],
+    }
+    statuses = {
+        master['gain']: master['status']
+        for master in library['profiles'][0]['layers'][0]['master_sets']
+    }
+    assert statuses == {10.0: 'active', 20.0: 'inactive', 30.0: 'mixed'}
 
 
 def test_selected_library_entries_never_cross_camera_boundary():

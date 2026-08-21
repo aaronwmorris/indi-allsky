@@ -25,9 +25,18 @@ def _render_builder(
     temperature_ready_count=None,
     automation_can_run=True,
     config_requires_reload=False,
+    library_can_manage=False,
+    library_catalog=None,
 ):
     if temperature_ready_count is None:
         temperature_ready_count = ready_count
+    if library_catalog is None:
+        library_catalog = {
+            'cameras': [],
+            'camera_count': 0,
+            'entry_count': 0,
+            'size': '0 B',
+        }
 
     environment = Environment(loader=DictLoader({
         'base.html': (
@@ -105,9 +114,9 @@ def _render_builder(
         'dark_automation_can_run': automation_can_run,
         'dark_config_requires_reload': config_requires_reload,
         'dark_automation_task_id': None,
-        'dark_library_can_manage': False,
+        'dark_library_can_manage': library_can_manage,
         'dark_library_task_active': False,
-        'dark_library_catalog': {'libraries': [], 'entry_count': 0},
+        'dark_library_catalog': library_catalog,
         'darkframe_list': [],
         'bpm_list': [],
         'camera_name': 'Test Camera',
@@ -144,7 +153,7 @@ def test_builder_explains_each_library_state(
     assert 'One master set is a master dark and matching bad-pixel map' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.21.11' in html
+    assert 'Preview 2026.08.21.14' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'masters from 15.0°C to 25.0°C count as matched' in html
     assert 'Every required master set is checked separately, so capture drift may leave only some' in html
@@ -196,6 +205,154 @@ def test_advanced_options_use_width_safe_two_column_layout():
     assert 'tw:lg:grid-cols-3' not in advanced
     assert 'tw:w-full tw:max-w-full tw:min-w-0' in advanced
     assert 'target cells' not in advanced
+
+
+def test_capture_groups_reflow_as_cards_instead_of_squeezing_table_columns():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=20,
+        stored_bpm_count=20,
+        ready_count=5,
+        suggested_count=12,
+    )
+    advanced = html.split('id="dark-advanced-options"', 1)[1].split(
+        'id="dark-run-instructions"',
+        1,
+    )[0]
+
+    assert 'id="dark-plan-groups" role="list" aria-label="Capture groups"' in advanced
+    assert '<table' not in advanced
+    assert 'grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));' in html
+    assert '<section class="dark-plan-row ' in html
+    assert 'class="dark-plan-row-fields"' in html
+    assert 'Image output and temperature target' in html
+    assert 'tw:min-w-48' not in html
+
+
+def test_library_removal_explains_temperature_groups_and_master_status():
+    library_catalog = {
+        'camera_count': 1,
+        'entry_count': 4,
+        'size': '4.0 KiB',
+        'cameras': [{
+            'id': 1,
+            'name': 'Test Camera',
+            'friendly_name': 'Test Camera',
+            'current': True,
+            'dark_count': 2,
+            'bpm_count': 2,
+            'master_set_count': 2,
+            'active_master_set_count': 1,
+            'inactive_master_set_count': 1,
+            'mixed_master_set_count': 0,
+            'inactive_count': 2,
+            'inactive_selection': {'dark_ids': [2], 'bpm_ids': [12]},
+            'selection': {'dark_ids': [1, 2], 'bpm_ids': [11, 12]},
+            'size': '4.0 KiB',
+            'temperature_range': 5.0,
+            'profiles': [{
+                'width': 100,
+                'height': 50,
+                'binning': 1,
+                'bit_depth': 16,
+                'entry_count': 4,
+                'master_set_count': 2,
+                'active_master_set_count': 1,
+                'inactive_master_set_count': 1,
+                'mixed_master_set_count': 0,
+                'size': '4.0 KiB',
+                'selection': {'dark_ids': [1, 2], 'bpm_ids': [11, 12]},
+                'layers': [{
+                    'temperature_label': '42.1 to 43.2°C',
+                    'active_master_set_count': 1,
+                    'inactive_master_set_count': 1,
+                    'mixed_master_set_count': 0,
+                    'master_set_count': 2,
+                    'entry_count': 4,
+                    'size': '4.0 KiB',
+                    'latest_date': None,
+                    'selection': {'dark_ids': [1, 2], 'bpm_ids': [11, 12]},
+                    'master_sets': [{
+                        'gain': 10,
+                        'exposure': 30,
+                        'temperature': 43.2,
+                        'paired': True,
+                        'status': 'active',
+                        'size': '2.0 KiB',
+                        'selection': {'dark_ids': [1], 'bpm_ids': [11]},
+                    }, {
+                        'gain': 20,
+                        'exposure': 30,
+                        'temperature': 42.1,
+                        'paired': True,
+                        'status': 'inactive',
+                        'size': '2.0 KiB',
+                        'selection': {'dark_ids': [2], 'bpm_ids': [12]},
+                    }],
+                }],
+            }],
+        }],
+    }
+    html = _render_builder(
+        'none',
+        stored_dark_count=2,
+        stored_bpm_count=2,
+        ready_count=17,
+        suggested_count=0,
+        library_can_manage=True,
+        library_catalog=library_catalog,
+    )
+
+    assert 'uses a ±5°C Allowed temperature difference' in html
+    assert '42.1 to 43.2°C' in html
+    assert '2 master sets: 1 active, 1 inactive' in html
+    assert '>Active</span>' in html
+    assert '>Inactive</span>' in html
+    assert 'Remove temperature group…' in html
+    assert 'Remove temperature layer…' not in html
+
+    recommendation = html.split('aria-labelledby="dark-recommendation-title"', 1)[1].split(
+        'id="dark-recommendation-details"',
+        1,
+    )[0]
+    assert 'dark-recommendation-summary' in recommendation
+    assert recommendation.count('dark-recommendation-summary-cell') == 3
+    assert 'tw:divide-y' not in recommendation
+    assert 'tw:divide-x' not in recommendation
+
+    maintenance = html.split('id="dark-library-maintenance"', 1)[1].split(
+        'id="dark-removal-confirmation"',
+        1,
+    )[0]
+    assert 'tw:border-base-300 tw:bg-base-200' in maintenance
+    assert 'dark-library-maintenance-body' in maintenance
+    assert 'Stored calibration files' in maintenance
+    assert 'Storage used' in maintenance
+    assert maintenance.count('dark-library-scope-row') >= 5
+    assert maintenance.count('dark-library-action-column') >= 5
+    assert 'Remove complete camera library…' in maintenance
+    assert 'dark-remove-selection tw:btn tw:btn-sm' in maintenance
+
+    assert '.dark-library-scope-row {' in html
+    assert 'grid-template-columns: minmax(0, 1fr) minmax(13rem, 16rem);' in html
+    assert '#dark-library-maintenance > .dark-library-maintenance-body' in html
+
+
+def test_non_config_admin_can_review_recommendation_but_not_capture_or_remove():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=20,
+        stored_bpm_count=20,
+        ready_count=5,
+        suggested_count=12,
+        automation_can_run=False,
+        library_can_manage=False,
+    )
+
+    assert 'An administrator can use guided capture for a local camera.' in html
+    assert 'Library storage and removal' not in html
+    assert 'const darkAutomationCanRun = false;' in html
+    assert 'const darkLibraryCanManage = false;' in html
 
 
 def test_library_update_choices_have_distinct_capture_and_retirement_outcomes():

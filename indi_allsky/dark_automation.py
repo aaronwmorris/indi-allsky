@@ -14,6 +14,7 @@ from pathlib import Path
 from . import constants
 from .capture_state import binned_dimension
 from .dark_library import DEFAULT_TEMPERATURE_RANGE
+from .dark_library import camera_temperature_preferences
 
 
 STRATEGY_COMPLETE = 'complete'
@@ -681,6 +682,11 @@ def build_library_catalog(cameras, dark_frames, bad_pixel_maps, current_camera_i
         if not typed_frames:
             continue
 
+        temperature_range = camera_temperature_preferences(camera)['temperature_range']
+        layer_assignments = _library_layer_assignments(
+            typed_frames,
+            temperature_range,
+        )
         profiles = {}
         inactive_selection = {'dark_ids': [], 'bpm_ids': []}
         camera_selection = {'dark_ids': [], 'bpm_ids': []}
@@ -690,6 +696,8 @@ def build_library_catalog(cameras, dark_frames, bad_pixel_maps, current_camera_i
             frame_id = int(frame.id)
             selection_key = '{0:s}_ids'.format(frame_type)
             camera_selection[selection_key].append(frame_id)
+            if not bool(frame.active):
+                inactive_selection[selection_key].append(frame_id)
 
             frame_bytes = _library_frame_bytes(frame)
             camera_bytes += frame_bytes
@@ -699,12 +707,7 @@ def build_library_catalog(cameras, dark_frames, bad_pixel_maps, current_camera_i
             ):
                 camera_latest = create_date
 
-            profile_key = (
-                getattr(frame, 'bitdepth', None),
-                int(getattr(frame, 'binmode', 1)),
-                getattr(frame, 'width', None),
-                getattr(frame, 'height', None),
-            )
+            profile_key = _library_profile_key(frame)
             profile = profiles.setdefault(profile_key, {
                 'entries': [],
                 'layers': {},
@@ -716,11 +719,8 @@ def build_library_catalog(cameras, dark_frames, bad_pixel_maps, current_camera_i
             profile['size_bytes'] += frame_bytes
 
             automation_data = _frame_automation_data(frame)
-            generation_id = str(automation_data.get('generation_id') or '')
-            if generation_id:
-                layer_key = ('generation', generation_id)
-            else:
-                layer_key = ('temperature', _library_temperature_bucket(frame.temp))
+            layer_assignment = layer_assignments[(frame_type, frame_id)]
+            layer_key = layer_assignment['key']
             layer = profile['layers'].setdefault(layer_key, {
                 'entries': [],
                 'master_sets': {},
@@ -728,7 +728,7 @@ def build_library_catalog(cameras, dark_frames, bad_pixel_maps, current_camera_i
                 'size_bytes': 0,
                 'temperatures': [],
                 'latest_date': None,
-                'automation': bool(generation_id),
+                'automation': bool(layer_assignment['automation']),
             })
             layer['entries'].append((frame_type, frame))
             layer['selection'][selection_key].append(frame_id)
@@ -749,12 +749,15 @@ def build_library_catalog(cameras, dark_frames, bad_pixel_maps, current_camera_i
                 'exposure': float(frame.exposure),
                 'temperature': frame.temp,
                 'active': False,
+                'active_entry_count': 0,
                 'latest_date': None,
             })
             master['entries'].append((frame_type, frame))
             master['selection'][selection_key].append(frame_id)
             master['size_bytes'] += frame_bytes
             master['active'] = master['active'] or bool(frame.active)
+            if bool(frame.active):
+                master['active_entry_count'] += 1
             if create_date is not None and (
                     master['latest_date'] is None or create_date > master['latest_date']
             ):
@@ -769,15 +772,23 @@ def build_library_catalog(cameras, dark_frames, bad_pixel_maps, current_camera_i
                 for master in layer['master_sets'].values():
                     dark_count = len(master['selection']['dark_ids'])
                     bpm_count = len(master['selection']['bpm_ids'])
+                    entry_count = dark_count + bpm_count
+                    if master['active_entry_count'] == 0:
+                        status = 'inactive'
+                    elif master['active_entry_count'] == entry_count:
+                        status = 'active'
+                    else:
+                        status = 'mixed'
                     master_sets.append({
                         'gain': master['gain'],
                         'exposure': master['exposure'],
                         'temperature': master['temperature'],
                         'active': master['active'],
+                        'status': status,
                         'paired': dark_count > 0 and bpm_count > 0,
                         'dark_count': dark_count,
                         'bpm_count': bpm_count,
-                        'entry_count': dark_count + bpm_count,
+                        'entry_count': entry_count,
                         'size_bytes': master['size_bytes'],
                         'size': format_bytes(master['size_bytes']),
                         'latest_date': master['latest_date'],
@@ -788,16 +799,16 @@ def build_library_catalog(cameras, dark_frames, bad_pixel_maps, current_camera_i
                     item['exposure'],
                     float('inf') if item['temperature'] is None else item['temperature'],
                 ))
-                for master in master_sets:
-                    if master['active']:
-                        continue
-                    inactive_selection['dark_ids'].extend(
-                        master['selection']['dark_ids']
-                    )
-                    inactive_selection['bpm_ids'].extend(
-                        master['selection']['bpm_ids']
-                    )
                 temperatures = layer['temperatures']
+                active_master_set_count = sum(
+                    1 for item in master_sets if item['status'] == 'active'
+                )
+                inactive_master_set_count = sum(
+                    1 for item in master_sets if item['status'] == 'inactive'
+                )
+                mixed_master_set_count = sum(
+                    1 for item in master_sets if item['status'] == 'mixed'
+                )
                 context_layers.append({
                     'temperature_label': _library_temperature_label(temperatures),
                     'automation': layer['automation'],
@@ -806,6 +817,9 @@ def build_library_catalog(cameras, dark_frames, bad_pixel_maps, current_camera_i
                     ),
                     'entry_count': len(layer['entries']),
                     'master_set_count': len(master_sets),
+                    'active_master_set_count': active_master_set_count,
+                    'inactive_master_set_count': inactive_master_set_count,
+                    'mixed_master_set_count': mixed_master_set_count,
                     'paired_set_count': sum(1 for item in master_sets if item['paired']),
                     'size_bytes': layer['size_bytes'],
                     'size': format_bytes(layer['size_bytes']),
@@ -823,6 +837,18 @@ def build_library_catalog(cameras, dark_frames, bad_pixel_maps, current_camera_i
                 'width': width,
                 'height': height,
                 'entry_count': len(profile['entries']),
+                'master_set_count': sum(
+                    layer['master_set_count'] for layer in context_layers
+                ),
+                'active_master_set_count': sum(
+                    layer['active_master_set_count'] for layer in context_layers
+                ),
+                'inactive_master_set_count': sum(
+                    layer['inactive_master_set_count'] for layer in context_layers
+                ),
+                'mixed_master_set_count': sum(
+                    layer['mixed_master_set_count'] for layer in context_layers
+                ),
                 'size_bytes': profile['size_bytes'],
                 'size': format_bytes(profile['size_bytes']),
                 'selection': _sorted_library_selection(profile['selection']),
@@ -837,6 +863,9 @@ def build_library_catalog(cameras, dark_frames, bad_pixel_maps, current_camera_i
 
         inactive_selection = _sorted_library_selection(inactive_selection)
         camera_selection = _sorted_library_selection(camera_selection)
+        camera_master_set_count = sum(
+            profile['master_set_count'] for profile in context_profiles
+        )
         total_bytes += camera_bytes
         total_entries += len(typed_frames)
         catalog.append({
@@ -851,6 +880,17 @@ def build_library_catalog(cameras, dark_frames, bad_pixel_maps, current_camera_i
             'inactive_count': (
                 len(inactive_selection['dark_ids']) + len(inactive_selection['bpm_ids'])
             ),
+            'master_set_count': camera_master_set_count,
+            'active_master_set_count': sum(
+                profile['active_master_set_count'] for profile in context_profiles
+            ),
+            'inactive_master_set_count': sum(
+                profile['inactive_master_set_count'] for profile in context_profiles
+            ),
+            'mixed_master_set_count': sum(
+                profile['mixed_master_set_count'] for profile in context_profiles
+            ),
+            'temperature_range': temperature_range,
             'size_bytes': camera_bytes,
             'size': format_bytes(camera_bytes),
             'latest_date': camera_latest,
@@ -953,10 +993,91 @@ def _library_frame_bytes(frame):
     return max(0, stored_size)
 
 
-def _library_temperature_bucket(temperature):
-    if temperature is None:
-        return None
-    return int(math.floor((float(temperature) + 2.5) / 5.0)) * 5
+def _library_profile_key(frame):
+    return (
+        getattr(frame, 'bitdepth', None),
+        int(getattr(frame, 'binmode', 1)),
+        getattr(frame, 'width', None),
+        getattr(frame, 'height', None),
+    )
+
+
+def _library_layer_assignments(typed_frames, temperature_range):
+    """Combine nearby capture batches without splitting one run at a fixed boundary."""
+    try:
+        matching_distance = float(temperature_range)
+    except (TypeError, ValueError):
+        matching_distance = DEFAULT_TEMPERATURE_RANGE
+    if not math.isfinite(matching_distance) or matching_distance <= 0:
+        matching_distance = DEFAULT_TEMPERATURE_RANGE
+
+    profile_batches = {}
+    for frame_type, frame in typed_frames:
+        automation_data = _frame_automation_data(frame)
+        generation_id = str(automation_data.get('generation_id') or '')
+        if generation_id:
+            batch_key = ('generation', generation_id)
+        else:
+            batch_key = ('legacy',) + _library_master_key(frame, automation_data)
+        profile_key = _library_profile_key(frame)
+        batch = profile_batches.setdefault(profile_key, {}).setdefault(batch_key, {
+            'entries': [],
+            'temperatures': [],
+            'automation': bool(generation_id),
+        })
+        batch['entries'].append((frame_type, frame))
+        if getattr(frame, 'temp', None) is not None:
+            batch['temperatures'].append(float(frame.temp))
+
+    assignments = {}
+    for profile_index, batches in enumerate(profile_batches.values()):
+        recorded_batches = [batch for batch in batches.values() if batch['temperatures']]
+        recorded_batches.sort(key=lambda batch: (
+            min(batch['temperatures']),
+            max(batch['temperatures']),
+        ))
+        clusters = []
+        for batch in recorded_batches:
+            batch_minimum = min(batch['temperatures'])
+            batch_maximum = max(batch['temperatures'])
+            if clusters:
+                cluster = clusters[-1]
+                combined_minimum = min(cluster['minimum'], batch_minimum)
+                combined_maximum = max(cluster['maximum'], batch_maximum)
+            else:
+                combined_minimum = batch_minimum
+                combined_maximum = batch_maximum
+            if clusters and (combined_maximum - combined_minimum) < matching_distance:
+                cluster['batches'].append(batch)
+                cluster['minimum'] = combined_minimum
+                cluster['maximum'] = combined_maximum
+            else:
+                clusters.append({
+                    'batches': [batch],
+                    'minimum': batch_minimum,
+                    'maximum': batch_maximum,
+                })
+
+        unrecorded_batches = [
+            batch for batch in batches.values() if not batch['temperatures']
+        ]
+        if unrecorded_batches:
+            clusters.append({
+                'batches': unrecorded_batches,
+                'minimum': None,
+                'maximum': None,
+            })
+
+        for cluster_index, cluster in enumerate(clusters):
+            cluster_key = ('temperature-group', profile_index, cluster_index)
+            automation = any(batch['automation'] for batch in cluster['batches'])
+            for batch in cluster['batches']:
+                for frame_type, frame in batch['entries']:
+                    assignments[(frame_type, int(frame.id))] = {
+                        'key': cluster_key,
+                        'automation': automation,
+                    }
+    return assignments
 
 
 def _library_temperature_label(temperatures):

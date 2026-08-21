@@ -1576,8 +1576,9 @@ class DarkFramesView(TemplateView):
         context['dark_temperature_sources'] = temperature_source_choices(
             self.indi_allsky_config,
         )
+        dark_config_can_save = _can_save_standard_configuration()
         dark_automation_authorized = bool(
-            _can_save_standard_configuration()
+            dark_config_can_save
             and getattr(self.camera, 'local', False)
             and dark_analysis.get('available', False)
         )
@@ -1602,7 +1603,7 @@ class DarkFramesView(TemplateView):
         context['dark_library_catalog'] = dark_library_catalog
         context['dark_library_task_active'] = maintenance_task is not None
         context['dark_library_can_manage'] = bool(
-            dark_automation_authorized
+            dark_config_can_save
             and dark_library_catalog['entry_count'] > 0
         )
         # Retain the old context name for extensions that still inspect it.
