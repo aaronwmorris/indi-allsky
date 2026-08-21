@@ -33,6 +33,90 @@
     overflow-x: auto;
 }
 
+.dark-library-health-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
+    gap: 0.5rem;
+}
+
+.dark-library-quick-filter {
+    height: auto;
+    min-height: 3.25rem;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 0.625rem 0.75rem;
+    text-align: left;
+    white-space: normal;
+}
+
+.dark-library-quick-filter[aria-pressed="true"] {
+    border-color: var(--color-primary);
+    background-color: color-mix(in oklab, var(--color-primary) 12%, transparent);
+}
+
+.dark-partner-link {
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+@media (max-width: 1450px) {
+    .dark-col-diagnostic {
+        display: none !important;
+    }
+}
+
+@media (max-width: 1200px) {
+    .dark-col-date {
+        display: none !important;
+    }
+}
+
+@media (max-width: 1050px) {
+    .dark-col-process {
+        display: none !important;
+    }
+}
+
+@media (max-width: 950px) {
+    .dark-col-file {
+        display: none !important;
+    }
+}
+
+@media (max-width: 850px) {
+    .dark-col-image-profile {
+        display: none !important;
+    }
+}
+
+@media (max-width: 720px) {
+    .dark-col-compatibility {
+        display: none !important;
+    }
+}
+
+@media (max-width: 560px) {
+    .dark-col-id {
+        display: none !important;
+    }
+
+    .dark-partner-state {
+        display: none !important;
+    }
+
+    .dark-library-card-body {
+        padding: 0.75rem !important;
+    }
+
+    #darks-table th,
+    #darks-table td,
+    #bpm-table th,
+    #bpm-table td {
+        padding-left: 0.4rem !important;
+        padding-right: 0.4rem !important;
+    }
+}
+
 .dark-library-card .dt-layout-row {
     gap: 0.75rem;
 }
@@ -267,7 +351,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
 {% endblock %}
 
 {% block content %}
-{% set dark_builder_preview_version = '2026.08.21.14' %}
+{% set dark_builder_preview_version = '2026.08.21.15' %}
 <div id="dark-page-content" class="tw:container tw:mx-auto tw:w-full tw:px-4 tw:py-6 tw:flex tw:flex-col tw:gap-4">
 
     <nav aria-label="Dark library sections">
@@ -992,7 +1076,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
         <!-- Dark Frames Tab Panel -->
         <div id="tab-darks" class="dark-tab-pane" role="tabpanel" aria-labelledby="dark-tab-darks">
             <div class="dark-library-card tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
-                <div class="tw:card-body tw:p-6">
+                <div class="dark-library-card-body tw:card-body tw:p-6">
                     <div class="tw:border-b tw:border-base-content/10 tw:pb-3 tw:mb-4">
                         <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2">
                             <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50">Dark Library</h4>
@@ -1000,60 +1084,108 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                         </div>
                         <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">Master dark frames remove repeatable sensor noise. Active entries are matched automatically by gain, exposure, binning, image format and temperature.</p>
                     </div>
-                    
+
+                    <div class="dark-library-health-grid tw:mb-4" aria-label="Filter master darks">
+                        {% for key, label, count in (
+                            ('all', 'All masters', darkframe_summary.total),
+                            ('active', 'Active', darkframe_summary.active),
+                            ('inactive', 'Inactive', darkframe_summary.inactive),
+                            ('unpaired', 'Missing map', darkframe_summary.unpaired),
+                            ('compatible', 'Current profile', darkframe_summary.compatible),
+                            ('missing-file', 'Missing file', darkframe_summary.missing_files)
+                        ) %}
+                        <button type="button" class="dark-library-quick-filter tw:btn tw:btn-sm tw:btn-outline" data-table-id="darks-table" data-filter="{{ key }}" aria-pressed="{% if key == 'all' %}true{% else %}false{% endif %}">
+                            <span>
+                                <span class="tw:block tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">{{ label }}</span>
+                                <span class="tw:block tw:text-base tw:font-semibold tw:mt-0.5">{{ count }}</span>
+                            </span>
+                        </button>
+                        {% endfor %}
+                    </div>
+
+                    <p class="tw:text-xs tw:text-base-content/50 tw:mb-3">Current profile compares image size, binning and bit depth. Gain, exposure, temperature, active state and file availability still decide whether calibration can use an entry.</p>
+
                     <div class="dark-table-wrap tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
                         <table id="darks-table" class="tw:table tw:table-zebra tw:table-xs tw:w-full tw:m-0">
                             <thead>
                                 <tr class="tw:bg-base-300/60 tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
-                                    <th class="tw:pl-4 tw:py-3">ID</th>
-                                    <th class="tw:py-3">Date</th>
+                                    <th class="dark-col-id tw:pl-4 tw:py-3">ID</th>
+                                    <th class="dark-col-date tw:py-3">Date</th>
                                     <th class="tw:py-3">Active</th>
-                                    <th class="tw:py-3">Resolution</th>
-                                    <th class="tw:py-3">Bits</th>
+                                    <th class="tw:py-3">Matching map</th>
+                                    <th class="dark-col-compatibility tw:py-3">Config fit</th>
+                                    <th class="dark-col-image-profile tw:py-3">Image profile</th>
                                     <th class="tw:py-3">Gain</th>
                                     <th class="tw:py-3">Exposure</th>
-                                    <th class="tw:py-3">Bin</th>
-                                    <th class="tw:py-3">Temp</th>
-                                    <th class="tw:py-3">ADU</th>
-                                    <th class="tw:py-3">Hot Pixels</th>
-                                    <th class="tw:py-3">View</th>
-                                    <th class="tw:py-3">File</th>
-                                    <th class="tw:py-3">Size (MB)</th>
-                                    <th class="tw:pr-4 tw:py-3">Method</th>
+                                    <th class="tw:py-3">Temperature</th>
+                                    <th class="dark-col-diagnostic tw:py-3">ADU</th>
+                                    <th class="dark-col-diagnostic tw:py-3">Hot pixels</th>
+                                    <th class="dark-col-process tw:py-3">Inspect</th>
+                                    <th class="dark-col-file tw:py-3">File</th>
+                                    <th class="dark-col-diagnostic tw:py-3">Size</th>
+                                    <th class="dark-col-diagnostic tw:pr-4 tw:py-3">Method</th>
                                 </tr>
                             </thead>
                             <tbody class="tw:divide-y tw:divide-base-content/5">
                                 {% for dark in darkframe_list %}
-                                <tr class="tw:hover:bg-base-content/5 tw:transition-colors tw:text-xs">
-                                    <td class="tw:pl-4 tw:font-mono tw:text-base-content/70">{{ dark.id }}</td>
-                                    <td class="tw:whitespace-nowrap tw:text-base-content/90">{{ dark.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                                    <td>
+                                <tr id="dark-row-{{ dark.id }}" class="tw:hover:bg-base-content/5 tw:transition-colors tw:text-xs">
+                                    <td class="dark-col-id tw:pl-4 tw:font-mono tw:text-base-content/70">{{ dark.id }}</td>
+                                    <td class="dark-col-date tw:whitespace-nowrap tw:text-base-content/90">{{ dark.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                    <td data-search="{% if dark.active %}active{% else %}inactive{% endif %}">
                                         {% if dark.active %}
                                             <span class="tw:badge tw:badge-success tw:badge-sm tw:font-semibold tw:rounded-[var(--radius-box)]">Active</span>
                                         {% else %}
                                             <span class="tw:badge tw:badge-ghost tw:badge-sm tw:text-base-content/40 tw:font-semibold tw:rounded-[var(--radius-box)]">Inactive</span>
                                         {% endif %}
                                     </td>
-                                    <td class="tw:font-mono">{{ dark.width }}x{{ dark.height }}</td>
-                                    <td>{{ dark.bitdepth }}</td>
+                                    <td data-search="{% if dark.partner_id is none %}unpaired{% else %}paired{% endif %}">
+                                        {% if dark.partner_id is none %}
+                                        <span class="tw:badge tw:badge-warning tw:badge-sm">Missing map</span>
+                                        {% else %}
+                                        <a href="#tab-bpm" class="dark-partner-link" data-target-tab="tab-bpm" data-partner-id="{{ dark.partner_id }}" title="Show matching bad-pixel map {{ dark.partner_id }}">
+                                            <span class="tw:badge {% if not dark.partner_exists %}tw:badge-error{% elif dark.partner_active %}tw:badge-success tw:badge-outline{% else %}tw:badge-ghost{% endif %} tw:badge-sm">Map #{{ dark.partner_id }}</span>
+                                            <span class="dark-partner-state tw:text-base-content/50">{% if not dark.partner_exists %}file missing{% elif dark.partner_active %}active{% else %}inactive{% endif %}</span>
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                    <td class="dark-col-compatibility" data-search="{% if dark.configuration_compatible == true %}compatible{% else %}other{% endif %}">
+                                        {% if dark.configuration_compatible is none %}
+                                        <span class="tw:badge tw:badge-ghost tw:badge-sm">Unavailable</span>
+                                        {% elif dark.configuration_compatible %}
+                                        <span class="tw:badge tw:badge-info tw:badge-outline tw:badge-sm" title="Image dimensions, bit depth and binning fit a currently configured capture profile.">Compatible</span>
+                                        {% else %}
+                                        <span class="tw:badge tw:badge-ghost tw:badge-sm" title="Image dimensions, bit depth or binning do not fit the current capture profiles.">Other profile</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="dark-col-image-profile tw:font-mono tw:whitespace-nowrap">{{ dark.width }}×{{ dark.height }} · bin {{ dark.binmode }} · {{ dark.bitdepth }} bit</td>
                                     <td class="tw:font-mono">{{ "%0.2f"|format(dark.gain | float) }}</td>
                                     <td class="tw:font-mono">{{ dark.exposure }}s</td>
-                                    <td>{{ dark.binmode }}</td>
-                                    <td class="tw:font-mono tw:text-info">{{ "%0.2f"|format(dark.temp | float) }}°C</td>
-                                    <td class="tw:font-mono">{{ "%0.1f"|format(dark.adu | float) }}</td>
-                                    <td class="tw:font-mono tw:text-warning">{{ dark.hot_pixels }}</td>
-                                    <td>
+                                    <td class="tw:font-mono tw:whitespace-nowrap">
+                                        {% if dark.temp is none %}
+                                        <span class="tw:text-warning">Not recorded</span>
+                                        {% else %}
+                                        <span class="tw:text-info">{{ "%0.1f"|format(dark.temp | float) }}°C</span>
+                                        <span class="tw:block tw:text-[0.625rem] tw:text-base-content/50">usable {{ "%0.1f"|format(dark.temperature_min) }} to {{ "%0.1f"|format(dark.temperature_max) }}°C</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="dark-col-diagnostic tw:font-mono">{{ "%0.1f"|format(dark.adu | float) }}</td>
+                                    <td class="dark-col-diagnostic tw:font-mono tw:text-warning">{{ dark.hot_pixels }}</td>
+                                    <td class="dark-col-process">
                                         <a href="{{ url_for('indi_allsky.image_processing_view', type='dark', id=dark.id) }}" class="tw:btn tw:btn-xs tw:btn-success tw:btn-outline tw:gap-1 tw:no-underline">
                                             <i class="tw:icon-[lucide--play] tw:w-3 tw:h-3"></i> Process
                                         </a>
                                     </td>
-                                    <td>
+                                    <td class="dark-col-file" data-search="{% if dark.exists %}present{% else %}missing-file{% endif %}">
+                                        {% if dark.exists %}
                                         <a href="{{ dark.url }}" class="tw:btn tw:btn-xs tw:btn-info tw:btn-outline tw:gap-1 tw:no-underline">
                                             <i class="tw:icon-[lucide--download] tw:w-3 tw:h-3"></i> Download
                                         </a>
+                                        {% else %}
+                                        <span class="tw:badge tw:badge-error tw:badge-sm">Missing file</span>
+                                        {% endif %}
                                     </td>
-                                    <td class="tw:font-mono">{{ "%0.1f"|format(dark.size_mb | float) }}</td>
-                                    <td class="tw:pr-4 tw:text-base-content/70">{{ dark.method }}</td>
+                                    <td class="dark-col-diagnostic tw:font-mono">{{ "%0.1f"|format(dark.size_mb | float) }} MB</td>
+                                    <td class="dark-col-diagnostic tw:pr-4 tw:text-base-content/70">{{ dark.method }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -1066,7 +1198,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
         <!-- Bad Pixel Maps Tab Panel -->
         <div id="tab-bpm" class="dark-tab-pane" role="tabpanel" aria-labelledby="dark-tab-bpm" style="display: none;">
             <div class="dark-library-card tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm">
-                <div class="tw:card-body tw:p-6">
+                <div class="dark-library-card-body tw:card-body tw:p-6">
                     <div class="tw:border-b tw:border-base-content/10 tw:pb-3 tw:mb-4">
                         <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2">
                             <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50">Bad Pixel Map Library</h4>
@@ -1074,58 +1206,108 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                         </div>
                         <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">Bad-pixel maps identify persistent hot and dead pixels. They are generated alongside master darks and matched using the same gain, exposure, binning, image format and temperature.</p>
                     </div>
-                    
+
+                    <div class="dark-library-health-grid tw:mb-4" aria-label="Filter bad-pixel maps">
+                        {% for key, label, count in (
+                            ('all', 'All maps', bpm_summary.total),
+                            ('active', 'Active', bpm_summary.active),
+                            ('inactive', 'Inactive', bpm_summary.inactive),
+                            ('unpaired', 'Missing dark', bpm_summary.unpaired),
+                            ('compatible', 'Current profile', bpm_summary.compatible),
+                            ('missing-file', 'Missing file', bpm_summary.missing_files)
+                        ) %}
+                        <button type="button" class="dark-library-quick-filter tw:btn tw:btn-sm tw:btn-outline" data-table-id="bpm-table" data-filter="{{ key }}" aria-pressed="{% if key == 'all' %}true{% else %}false{% endif %}">
+                            <span>
+                                <span class="tw:block tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">{{ label }}</span>
+                                <span class="tw:block tw:text-base tw:font-semibold tw:mt-0.5">{{ count }}</span>
+                            </span>
+                        </button>
+                        {% endfor %}
+                    </div>
+
+                    <p class="tw:text-xs tw:text-base-content/50 tw:mb-3">Current profile compares image size, binning and bit depth. Gain, exposure, temperature, active state and file availability still decide whether calibration can use an entry.</p>
+
                     <div class="dark-table-wrap tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
                         <table id="bpm-table" class="tw:table tw:table-zebra tw:table-xs tw:w-full tw:m-0">
                             <thead>
                                 <tr class="tw:bg-base-300/60 tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
-                                    <th class="tw:pl-4 tw:py-3">ID</th>
-                                    <th class="tw:py-3">Date</th>
+                                    <th class="dark-col-id tw:pl-4 tw:py-3">ID</th>
+                                    <th class="dark-col-date tw:py-3">Date</th>
                                     <th class="tw:py-3">Active</th>
-                                    <th class="tw:py-3">Resolution</th>
-                                    <th class="tw:py-3">Bits</th>
+                                    <th class="tw:py-3">Matching dark</th>
+                                    <th class="dark-col-compatibility tw:py-3">Config fit</th>
+                                    <th class="dark-col-image-profile tw:py-3">Image profile</th>
                                     <th class="tw:py-3">Gain</th>
                                     <th class="tw:py-3">Exposure</th>
-                                    <th class="tw:py-3">Bin</th>
-                                    <th class="tw:py-3">Temp</th>
-                                    <th class="tw:py-3">ADU</th>
-                                    <th class="tw:py-3">Hot Pixels</th>
-                                    <th class="tw:py-3">View</th>
-                                    <th class="tw:py-3">File</th>
-                                    <th class="tw:pr-4 tw:py-3">Size (MB)</th>
+                                    <th class="tw:py-3">Temperature</th>
+                                    <th class="dark-col-diagnostic tw:py-3">ADU</th>
+                                    <th class="dark-col-diagnostic tw:py-3">Hot pixels</th>
+                                    <th class="dark-col-process tw:py-3">Inspect</th>
+                                    <th class="dark-col-file tw:py-3">File</th>
+                                    <th class="dark-col-diagnostic tw:py-3">Size</th>
+                                    <th class="dark-col-diagnostic tw:pr-4 tw:py-3">Method</th>
                                 </tr>
                             </thead>
                             <tbody class="tw:divide-y tw:divide-base-content/5">
                                 {% for bpm in bpm_list %}
-                                <tr class="tw:hover:bg-base-content/5 tw:transition-colors tw:text-xs">
-                                    <td class="tw:pl-4 tw:font-mono tw:text-base-content/70">{{ bpm.id }}</td>
-                                    <td class="tw:whitespace-nowrap tw:text-base-content/90">{{ bpm.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                                    <td>
+                                <tr id="bpm-row-{{ bpm.id }}" class="tw:hover:bg-base-content/5 tw:transition-colors tw:text-xs">
+                                    <td class="dark-col-id tw:pl-4 tw:font-mono tw:text-base-content/70">{{ bpm.id }}</td>
+                                    <td class="dark-col-date tw:whitespace-nowrap tw:text-base-content/90">{{ bpm.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                    <td data-search="{% if bpm.active %}active{% else %}inactive{% endif %}">
                                         {% if bpm.active %}
                                             <span class="tw:badge tw:badge-success tw:badge-sm tw:font-semibold tw:rounded-[var(--radius-box)]">Active</span>
                                         {% else %}
                                             <span class="tw:badge tw:badge-ghost tw:badge-sm tw:text-base-content/40 tw:font-semibold tw:rounded-[var(--radius-box)]">Inactive</span>
                                         {% endif %}
                                     </td>
-                                    <td class="tw:font-mono">{{ bpm.width }}x{{ bpm.height }}</td>
-                                    <td>{{ bpm.bitdepth }}</td>
+                                    <td data-search="{% if bpm.partner_id is none %}unpaired{% else %}paired{% endif %}">
+                                        {% if bpm.partner_id is none %}
+                                        <span class="tw:badge tw:badge-warning tw:badge-sm">Missing dark</span>
+                                        {% else %}
+                                        <a href="#tab-darks" class="dark-partner-link" data-target-tab="tab-darks" data-partner-id="{{ bpm.partner_id }}" title="Show matching master dark {{ bpm.partner_id }}">
+                                            <span class="tw:badge {% if not bpm.partner_exists %}tw:badge-error{% elif bpm.partner_active %}tw:badge-success tw:badge-outline{% else %}tw:badge-ghost{% endif %} tw:badge-sm">Dark #{{ bpm.partner_id }}</span>
+                                            <span class="dark-partner-state tw:text-base-content/50">{% if not bpm.partner_exists %}file missing{% elif bpm.partner_active %}active{% else %}inactive{% endif %}</span>
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                    <td class="dark-col-compatibility" data-search="{% if bpm.configuration_compatible == true %}compatible{% else %}other{% endif %}">
+                                        {% if bpm.configuration_compatible is none %}
+                                        <span class="tw:badge tw:badge-ghost tw:badge-sm">Unavailable</span>
+                                        {% elif bpm.configuration_compatible %}
+                                        <span class="tw:badge tw:badge-info tw:badge-outline tw:badge-sm" title="Image dimensions, bit depth and binning fit a currently configured capture profile.">Compatible</span>
+                                        {% else %}
+                                        <span class="tw:badge tw:badge-ghost tw:badge-sm" title="Image dimensions, bit depth or binning do not fit the current capture profiles.">Other profile</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="dark-col-image-profile tw:font-mono tw:whitespace-nowrap">{{ bpm.width }}×{{ bpm.height }} · bin {{ bpm.binmode }} · {{ bpm.bitdepth }} bit</td>
                                     <td class="tw:font-mono">{{ "%0.2f"|format(bpm.gain | float) }}</td>
                                     <td class="tw:font-mono">{{ bpm.exposure }}s</td>
-                                    <td>{{ bpm.binmode }}</td>
-                                    <td class="tw:font-mono tw:text-info">{{ "%0.2f"|format(bpm.temp | float) }}°C</td>
-                                    <td class="tw:font-mono">{{ "%0.1f"|format(bpm.adu | float) }}</td>
-                                    <td class="tw:font-mono tw:text-warning">{{ bpm.hot_pixels }}</td>
-                                    <td>
+                                    <td class="tw:font-mono tw:whitespace-nowrap">
+                                        {% if bpm.temp is none %}
+                                        <span class="tw:text-warning">Not recorded</span>
+                                        {% else %}
+                                        <span class="tw:text-info">{{ "%0.1f"|format(bpm.temp | float) }}°C</span>
+                                        <span class="tw:block tw:text-[0.625rem] tw:text-base-content/50">usable {{ "%0.1f"|format(bpm.temperature_min) }} to {{ "%0.1f"|format(bpm.temperature_max) }}°C</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="dark-col-diagnostic tw:font-mono">{{ "%0.1f"|format(bpm.adu | float) }}</td>
+                                    <td class="dark-col-diagnostic tw:font-mono tw:text-warning">{{ bpm.hot_pixels }}</td>
+                                    <td class="dark-col-process">
                                         <a href="{{ url_for('indi_allsky.image_processing_view', type='bpm', id=bpm.id) }}" class="tw:btn tw:btn-xs tw:btn-success tw:btn-outline tw:gap-1 tw:no-underline">
                                             <i class="tw:icon-[lucide--play] tw:w-3 tw:h-3"></i> Process
                                         </a>
                                     </td>
-                                    <td>
+                                    <td class="dark-col-file" data-search="{% if bpm.exists %}present{% else %}missing-file{% endif %}">
+                                        {% if bpm.exists %}
                                         <a href="{{ bpm.url }}" class="tw:btn tw:btn-xs tw:btn-info tw:btn-outline tw:gap-1 tw:no-underline">
                                             <i class="tw:icon-[lucide--download] tw:w-3 tw:h-3"></i> Download
                                         </a>
+                                        {% else %}
+                                        <span class="tw:badge tw:badge-error tw:badge-sm">Missing file</span>
+                                        {% endif %}
                                     </td>
-                                    <td class="tw:pr-4 tw:font-mono">{{ "%0.1f"|format(bpm.size_mb | float) }}</td>
+                                    <td class="dark-col-diagnostic tw:font-mono">{{ "%0.1f"|format(bpm.size_mb | float) }} MB</td>
+                                    <td class="dark-col-diagnostic tw:pr-4 tw:text-base-content/70">{{ bpm.method }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -2237,32 +2419,86 @@ async function cancelDarkCalibration() {
     }
 }
 
+const darkLibraryFilterColumns = {
+    id: 0,
+    active: 2,
+    partner: 3,
+    compatible: 4,
+    file: 12,
+};
+
+function darkLibraryDataTable(tableId) {
+    if (tableId === 'darks-table') return darkFramesDataTable;
+    if (tableId === 'bpm-table') return badPixelDataTable;
+    return null;
+}
+
+function applyDarkLibraryFilter(tableId, filterName, focusedId) {
+    const table = darkLibraryDataTable(tableId);
+    if (!table) return;
+
+    [
+        darkLibraryFilterColumns.id,
+        darkLibraryFilterColumns.active,
+        darkLibraryFilterColumns.partner,
+        darkLibraryFilterColumns.compatible,
+        darkLibraryFilterColumns.file,
+    ].forEach((columnIndex) => table.column(columnIndex).search(''));
+
+    if (focusedId !== undefined && focusedId !== null) {
+        table.search('');
+        table.column(darkLibraryFilterColumns.id).search(
+            '^' + String(focusedId).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$',
+            true,
+            false
+        );
+    } else if (filterName === 'active' || filterName === 'inactive') {
+        table.column(darkLibraryFilterColumns.active).search('^' + filterName + '$', true, false);
+    } else if (filterName === 'unpaired') {
+        table.column(darkLibraryFilterColumns.partner).search('^unpaired$', true, false);
+    } else if (filterName === 'compatible') {
+        table.column(darkLibraryFilterColumns.compatible).search('^compatible$', true, false);
+    } else if (filterName === 'missing-file') {
+        table.column(darkLibraryFilterColumns.file).search('^missing-file$', true, false);
+    }
+
+    $('.dark-library-quick-filter[data-table-id="' + tableId + '"]')
+        .attr('aria-pressed', 'false');
+    if (focusedId === undefined || focusedId === null) {
+        $('.dark-library-quick-filter[data-table-id="' + tableId + '"][data-filter="' + filterName + '"]')
+            .attr('aria-pressed', 'true');
+    }
+    table.draw();
+}
+
 function init() {
     darkFramesDataTable = new DataTable('#darks-table', {
         searching: true,
-        order: [[5, 'desc'], [6, 'desc'], [1, 'desc']],
+        autoWidth: false,
+        order: [[6, 'desc'], [7, 'desc'], [1, 'desc']],
         layout: {
             topStart: ['pageLength', 'buttons'],
             topEnd: 'search',
         },
         buttons: [
-            'copy',
-            'csv',
-            'excel',
+            {extend: 'copy', exportOptions: {columns: ':not(.dark-col-process)'}},
+            {extend: 'csv', exportOptions: {columns: ':not(.dark-col-process)'}},
+            {extend: 'excel', exportOptions: {columns: ':not(.dark-col-process)'}},
         ]
     });
 
     badPixelDataTable = new DataTable('#bpm-table', {
         searching: true,
-        order: [[5, 'desc'], [6, 'desc'], [1, 'desc']],
+        autoWidth: false,
+        order: [[6, 'desc'], [7, 'desc'], [1, 'desc']],
         layout: {
             topStart: ['pageLength', 'buttons'],
             topEnd: 'search',
         },
         buttons: [
-            'copy',
-            'csv',
-            'excel',
+            {extend: 'copy', exportOptions: {columns: ':not(.dark-col-process)'}},
+            {extend: 'csv', exportOptions: {columns: ':not(.dark-col-process)'}},
+            {extend: 'excel', exportOptions: {columns: ':not(.dark-col-process)'}},
         ]
     });
 }
@@ -2271,6 +2507,18 @@ function init() {
 $( document ).ready(function() {
     $('.dark-tab-btn').on('click', function() {
         selectDarkSection($(this).data('target'), true);
+    });
+
+    $('.dark-library-quick-filter').on('click', function() {
+        applyDarkLibraryFilter($(this).data('table-id'), $(this).data('filter'));
+    });
+
+    $('.dark-partner-link').on('click', function(event) {
+        event.preventDefault();
+        const targetTab = $(this).data('target-tab');
+        const tableId = targetTab === 'tab-bpm' ? 'bpm-table' : 'darks-table';
+        selectDarkSection(targetTab, true);
+        applyDarkLibraryFilter(tableId, 'all', $(this).data('partner-id'));
     });
 
     const requestedSection = window.location.hash.replace('#', '');

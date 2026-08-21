@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -27,6 +28,10 @@ def _render_builder(
     config_requires_reload=False,
     library_can_manage=False,
     library_catalog=None,
+    darkframe_list=None,
+    bpm_list=None,
+    darkframe_summary=None,
+    bpm_summary=None,
 ):
     if temperature_ready_count is None:
         temperature_ready_count = ready_count
@@ -37,6 +42,22 @@ def _render_builder(
             'entry_count': 0,
             'size': '0 B',
         }
+    if darkframe_list is None:
+        darkframe_list = []
+    if bpm_list is None:
+        bpm_list = []
+    empty_summary = {
+        'total': 0,
+        'active': 0,
+        'inactive': 0,
+        'unpaired': 0,
+        'compatible': 0,
+        'missing_files': 0,
+    }
+    if darkframe_summary is None:
+        darkframe_summary = empty_summary
+    if bpm_summary is None:
+        bpm_summary = empty_summary
 
     environment = Environment(loader=DictLoader({
         'base.html': (
@@ -117,8 +138,10 @@ def _render_builder(
         'dark_library_can_manage': library_can_manage,
         'dark_library_task_active': False,
         'dark_library_catalog': library_catalog,
-        'darkframe_list': [],
-        'bpm_list': [],
+        'darkframe_list': darkframe_list,
+        'bpm_list': bpm_list,
+        'darkframe_summary': darkframe_summary,
+        'bpm_summary': bpm_summary,
         'camera_name': 'Test Camera',
     })
 
@@ -153,7 +176,7 @@ def test_builder_explains_each_library_state(
     assert 'One master set is a master dark and matching bad-pixel map' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.21.14' in html
+    assert 'Preview 2026.08.21.15' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'masters from 15.0°C to 25.0°C count as matched' in html
     assert 'Every required master set is checked separately, so capture drift may leave only some' in html
@@ -163,6 +186,138 @@ def test_builder_explains_each_library_state(
         assert 'id="dark-run-instructions" class="tw:flex tw:flex-col tw:gap-4"' in html
     else:
         assert 'id="dark-run-instructions" class="tw:flex tw:flex-col tw:gap-4 tw:hidden"' in html
+
+
+def test_library_tabs_show_health_pairing_compatibility_and_temperature_range():
+    row_base = {
+        'createDate': datetime(2026, 8, 21, 12, 0, 0),
+        'bitdepth': 16,
+        'gain': 100,
+        'exposure': 30,
+        'binmode': 1,
+        'width': 100,
+        'height': 50,
+        'adu': 123.4,
+        'hot_pixels': 7,
+        'url': '/download',
+        'size_mb': 1.5,
+        'method': 'sigmaclip',
+    }
+    dark = {
+        **row_base,
+        'id': 101,
+        'active': True,
+        'exists': True,
+        'temp': 20.0,
+        'temperature_min': 15.0,
+        'temperature_max': 25.0,
+        'configuration_compatible': True,
+        'partner_id': 201,
+        'partner_active': False,
+        'partner_exists': False,
+    }
+    bpm = {
+        **row_base,
+        'id': 201,
+        'active': False,
+        'exists': False,
+        'temp': None,
+        'temperature_min': None,
+        'temperature_max': None,
+        'configuration_compatible': False,
+        'partner_id': 101,
+        'partner_active': True,
+        'partner_exists': True,
+    }
+    dark_summary = {
+        'total': 1,
+        'active': 1,
+        'inactive': 0,
+        'unpaired': 0,
+        'compatible': 1,
+        'missing_files': 0,
+    }
+    bpm_summary = {
+        'total': 1,
+        'active': 0,
+        'inactive': 1,
+        'unpaired': 0,
+        'compatible': 0,
+        'missing_files': 1,
+    }
+
+    html = _render_builder(
+        'none',
+        stored_dark_count=1,
+        stored_bpm_count=1,
+        ready_count=17,
+        suggested_count=0,
+        darkframe_list=[dark],
+        bpm_list=[bpm],
+        darkframe_summary=dark_summary,
+        bpm_summary=bpm_summary,
+    )
+
+    assert 'aria-label="Filter master darks"' in html
+    assert 'aria-label="Filter bad-pixel maps"' in html
+    assert 'data-filter="inactive"' in html
+    assert 'data-filter="unpaired"' in html
+    assert 'data-filter="compatible"' in html
+    assert 'data-filter="missing-file"' in html
+    assert html.count('Current profile compares image size, binning and bit depth.') == 2
+    assert 'data-target-tab="tab-bpm" data-partner-id="201"' in html
+    assert 'data-target-tab="tab-darks" data-partner-id="101"' in html
+    assert 'Map #201' in html
+    assert 'Dark #101' in html
+    assert 'usable 15.0 to 25.0°C' in html
+    assert '>Compatible</span>' in html
+    assert '>Other profile</span>' in html
+    assert 'data-search="missing-file"' in html
+    assert '>Missing file</span>' in html
+
+    dark_table = html.split('<table id="darks-table"', 1)[1].split('</table>', 1)[0]
+    bpm_table = html.split('<table id="bpm-table"', 1)[1].split('</table>', 1)[0]
+    assert dark_table.split('</thead>', 1)[0].count('<th ') == 15
+    assert bpm_table.split('</thead>', 1)[0].count('<th ') == 15
+
+
+def test_library_tables_drop_secondary_columns_before_calibration_identity():
+    html = _render_builder(
+        'none',
+        stored_dark_count=0,
+        stored_bpm_count=0,
+        ready_count=17,
+        suggested_count=0,
+    )
+
+    breakpoints = (
+        '@media (max-width: 1450px)',
+        '@media (max-width: 1200px)',
+        '@media (max-width: 1050px)',
+        '@media (max-width: 950px)',
+        '@media (max-width: 850px)',
+        '@media (max-width: 720px)',
+        '@media (max-width: 560px)',
+    )
+    assert [html.index(breakpoint) for breakpoint in breakpoints] == sorted(
+        html.index(breakpoint) for breakpoint in breakpoints
+    )
+    assert '.dark-col-diagnostic {' in html
+    assert '.dark-col-date {' in html
+    assert '.dark-col-process {' in html
+    assert '.dark-col-file {' in html
+    assert '.dark-col-image-profile {' in html
+    assert '.dark-col-compatibility {' in html
+    assert '.dark-col-id {' in html
+    assert '.dark-partner-state {' in html
+    assert 'overflow-x: auto;' in html
+    assert 'grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));' in html
+    assert "const darkLibraryFilterColumns = {" in html
+    assert 'active: 2' in html
+    assert 'partner: 3' in html
+    assert 'compatible: 4' in html
+    assert 'file: 12' in html
+    assert "order: [[6, 'desc'], [7, 'desc'], [1, 'desc']]" in html
 
 
 def test_partial_library_separates_structural_and_temperature_coverage():

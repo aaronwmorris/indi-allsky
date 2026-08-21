@@ -40,6 +40,7 @@ from ..dark_library import analysis_context
 from ..dark_library import analyze_dark_plan
 from ..dark_library import build_dark_plan
 from ..dark_library import camera_temperature_preferences
+from ..dark_library import frame_matches_plan_profile
 from ..dark_library import update_camera_temperature_preferences
 from ..dark_library import validate_temperature_range
 from ..capture_state import CameraCapabilities
@@ -1296,6 +1297,17 @@ def _dark_config_requires_reload(view):
     return _dark_active_config_id(view) != int(view.indi_allsky_config_id)
 
 
+def _dark_library_table_summary(rows):
+    return {
+        'total': len(rows),
+        'active': sum(1 for row in rows if row['active']),
+        'inactive': sum(1 for row in rows if not row['active']),
+        'unpaired': sum(1 for row in rows if row['partner_id'] is None),
+        'compatible': sum(1 for row in rows if row['configuration_compatible'] is True),
+        'missing_files': sum(1 for row in rows if not row['exists']),
+    }
+
+
 def _prepare_dark_capture_service(view, operation='capture'):
     """Start a native service when possible or return durable queue guidance."""
     if _dark_capture_controller_available(view):
@@ -1352,16 +1364,30 @@ class DarkFramesView(TemplateView):
             )\
             .all()
 
+        try:
+            temperature_preferences = camera_temperature_preferences(self.camera)
+        except (TypeError, ValueError):
+            temperature_preferences = {
+                'temperature_range': DEFAULT_TEMPERATURE_RANGE,
+                'temperature_step': DEFAULT_TEMPERATURE_RANGE,
+                'range_source': 'legacy_default',
+            }
+        temperature_range = temperature_preferences['temperature_range']
+        partner_index = dark_automation.build_library_partner_index(
+            darkframe_list,
+            bpm_list,
+        )
 
         d_info_list = list()
         dark_inventory = list()
+        inventory_index = {}
         for d in darkframe_list:
             file_path = d.getFilesystemPath()
 
             try:
                 file_size = file_path.stat().st_size
                 file_exists = file_path.is_file()
-            except FileNotFoundError:
+            except OSError:
                 file_size = 0
                 file_exists = False
 
@@ -1385,26 +1411,34 @@ class DarkFramesView(TemplateView):
                 'hot_pixels'   : dark_data.get('hot_pixels', -1),
                 'method'       : dark_data.get('method', ''),
                 'size_mb'      : file_size / 1024 / 1024,
+                'exists'       : file_exists,
+                'temperature_min': (
+                    None if d.temp is None else float(d.temp) - temperature_range
+                ),
+                'temperature_max': (
+                    None if d.temp is None else float(d.temp) + temperature_range
+                ),
+                'configuration_compatible': None,
             }
 
             d_info_list.append(d_info)
-            dark_inventory.append(
-                DarkInventoryFrame(
-                    frame_type='dark',
-                    frame_id=d.id,
-                    camera_id=d.camera_id,
-                    active=bool(d.active),
-                    exists=file_exists,
-                    bit_depth=d.bitdepth,
-                    exposure=float(d.exposure),
-                    gain=float(d.gain),
-                    binning=int(d.binmode),
-                    temperature=d.temp,
-                    width=d.width,
-                    height=d.height,
-                    create_date=d.createDate,
-                )
+            inventory_frame = DarkInventoryFrame(
+                frame_type='dark',
+                frame_id=d.id,
+                camera_id=d.camera_id,
+                active=bool(d.active),
+                exists=file_exists,
+                bit_depth=d.bitdepth,
+                exposure=float(d.exposure),
+                gain=float(d.gain),
+                binning=int(d.binmode),
+                temperature=d.temp,
+                width=d.width,
+                height=d.height,
+                create_date=d.createDate,
             )
+            dark_inventory.append(inventory_frame)
+            inventory_index[('dark', int(d.id))] = inventory_frame
 
 
         b_info_list = list()
@@ -1414,7 +1448,7 @@ class DarkFramesView(TemplateView):
             try:
                 file_size = file_path.stat().st_size
                 file_exists = file_path.is_file()
-            except FileNotFoundError:
+            except OSError:
                 file_size = 0
                 file_exists = False
 
@@ -1436,31 +1470,70 @@ class DarkFramesView(TemplateView):
                 'filename'     : b.filename,
                 'url'          : b.getUrl(),
                 'hot_pixels'   : bpm_data.get('hot_pixels', -1),
+                'method'       : bpm_data.get('method', ''),
                 'size_mb'      : file_size / 1024 / 1024,
+                'exists'       : file_exists,
+                'temperature_min': (
+                    None if b.temp is None else float(b.temp) - temperature_range
+                ),
+                'temperature_max': (
+                    None if b.temp is None else float(b.temp) + temperature_range
+                ),
+                'configuration_compatible': None,
             }
 
             b_info_list.append(b_info)
-            dark_inventory.append(
-                DarkInventoryFrame(
-                    frame_type='bpm',
-                    frame_id=b.id,
-                    camera_id=b.camera_id,
-                    active=bool(b.active),
-                    exists=file_exists,
-                    bit_depth=b.bitdepth,
-                    exposure=float(b.exposure),
-                    gain=float(b.gain),
-                    binning=int(b.binmode),
-                    temperature=b.temp,
-                    width=b.width,
-                    height=b.height,
-                    create_date=b.createDate,
-                )
+            inventory_frame = DarkInventoryFrame(
+                frame_type='bpm',
+                frame_id=b.id,
+                camera_id=b.camera_id,
+                active=bool(b.active),
+                exists=file_exists,
+                bit_depth=b.bitdepth,
+                exposure=float(b.exposure),
+                gain=float(b.gain),
+                binning=int(b.binmode),
+                temperature=b.temp,
+                width=b.width,
+                height=b.height,
+                create_date=b.createDate,
             )
+            dark_inventory.append(inventory_frame)
+            inventory_index[('bpm', int(b.id))] = inventory_frame
+
+        info_by_type = {
+            'dark': {int(row['id']): row for row in d_info_list},
+            'bpm': {int(row['id']): row for row in b_info_list},
+        }
+        for frame_type, rows in (('dark', d_info_list), ('bpm', b_info_list)):
+            for row in rows:
+                pairing = partner_index.get((frame_type, int(row['id'])), {})
+                partner_type = pairing.get(
+                    'partner_type',
+                    'bpm' if frame_type == 'dark' else 'dark',
+                )
+                partner_rows = [
+                    info_by_type[partner_type][partner_id]
+                    for partner_id in pairing.get('partner_ids', ())
+                    if partner_id in info_by_type[partner_type]
+                ]
+                partner_rows.sort(key=lambda partner: (
+                    not partner['active'],
+                    not partner['exists'],
+                    -int(partner['id']),
+                ))
+                partner = partner_rows[0] if partner_rows else None
+                row['partner_type'] = partner_type
+                row['partner_id'] = partner['id'] if partner is not None else None
+                row['partner_active'] = (
+                    bool(partner['active']) if partner is not None else False
+                )
+                row['partner_exists'] = (
+                    bool(partner['exists']) if partner is not None else False
+                )
 
 
         try:
-            temperature_preferences = camera_temperature_preferences(self.camera)
             camera_capabilities = CameraCapabilities.from_camera(self.camera)
             capture_state = build_effective_capture_state(
                 self.indi_allsky_config,
@@ -1516,6 +1589,10 @@ class DarkFramesView(TemplateView):
                 self.indi_allsky_config,
                 dark_execution_preview['groups'],
             )
+            for frame_key, inventory_frame in inventory_index.items():
+                info_by_type[frame_key[0]][frame_key[1]][
+                    'configuration_compatible'
+                ] = frame_matches_plan_profile(dark_plan, inventory_frame)
         except (TypeError, ValueError, KeyError) as e:
             app.logger.error('Unable to analyse dark library: %s', str(e))
             dark_analysis = {
@@ -1571,6 +1648,8 @@ class DarkFramesView(TemplateView):
 
         context['darkframe_list'] = d_info_list
         context['bpm_list'] = b_info_list
+        context['darkframe_summary'] = _dark_library_table_summary(d_info_list)
+        context['bpm_summary'] = _dark_library_table_summary(b_info_list)
         context['dark_analysis'] = dark_analysis
         context['dark_execution_preview'] = dark_execution_preview
         context['dark_temperature_sources'] = temperature_source_choices(

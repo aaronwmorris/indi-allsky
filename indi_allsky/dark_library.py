@@ -397,6 +397,25 @@ def analyze_dark_plan(plan, inventory, temperature=None):
     )
 
 
+def frame_matches_plan_profile(plan, frame):
+    """Report whether a stored frame fits an image profile in the current plan."""
+    for target in plan.targets:
+        if frame.camera_id != target.camera_id:
+            continue
+        if target.bit_depth is not None and frame.bit_depth != target.bit_depth:
+            continue
+        if frame.binning != target.binning:
+            continue
+        if target.width is not None and frame.width is not None:
+            if frame.width != target.width:
+                continue
+        if target.height is not None and frame.height is not None:
+            if frame.height != target.height:
+                continue
+        return True
+    return False
+
+
 def analysis_context(capture_state, capabilities, analysis):
     action_labels = {
         'none': 'Library covers the recommendation',

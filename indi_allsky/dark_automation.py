@@ -913,6 +913,36 @@ def build_library_catalog(cameras, dark_frames, bad_pixel_maps, current_camera_i
     }
 
 
+def build_library_partner_index(dark_frames, bad_pixel_maps):
+    """Return exact dark/map partners using the same master-set identity as maintenance."""
+    groups = {}
+    for frame_type, frames in (('dark', dark_frames), ('bpm', bad_pixel_maps)):
+        for frame in frames:
+            automation_data = _frame_automation_data(frame)
+            master_key = (
+                int(frame.camera_id),
+                _library_master_key(frame, automation_data),
+            )
+            group = groups.setdefault(master_key, {'dark': [], 'bpm': []})
+            group[frame_type].append(int(frame.id))
+
+    partner_index = {}
+    for group in groups.values():
+        dark_ids = tuple(sorted(set(group['dark'])))
+        bpm_ids = tuple(sorted(set(group['bpm'])))
+        for frame_id in dark_ids:
+            partner_index[('dark', frame_id)] = {
+                'partner_type': 'bpm',
+                'partner_ids': bpm_ids,
+            }
+        for frame_id in bpm_ids:
+            partner_index[('bpm', frame_id)] = {
+                'partner_type': 'dark',
+                'partner_ids': dark_ids,
+            }
+    return partner_index
+
+
 def select_camera_library_entries(models, camera_id, selection=None):
     """Resolve an explicit selection without ever crossing camera boundaries."""
     camera_id = int(camera_id)

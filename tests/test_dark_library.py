@@ -19,6 +19,7 @@ from indi_allsky.dark_library import analysis_context
 from indi_allsky.dark_library import build_dark_exposures
 from indi_allsky.dark_library import build_dark_plan
 from indi_allsky.dark_library import camera_temperature_preferences
+from indi_allsky.dark_library import frame_matches_plan_profile
 from indi_allsky.dark_library import update_camera_temperature_preferences
 from indi_allsky.dark_library import validate_temperature_range
 from indi_allsky.dark_automation import DarkAutomationError
@@ -26,6 +27,7 @@ from indi_allsky.dark_automation import _log_error_summary
 from indi_allsky.dark_automation import _mark_task_capture_restored
 from indi_allsky.dark_automation import activation_changes
 from indi_allsky.dark_automation import build_library_catalog
+from indi_allsky.dark_automation import build_library_partner_index
 from indi_allsky.dark_automation import build_dark_command
 from indi_allsky.dark_automation import build_execution_groups
 from indi_allsky.dark_automation import capture_controller_available
@@ -1653,6 +1655,76 @@ def _catalog_frame(
         fileSize=file_size,
         data=automation_data,
     )
+
+
+def test_library_partner_index_uses_exact_master_set_identity():
+    create_date = datetime(2026, 8, 21, 12, 0, 0)
+    dark_frames = [
+        _catalog_frame(1, 1, create_date, generation_id='summer', gain=100),
+        _catalog_frame(2, 1, create_date, generation_id='summer', gain=200),
+        _catalog_frame(3, 1, create_date, generation_id='winter', gain=100),
+    ]
+    bad_pixel_maps = [
+        _catalog_frame(101, 1, create_date, generation_id='summer', gain=100),
+        _catalog_frame(102, 1, create_date, generation_id='summer', gain=200),
+    ]
+
+    partners = build_library_partner_index(dark_frames, bad_pixel_maps)
+
+    assert partners[('dark', 1)] == {
+        'partner_type': 'bpm',
+        'partner_ids': (101,),
+    }
+    assert partners[('bpm', 102)] == {
+        'partner_type': 'dark',
+        'partner_ids': (2,),
+    }
+    assert partners[('dark', 3)] == {
+        'partner_type': 'bpm',
+        'partner_ids': (),
+    }
+
+
+def test_library_partner_index_keeps_identical_legacy_pairing_conservative():
+    first_date = datetime(2026, 8, 21, 12, 0, 0)
+    later_date = datetime(2026, 8, 21, 12, 1, 0)
+    dark = _catalog_frame(1, 1, first_date, temperature=20.0)
+    exact_map = _catalog_frame(101, 1, first_date, temperature=20.0)
+    later_map = _catalog_frame(102, 1, later_date, temperature=20.0)
+
+    partners = build_library_partner_index([dark], [exact_map, later_map])
+
+    assert partners[('dark', 1)]['partner_ids'] == (101,)
+    assert partners[('bpm', 102)]['partner_ids'] == ()
+
+
+def test_frame_profile_fit_uses_current_structural_capture_profiles():
+    plan = SimpleNamespace(targets=(SimpleNamespace(
+        camera_id=1,
+        bit_depth=16,
+        binning=2,
+        width=100,
+        height=50,
+    ),))
+    frame = SimpleNamespace(
+        camera_id=1,
+        bit_depth=16,
+        binning=2,
+        width=100,
+        height=50,
+        active=False,
+        exists=False,
+    )
+
+    assert frame_matches_plan_profile(plan, frame) is True
+    assert frame_matches_plan_profile(
+        plan,
+        SimpleNamespace(**{**frame.__dict__, 'width': 101}),
+    ) is False
+    assert frame_matches_plan_profile(
+        plan,
+        SimpleNamespace(**{**frame.__dict__, 'camera_id': 2}),
+    ) is False
 
 
 def test_library_catalog_groups_cameras_profiles_layers_and_pairs():
