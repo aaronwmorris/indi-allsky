@@ -230,6 +230,63 @@ var fullscreen = false;  //initial state
 
                             <div class="tw:divider tw:my-0"></div>
 
+                            <!-- Detection Tuning -->
+                            <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
+                                <div class="tw:flex tw:items-center tw:justify-between">
+                                    <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">{{ form_image_processing.RUN_DETECTION.label.text }}</span>
+                                    {{ form_image_processing.RUN_DETECTION(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                                </div>
+                                <div id="RUN_DETECTION-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
+
+                                <div class="tw:form-control">
+                                    <label class="tw:label tw:py-1">
+                                        <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Method</span>
+                                    </label>
+                                    {{ form_image_processing.DETECT_STARS_METHOD(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:w-full') }}
+                                    <div id="DETECT_STARS_METHOD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                </div>
+
+                                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                    <div class="tw:form-control" id="DETECT_STARS_THOLD_row">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Star Threshold</span>
+                                        </label>
+                                        {{ form_image_processing.DETECT_STARS_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="DETECT_STARS_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                    </div>
+                                    <div class="tw:form-control" id="DETECT_STARS_SEP_THOLD_row">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Star Sigma</span>
+                                        </label>
+                                        {{ form_image_processing.DETECT_STARS_SEP_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="DETECT_STARS_SEP_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                    </div>
+                                    <div class="tw:form-control" id="DETECT_STARS_SEP_MAX_RADIUS_row">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Max Star Radius</span>
+                                        </label>
+                                        {{ form_image_processing.DETECT_STARS_SEP_MAX_RADIUS(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="DETECT_STARS_SEP_MAX_RADIUS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                    </div>
+                                    <div class="tw:form-control">
+                                        <label class="tw:label tw:py-1">
+                                            <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Meteor Threshold</span>
+                                        </label>
+                                        {{ form_image_processing.DETECT_METEORS_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
+                                        <div id="DETECT_METEORS_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                                    </div>
+                                    <div class="tw:form-control tw:justify-end">
+                                        <div class="tw:flex tw:flex-wrap tw:gap-2 tw:pb-1">
+                                            <span id="stars_count_badge" class="tw:badge tw:badge-outline tw:badge-primary tw:font-bold" style="display: none;">0</span>
+                                            <span id="detections_count_badge" class="tw:badge tw:badge-outline tw:badge-secondary tw:font-bold" style="display: none;">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="tw:text-[0.625rem] tw:text-base-content/40">Runs star and meteor detection on the preview and draws the results in place</span>
+                            </div>
+
+                            <div class="tw:divider tw:my-0"></div>
+
                             <!-- Contrast Section -->
                             <div class="tw:flex tw:flex-col tw:gap-4 tw:bg-base-300/30 tw:p-3 tw:rounded-[var(--radius-box)]">
                                 <div class="tw:grid tw:grid-cols-2 tw:gap-4">
@@ -1188,6 +1245,7 @@ const field_names = [
     'WBR_FACTOR', 'WBG_FACTOR', 'WBB_FACTOR', 'WBR_MTF_MIDTONES', 'WBG_MTF_MIDTONES', 'WBB_MTF_MIDTONES',
     'SATURATION_FACTOR', 'GAMMA_CORRECTION', 'SHARPEN_AMOUNT', 'IMAGE_COLORMAP',
     'IMAGE_ROTATE', 'IMAGE_ROTATE_ANGLE', 'DETECT_MASK', 'SQM_FOV_DIV',
+    'DETECT_STARS_METHOD', 'DETECT_STARS_THOLD', 'DETECT_STARS_SEP_THOLD', 'DETECT_STARS_SEP_MAX_RADIUS', 'DETECT_METEORS_THOLD',
     'SQM_ROI_X1', 'SQM_ROI_Y1', 'SQM_ROI_X2', 'SQM_ROI_Y2',
     'IMAGE_STACK_METHOD', 'IMAGE_STACK_COUNT', 'IMAGE_ALIGN_DETECTSIGMA',
     'IMAGE_ALIGN_POINTS', 'IMAGE_ALIGN_SOURCEMINAREA',
@@ -1227,6 +1285,7 @@ const checkbox_field_names = [
     'LIGHTGRAPH_OVERLAY__ENABLE', 'LIGHTGRAPH_OVERLAY__LABEL', 'LIGHTGRAPH_OVERLAY__HOUR_LINES',
     'IMAGE_CIRCLE_MASK__ENABLE', 'IMAGE_CIRCLE_MASK__OUTLINE', 'IMAGE_CROP_IMAGE_CIRCLE',
     'CARDINAL_DIRS__ENABLE', 'CARDINAL_DIRS__SWAP_NS', 'CARDINAL_DIRS__SWAP_EW', 'CARDINAL_DIRS__OUTLINE_CIRCLE',
+    'RUN_DETECTION',
 ];
 
 var fields = {};
@@ -1293,6 +1352,14 @@ function submitProcessingData() {
             }
             $('#processing_message').text(json_data['message']);
             $('#processing-info-bar').show();
+
+            // Detection results
+            if (json_data['stars_count'] !== undefined) {
+                $('#stars_count_badge').text(json_data['stars_count'] + ' stars').css({'display' : 'inline-flex'});
+                $('#detections_count_badge').text(json_data['detections_count'] + ' meteors').css({'display' : 'inline-flex'});
+            }
+
+            applyDetectionMethod(json_data['DETECT_STARS_METHOD']);
         },
         error: function(rdata){
             // Turn button red and show hint
@@ -1330,8 +1397,26 @@ function submitProcessingData() {
 $('#form_image_processing').on('submit', submitProcessingData);
 
 var _initLoad = false;
+// Only show the threshold used by the selected method
+function applyDetectionMethod(method) {
+    if (method === 'sep') {
+        $('#DETECT_STARS_THOLD_row').hide();
+        $('#DETECT_STARS_SEP_THOLD_row').show();
+        $('#DETECT_STARS_SEP_MAX_RADIUS_row').show();
+    } else {
+        $('#DETECT_STARS_SEP_THOLD_row').hide();
+        $('#DETECT_STARS_SEP_MAX_RADIUS_row').hide();
+        $('#DETECT_STARS_THOLD_row').show();
+    }
+}
+
+$('#DETECT_STARS_METHOD').on('change', function() {
+    applyDetectionMethod($(this).val());
+});
+
 function init() {
     _initLoad = true;
+    applyDetectionMethod($('#DETECT_STARS_METHOD').val());
     $('#DISABLE_PROCESSING').prop('checked', true);
     submitProcessingData();
     $('#DISABLE_PROCESSING').prop('checked', false);
