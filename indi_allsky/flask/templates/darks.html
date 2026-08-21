@@ -197,6 +197,20 @@
     padding: 0 1rem 1rem;
 }
 
+#dark-library-maintenance {
+    border-color: color-mix(in oklab, var(--color-error) 38%, var(--color-base-300));
+    background-color: color-mix(in oklab, var(--color-error) 6%, var(--color-base-200));
+}
+
+#dark-library-maintenance > summary {
+    background-color: color-mix(in oklab, var(--color-error) 5%, transparent);
+}
+
+#dark-removal-confirmation {
+    border-color: color-mix(in oklab, var(--color-error) 45%, var(--color-base-300));
+    background-color: color-mix(in oklab, var(--color-error) 6%, var(--color-base-100));
+}
+
 .dark-library-scope-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(13rem, 16rem);
@@ -228,6 +242,34 @@
     min-width: 0;
 }
 
+.dark-library-batch-toolbar {
+    border-color: color-mix(in oklab, var(--color-error) 28%, var(--color-base-300));
+    background-color: color-mix(in oklab, var(--color-error) 4%, var(--color-base-100));
+}
+
+.dark-library-master-choice {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    min-width: 0;
+    cursor: pointer;
+}
+
+.dark-library-master-row {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    border-radius: var(--radius-field);
+}
+
+.dark-library-master-row.dark-library-master-selected {
+    background-color: color-mix(in oklab, var(--color-error) 8%, transparent);
+}
+
+.dark-library-filter-status {
+    border-color: color-mix(in oklab, var(--color-info) 35%, var(--color-base-300));
+    background-color: color-mix(in oklab, var(--color-info) 8%, var(--color-base-100));
+}
+
 @media (min-width: 640px) {
     .dark-recommendation-summary {
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -250,19 +292,19 @@
 }
 
 #dark-cover-confirmation {
-    color: var(--color-warning-content);
-    border-color: color-mix(in oklab, var(--color-warning-content) 40%, transparent);
-    background-color: color-mix(in oklab, var(--color-warning-content) 8%, transparent);
+    color: var(--color-base-content);
+    border-color: color-mix(in oklab, var(--color-warning) 55%, var(--color-base-300));
+    background-color: color-mix(in oklab, var(--color-warning) 12%, var(--color-base-100));
 }
 
 #dark-cover-confirmation:hover {
-    background-color: color-mix(in oklab, var(--color-warning-content) 14%, transparent);
+    background-color: color-mix(in oklab, var(--color-warning) 18%, var(--color-base-100));
 }
 
 #dark-camera-covered {
-    color: var(--color-warning-content) !important;
-    background-color: color-mix(in oklab, var(--color-warning-content) 5%, transparent) !important;
-    border: 2px solid var(--color-warning-content) !important;
+    color: var(--color-base-content) !important;
+    background-color: color-mix(in oklab, var(--color-warning) 12%, var(--color-base-100)) !important;
+    border: 2px solid color-mix(in oklab, var(--color-warning) 70%, var(--color-base-content)) !important;
     border-radius: 0.25rem !important;
     opacity: 1 !important;
 }
@@ -270,6 +312,7 @@
 #dark-camera-covered:checked {
     color: var(--color-success-content) !important;
     background-color: var(--color-success) !important;
+    border-color: var(--color-success) !important;
 }
 
 #dark-advisor-body .dark-advisor-action {
@@ -351,7 +394,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
 {% endblock %}
 
 {% block content %}
-{% set dark_builder_preview_version = '2026.08.21.15' %}
+{% set dark_builder_preview_version = '2026.08.21.16' %}
 <div id="dark-page-content" class="tw:container tw:mx-auto tw:w-full tw:px-4 tw:py-6 tw:flex tw:flex-col tw:gap-4">
 
     <nav aria-label="Dark library sections">
@@ -971,6 +1014,25 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                             </div>
                         </div>
 
+                        <div class="dark-library-batch-toolbar dark-library-scope-row tw:border tw:rounded-[var(--radius-box)] tw:p-3" data-camera-id="{{ library.id }}">
+                            <div class="dark-library-scope-copy">
+                                <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Select several master sets</div>
+                                <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">Open <strong>Individual master sets</strong> below and tick any combination for this camera. Each selection keeps its dark and matching map together where possible.</div>
+                            </div>
+                            <div class="dark-library-action-column">
+                                <span class="dark-library-marked-summary tw:text-xs tw:text-base-content/60" aria-live="polite">No master sets selected</span>
+                                <div class="tw:flex tw:flex-wrap tw:gap-2">
+                                    <button type="button" class="dark-library-clear-selection tw:btn tw:btn-xs tw:btn-ghost" data-camera-id="{{ library.id }}" disabled>Clear</button>
+                                    <button type="button" class="dark-remove-marked dark-remove-selection tw:btn tw:btn-sm tw:btn-error tw:btn-outline tw:flex-1"
+                                        data-camera-id="{{ library.id }}" data-camera-name="{{ library.name }}"
+                                        data-label="selected master sets for {{ library.name }}"
+                                        data-selection='{"dark_ids":[],"bpm_ids":[]}' disabled>
+                                        Review selected master sets…
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         {% for profile in library.profiles %}
                         <section class="dark-library-profile tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/40 tw:overflow-hidden">
                             <div class="dark-library-scope-row tw:p-4">
@@ -1021,12 +1083,19 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                         <summary class="tw:collapse-title tw:min-h-0 tw:py-2 tw:text-xs tw:font-semibold">Individual master sets</summary>
                                         <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-1">
                                         {% for master in layer.master_sets %}
-                                            <div class="dark-library-scope-row tw:border-t tw:border-base-300 tw:py-2 tw:text-xs">
-                                                <div class="dark-library-scope-copy tw:font-mono">
-                                                    gain {{ "%g"|format(master.gain) }} · {{ "%g"|format(master.exposure) }}s · {% if master.temperature is not none %}{{ "%0.1f"|format(master.temperature) }}°C{% else %}no temperature{% endif %}
-                                                    <span class="tw:font-sans tw:ml-2 {% if master.paired %}tw:text-success{% else %}tw:text-warning{% endif %}">{% if master.paired %}dark + map{% else %}unpaired{% endif %}</span>
-                                                    {% if master.status == 'active' %}<span class="tw:badge tw:badge-success tw:badge-outline tw:badge-sm tw:font-sans tw:ml-2">Active</span>{% elif master.status == 'inactive' %}<span class="tw:badge tw:badge-warning tw:badge-sm tw:font-sans tw:ml-2">Inactive</span>{% else %}<span class="tw:badge tw:badge-warning tw:badge-outline tw:badge-sm tw:font-sans tw:ml-2">Mixed status</span>{% endif %}
-                                                </div>
+                                            <div class="dark-library-master-row dark-library-scope-row tw:border-t tw:border-base-300 tw:py-2 tw:text-xs">
+                                                <label class="dark-library-master-choice dark-library-scope-copy">
+                                                    <input type="checkbox" class="dark-library-master-checkbox tw:checkbox tw:checkbox-error tw:checkbox-sm tw:mt-0.5 tw:shrink-0"
+                                                        data-camera-id="{{ library.id }}"
+                                                        data-selection='{{ master.selection | tojson | forceescape }}'
+                                                        aria-label="Select gain {{ '%g'|format(master.gain) }}, {{ '%g'|format(master.exposure) }} second master set"
+                                                        {% if dark_library_task_active %}disabled{% endif %}>
+                                                    <span class="tw:font-mono tw:min-w-0">
+                                                        gain {{ "%g"|format(master.gain) }} · {{ "%g"|format(master.exposure) }}s · {% if master.temperature is not none %}{{ "%0.1f"|format(master.temperature) }}°C{% else %}no temperature{% endif %}
+                                                        <span class="tw:font-sans tw:ml-2 {% if master.paired %}tw:text-success{% else %}tw:text-warning{% endif %}">{% if master.paired %}dark + map{% else %}unpaired{% endif %}</span>
+                                                        {% if master.status == 'active' %}<span class="tw:badge tw:badge-success tw:badge-outline tw:badge-sm tw:font-sans tw:ml-2">Active</span>{% elif master.status == 'inactive' %}<span class="tw:badge tw:badge-warning tw:badge-sm tw:font-sans tw:ml-2">Inactive</span>{% else %}<span class="tw:badge tw:badge-warning tw:badge-outline tw:badge-sm tw:font-sans tw:ml-2">Mixed status</span>{% endif %}
+                                                    </span>
+                                                </label>
                                                 <div class="dark-library-action-column">
                                                     <span class="tw:text-base-content/50">{{ master.size }}</span>
                                                     <button type="button" class="dark-remove-selection tw:btn tw:btn-xs tw:btn-error tw:btn-ghost"
@@ -1051,7 +1120,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
             {% endfor %}
             </div>
 
-            <div id="dark-removal-confirmation" class="tw:hidden tw:border tw:border-error/40 tw:rounded-[var(--radius-box)] tw:bg-base-100 tw:p-4 tw:flex tw:flex-col tw:gap-3">
+            <div id="dark-removal-confirmation" class="tw:hidden tw:border tw:rounded-[var(--radius-box)] tw:p-4 tw:flex tw:flex-col tw:gap-3">
                 <div>
                     <div id="dark-removal-preview-title" class="tw:font-semibold tw:text-sm"></div>
                     <div id="dark-removal-preview-summary" class="tw:text-xs tw:text-base-content/60 tw:mt-1"></div>
@@ -1059,7 +1128,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 <div id="dark-removal-coverage-impact" class="tw:alert tw:items-start tw:text-sm"></div>
                 <label class="tw:form-control">
                     <span class="tw:label-text tw:text-sm tw:font-semibold">Type <span id="dark-removal-camera-name" class="tw:font-mono"></span> to confirm permanent removal</span>
-                    <input id="dark-removal-confirmation-input" class="tw:input tw:input-bordered tw:input-sm tw:mt-1" type="text" autocomplete="off" spellcheck="false">
+                    <input id="dark-removal-confirmation-input" class="tw:input tw:input-bordered tw:input-error tw:input-sm tw:mt-1" type="text" autocomplete="off" spellcheck="false">
                 </label>
                 <div class="tw:flex tw:flex-wrap tw:justify-end tw:gap-2">
                     <button id="dark-removal-confirm-cancel" type="button" class="tw:btn tw:btn-sm tw:btn-ghost">Cancel</button>
@@ -1082,16 +1151,23 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                             <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50">Dark Library</h4>
                             <span class="tw:badge tw:badge-ghost tw:badge-sm">{{ darkframe_list | length }} entries</span>
                         </div>
-                        <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">Master dark frames remove repeatable sensor noise. Active entries are matched automatically by gain, exposure, binning, image format and temperature.</p>
+                        <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">Master dark frames remove repeatable sensor noise. Active entries are eligible for automatic calibration; inactive entries remain stored but are not selected. A successful refresh or rebuild can retire older entries by marking them inactive.</p>
                     </div>
 
+                    <div class="tw:flex tw:flex-wrap tw:items-end tw:justify-between tw:gap-2 tw:mb-2">
+                        <div>
+                            <h5 class="tw:text-sm tw:font-semibold tw:flex tw:items-center tw:gap-1.5"><i class="tw:icon-[lucide--list-filter] tw:w-4 tw:h-4"></i>Filter entries</h5>
+                            <p class="tw:text-xs tw:text-base-content/50 tw:mt-0.5">Choose a summary card to show only those entries.</p>
+                        </div>
+                        <span class="tw:badge tw:badge-ghost tw:badge-sm">Interactive</span>
+                    </div>
                     <div class="dark-library-health-grid tw:mb-4" aria-label="Filter master darks">
                         {% for key, label, count in (
-                            ('all', 'All masters', darkframe_summary.total),
+                            ('all', 'All entries', darkframe_summary.total),
                             ('active', 'Active', darkframe_summary.active),
                             ('inactive', 'Inactive', darkframe_summary.inactive),
                             ('unpaired', 'Missing map', darkframe_summary.unpaired),
-                            ('compatible', 'Current profile', darkframe_summary.compatible),
+                            ('compatible', 'Matches setup', darkframe_summary.compatible),
                             ('missing-file', 'Missing file', darkframe_summary.missing_files)
                         ) %}
                         <button type="button" class="dark-library-quick-filter tw:btn tw:btn-sm tw:btn-outline" data-table-id="darks-table" data-filter="{{ key }}" aria-pressed="{% if key == 'all' %}true{% else %}false{% endif %}">
@@ -1103,7 +1179,12 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                         {% endfor %}
                     </div>
 
-                    <p class="tw:text-xs tw:text-base-content/50 tw:mb-3">Current profile compares image size, binning and bit depth. Gain, exposure, temperature, active state and file availability still decide whether calibration can use an entry.</p>
+                    <p class="tw:text-xs tw:text-base-content/50 tw:mb-3">Current setup compares image size, binning and bit depth with the saved camera configuration. Gain, exposure, temperature, active state and file availability still decide whether calibration can use an entry.</p>
+
+                    <div id="darks-table-filter-status" class="dark-library-filter-status tw:hidden tw:border tw:rounded-[var(--radius-box)] tw:px-3 tw:py-2 tw:mb-3 tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2" role="status" aria-live="polite">
+                        <span class="dark-library-filter-message tw:text-xs tw:font-semibold"></span>
+                        <button type="button" class="dark-library-clear-filter tw:btn tw:btn-xs tw:btn-info tw:btn-outline" data-table-id="darks-table">Show all entries</button>
+                    </div>
 
                     <div class="dark-table-wrap tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
                         <table id="darks-table" class="tw:table tw:table-zebra tw:table-xs tw:w-full tw:m-0">
@@ -1113,7 +1194,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                     <th class="dark-col-date tw:py-3">Date</th>
                                     <th class="tw:py-3">Active</th>
                                     <th class="tw:py-3">Matching map</th>
-                                    <th class="dark-col-compatibility tw:py-3">Config fit</th>
+                                    <th class="dark-col-compatibility tw:py-3">Current setup</th>
                                     <th class="dark-col-image-profile tw:py-3">Image profile</th>
                                     <th class="tw:py-3">Gain</th>
                                     <th class="tw:py-3">Exposure</th>
@@ -1152,9 +1233,9 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                         {% if dark.configuration_compatible is none %}
                                         <span class="tw:badge tw:badge-ghost tw:badge-sm">Unavailable</span>
                                         {% elif dark.configuration_compatible %}
-                                        <span class="tw:badge tw:badge-info tw:badge-outline tw:badge-sm" title="Image dimensions, bit depth and binning fit a currently configured capture profile.">Compatible</span>
+                                        <span class="tw:badge tw:badge-info tw:badge-outline tw:badge-sm" title="Image dimensions, bit depth and binning match a capture profile in the current saved configuration.">Matches</span>
                                         {% else %}
-                                        <span class="tw:badge tw:badge-ghost tw:badge-sm" title="Image dimensions, bit depth or binning do not fit the current capture profiles.">Other profile</span>
+                                        <span class="tw:badge tw:badge-ghost tw:badge-sm" title="Image dimensions, bit depth or binning differ from every capture profile in the current saved configuration.">Different</span>
                                         {% endif %}
                                     </td>
                                     <td class="dark-col-image-profile tw:font-mono tw:whitespace-nowrap">{{ dark.width }}×{{ dark.height }} · bin {{ dark.binmode }} · {{ dark.bitdepth }} bit</td>
@@ -1204,16 +1285,23 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                             <h4 class="tw:text-xs tw:font-bold tw:tracking-widest tw:uppercase tw:text-base-content/50">Bad Pixel Map Library</h4>
                             <span class="tw:badge tw:badge-ghost tw:badge-sm">{{ bpm_list | length }} entries</span>
                         </div>
-                        <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">Bad-pixel maps identify persistent hot and dead pixels. They are generated alongside master darks and matched using the same gain, exposure, binning, image format and temperature.</p>
+                        <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">Bad-pixel maps identify persistent hot and dead pixels. Active entries are eligible for automatic calibration; inactive entries remain stored but are not selected. A successful refresh or rebuild can retire older entries by marking them inactive.</p>
                     </div>
 
+                    <div class="tw:flex tw:flex-wrap tw:items-end tw:justify-between tw:gap-2 tw:mb-2">
+                        <div>
+                            <h5 class="tw:text-sm tw:font-semibold tw:flex tw:items-center tw:gap-1.5"><i class="tw:icon-[lucide--list-filter] tw:w-4 tw:h-4"></i>Filter entries</h5>
+                            <p class="tw:text-xs tw:text-base-content/50 tw:mt-0.5">Choose a summary card to show only those entries.</p>
+                        </div>
+                        <span class="tw:badge tw:badge-ghost tw:badge-sm">Interactive</span>
+                    </div>
                     <div class="dark-library-health-grid tw:mb-4" aria-label="Filter bad-pixel maps">
                         {% for key, label, count in (
-                            ('all', 'All maps', bpm_summary.total),
+                            ('all', 'All entries', bpm_summary.total),
                             ('active', 'Active', bpm_summary.active),
                             ('inactive', 'Inactive', bpm_summary.inactive),
                             ('unpaired', 'Missing dark', bpm_summary.unpaired),
-                            ('compatible', 'Current profile', bpm_summary.compatible),
+                            ('compatible', 'Matches setup', bpm_summary.compatible),
                             ('missing-file', 'Missing file', bpm_summary.missing_files)
                         ) %}
                         <button type="button" class="dark-library-quick-filter tw:btn tw:btn-sm tw:btn-outline" data-table-id="bpm-table" data-filter="{{ key }}" aria-pressed="{% if key == 'all' %}true{% else %}false{% endif %}">
@@ -1225,7 +1313,12 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                         {% endfor %}
                     </div>
 
-                    <p class="tw:text-xs tw:text-base-content/50 tw:mb-3">Current profile compares image size, binning and bit depth. Gain, exposure, temperature, active state and file availability still decide whether calibration can use an entry.</p>
+                    <p class="tw:text-xs tw:text-base-content/50 tw:mb-3">Current setup compares image size, binning and bit depth with the saved camera configuration. Gain, exposure, temperature, active state and file availability still decide whether calibration can use an entry.</p>
+
+                    <div id="bpm-table-filter-status" class="dark-library-filter-status tw:hidden tw:border tw:rounded-[var(--radius-box)] tw:px-3 tw:py-2 tw:mb-3 tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2" role="status" aria-live="polite">
+                        <span class="dark-library-filter-message tw:text-xs tw:font-semibold"></span>
+                        <button type="button" class="dark-library-clear-filter tw:btn tw:btn-xs tw:btn-info tw:btn-outline" data-table-id="bpm-table">Show all entries</button>
+                    </div>
 
                     <div class="dark-table-wrap tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
                         <table id="bpm-table" class="tw:table tw:table-zebra tw:table-xs tw:w-full tw:m-0">
@@ -1235,7 +1328,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                     <th class="dark-col-date tw:py-3">Date</th>
                                     <th class="tw:py-3">Active</th>
                                     <th class="tw:py-3">Matching dark</th>
-                                    <th class="dark-col-compatibility tw:py-3">Config fit</th>
+                                    <th class="dark-col-compatibility tw:py-3">Current setup</th>
                                     <th class="dark-col-image-profile tw:py-3">Image profile</th>
                                     <th class="tw:py-3">Gain</th>
                                     <th class="tw:py-3">Exposure</th>
@@ -1274,9 +1367,9 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                         {% if bpm.configuration_compatible is none %}
                                         <span class="tw:badge tw:badge-ghost tw:badge-sm">Unavailable</span>
                                         {% elif bpm.configuration_compatible %}
-                                        <span class="tw:badge tw:badge-info tw:badge-outline tw:badge-sm" title="Image dimensions, bit depth and binning fit a currently configured capture profile.">Compatible</span>
+                                        <span class="tw:badge tw:badge-info tw:badge-outline tw:badge-sm" title="Image dimensions, bit depth and binning match a capture profile in the current saved configuration.">Matches</span>
                                         {% else %}
-                                        <span class="tw:badge tw:badge-ghost tw:badge-sm" title="Image dimensions, bit depth or binning do not fit the current capture profiles.">Other profile</span>
+                                        <span class="tw:badge tw:badge-ghost tw:badge-sm" title="Image dimensions, bit depth or binning differ from every capture profile in the current saved configuration.">Different</span>
                                         {% endif %}
                                     </td>
                                     <td class="dark-col-image-profile tw:font-mono tw:whitespace-nowrap">{{ bpm.width }}×{{ bpm.height }} · bin {{ bpm.binmode }} · {{ bpm.bitdepth }} bit</td>
@@ -2221,6 +2314,49 @@ function hideDarkRemovalConfirmation() {
     updateDarkRemovalConfirmation();
 }
 
+function updateDarkMarkedSelection(cameraId) {
+    const cameraSelector = '[data-camera-id="' + String(cameraId) + '"]';
+    const checkboxes = $('.dark-library-master-checkbox' + cameraSelector);
+    const selected = checkboxes.filter(':checked');
+    const toolbar = $('.dark-library-batch-toolbar' + cameraSelector);
+    const button = toolbar.find('.dark-remove-marked');
+    const clearButton = toolbar.find('.dark-library-clear-selection');
+    const darkIds = new Set();
+    const bpmIds = new Set();
+
+    selected.each(function() {
+        const selection = JSON.parse($(this).attr('data-selection') || '{}');
+        (selection.dark_ids || []).forEach((value) => darkIds.add(Number(value)));
+        (selection.bpm_ids || []).forEach((value) => bpmIds.add(Number(value)));
+    });
+
+    const selection = {
+        dark_ids: Array.from(darkIds).filter(Number.isFinite).sort((left, right) => left - right),
+        bpm_ids: Array.from(bpmIds).filter(Number.isFinite).sort((left, right) => left - right),
+    };
+    const masterCount = selected.length;
+    const fileCount = selection.dark_ids.length + selection.bpm_ids.length;
+    const blocked = Boolean(activeDarkTaskId) || checkboxes.filter(':disabled').length > 0;
+    const cameraName = button.attr('data-camera-name') || 'this camera';
+    const masterLabel = masterCount === 1 ? 'master set' : 'master sets';
+
+    checkboxes.each(function() {
+        $(this).closest('.dark-library-master-row')
+            .toggleClass('dark-library-master-selected', $(this).is(':checked'));
+    });
+    toolbar.find('.dark-library-marked-summary').text(
+        masterCount
+            ? masterCount + ' ' + masterLabel + ' selected · ' + fileCount + ' file' + (fileCount === 1 ? '' : 's')
+            : 'No master sets selected'
+    );
+    button
+        .attr('data-selection', JSON.stringify(selection))
+        .attr('data-label', masterCount + ' selected ' + masterLabel + ' for ' + cameraName)
+        .prop('disabled', !masterCount || blocked)
+        .text(masterCount ? 'Review ' + masterCount + ' selected…' : 'Review selected master sets…');
+    clearButton.prop('disabled', !masterCount || blocked);
+}
+
 async function previewDarkRemoval(button) {
     if (!darkLibraryCanManage || activeDarkTaskId || button.prop('disabled')) return;
     showDarkActionError('');
@@ -2437,6 +2573,8 @@ function applyDarkLibraryFilter(tableId, filterName, focusedId) {
     const table = darkLibraryDataTable(tableId);
     if (!table) return;
 
+    table.search('');
+
     [
         darkLibraryFilterColumns.id,
         darkLibraryFilterColumns.active,
@@ -2446,7 +2584,6 @@ function applyDarkLibraryFilter(tableId, filterName, focusedId) {
     ].forEach((columnIndex) => table.column(columnIndex).search(''));
 
     if (focusedId !== undefined && focusedId !== null) {
-        table.search('');
         table.column(darkLibraryFilterColumns.id).search(
             '^' + String(focusedId).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$',
             true,
@@ -2464,9 +2601,17 @@ function applyDarkLibraryFilter(tableId, filterName, focusedId) {
 
     $('.dark-library-quick-filter[data-table-id="' + tableId + '"]')
         .attr('aria-pressed', 'false');
+    const filterStatus = $('#' + tableId + '-filter-status');
     if (focusedId === undefined || focusedId === null) {
         $('.dark-library-quick-filter[data-table-id="' + tableId + '"][data-filter="' + filterName + '"]')
             .attr('aria-pressed', 'true');
+        filterStatus.addClass('tw:hidden');
+    } else {
+        const entryLabel = tableId === 'darks-table' ? 'master dark' : 'bad-pixel map';
+        filterStatus
+            .removeClass('tw:hidden')
+            .find('.dark-library-filter-message')
+            .text('Showing linked ' + entryLabel + ' #' + focusedId + '.');
     }
     table.draw();
 }
@@ -2511,6 +2656,10 @@ $( document ).ready(function() {
 
     $('.dark-library-quick-filter').on('click', function() {
         applyDarkLibraryFilter($(this).data('table-id'), $(this).data('filter'));
+    });
+
+    $('.dark-library-clear-filter').on('click', function() {
+        applyDarkLibraryFilter($(this).data('table-id'), 'all');
     });
 
     $('.dark-partner-link').on('click', function(event) {
@@ -2558,12 +2707,6 @@ $( document ).ready(function() {
         $('#dark-refresh-plan').on('click', refreshDarkPlan);
         $('#dark-start').on('click', startDarkCalibration);
         $('#dark-cancel').on('click', cancelDarkCalibration);
-        $('.dark-remove-selection').on('click', function() {
-            previewDarkRemoval($(this));
-        });
-        $('#dark-removal-confirmation-input').on('input', updateDarkRemovalConfirmation);
-        $('#dark-removal-confirm-cancel').on('click', hideDarkRemovalConfirmation);
-        $('#dark-removal-confirm').on('click', removeDarkLibrarySelection);
         $('#dark-review-library').on('click', function() { window.location.reload(); });
 
         if (activeDarkTaskId) {
@@ -2571,6 +2714,27 @@ $( document ).ready(function() {
             $('#dark-progress-panel').removeClass('tw:hidden');
             scheduleDarkPoll(100);
         }
+    }
+
+    if (darkLibraryCanManage) {
+        $('.dark-library-master-checkbox').on('change', function() {
+            updateDarkMarkedSelection($(this).attr('data-camera-id'));
+        });
+        $('.dark-library-clear-selection').on('click', function() {
+            const cameraId = $(this).attr('data-camera-id');
+            $('.dark-library-master-checkbox[data-camera-id="' + String(cameraId) + '"]')
+                .prop('checked', false);
+            updateDarkMarkedSelection(cameraId);
+        });
+        $('.dark-library-batch-toolbar').each(function() {
+            updateDarkMarkedSelection($(this).attr('data-camera-id'));
+        });
+        $('.dark-remove-selection').on('click', function() {
+            previewDarkRemoval($(this));
+        });
+        $('#dark-removal-confirmation-input').on('input', updateDarkRemovalConfirmation);
+        $('#dark-removal-confirm-cancel').on('click', hideDarkRemovalConfirmation);
+        $('#dark-removal-confirm').on('click', removeDarkLibrarySelection);
     }
 
     init();

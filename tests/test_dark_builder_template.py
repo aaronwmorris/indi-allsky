@@ -176,7 +176,7 @@ def test_builder_explains_each_library_state(
     assert 'One master set is a master dark and matching bad-pixel map' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.21.15' in html
+    assert 'Preview 2026.08.21.16' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'masters from 15.0°C to 25.0°C count as matched' in html
     assert 'Every required master set is checked separately, so capture drift may leave only some' in html
@@ -264,16 +264,25 @@ def test_library_tabs_show_health_pairing_compatibility_and_temperature_range():
     assert 'data-filter="unpaired"' in html
     assert 'data-filter="compatible"' in html
     assert 'data-filter="missing-file"' in html
-    assert html.count('Current profile compares image size, binning and bit depth.') == 2
+    assert html.count('Current setup compares image size, binning and bit depth') == 2
+    assert html.count('Choose a summary card to show only those entries.') == 2
+    assert html.count('>Interactive</span>') == 2
+    assert html.count('>All entries</span>') == 2
+    assert html.count('>Matches setup</span>') == 2
     assert 'data-target-tab="tab-bpm" data-partner-id="201"' in html
     assert 'data-target-tab="tab-darks" data-partner-id="101"' in html
     assert 'Map #201' in html
     assert 'Dark #101' in html
     assert 'usable 15.0 to 25.0°C' in html
-    assert '>Compatible</span>' in html
-    assert '>Other profile</span>' in html
+    assert '>Matches</span>' in html
+    assert '>Different</span>' in html
+    assert html.count('>Current setup</th>') == 2
     assert 'data-search="missing-file"' in html
     assert '>Missing file</span>' in html
+    assert 'id="darks-table-filter-status"' in html
+    assert 'id="bpm-table-filter-status"' in html
+    assert html.count('>Show all entries</button>') == 2
+    assert html.count('inactive entries remain stored but are not selected') == 2
 
     dark_table = html.split('<table id="darks-table"', 1)[1].split('</table>', 1)[0]
     bpm_table = html.split('<table id="bpm-table"', 1)[1].split('</table>', 1)[0]
@@ -318,6 +327,9 @@ def test_library_tables_drop_secondary_columns_before_calibration_identity():
     assert 'compatible: 4' in html
     assert 'file: 12' in html
     assert "order: [[6, 'desc'], [7, 'desc'], [1, 'desc']]" in html
+    assert ".removeClass('tw:hidden')" in html
+    assert ".text('Showing linked ' + entryLabel + ' #' + focusedId + '.')" in html
+    assert "applyDarkLibraryFilter($(this).data('table-id'), 'all');" in html
 
 
 def test_partial_library_separates_structural_and_temperature_coverage():
@@ -487,10 +499,23 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert maintenance.count('dark-library-action-column') >= 5
     assert 'Remove complete camera library…' in maintenance
     assert 'dark-remove-selection tw:btn tw:btn-sm' in maintenance
+    assert 'Select several master sets' in maintenance
+    assert 'Each selection keeps its dark and matching map together where possible.' in maintenance
+    assert maintenance.count('dark-library-master-checkbox') == 2
+    assert 'Review selected master sets…' in maintenance
+    assert 'dark-library-clear-selection' in maintenance
 
     assert '.dark-library-scope-row {' in html
     assert 'grid-template-columns: minmax(0, 1fr) minmax(13rem, 16rem);' in html
     assert '#dark-library-maintenance > .dark-library-maintenance-body' in html
+    assert 'background-color: color-mix(in oklab, var(--color-error) 6%, var(--color-base-200));' in html
+    assert 'border-color: color-mix(in oklab, var(--color-error) 38%, var(--color-base-300));' in html
+    assert 'background-color: color-mix(in oklab, var(--color-warning) 12%, var(--color-base-100));' in html
+    assert 'id="dark-removal-confirmation-input" class="tw:input tw:input-bordered tw:input-error' in html
+    assert 'function updateDarkMarkedSelection(cameraId)' in html
+    assert 'const darkIds = new Set();' in html
+    assert 'const bpmIds = new Set();' in html
+    assert "if (darkLibraryCanManage) {" in html
 
 
 def test_non_config_admin_can_review_recommendation_but_not_capture_or_remove():
