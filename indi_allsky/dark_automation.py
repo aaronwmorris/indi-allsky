@@ -70,8 +70,8 @@ ELIGIBILITY_REASON_LABELS = {
     ELIGIBILITY_REASON_CAPTURE_STAGING: 'Capture staging',
     ELIGIBILITY_REASON_REFRESH_REPLACED: 'Retired by a refresh run',
     ELIGIBILITY_REASON_REBUILD_REPLACED: 'Retired by a rebuild run',
-    ELIGIBILITY_REASON_MANUAL_EXCLUSION: 'Manually excluded',
-    ELIGIBILITY_REASON_MANUAL_RESTORE: 'Manually restored',
+    ELIGIBILITY_REASON_MANUAL_EXCLUSION: 'Manually deactivated',
+    ELIGIBILITY_REASON_MANUAL_RESTORE: 'Manually activated',
 }
 
 
@@ -1108,7 +1108,7 @@ def update_library_entries_eligibility(entries, active, changed_utc=None):
     entries = tuple(entries)
     if active and any(library_entry_eligibility(frame)['staged'] for frame in entries):
         raise DarkAutomationError(
-            'Capture staging files cannot be made eligible manually. Finish or remove the staged run first.'
+            'Capture staging files cannot be activated manually. Finish the run or delete the staged files first.'
         )
     changed_utc = changed_utc or _utc_now_text()
     changed = []
@@ -1463,7 +1463,7 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                     },
                     progress={
                         'phase': 'removing_library',
-                        'message': 'Normal capture is paused; removing {0:s}.'.format(
+                        'message': 'Normal capture is paused; deleting {0:s}.'.format(
                             removal_label,
                         ),
                     },
@@ -1488,10 +1488,10 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                     },
                     progress={
                         'phase': 'restoring_capture',
-                        'message': 'Selected library records removed; restarting normal capture.',
+                        'message': 'Selected library records deleted; restarting normal capture.',
                     },
                     state=TaskQueueState.SUCCESS,
-                    result='Selected dark-library records removed',
+                    result='Selected dark-library records deleted',
                 )
                 return 'success'
 
@@ -1884,14 +1884,14 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                     'phase': 'restoring_capture',
                     'message': (
                         'The selected library records changed; restarting normal capture '
-                        'before you review the removal again.'
+                        'before you preview the deletion again.'
                         if removal_review else
                         'The camera changed; restarting normal capture before you review the plan.'
                     ),
                 },
                 state=TaskQueueState.EXPIRED,
                 result=(
-                    'Dark-library removal requires review'
+                    'Dark-library deletion requires review'
                     if removal_review else 'Dark calibration plan requires review'
                 ),
             )
@@ -1971,7 +1971,7 @@ def _mark_task_capture_restored(task):
         restore_phrase = 'normal capture has resumed'
     if data.get('status') == 'success':
         if data.get('operation') == 'flush':
-            progress['message'] = 'Selected library records removed; {0:s}.'.format(
+            progress['message'] = 'Selected library records deleted; {0:s}.'.format(
                 restore_phrase,
             )
         elif (
@@ -1995,7 +1995,7 @@ def _mark_task_capture_restored(task):
     elif data.get('status') == 'review_required':
         if data.get('operation') == 'flush':
             progress['message'] = (
-                '{0:s}. Preview the library removal again before retrying.'.format(
+                '{0:s}. Preview the library deletion again before retrying.'.format(
                     restore_phrase.capitalize(),
                 )
             )
@@ -2021,7 +2021,7 @@ def flush_camera_library(
         selection=None,
         expected_signature=None,
 ):
-    """Remove one camera's dark/BPM rows before unlinking their files.
+    """Delete one camera's dark/BPM rows before unlinking their files.
 
     Committing the database first avoids leaving live calibration rows pointing
     at missing files after a transaction failure or process interruption.  A
@@ -2030,7 +2030,7 @@ def flush_camera_library(
     resolved = select_camera_library_entries(models, camera_id, selection=selection)
     if expected_signature is not None and resolved['signature'] != str(expected_signature):
         raise DarkAutomationReviewRequired(
-            'The selected library records changed after review. Preview the removal again.'
+            'The selected library records changed after preview. Preview the deletion again.'
         )
     entries = resolved.pop('entries')
     resolved.pop('selection')

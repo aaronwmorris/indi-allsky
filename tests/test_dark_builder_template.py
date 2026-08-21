@@ -176,7 +176,7 @@ def test_builder_explains_each_library_state(
     assert 'One master set is a master dark and matching bad-pixel map' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.22.1' in html
+    assert 'Preview 2026.08.22.2' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'masters from 15.0°C to 25.0°C count as matched' in html
     assert 'Every required master set is checked separately, so capture drift may leave only some' in html
@@ -475,8 +475,8 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert '2 master sets: 1 active, 1 inactive' in html
     assert '>Active</span>' in html
     assert '>Inactive</span>' in html
-    assert 'Remove temperature group…' in html
-    assert 'Remove temperature layer…' not in html
+    assert 'Delete temperature group…' in html
+    assert 'Delete temperature layer…' not in html
 
     recommendation = html.split('aria-labelledby="dark-recommendation-title"', 1)[1].split(
         'id="dark-recommendation-details"',
@@ -497,17 +497,17 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert 'Storage used' in maintenance
     assert maintenance.count('dark-library-scope-row') >= 5
     assert maintenance.count('dark-library-action-column') >= 5
-    assert 'Remove complete camera library…' in maintenance
+    assert 'Delete complete camera library…' in maintenance
     assert 'dark-remove-selection tw:btn tw:btn-sm' in maintenance
     assert 'Select several master sets' in maintenance
     assert 'Each selection keeps its dark and matching map together.' in maintenance
     assert maintenance.count('dark-library-master-checkbox') == 2
-    assert 'Review selected master sets…' in maintenance
+    assert 'Delete selected master sets…' in maintenance
     assert 'dark-library-clear-selection' in maintenance
-    assert 'Exclude selected from calibration…' in maintenance
-    assert 'Make selected eligible again…' in maintenance
+    assert 'Deactivate selected (exclude from calibration)…' in maintenance
+    assert 'Activate selected (make eligible again)…' in maintenance
     assert 'id="dark-eligibility-confirmation"' in maintenance
-    assert 'No files are deleted, and you can reverse it later.' in maintenance
+    assert 'Deactivation leaves the files stored and can be reversed' in maintenance
 
     assert '.dark-library-scope-row {' in html
     assert 'grid-template-columns: minmax(0, 1fr) minmax(13rem, 16rem);' in html

@@ -1229,7 +1229,7 @@ def _dark_library_removal_coverage(camera, config, selection):
         level = 'danger'
         message = (
             'This would add {0:d} master set{1:s} to the structural completion plan. '
-            'After removal, {2:d} of {3:d} recommended camera settings remain ready.'
+            'After deletion, {2:d} of {3:d} recommended camera settings remain ready.'
         ).format(
             after_structural_missing - before_structural_missing,
             '' if after_structural_missing - before_structural_missing == 1 else 's',
@@ -1306,7 +1306,7 @@ def _dark_library_eligibility_coverage(camera, config, selection, active):
         else:
             level = 'safe'
             message = (
-                'These master sets become eligible again, but they do not change the current '
+                'Activating these master sets makes them eligible again, but does not change the current '
                 'camera recommendation. They may still match another temperature or future configuration.'
             )
     elif structural_change > 0:
@@ -1323,8 +1323,8 @@ def _dark_library_eligibility_coverage(camera, config, selection, active):
     else:
         level = 'safe'
         message = (
-            'Excluding these master sets does not reduce the current recommended coverage. '
-            'The files remain stored and can be made eligible again later.'
+            'Deactivating these master sets does not reduce the current recommended coverage. '
+            'The files remain stored and can be activated again later.'
         )
 
     return {
@@ -1419,7 +1419,7 @@ def _prepare_dark_capture_service(view, operation='capture'):
 
     if operation == 'flush':
         return (
-            'Library removal is queued, but the capture controller is not responding and '
+            'Library deletion is queued, but the capture controller is not responding and '
             'could not be started automatically. Start it within 30 minutes.'
         )
     return (
@@ -2042,7 +2042,7 @@ class AjaxDarkLibraryFlushView(BaseView):
 
     def dispatch_request(self):
         if not _can_save_standard_configuration():
-            return jsonify({'error': 'Administrator access is required to remove a dark library.'}), 403
+            return jsonify({'error': 'Administrator access is required to delete a dark library.'}), 403
 
         request_data = request.get_json(silent=True) or {}
         try:
@@ -2122,13 +2122,13 @@ class AjaxDarkLibraryFlushView(BaseView):
             return jsonify({
                 'error': (
                     'The selected library records changed after review. Preview the '
-                    'removal again before confirming.'
+                    'deletion again before confirming.'
                 ),
             }), 409
         confirmation = str(request_data.get('confirmation') or '')
         if confirmation != str(self.camera.name):
             return jsonify({
-                'error': 'Enter the camera name exactly to confirm permanent library removal.',
+                'error': 'Enter the camera name exactly to confirm permanent library deletion.',
             }), 400
 
         active_task = _find_active_dark_task()
@@ -2163,7 +2163,7 @@ class AjaxDarkLibraryFlushView(BaseView):
             'progress': {
                 'phase': 'queued',
                 'message': service_start_warning or (
-                    'Waiting for the capture controller before removing {0:s}.'.format(
+                    'Waiting for the capture controller before deleting {0:s}.'.format(
                         removal_label,
                     )
                 ),
@@ -2183,9 +2183,9 @@ class AjaxDarkLibraryFlushView(BaseView):
             db.session.commit()
         except SQLAlchemyError:
             db.session.rollback()
-            app.logger.exception('Unable to queue dark-library removal')
+            app.logger.exception('Unable to queue dark-library deletion')
             return jsonify({
-                'error': 'Library removal could not be queued. Wait a moment and try again.',
+                'error': 'Library deletion could not be queued. Wait a moment and try again.',
             }), 500
 
         response = dark_automation.task_public_status(task)
@@ -2200,7 +2200,7 @@ class AjaxDarkLibraryEligibilityView(BaseView):
     def dispatch_request(self):
         if not _can_save_standard_configuration():
             return jsonify({
-                'error': 'Administrator access is required to change dark-library eligibility.',
+                'error': 'Administrator access is required to activate or deactivate dark master sets.',
             }), 403
 
         request_data = request.get_json(silent=True) or {}
@@ -2210,7 +2210,7 @@ class AjaxDarkLibraryEligibilityView(BaseView):
             return jsonify({'error': 'Select a valid camera.'}), 400
         active = request_data.get('active')
         if not isinstance(active, bool):
-            return jsonify({'error': 'Choose whether the selected master sets are eligible.'}), 400
+            return jsonify({'error': 'Choose whether to activate or deactivate the selected master sets.'}), 400
 
         self.cameraSetup(camera_id=camera_id)
         if getattr(self.camera, 'id', None) != camera_id:
@@ -2239,8 +2239,8 @@ class AjaxDarkLibraryEligibilityView(BaseView):
         if not changing_entries:
             return jsonify({
                 'error': (
-                    'The selected master sets are already eligible.' if active
-                    else 'The selected master sets are already excluded.'
+                    'The selected master sets are already active.' if active
+                    else 'The selected master sets are already inactive.'
                 ),
             }), 409
         if active and any(
@@ -2249,8 +2249,8 @@ class AjaxDarkLibraryEligibilityView(BaseView):
         ):
             return jsonify({
                 'error': (
-                    'Capture staging files cannot be made eligible manually. '
-                    'Finish or remove the staged run first.'
+                    'Capture staging files cannot be activated manually. '
+                    'Finish the run or delete the staged files first.'
                 ),
             }), 409
 
@@ -2275,7 +2275,7 @@ class AjaxDarkLibraryEligibilityView(BaseView):
                     coverage_impact = {
                         'evaluated': False,
                         'level': 'unknown',
-                        'message': 'Coverage impact could not be evaluated. Review the selection carefully.',
+                        'message': 'Coverage impact could not be evaluated. Check the selection carefully.',
                     }
             else:
                 coverage_impact = {
@@ -2303,11 +2303,11 @@ class AjaxDarkLibraryEligibilityView(BaseView):
             })
 
         if mode != 'apply':
-            return jsonify({'error': 'The requested eligibility action is invalid.'}), 400
+            return jsonify({'error': 'The requested activation action is invalid.'}), 400
         if str(request_data.get('selection_signature') or '') != resolved['signature']:
             return jsonify({
                 'error': (
-                    'The selected master sets changed after review. Preview the action again.'
+                    'The selected master sets changed after preview. Preview the action again.'
                 ),
             }), 409
 
@@ -2324,15 +2324,15 @@ class AjaxDarkLibraryEligibilityView(BaseView):
             db.session.rollback()
             app.logger.exception('Unable to update dark-library eligibility')
             return jsonify({
-                'error': 'Dark-library eligibility could not be changed. Try again.',
+                'error': 'The activation state could not be changed. Try again.',
             }), 500
         return jsonify({
             'success': True,
             'active': active,
             'changed_entry_count': len(changed),
             'message': (
-                'The selected master sets are eligible for calibration again.' if active
-                else 'The selected master sets are excluded from calibration but remain stored.'
+                'The selected master sets are active and eligible for calibration again.' if active
+                else 'The selected master sets are inactive and excluded from calibration but remain stored.'
             ),
         })
 
@@ -2358,7 +2358,7 @@ class AjaxDarkAutomationStatusView(BaseView):
             task_data['capture_restored'] = True
             if task_data.get('operation') == 'flush':
                 task_data['error'] = (
-                    'The capture controller did not accept library removal within 30 minutes. '
+                    'The capture controller did not accept library deletion within 30 minutes. '
                     'Check that capture is running and try again.'
                 )
             else:
@@ -2369,7 +2369,7 @@ class AjaxDarkAutomationStatusView(BaseView):
             progress = dict(task_data.get('progress') or {})
             progress['phase'] = 'failed'
             progress['message'] = (
-                'Library removal was not accepted.'
+                'Library deletion was not accepted.'
                 if task_data.get('operation') == 'flush'
                 else 'The covered-camera confirmation expired before capture started.'
             )

@@ -236,11 +236,17 @@
     min-width: 0;
 }
 
-.dark-library-action-column > .dark-remove-selection,
-.dark-library-action-column > .dark-eligibility-selection {
+.dark-library-action-column .dark-remove-selection,
+.dark-library-action-column .dark-eligibility-selection {
     width: 100%;
+    height: auto;
+    min-height: 2rem;
     justify-content: flex-start;
     text-align: left;
+    white-space: normal;
+    line-height: 1.2;
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
 }
 
 .dark-library-profile,
@@ -401,7 +407,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
 {% endblock %}
 
 {% block content %}
-{% set dark_builder_preview_version = '2026.08.22.1' %}
+{% set dark_builder_preview_version = '2026.08.22.2' %}
 <div id="dark-page-content" class="tw:container tw:mx-auto tw:w-full tw:px-4 tw:py-6 tw:flex tw:flex-col tw:gap-4">
 
     <nav aria-label="Dark library sections">
@@ -599,7 +605,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                         <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">Start with all recommended master sets, then edit the rows. Existing masters keep their active/inactive status.</div>
                     </div>
                 </div>
-                <div class="tw:text-xs tw:text-base-content/50 tw:mt-2">Inactive masters stay stored but are not used for calibration. Remove them later only if you want to reclaim space.</div>
+                <div class="tw:text-xs tw:text-base-content/50 tw:mt-2">Inactive masters stay stored but are not used for calibration. Delete them later only if you want to reclaim space.</div>
             </div>
 
             {% if dark_analysis.warnings %}
@@ -958,15 +964,15 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
             <span class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:text-sm tw:font-semibold">
                 <i class="tw:icon-[lucide--trash-2] tw:w-4 tw:h-4 tw:text-error tw:shrink-0"></i>
                 <span>Library maintenance</span>
-                <span class="tw:badge tw:badge-error tw:badge-outline tw:badge-sm">Eligibility and removal</span>
+                <span class="tw:badge tw:badge-error tw:badge-outline tw:badge-sm">Activation and deletion</span>
             </span>
         </summary>
         <div class="dark-library-maintenance-body tw:collapse-content tw:flex tw:flex-col tw:gap-4">
             <div class="tw:alert tw:alert-warning tw:items-start tw:text-sm">
                 <i class="tw:icon-[lucide--shield-alert] tw:w-5 tw:h-5 tw:mt-0.5 tw:shrink-0"></i>
                 <div>
-                    <div class="tw:font-semibold">Exclude safely or remove permanently</div>
-                    <div class="tw:text-xs tw:mt-1">Excluding a master set is reversible and leaves its files stored. Removal deletes files permanently. A dark and its matching map are changed together, and you will see the coverage impact first.</div>
+                    <div class="tw:font-semibold">Deactivate safely or delete permanently</div>
+                    <div class="tw:text-xs tw:mt-1">Deactivating excludes a master set from calibration but leaves its files stored and can be reversed. Deletion is permanent. A dark and its matching map are changed together, and you will see the coverage impact first.</div>
                 </div>
             </div>
 
@@ -1008,7 +1014,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                 data-label="inactive or replaced records for {{ library.name }}"
                                 data-selection='{{ library.inactive_selection | tojson | forceescape }}'
                                 {% if dark_library_task_active %}disabled{% endif %}>
-                                Review {{ library.inactive_count }} inactive files…
+                                Delete {{ library.inactive_count }} inactive files…
                             </button>
                             {% endif %}
                             <button type="button" class="dark-remove-selection tw:btn tw:btn-sm tw:btn-error tw:btn-outline"
@@ -1016,7 +1022,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                 data-label="the complete library for {{ library.name }}"
                                 data-selection='{{ library.selection | tojson | forceescape }}'
                                 {% if dark_library_task_active %}disabled{% endif %}>
-                                Remove complete camera library…
+                                Delete complete camera library…
                             </button>
                             </div>
                         </div>
@@ -1034,19 +1040,19 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                         data-camera-id="{{ library.id }}" data-camera-name="{{ library.name }}" data-active="false"
                                         data-label="selected master sets for {{ library.name }}"
                                         data-selection='{"dark_ids":[],"bpm_ids":[]}' disabled>
-                                        Exclude selected from calibration…
+                                        Deactivate selected (exclude from calibration)…
                                     </button>
                                     <button type="button" class="dark-restore-marked dark-eligibility-selection tw:btn tw:btn-sm tw:btn-success tw:btn-outline"
                                         data-camera-id="{{ library.id }}" data-camera-name="{{ library.name }}" data-active="true"
                                         data-label="selected master sets for {{ library.name }}"
                                         data-selection='{"dark_ids":[],"bpm_ids":[]}' disabled>
-                                        Make selected eligible again…
+                                        Activate selected (make eligible again)…
                                     </button>
                                     <button type="button" class="dark-remove-marked dark-remove-selection tw:btn tw:btn-sm tw:btn-error tw:btn-outline tw:flex-1"
                                         data-camera-id="{{ library.id }}" data-camera-name="{{ library.name }}"
                                         data-label="selected master sets for {{ library.name }}"
                                         data-selection='{"dark_ids":[],"bpm_ids":[]}' disabled>
-                                        Review selected master sets…
+                                        Delete selected master sets…
                                     </button>
                                 </div>
                             </div>
@@ -1066,7 +1072,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                     data-label="the {{ profile.width if profile.width is not none else '?' }}×{{ profile.height if profile.height is not none else '?' }}, bin {{ profile.binning }}, {{ profile.bit_depth if profile.bit_depth is not none else 'unknown' }}-bit sensor profile"
                                     data-selection='{{ profile.selection | tojson | forceescape }}'
                                     {% if dark_library_task_active %}disabled{% endif %}>
-                                    Remove sensor profile…
+                                    Delete sensor profile…
                                 </button>
                                 </div>
                             </div>
@@ -1093,7 +1099,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                             data-label="the {{ layer.temperature_label }} temperature group for {{ library.name }}"
                                             data-selection='{{ layer.selection | tojson | forceescape }}'
                                             {% if dark_library_task_active %}disabled{% endif %}>
-                                            Remove temperature group…
+                                            Delete temperature group…
                                         </button>
                                         </div>
                                     </div>
@@ -1126,7 +1132,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                                         data-label="gain {{ '%g'|format(master.gain) }}, {{ '%g'|format(master.exposure) }}s master set for {{ library.name }}"
                                                         data-selection='{{ master.selection | tojson | forceescape }}'
                                                         {% if dark_library_task_active %}disabled{% endif %}>
-                                                        Exclude…
+                                                        Deactivate…
                                                     </button>
                                                     {% endif %}
                                                     {% if master.status in ('inactive', 'mixed') and not master.staged %}
@@ -1135,7 +1141,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                                         data-label="gain {{ '%g'|format(master.gain) }}, {{ '%g'|format(master.exposure) }}s master set for {{ library.name }}"
                                                         data-selection='{{ master.selection | tojson | forceescape }}'
                                                         {% if dark_library_task_active %}disabled{% endif %}>
-                                                        Make eligible…
+                                                        Activate…
                                                     </button>
                                                     {% endif %}
                                                     <button type="button" class="dark-remove-selection tw:btn tw:btn-xs tw:btn-error tw:btn-ghost"
@@ -1143,7 +1149,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                                         data-label="{% if master.status == 'inactive' %}inactive {% endif %}gain {{ '%g'|format(master.gain) }}, {{ '%g'|format(master.exposure) }}s master set for {{ library.name }}"
                                                         data-selection='{{ master.selection | tojson | forceescape }}'
                                                         {% if dark_library_task_active %}disabled{% endif %}>
-                                                        Remove…
+                                                        Delete…
                                                     </button>
                                                 </div>
                                             </div>
@@ -1166,7 +1172,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     <div id="dark-eligibility-preview-summary" class="tw:text-xs tw:text-base-content/60 tw:mt-1"></div>
                 </div>
                 <div id="dark-eligibility-coverage-impact" class="tw:alert tw:items-start tw:text-sm"></div>
-                <div class="tw:text-xs tw:text-base-content/60">This changes only calibration eligibility. No files are deleted, and you can reverse it later.</div>
+                <div class="tw:text-xs tw:text-base-content/60">Deactivation leaves the files stored and can be reversed by activating the master set again.</div>
                 <div class="tw:flex tw:flex-wrap tw:justify-end tw:gap-2">
                     <button id="dark-eligibility-confirm-cancel" type="button" class="tw:btn tw:btn-sm tw:btn-ghost">Cancel</button>
                     <button id="dark-eligibility-confirm" type="button" class="tw:btn tw:btn-sm"></button>
@@ -1180,12 +1186,12 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 </div>
                 <div id="dark-removal-coverage-impact" class="tw:alert tw:items-start tw:text-sm"></div>
                 <label class="tw:form-control">
-                    <span class="tw:label-text tw:text-sm tw:font-semibold">Type <span id="dark-removal-camera-name" class="tw:font-mono"></span> to confirm permanent removal</span>
+                    <span class="tw:label-text tw:text-sm tw:font-semibold">Type <span id="dark-removal-camera-name" class="tw:font-mono"></span> to confirm permanent deletion</span>
                     <input id="dark-removal-confirmation-input" class="tw:input tw:input-bordered tw:input-error tw:input-sm tw:mt-1" type="text" autocomplete="off" spellcheck="false">
                 </label>
                 <div class="tw:flex tw:flex-wrap tw:justify-end tw:gap-2">
                     <button id="dark-removal-confirm-cancel" type="button" class="tw:btn tw:btn-sm tw:btn-ghost">Cancel</button>
-                    <button id="dark-removal-confirm" type="button" class="tw:btn tw:btn-sm tw:btn-error" disabled>Permanently remove selection</button>
+                    <button id="dark-removal-confirm" type="button" class="tw:btn tw:btn-sm tw:btn-error" disabled>Permanently delete selection</button>
                 </div>
             </div>
         </div>
@@ -2422,7 +2428,7 @@ function updateDarkMarkedSelection(cameraId) {
         .attr('data-selection', JSON.stringify(selection))
         .attr('data-label', masterCount + ' selected ' + masterLabel + ' for ' + cameraName)
         .prop('disabled', !masterCount || blocked)
-        .text(masterCount ? 'Review ' + masterCount + ' selected…' : 'Review selected master sets…');
+        .text(masterCount ? 'Delete ' + masterCount + ' selected…' : 'Delete selected master sets…');
     excludeButton
         .attr('data-selection', JSON.stringify(selection))
         .attr('data-label', masterCount + ' selected ' + masterLabel + ' for ' + cameraName)
@@ -2471,8 +2477,7 @@ async function previewDarkEligibility(button) {
         });
         pendingDarkEligibility = preview;
         $('#dark-eligibility-preview-title').text(
-            (preview.active ? 'Make ' : 'Exclude ') + preview.label
-            + (preview.active ? ' eligible again?' : ' from calibration?')
+            (preview.active ? 'Activate ' : 'Deactivate ') + preview.label + '?'
         );
         $('#dark-eligibility-preview-summary').text(
             preview.dark_frames + ' dark frame' + (preview.dark_frames === 1 ? '' : 's')
@@ -2483,12 +2488,12 @@ async function previewDarkEligibility(button) {
         renderDarkCoverageImpact(
             '#dark-eligibility-coverage-impact',
             impact,
-            'Review the selected master sets carefully.'
+            'Check the selected master sets carefully.'
         );
         $('#dark-eligibility-confirm')
             .removeClass('tw:btn-warning tw:btn-success')
             .addClass(preview.active ? 'tw:btn-success' : 'tw:btn-warning')
-            .text(preview.active ? 'Make eligible again' : 'Exclude from calibration')
+            .text(preview.active ? 'Activate selected' : 'Deactivate selected')
             .prop('disabled', false);
         $('#dark-eligibility-confirmation').removeClass('tw:hidden');
         document.getElementById('dark-eligibility-confirmation').scrollIntoView({
@@ -2542,7 +2547,7 @@ async function previewDarkRemoval(button) {
             }),
         });
         pendingDarkRemoval = preview;
-        $('#dark-removal-preview-title').text('Remove ' + preview.label + '?');
+        $('#dark-removal-preview-title').text('Delete ' + preview.label + '?');
         $('#dark-removal-preview-summary').text(
             preview.dark_frames + ' dark frame' + (preview.dark_frames === 1 ? '' : 's')
             + ' + ' + preview.bad_pixel_maps + ' bad-pixel map'
@@ -2554,7 +2559,7 @@ async function previewDarkRemoval(button) {
         renderDarkCoverageImpact(
             '#dark-removal-coverage-impact',
             impact,
-            'Review the selected records carefully.'
+            'Check the selected records carefully.'
         );
         $('#dark-removal-confirmation').removeClass('tw:hidden');
         $('#dark-removal-confirmation-input').val('').trigger('focus');
@@ -2574,7 +2579,7 @@ async function removeDarkLibrarySelection() {
     if (!darkLibraryCanManage || activeDarkTaskId || !pendingDarkRemoval) return;
     const confirmation = $('#dark-removal-confirmation-input').val();
     if (confirmation !== pendingDarkRemoval.camera_name) {
-        showDarkActionError('Enter the camera name exactly to confirm permanent library removal.');
+        showDarkActionError('Enter the camera name exactly to confirm permanent library deletion.');
         updateDarkRemovalConfirmation();
         return;
     }
@@ -2620,7 +2625,7 @@ function renderDarkProgress(status) {
         review_required: 'Review required',
     };
     $('#dark-progress-title').text(status.operation === 'flush'
-        ? 'Removing ' + (status.removal_label || 'dark-library records')
+        ? 'Deleting ' + (status.removal_label || 'dark-library records')
         : (status.capture_mode === 'temperature_series' ? 'Temperature-series dark calibration' : 'Dark calibration'));
     $('#dark-progress-status').text(labels[status.status] || status.status || 'Working');
     $('#dark-progress-message').text(status.message || 'Dark calibration is running.');
@@ -2673,7 +2678,7 @@ function renderDarkProgress(status) {
     $('#dark-cancel').toggleClass('tw:hidden', terminal);
     $('#dark-review-library').toggleClass('tw:hidden', !(terminal && status.capture_restored));
     $('#dark-review-library').text(status.status === 'review_required'
-        ? (status.operation === 'flush' ? 'Review removal again' : 'Review revised plan')
+        ? (status.operation === 'flush' ? 'Preview deletion again' : 'Review revised plan')
         : 'Review library');
     if (terminal && status.capture_restored) {
         if (darkPollTimer) clearTimeout(darkPollTimer);

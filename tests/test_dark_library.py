@@ -1945,14 +1945,14 @@ def test_manual_eligibility_changes_are_reversible_and_recorded():
     assert excluded == tuple(frames)
     assert all(frame.active is False for frame in frames)
     assert all(
-        library_entry_eligibility(frame)['reason_label'] == 'Manually excluded'
+        library_entry_eligibility(frame)['reason_label'] == 'Manually deactivated'
         for frame in frames
     )
     restored = update_library_entries_eligibility(frames, True, changed_utc='later')
     assert restored == tuple(frames)
     assert all(frame.active is True for frame in frames)
     assert all(
-        library_entry_eligibility(frame)['reason_label'] == 'Manually restored'
+        library_entry_eligibility(frame)['reason_label'] == 'Manually activated'
         for frame in frames
     )
 
@@ -2033,7 +2033,7 @@ def test_flush_requires_a_fresh_selection_signature():
     selected_entry.filename = 'replacement.fit'
     session = _FakeSession()
 
-    with pytest.raises(DarkAutomationError, match='changed after review'):
+    with pytest.raises(DarkAutomationError, match='changed after preview'):
         flush_camera_library(
             SimpleNamespace(session=session),
             (dark_model, bpm_model),
