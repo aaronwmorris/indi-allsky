@@ -204,6 +204,9 @@ const field_names = [
     'SQM_ROI_Y2',
     'SQM_FOV_DIV',
     'DETECT_STARS_THOLD',
+    'DETECT_STARS_METHOD',
+    'DETECT_STARS_SEP_THOLD',
+    'DETECT_STARS_SEP_MAX_RADIUS',
     'DETECT_METEORS_THOLD',
     'DETECT_MASK',
     'LOGO_OVERLAY',
@@ -1326,6 +1329,24 @@ $('#USE_NIGHT_COLOR').on('change', function() {
     }
 });
 
+// Star detection method - only the threshold for the active method is editable
+function applyDetectStarsMethod(val) {
+    var $tmpl = $('#DETECT_STARS_THOLD');
+    var $sep = $('#DETECT_STARS_SEP_THOLD').add($('#DETECT_STARS_SEP_MAX_RADIUS'));
+
+    if (val === 'sep') {
+        $tmpl.attr({'readonly': true, 'disabled': true}).addClass('tw:opacity-50 tw:bg-base-300');
+        $sep.removeAttr('readonly disabled').removeClass('tw:opacity-50 tw:bg-base-300');
+    } else {
+        $sep.attr({'readonly': true, 'disabled': true}).addClass('tw:opacity-50 tw:bg-base-300');
+        $tmpl.removeAttr('readonly disabled').removeClass('tw:opacity-50 tw:bg-base-300');
+    }
+}
+
+$('#DETECT_STARS_METHOD').on('change', function() {
+    applyDetectStarsMethod($(this).val());
+});
+
 // Denoise dependent fields - night
 $('#IMAGE_DENOISE').on('change', function() {
     var val = $(this).val();
@@ -1716,6 +1737,9 @@ group_on_change('CIRCULAR_DISPLAY__ENABLE', group_fields_circular_display, group
 
 
 $( document ).ready(function() {
+    // Star detection method - apply initial state
+    applyDetectStarsMethod($('#DETECT_STARS_METHOD').val());
+
     // Global timelapse
     if (!$('#TIMELAPSE_ENABLE').prop('checked')) {
         $('#DAYTIME_TIMELAPSE').attr({'readonly': true, 'disabled': true});
