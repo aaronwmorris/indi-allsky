@@ -144,7 +144,7 @@ def test_builder_explains_each_library_state(
     assert 'A setting combines gain, exposure, binning and data depth.' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.21.7' in html
+    assert 'Preview 2026.08.21.8' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'masters captured from 15.0°C through 25.0°C' in html
     assert 'The ±5°C value is a distance from this reading' in html
@@ -234,7 +234,7 @@ def test_temperature_series_summary_pluralizes_one_set():
     assert "' across ' + temperatureSetCount + ' sets'" not in html
 
 
-def test_advanced_temperature_controls_distinguish_matching_from_capture_step():
+def test_primary_temperature_workflow_distinguishes_matching_from_capture_step():
     html = _render_builder(
         'complete',
         stored_dark_count=20,
@@ -243,14 +243,34 @@ def test_advanced_temperature_controls_distinguish_matching_from_capture_step():
         suggested_count=12,
     )
 
-    assert 'id="dark-temperature-range"' in html
-    assert 'Recommend another layer beyond' in html
+    workflow = html.split('id="dark-temperature-workflow"', 1)[1].split(
+        'id="dark-advanced-options"',
+        1,
+    )[0]
+    advanced = html.split('id="dark-advanced-options"', 1)[1].split(
+        'id="dark-run-instructions"',
+        1,
+    )[0]
+
+    assert 'id="dark-temperature-range"' in workflow
+    assert 'Temperature matching distance' in workflow
+    assert 'Changing this value updates the recommendation immediately' in workflow
+    assert 'does not save anything by itself' in workflow
+    assert 'saved for this camera only when you start a dark run' in workflow
+    assert 'id="dark-temperature-range"' not in advanced
     assert 'The initial 5°C value is the legacy fallback' in html
-    assert 'does not infer this preference from their spacing' in html
-    assert 'id="dark-temperature-delta"' in html
-    assert 'Temperature-series step' in html
-    assert 'It is independent of the recommendation distance above' in html
-    assert 'Starting this run saves the override as this camera' in html
+    assert 'their spacing is not treated as a saved preference' in html
+    assert 'id="dark-temperature-series-controls" class="tw:hidden' in workflow
+    assert 'id="dark-temperature-delta"' in workflow
+    assert 'Capture another set after cooling by' in workflow
+    assert 'independent of the matching distance above' in workflow
+    assert 'id="dark-temperature-target"' in workflow
+    assert 'id="dark-single-temperature-controls"' in workflow
+    assert 'id="dark-strategy-control"' in advanced
+    assert "$('#dark-temperature-series-controls').toggleClass('tw:hidden', !temperatureSeries);" in html
+    assert "$('#dark-single-temperature-controls').toggleClass('tw:hidden', temperatureSeries);" in html
+    assert "$('#dark-strategy-control').toggleClass('tw:hidden', temperatureSeries);" in html
+    assert 'This changed value is still unsaved' in html
 
 
 def test_stale_service_configuration_explains_why_capture_is_unavailable():
