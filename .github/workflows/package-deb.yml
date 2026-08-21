@@ -102,16 +102,10 @@ jobs:
             echo "### What's Changed"
             # Ensure all git tags are fetched locally
             git fetch --tags --force 2>/dev/null || true
-            PREV_TAG=$(git describe --tags --abbrev=0 --match "indi_v*" --match "v*" HEAD^ 2>/dev/null || git tag -l "indi_v*" "v*" --sort=-creatordate | head -n 1)
-            if [ -n "$PREV_TAG" ]; then
-              echo "Commits since **${PREV_TAG}**:"
-              echo ""
-              git log --no-merges "${PREV_TAG}..HEAD" --pretty=format:"* %s ([%h](https://github.com/${{ github.repository }}/commit/%H)) - %an"
-            else
-              echo "Recent commits:"
-              echo ""
-              git log --no-merges -n 20 --pretty=format:"* %s ([%h](https://github.com/${{ github.repository }}/commit/%H)) - %an"
-            fi
+            PREV_TAG=$(git tag -l "indi_v*" | sort -V | tail -n 1)
+            echo "Commits since **${PREV_TAG}**:"
+            echo ""
+            git log --no-merges "${PREV_TAG}..HEAD" --pretty=format:"* %s ([%h](https://github.com/${{ github.repository }}/commit/%H)) - %an"
             echo ""
             echo "---"
           } > release_notes.md
@@ -320,7 +314,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           body_path: downloaded-debs/release_notes.md
-          generate_release_notes: true
+          generate_release_notes: false
           files: downloaded-debs/*.deb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -332,7 +326,7 @@ jobs:
           tag_name: "nightly"
           prerelease: true
           body_path: downloaded-debs/release_notes.md
-          generate_release_notes: true
+          generate_release_notes: false
           files: downloaded-debs/*.deb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
