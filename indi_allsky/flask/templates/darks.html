@@ -167,7 +167,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
 {% endblock %}
 
 {% block content %}
-{% set dark_builder_preview_version = '2026.08.21.4' %}
+{% set dark_builder_preview_version = '2026.08.21.7' %}
 <div id="dark-page-content" class="tw:container tw:mx-auto tw:w-full tw:px-4 tw:py-6 tw:flex tw:flex-col tw:gap-4">
 
     <nav aria-label="Dark library sections">
@@ -319,12 +319,12 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                         {% if dark_analysis.target_temperatures %}
                         <div id="dark-temperature-check-value" class="tw:font-semibold tw:mt-1">{{ dark_analysis.temperature_ready_target_count }} of {{ dark_analysis.target_count }} ready</div>
                         <div id="dark-temperature-check-note" class="tw:text-xs tw:text-base-content/70 tw:mt-1 tw:leading-relaxed">
-                            Cooled targets: {{ dark_analysis.target_temperatures | join(', ') }}°C. Each target has its own relative {{ "%g"|format(dark_analysis.temperature_range) }}°C window; for example, the {{ "%0.1f"|format(dark_analysis.target_temperatures[0]) }}°C target accepts masters from {{ "%0.1f"|format(dark_analysis.target_temperatures[0]) }}°C through {{ "%0.1f"|format(dark_analysis.target_temperatures[0] + dark_analysis.temperature_range) }}°C. “+{{ "%g"|format(dark_analysis.temperature_range) }}°C” does not mean an absolute +{{ "%g"|format(dark_analysis.temperature_range) }}°C sensor temperature. Outside the window, the builder recommends another layer and keeps the existing layers.
+                            Cooled targets: {{ dark_analysis.target_temperatures | join(', ') }}°C. Each target has its own ±{{ "%g"|format(dark_analysis.temperature_range) }}°C window; for example, the {{ "%0.1f"|format(dark_analysis.target_temperatures[0]) }}°C target accepts masters from {{ "%0.1f"|format(dark_analysis.target_temperatures[0] - dark_analysis.temperature_range) }}°C through {{ "%0.1f"|format(dark_analysis.target_temperatures[0] + dark_analysis.temperature_range) }}°C. The ±{{ "%g"|format(dark_analysis.temperature_range) }}°C value is a distance from that target, not an absolute sensor temperature. Temperature is checked separately for each gain/exposure setting against the reading stored on its own master dark and map. Normal drift during capture can therefore leave only some settings needing another master set; the prepared job includes only those settings and keeps every existing layer.
                         </div>
                         {% elif dark_analysis.temperature_checked %}
                         <div id="dark-temperature-check-value" class="tw:font-semibold tw:mt-1">{{ dark_analysis.temperature_ready_target_count }} of {{ dark_analysis.target_count }} ready at {{ "%0.1f"|format(dark_analysis.temperature) }}°C</div>
                         <div id="dark-temperature-check-note" class="tw:text-xs tw:text-base-content/70 tw:mt-1 tw:leading-relaxed">
-                            {{ dark_analysis.temperature_status_label }}. At this {{ "%0.1f"|format(dark_analysis.temperature) }}°C reference reading, masters captured from {{ "%0.1f"|format(dark_analysis.temperature) }}°C through {{ "%0.1f"|format(dark_analysis.temperature + dark_analysis.temperature_range) }}°C count as temperature matched. The +{{ "%g"|format(dark_analysis.temperature_range) }}°C limit is relative to this reading, not an absolute +{{ "%g"|format(dark_analysis.temperature_range) }}°C temperature. Outside the window, the builder recommends another layer and keeps the existing layers.
+                            {{ dark_analysis.temperature_status_label }}. At this {{ "%0.1f"|format(dark_analysis.temperature) }}°C reference reading, masters captured from {{ "%0.1f"|format(dark_analysis.temperature - dark_analysis.temperature_range) }}°C through {{ "%0.1f"|format(dark_analysis.temperature + dark_analysis.temperature_range) }}°C count as temperature matched. The ±{{ "%g"|format(dark_analysis.temperature_range) }}°C value is a distance from this reading, not an absolute sensor temperature. Temperature is checked separately for each gain/exposure setting against the reading stored on its own master dark and map. Normal drift during capture can therefore leave only some settings needing another master set; the prepared job includes only those settings and keeps every existing layer.
                         </div>
                         {% else %}
                         <div id="dark-temperature-check-value" class="tw:font-semibold tw:mt-1">Not available</div>
@@ -504,7 +504,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                             <label class="tw:form-control tw:min-w-0">
                                 <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Maximum exposure</span>
                                 <div class="tw:join">
-                                    <input id="dark-exposure-max" class="tw:input tw:input-bordered tw:input-sm tw:join-item tw:w-full" type="number" min="1" step="1" value="{{ dark_execution_preview.exposure_max }}">
+                                    <input id="dark-exposure-max" class="tw:input tw:input-bordered tw:input-sm tw:join-item tw:w-full" type="number" min="1" max="{{ dark_execution_preview.exposure_max }}" step="1" value="{{ dark_execution_preview.exposure_max }}">
                                     <span class="tw:btn tw:btn-sm tw:join-item tw:pointer-events-none">seconds</span>
                                 </div>
                                 <span class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">Longest image exposure the library should cover. Normally leave this at the configured or camera-limited maximum.</span>
@@ -534,6 +534,16 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                 </span>
                             </label>
                             <label class="tw:form-control tw:min-w-0">
+                                <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Recommend another layer beyond</span>
+                                <div class="tw:join">
+                                    <input id="dark-temperature-range" class="tw:input tw:input-bordered tw:input-sm tw:join-item tw:w-full" type="number" min="0.1" max="50" step="0.1" value="{{ dark_execution_preview.temperature_range }}">
+                                    <span class="tw:btn tw:btn-sm tw:join-item tw:pointer-events-none">°C</span>
+                                </div>
+                                <span id="dark-temperature-range-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">
+                                    The nearest matching dark-and-map pair may be this far warmer or colder before another layer is recommended. This does not control the interval between falling-temperature captures. Existing masters record measured temperatures, not the user's original interval, so the builder does not infer this preference from their spacing. {% if dark_execution_preview.temperature_range_source == 'saved_camera' %}Loaded from this camera's saved dark-library preference.{% else %}The initial 5°C value is the legacy fallback; starting a run saves your choice for this camera.{% endif %}
+                                </span>
+                            </label>
+                            <label class="tw:form-control tw:min-w-0">
                                 <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Capture order</span>
                                 <select id="dark-capture-order" class="tw:select tw:select-bordered tw:select-sm tw:w-full tw:max-w-full tw:min-w-0">
                                     <option value="long_first" selected>Longest exposures first</option>
@@ -547,10 +557,10 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                             <label id="dark-temperature-delta-control" class="tw:form-control tw:hidden">
                                 <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Temperature-series step</span>
                                 <div class="tw:join">
-                                    <input id="dark-temperature-delta" class="tw:input tw:input-bordered tw:input-sm tw:join-item tw:w-full" type="number" min="0.1" max="50" step="0.1" value="5">
+                                    <input id="dark-temperature-delta" class="tw:input tw:input-bordered tw:input-sm tw:join-item tw:w-full" type="number" min="0.1" max="50" step="0.1" value="{{ dark_execution_preview.temperature_delta }}">
                                     <span class="tw:btn tw:btn-sm tw:join-item tw:pointer-events-none">°C</span>
                                 </div>
-                                <span class="tw:label-text-alt tw:text-base-content/50 tw:mt-1">Waits for a falling sensor reading; it does not change the configured cooler target.</span>
+                                <span class="tw:label-text-alt tw:text-base-content/50 tw:mt-1">Controls only when the next complete set is captured as the sensor cools. It is independent of the recommendation distance above and does not change the configured cooler target.</span>
                             </label>
                             <label id="dark-temperature-target-control" class="tw:form-control tw:hidden">
                                 <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Finish at sensor temperature</span>
@@ -596,6 +606,14 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                         </div>
                     </div>
                 </details>
+
+                <div id="dark-plan-validation" class="tw:alert tw:alert-error tw:hidden tw:items-start" role="alert" aria-live="polite">
+                    <i class="tw:icon-[lucide--circle-alert] tw:w-5 tw:h-5 tw:mt-0.5 tw:shrink-0"></i>
+                    <div>
+                        <div class="tw:font-semibold">Review the advanced plan</div>
+                        <div class="dark-plan-validation-message tw:text-sm"></div>
+                    </div>
+                </div>
 
                 <div id="dark-run-instructions" class="tw:flex tw:flex-col tw:gap-4{% if not dark_execution_preview.target_count %} tw:hidden{% endif %}">
                     <div id="dark-cover-warning" class="tw:alert tw:alert-warning tw:items-start">
@@ -661,9 +679,19 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 </div>
             </div>
             {% else %}
+            {% if dark_config_requires_reload %}
+            <div class="tw:alert tw:alert-warning tw:items-start">
+                <i class="tw:icon-[lucide--refresh-cw] tw:w-5 tw:h-5 tw:mt-0.5 tw:shrink-0"></i>
+                <div>
+                    <div class="tw:font-semibold">Reload indi-allsky before taking darks</div>
+                    <div class="tw:text-sm">This recommendation uses the newest saved configuration, but the capture service is still using an older one. Reload the service, return here, and review the updated plan. No dark run can start while the two configurations differ.</div>
+                </div>
+            </div>
+            {% else %}
             <div class="tw:text-xs tw:text-base-content/50">
                 An administrator can use guided capture for a local camera. The recommendation remains available here for review.
             </div>
+            {% endif %}
             {% endif %}
             {% else %}
             <div class="tw:alert tw:alert-warning">
@@ -1020,7 +1048,19 @@ function darkNumberList(values) {
 
 function parseDarkNumberList(value) {
     const parts = String(value || '').split(/[\s,;]+/).filter(Boolean);
-    return parts.map((part) => Number(part));
+    return Array.from(new Set(parts.map((part) => Number(part))));
+}
+
+function parseDarkNumberListStrict(value) {
+    const values = parseDarkNumberList(value);
+    return {
+        values: values,
+        valid: values.length > 0 && values.every(Number.isFinite),
+    };
+}
+
+function darkNumbersEqual(first, second, tolerance) {
+    return Math.abs(Number(first) - Number(second)) <= (tolerance || 0.000001);
 }
 
 function darkOptionalNumber(selector) {
@@ -1054,6 +1094,248 @@ function showDarkActionError(message) {
         return;
     }
     panel.removeClass('tw:hidden').text(message);
+}
+
+function darkPlanValidationFailure(masterCount, includeGroups) {
+    const frameControl = $('#dark-frame-count')[0];
+    const frameCount = Number($('#dark-frame-count').val());
+    if (!frameControl || !frameControl.checkValidity() || !Number.isInteger(frameCount)
+            || frameCount < 3 || frameCount > 50) {
+        return {
+            field: $('#dark-frame-count'),
+            message: 'Choose between 3 and 50 source frames per master.',
+        };
+    }
+
+    const exposureMaxControl = $('#dark-exposure-max')[0];
+    const exposureMax = Number($('#dark-exposure-max').val());
+    if (!exposureMaxControl || !exposureMaxControl.checkValidity()
+            || !Number.isFinite(exposureMax) || !Number.isInteger(exposureMax)
+            || exposureMax < 1) {
+        return {
+            field: $('#dark-exposure-max'),
+            message: 'Use a whole-second exposure maximum between 1 second and the configured camera maximum.',
+        };
+    }
+
+    const exposureStepControl = $('#dark-exposure-step')[0];
+    const exposureStep = Number($('#dark-exposure-step').val());
+    if (!exposureStepControl || !exposureStepControl.checkValidity()
+            || !Number.isFinite(exposureStep) || exposureStep < 1) {
+        return {
+            field: $('#dark-exposure-step'),
+            message: 'The exposure step must be at least 1 second.',
+        };
+    }
+
+    const temperatureRangeControl = $('#dark-temperature-range')[0];
+    const temperatureRange = Number($('#dark-temperature-range').val());
+    if (!temperatureRangeControl || !temperatureRangeControl.checkValidity()
+            || !Number.isFinite(temperatureRange)
+            || temperatureRange < 0.1 || temperatureRange > 50) {
+        return {
+            field: $('#dark-temperature-range'),
+            message: 'Choose a temperature recommendation distance between 0.1 and 50°C.',
+        };
+    }
+
+    const temperatureSeries = $('#dark-capture-mode').val() === 'temperature_series';
+    if (temperatureSeries) {
+        const temperatureDeltaControl = $('#dark-temperature-delta')[0];
+        const temperatureDelta = Number($('#dark-temperature-delta').val());
+        if (!temperatureDeltaControl || !temperatureDeltaControl.checkValidity()
+                || !Number.isFinite(temperatureDelta)
+                || temperatureDelta < 0.1 || temperatureDelta > 50) {
+            return {
+                field: $('#dark-temperature-delta'),
+                message: 'Choose a temperature-series step between 0.1 and 50°C.',
+            };
+        }
+        const targetText = String($('#dark-temperature-target').val() || '').trim();
+        const temperatureTargetControl = $('#dark-temperature-target')[0];
+        const temperatureTarget = Number(targetText);
+        if (targetText !== '' && (!temperatureTargetControl
+                || !temperatureTargetControl.checkValidity()
+                || !Number.isFinite(temperatureTarget))) {
+            return {
+                field: $('#dark-temperature-target'),
+                message: 'Target sensor temperature must be between -100 and 100°C, or blank to keep running.',
+            };
+        }
+    }
+
+    if (includeGroups === false) return null;
+
+    const capabilities = ((currentDarkPlan.analysis || {}).capabilities || {});
+    const gainCapabilities = capabilities.gain || {};
+    const exposureCapabilities = capabilities.exposure || {};
+    const supportedGains = (gainCapabilities.values || []).map(Number).filter(Number.isFinite);
+    const seenTargets = new Set();
+    let calculatedMasterCount = 0;
+    let failure = null;
+    $('.dark-plan-row').each(function() {
+        const row = $(this);
+        if (!row.find('.dark-group-enabled').is(':checked')) return;
+
+        const binningField = row.find('.dark-group-binning');
+        const binningControl = binningField[0];
+        const binning = Number(binningField.val());
+        if (!binningControl || !binningControl.checkValidity() || !Number.isInteger(binning)) {
+            failure = {
+                field: binningField,
+                message: 'Every enabled group needs a valid camera binning value.',
+            };
+            return false;
+        }
+
+        const gainField = row.find('.dark-group-gains');
+        const parsedGains = parseDarkNumberListStrict(gainField.val());
+        if (!parsedGains.valid) {
+            failure = {
+                field: gainField,
+                message: 'Every enabled group needs at least one valid, comma-separated gain.',
+            };
+            return false;
+        }
+        for (const gain of parsedGains.values) {
+            if (gainCapabilities.supported === false && !darkNumbersEqual(gain, -1)) {
+                failure = {
+                    field: gainField,
+                    message: 'This camera does not provide adjustable gain; use -1 for its gainless state.',
+                };
+                return false;
+            }
+            if (gainCapabilities.supported !== false
+                    && gainCapabilities.min !== null && gainCapabilities.min !== undefined
+                    && gain < Number(gainCapabilities.min) - 0.000001) {
+                failure = {field: gainField, message: 'A selected gain is below the camera minimum.'};
+                return false;
+            }
+            if (gainCapabilities.supported !== false
+                    && gainCapabilities.max !== null && gainCapabilities.max !== undefined
+                    && gain > Number(gainCapabilities.max) + 0.000001) {
+                failure = {field: gainField, message: 'A selected gain is above the camera maximum.'};
+                return false;
+            }
+            if (gainCapabilities.supported !== false && supportedGains.length
+                    && !supportedGains.some((value) => darkNumbersEqual(gain, value))) {
+                failure = {field: gainField, message: 'A selected gain is not supported by this camera.'};
+                return false;
+            }
+            if (gainCapabilities.supported !== false && !supportedGains.length
+                    && gainCapabilities.step_is_quantum && Number(gainCapabilities.step) > 0
+                    && gainCapabilities.min !== null && gainCapabilities.min !== undefined) {
+                const stepCount = (gain - Number(gainCapabilities.min)) / Number(gainCapabilities.step);
+                if (Math.abs(stepCount - Math.round(stepCount)) > 0.0001) {
+                    failure = {field: gainField, message: 'A selected gain does not match the camera gain step.'};
+                    return false;
+                }
+            }
+        }
+        if (failure) return false;
+
+        const exposureField = row.find('.dark-group-exposures');
+        const parsedExposures = parseDarkNumberListStrict(exposureField.val());
+        if (!parsedExposures.valid) {
+            failure = {
+                field: exposureField,
+                message: 'Every enabled group needs at least one valid, comma-separated exposure length.',
+            };
+            return false;
+        }
+        for (const exposure of parsedExposures.values) {
+            if (exposure <= 0) {
+                failure = {field: exposureField, message: 'Dark exposure lengths must be greater than zero.'};
+                return false;
+            }
+            if (exposureCapabilities.min !== null && exposureCapabilities.min !== undefined
+                    && exposure < Number(exposureCapabilities.min) - 0.000001) {
+                failure = {field: exposureField, message: 'A selected exposure is below the camera minimum.'};
+                return false;
+            }
+            const effectiveMaximum = Math.min(
+                exposureMax,
+                exposureCapabilities.max === null || exposureCapabilities.max === undefined
+                    ? exposureMax
+                    : Number(exposureCapabilities.max),
+            );
+            if (exposure > effectiveMaximum + 0.000001) {
+                failure = {
+                    field: exposureField,
+                    message: 'A selected exposure exceeds this plan’s maximum exposure.',
+                };
+                return false;
+            }
+        }
+        if (failure) return false;
+
+        calculatedMasterCount += parsedGains.values.length * parsedExposures.values.length;
+        const sourceGroup = (currentDarkPlan.groups || []).find(
+            (item) => item.id === row.data('group-id')
+        ) || {};
+        const frameCapabilities = capabilities.frame || {};
+        const targetWidth = frameCapabilities.width === null || frameCapabilities.width === undefined
+            ? sourceGroup.width
+            : Math.max(1, Math.floor(Number(frameCapabilities.width) / binning));
+        const targetHeight = frameCapabilities.height === null || frameCapabilities.height === undefined
+            ? sourceGroup.height
+            : Math.max(1, Math.floor(Number(frameCapabilities.height) / binning));
+        for (const gain of parsedGains.values) {
+            for (const exposure of parsedExposures.values) {
+                const targetKey = [
+                    sourceGroup.capture_period,
+                    binning,
+                    sourceGroup.bit_depth,
+                    targetWidth,
+                    targetHeight,
+                    Number(gain).toFixed(6),
+                    Number(exposure).toFixed(6),
+                ].join('|');
+                if (seenTargets.has(targetKey)) {
+                    failure = {
+                        field: gainField,
+                        message: 'Two enabled groups contain the same gain, exposure, binning, and profile target.',
+                    };
+                    return false;
+                }
+                seenTargets.add(targetKey);
+            }
+            if (failure) return false;
+        }
+        if (failure) return false;
+    });
+    if (failure) return failure;
+
+    const effectiveMasterCount = masterCount === undefined
+        ? calculatedMasterCount
+        : Number(masterCount);
+    if (effectiveMasterCount > 2000) {
+        return {
+            field: $('#dark-plan-groups'),
+            message: 'The plan contains more than 2000 master sets. Reduce the selected gains or exposures.',
+        };
+    }
+    return null;
+}
+
+function updateDarkPlanValidation(masterCount, includeGroups) {
+    const fields = $('#dark-frame-count, #dark-exposure-max, #dark-exposure-step, '
+        + '#dark-temperature-range, #dark-temperature-delta, #dark-temperature-target, .dark-group-binning, '
+        + '.dark-group-gains, .dark-group-exposures');
+    fields.removeClass('tw:input-error').removeAttr('aria-invalid');
+    const failure = darkPlanValidationFailure(masterCount, includeGroups);
+    const panel = $('#dark-plan-validation');
+    if (!failure) {
+        panel.addClass('tw:hidden').find('.dark-plan-validation-message').empty();
+        return true;
+    }
+    if (failure.field && failure.field.length) {
+        failure.field.addClass('tw:input-error').attr('aria-invalid', 'true');
+    }
+    panel.removeClass('tw:hidden')
+        .find('.dark-plan-validation-message')
+        .text(failure.message);
+    return false;
 }
 
 function updateDarkCaptureModeControls() {
@@ -1096,6 +1378,7 @@ function updateDarkOptionGuidance(plan) {
     const temperatureRangeLabel = Number.isInteger(temperatureRange)
         ? temperatureRange.toFixed(0)
         : temperatureRange.toFixed(1);
+    const temperatureRangeSource = (plan || {}).temperature_range_source || 'legacy_default';
     const targetTemperatures = (analysis.target_temperatures || [])
         .map(Number)
         .filter(Number.isFinite);
@@ -1130,7 +1413,16 @@ function updateDarkOptionGuidance(plan) {
 
     $('#dark-temperature-policy-help').text(temperaturePolicy === 'ignore'
         ? 'Treats uncooled gain/exposure settings as filled regardless of temperature. Captured files still record their measured temperature.'
-        : 'Uses a configured cooler target or the selected recent reading. Another layer is recommended when no master falls inside the relative ' + temperatureRangeLabel + '°C window.');
+        : 'Uses a configured cooler target or the selected recent reading. Each gain/exposure setting is checked separately; another layer is recommended when its nearest dark-and-map pair is more than ' + temperatureRangeLabel + '°C away.');
+    $('#dark-temperature-range-help').text(
+        'The nearest matching dark-and-map pair may be this far warmer or colder before another layer is recommended. '
+        + 'This is independent of the falling-temperature capture interval. Existing masters record measured temperatures, not the user\'s original interval, so their spacing is not treated as a saved preference. '
+        + (temperatureRangeSource === 'saved_camera'
+            ? 'This value was loaded from the camera\'s saved dark-library preference.'
+            : (temperatureRangeSource === 'advanced_override'
+                ? 'Starting this run saves the override as this camera\'s preference.'
+                : 'The initial 5°C value is the legacy fallback; starting a run saves your choice for this camera.'))
+    );
     const temperatureSourcePurpose = targetTemperatures.length
         ? 'Configured cooler targets define matching for cooled profiles; this source supplies uncooled profiles and falling-temperature series. '
         : 'This source establishes the relative temperature window. ';
@@ -1151,12 +1443,12 @@ function updateDarkOptionGuidance(plan) {
             .addClass('tw:text-base-content/70')
             .text(
                 'Cooled targets: ' + targetTemperatures.map(value => value.toFixed(1)).join(', ')
-                + '°C. Each target has its own relative ' + temperatureRangeLabel
+                + '°C. Each target has its own ±' + temperatureRangeLabel
                 + '°C window; for example, the ' + exampleTarget.toFixed(1)
-                + '°C target accepts masters from ' + exampleTarget.toFixed(1) + '°C through '
-                + (exampleTarget + temperatureRange).toFixed(1) + '°C. “+'
-                + temperatureRangeLabel + '°C” does not mean an absolute +'
-                + temperatureRangeLabel + '°C sensor temperature. Outside the window, the builder recommends another layer and keeps the existing layers.'
+                + '°C target accepts masters from '
+                + (exampleTarget - temperatureRange).toFixed(1) + '°C through '
+                + (exampleTarget + temperatureRange).toFixed(1) + '°C. The ±'
+                + temperatureRangeLabel + '°C value is a distance from that target, not an absolute sensor temperature. Temperature is checked separately for each gain/exposure setting against the reading stored on its own master dark and map. Normal drift during capture can therefore leave only some settings needing another master set; the prepared job includes only those settings and keeps every existing layer.'
             );
     } else {
         const parsedReferenceTemperature = Number(analysis.temperature);
@@ -1173,12 +1465,12 @@ function updateDarkOptionGuidance(plan) {
             .toggleClass('tw:text-base-content/70', hasReferenceTemperature)
             .text(hasReferenceTemperature
                 ? (analysis.temperature_status_label || 'Temperature checked') + '. At this '
-                    + parsedReferenceTemperature.toFixed(1) + '°C reference reading, masters captured from '
-                    + parsedReferenceTemperature.toFixed(1) + '°C through '
+                    + parsedReferenceTemperature.toFixed(1)
+                    + '°C reference reading, masters captured from '
+                    + (parsedReferenceTemperature - temperatureRange).toFixed(1) + '°C through '
                     + (parsedReferenceTemperature + temperatureRange).toFixed(1)
-                    + '°C count as temperature matched. The +' + temperatureRangeLabel
-                    + '°C limit is relative to this reading, not an absolute +'
-                    + temperatureRangeLabel + '°C temperature. Outside the window, the builder recommends another layer and keeps the existing layers.'
+                    + '°C count as temperature matched. The ±' + temperatureRangeLabel
+                    + '°C value is a distance from this reading, not an absolute sensor temperature. Temperature is checked separately for each gain/exposure setting against the reading stored on its own master dark and map. Normal drift during capture can therefore leave only some settings needing another master set; the prepared job includes only those settings and keeps every existing layer.'
                 : 'Temperature is not being used to decide which gain/exposure settings are missing.');
     }
 
@@ -1239,6 +1531,7 @@ function renderDarkPlan(plan) {
     if (plan.exposure_step !== undefined) $('#dark-exposure-step').val(plan.exposure_step);
     if (plan.capture_order) $('#dark-capture-order').val(plan.capture_order);
     if (plan.temperature_policy) $('#dark-temperature-policy').val(plan.temperature_policy);
+    if (plan.temperature_range !== undefined) $('#dark-temperature-range').val(plan.temperature_range);
     if (plan.temperature_source) $('#dark-temperature-source').val(plan.temperature_source);
     if (plan.capture_mode) $('#dark-capture-mode').val(plan.capture_mode);
     if (plan.quality) $('#dark-quality').val(plan.quality);
@@ -1373,8 +1666,9 @@ function updateDarkPlanSummary() {
     const masterSetText = (count) => count + ' master set' + (count === 1 ? '' : 's');
     const sourceFrameText = (count) => count + ' source frame' + (count === 1 ? '' : 's');
     const temperatureText = (count) => count + ' temperature' + (count === 1 ? '' : 's');
+    const temperatureSetText = (count) => count + ' temperature set' + (count === 1 ? '' : 's');
     $('#dark-plan-summary').text(temperatureSetCount
-        ? masterSetText(masterCount) + ' per temperature · ' + masterSetText(totalMasterCount) + ' across ' + temperatureSetCount + ' sets · ' + frameCount + ' source frames each'
+        ? masterSetText(masterCount) + ' per temperature · ' + masterSetText(totalMasterCount) + ' across ' + temperatureSetText(temperatureSetCount) + ' · ' + frameCount + ' source frames each'
         : masterSetText(masterCount) + estimateSuffix + ' · ' + frameCount + ' source frames each');
     $('#dark-primary-targets').text(temperatureSetCount
         ? masterSetText(totalMasterCount) + ' · ' + sourceFrameText(totalSourceFrameCount) + ' across ' + temperatureText(temperatureSetCount)
@@ -1410,8 +1704,10 @@ function updateDarkStartButton(masterCount) {
         });
     }
     $('#dark-run-instructions').toggleClass('tw:hidden', masterCount <= 0);
+    const planIsValid = updateDarkPlanValidation(masterCount, true);
     const ready = darkAutomationCanRun
         && masterCount > 0
+        && planIsValid
         && $('#dark-camera-covered').is(':checked')
         && !activeDarkTaskId;
     $('#dark-start').prop('disabled', !ready);
@@ -1440,8 +1736,13 @@ async function refreshDarkPlan() {
         clearTimeout(darkPlanRefreshTimer);
         darkPlanRefreshTimer = null;
     }
+    if (!updateDarkPlanValidation(undefined, false)) {
+        updateDarkStartButton();
+        return;
+    }
     const requestRevision = ++darkPlanRequestRevision;
     showDarkActionError('');
+    $('#dark-start').prop('disabled', true);
     setDarkPlanRefreshing(true);
     updateDarkOptionGuidance(currentDarkPlan);
     $('#dark-refresh-plan').prop('disabled', true).addClass('tw:loading');
@@ -1455,6 +1756,7 @@ async function refreshDarkPlan() {
                 frame_count: Number($('#dark-frame-count').val()),
                 exposure_max: Number($('#dark-exposure-max').val()),
                 exposure_step: Number($('#dark-exposure-step').val()),
+                temperature_range: Number($('#dark-temperature-range').val()),
                 temperature_policy: $('#dark-temperature-policy').val(),
                 temperature_source: $('#dark-temperature-source').val(),
                 capture_order: $('#dark-capture-order').val(),
@@ -1479,6 +1781,10 @@ async function refreshDarkPlan() {
 
 async function startDarkCalibration() {
     showDarkActionError('');
+    if (!updateDarkPlanValidation(undefined, true)) {
+        updateDarkStartButton();
+        return;
+    }
     $('#dark-start').prop('disabled', true).addClass('tw:loading');
     try {
         const status = await darkJsonRequest(darkStartUrl, {
@@ -1491,6 +1797,7 @@ async function startDarkCalibration() {
                 frame_count: Number($('#dark-frame-count').val()),
                 exposure_max: Number($('#dark-exposure-max').val()),
                 exposure_step: Number($('#dark-exposure-step').val()),
+                temperature_range: Number($('#dark-temperature-range').val()),
                 temperature_policy: $('#dark-temperature-policy').val(),
                 temperature_source: $('#dark-temperature-source').val(),
                 capture_order: $('#dark-capture-order').val(),
@@ -1786,15 +2093,17 @@ $( document ).ready(function() {
             refreshDarkPlan();
         });
         $('#dark-frame-count').on('input', function() {
-            if (!this.checkValidity()) return;
             updateDarkPlanSummary();
-            scheduleDarkPlanRefresh(350);
-        }).on('change', function() {
-            if (this.checkValidity()) refreshDarkPlan();
-        });
-        $('#dark-exposure-max, #dark-exposure-step, #dark-temperature-delta, #dark-temperature-target').on('input', function() {
             if (this.checkValidity()) scheduleDarkPlanRefresh(350);
         }).on('change', function() {
+            updateDarkPlanSummary();
+            if (this.checkValidity()) refreshDarkPlan();
+        });
+        $('#dark-exposure-max, #dark-exposure-step, #dark-temperature-range, #dark-temperature-delta, #dark-temperature-target').on('input', function() {
+            updateDarkPlanSummary();
+            if (this.checkValidity()) scheduleDarkPlanRefresh(350);
+        }).on('change', function() {
+            updateDarkPlanSummary();
             if (this.checkValidity()) refreshDarkPlan();
         });
         $('#dark-temperature-policy, #dark-temperature-source, #dark-capture-order').on('change', refreshDarkPlan);

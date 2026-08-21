@@ -35,9 +35,13 @@ from ..lens_solver import applySolvedValuesToConfig
 from ..dark_library import DarkInventoryFrame
 from ..dark_library import COVERAGE_ACCEPTABLE
 from ..dark_library import COVERAGE_EXACT
+from ..dark_library import DEFAULT_TEMPERATURE_RANGE
 from ..dark_library import analysis_context
 from ..dark_library import analyze_dark_plan
 from ..dark_library import build_dark_plan
+from ..dark_library import camera_temperature_preferences
+from ..dark_library import update_camera_temperature_preferences
+from ..dark_library import validate_temperature_range
 from ..capture_state import CameraCapabilities
 from ..capture_state import build_effective_capture_state
 from ..temperature import resolve_temperature
@@ -1005,7 +1009,13 @@ def _dark_default_temperature_target(config):
     )
 
 
-def _dark_capture_options(request_data, config, capabilities):
+def _dark_capture_options(
+        request_data,
+        config,
+        capabilities,
+        temperature_range_default=DEFAULT_TEMPERATURE_RANGE,
+        temperature_step_default=None,
+):
     configured_maximum = float(config.get('CCD_EXPOSURE_MAX', 15.0))
     if capabilities.exposure_max is not None:
         configured_maximum = min(configured_maximum, float(capabilities.exposure_max))
@@ -1025,6 +1035,15 @@ def _dark_capture_options(request_data, config, capabilities):
         )
     if not math.isfinite(exposure_step) or exposure_step < 1.0:
         raise dark_automation.DarkAutomationError('The exposure step must be at least 1 second')
+
+    try:
+        temperature_range = validate_temperature_range(
+            request_data.get('temperature_range', temperature_range_default),
+        )
+    except ValueError as error:
+        raise dark_automation.DarkAutomationError(str(error))
+    if temperature_step_default is None:
+        temperature_step_default = temperature_range
 
     capture_order = str(request_data.get('capture_order') or 'long_first')
     if capture_order not in dark_automation.CAPTURE_ORDERS:
@@ -1046,11 +1065,26 @@ def _dark_capture_options(request_data, config, capabilities):
     if capture_mode not in dark_automation.CAPTURE_MODES:
         raise dark_automation.DarkAutomationError('Select a valid dark capture mode')
     if capture_mode != dark_automation.CAPTURE_MODE_TEMPERATURE_SERIES:
-        temperature_delta = 5.0
+        try:
+            temperature_delta = float(request_data.get(
+                'temperature_delta',
+                temperature_step_default,
+            ))
+        except (TypeError, ValueError):
+            temperature_delta = temperature_range
+        if (
+                not math.isfinite(temperature_delta)
+                or temperature_delta < dark_automation.MIN_TEMPERATURE_DELTA
+                or temperature_delta > dark_automation.MAX_TEMPERATURE_DELTA
+        ):
+            temperature_delta = temperature_range
         temperature_target = None
     else:
         try:
-            temperature_delta = float(request_data.get('temperature_delta', 5.0))
+            temperature_delta = float(request_data.get(
+                'temperature_delta',
+                temperature_step_default,
+            ))
         except (TypeError, ValueError):
             raise dark_automation.DarkAutomationError('Enter a valid temperature step')
         if (
@@ -1087,6 +1121,7 @@ def _dark_capture_options(request_data, config, capabilities):
         'exposure_max': exposure_max,
         'exposure_step': exposure_step,
         'capture_order': capture_order,
+        'temperature_range': temperature_range,
         'temperature_policy': temperature_policy,
         'temperature_source': temperature_source,
         'capture_mode': capture_mode,
@@ -1104,6 +1139,7 @@ def _build_dark_analysis(
         temperature=None,
         exposure_max=None,
         exposure_step=5.0,
+        temperature_range=DEFAULT_TEMPERATURE_RANGE,
 ):
     capabilities = CameraCapabilities.from_camera(camera)
     capture_state = build_effective_capture_state(
@@ -1117,6 +1153,7 @@ def _build_dark_analysis(
         capabilities,
         camera.id,
         quality=quality,
+        temperature_range=temperature_range,
     )
     coverage = analyze_dark_plan(
         dark_plan,
@@ -1140,7 +1177,14 @@ def _dark_library_removal_coverage(camera, config, selection):
     )
     capabilities = CameraCapabilities.from_camera(camera)
     capture_state = build_effective_capture_state(config, capabilities)
-    plan = build_dark_plan(capture_state, capabilities, camera.id, quality='balanced')
+    temperature_preferences = camera_temperature_preferences(camera)
+    plan = build_dark_plan(
+        capture_state,
+        capabilities,
+        camera.id,
+        quality='balanced',
+        temperature_range=temperature_preferences['temperature_range'],
+    )
     current_temperature = _dark_current_temperature(camera.id, config)
     before = analyze_dark_plan(plan, inventory, temperature=current_temperature)
     after = analyze_dark_plan(plan, remaining_inventory, temperature=current_temperature)
@@ -1237,6 +1281,19 @@ def _dark_capture_controller_available(view):
     except NoResultFound:
         status = None
     return dark_automation.capture_controller_available(watchdog, status=status)
+
+
+def _dark_active_config_id(view):
+    try:
+        return int(view._miscDb.getState('CONFIG_ID'))
+    except (NoResultFound, TypeError, ValueError):
+        return None
+
+
+def _dark_config_requires_reload(view):
+    if not _dark_capture_controller_available(view):
+        return False
+    return _dark_active_config_id(view) != int(view.indi_allsky_config_id)
 
 
 def _prepare_dark_capture_service(view, operation='capture'):
@@ -1403,6 +1460,7 @@ class DarkFramesView(TemplateView):
 
 
         try:
+            temperature_preferences = camera_temperature_preferences(self.camera)
             camera_capabilities = CameraCapabilities.from_camera(self.camera)
             capture_state = build_effective_capture_state(
                 self.indi_allsky_config,
@@ -1413,6 +1471,7 @@ class DarkFramesView(TemplateView):
                 camera_capabilities,
                 self.camera.id,
                 quality='balanced',
+                temperature_range=temperature_preferences['temperature_range'],
             )
 
             temperature_reading = _dark_temperature_reading(
@@ -1444,11 +1503,15 @@ class DarkFramesView(TemplateView):
             dark_execution_preview = dark_automation.execution_preview(
                 dark_coverage,
                 initial_strategy,
+                temperature_delta=temperature_preferences['temperature_step'],
                 temperature_target=_dark_default_temperature_target(
                     self.indi_allsky_config,
                 ),
             )
             dark_execution_preview['analysis'] = dark_analysis
+            dark_execution_preview['temperature_range_source'] = temperature_preferences[
+                'range_source'
+            ]
             dark_execution_preview['recommended_method'] = dark_automation.recommended_stacking_method(
                 self.indi_allsky_config,
                 dark_execution_preview['groups'],
@@ -1472,9 +1535,11 @@ class DarkFramesView(TemplateView):
                 'exposure_step': 5.0,
                 'capture_order': 'long_first',
                 'temperature_policy': 'recommended',
+                'temperature_range': DEFAULT_TEMPERATURE_RANGE,
+                'temperature_range_source': 'legacy_default',
                 'temperature_source': 'auto',
                 'capture_mode': dark_automation.CAPTURE_MODE_SINGLE,
-                'temperature_delta': 5.0,
+                'temperature_delta': DEFAULT_TEMPERATURE_RANGE,
                 'temperature_target': _dark_default_temperature_target(
                     self.indi_allsky_config,
                 ),
@@ -1511,10 +1576,16 @@ class DarkFramesView(TemplateView):
         context['dark_temperature_sources'] = temperature_source_choices(
             self.indi_allsky_config,
         )
-        context['dark_automation_can_run'] = bool(
+        dark_automation_authorized = bool(
             _can_save_standard_configuration()
             and getattr(self.camera, 'local', False)
             and dark_analysis.get('available', False)
+        )
+        context['dark_config_requires_reload'] = bool(
+            dark_automation_authorized and _dark_config_requires_reload(self)
+        )
+        context['dark_automation_can_run'] = bool(
+            dark_automation_authorized and not context['dark_config_requires_reload']
         )
         active_task = _find_active_dark_task(
             owner=_dark_automation_owner(),
@@ -1531,7 +1602,7 @@ class DarkFramesView(TemplateView):
         context['dark_library_catalog'] = dark_library_catalog
         context['dark_library_task_active'] = maintenance_task is not None
         context['dark_library_can_manage'] = bool(
-            context['dark_automation_can_run']
+            dark_automation_authorized
             and dark_library_catalog['entry_count'] > 0
         )
         # Retain the old context name for extensions that still inspect it.
@@ -1561,11 +1632,14 @@ class AjaxDarkAutomationPlanView(BaseView):
         quality = str(request_data.get('quality') or 'balanced')
         strategy = str(request_data.get('strategy') or 'complete')
         try:
+            temperature_preferences = camera_temperature_preferences(self.camera)
             capabilities = CameraCapabilities.from_camera(self.camera)
             options = _dark_capture_options(
                 request_data,
                 self.indi_allsky_config,
                 capabilities,
+                temperature_range_default=temperature_preferences['temperature_range'],
+                temperature_step_default=temperature_preferences['temperature_step'],
             )
             temperature_reading = _dark_temperature_reading(
                 self.camera.id,
@@ -1587,6 +1661,7 @@ class AjaxDarkAutomationPlanView(BaseView):
                 temperature=analysis_temperature,
                 exposure_max=options['exposure_max'],
                 exposure_step=options['exposure_step'],
+                temperature_range=options['temperature_range'],
             )
             preview = dark_automation.execution_preview(
                 coverage,
@@ -1610,6 +1685,11 @@ class AjaxDarkAutomationPlanView(BaseView):
             capture_state,
             capabilities,
             coverage,
+        )
+        preview['temperature_range_source'] = (
+            temperature_preferences['range_source']
+            if options['temperature_range'] == temperature_preferences['temperature_range']
+            else 'advanced_override'
         )
         preview['analysis']['temperature_reading'] = (
             temperature_reading.to_dict() if temperature_reading is not None else None
@@ -1642,11 +1722,14 @@ class AjaxDarkAutomationStartView(BaseView):
 
         quality = str(request_data.get('quality') or 'balanced')
         try:
+            temperature_preferences = camera_temperature_preferences(self.camera)
             capabilities = CameraCapabilities.from_camera(self.camera)
             options = _dark_capture_options(
                 request_data,
                 self.indi_allsky_config,
                 capabilities,
+                temperature_range_default=temperature_preferences['temperature_range'],
+                temperature_step_default=temperature_preferences['temperature_step'],
             )
             temperature_reading = _dark_temperature_reading(
                 self.camera.id,
@@ -1668,6 +1751,7 @@ class AjaxDarkAutomationStartView(BaseView):
                 temperature=analysis_temperature,
                 exposure_max=options['exposure_max'],
                 exposure_step=options['exposure_step'],
+                temperature_range=options['temperature_range'],
             )
             execution = dark_automation.normalize_execution_request(
                 coverage,
@@ -1686,6 +1770,16 @@ class AjaxDarkAutomationStartView(BaseView):
                 'task_id': active_task.id,
             }), 409
 
+        if _dark_config_requires_reload(self):
+            return jsonify({
+                'error': (
+                    'The saved configuration used for this plan is not active in the '
+                    'indi-allsky service. Reload indi-allsky, then review the updated plan; '
+                    'no dark frames were taken.'
+                ),
+                'review_required': True,
+            }), 409
+
         service_start_warning = _prepare_dark_capture_service(self)
         now_text = datetime.now(timezone.utc).isoformat()
         task_data = {
@@ -1693,6 +1787,7 @@ class AjaxDarkAutomationStartView(BaseView):
             'owner': _dark_automation_owner(),
             'camera_id': self.camera.id,
             'camera_uuid': str(getattr(self.camera, 'uuid', '') or ''),
+            'config_id': int(self.indi_allsky_config_id),
             'capability_signature': capabilities.signature,
             'generation_id': str(uuid.uuid4()),
             'status': 'queued',
@@ -1716,6 +1811,7 @@ class AjaxDarkAutomationStartView(BaseView):
             'exposure_step': execution['exposure_step'],
             'capture_order': execution['capture_order'],
             'temperature_policy': execution['temperature_policy'],
+            'temperature_range': execution['temperature_range'],
             'temperature_source': execution['temperature_source'],
             'temperature_source_signature': temperature_source_signature(
                 self.indi_allsky_config,
@@ -1741,6 +1837,11 @@ class AjaxDarkAutomationStartView(BaseView):
             state=TaskQueueState.MANUAL,
             priority=10,
             data=task_data,
+        )
+        update_camera_temperature_preferences(
+            self.camera,
+            execution['temperature_range'],
+            execution['temperature_delta'],
         )
         db.session.add(task)
         try:

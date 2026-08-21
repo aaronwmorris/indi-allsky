@@ -63,19 +63,17 @@ except ImportError:
 logger = logging.getLogger('indi_allsky')
 
 
-def _dark_fallback_order(current_temperature):
+def _calibration_frame_order(model, current_temperature):
     return (
-        IndiAllSkyDbDarkFrameTable.gain.asc(),
-        IndiAllSkyDbDarkFrameTable.exposure.asc(),
-        IndiAllSkyDbDarkFrameTable.temp.is_(None).asc(),
-        func.abs(IndiAllSkyDbDarkFrameTable.temp - float(current_temperature)).asc(),
-        IndiAllSkyDbDarkFrameTable.createDate.desc(),
+        model.gain.asc(),
+        model.exposure.asc(),
+        model.temp.is_(None).asc(),
+        func.abs(model.temp - float(current_temperature)).asc(),
+        model.createDate.desc(),
     )
 
 
 class ImageProcessor(object):
-
-    dark_temperature_range = 5.0  # dark must be within this range
 
     registration_exposure_thresh = 5.0
 
@@ -1314,8 +1312,10 @@ class ImageProcessor(object):
         data = i_ref.hdulist[0].data
 
         if self.config.get('IMAGE_CALIBRATE_BPM'):
-            # pick a bad pixel map that is closest to the exposure and temperature
-            logger.info('Searching for bad pixel map: gain %0.3f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
+            # Preserve the existing gain/exposure priorities, then choose the
+            # closest available temperature in either direction.
+            current_temperature = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]
+            logger.info('Searching for bad pixel map: gain %0.3f, exposure >= %0.1f, closest to %0.1fc', i_ref.gain, i_ref.exposure, current_temperature)
             bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
                 .filter(IndiAllSkyDbBadPixelMapTable.camera_id == i_ref.camera_id)\
                 .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
@@ -1323,52 +1323,30 @@ class ImageProcessor(object):
                 .filter(IndiAllSkyDbBadPixelMapTable.binmode == i_ref.binning)\
                 .filter(IndiAllSkyDbBadPixelMapTable.gain >= i_ref.gain)\
                 .filter(IndiAllSkyDbBadPixelMapTable.exposure >= i_ref.exposure)\
-                .filter(IndiAllSkyDbBadPixelMapTable.temp >= self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])\
-                .filter(IndiAllSkyDbBadPixelMapTable.temp <= (self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] + self.dark_temperature_range))\
-                .order_by(
-                    IndiAllSkyDbBadPixelMapTable.gain.asc(),
-                    IndiAllSkyDbBadPixelMapTable.exposure.asc(),
-                    IndiAllSkyDbBadPixelMapTable.temp.asc(),
-                    IndiAllSkyDbBadPixelMapTable.createDate.desc(),
-                )\
+                .order_by(*_calibration_frame_order(
+                    IndiAllSkyDbBadPixelMapTable,
+                    current_temperature,
+                ))\
                 .first()
 
             if not bpm_entry:
-                #logger.warning('Temperature matched bad pixel map not found: %0.2fc', self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
-
-                # pick a bad pixel map that matches the exposure at the hightest temperature found
-                bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
-                    .filter(IndiAllSkyDbBadPixelMapTable.camera_id == i_ref.camera_id)\
-                    .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
-                    .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == i_ref.image_bitpix)\
-                    .filter(IndiAllSkyDbBadPixelMapTable.binmode == i_ref.binning)\
-                    .filter(IndiAllSkyDbBadPixelMapTable.gain >= i_ref.gain)\
-                    .filter(IndiAllSkyDbBadPixelMapTable.exposure >= i_ref.exposure)\
-                    .order_by(
-                        IndiAllSkyDbBadPixelMapTable.gain.asc(),
-                        IndiAllSkyDbBadPixelMapTable.exposure.asc(),
-                        IndiAllSkyDbBadPixelMapTable.temp.desc(),
-                        IndiAllSkyDbBadPixelMapTable.createDate.desc(),
-                    )\
-                    .first()
-
-
-                if not bpm_entry:
-                    logger.warning(
-                        'Bad Pixel Map not found: ccd%d %dbit %0.6fs gain %0.3f bin %d %0.2fc',
-                        i_ref.camera_id,
-                        i_ref.image_bitpix,
-                        float(i_ref.exposure),
-                        i_ref.gain,
-                        i_ref.binning,
-                        self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
-                    )
+                logger.warning(
+                    'Bad Pixel Map not found: ccd%d %dbit %0.6fs gain %0.3f bin %d %0.2fc',
+                    i_ref.camera_id,
+                    i_ref.image_bitpix,
+                    float(i_ref.exposure),
+                    i_ref.gain,
+                    i_ref.binning,
+                    current_temperature,
+                )
         else:
             bpm_entry = None
 
 
-        # pick a dark frame that is closest to the exposure and temperature
-        logger.info('Searching for dark frame: gain %0.3f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
+        # Preserve the existing gain/exposure priorities, then choose the
+        # closest available temperature in either direction.
+        current_temperature = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]
+        logger.info('Searching for dark frame: gain %0.3f, exposure >= %0.1f, closest to %0.1fc', i_ref.gain, i_ref.exposure, current_temperature)
         dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
             .filter(IndiAllSkyDbDarkFrameTable.camera_id == i_ref.camera_id)\
             .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
@@ -1376,45 +1354,24 @@ class ImageProcessor(object):
             .filter(IndiAllSkyDbDarkFrameTable.binmode == i_ref.binning)\
             .filter(IndiAllSkyDbDarkFrameTable.gain >= i_ref.gain)\
             .filter(IndiAllSkyDbDarkFrameTable.exposure >= i_ref.exposure)\
-            .filter(IndiAllSkyDbDarkFrameTable.temp >= self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])\
-            .filter(IndiAllSkyDbDarkFrameTable.temp <= (self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] + self.dark_temperature_range))\
-            .order_by(
-                IndiAllSkyDbDarkFrameTable.gain.asc(),
-                IndiAllSkyDbDarkFrameTable.exposure.asc(),
-                IndiAllSkyDbDarkFrameTable.temp.asc(),
-                IndiAllSkyDbDarkFrameTable.createDate.desc(),
-            )\
+            .order_by(*_calibration_frame_order(
+                IndiAllSkyDbDarkFrameTable,
+                current_temperature,
+            ))\
             .first()
 
         if not dark_frame_entry:
-            #logger.warning('Temperature matched dark not found: %0.2fc', self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
+            logger.warning(
+                'Dark not found: ccd%d %dbit %0.6fs gain %0.3f bin %d %0.2fc',
+                i_ref.camera_id,
+                i_ref.image_bitpix,
+                float(i_ref.exposure),
+                i_ref.gain,
+                i_ref.binning,
+                current_temperature,
+            )
 
-            # Preserve the existing gain/exposure priorities, then use the
-            # closest available temperature when no in-range dark exists.
-            current_temperature = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]
-            dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
-                .filter(IndiAllSkyDbDarkFrameTable.camera_id == i_ref.camera_id)\
-                .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
-                .filter(IndiAllSkyDbDarkFrameTable.bitdepth == i_ref.image_bitpix)\
-                .filter(IndiAllSkyDbDarkFrameTable.binmode == i_ref.binning)\
-                .filter(IndiAllSkyDbDarkFrameTable.gain >= i_ref.gain)\
-                .filter(IndiAllSkyDbDarkFrameTable.exposure >= i_ref.exposure)\
-                .order_by(*_dark_fallback_order(current_temperature))\
-                .first()
-
-
-            if not dark_frame_entry:
-                logger.warning(
-                    'Dark not found: ccd%d %dbit %0.6fs gain %0.3f bin %d %0.2fc',
-                    i_ref.camera_id,
-                    i_ref.image_bitpix,
-                    float(i_ref.exposure),
-                    i_ref.gain,
-                    i_ref.binning,
-                    self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
-                )
-
-                raise CalibrationNotFound('Dark not found')
+            raise CalibrationNotFound('Dark not found')
 
 
         if bpm_entry:

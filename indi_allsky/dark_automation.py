@@ -13,6 +13,7 @@ from pathlib import Path
 
 from . import constants
 from .capture_state import binned_dimension
+from .dark_library import DEFAULT_TEMPERATURE_RANGE
 
 
 STRATEGY_COMPLETE = 'complete'
@@ -64,6 +65,47 @@ class DarkAutomationCancelled(DarkAutomationError):
 
 class DarkAutomationReviewRequired(DarkAutomationError):
     pass
+
+
+def reject_task_for_config_drift(task, active_config_id):
+    """Expire a queued capture task when the controller has not loaded its config."""
+    data = dict(task.data or {})
+    if data.get('operation') == 'flush':
+        return False
+    expected_config_id = data.get('config_id')
+    if expected_config_id is None:
+        # Preserve compatibility with a task queued by an older web process.
+        return False
+    try:
+        matches = int(expected_config_id) == int(active_config_id)
+    except (TypeError, ValueError):
+        matches = False
+    if matches:
+        return False
+
+    message = (
+        'The saved configuration used for this plan is not active in the '
+        'indi-allsky service. Reload indi-allsky, then review the updated plan; '
+        'no dark frames were taken.'
+    )
+    data.update({
+        'status': 'review_required',
+        'completed_utc': _utc_now_text(),
+        'capture_restored': True,
+        'error': message,
+        'requires_review': True,
+    })
+    progress = dict(data.get('progress') or {})
+    progress.update({
+        'phase': 'review_required',
+        'message': message,
+        'heartbeat_utc': _utc_now_text(),
+    })
+    data['progress'] = progress
+    task.data = data
+    task.result = 'Reload indi-allsky before dark calibration'
+    task.setExpired()
+    return True
 
 
 def capture_controller_available(watchdog, status=None, now=None):
@@ -204,7 +246,7 @@ def execution_preview(
         temperature_policy='recommended',
         temperature_source='auto',
         capture_mode=CAPTURE_MODE_SINGLE,
-        temperature_delta=5.0,
+        temperature_delta=DEFAULT_TEMPERATURE_RANGE,
         temperature_target=None,
 ):
     frame_count = _validate_frame_count(frame_count)
@@ -233,7 +275,10 @@ def execution_preview(
             if group['capture_period'] == 'night'
         ]
     else:
-        temperature_delta = 5.0
+        try:
+            temperature_delta = _validate_temperature_delta(temperature_delta)
+        except DarkAutomationError:
+            temperature_delta = analysis.plan.quality.temperature_range
         temperature_target = None
         groups = build_execution_groups(analysis, strategy)
     for group in groups:
@@ -276,6 +321,7 @@ def execution_preview(
         'exposure_step': analysis.plan.exposure_step,
         'capture_order': capture_order,
         'temperature_policy': temperature_policy,
+        'temperature_range': analysis.plan.quality.temperature_range,
         'temperature_source': temperature_source,
         'capture_mode': capture_mode,
         'temperature_delta': temperature_delta,
@@ -321,14 +367,25 @@ def normalize_execution_request(analysis, capabilities, capture_state, request_d
     )
     if capture_mode == CAPTURE_MODE_TEMPERATURE_SERIES:
         temperature_delta = _validate_temperature_delta(
-            request_data.get('temperature_delta', 5.0),
+            request_data.get(
+                'temperature_delta',
+                analysis.plan.quality.temperature_range,
+            ),
         )
         temperature_target = _validate_temperature_target(
             request_data.get('temperature_target'),
         )
         strategy = STRATEGY_CUSTOM
     else:
-        temperature_delta = 5.0
+        try:
+            temperature_delta = _validate_temperature_delta(
+                request_data.get(
+                    'temperature_delta',
+                    analysis.plan.quality.temperature_range,
+                ),
+            )
+        except DarkAutomationError:
+            temperature_delta = analysis.plan.quality.temperature_range
         temperature_target = None
     expected_signature = str(request_data.get('config_signature') or '')
     if expected_signature != analysis.plan.config_signature:
@@ -459,6 +516,7 @@ def normalize_execution_request(analysis, capabilities, capture_state, request_d
         'exposure_step': analysis.plan.exposure_step,
         'capture_order': capture_order,
         'temperature_policy': temperature_policy,
+        'temperature_range': analysis.plan.quality.temperature_range,
         'temperature_source': temperature_source,
         'capture_mode': capture_mode,
         'temperature_delta': temperature_delta,
@@ -534,6 +592,7 @@ def _execution_signature(execution):
         'exposure_step': execution['exposure_step'],
         'capture_order': execution['capture_order'],
         'temperature_policy': execution['temperature_policy'],
+        'temperature_range': execution['temperature_range'],
         'temperature_source': execution.get('temperature_source', 'auto'),
         'capture_mode': execution['capture_mode'],
         'temperature_delta': execution['temperature_delta'],
@@ -1043,6 +1102,7 @@ def task_public_status(task):
         ),
         'completed_temperature_sets': progress.get('completed_temperature_sets', 0),
         'planned_temperature_sets': planned_temperature_sets,
+        'temperature_range': data.get('temperature_range', DEFAULT_TEMPERATURE_RANGE),
         'temperature_delta': data.get('temperature_delta'),
         'temperature_source': data.get('temperature_source', 'auto'),
         'temperature_source_label': progress.get('temperature_source'),
@@ -1178,7 +1238,16 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                 raise DarkAutomationReviewRequired(
                     'The selected camera changed before capture started. Review the revised plan.'
                 )
-            config = IndiAllSkyConfig().config
+            config_obj = IndiAllSkyConfig()
+            if (
+                    task_data.get('config_id') is not None
+                    and int(config_obj.config_id) != int(task_data['config_id'])
+            ):
+                raise DarkAutomationReviewRequired(
+                    'The saved configuration changed before capture started. '
+                    'Reload indi-allsky, then review the updated plan; no dark frames were taken.'
+                )
+            config = config_obj.config
             if (
                     task_data.get('temperature_source_signature')
                     and temperature_source_signature(config)
@@ -1225,6 +1294,12 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                 'capture_order': str(task_data.get('capture_order') or 'long_first'),
                 'exposure_max': float(task_data['exposure_max']),
                 'exposure_step': float(task_data['exposure_step']),
+                'temperature_range': float(
+                    task_data.get('temperature_range', DEFAULT_TEMPERATURE_RANGE)
+                ),
+                'temperature_delta': float(
+                    task_data.get('temperature_delta', DEFAULT_TEMPERATURE_RANGE)
+                ),
                 'temperature_source': str(task_data.get('temperature_source') or 'auto'),
                 'stage_inactive': True,
             }
@@ -1801,6 +1876,10 @@ def _activate_generation(db, models, task_data):
             all_new_frames,
             all_old_frames,
             task_data['groups'],
+            temperature_range=task_data.get(
+                'temperature_range',
+                DEFAULT_TEMPERATURE_RANGE,
+            ),
         )
         for frame in to_activate:
             frame.active = True
@@ -1817,7 +1896,13 @@ def _activate_generation(db, models, task_data):
     }
 
 
-def activation_changes(strategy, new_frames, old_frames, groups, temperature_range=5.0):
+def activation_changes(
+        strategy,
+        new_frames,
+        old_frames,
+        groups,
+        temperature_range=DEFAULT_TEMPERATURE_RANGE,
+):
     new_frames = tuple(new_frames)
     old_frames = tuple(old_frames)
     if strategy in (STRATEGY_COMPLETE, STRATEGY_CUSTOM):
@@ -1933,10 +2018,9 @@ def _frame_matches_group_scope(frame, group, new_frames, temperature_range):
     if target_temperature is not None:
         if frame_temperature is None:
             return False
-        return (
-            float(frame_temperature) >= float(target_temperature)
-            and float(frame_temperature) <= float(target_temperature) + float(temperature_range)
-        )
+        return abs(
+            float(frame_temperature) - float(target_temperature)
+        ) <= float(temperature_range)
 
     group_new_temperatures = [
         getattr(new_frame, 'temp', None)

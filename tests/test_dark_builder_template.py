@@ -23,6 +23,8 @@ def _render_builder(
     suggested_count,
     target_count=17,
     temperature_ready_count=None,
+    automation_can_run=True,
+    config_requires_reload=False,
 ):
     if temperature_ready_count is None:
         temperature_ready_count = ready_count
@@ -46,7 +48,10 @@ def _render_builder(
         'estimated_library_storage': '500 MiB',
         'exposure_max': 30,
         'exposure_step': 5,
+        'temperature_range': 5.0,
+        'temperature_range_source': 'legacy_default',
         'temperature_source': 'auto',
+        'temperature_delta': 5.0,
         'temperature_target': None,
         'target_count': suggested_count,
         'groups': [],
@@ -97,7 +102,8 @@ def _render_builder(
         'dark_execution_preview': preview,
         'dark_analysis': analysis,
         'dark_temperature_sources': [],
-        'dark_automation_can_run': True,
+        'dark_automation_can_run': automation_can_run,
+        'dark_config_requires_reload': config_requires_reload,
         'dark_automation_task_id': None,
         'dark_library_can_manage': False,
         'dark_library_task_active': False,
@@ -138,9 +144,12 @@ def test_builder_explains_each_library_state(
     assert 'A setting combines gain, exposure, binning and data depth.' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.21.4' in html
+    assert 'Preview 2026.08.21.7' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
-    assert 'not an absolute +5°C temperature' in html
+    assert 'masters captured from 15.0°C through 25.0°C' in html
+    assert 'The ±5°C value is a distance from this reading' in html
+    assert 'Temperature is checked separately for each gain/exposure setting' in html
+    assert 'Normal drift during capture can therefore leave only some settings' in html
     assert 'More frames reduce random noise' in html
     assert 'Starting at the maximum, adds another exposure length' in html
     if suggested_count:
@@ -189,3 +198,72 @@ def test_advanced_options_use_width_safe_two_column_layout():
     assert 'tw:lg:grid-cols-3' not in advanced
     assert 'tw:w-full tw:max-w-full tw:min-w-0' in advanced
     assert 'target cells' not in advanced
+
+
+def test_advanced_plan_validation_blocks_invalid_capture_requests():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=20,
+        stored_bpm_count=20,
+        ready_count=5,
+        suggested_count=12,
+    )
+
+    assert 'id="dark-plan-validation"' in html
+    assert 'Review the advanced plan' in html
+    assert 'Choose between 3 and 50 source frames per master.' in html
+    assert 'A selected gain is below the camera minimum.' in html
+    assert 'Dark exposure lengths must be greater than zero.' in html
+    assert 'const planIsValid = updateDarkPlanValidation(masterCount, true);' in html
+    assert '&& planIsValid' in html
+    assert 'if (!updateDarkPlanValidation(undefined, false))' in html
+    assert 'if (!updateDarkPlanValidation(undefined, true))' in html
+
+
+def test_temperature_series_summary_pluralizes_one_set():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=20,
+        stored_bpm_count=20,
+        ready_count=5,
+        suggested_count=12,
+    )
+
+    assert "const temperatureSetText = (count) => count + ' temperature set'" in html
+    assert "' across ' + temperatureSetText(temperatureSetCount)" in html
+    assert "' across ' + temperatureSetCount + ' sets'" not in html
+
+
+def test_advanced_temperature_controls_distinguish_matching_from_capture_step():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=20,
+        stored_bpm_count=20,
+        ready_count=5,
+        suggested_count=12,
+    )
+
+    assert 'id="dark-temperature-range"' in html
+    assert 'Recommend another layer beyond' in html
+    assert 'The initial 5°C value is the legacy fallback' in html
+    assert 'does not infer this preference from their spacing' in html
+    assert 'id="dark-temperature-delta"' in html
+    assert 'Temperature-series step' in html
+    assert 'It is independent of the recommendation distance above' in html
+    assert 'Starting this run saves the override as this camera' in html
+
+
+def test_stale_service_configuration_explains_why_capture_is_unavailable():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=20,
+        stored_bpm_count=20,
+        ready_count=5,
+        suggested_count=12,
+        automation_can_run=False,
+        config_requires_reload=True,
+    )
+
+    assert 'the capture service is still using an older one' in html
+    assert 'Reload the service, return here, and review the updated plan.' in html
+    assert 'No dark run can start while the two configurations differ.' in html

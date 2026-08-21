@@ -37,12 +37,20 @@ COVERAGE_STATUSES = (
 )
 
 
+DEFAULT_TEMPERATURE_RANGE = 5.0
+MIN_TEMPERATURE_RANGE = 0.1
+MAX_TEMPERATURE_RANGE = 50.0
+DARK_LIBRARY_CAMERA_DATA_KEY = 'dark_library'
+TEMPERATURE_RANGE_CAMERA_DATA_KEY = 'temperature_matching_distance'
+TEMPERATURE_STEP_CAMERA_DATA_KEY = 'temperature_series_step'
+
+
 @dataclass(frozen=True)
 class DarkQualityPolicy:
     name: str
     label: str
     gain_step_db: float
-    temperature_range: float = 5.0
+    temperature_range: float = DEFAULT_TEMPERATURE_RANGE
     frame_count: int = 10
     overhead_seconds: float = 30.0
 
@@ -52,6 +60,63 @@ QUALITY_POLICIES = {
     'balanced': DarkQualityPolicy('balanced', 'Balanced', 3.0),
     'fast': DarkQualityPolicy('fast', 'Fast', 6.0),
 }
+
+
+def validate_temperature_range(value):
+    try:
+        temperature_range = float(value)
+    except (TypeError, ValueError):
+        raise ValueError('Enter a valid temperature matching distance')
+    if (
+            not math.isfinite(temperature_range)
+            or temperature_range < MIN_TEMPERATURE_RANGE
+            or temperature_range > MAX_TEMPERATURE_RANGE
+    ):
+        raise ValueError(
+            'Choose a temperature matching distance between {0:g} and {1:g}°C.'.format(
+                MIN_TEMPERATURE_RANGE,
+                MAX_TEMPERATURE_RANGE,
+            )
+        )
+    return float(round(temperature_range, 3))
+
+
+def camera_temperature_preferences(camera):
+    camera_data = dict(getattr(camera, 'data', None) or {})
+    library_data = dict(camera_data.get(DARK_LIBRARY_CAMERA_DATA_KEY) or {})
+    try:
+        temperature_range = validate_temperature_range(
+            library_data.get(TEMPERATURE_RANGE_CAMERA_DATA_KEY),
+        )
+        range_source = 'saved_camera'
+    except ValueError:
+        temperature_range = DEFAULT_TEMPERATURE_RANGE
+        range_source = 'legacy_default'
+    try:
+        temperature_step = validate_temperature_range(
+            library_data.get(TEMPERATURE_STEP_CAMERA_DATA_KEY),
+        )
+    except ValueError:
+        temperature_step = temperature_range
+    return {
+        'temperature_range': temperature_range,
+        'temperature_step': temperature_step,
+        'range_source': range_source,
+    }
+
+
+def update_camera_temperature_preferences(camera, temperature_range, temperature_step):
+    camera_data = dict(getattr(camera, 'data', None) or {})
+    library_data = dict(camera_data.get(DARK_LIBRARY_CAMERA_DATA_KEY) or {})
+    library_data[TEMPERATURE_RANGE_CAMERA_DATA_KEY] = validate_temperature_range(
+        temperature_range,
+    )
+    library_data[TEMPERATURE_STEP_CAMERA_DATA_KEY] = validate_temperature_range(
+        temperature_step,
+    )
+    camera_data[DARK_LIBRARY_CAMERA_DATA_KEY] = library_data
+    camera.data = camera_data
+    return library_data
 
 
 @dataclass(frozen=True)
@@ -180,11 +245,21 @@ def build_dark_exposures(exposure_max, exposure_step=5.0):
     return tuple(sorted(exposures))
 
 
-def build_dark_plan(capture_state, capabilities, camera_id, quality='balanced'):
+def build_dark_plan(
+        capture_state,
+        capabilities,
+        camera_id,
+        quality='balanced',
+        temperature_range=DEFAULT_TEMPERATURE_RANGE,
+):
     try:
         quality_policy = QUALITY_POLICIES[quality]
     except KeyError:
         raise ValueError('Unknown dark quality policy: {0:s}'.format(quality))
+    quality_policy = replace(
+        quality_policy,
+        temperature_range=validate_temperature_range(temperature_range),
+    )
 
     warnings = list(capture_state.warnings)
     requested_exposures = build_dark_exposures(
@@ -656,7 +731,10 @@ def _coverage_for_frame_type(plan, target, inventory, frame_type, temperature):
 
         return FrameCoverage(COVERAGE_MISSING)
 
-    selected_frame = sorted(temperature_frames, key=_runtime_frame_order)[0]
+    selected_frame = sorted(
+        temperature_frames,
+        key=lambda frame: _runtime_frame_order(frame, temperature),
+    )[0]
     gain_delta = selected_frame.gain - target.gain
     exposure_delta = selected_frame.exposure - target.exposure
 
@@ -864,21 +942,23 @@ def _same_capture_cell(target, frame):
 def _temperature_compatible(frame, temperature, temperature_range):
     if frame.temperature is None:
         return False
-    return frame.temperature >= temperature and frame.temperature <= temperature + temperature_range
+    return abs(frame.temperature - temperature) <= temperature_range
 
 
-def _runtime_frame_order(frame):
+def _runtime_frame_order(frame, current_temperature=None):
     if frame.temperature is None:
-        temperature = float('inf')
+        temperature_distance = float('inf')
+    elif current_temperature is None:
+        temperature_distance = frame.temperature
     else:
-        temperature = frame.temperature
+        temperature_distance = abs(frame.temperature - current_temperature)
 
     if frame.create_date is None:
         create_timestamp = 0.0
     else:
         create_timestamp = frame.create_date.timestamp()
 
-    return frame.gain, frame.exposure, temperature, create_timestamp * -1
+    return frame.gain, frame.exposure, temperature_distance, create_timestamp * -1
 
 
 def _combine_statuses(*statuses):

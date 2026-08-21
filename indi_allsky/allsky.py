@@ -1531,6 +1531,15 @@ class IndiAllSky(object):
                         task.setExpired()
                         continue
 
+                    if dark_automation.reject_task_for_config_drift(
+                            task,
+                            self._config_obj.config_id,
+                    ):
+                        logger.warning(
+                            'Dark-library task requires a service reload before capture'
+                        )
+                        continue
+
                     logger.warning('Dark-library maintenance requested')
                     try:
                         capture_status = int(self._miscDb.getState('STATUS'))

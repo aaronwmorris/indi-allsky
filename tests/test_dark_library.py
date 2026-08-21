@@ -18,6 +18,9 @@ from indi_allsky.dark_library import analyze_dark_plan
 from indi_allsky.dark_library import analysis_context
 from indi_allsky.dark_library import build_dark_exposures
 from indi_allsky.dark_library import build_dark_plan
+from indi_allsky.dark_library import camera_temperature_preferences
+from indi_allsky.dark_library import update_camera_temperature_preferences
+from indi_allsky.dark_library import validate_temperature_range
 from indi_allsky.dark_automation import DarkAutomationError
 from indi_allsky.dark_automation import _log_error_summary
 from indi_allsky.dark_automation import _mark_task_capture_restored
@@ -32,6 +35,7 @@ from indi_allsky.dark_automation import estimate_execution_storage
 from indi_allsky.dark_automation import flush_camera_library
 from indi_allsky.dark_automation import normalize_execution_request
 from indi_allsky.dark_automation import recommended_stacking_method
+from indi_allsky.dark_automation import reject_task_for_config_drift
 from indi_allsky.dark_automation import select_camera_library_entries
 from indi_allsky.dark_automation import task_public_status
 from indi_allsky.dark_automation import temperature_thresholds
@@ -158,6 +162,34 @@ def test_camera_capabilities_round_trip_ccd_info_and_database_snapshot():
     )
 
     assert CameraCapabilities.from_camera(camera) == capabilities
+
+
+def test_camera_temperature_preferences_use_legacy_fallback_then_persist_override():
+    camera = SimpleNamespace(data={'camera_capabilities': {'gain': {'min': 0}}})
+
+    initial = camera_temperature_preferences(camera)
+
+    assert initial == {
+        'temperature_range': 5.0,
+        'temperature_step': 5.0,
+        'range_source': 'legacy_default',
+    }
+
+    update_camera_temperature_preferences(camera, 3.5, 2.0)
+    saved = camera_temperature_preferences(camera)
+
+    assert saved == {
+        'temperature_range': 3.5,
+        'temperature_step': 2.0,
+        'range_source': 'saved_camera',
+    }
+    assert camera.data['camera_capabilities'] == {'gain': {'min': 0}}
+
+
+@pytest.mark.parametrize('value', (None, 'invalid', 0, 50.1, float('nan')))
+def test_temperature_matching_distance_rejects_invalid_values(value):
+    with pytest.raises(ValueError, match='temperature matching distance'):
+        validate_temperature_range(value)
 
 
 def test_basic_state_uses_configured_profiles_and_camera_limits():
@@ -787,7 +819,7 @@ def test_exact_pair_is_covered_but_missing_bpm_requires_capture():
     assert missing_bpm_analysis.suggested_action == 'rebuild'
 
 
-def test_temperature_direction_matches_runtime_selection():
+def test_temperature_coverage_accepts_nearest_layer_in_either_direction():
     config = _config(EXPOSURE_MODE_BASIC, exposure_max=1)
     config['DAYTIME_CAPTURE'] = False
     config['CCD_CONFIG']['NIGHT'] = {'GAIN': 100, 'BINNING': 1}
@@ -796,9 +828,19 @@ def test_temperature_direction_matches_runtime_selection():
     plan = build_dark_plan(state, _capabilities(), camera_id=5)
     target = plan.targets[0]
 
-    analysis = analyze_dark_plan(plan, _inventory_pair(target, temperature=18), temperature=20)
+    colder_layer = analyze_dark_plan(
+        plan,
+        _inventory_pair(target, temperature=18),
+        temperature=20,
+    )
+    warmer_layer = analyze_dark_plan(
+        plan,
+        _inventory_pair(target, temperature=22),
+        temperature=20,
+    )
 
-    assert analysis.target_coverages[0].status == COVERAGE_TEMPERATURE
+    assert colder_layer.target_coverages[0].status == COVERAGE_EXACT
+    assert warmer_layer.target_coverages[0].status == COVERAGE_EXACT
 
 
 def test_warm_seasonal_library_is_covered_through_five_degree_boundary():
@@ -811,22 +853,132 @@ def test_warm_seasonal_library_is_covered_through_five_degree_boundary():
     plan = build_dark_plan(state, capabilities, camera_id=5)
     inventory = _inventory_pair(plan.targets[0], temperature=40)
 
-    boundary = analyze_dark_plan(plan, inventory, temperature=35)
+    colder_boundary = analyze_dark_plan(plan, inventory, temperature=35)
+    warmer_boundary = analyze_dark_plan(plan, inventory, temperature=45)
     colder = analyze_dark_plan(plan, inventory, temperature=34.9)
+    warmer = analyze_dark_plan(plan, inventory, temperature=45.1)
 
-    assert boundary.target_coverages[0].status == COVERAGE_EXACT
-    assert boundary.suggested_action == 'none'
+    assert colder_boundary.target_coverages[0].status == COVERAGE_EXACT
+    assert colder_boundary.suggested_action == 'none'
+    assert warmer_boundary.target_coverages[0].status == COVERAGE_EXACT
+    assert warmer_boundary.suggested_action == 'none'
     assert colder.target_coverages[0].status == COVERAGE_TEMPERATURE
     assert colder.structurally_complete is True
     assert colder.temperature_ready is False
     assert colder.suggested_action == 'temperature'
     assert colder.completion_targets == plan.targets
+    assert warmer.target_coverages[0].status == COVERAGE_TEMPERATURE
+    assert warmer.suggested_action == 'temperature'
+    assert warmer.completion_targets == plan.targets
 
     context = analysis_context(state, capabilities, colder)
     assert context['structural_status_label'] == 'Complete'
     assert context['structural_missing_target_count'] == 0
     assert context['temperature_addition_target_count'] == 1
     assert context['suggested_action_label'] == 'Library complete; add a temperature layer'
+
+
+def test_temperature_recommendation_uses_selected_matching_distance():
+    config = _config(EXPOSURE_MODE_BASIC, exposure_max=1)
+    config['DAYTIME_CAPTURE'] = False
+    config['CCD_CONFIG']['NIGHT'] = {'GAIN': 100, 'BINNING': 1}
+    config['CCD_CONFIG']['MOONMODE'] = {'GAIN': 100, 'BINNING': 1}
+    capabilities = _capabilities()
+    state = build_effective_capture_state(config, capabilities)
+    narrow_plan = build_dark_plan(
+        state,
+        capabilities,
+        camera_id=5,
+        temperature_range=4.0,
+    )
+    wide_plan = build_dark_plan(
+        state,
+        capabilities,
+        camera_id=5,
+        temperature_range=6.0,
+    )
+    inventory = _inventory_pair(narrow_plan.targets[0], temperature=40.0)
+
+    narrow = analyze_dark_plan(narrow_plan, inventory, temperature=35.0)
+    wide = analyze_dark_plan(wide_plan, inventory, temperature=35.0)
+
+    assert narrow.suggested_action == 'temperature'
+    assert wide.suggested_action == 'none'
+    assert analysis_context(state, capabilities, narrow)['temperature_range'] == 4.0
+    assert execution_preview(wide, 'complete')['temperature_range'] == 6.0
+
+
+def test_capture_temperature_drift_is_checked_per_gain_exposure_setting():
+    config = _config(EXPOSURE_MODE_BASIC, exposure_max=30)
+    config['DAYTIME_CAPTURE'] = False
+    config['CCD_CONFIG']['NIGHT'] = {'GAIN': 0, 'BINNING': 1}
+    config['CCD_CONFIG']['MOONMODE'] = {'GAIN': 0, 'BINNING': 1}
+    capabilities = _capabilities()
+    state = build_effective_capture_state(
+        config,
+        capabilities,
+        exposure_max=30,
+        exposure_step=5,
+    )
+    complete_plan = build_dark_plan(state, capabilities, camera_id=5)
+    selected_targets = tuple(
+        target for target in complete_plan.targets
+        if target.gain == 0 and target.exposure in (25, 30)
+    )
+    assert {target.exposure for target in selected_targets} == {25, 30}
+    plan = replace(
+        complete_plan,
+        exposures=(25.0, 30.0),
+        targets=selected_targets,
+    )
+    targets_by_exposure = {target.exposure: target for target in plan.targets}
+    inventory = (
+        _inventory_pair(targets_by_exposure[25.0], temperature=39.6)
+        + _inventory_pair(targets_by_exposure[30.0], temperature=40.0)
+    )
+
+    analysis = analyze_dark_plan(plan, inventory, temperature=34.8)
+    coverage_by_exposure = {
+        coverage.target.exposure: coverage.status
+        for coverage in analysis.target_coverages
+    }
+
+    assert coverage_by_exposure == {
+        25.0: COVERAGE_EXACT,
+        30.0: COVERAGE_TEMPERATURE,
+    }
+    assert analysis.structurally_complete is True
+    assert analysis.suggested_action == 'temperature'
+    assert tuple(target.exposure for target in analysis.completion_targets) == (30.0,)
+
+
+def test_temperature_recommendation_fills_gap_between_existing_layers():
+    config = _config(EXPOSURE_MODE_BASIC, exposure_max=1)
+    config['DAYTIME_CAPTURE'] = False
+    config['CCD_CONFIG']['NIGHT'] = {'GAIN': 100, 'BINNING': 1}
+    config['CCD_CONFIG']['MOONMODE'] = {'GAIN': 100, 'BINNING': 1}
+    capabilities = _capabilities()
+    state = build_effective_capture_state(config, capabilities)
+    plan = build_dark_plan(state, capabilities, camera_id=5)
+    target = plan.targets[0]
+    separated_layers = (
+        _inventory_pair(target, temperature=40.0)
+        + _inventory_pair(target, temperature=28.9)
+    )
+
+    upper_edge = analyze_dark_plan(plan, separated_layers, temperature=35.0)
+    lower_edge = analyze_dark_plan(plan, separated_layers, temperature=33.9)
+    gap = analyze_dark_plan(plan, separated_layers, temperature=34.9)
+
+    assert upper_edge.suggested_action == 'none'
+    assert lower_edge.suggested_action == 'none'
+    assert gap.suggested_action == 'temperature'
+    assert gap.completion_targets == plan.targets
+
+    bridged_layers = separated_layers + _inventory_pair(target, temperature=34.9)
+    for temperature in (33.9, 34.0, 34.5, 34.9, 35.0):
+        bridged = analyze_dark_plan(plan, bridged_layers, temperature=temperature)
+        assert bridged.suggested_action == 'none'
 
 
 def test_configured_cooling_target_takes_priority_over_latest_image_temperature():
@@ -1192,6 +1344,41 @@ def test_capture_controller_availability_is_supervisor_independent(
         expected,
 ):
     assert capture_controller_available(watchdog, status=status, now=now) is expected
+
+
+def test_config_drift_expires_capture_task_before_workers_are_touched():
+    class QueuedTask:
+        def __init__(self, config_id=12, operation=None):
+            self.data = {
+                'action': 'dark_automation',
+                'status': 'queued',
+                'config_id': config_id,
+                'operation': operation,
+                'progress': {'phase': 'queued'},
+            }
+            self.result = None
+            self.expired = False
+
+        def setExpired(self):
+            self.expired = True
+
+    current = QueuedTask()
+    stale = QueuedTask()
+    removal = QueuedTask(operation='flush')
+
+    assert reject_task_for_config_drift(current, active_config_id=12) is False
+    assert current.expired is False
+    assert reject_task_for_config_drift(removal, active_config_id=99) is False
+    assert removal.expired is False
+
+    assert reject_task_for_config_drift(stale, active_config_id=13) is True
+    assert stale.expired is True
+    assert stale.data['status'] == 'review_required'
+    assert stale.data['requires_review'] is True
+    assert stale.data['capture_restored'] is True
+    assert stale.data['progress']['phase'] == 'review_required'
+    assert 'no dark frames were taken' in stale.data['error']
+    assert stale.result == 'Reload indi-allsky before dark calibration'
 
 
 @pytest.mark.parametrize(
@@ -1678,6 +1865,29 @@ def test_refresh_retires_only_equivalent_temperature_generation():
     assert deactivate == (equivalent,)
 
 
+def test_refresh_uses_selected_temperature_distance_for_equivalent_layers():
+    new_frame = _generation_frame('new', temperature=20)
+    four_degrees_away = _generation_frame('old', active=True, temperature=24)
+
+    _activate, narrow_deactivate = activation_changes(
+        'refresh',
+        [new_frame],
+        [four_degrees_away],
+        [_activation_group()],
+        temperature_range=3.9,
+    )
+    _activate, wide_deactivate = activation_changes(
+        'refresh',
+        [new_frame],
+        [four_degrees_away],
+        [_activation_group()],
+        temperature_range=4.0,
+    )
+
+    assert narrow_deactivate == ()
+    assert wide_deactivate == (four_degrees_away,)
+
+
 def test_rebuild_retires_displayed_scope_but_preserves_unrelated_library():
     new_frame = _generation_frame('new', gain=100, exposure=5, temperature=20)
     same_scope_other_cell = _generation_frame(
@@ -1698,6 +1908,24 @@ def test_rebuild_retires_displayed_scope_but_preserves_unrelated_library():
     )
 
     assert deactivate == (same_scope_other_cell,)
+
+
+def test_rebuild_uses_symmetric_matching_around_cooled_target():
+    new_frame = _generation_frame('new', temperature=20)
+    colder = _generation_frame('old-cold', active=True, temperature=16)
+    warmer = _generation_frame('old-warm', active=True, temperature=24)
+    outside = _generation_frame('old-outside', active=True, temperature=25.1)
+    group = _activation_group(temperature=20)
+
+    _activate, deactivate = activation_changes(
+        'rebuild',
+        [new_frame],
+        [colder, warmer, outside],
+        [group],
+        temperature_range=5.0,
+    )
+
+    assert deactivate == (colder, warmer)
 
 
 def test_capability_signature_detects_material_live_camera_change():

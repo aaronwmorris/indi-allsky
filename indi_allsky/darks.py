@@ -2032,6 +2032,8 @@ class IndiAllSkyDarks(object):
             'frame_count': manifest.get('frame_count'),
             'capture_profile': manifest.get('capture_profile'),
             'capture_period': manifest.get('capture_period'),
+            'temperature_range': manifest.get('temperature_range'),
+            'temperature_delta': manifest.get('temperature_delta'),
             'temperature_set': manifest.get('temperature_set'),
             'temperature_source': manifest.get('temperature_source', TEMPERATURE_SOURCE_AUTO),
             'temperature_source_label': self._progress_temperature_source,
