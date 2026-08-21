@@ -7,10 +7,13 @@ from typing import Optional
 from typing import Tuple
 
 from .gain import CONTINUOUS_AUTO_GAIN_MODES
+from .gain import EXPOSURE_MODE_LEGACY
 from .gain import db_to_gain
 from .gain import gain_to_db
 from .capture_state import GAIN_KIND_CONTINUOUS
+from .capture_state import GAIN_KIND_DISCRETE
 from .capture_state import GAIN_KIND_NONE
+from .capture_state import CALIBRATION_MODE_ALL_EXPOSURES
 from .capture_state import CALIBRATION_MODE_EXPOSURE_PRIORITY
 from .capture_state import CALIBRATION_MODE_FIXED_EXPOSURES
 from .capture_state import binned_dimension
@@ -380,8 +383,10 @@ def analysis_context(capture_state, capabilities, analysis):
     return {
         'available': bool(analysis.plan.targets),
         'mode': capture_state.exposure_mode_label,
+        'mode_description': _camera_strategy_description(capture_state),
         'quality': analysis.plan.quality.label,
         'gain_step_db': analysis.plan.quality.gain_step_db,
+        'temperature_range': analysis.plan.quality.temperature_range,
         'continuous_gain': continuous_gain,
         'gain_policy_summary': gain_policy_summary,
         'gain_values': gain_values,
@@ -423,6 +428,74 @@ def analysis_context(capture_state, capabilities, analysis):
         'config_signature': analysis.plan.config_signature,
         'capabilities': capabilities.to_dict(),
     }
+
+
+def _camera_strategy_description(capture_state):
+    profiles = tuple(capture_state.profiles)
+    exposure_priority_profiles = tuple(
+        profile for profile in profiles
+        if profile.calibration_mode == CALIBRATION_MODE_EXPOSURE_PRIORITY
+    )
+    all_exposure_profiles = tuple(
+        profile for profile in profiles
+        if profile.calibration_mode == CALIBRATION_MODE_ALL_EXPOSURES
+    )
+    fixed_exposure_profiles = tuple(
+        profile for profile in profiles
+        if profile.calibration_mode == CALIBRATION_MODE_FIXED_EXPOSURES
+    )
+    descriptions = []
+
+    if exposure_priority_profiles:
+        gain_kinds = {profile.gain_kind for profile in exposure_priority_profiles}
+        if GAIN_KIND_CONTINUOUS in gain_kinds:
+            descriptions.append(
+                'indi-allsky first lengthens exposure at the lowest configured auto-gain. '
+                'At the maximum exposure it holds exposure steady and raises or lowers gain '
+                'to control brightness. The plan mirrors this with an exposure ladder at the '
+                'lowest gain and a spaced gain ladder at maximum exposure.'
+            )
+        elif GAIN_KIND_DISCRETE in gain_kinds:
+            if capture_state.exposure_mode == EXPOSURE_MODE_LEGACY:
+                descriptions.append(
+                    'indi-allsky first lengthens exposure at the lowest configured auto-gain. '
+                    'At the maximum exposure it holds exposure steady and moves through the '
+                    'configured legacy auto-gain levels. The plan uses the exposure ladder at '
+                    'the lowest gain and those gain levels at maximum exposure.'
+                )
+            else:
+                descriptions.append(
+                    'indi-allsky first lengthens exposure at the lowest configured auto-gain. '
+                    'At the maximum exposure it holds exposure steady and moves among the '
+                    'camera\'s reported discrete gain values. The plan uses the exposure ladder '
+                    'at the lowest gain and each reported gain at maximum exposure.'
+                )
+        else:
+            descriptions.append(
+                'This camera does not expose gain control, so indi-allsky varies exposure '
+                'only. The plan captures the exposure ladder once for each required binning '
+                'and data depth.'
+            )
+
+    if all_exposure_profiles:
+        if all(profile.gain_kind == GAIN_KIND_NONE for profile in all_exposure_profiles):
+            descriptions.append(
+                'The fixed capture profiles have no gain control, so each required exposure '
+                'is captured once per binning and data depth.'
+            )
+        else:
+            descriptions.append(
+                'Fixed capture profiles use their configured day, night and moon gains. The '
+                'plan captures every required exposure at each distinct configured gain and '
+                'captures settings shared by several profiles only once.'
+            )
+
+    if fixed_exposure_profiles:
+        descriptions.append(
+            'Enabled camera-SQM profiles are added separately at their configured fixed exposure.'
+        )
+
+    return ' '.join(descriptions)
 
 
 def _profile_gains(profile, capabilities, quality_policy, warnings):

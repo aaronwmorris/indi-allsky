@@ -426,7 +426,11 @@ def test_zwo_balanced_plan_uses_three_db_gain_steps():
     analysis = analyze_dark_plan(plan, (), temperature=20)
 
     assert state.profiles[0].gain_kind == GAIN_KIND_CONTINUOUS
-    assert analysis_context(state, capabilities, analysis)['continuous_gain'] is True
+    context = analysis_context(state, capabilities, analysis)
+    assert context['continuous_gain'] is True
+    assert 'first lengthens exposure at the lowest configured auto-gain' in context['mode_description']
+    assert 'spaced gain ladder at maximum exposure' in context['mode_description']
+    assert context['temperature_range'] == 5.0
     assert sorted(set(target.gain for target in plan.targets)) == [
         0.0,
         30.0,
@@ -602,7 +606,9 @@ def test_discrete_camera_values_are_used_instead_of_interpolated_gains():
     analysis = analyze_dark_plan(plan, (), temperature=20)
 
     assert all(profile.gain_kind == GAIN_KIND_DISCRETE for profile in state.profiles)
-    assert analysis_context(state, capabilities, analysis)['continuous_gain'] is False
+    context = analysis_context(state, capabilities, analysis)
+    assert context['continuous_gain'] is False
+    assert 'camera\'s reported discrete gain values' in context['mode_description']
     assert sorted(set(target.gain for target in plan.targets)) == [100.0, 200.0, 400.0, 800.0]
 
 
@@ -639,16 +645,43 @@ def test_discrete_auto_gain_modes_only_expand_gain_at_maximum_exposure(
     assert sorted(set(target.gain for target in plan.targets if target.exposure == 5)) == sorted(
         set(state.profiles[0].gain_values)
     )
+    description = analysis_context(
+        state,
+        capabilities,
+        analyze_dark_plan(plan, (), temperature=20),
+    )['mode_description']
+    if exposure_mode == EXPOSURE_MODE_LEGACY:
+        assert 'configured legacy auto-gain levels' in description
+    else:
+        assert 'reported discrete gain values' in description
 
 
 def test_camera_without_gain_control_uses_one_gain_state_per_binning():
     capabilities = _capabilities(gain_min=-1, gain_max=-1, gain_step=1)
     state = build_effective_capture_state(_config(EXPOSURE_MODE_DB_1_10, exposure_max=1), capabilities)
     plan = build_dark_plan(state, capabilities, camera_id=1)
+    analysis = analyze_dark_plan(plan, (), temperature=20)
 
     assert all(profile.gain_kind == GAIN_KIND_NONE for profile in state.profiles)
     assert set(target.gain for target in plan.targets) == {-1.0}
     assert len(plan.targets) == 2
+    assert 'does not expose gain control' in analysis_context(
+        state,
+        capabilities,
+        analysis,
+    )['mode_description']
+
+
+def test_fixed_gain_strategy_description_explains_profile_deduplication():
+    capabilities = _capabilities()
+    state = build_effective_capture_state(_config(EXPOSURE_MODE_BASIC, exposure_max=5), capabilities)
+    plan = build_dark_plan(state, capabilities, camera_id=1)
+    analysis = analyze_dark_plan(plan, (), temperature=20)
+
+    description = analysis_context(state, capabilities, analysis)['mode_description']
+
+    assert 'configured day, night and moon gains' in description
+    assert 'shared by several profiles only once' in description
 
 
 def test_fixed_gain_profiles_snap_to_an_explicit_camera_gain_quantum():

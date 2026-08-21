@@ -59,7 +59,11 @@ def _render_builder(
         'structural_ready_target_count': ready_count,
         'target_count': target_count,
         'mode': 'Exposure priority',
+        'mode_description': (
+            'indi-allsky lengthens exposure first, then changes gain at maximum exposure.'
+        ),
         'gain_policy_summary': 'Balanced gain spacing',
+        'temperature_range': 5.0,
         'binnings': [1],
         'bit_depths': [16],
         'temperature_ready_target_count': ready_count,
@@ -130,7 +134,11 @@ def test_builder_explains_each_library_state(
     assert 'A setting combines gain, exposure, binning and data depth.' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.21.2' in html
+    assert 'Preview 2026.08.21.3' in html
+    assert 'lengthens exposure first, then changes gain at maximum exposure' in html
+    assert 'not an absolute +5°C temperature' in html
+    assert 'More frames reduce random noise' in html
+    assert 'Starting at the maximum, adds another exposure length' in html
     if suggested_count:
         assert 'id="dark-run-instructions" class="tw:flex tw:flex-col tw:gap-4"' in html
     else:
