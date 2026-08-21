@@ -1163,7 +1163,7 @@ def _dark_library_removal_coverage(camera, config, selection):
         level = 'danger'
         message = (
             'This would add {0:d} master set{1:s} to the structural completion plan. '
-            'After removal, {2:d} of {3:d} recommended gain/exposure cells remain ready.'
+            'After removal, {2:d} of {3:d} recommended camera settings remain ready.'
         ).format(
             after_structural_missing - before_structural_missing,
             '' if after_structural_missing - before_structural_missing == 1 else 's',

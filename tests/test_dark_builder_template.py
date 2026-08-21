@@ -22,7 +22,11 @@ def _render_builder(
     ready_count,
     suggested_count,
     target_count=17,
+    temperature_ready_count=None,
 ):
+    if temperature_ready_count is None:
+        temperature_ready_count = ready_count
+
     environment = Environment(loader=DictLoader({
         'base.html': (
             '{% block title %}{% endblock %}'
@@ -66,7 +70,7 @@ def _render_builder(
         'temperature_range': 5.0,
         'binnings': [1],
         'bit_depths': [16],
-        'temperature_ready_target_count': ready_count,
+        'temperature_ready_target_count': temperature_ready_count,
         'temperature_checked': True,
         'temperature': 20,
         'temperature_status_label': 'Covered',
@@ -134,7 +138,7 @@ def test_builder_explains_each_library_state(
     assert 'A setting combines gain, exposure, binning and data depth.' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.21.3' in html
+    assert 'Preview 2026.08.21.4' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'not an absolute +5°C temperature' in html
     assert 'More frames reduce random noise' in html
@@ -143,3 +147,45 @@ def test_builder_explains_each_library_state(
         assert 'id="dark-run-instructions" class="tw:flex tw:flex-col tw:gap-4"' in html
     else:
         assert 'id="dark-run-instructions" class="tw:flex tw:flex-col tw:gap-4 tw:hidden"' in html
+
+
+def test_partial_library_separates_structural_and_temperature_coverage():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=20,
+        stored_bpm_count=20,
+        ready_count=5,
+        suggested_count=17,
+        temperature_ready_count=0,
+    )
+
+    assert (
+        'Across all stored temperature layers, compatible dark-and-map pairs cover '
+        '5 of 17 recommended camera settings.'
+    ) in html
+    assert (
+        'At the configured or current temperature, 0 of 17 are ready, so the '
+        'prepared job contains 17 new master sets for this temperature layer.'
+    ) in html
+    assert '5 of 17 settings covered across all temperatures' in html
+    assert '0 of 17 are ready at the configured or current temperature.' in html
+
+
+def test_advanced_options_use_width_safe_two_column_layout():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=20,
+        stored_bpm_count=20,
+        ready_count=5,
+        suggested_count=12,
+    )
+    advanced = html.split('id="dark-advanced-options"', 1)[1].split(
+        'id="dark-run-instructions"',
+        1,
+    )[0]
+
+    assert 'tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-3 tw:min-w-0' in advanced
+    assert 'tw:sm:grid-cols-3' not in advanced
+    assert 'tw:lg:grid-cols-3' not in advanced
+    assert 'tw:w-full tw:max-w-full tw:min-w-0' in advanced
+    assert 'target cells' not in advanced

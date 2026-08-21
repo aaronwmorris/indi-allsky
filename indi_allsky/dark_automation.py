@@ -113,7 +113,7 @@ def targets_for_strategy(analysis, strategy):
 
 
 def build_execution_groups(analysis, strategy):
-    """Turn arbitrary target cells into exact CLI rectangles.
+    """Turn arbitrary target settings into exact CLI rectangles.
 
     Completion plans can be irregular because one existing gain may cover only
     some exposure lengths.  Gains are grouped only when their exposure lists
