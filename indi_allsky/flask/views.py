@@ -1165,18 +1165,6 @@ def _prepare_dark_capture_service(view, operation='capture'):
     if _dark_capture_controller_available(view):
         return None
 
-    if view.docker:
-        if operation == 'flush':
-            return (
-                'Library removal is queued, but the capture controller is not running. '
-                'Start the capture service or container within 30 minutes.'
-            )
-        return (
-            'The plan is queued, but the capture controller is not running. '
-            'Start the capture service or container within 30 minutes; otherwise '
-            'the camera-cover confirmation will expire.'
-        )
-
     try:
         active_state, _unit_state = view.getSystemdUnitStatus(
             app.config['ALLSKY_SERVICE_NAME']
