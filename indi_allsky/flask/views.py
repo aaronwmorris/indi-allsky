@@ -5006,10 +5006,11 @@ class AjaxGalleryViewerView(BaseView):
 
     def dispatch_request(self):
         camera_id  = int(request.json['CAMERA_ID'])
-        form_year  = int(request.json.get('YEAR_SELECT', 0))
-        form_month = int(request.json.get('MONTH_SELECT', 0))
-        form_day   = int(request.json.get('DAY_SELECT', 0))
-        form_hour  = int(request.json.get('HOUR_SELECT', -1))  # 0 is a real hour
+        form_year  = int(request.json.get('YEAR_SELECT') or 0)
+        form_month = int(request.json.get('MONTH_SELECT') or 0)
+        form_day   = int(request.json.get('DAY_SELECT') or 0)
+        hour_val   = request.json.get('HOUR_SELECT')
+        form_hour  = int(hour_val) if hour_val is not None and hour_val != '' else -1
         form_filter_detections = bool(request.json.get('FILTER_DETECTIONS'))
         form_filter_asi676mc_repaired_requested = bool(request.json.get('FILTER_ASI676MC_REPAIRED'))
         form_filter_asi676mc_excluded_requested = bool(request.json.get('FILTER_ASI676MC_EXCLUDED'))

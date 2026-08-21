@@ -96,7 +96,6 @@ function init() {
     });
 
 
-    /*
     ctx_jsqm_d = $('#jsqm_d-chart')[0].getContext('2d');
     jsqm_d_chart = new Chart(ctx_jsqm_d, {
         type: "bar",
@@ -142,7 +141,6 @@ function init() {
             }
         }
     });
-    */
 
 
     ctx_stars = $('#stars-chart')[0].getContext('2d');
@@ -884,7 +882,7 @@ function loadChartData() {
 
 function drawChart() {
     jsqm_chart.data.datasets[0].data = json_data['chart_data']['jsqm'];
-    //jsqm_d_chart.data.datasets[0].data = json_data['chart_data']['jsqm_d'];
+    jsqm_d_chart.data.datasets[0].data = json_data['chart_data']['jsqm_d'];
     stars_chart.data.datasets[0].data = json_data['chart_data']['stars'];
     temp_chart.data.datasets[0].data = json_data['chart_data']['temp'];
     exposure_chart.data.datasets[0].data = json_data['chart_data']['exp'];
@@ -906,7 +904,7 @@ function drawChart() {
     histogram_chart.data.datasets[3].data = json_data['chart_data']['histogram']['gray'];
 
     jsqm_chart.update();
-    //jsqm_d_chart.update();
+    jsqm_d_chart.update();
     stars_chart.update();
     temp_chart.update();
     exposure_chart.update();
@@ -1033,6 +1031,18 @@ $( document ).ready(function() {
     <div class="allsky-charts-grid">
         
         <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
+            <canvas id="jsqm-chart" class="tw:w-full tw:h-auto"></canvas>
+        </div>
+
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
+            <canvas id="jsqm_d-chart" class="tw:w-full tw:h-auto"></canvas>
+        </div>
+
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
+            <canvas id="stars-chart" class="tw:w-full tw:h-auto"></canvas>
+        </div>
+
+        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
             <canvas id="exposure-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
 
@@ -1041,15 +1051,7 @@ $( document ).ready(function() {
         </div>
 
         <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
-            <canvas id="stars-chart" class="tw:w-full tw:h-auto"></canvas>
-        </div>
-
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
             <canvas id="temp-chart" class="tw:w-full tw:h-auto"></canvas>
-        </div>
-
-        <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">
-            <canvas id="jsqm-chart" class="tw:w-full tw:h-auto"></canvas>
         </div>
 
         <div class="tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3 tw:flex tw:items-center tw:justify-center">

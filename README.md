@@ -1,7 +1,7 @@
 # indi-allsky
 indi-allsky is software used to manage a Linux-based All Sky Camera using the INDI framework.  Theoretically, any INDI supported CCD/CMOS camera can be functional.
 
-![](./content/20210930_224951.jpg)
+![](content/20210930_224951.jpg)
 *Pictured: SpaceX Cargo Dragon (over Georgia) headed for splashdown off the coast of Florida*
 
 ## New Features
@@ -352,7 +352,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/Keogram-Rotation
 
 Below you can see perodic clouds passed over between 8-9pm and again between 4-5am.  If you look closely enough, you can see the Pleiades star cluster and the Orion constellation as it passed through the meridian in this example keogram.
 
-![](./content/keogram_example.jpg)
+![](content/keogram_example.jpg)
 
 *Note: The horizontal lines are just hot pixels that were subtracted by the dark frame.*
 
@@ -360,7 +360,7 @@ Below you can see perodic clouds passed over between 8-9pm and again between 4-5
 ## Star Trails
 Star trail images stack the stars from each frame to show their progression across the sky.
 
-![](./content/startrails_example.jpg)
+![](content/startrails_example.jpg)
 
 
 ### Star Trails Timelapse
@@ -435,30 +435,30 @@ Most views do not require authentication.  Credentials for accessing the privile
 
 
 ### Home Page
-![](./content/webui_home.png)
+<img src="content/screenshots/webui_home.png" width="800" alt="Home Page">
 
 
 ### Charts
 Early evening, the sun was still going down, but a cloud passed by, increasing the average brightness and lowering the star count.
-![](./content/webui_chart01.png)
+<img src="content/screenshots/webui_chart01.png" width="800" alt="Charts Scenario 1">
 
 A large cloud passed over significantly increasing the brightness of the sky and blocking out almost all of the stars.
-![](./content/webui_chart02.png)
+<img src="content/screenshots/webui_chart02.png" width="800" alt="Charts Scenario 2">
 
 
 ### Image viewer
 Historical images browsing.
-![](./content/webui_images.png)
+<img src="content/screenshots/webui_images.png" width="800" alt="Image Viewer">
 *Pictured: A small satellite flare.*
 
 
 ### Timelapse viewer
 Historical Star trails and Keograms.  The Keogram image is linked directly to the timelapse video for the night.
-![](./content/webui_timelapse_mono.png)
+<img src="content/screenshots/webui_timelapse_mono.png" width="800" alt="Timelapse Viewer">
 
 
 ### System Info
-![](./content/webui_systeminfo.png)
+<img src="content/screenshots/webui_systeminfo.png" width="800" alt="System Info">
 
 
 ## Database
@@ -596,13 +596,15 @@ ffmpeg video processing is considerably more expensive.  A 2 minute 1920x1080 h.
 
 indi-allsky utilizes python's multiprocessing library to enable parallelizing tasks so that image processing does not interfere with image aquisition, etc.
 
-![](./content/indi-allsky-arch.svg)
+![](content/indi-allsky-arch.svg)
 
 
 ## Configuration
 
 All configuration is read from the database.  Almost all of the configuration is managed via the web interface.
 You may use the config.py utility to manipulate the configuration from the command line.
+
+<img src="content/screenshots/webui_config.png" width="800" alt="Configuration">
 
 
 ## Tested Hardware
@@ -723,6 +725,35 @@ When testing template or CSS changes locally, compile the assets manually:
 ```bash
 npm run build
 ```
+
+### Generating Documentation Screenshots
+Screenshots for the README are rendered into `content/screenshots/` using sample seed images stored in `content/screenshots/seedImages/`.
+
+#### Step 1 (Optional): Download Seed Images from a Live Instance
+To populate or update `content/screenshots/seedImages/` with authentic media from a live `indi-allsky` instance:
+```bash
+npm run download-seeds -- --url https://your-allsky-instance.example.com
+```
+
+#### Step 2: Generate Documentation Screenshots
+To generate high-resolution README screenshots into `content/screenshots/` using the seed images:
+```bash
+npm run screenshots
+```
+*(Or specify a custom seed directory with `npm run screenshots -- --image-dir /path/to/images`)*
+
+#### Seed Images Naming Schema (`content/screenshots/seedImages/`)
+To ensure specific images are assigned to the correct UI components, name your files according to the following schema (`.jpg`, `.png`, or `.webp`):
+
+| File Pattern | Target UI Component | Description |
+|---|---|---|
+| `latest.<ext>` | Home Page | Main camera capture image displayed on the home page |
+| `gallery_01.<ext>` .. `gallery_16.<ext>` | Gallery View | Sample images used for gallery grid thumbnails and full-size views |
+| `keogram_night_01.<ext>` .. `keogram_night_05.<ext>` | Timelapse Viewer | Nighttime keogram preview thumbnails |
+| `keogram_day_01.<ext>` .. `keogram_day_05.<ext>` | Timelapse Viewer | Daytime keogram preview thumbnails |
+| `startrails_01.<ext>` .. `startrails_05.<ext>` | Timelapse Viewer | Star trails preview thumbnails |
+
+The generator populates a local test environment with multi-day keograms, star trails, and chart data, and captures high-resolution screenshots into `content/screenshots/`.
 
 
 ## Alternatives
