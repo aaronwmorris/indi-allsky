@@ -176,7 +176,7 @@ def test_builder_explains_each_library_state(
     assert 'One master set is a master dark and matching bad-pixel map' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.22.4' in html
+    assert 'Preview 2026.08.22.5' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'masters from 15.0°C to 25.0°C count as matched' in html
     assert 'Every required master set is checked separately, so capture drift may leave only some' in html
@@ -583,14 +583,53 @@ def test_recommendation_origin_and_overviews_are_explicitly_labelled():
     assert 'relevant saved day, night, moon and SQM capture profiles' in html
     assert '1 second is always included' in html
     assert 'Duplicate combinations shared by several capture profiles count only once.' in html
-    assert 'This produces 17 recommended master sets.' in html
+    assert 'id="dark-recommendation-target-count">17</span> recommended master' in html
     assert 'A stored set can fall outside today’s recommendation' in html
     assert 'after changing a capture profile, gain strategy, longest exposure or exposure interval' in html
     assert 'This does not mean the stored set is damaged' in html
     assert 'Recommended master-set overview' in html
-    assert 'This is the generated recommendation before any Advanced options are changed.' in html
+    assert 'This is the generated recommendation for the current camera and builder choices.' in html
     assert 'Recommended capture plan' in html
     assert '>Recommendation</span>' in html
+
+
+def test_recalculated_plan_updates_every_recommendation_surface():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=20,
+        stored_bpm_count=20,
+        ready_count=5,
+        suggested_count=12,
+    )
+
+    expected_targets = (
+        'dark-recommendation-title',
+        'dark-recommendation-description',
+        'dark-recommendation-badge',
+        'dark-recommendation-structural-coverage',
+        'dark-recommendation-temperature-coverage',
+        'dark-recommendation-new-count',
+        'dark-recommendation-new-note',
+        'dark-coverage-exact',
+        'dark-coverage-acceptable',
+        'dark-coverage-coarse',
+        'dark-coverage-temperature',
+        'dark-coverage-incompatible',
+        'dark-coverage-missing',
+        'dark-completion-option-description',
+        'dark-refresh-option-description',
+        'dark-rebuild-option-description',
+        'dark-recommendation-overview-body',
+    )
+    for target in expected_targets:
+        assert f'id="{target}"' in html
+
+    assert 'function renderDarkRecommendation(plan)' in html
+    assert 'const analysis = (plan || {}).analysis || {};' in html
+    assert "$('#dark-recommendation-temperature-coverage')" in html
+    assert "$('#dark-coverage-' + kind).text(Number(counts[kind]) || 0);" in html
+    assert "const overviewBody = $('#dark-recommendation-overview-body');" in html
+    assert 'renderDarkRecommendation(plan);' in html
 
 
 def test_advanced_fields_and_options_describe_user_visible_outcomes():
