@@ -31,6 +31,13 @@
 .dark-table-wrap {
     width: 100%;
     overflow-x: auto;
+    background-color: var(--color-base-100);
+    background-color: color-mix(in oklab, var(--color-base-200) 50%, var(--color-base-100));
+}
+
+.dark-table-heading {
+    background-color: var(--color-base-300);
+    background-color: color-mix(in oklab, var(--color-base-300) 60%, var(--color-base-100));
 }
 
 .dark-library-health-grid {
@@ -155,6 +162,136 @@
     min-width: 0;
 }
 
+.dark-builder-step {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
+    max-width: 100%;
+    padding: 1.25rem;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--radius-box);
+    background-color: var(--color-base-100);
+}
+
+.dark-builder-step-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.dark-builder-step-marker {
+    display: inline-flex;
+    width: 2rem;
+    height: 2rem;
+    flex: 0 0 2rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--radius-field);
+    color: var(--color-base-content);
+    background-color: var(--color-base-200);
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.dark-builder-step-marker--danger {
+    border-color: color-mix(in oklab, var(--color-error) 40%, var(--color-base-300));
+    color: var(--color-error);
+    background-color: color-mix(in oklab, var(--color-error) 10%, var(--color-base-100));
+}
+
+.dark-builder-step-heading {
+    min-width: 0;
+}
+
+.dark-builder-step-eyebrow {
+    color: color-mix(in oklab, var(--color-base-content) 50%, transparent);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.25;
+    text-transform: uppercase;
+}
+
+.dark-builder-step-title {
+    margin-top: 0.25rem;
+    color: var(--color-base-content);
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.dark-builder-step-copy {
+    max-width: 64rem;
+    margin-top: 0.25rem;
+    color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.dark-recommendation-state {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
+    padding: 1rem;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--radius-box);
+    background-color: var(--color-base-100);
+}
+
+.dark-recommendation-state-success {
+    border-color: color-mix(in oklab, var(--color-success) 38%, var(--color-base-300));
+    background-color: color-mix(in oklab, var(--color-success) 6%, var(--color-base-100));
+}
+
+.dark-recommendation-state-warning {
+    border-color: color-mix(in oklab, var(--color-warning) 38%, var(--color-base-300));
+    background-color: color-mix(in oklab, var(--color-warning) 7%, var(--color-base-100));
+}
+
+.dark-recommendation-state-info {
+    border-color: color-mix(in oklab, var(--color-info) 34%, var(--color-base-300));
+    background-color: color-mix(in oklab, var(--color-info) 6%, var(--color-base-100));
+}
+
+.dark-recommendation-summary,
+.dark-recommendation-instructions,
+.dark-library-storage-summary {
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--radius-box);
+    background-color: var(--color-base-100);
+    background-color: color-mix(in oklab, var(--color-base-100) 82%, var(--color-base-200));
+}
+
+.dark-coverage-card {
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--radius-box);
+    background-color: var(--color-base-100);
+}
+
+.dark-coverage-card--success {
+    border-color: color-mix(in oklab, var(--color-success) 28%, var(--color-base-300));
+    background-color: color-mix(in oklab, var(--color-success) 9%, var(--color-base-100));
+}
+
+.dark-coverage-card--info {
+    border-color: color-mix(in oklab, var(--color-info) 28%, var(--color-base-300));
+    background-color: color-mix(in oklab, var(--color-info) 9%, var(--color-base-100));
+}
+
+.dark-coverage-card--warning {
+    border-color: color-mix(in oklab, var(--color-warning) 30%, var(--color-base-300));
+    background-color: color-mix(in oklab, var(--color-warning) 10%, var(--color-base-100));
+}
+
+.dark-coverage-card--error {
+    border-color: color-mix(in oklab, var(--color-error) 28%, var(--color-base-300));
+    background-color: color-mix(in oklab, var(--color-error) 9%, var(--color-base-100));
+}
+
 #dark-plan-groups {
     display: flex;
     flex-direction: column;
@@ -190,6 +327,12 @@
     min-width: 0;
 }
 
+.dark-plan-groups-shell,
+.dark-library-profile {
+    background-color: var(--color-base-100);
+    background-color: color-mix(in oklab, var(--color-base-200) 42%, var(--color-base-100));
+}
+
 .dark-recommendation-summary {
     display: grid;
     grid-template-columns: 1fr;
@@ -200,16 +343,24 @@
 }
 
 #dark-library-maintenance > .dark-library-maintenance-body {
-    padding: 0 1rem 1rem;
+    padding: 0 1.25rem 1.25rem;
+}
+
+.dark-builder-maintenance-wrap {
+    min-width: 0;
+    padding-right: 1.5rem;
+    padding-left: 1.5rem;
 }
 
 #dark-library-maintenance {
     border-color: color-mix(in oklab, var(--color-error) 38%, var(--color-base-300));
-    background-color: color-mix(in oklab, var(--color-error) 6%, var(--color-base-200));
+    background-color: color-mix(in oklab, var(--color-error) 5%, var(--color-base-100));
 }
 
 #dark-library-maintenance > summary {
-    background-color: color-mix(in oklab, var(--color-error) 5%, transparent);
+    min-width: 0;
+    padding: 1.25rem 3rem 1.25rem 1.25rem;
+    background-color: transparent;
 }
 
 #dark-removal-confirmation {
@@ -297,10 +448,6 @@
         border-top: 0;
         border-left: 1px solid var(--color-base-300);
     }
-
-    #dark-library-maintenance > .dark-library-maintenance-body {
-        padding: 0 1.5rem 1.5rem;
-    }
 }
 
 @media (max-width: 639px) {
@@ -373,7 +520,10 @@
 @media (max-width: 640px) {
     #dark-page-content { padding: 0.5rem; }
     #dark-advisor-body { padding: 0.75rem; }
-    #dark-capture-controls { padding: 0.5rem; }
+    .dark-builder-step { padding: 0.75rem; }
+    .dark-builder-maintenance-wrap { padding-right: 0.75rem; padding-left: 0.75rem; }
+    #dark-library-maintenance > summary { padding: 0.75rem 2.5rem 0.75rem 0.75rem; }
+    #dark-library-maintenance > .dark-library-maintenance-body { padding: 0 0.75rem 0.75rem; }
     .dark-section-tabs { grid-template-columns: 1fr; }
     .dark-library-card .tw\:card-body { padding: 0.75rem; }
     #dark-cover-warning {
@@ -413,7 +563,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
 {% endblock %}
 
 {% block content %}
-{% set dark_builder_preview_version = '2026.08.22.6' %}
+{% set dark_builder_preview_version = '2026.08.22.7' %}
 <div id="dark-page-content" class="tw:container tw:mx-auto tw:w-full tw:px-4 tw:py-6 tw:flex tw:flex-col tw:gap-4">
 
     <nav aria-label="Dark library sections">
@@ -453,15 +603,15 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
             {% if dark_analysis.available %}
             {% set dark_library_empty = dark_analysis.stored_dark_count == 0 and dark_analysis.stored_bpm_count == 0 %}
             {% if dark_automation_can_run %}
-            <section id="dark-temperature-workflow" class="tw:border tw:border-info/40 tw:rounded-[var(--radius-box)] tw:bg-info/5 tw:p-4 tw:sm:p-5 tw:flex tw:flex-col tw:gap-4" aria-labelledby="dark-temperature-workflow-title">
-                <div class="tw:flex tw:items-start tw:gap-3">
-                    <span class="tw:badge tw:badge-info tw:badge-lg tw:font-bold tw:shrink-0">1</span>
-                    <div>
-                        <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Start here</div>
-                        <h5 id="dark-temperature-workflow-title" class="tw:font-bold tw:text-lg tw:mt-1">Set temperature matching</h5>
-                        <p class="tw:text-sm tw:text-base-content/70 tw:mt-1 tw:max-w-4xl">Choose the sensor and allowed difference before reviewing the recommendation. These choices recalculate temperature coverage, every count and the prepared capture plan throughout this page. Cooled profiles still use their configured target temperatures.</p>
+            <section id="dark-temperature-workflow" class="dark-builder-step" aria-labelledby="dark-temperature-workflow-title">
+                <header class="dark-builder-step-header">
+                    <span class="dark-builder-step-marker" aria-hidden="true">1</span>
+                    <div class="dark-builder-step-heading">
+                        <div class="dark-builder-step-eyebrow">Step 1</div>
+                        <h5 id="dark-temperature-workflow-title" class="dark-builder-step-title">Set temperature matching</h5>
+                        <p class="dark-builder-step-copy">Choose the sensor and allowed difference before reviewing the recommendation. These choices recalculate temperature coverage, every count and the prepared capture plan throughout this page. Cooled profiles still use their configured target temperatures.</p>
                     </div>
-                </div>
+                </header>
 
                 <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-3 tw:min-w-0">
                     <label class="tw:form-control tw:min-w-0">
@@ -495,13 +645,23 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
             </section>
             {% endif %}
 
-            <section id="dark-recommendation-card" data-library-empty="{{ 'true' if dark_library_empty else 'false' }}" class="tw:border {% if dark_analysis.suggested_action == 'none' %}tw:border-success/40 tw:bg-success/5{% elif dark_analysis.suggested_action == 'complete' %}tw:border-warning/40 tw:bg-warning/5{% else %}tw:border-info/40 tw:bg-info/5{% endif %} tw:rounded-[var(--radius-box)] tw:p-4 tw:sm:p-5 tw:flex tw:flex-col tw:gap-4" aria-labelledby="dark-recommendation-title" aria-live="polite">
+            <section class="dark-builder-step" aria-labelledby="dark-recommendation-step-title">
+                <header class="dark-builder-step-header">
+                    <span class="dark-builder-step-marker" aria-hidden="true">{% if dark_automation_can_run %}2{% else %}<i class="tw:icon-[lucide--file-search] tw:w-4 tw:h-4"></i>{% endif %}</span>
+                    <div class="dark-builder-step-heading">
+                        <div class="dark-builder-step-eyebrow">{% if dark_automation_can_run %}Step 2{% else %}Recommendation{% endif %}</div>
+                        <h5 id="dark-recommendation-step-title" class="dark-builder-step-title">Review the recommendation</h5>
+                        <p class="dark-builder-step-copy">This is what the builder recommends for the temperature matching above and the current camera configuration. Expand the explanation below if you want to see how the result was calculated.</p>
+                    </div>
+                </header>
+
+            <div id="dark-recommendation-card" data-library-empty="{{ 'true' if dark_library_empty else 'false' }}" class="dark-recommendation-state {% if dark_analysis.suggested_action == 'none' %}dark-recommendation-state-success{% elif dark_analysis.suggested_action == 'complete' %}dark-recommendation-state-warning{% else %}dark-recommendation-state-info{% endif %}" aria-labelledby="dark-recommendation-title" aria-live="polite">
                 <div class="tw:flex tw:flex-wrap tw:items-start tw:justify-between tw:gap-3">
                     <div class="tw:flex tw:items-start tw:gap-3 tw:min-w-0 tw:flex-1">
-                        <i id="dark-recommendation-icon" class="{% if dark_analysis.suggested_action == 'none' %}tw:icon-[lucide--circle-check-big] tw:text-success{% elif dark_analysis.suggested_action == 'temperature' %}tw:icon-[lucide--thermometer-sun] tw:text-info{% else %}tw:icon-[lucide--wand-sparkles] tw:text-info{% endif %} tw:w-6 tw:h-6 tw:mt-0.5 tw:shrink-0"></i>
+                        <i id="dark-recommendation-icon" class="{% if dark_analysis.suggested_action == 'none' %}tw:icon-[lucide--circle-check-big] tw:text-success{% elif dark_analysis.suggested_action == 'temperature' %}tw:icon-[lucide--thermometer-sun] tw:text-info{% elif dark_analysis.suggested_action == 'complete' %}tw:icon-[lucide--wand-sparkles] tw:text-warning{% else %}tw:icon-[lucide--wand-sparkles] tw:text-info{% endif %} tw:w-6 tw:h-6 tw:mt-0.5 tw:shrink-0"></i>
                         <div>
-                            <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">{% if dark_automation_can_run %}Step 2 · Recommendation{% else %}Recommendation{% endif %}</div>
-                            <h5 id="dark-recommendation-title" class="tw:text-lg tw:font-bold tw:mt-1">
+                            <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Recommended next step</div>
+                            <h5 id="dark-recommendation-title" class="tw:text-base tw:font-bold tw:mt-1">
                                 {% if dark_analysis.suggested_action == 'none' %}
                                 Your dark library is ready
                                 {% elif dark_analysis.suggested_action == 'temperature' %}
@@ -544,7 +704,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     </span>
                 </div>
 
-                <div class="dark-recommendation-summary tw:bg-base-100/70 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:overflow-hidden">
+                <div class="dark-recommendation-summary tw:overflow-hidden">
                     <div class="dark-recommendation-summary-cell tw:p-3">
                         <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Stored for this camera</div>
                         <div class="tw:font-semibold tw:mt-1">{{ dark_analysis.stored_dark_count }} dark{% if dark_analysis.stored_dark_count != 1 %}s{% endif %} + {{ dark_analysis.stored_bpm_count }} map{% if dark_analysis.stored_bpm_count != 1 %}s{% endif %}</div>
@@ -565,7 +725,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     </div>
                 </div>
 
-                <div id="dark-recommendation-instructions" class="tw:bg-base-100/70 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3{% if not dark_analysis.suggested_target_count %} tw:hidden{% endif %}">
+                <div id="dark-recommendation-instructions" class="dark-recommendation-instructions tw:p-3{% if not dark_analysis.suggested_target_count %} tw:hidden{% endif %}">
                     <div class="tw:font-semibold tw:text-sm">Before you start</div>
                     <ul class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-3 tw:gap-3 tw:mt-2 tw:text-sm">
                         <li class="tw:flex tw:gap-2"><i class="tw:icon-[lucide--circle-check] tw:w-4 tw:h-4 tw:text-info tw:mt-0.5 tw:shrink-0"></i><span>Keep the prepared plan unless you have a specific reason to use Advanced options.</span></li>
@@ -575,7 +735,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     <p class="tw:text-xs tw:text-base-content/50 tw:mt-3">One master set creates one master dark and one matching bad-pixel map from several source frames.</p>
                 </div>
                 <div id="dark-recommendation-no-action" class="tw:text-sm tw:text-base-content/70{% if dark_analysis.suggested_target_count %} tw:hidden{% endif %}">No action is required. Advanced options remain available if you deliberately want to refresh or rebuild the library.</div>
-            </section>
+            </div>
 
             <details id="dark-recommendation-details" class="tw:collapse tw:collapse-arrow tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-100">
                 <summary class="tw:collapse-title tw:text-sm tw:font-semibold tw:flex tw:flex-wrap tw:items-center tw:gap-2">
@@ -625,12 +785,12 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50 tw:mb-1">How the <span id="dark-coverage-target-count">{{ dark_analysis.target_count }}</span> recommended master sets are covered</div>
                     <div class="tw:text-xs tw:text-base-content/60 tw:mb-2">Exact and nearby-gain matches are ready. Incompatible means files exist for the same gain/exposure but cannot be used; no pair means a dark or map is absent.</div>
                     <div class="tw:grid tw:grid-cols-2 tw:sm:grid-cols-3 tw:xl:grid-cols-6 tw:gap-2">
-                        <div class="dark-coverage-card tw:bg-success/10 tw:border tw:border-success/20 tw:rounded-[var(--radius-box)] tw:p-3"><div id="dark-coverage-exact" class="tw:text-xl tw:font-bold tw:text-success">{{ dark_analysis.counts.exact }}</div><div class="tw:text-xs tw:text-base-content/60">Exact dark and map</div></div>
-                        <div class="dark-coverage-card tw:bg-info/10 tw:border tw:border-info/20 tw:rounded-[var(--radius-box)] tw:p-3"><div id="dark-coverage-acceptable" class="tw:text-xl tw:font-bold tw:text-info">{{ dark_analysis.counts.acceptable }}</div><div class="tw:text-xs tw:text-base-content/60">Nearby gain · ready</div></div>
-                        <div class="dark-coverage-card tw:bg-warning/10 tw:border tw:border-warning/20 tw:rounded-[var(--radius-box)] tw:p-3"><div id="dark-coverage-coarse" class="tw:text-xl tw:font-bold tw:text-warning">{{ dark_analysis.counts.coarse }}</div><div class="tw:text-xs tw:text-base-content/60">Gain/exposure too far</div></div>
-                        <div class="dark-coverage-card tw:bg-warning/10 tw:border tw:border-warning/20 tw:rounded-[var(--radius-box)] tw:p-3"><div id="dark-coverage-temperature" class="tw:text-xl tw:font-bold tw:text-warning">{{ dark_analysis.counts.temperature }}</div><div class="tw:text-xs tw:text-base-content/60">Outside temperature range</div></div>
-                        <div class="dark-coverage-card tw:bg-error/10 tw:border tw:border-error/20 tw:rounded-[var(--radius-box)] tw:p-3"><div id="dark-coverage-incompatible" class="tw:text-xl tw:font-bold tw:text-error">{{ dark_analysis.counts.incompatible }}</div><div class="tw:text-xs tw:text-base-content/60">Incompatible files</div></div>
-                        <div class="dark-coverage-card tw:bg-error/10 tw:border tw:border-error/20 tw:rounded-[var(--radius-box)] tw:p-3"><div id="dark-coverage-missing" class="tw:text-xl tw:font-bold tw:text-error">{{ dark_analysis.counts.missing }}</div><div class="tw:text-xs tw:text-base-content/60">No dark/map pair</div></div>
+                        <div class="dark-coverage-card dark-coverage-card--success tw:p-3"><div id="dark-coverage-exact" class="tw:text-xl tw:font-bold tw:text-success">{{ dark_analysis.counts.exact }}</div><div class="tw:text-xs tw:text-base-content/60">Exact dark and map</div></div>
+                        <div class="dark-coverage-card dark-coverage-card--info tw:p-3"><div id="dark-coverage-acceptable" class="tw:text-xl tw:font-bold tw:text-info">{{ dark_analysis.counts.acceptable }}</div><div class="tw:text-xs tw:text-base-content/60">Nearby gain · ready</div></div>
+                        <div class="dark-coverage-card dark-coverage-card--warning tw:p-3"><div id="dark-coverage-coarse" class="tw:text-xl tw:font-bold tw:text-warning">{{ dark_analysis.counts.coarse }}</div><div class="tw:text-xs tw:text-base-content/60">Gain/exposure too far</div></div>
+                        <div class="dark-coverage-card dark-coverage-card--warning tw:p-3"><div id="dark-coverage-temperature" class="tw:text-xl tw:font-bold tw:text-warning">{{ dark_analysis.counts.temperature }}</div><div class="tw:text-xs tw:text-base-content/60">Outside temperature range</div></div>
+                        <div class="dark-coverage-card dark-coverage-card--error tw:p-3"><div id="dark-coverage-incompatible" class="tw:text-xl tw:font-bold tw:text-error">{{ dark_analysis.counts.incompatible }}</div><div class="tw:text-xs tw:text-base-content/60">Incompatible files</div></div>
+                        <div class="dark-coverage-card dark-coverage-card--error tw:p-3"><div id="dark-coverage-missing" class="tw:text-xl tw:font-bold tw:text-error">{{ dark_analysis.counts.missing }}</div><div class="tw:text-xs tw:text-base-content/60">No dark/map pair</div></div>
                     </div>
                 </div>
                 <div>
@@ -677,7 +837,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
             <div class="tw:overflow-x-auto tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]" aria-label="Recommended master-set overview">
                 <table class="tw:table tw:table-sm tw:w-full tw:m-0">
                     <thead>
-                        <tr class="tw:bg-base-300/60 tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60">
+                        <tr class="dark-table-heading tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60">
                             <th>Profile</th>
                             <th>Bin</th>
                             <th>Bits</th>
@@ -708,20 +868,19 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
             </div>
                 </div>
             </details>
+            </section>
 
             {% if dark_automation_can_run %}
-            <div id="dark-capture-controls" class="tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-100 tw:p-4 tw:flex tw:flex-col tw:gap-4">
+            <section id="dark-capture-controls" class="dark-builder-step" aria-labelledby="dark-capture-controls-title">
                 <div class="tw:flex tw:flex-wrap tw:items-start tw:justify-between tw:gap-3">
-                    <div class="tw:flex tw:items-start tw:gap-3">
-                        <span class="tw:badge tw:badge-primary tw:badge-lg tw:font-bold tw:shrink-0">3</span>
-                        <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-2">
-                            <div>
-                                <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Prepared run</div>
-                                <h5 class="tw:font-bold tw:text-lg tw:mt-1">Review the capture plan</h5>
-                                <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">This plan follows the recommendation above. Leave Advanced options closed unless you deliberately need a different result.</p>
-                            </div>
+                    <header class="dark-builder-step-header">
+                        <span class="dark-builder-step-marker" aria-hidden="true">3</span>
+                        <div class="dark-builder-step-heading">
+                            <div class="dark-builder-step-eyebrow">Step 3</div>
+                            <h5 id="dark-capture-controls-title" class="dark-builder-step-title">Review the capture plan</h5>
+                            <p class="dark-builder-step-copy">This plan follows the recommendation above. Leave Advanced options closed unless you deliberately need a different result.</p>
                         </div>
-                    </div>
+                    </header>
                     <span id="dark-plan-refresh-status" class="tw:badge tw:badge-ghost tw:hidden" role="status" aria-live="polite">
                         <span class="tw:loading tw:loading-spinner tw:loading-xs"></span>
                         Updating plan
@@ -865,7 +1024,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                             Each checked row comes from a configured day, night, moon or SQM profile. Binning must match the images being calibrated. Gains use the camera's own units; exposures use seconds. Comma-separated lists capture every gain/exposure combination.
                         </p>
 
-                        <div class="tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/30">
+                        <div class="dark-plan-groups-shell tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]">
                             <div id="dark-plan-groups" role="list" aria-label="Capture groups"></div>
                         </div>
 
@@ -911,7 +1070,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     </div>
                 </div>
                 <div id="dark-action-error" class="tw:alert tw:alert-error tw:hidden"></div>
-            </div>
+            </section>
 
             <div id="dark-progress-panel" class="tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-100 tw:p-4 tw:flex tw:flex-col tw:gap-4 tw:hidden">
                 <div class="tw:flex tw:flex-wrap tw:items-start tw:justify-between tw:gap-3">
@@ -982,12 +1141,19 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
     </div>
 
     {% if dark_library_can_manage %}
-    <details id="dark-library-maintenance" class="tw:collapse tw:collapse-arrow tw:border tw:border-base-300 tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:shadow-sm">
-        <summary class="tw:collapse-title tw:pr-10">
-            <span class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:text-sm tw:font-semibold">
-                <i class="tw:icon-[lucide--trash-2] tw:w-4 tw:h-4 tw:text-error tw:shrink-0"></i>
-                <span>Library maintenance</span>
-                <span class="tw:badge tw:badge-error tw:badge-outline tw:badge-sm">Activation and deletion</span>
+    <div class="dark-builder-maintenance-wrap">
+    <details id="dark-library-maintenance" class="tw:collapse tw:collapse-arrow tw:border tw:rounded-[var(--radius-box)]">
+        <summary class="tw:collapse-title">
+            <span class="dark-builder-step-header">
+                <span class="dark-builder-step-marker dark-builder-step-marker--danger" aria-hidden="true"><i class="tw:icon-[lucide--library] tw:w-4 tw:h-4"></i></span>
+                <span class="dark-builder-step-heading">
+                    <span class="dark-builder-step-eyebrow">Library tools</span>
+                    <span class="dark-builder-step-title tw:flex tw:flex-wrap tw:items-center tw:gap-2">
+                        <span>Library maintenance</span>
+                        <span class="tw:badge tw:badge-error tw:badge-outline tw:badge-sm">Activation and deletion</span>
+                    </span>
+                    <span class="dark-builder-step-copy tw:block">Manage stored master sets after reviewing the guided recommendation above. Deactivation is reversible; deletion is permanent.</span>
+                </span>
             </span>
         </summary>
         <div class="dark-library-maintenance-body tw:collapse-content tw:flex tw:flex-col tw:gap-4">
@@ -999,7 +1165,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 </div>
             </div>
 
-            <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-3 tw:bg-base-100/70 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3">
+            <div class="dark-library-storage-summary tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-3 tw:p-3">
                 <div>
                     <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Stored calibration files</div>
                     <div class="tw:font-semibold tw:text-sm tw:mt-1">{{ dark_library_catalog.camera_count }} camera librar{% if dark_library_catalog.camera_count == 1 %}y{% else %}ies{% endif %} · {{ dark_library_catalog.entry_count }} files</div>
@@ -1082,7 +1248,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                         </div>
 
                         {% for profile in library.profiles %}
-                        <section class="dark-library-profile tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/40 tw:overflow-hidden">
+                        <section class="dark-library-profile tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:overflow-hidden">
                             <div class="dark-library-scope-row tw:p-4">
                                 <div class="dark-library-scope-copy">
                                     <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Sensor profile</div>
@@ -1219,6 +1385,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
             </div>
         </div>
     </details>
+    </div>
     {% endif %}
     </div>
 
@@ -1268,10 +1435,10 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                         <button type="button" class="dark-library-clear-filter tw:btn tw:btn-xs tw:btn-info tw:btn-outline" data-table-id="darks-table">Show all entries</button>
                     </div>
 
-                    <div class="dark-table-wrap tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
+                    <div class="dark-table-wrap tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]">
                         <table id="darks-table" class="tw:table tw:table-zebra tw:table-xs tw:w-full tw:m-0">
                             <thead>
-                                <tr class="tw:bg-base-300/60 tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
+                                <tr class="dark-table-heading tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
                                     <th class="dark-col-id tw:pl-4 tw:py-3">ID</th>
                                     <th class="dark-col-date tw:py-3">Date</th>
                                     <th class="tw:py-3">Active</th>
@@ -1403,10 +1570,10 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                         <button type="button" class="dark-library-clear-filter tw:btn tw:btn-xs tw:btn-info tw:btn-outline" data-table-id="bpm-table">Show all entries</button>
                     </div>
 
-                    <div class="dark-table-wrap tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/50">
+                    <div class="dark-table-wrap tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]">
                         <table id="bpm-table" class="tw:table tw:table-zebra tw:table-xs tw:w-full tw:m-0">
                             <thead>
-                                <tr class="tw:bg-base-300/60 tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
+                                <tr class="dark-table-heading tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60 tw:border-b tw:border-base-300">
                                     <th class="dark-col-id tw:pl-4 tw:py-3">ID</th>
                                     <th class="dark-col-date tw:py-3">Date</th>
                                     <th class="tw:py-3">Active</th>
@@ -2137,19 +2304,19 @@ function renderDarkRecommendation(plan) {
     const card = $('#dark-recommendation-card');
     const icon = $('#dark-recommendation-icon');
     const badge = $('#dark-recommendation-badge');
-    card.removeClass('tw:border-success/40 tw:bg-success/5 tw:border-warning/40 tw:bg-warning/5 tw:border-info/40 tw:bg-info/5');
-    icon.removeClass('tw:icon-[lucide--circle-check-big] tw:icon-[lucide--thermometer-sun] tw:icon-[lucide--wand-sparkles] tw:text-success tw:text-info');
+    card.removeClass('dark-recommendation-state-success dark-recommendation-state-warning dark-recommendation-state-info');
+    icon.removeClass('tw:icon-[lucide--circle-check-big] tw:icon-[lucide--thermometer-sun] tw:icon-[lucide--wand-sparkles] tw:text-success tw:text-warning tw:text-info');
     badge.removeClass('tw:badge-success tw:badge-warning tw:badge-info');
     if (action === 'none') {
-        card.addClass('tw:border-success/40 tw:bg-success/5');
+        card.addClass('dark-recommendation-state-success');
         icon.addClass('tw:icon-[lucide--circle-check-big] tw:text-success');
         badge.addClass('tw:badge-success');
     } else if (action === 'complete') {
-        card.addClass('tw:border-warning/40 tw:bg-warning/5');
-        icon.addClass('tw:icon-[lucide--wand-sparkles] tw:text-info');
+        card.addClass('dark-recommendation-state-warning');
+        icon.addClass('tw:icon-[lucide--wand-sparkles] tw:text-warning');
         badge.addClass('tw:badge-warning');
     } else {
-        card.addClass('tw:border-info/40 tw:bg-info/5');
+        card.addClass('dark-recommendation-state-info');
         icon.addClass(action === 'temperature'
             ? 'tw:icon-[lucide--thermometer-sun] tw:text-info'
             : 'tw:icon-[lucide--wand-sparkles] tw:text-info');

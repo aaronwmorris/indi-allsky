@@ -176,7 +176,7 @@ def test_builder_explains_each_library_state(
     assert 'One master set is a master dark and matching bad-pixel map' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.22.6' in html
+    assert 'Preview 2026.08.22.7' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'masters from 15.0°C to 25.0°C count as matched' in html
     assert 'Every required master set is checked separately, so capture drift may leave only some' in html
@@ -491,7 +491,9 @@ def test_library_removal_explains_temperature_groups_and_master_status():
         'id="dark-removal-confirmation"',
         1,
     )[0]
-    assert 'tw:border-base-300 tw:bg-base-200' in maintenance
+    assert 'dark-builder-step-header' in maintenance
+    assert 'dark-builder-step-marker dark-builder-step-marker--danger' in maintenance
+    assert 'Library tools' in maintenance
     assert 'dark-library-maintenance-body' in maintenance
     assert 'Stored calibration files' in maintenance
     assert 'Storage used' in maintenance
@@ -512,7 +514,7 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert '.dark-library-scope-row {' in html
     assert 'grid-template-columns: minmax(0, 1fr) minmax(13rem, 16rem);' in html
     assert '#dark-library-maintenance > .dark-library-maintenance-body' in html
-    assert 'background-color: color-mix(in oklab, var(--color-error) 6%, var(--color-base-200));' in html
+    assert 'background-color: color-mix(in oklab, var(--color-error) 5%, var(--color-base-100));' in html
     assert 'border-color: color-mix(in oklab, var(--color-error) 38%, var(--color-base-300));' in html
     assert 'background-color: color-mix(in oklab, var(--color-warning) 12%, var(--color-base-100));' in html
     assert 'id="dark-removal-confirmation-input" class="tw:input tw:input-bordered tw:input-error' in html
@@ -589,7 +591,8 @@ def test_recommendation_origin_and_overviews_are_explicitly_labelled():
     assert 'This does not mean the stored set is damaged' in html
     assert 'Recommended master-set overview' in html
     assert 'This is the generated recommendation for the current camera and builder choices.' in html
-    assert 'Step 2 · Recommendation' in html
+    assert 'id="dark-recommendation-step-title" class="dark-builder-step-title">Review the recommendation' in html
+    assert 'Recommended next step' in html
     assert 'Review the capture plan' in html
 
 
@@ -630,6 +633,56 @@ def test_recalculated_plan_updates_every_recommendation_surface():
     assert "$('#dark-coverage-' + kind).text(Number(counts[kind]) || 0);" in html
     assert "const overviewBody = $('#dark-recommendation-overview-body');" in html
     assert 'renderDarkRecommendation(plan);' in html
+
+
+def test_guided_steps_and_maintenance_share_a_theme_aware_visual_system():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=20,
+        stored_bpm_count=20,
+        ready_count=5,
+        suggested_count=12,
+        library_can_manage=True,
+    )
+
+    assert html.count('class="dark-builder-step"') == 3
+    assert html.count('dark-builder-step-header') >= 4
+    assert html.count('dark-builder-step-marker') >= 4
+    assert 'class="dark-builder-step-eyebrow">Step 1' in html
+    assert 'class="dark-builder-step-eyebrow">Step 2' in html
+    assert 'class="dark-builder-step-eyebrow">Step 3' in html
+    assert 'Set temperature matching' in html
+    assert 'Review the recommendation' in html
+    assert 'Review the capture plan' in html
+
+    step_two = html.split('aria-labelledby="dark-recommendation-step-title"', 1)[1].split(
+        'id="dark-capture-controls"',
+        1,
+    )[0]
+    assert 'id="dark-recommendation-card"' in step_two
+    assert 'id="dark-recommendation-details"' in step_two
+    assert step_two.index('id="dark-recommendation-card"') \
+        < step_two.index('id="dark-recommendation-details"')
+
+    assert 'background-color: var(--color-base-100);' in html
+    assert 'color-mix(in oklab, var(--color-success)' in html
+    assert 'color-mix(in oklab, var(--color-warning)' in html
+    assert 'color-mix(in oklab, var(--color-info)' in html
+    assert 'color-mix(in oklab, var(--color-error)' in html
+    assert 'dark-recommendation-state-success' in html
+    assert 'dark-recommendation-state-warning' in html
+    assert 'dark-recommendation-state-info' in html
+    assert 'dark-coverage-card--success' in html
+    assert 'dark-coverage-card--info' in html
+    assert 'dark-coverage-card--warning' in html
+    assert 'dark-coverage-card--error' in html
+    assert 'dark-library-storage-summary' in html
+    assert 'dark-plan-groups-shell' in html
+    assert 'dark-table-heading' in html
+    assert 'tw:bg-success/' not in html
+    assert 'tw:bg-warning/' not in html
+    assert 'tw:bg-info/' not in html
+    assert 'tw:bg-error/' not in html
 
 
 def test_advanced_fields_and_options_describe_user_visible_outcomes():
@@ -727,7 +780,7 @@ def test_primary_temperature_matching_and_advanced_series_are_separated():
     )[0]
 
     assert 'id="dark-temperature-range"' in workflow
-    assert 'Start here' in workflow
+    assert 'class="dark-builder-step-eyebrow">Step 1' in workflow
     assert 'Set temperature matching' in workflow
     assert 'These choices recalculate temperature coverage, every count and the prepared capture plan throughout this page.' in workflow
     assert 'Allowed temperature difference' in workflow
