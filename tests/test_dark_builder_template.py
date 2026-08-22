@@ -176,7 +176,7 @@ def test_builder_explains_each_library_state(
     assert 'One master set is a master dark and matching bad-pixel map' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.22.2' in html
+    assert 'Preview 2026.08.22.4' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'masters from 15.0°C to 25.0°C count as matched' in html
     assert 'Every required master set is checked separately, so capture drift may leave only some' in html
@@ -553,16 +553,44 @@ def test_library_update_choices_have_distinct_capture_and_retirement_outcomes():
 
     assert 'Library update' in html
     assert '>Fill gaps only</option>' in html
-    assert '>Refresh all recommended master sets</option>' in html
-    assert '>Rebuild selected profiles</option>' in html
+    assert '>Refresh recommended master sets only</option>' in html
+    assert '>Rebuild and clean selected profiles</option>' in html
     assert '>Edit capture groups manually</option>' in html
     assert (
         "complete: 'Capture only uncovered master sets. Existing masters keep their active/inactive status.'"
     ) in html
-    assert 'same gain/exposure combination and temperature range' in html
-    assert 'including master sets no longer recommended' in html
+    assert 'deactivate only older copies of those same gain/exposure combinations' in html
+    assert 'including gains or exposures no longer recommended' in html
+    assert 'Under Advanced options, choose <strong>Edit capture groups manually</strong>' in html
+    assert 'to change which rows, gains or exposures will be captured' in html
+    assert 'Refresh and Rebuild both capture 17 master sets' in html
+    assert 'Refresh replaces only those recommended sets' in html
+    assert 'Rebuild also deactivates older extras' in html
     assert 'Inactive masters stay stored but are not used for calibration.' in html
     assert 'setting' not in html.lower()
+
+
+def test_recommendation_origin_and_overviews_are_explicitly_labelled():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=20,
+        stored_bpm_count=20,
+        ready_count=5,
+        suggested_count=12,
+    )
+
+    assert 'How the recommended grid is built' in html
+    assert 'relevant saved day, night, moon and SQM capture profiles' in html
+    assert '1 second is always included' in html
+    assert 'Duplicate combinations shared by several capture profiles count only once.' in html
+    assert 'This produces 17 recommended master sets.' in html
+    assert 'A stored set can fall outside today’s recommendation' in html
+    assert 'after changing a capture profile, gain strategy, longest exposure or exposure interval' in html
+    assert 'This does not mean the stored set is damaged' in html
+    assert 'Recommended master-set overview' in html
+    assert 'This is the generated recommendation before any Advanced options are changed.' in html
+    assert 'Recommended capture plan' in html
+    assert '>Recommendation</span>' in html
 
 
 def test_advanced_fields_and_options_describe_user_visible_outcomes():
