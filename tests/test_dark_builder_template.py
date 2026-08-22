@@ -72,7 +72,7 @@ def _render_builder(
         'csrf_token': lambda: 'test-token',
     })
     preview = {
-        'strategy': 'complete',
+        'strategy': action if action in ('complete', 'rebuild') else 'complete',
         'capture_mode': 'single',
         'estimated_time': '1h 00m 00s',
         'estimated_library_storage': '500 MiB',
@@ -149,11 +149,11 @@ def _render_builder(
 @pytest.mark.parametrize(
     'action, stored_dark_count, stored_bpm_count, ready_count, suggested_count, title',
     (
-        ('rebuild', 0, 0, 0, 17, 'Build your first dark library'),
-        ('complete', 20, 20, 5, 12, 'Add the missing master darks and maps'),
-        ('temperature', 20, 20, 17, 17, 'Your library is complete'),
-        ('none', 20, 20, 17, 0, 'Your dark library is ready'),
-        ('rebuild', 20, 0, 0, 17, 'Build a compatible dark library'),
+        ('rebuild', 0, 0, 0, 17, 'Build or rebuild selected profiles'),
+        ('complete', 20, 20, 5, 12, 'Fill gaps only'),
+        ('temperature', 20, 20, 17, 17, 'Fill gaps only'),
+        ('none', 20, 20, 17, 0, 'No library update needed'),
+        ('rebuild', 20, 0, 0, 17, 'Build or rebuild selected profiles'),
     ),
 )
 def test_builder_explains_each_library_state(
@@ -176,7 +176,7 @@ def test_builder_explains_each_library_state(
     assert 'One master set is a master dark and matching bad-pixel map' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.22.7' in html
+    assert 'Preview 2026.08.22.8' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'masters from 15.0°C to 25.0°C count as matched' in html
     assert 'Every required master set is checked separately, so capture drift may leave only some' in html
@@ -186,6 +186,54 @@ def test_builder_explains_each_library_state(
         assert 'id="dark-run-instructions" class="tw:flex tw:flex-col tw:gap-4"' in html
     else:
         assert 'id="dark-run-instructions" class="tw:flex tw:flex-col tw:gap-4 tw:hidden"' in html
+
+
+@pytest.mark.parametrize(
+    'action, ready_count, suggested_count, title, recommended_option',
+    (
+        ('complete', 5, 12, 'Fill gaps only', 'dark-completion-option'),
+        ('temperature', 17, 17, 'Fill gaps only', 'dark-completion-option'),
+        ('rebuild', 0, 17, 'Build or rebuild selected profiles', 'dark-rebuild-option'),
+        ('none', 17, 0, 'No library update needed', None),
+    ),
+)
+def test_recommended_library_update_uses_the_same_name_everywhere(
+    action,
+    ready_count,
+    suggested_count,
+    title,
+    recommended_option,
+):
+    html = _render_builder(
+        action,
+        stored_dark_count=20,
+        stored_bpm_count=20,
+        ready_count=ready_count,
+        suggested_count=suggested_count,
+    )
+    recommendation = html.split('id="dark-recommendation-card"', 1)[1].split(
+        'id="dark-recommendation-explanation"',
+        1,
+    )[0]
+    update_choices = html.split('Library update choices', 1)[1].split(
+        'id="dark-planning-warnings"',
+        1,
+    )[0]
+
+    title_markup = recommendation.split('id="dark-recommendation-title"', 1)[1].split(
+        '</h5>',
+        1,
+    )[0]
+    strategy_options = html.split('id="dark-strategy"', 1)[1].split('</select>', 1)[0]
+    assert title in title_markup
+    if recommended_option:
+        assert f'id="{recommended_option}" class="dark-update-option dark-update-option--recommended' in update_choices
+        assert f'{title} · recommended</option>' in strategy_options
+        assert 'The choice made by the recommendation above is highlighted.' in update_choices
+    else:
+        assert 'dark-update-option--recommended' not in update_choices
+        assert ' · recommended</option>' not in strategy_options
+        assert 'No option is highlighted because no library update is recommended.' in update_choices
 
 
 def test_library_tabs_show_health_pairing_compatibility_and_temperature_range():
@@ -479,7 +527,7 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert 'Delete temperature layer…' not in html
 
     recommendation = html.split('aria-labelledby="dark-recommendation-title"', 1)[1].split(
-        'id="dark-recommendation-details"',
+        'id="dark-recommendation-explanation"',
         1,
     )[0]
     assert 'dark-recommendation-summary' in recommendation
@@ -554,9 +602,9 @@ def test_library_update_choices_have_distinct_capture_and_retirement_outcomes():
     )
 
     assert 'Library update' in html
-    assert '>Fill gaps only</option>' in html
+    assert '>Fill gaps only · recommended</option>' in html
     assert '>Refresh recommended master sets only</option>' in html
-    assert '>Rebuild and clean selected profiles</option>' in html
+    assert '>Build or rebuild selected profiles</option>' in html
     assert '>Edit capture groups manually</option>' in html
     assert (
         "complete: 'Capture only uncovered master sets. Existing masters keep their active/inactive status.'"
@@ -565,11 +613,13 @@ def test_library_update_choices_have_distinct_capture_and_retirement_outcomes():
     assert 'including gains or exposures no longer recommended' in html
     assert 'Under Advanced options, choose <strong>Edit capture groups manually</strong>' in html
     assert 'to change which rows, gains or exposures will be captured' in html
-    assert 'Refresh and Rebuild both capture 17 master sets' in html
+    assert 'Advanced options → Library update' in html
+    assert 'id="dark-completion-option" class="dark-update-option dark-update-option--recommended' in html
+    assert 'id="dark-completion-option-badge" class="tw:badge tw:badge-primary tw:badge-sm">Recommended' in html
+    assert 'Refresh recommended master sets only</strong> and <strong>Build or rebuild selected profiles</strong> both capture 17 master sets' in html
     assert 'Refresh replaces only those recommended sets' in html
-    assert 'Rebuild also deactivates older extras' in html
+    assert 'Build or rebuild also deactivates older extras' in html
     assert 'Inactive masters stay stored but are not used for calibration.' in html
-    assert 'setting' not in html.lower()
 
 
 def test_recommendation_origin_and_overviews_are_explicitly_labelled():
@@ -582,7 +632,13 @@ def test_recommendation_origin_and_overviews_are_explicitly_labelled():
     )
 
     assert 'How the recommended grid is built' in html
-    assert 'relevant saved day, night, moon and SQM capture profiles' in html
+    assert 'Where the inputs come from' in html
+    assert 'Saved configuration' in html
+    assert 'Supplies the enabled day, night, moon and SQM capture profiles' in html
+    assert 'Camera-reported limits' in html
+    assert 'Builder choices' in html
+    assert 'On page load, this comes from the saved <strong>Maximum exposure</strong> value' in html
+    assert 'Exposure interval is a builder choice, not a saved camera setting.' in html
     assert '1 second is always included' in html
     assert 'Duplicate combinations shared by several capture profiles count only once.' in html
     assert 'id="dark-recommendation-target-count">17</span> recommended master' in html
@@ -592,7 +648,7 @@ def test_recommendation_origin_and_overviews_are_explicitly_labelled():
     assert 'Recommended master-set overview' in html
     assert 'This is the generated recommendation for the current camera and builder choices.' in html
     assert 'id="dark-recommendation-step-title" class="dark-builder-step-title">Review the recommendation' in html
-    assert 'Recommended next step' in html
+    assert 'Recommended library update' in html
     assert 'Review the capture plan' in html
 
 
@@ -622,6 +678,7 @@ def test_recalculated_plan_updates_every_recommendation_surface():
         'dark-completion-option-description',
         'dark-refresh-option-description',
         'dark-rebuild-option-description',
+        'dark-update-choice-state',
         'dark-recommendation-overview-body',
     )
     for target in expected_targets:
@@ -660,9 +717,10 @@ def test_guided_steps_and_maintenance_share_a_theme_aware_visual_system():
         1,
     )[0]
     assert 'id="dark-recommendation-card"' in step_two
-    assert 'id="dark-recommendation-details"' in step_two
+    assert 'id="dark-recommendation-explanation"' in step_two
     assert step_two.index('id="dark-recommendation-card"') \
-        < step_two.index('id="dark-recommendation-details"')
+        < step_two.index('id="dark-recommendation-explanation"')
+    assert 'id="dark-recommendation-details"' not in html
 
     assert 'background-color: var(--color-base-100);' in html
     assert 'color-mix(in oklab, var(--color-success)' in html
@@ -709,7 +767,7 @@ def test_advanced_fields_and_options_describe_user_visible_outcomes():
         'Exposure interval',
         'Exposure order',
         'Longest first · recommended',
-        'Reset capture groups',
+        'Restore recommended capture groups',
         'Bad-pixel detection range',
         'Use image depth · automatic',
     )
@@ -782,7 +840,7 @@ def test_primary_temperature_matching_and_advanced_series_are_separated():
     assert 'id="dark-temperature-range"' in workflow
     assert 'class="dark-builder-step-eyebrow">Step 1' in workflow
     assert 'Set temperature matching' in workflow
-    assert 'These choices recalculate temperature coverage, every count and the prepared capture plan throughout this page.' in workflow
+    assert 'These choices recalculate temperature coverage, the recommendation and the prepared capture plan throughout this page.' in workflow
     assert 'Allowed temperature difference' in workflow
     assert 'A larger value accepts temperatures farther away' in workflow
     assert 'saved for this camera only when a run starts' in workflow
@@ -817,7 +875,7 @@ def test_primary_temperature_matching_and_advanced_series_are_separated():
 
     temperature_position = html.index('id="dark-temperature-workflow"')
     recommendation_position = html.index('id="dark-recommendation-card"')
-    explanation_position = html.index('id="dark-recommendation-details"')
+    explanation_position = html.index('id="dark-recommendation-explanation"')
     capture_position = html.index('id="dark-capture-controls"')
     advanced_position = html.index('id="dark-advanced-options"')
     assert temperature_position < recommendation_position
