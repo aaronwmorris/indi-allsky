@@ -176,7 +176,7 @@ def test_builder_explains_each_library_state(
     assert 'One master set is a master dark and matching bad-pixel map' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.22.5' in html
+    assert 'Preview 2026.08.22.6' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'masters from 15.0°C to 25.0°C count as matched' in html
     assert 'Every required master set is checked separately, so capture drift may leave only some' in html
@@ -389,7 +389,7 @@ def test_capture_groups_reflow_as_cards_instead_of_squeezing_table_columns():
 
     assert 'id="dark-plan-groups" role="list" aria-label="Capture groups"' in advanced
     assert '<table' not in advanced
-    assert 'grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));' in html
+    assert 'grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));' in html
     assert '<section class="dark-plan-row ' in html
     assert 'class="dark-plan-row-fields"' in html
     assert 'Image output and temperature target' in html
@@ -589,8 +589,8 @@ def test_recommendation_origin_and_overviews_are_explicitly_labelled():
     assert 'This does not mean the stored set is damaged' in html
     assert 'Recommended master-set overview' in html
     assert 'This is the generated recommendation for the current camera and builder choices.' in html
-    assert 'Recommended capture plan' in html
-    assert '>Recommendation</span>' in html
+    assert 'Step 2 · Recommendation' in html
+    assert 'Review the capture plan' in html
 
 
 def test_recalculated_plan_updates_every_recommendation_surface():
@@ -727,6 +727,9 @@ def test_primary_temperature_matching_and_advanced_series_are_separated():
     )[0]
 
     assert 'id="dark-temperature-range"' in workflow
+    assert 'Start here' in workflow
+    assert 'Set temperature matching' in workflow
+    assert 'These choices recalculate temperature coverage, every count and the prepared capture plan throughout this page.' in workflow
     assert 'Allowed temperature difference' in workflow
     assert 'A larger value accepts temperatures farther away' in workflow
     assert 'saved for this camera only when a run starts' in workflow
@@ -758,6 +761,16 @@ def test_primary_temperature_matching_and_advanced_series_are_separated():
     assert "$('#dark-temperature-policy-control').toggleClass('tw:hidden', temperatureSeries);" in html
     assert "$('#dark-strategy-control').toggleClass('tw:hidden', temperatureSeries);" in html
     assert 'This change is not saved yet' in html
+
+    temperature_position = html.index('id="dark-temperature-workflow"')
+    recommendation_position = html.index('id="dark-recommendation-card"')
+    explanation_position = html.index('id="dark-recommendation-details"')
+    capture_position = html.index('id="dark-capture-controls"')
+    advanced_position = html.index('id="dark-advanced-options"')
+    assert temperature_position < recommendation_position
+    assert recommendation_position < explanation_position
+    assert explanation_position < capture_position
+    assert capture_position < advanced_position
 
 
 def test_temperature_guidance_explains_automatic_and_both_one_run_policies():

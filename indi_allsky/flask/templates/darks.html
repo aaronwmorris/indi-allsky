@@ -131,20 +131,26 @@
     max-width: 100%;
 }
 
-#dark-capture-controls label.tw\:form-control {
+#dark-capture-controls label.tw\:form-control,
+#dark-temperature-workflow label.tw\:form-control {
     display: flex;
     flex-direction: column;
     min-width: 0;
 }
 
 #dark-capture-controls label.tw\:form-control > .tw\:label-text,
-#dark-capture-controls label.tw\:form-control > .tw\:label-text-alt {
+#dark-capture-controls label.tw\:form-control > .tw\:label-text-alt,
+#dark-temperature-workflow label.tw\:form-control > .tw\:label-text,
+#dark-temperature-workflow label.tw\:form-control > .tw\:label-text-alt {
     display: block;
 }
 
 #dark-capture-controls label.tw\:form-control > .tw\:select,
 #dark-capture-controls label.tw\:form-control > .tw\:input,
-#dark-capture-controls label.tw\:form-control > .tw\:join {
+#dark-capture-controls label.tw\:form-control > .tw\:join,
+#dark-temperature-workflow label.tw\:form-control > .tw\:select,
+#dark-temperature-workflow label.tw\:form-control > .tw\:input,
+#dark-temperature-workflow label.tw\:form-control > .tw\:join {
     width: 100%;
     min-width: 0;
 }
@@ -170,7 +176,7 @@
 
 .dark-plan-row-fields {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
     gap: 0.75rem;
 }
 
@@ -407,7 +413,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
 {% endblock %}
 
 {% block content %}
-{% set dark_builder_preview_version = '2026.08.22.5' %}
+{% set dark_builder_preview_version = '2026.08.22.6' %}
 <div id="dark-page-content" class="tw:container tw:mx-auto tw:w-full tw:px-4 tw:py-6 tw:flex tw:flex-col tw:gap-4">
 
     <nav aria-label="Dark library sections">
@@ -446,12 +452,55 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
 
             {% if dark_analysis.available %}
             {% set dark_library_empty = dark_analysis.stored_dark_count == 0 and dark_analysis.stored_bpm_count == 0 %}
+            {% if dark_automation_can_run %}
+            <section id="dark-temperature-workflow" class="tw:border tw:border-info/40 tw:rounded-[var(--radius-box)] tw:bg-info/5 tw:p-4 tw:sm:p-5 tw:flex tw:flex-col tw:gap-4" aria-labelledby="dark-temperature-workflow-title">
+                <div class="tw:flex tw:items-start tw:gap-3">
+                    <span class="tw:badge tw:badge-info tw:badge-lg tw:font-bold tw:shrink-0">1</span>
+                    <div>
+                        <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Start here</div>
+                        <h5 id="dark-temperature-workflow-title" class="tw:font-bold tw:text-lg tw:mt-1">Set temperature matching</h5>
+                        <p class="tw:text-sm tw:text-base-content/70 tw:mt-1 tw:max-w-4xl">Choose the sensor and allowed difference before reviewing the recommendation. These choices recalculate temperature coverage, every count and the prepared capture plan throughout this page. Cooled profiles still use their configured target temperatures.</p>
+                    </div>
+                </div>
+
+                <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-3 tw:min-w-0">
+                    <label class="tw:form-control tw:min-w-0">
+                        <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Temperature sensor</span>
+                        <select id="dark-temperature-source" aria-label="Temperature sensor" class="tw:select tw:select-bordered tw:select-sm tw:w-full tw:max-w-full tw:min-w-0">
+                            {% for source in dark_temperature_sources %}
+                            <option value="{{ source.key }}" {% if source.key == dark_execution_preview.temperature_source %}selected{% endif %}>{{ source.label }}</option>
+                            {% endfor %}
+                        </select>
+                        <span id="dark-temperature-source-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">
+                            Automatic uses the camera first. If unavailable, it selects one unambiguous configured sensor; otherwise you must choose one. Sensor names are never used to guess placement. {% if dark_analysis.temperature_reading %}Using {{ dark_analysis.temperature_reading.label }} at {{ "%0.1f"|format(dark_analysis.temperature_reading.value) }}°C from the latest image.{% else %}No unique recent reading is available; choose a named sensor if possible.{% endif %}
+                        </span>
+                    </label>
+                    <label class="tw:form-control tw:min-w-0">
+                        <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Allowed temperature difference</span>
+                        <div class="tw:join tw:max-w-xs">
+                            <span class="tw:btn tw:btn-sm tw:join-item tw:pointer-events-none">±</span>
+                            <input id="dark-temperature-range" class="tw:input tw:input-bordered tw:input-sm tw:join-item tw:w-full" type="number" min="0.1" max="50" step="0.1" value="{{ dark_execution_preview.temperature_range }}">
+                            <span class="tw:btn tw:btn-sm tw:join-item tw:pointer-events-none">°C</span>
+                        </div>
+                        <span id="dark-temperature-range-help" class="tw:label-text-alt tw:text-base-content/60 tw:mt-1 tw:leading-snug">
+                            Existing darks and maps within this difference count as matched. A larger value accepts temperatures farther away and recommends fewer new layers. Changes update the entire recommendation now and are saved for this camera only when a run starts. This does not set the cooling interval.
+                        </span>
+                    </label>
+                </div>
+
+                <div id="dark-temperature-evaluation-summary" class="tw:alert tw:alert-info tw:py-2 tw:text-xs tw:items-start" aria-live="polite">
+                    <i class="tw:icon-[lucide--thermometer] tw:w-4 tw:h-4 tw:mt-0.5 tw:shrink-0"></i>
+                    <span>{% if dark_analysis.temperature_reading %}Using {{ dark_analysis.temperature_reading.label }} at {{ "%0.1f"|format(dark_analysis.temperature_reading.value) }}°C. Stored masters from {{ "%0.1f"|format(dark_analysis.temperature_reading.value - dark_analysis.temperature_range) }}°C to {{ "%0.1f"|format(dark_analysis.temperature_reading.value + dark_analysis.temperature_range) }}°C count as matched.{% else %}No unique recent reading is available, so uncooled coverage is shown without a temperature check.{% endif %}</span>
+                </div>
+            </section>
+            {% endif %}
+
             <section id="dark-recommendation-card" data-library-empty="{{ 'true' if dark_library_empty else 'false' }}" class="tw:border {% if dark_analysis.suggested_action == 'none' %}tw:border-success/40 tw:bg-success/5{% elif dark_analysis.suggested_action == 'complete' %}tw:border-warning/40 tw:bg-warning/5{% else %}tw:border-info/40 tw:bg-info/5{% endif %} tw:rounded-[var(--radius-box)] tw:p-4 tw:sm:p-5 tw:flex tw:flex-col tw:gap-4" aria-labelledby="dark-recommendation-title" aria-live="polite">
                 <div class="tw:flex tw:flex-wrap tw:items-start tw:justify-between tw:gap-3">
                     <div class="tw:flex tw:items-start tw:gap-3 tw:min-w-0 tw:flex-1">
                         <i id="dark-recommendation-icon" class="{% if dark_analysis.suggested_action == 'none' %}tw:icon-[lucide--circle-check-big] tw:text-success{% elif dark_analysis.suggested_action == 'temperature' %}tw:icon-[lucide--thermometer-sun] tw:text-info{% else %}tw:icon-[lucide--wand-sparkles] tw:text-info{% endif %} tw:w-6 tw:h-6 tw:mt-0.5 tw:shrink-0"></i>
                         <div>
-                            <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Recommended next step</div>
+                            <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">{% if dark_automation_can_run %}Step 2 · Recommendation{% else %}Recommendation{% endif %}</div>
                             <h5 id="dark-recommendation-title" class="tw:text-lg tw:font-bold tw:mt-1">
                                 {% if dark_analysis.suggested_action == 'none' %}
                                 Your dark library is ready
@@ -517,12 +566,12 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 </div>
 
                 <div id="dark-recommendation-instructions" class="tw:bg-base-100/70 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:p-3{% if not dark_analysis.suggested_target_count %} tw:hidden{% endif %}">
-                    <div class="tw:font-semibold tw:text-sm">What you need to do</div>
-                    <ol class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-3 tw:gap-3 tw:mt-2 tw:text-sm">
-                        <li class="tw:flex tw:gap-2"><span class="tw:badge tw:badge-info tw:badge-sm tw:shrink-0">1</span><span>Leave the prepared plan unchanged unless you have a specific reason to use Advanced options.</span></li>
-                        <li class="tw:flex tw:gap-2"><span class="tw:badge tw:badge-info tw:badge-sm tw:shrink-0">2</span><span>Physically block all light from reaching the camera. Day or night is fine.</span></li>
-                        <li class="tw:flex tw:gap-2"><span class="tw:badge tw:badge-info tw:badge-sm tw:shrink-0">3</span><span>Confirm the camera is covered, then start. Normal capture resumes automatically.</span></li>
-                    </ol>
+                    <div class="tw:font-semibold tw:text-sm">Before you start</div>
+                    <ul class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-3 tw:gap-3 tw:mt-2 tw:text-sm">
+                        <li class="tw:flex tw:gap-2"><i class="tw:icon-[lucide--circle-check] tw:w-4 tw:h-4 tw:text-info tw:mt-0.5 tw:shrink-0"></i><span>Keep the prepared plan unless you have a specific reason to use Advanced options.</span></li>
+                        <li class="tw:flex tw:gap-2"><i class="tw:icon-[lucide--circle-check] tw:w-4 tw:h-4 tw:text-info tw:mt-0.5 tw:shrink-0"></i><span>Physically block all light from reaching the camera. Day or night is fine.</span></li>
+                        <li class="tw:flex tw:gap-2"><i class="tw:icon-[lucide--circle-check] tw:w-4 tw:h-4 tw:text-info tw:mt-0.5 tw:shrink-0"></i><span>Confirm the camera is covered in the final step, then start. Normal capture resumes automatically.</span></li>
+                    </ul>
                     <p class="tw:text-xs tw:text-base-content/50 tw:mt-3">One master set creates one master dark and one matching bad-pixel map from several source frames.</p>
                 </div>
                 <div id="dark-recommendation-no-action" class="tw:text-sm tw:text-base-content/70{% if dark_analysis.suggested_target_count %} tw:hidden{% endif %}">No action is required. Advanced options remain available if you deliberately want to refresh or rebuild the library.</div>
@@ -663,12 +712,15 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
             {% if dark_automation_can_run %}
             <div id="dark-capture-controls" class="tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-100 tw:p-4 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:flex-wrap tw:items-start tw:justify-between tw:gap-3">
-                    <div>
+                    <div class="tw:flex tw:items-start tw:gap-3">
+                        <span class="tw:badge tw:badge-primary tw:badge-lg tw:font-bold tw:shrink-0">3</span>
                         <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-2">
-                            <h5 class="tw:font-bold tw:text-sm">Recommended capture plan</h5>
-                            <span class="tw:badge tw:badge-primary tw:badge-outline tw:badge-sm">Recommendation</span>
+                            <div>
+                                <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Prepared run</div>
+                                <h5 class="tw:font-bold tw:text-lg tw:mt-1">Review the capture plan</h5>
+                                <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">This plan follows the recommendation above. Leave Advanced options closed unless you deliberately need a different result.</p>
+                            </div>
                         </div>
-                        <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">This is the plan prepared from the recommendation above. Leave Advanced options closed unless you deliberately need a different result.</p>
                     </div>
                     <span id="dark-plan-refresh-status" class="tw:badge tw:badge-ghost tw:hidden" role="status" aria-live="polite">
                         <span class="tw:loading tw:loading-spinner tw:loading-xs"></span>
@@ -690,43 +742,6 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                         <div id="dark-primary-storage" class="tw:font-semibold tw:mt-1">{{ dark_execution_preview.estimated_library_storage }}</div>
                     </div>
                 </div>
-
-                <section id="dark-temperature-workflow" class="tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-200/40 tw:p-4 tw:flex tw:flex-col tw:gap-4" aria-labelledby="dark-temperature-workflow-title">
-                    <div>
-                        <h5 id="dark-temperature-workflow-title" class="tw:font-bold tw:text-sm">Temperature matching</h5>
-                        <p class="tw:text-xs tw:text-base-content/60 tw:mt-1">Choose the sensor used for uncooled profiles and how far a stored master may differ. Cooled profiles use their configured target temperatures.</p>
-                    </div>
-
-                    <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-3 tw:min-w-0">
-                        <label class="tw:form-control tw:min-w-0">
-                            <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Temperature sensor</span>
-                            <select id="dark-temperature-source" aria-label="Temperature sensor" class="tw:select tw:select-bordered tw:select-sm tw:w-full tw:max-w-full tw:min-w-0">
-                                {% for source in dark_temperature_sources %}
-                                <option value="{{ source.key }}" {% if source.key == dark_execution_preview.temperature_source %}selected{% endif %}>{{ source.label }}</option>
-                                {% endfor %}
-                            </select>
-                            <span id="dark-temperature-source-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">
-                                Automatic uses the camera first. If unavailable, it selects one unambiguous configured sensor; otherwise you must choose one. Sensor names are never used to guess placement. {% if dark_analysis.temperature_reading %}Using {{ dark_analysis.temperature_reading.label }} at {{ "%0.1f"|format(dark_analysis.temperature_reading.value) }}°C from the latest image.{% else %}No unique recent reading is available; choose a named sensor if possible.{% endif %}
-                            </span>
-                        </label>
-                        <label class="tw:form-control tw:min-w-0">
-                            <span class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Allowed temperature difference</span>
-                            <div class="tw:join tw:max-w-xs">
-                                <span class="tw:btn tw:btn-sm tw:join-item tw:pointer-events-none">±</span>
-                                <input id="dark-temperature-range" class="tw:input tw:input-bordered tw:input-sm tw:join-item tw:w-full" type="number" min="0.1" max="50" step="0.1" value="{{ dark_execution_preview.temperature_range }}">
-                                <span class="tw:btn tw:btn-sm tw:join-item tw:pointer-events-none">°C</span>
-                            </div>
-                            <span id="dark-temperature-range-help" class="tw:label-text-alt tw:text-base-content/60 tw:mt-1 tw:leading-snug">
-                                Existing darks and maps within this difference count as matched. A larger value accepts temperatures farther away and recommends fewer new layers. Changes update the recommendation now and are saved for this camera only when a run starts. This does not set the cooling interval.
-                            </span>
-                        </label>
-                    </div>
-
-                    <div id="dark-temperature-evaluation-summary" class="tw:alert tw:alert-info tw:py-2 tw:text-xs tw:items-start" aria-live="polite">
-                        <i class="tw:icon-[lucide--thermometer] tw:w-4 tw:h-4 tw:mt-0.5 tw:shrink-0"></i>
-                        <span>{% if dark_analysis.temperature_reading %}Using {{ dark_analysis.temperature_reading.label }} at {{ "%0.1f"|format(dark_analysis.temperature_reading.value) }}°C. Stored masters from {{ "%0.1f"|format(dark_analysis.temperature_reading.value - dark_analysis.temperature_range) }}°C to {{ "%0.1f"|format(dark_analysis.temperature_reading.value + dark_analysis.temperature_range) }}°C count as matched.{% else %}No unique recent reading is available, so uncooled coverage is shown without a temperature check.{% endif %}</span>
-                    </div>
-                </section>
 
                 <details id="dark-advanced-options" class="tw:collapse tw:collapse-arrow tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:min-w-0 tw:max-w-full">
                     <summary class="tw:collapse-title tw:text-sm tw:font-semibold tw:flex tw:items-center tw:gap-2">
