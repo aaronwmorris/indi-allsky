@@ -575,7 +575,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
 {% endblock %}
 
 {% block content %}
-{% set dark_builder_preview_version = '2026.08.22.8' %}
+{% set dark_builder_preview_version = '2026.08.23.1' %}
 <div id="dark-page-content" class="tw:container tw:mx-auto tw:w-full tw:px-4 tw:py-6 tw:flex tw:flex-col tw:gap-4">
 
     <nav aria-label="Dark library sections">
@@ -755,29 +755,9 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 </summary>
                 <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-4">
                 <div>
-                    <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50 tw:mb-2">Where the inputs come from</div>
-                    <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-3 tw:gap-2">
-                        <div class="tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3">
-                            <div class="tw:font-semibold tw:text-sm">Saved configuration</div>
-                            <p class="tw:text-xs tw:text-base-content/70 tw:mt-1">Supplies the enabled day, night, moon and SQM capture profiles, camera strategy, gains and gain limits, binning, image depth, cooler targets and Maximum exposure.</p>
-                        </div>
-                        <div class="tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3">
-                            <div class="tw:font-semibold tw:text-sm">Camera-reported limits</div>
-                            <p class="tw:text-xs tw:text-base-content/70 tw:mt-1">Constrain configured gains, exposure and image formats only when the camera reports a narrower supported range. This does not change the saved configuration.</p>
-                        </div>
-                        <div class="tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3">
-                            <div class="tw:font-semibold tw:text-sm">Builder choices</div>
-                            <p class="tw:text-xs tw:text-base-content/70 tw:mt-1">Temperature sensor and matching difference come from Step 1. Exposure interval and any other overrides come from Advanced options and apply to this prepared plan.</p>
-                        </div>
-                    </div>
-                </div>
-                <div>
                     <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50 tw:mb-1">How the recommended grid is built</div>
                     <p class="tw:text-sm tw:text-base-content/70">
-                        The current plan starts at <span id="dark-recommendation-exposure-max">{{ "%g"|format(dark_execution_preview.exposure_max) }}</span> seconds. On page load, this comes from the saved <strong>Maximum exposure</strong> value and is reduced only if the camera reports a lower limit. Changing <strong>Longest exposure to include</strong> under Advanced options changes it for this plan.
-                    </p>
-                    <p class="tw:text-sm tw:text-base-content/70 tw:mt-2">
-                        From that maximum, the builder steps down by the current <strong>Exposure interval</strong> of <span id="dark-recommendation-exposure-step">{{ "%g"|format(dark_execution_preview.exposure_step) }}</span> seconds; 1 second is always included. Exposure interval is a builder choice, not a saved camera setting. For each distinct image profile, these exposure lengths are combined with the gains selected by the configured camera strategy. Duplicate combinations shared by several capture profiles count only once.
+                        The builder reads the relevant saved day, night, moon and SQM capture profiles. For each distinct image profile, it combines the camera strategy's gain values with exposure lengths stepped down from <span id="dark-recommendation-exposure-max">{{ "%g"|format(dark_execution_preview.exposure_max) }}</span> seconds by <span id="dark-recommendation-exposure-step">{{ "%g"|format(dark_execution_preview.exposure_step) }}</span> seconds; 1 second is always included. Duplicate combinations shared by several capture profiles count only once.
                     </p>
                     <p class="tw:text-sm tw:text-base-content/70 tw:mt-2">
                         This produces <span id="dark-recommendation-target-count">{{ dark_analysis.target_count }}</span> recommended master <span id="dark-recommendation-target-set-word">set{% if dark_analysis.target_count != 1 %}s{% endif %}</span>. Each needs both a compatible master dark and bad-pixel map. The builder then checks every set against the stored library and the temperature rule to decide what should be captured now. Stored files outside the recommendation remain in the library and are not counted below.
@@ -785,6 +765,25 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     <p class="tw:text-sm tw:text-base-content/70 tw:mt-2">
                         A stored set can fall outside today’s recommendation when the current capture configuration no longer asks for that exact image profile, gain or exposure—for example after changing a capture profile, gain strategy, longest exposure or exposure interval. This does not mean the stored set is damaged; it is simply not needed by the current recommended grid.
                     </p>
+                </div>
+                {% set selected_temperature_source = namespace(label='Automatic') %}
+                {% for source in dark_temperature_sources %}
+                    {% if source.key == dark_execution_preview.temperature_source %}
+                        {% set selected_temperature_source.label = source.label %}
+                    {% endif %}
+                {% endfor %}
+                <div class="tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3 tw:text-xs tw:text-base-content/70">
+                    <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50 tw:mb-2">Inputs used</div>
+                    <dl class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-[minmax(9rem,auto)_minmax(0,1fr)] tw:gap-x-4 tw:gap-y-2">
+                        <dt class="tw:font-semibold tw:text-base-content">Saved camera configuration</dt>
+                        <dd>
+                            Maximum exposure: <strong id="dark-saved-exposure-max">{{ "%g"|format(dark_execution_preview.exposure_max) }} seconds</strong> (capped by the camera if necessary) · Strategy: <strong>{{ dark_analysis.mode }}</strong> · Bin {{ dark_analysis.binnings | join(', ') }}{% if dark_analysis.bit_depths %} · {{ dark_analysis.bit_depths | join('/') }} bit{% endif %}
+                        </dd>
+                        <dt class="tw:font-semibold tw:text-base-content">Library builder / user</dt>
+                        <dd>
+                            Sensor: <strong id="dark-input-temperature-source">{{ selected_temperature_source.label }}</strong> · Allowed difference: <strong>±<span id="dark-input-temperature-range">{{ "%g"|format(dark_execution_preview.temperature_range) }}</span>°C</strong> · Exposure interval: <strong><span id="dark-input-exposure-step">{{ "%g"|format(dark_execution_preview.exposure_step) }}</span> seconds</strong>. Step 1 supplies the first two values; Advanced options supplies the exposure interval and any other plan overrides.
+                        </dd>
+                    </dl>
                 </div>
                 <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-3">
                     <div class="tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3">
@@ -915,8 +914,8 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                         <span class="dark-builder-step-marker" aria-hidden="true">3</span>
                         <div class="dark-builder-step-heading">
                             <div class="dark-builder-step-eyebrow">Step 3</div>
-                            <h5 id="dark-capture-controls-title" class="dark-builder-step-title">Review the capture plan</h5>
-                            <p class="dark-builder-step-copy">This plan follows the recommendation above. If needed, you can customize the recommended plan under Advanced options.</p>
+                            <h5 id="dark-capture-controls-title" class="dark-builder-step-title">Run the capture plan</h5>
+                            <p class="dark-builder-step-copy">The capture plan follows the recommendation above. If needed, you can customize it under Advanced options.</p>
                         </div>
                     </header>
                     <span id="dark-plan-refresh-status" class="tw:badge tw:badge-ghost tw:hidden" role="status" aria-live="polite">
@@ -2099,10 +2098,15 @@ function updateDarkOptionGuidance(plan) {
     const temperatureRangeLabel = Number.isInteger(temperatureRange)
         ? temperatureRange.toFixed(0)
         : temperatureRange.toFixed(1);
+    const temperatureSourceLabel = $('#dark-temperature-source option:selected').text().trim()
+        || 'Automatic';
     const temperatureRangeSource = (plan || {}).temperature_range_source || 'legacy_default';
     const targetTemperatures = (analysis.target_temperatures || [])
         .map(Number)
         .filter(Number.isFinite);
+
+    $('#dark-input-temperature-source').text(temperatureSourceLabel);
+    $('#dark-input-temperature-range').text(temperatureRangeLabel);
 
     if (analysis.mode) $('#dark-camera-strategy-name').text(analysis.mode);
     if (analysis.mode_description) {
@@ -2402,7 +2406,8 @@ function renderDarkRecommendation(plan) {
         $('#dark-recommendation-exposure-max').text(Number(plan.exposure_max).toString());
     }
     if (plan.exposure_step !== undefined) {
-        $('#dark-recommendation-exposure-step').text(Number(plan.exposure_step).toString());
+        $('#dark-recommendation-exposure-step, #dark-input-exposure-step')
+            .text(Number(plan.exposure_step).toString());
     }
     $('#dark-recommendation-target-count, #dark-coverage-target-count').text(targetCount);
     $('#dark-recommendation-target-set-word').text('set' + (targetCount === 1 ? '' : 's'));

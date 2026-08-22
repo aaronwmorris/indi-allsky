@@ -176,7 +176,7 @@ def test_builder_explains_each_library_state(
     assert 'One master set is a master dark and matching bad-pixel map' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.22.8' in html
+    assert 'Preview 2026.08.23.1' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'masters from 15.0°C to 25.0°C count as matched' in html
     assert 'Every required master set is checked separately, so capture drift may leave only some' in html
@@ -632,13 +632,18 @@ def test_recommendation_origin_and_overviews_are_explicitly_labelled():
     )
 
     assert 'How the recommended grid is built' in html
-    assert 'Where the inputs come from' in html
-    assert 'Saved configuration' in html
-    assert 'Supplies the enabled day, night, moon and SQM capture profiles' in html
-    assert 'Camera-reported limits' in html
-    assert 'Builder choices' in html
-    assert 'On page load, this comes from the saved <strong>Maximum exposure</strong> value' in html
-    assert 'Exposure interval is a builder choice, not a saved camera setting.' in html
+    assert 'The builder reads the relevant saved day, night, moon and SQM capture profiles.' in html
+    assert 'Inputs used' in html
+    assert 'Saved camera configuration' in html
+    assert 'id="dark-saved-exposure-max">30 seconds</strong> (capped by the camera if necessary)' in html
+    assert 'Strategy: <strong>Exposure priority</strong>' in html
+    assert 'Library builder / user' in html
+    assert 'id="dark-input-temperature-source">Automatic</strong>' in html
+    assert 'id="dark-input-temperature-range">5</span>°C' in html
+    assert 'id="dark-input-exposure-step">5</span> seconds' in html
+    assert 'Step 1 supplies the first two values; Advanced options supplies the exposure interval' in html
+    assert 'Where the inputs come from' not in html
+    assert 'Camera-reported limits' not in html
     assert '1 second is always included' in html
     assert 'Duplicate combinations shared by several capture profiles count only once.' in html
     assert 'id="dark-recommendation-target-count">17</span> recommended master' in html
@@ -649,7 +654,8 @@ def test_recommendation_origin_and_overviews_are_explicitly_labelled():
     assert 'This is the generated recommendation for the current camera and builder choices.' in html
     assert 'id="dark-recommendation-step-title" class="dark-builder-step-title">Review the recommendation' in html
     assert 'Recommended library update' in html
-    assert 'Review the capture plan' in html
+    assert 'Run the capture plan' in html
+    assert 'The capture plan follows the recommendation above. If needed, you can customize it under Advanced options.' in html
 
 
 def test_recalculated_plan_updates_every_recommendation_surface():
@@ -680,6 +686,9 @@ def test_recalculated_plan_updates_every_recommendation_surface():
         'dark-rebuild-option-description',
         'dark-update-choice-state',
         'dark-recommendation-overview-body',
+        'dark-input-temperature-source',
+        'dark-input-temperature-range',
+        'dark-input-exposure-step',
     )
     for target in expected_targets:
         assert f'id="{target}"' in html
@@ -689,6 +698,9 @@ def test_recalculated_plan_updates_every_recommendation_surface():
     assert "$('#dark-recommendation-temperature-coverage')" in html
     assert "$('#dark-coverage-' + kind).text(Number(counts[kind]) || 0);" in html
     assert "const overviewBody = $('#dark-recommendation-overview-body');" in html
+    assert "$('#dark-input-temperature-source').text(temperatureSourceLabel);" in html
+    assert "$('#dark-input-temperature-range').text(temperatureRangeLabel);" in html
+    assert "$('#dark-recommendation-exposure-step, #dark-input-exposure-step')" in html
     assert 'renderDarkRecommendation(plan);' in html
 
 
@@ -710,7 +722,7 @@ def test_guided_steps_and_maintenance_share_a_theme_aware_visual_system():
     assert 'class="dark-builder-step-eyebrow">Step 3' in html
     assert 'Set temperature matching' in html
     assert 'Review the recommendation' in html
-    assert 'Review the capture plan' in html
+    assert 'Run the capture plan' in html
 
     step_two = html.split('aria-labelledby="dark-recommendation-step-title"', 1)[1].split(
         'id="dark-capture-controls"',
