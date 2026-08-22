@@ -181,10 +181,11 @@ EOF
             python3 -m venv "$VENV"
         fi
 
-        # Link application source directory into virtualenv site-packages
+        # Link application source directory and system dist-packages into virtualenv site-packages
         for SP_DIR in "$VENV"/lib/python*/site-packages; do
             if [ -d "$SP_DIR" ]; then
                 echo "/usr/share/indi-allsky" > "${SP_DIR}/indi-allsky.pth"
+                echo "/usr/lib/python3/dist-packages" > "${SP_DIR}/dist-packages.pth"
             fi
         done
 
@@ -195,7 +196,7 @@ EOF
 
         if [ -d "$WHEELS_DIR" ] && [ -f "$REQ_FILE" ]; then
             echo "indi-allsky: Installing Python dependencies from bundled offline wheel cache..."
-            if "$VENV/bin/pip" install --no-cache-dir --no-index --find-links="$WHEELS_DIR" pyindi-client -r "$REQ_FILE" 2>/dev/null; then
+            if "$VENV/bin/pip" install --no-cache-dir --no-index --find-links="$WHEELS_DIR" -r "$REQ_FILE" 2>/dev/null; then
                 OFFLINE_OK=1
                 echo "indi-allsky: Successfully installed all dependencies from offline wheel cache."
                 echo "indi-allsky: (To reclaim ~200MB+ disk space, you may remove the cache package via: sudo apt remove indi-allsky-wheels)"
@@ -205,11 +206,12 @@ EOF
         fi
 
         if [ "$OFFLINE_OK" != "1" ] && [ -f "$REQ_FILE" ]; then
-            echo "indi-allsky: Attempting online dependency resolution via PyPI & git..."
-            "$VENV/bin/pip" install --no-cache-dir "git+https://github.com/indilib/pyindi-client.git@d8ad88f#egg=pyindi-client" -r "$REQ_FILE" || {
+            echo "indi-allsky: Attempting online dependency resolution via PyPI..."
+            "$VENV/bin/pip" install --no-cache-dir -r "$REQ_FILE" || {
                 echo "indi-allsky: WARNING: Online dependency installation encountered errors. Virtualenv may be incomplete."
             }
         fi
+
 
         # Initialize SQLite Database (Backup, Vacuum, Migration) & Admin User
         DB_DIR="/var/lib/indi-allsky"

@@ -35,6 +35,7 @@ Package: indi-allsky
 Architecture: any
 Depends: ${misc:Depends},
  ${shlibs:Depends},
+ python3-pyindi-client,
  python3 (>= 3.9),
  python3-venv,
  python3-pip,
@@ -76,6 +77,19 @@ Description: Allsky camera software using INDI framework and Flask web UI
  INDI library framework for camera control, keogram generation, startrail
  generation, and web-based monitoring.
 
+Package: python3-pyindi-client
+Architecture: any
+Section: python
+Priority: optional
+Depends: ${misc:Depends},
+ ${shlibs:Depends},
+ ${python3:Depends},
+ libindi1 | libindidriver1 | libindiclient1
+Description: Python 3 bindings for INDI library (PyIndi)
+ This package provides compiled Python 3 bindings for the INDI library
+ framework, allowing Python scripts and applications to interact with
+ astronomical hardware drivers and indiserver via the PyIndi module.
+
 Package: indi-allsky-wheels
 Architecture: any
 Section: python
@@ -83,7 +97,7 @@ Priority: optional
 Depends: ${misc:Depends}
 Description: Pre-compiled offline Python wheel cache for indi-allsky
  This package provides an offline cache of pre-compiled Python wheels
- (including pyindi-client and C-extensions) for indi-allsky. It can be
- safely removed after initial setup via 'sudo apt remove indi-allsky-wheels'
- to reclaim disk space.
+ for indi-allsky. It can be safely removed after initial setup via
+ 'sudo apt remove indi-allsky-wheels' to reclaim disk space.
+
 

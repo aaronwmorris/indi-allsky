@@ -6,17 +6,28 @@ export PYBUILD_NAME=indi-allsky
 	dh $@ --with python3
 
 override_dh_auto_build:
-	# Pre-compile pyindi-client and bundle all dependencies as wheels into debian/wheels/ during package build
+	# Clone and compile pyindi-client for python3-pyindi-client package
+	mkdir -p debian/pyindi-build
+	if [ ! -f debian/pyindi-build/setup.py ]; then \
+		git clone --depth 1 https://github.com/indilib/pyindi-client.git debian/pyindi-build; \
+		(cd debian/pyindi-build && git checkout d8ad88f 2>/dev/null || true); \
+	fi
+	(cd debian/pyindi-build && python3 setup.py build)
+
+	# Pre-download PyPI dependencies as wheels into debian/wheels/ for offline cache
 	mkdir -p debian/wheels
 	python3 -m pip wheel -r requirements/requirements_latest.txt -w debian/wheels/
-	python3 -m pip wheel --no-deps "git+https://github.com/indilib/pyindi-client.git@d8ad88f#egg=pyindi-client" -w debian/wheels/
 
 override_dh_auto_install:
 	# Install application source into /usr/share/indi-allsky
 	mkdir -p debian/indi-allsky/usr/share/indi-allsky
 	cp -r allsky.py app.py config.py flask.json_template darks.py indi_allsky migrations misc log html requirements service debian/indi-allsky/usr/share/indi-allsky/
 	
-	# Install pre-compiled python wheels into the separate indi-allsky-wheels package
+	# Install python3-pyindi-client into /usr/lib/python3/dist-packages
+	mkdir -p debian/python3-pyindi-client
+	(cd debian/pyindi-build && python3 setup.py install --root=$(CURDIR)/debian/python3-pyindi-client --install-layout=deb --no-compile)
+
+	# Install pre-compiled PyPI python wheels into the separate indi-allsky-wheels package
 	mkdir -p debian/indi-allsky-wheels/usr/share/indi-allsky/wheels
 	cp -r debian/wheels/* debian/indi-allsky-wheels/usr/share/indi-allsky/wheels/ 2>/dev/null || true
 
@@ -33,5 +44,10 @@ override_dh_installsystemd:
 	dh_installsystemd -pindi-allsky --name=indi-allsky
 	dh_installsystemd -pindi-allsky --name=gunicorn-indi-allsky
 	dh_installsystemd -pindi-allsky --name=indiserver
+
+override_dh_auto_clean:
+	rm -rf debian/pyindi-build debian/wheels
+	dh_auto_clean
+
 
 
