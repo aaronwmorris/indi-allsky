@@ -56,9 +56,21 @@ dpkg-reconfigure -f noninteractive indi-allsky
 echo "Debconf reconfiguration passed!"
 
 echo "============================================================"
-echo "=== 6. Testing Package Purge ==="
+echo "=== 6. Testing indi-allsky-wheels Removal ==="
+echo "============================================================"
+if dpkg -l indi-allsky-wheels >/dev/null 2>&1; then
+    apt-get remove -y indi-allsky-wheels
+    test ! -d /usr/share/indi-allsky/wheels
+    echo "indi-allsky-wheels removed cleanly and wheels directory purged!"
+    # Verify virtualenv and WSGI still work after wheels removal
+    PYTHONPATH=/usr/share/indi-allsky /var/lib/indi-allsky/venv/bin/python3 -c "import PyIndi, flask, astropy; from indi_allsky.wsgi import application; assert application is not None; print('WSGI still operational after wheels package removal!')"
+fi
+
+echo "============================================================"
+echo "=== 7. Testing Package Purge ==="
 echo "============================================================"
 apt-get purge -y indi-allsky
 echo "============================================================"
 echo "=== All Automated .deb QA Probes Passed Successfully! ==="
 echo "============================================================"
+

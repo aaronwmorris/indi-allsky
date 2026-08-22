@@ -62,7 +62,8 @@ Depends: ${misc:Depends},
  libraw20 | libraw23t64 | libraw-dev,
  network-manager,
  udisks2
-Recommends: indiserver | indi-bin,
+Recommends: indi-allsky-wheels,
+ indiserver | indi-bin,
  libindi-data,
  indi-3rdparty | indi-asi | indi-qhy | indi-playerone | indi-svbony | indi-toupbase | indi-toupcam | indi-sx | indi-gphoto | indi-webcam,
  rpicam-apps | libcamera-apps | libcamera-tools
@@ -74,3 +75,15 @@ Description: Allsky camera software using INDI framework and Flask web UI
  indi-allsky is a solution for operating an allsky camera using the
  INDI library framework for camera control, keogram generation, startrail
  generation, and web-based monitoring.
+
+Package: indi-allsky-wheels
+Architecture: any
+Section: python
+Priority: optional
+Depends: ${misc:Depends}
+Description: Pre-compiled offline Python wheel cache for indi-allsky
+ This package provides an offline cache of pre-compiled Python wheels
+ (including pyindi-client and C-extensions) for indi-allsky. It can be
+ safely removed after initial setup via 'sudo apt remove indi-allsky-wheels'
+ to reclaim disk space.
+

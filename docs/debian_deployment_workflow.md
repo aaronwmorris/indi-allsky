@@ -145,6 +145,12 @@ When `postinst` runs on the host:
 
 ## 6. Package Upgrades & Uninstallation
 
+* **Reclaiming disk space after installation**:
+  ```bash
+  sudo apt remove indi-allsky-wheels
+  ```
+  * Safely removes the ~200MB+ pre-compiled offline Python wheel cache from `/usr/share/indi-allsky/wheels/` while keeping the provisioned virtualenv and all camera services fully operational.
+
 * **Upgrading to a newer version**:
   ```bash
   sudo apt install ./indi-allsky_2026.09.1-1_arm64.deb
@@ -155,6 +161,7 @@ When `postinst` runs on the host:
 
 * **Purging the package**:
   ```bash
-  sudo apt purge indi-allsky
+  sudo apt purge indi-allsky indi-allsky-wheels
   ```
   * Removes all created configuration files, SSL certificates, database files, logs, and cleans up the system user.
+

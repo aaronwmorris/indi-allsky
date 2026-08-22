@@ -16,9 +16,9 @@ override_dh_auto_install:
 	mkdir -p debian/indi-allsky/usr/share/indi-allsky
 	cp -r allsky.py app.py config.py flask.json_template darks.py indi_allsky migrations misc log html requirements service debian/indi-allsky/usr/share/indi-allsky/
 	
-	# Install pre-compiled python wheels (offline cache)
-	mkdir -p debian/indi-allsky/usr/share/indi-allsky/wheels
-	cp -r debian/wheels/* debian/indi-allsky/usr/share/indi-allsky/wheels/ 2>/dev/null || true
+	# Install pre-compiled python wheels into the separate indi-allsky-wheels package
+	mkdir -p debian/indi-allsky-wheels/usr/share/indi-allsky/wheels
+	cp -r debian/wheels/* debian/indi-allsky-wheels/usr/share/indi-allsky/wheels/ 2>/dev/null || true
 
 	# Install bundled pre-compiled INDI driver .deb packages if available
 	mkdir -p debian/indi-allsky/usr/share/indi-allsky/debs
@@ -30,7 +30,8 @@ override_dh_auto_install:
 
 override_dh_installsystemd:
 	# Enable indi-allsky, gunicorn, and indiserver services
-	dh_installsystemd --name=indi-allsky
-	dh_installsystemd --name=gunicorn-indi-allsky
-	dh_installsystemd --name=indiserver
+	dh_installsystemd -pindi-allsky --name=indi-allsky
+	dh_installsystemd -pindi-allsky --name=gunicorn-indi-allsky
+	dh_installsystemd -pindi-allsky --name=indiserver
+
 
