@@ -257,8 +257,9 @@ jobs:
               echo "=== Building indi-allsky ==="
               dpkg-buildpackage -b -us -uc
 
-              # Clean up any debug symbol packages before packaging
+              # Clean up any debug symbol and development header packages before packaging
               rm -f /*-dbgsym*.deb /tmp/*-dbgsym*.deb /*-dbg*.deb /tmp/*-dbg*.deb /work/*-dbgsym*.deb /work/*-dbg*.deb 2>/dev/null || true
+              rm -f /*-dev*.deb /tmp/*-dev*.deb /work/*-dev*.deb 2>/dev/null || true
 
               # Collect and tag all built .deb packages with distribution suite suffix
               for f in /*.deb /tmp/*.deb; do
