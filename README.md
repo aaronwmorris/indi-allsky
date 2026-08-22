@@ -194,66 +194,45 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
     * [libcamera](https://github.com/aaronwmorris/indi-allsky/wiki/libcamera-enablement) - Raspberry Pi camera module
 
 
-## Distibution support
-| Distribution                    | Note |
-| ------------------------------- | ---- |
-| **Raspberry Pi OS 13 (trixie)** | **RECOMMENDED**<br>Compile INDI with build_indi.sh<br>Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
-| Raspberry Pi OS 12 (bookworm)   | Compile INDI with build_indi.sh<br>Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
-| Raspberry Pi OS 11 (bullseye)   | Compile INDI with build_indi.sh |
-| Raspberry Pi OS 10 (buster)     | (DO NOT USE) |
-| **Debian 13 (trixie)**          | **RECOMMENDED**<br>Compile INDI with build_indi.sh |
-| Debian 12 (bookworm)            | Compile INDI with build_indi.sh |
-| Debian 11 (bullseye)            | Compile INDI with build_indi.sh |
-| Debian 10 (buster)              | (DO NOT USE) |
-| Ubuntu 24.04 (noble)            | **RECOMMENDED**<br>Requires INDI 2.0.8 or newer for pyindi-client<br>INDI installed from ppa:mutlaqja/ppa<br>Compile libcamera with build_libcamera.sh |
-| Ubuntu 22.04 (focal)            | INDI installed from ppa:mutlaqja/ppa |
-| Ubuntu 20.04 (bionic)           | (NOT RECOMMENDED) INDI installed from ppa:mutlaqja/ppa |
-| Linux Mint 22                   | INDI installed from ppa:mutlaqja/ppa |
-| Linux Mint 21                   | INDI installed from ppa:mutlaqja/ppa |
-| Arch Linux                      | Compile INDI with build_indi.sh |
-| LMDE 6 (Linux Mint)             | Compile INDI with build_indi.sh |
-| Armbian                         | Compile INDI with build_indi.sh<br>https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
-| Stellarmate 1.8.x               | INDI pre-installed |
-| Astroberry 3.0                  | |
-| ~~Astroberry Server 2.0~~       | (DO NOT USE) |
+## Distribution support
+| Distribution                    | Native Package (`.deb`) | Note |
+| ------------------------------- | ----------------------- | ---- |
+| **Raspberry Pi OS 13 (trixie)** | **Supported (`.deb`)**  | **RECOMMENDED** (arm64, amd64) |
+| **Raspberry Pi OS 12 (bookworm)** | **Supported (`.deb`)**  | **RECOMMENDED** (arm64, amd64) |
+| Raspberry Pi OS 11 (bullseye)   | Manual (`setup.sh`)     | Compile INDI with build_indi.sh |
+| Raspberry Pi OS 10 (buster)     | (DO NOT USE)            | |
+| **Debian 13 (trixie)**          | **Supported (`.deb`)**  | **RECOMMENDED** (arm64, amd64) |
+| **Debian 12 (bookworm)**        | **Supported (`.deb`)**  | **RECOMMENDED** (arm64, amd64) |
+| Debian 11 (bullseye)            | Manual (`setup.sh`)     | Compile INDI with build_indi.sh |
+| Debian 10 (buster)              | (DO NOT USE)            | |
+| **Ubuntu 24.04 (noble)**        | **Supported (`.deb`)**  | **RECOMMENDED** (arm64, amd64) |
+| Ubuntu 22.04 (focal)            | Manual (`setup.sh`)     | INDI installed from ppa:mutlaqja/ppa |
+| Linux Mint 22                   | **Supported (`.deb`)**  | Based on Ubuntu 24.04 (Noble) |
+| Linux Mint 21                   | Manual (`setup.sh`)     | Based on Ubuntu 22.04 |
+| Arch Linux                      | Manual (`setup.sh`)     | Compile INDI with build_indi.sh |
+| Armbian                         | **Supported (`.deb`)**  | Use Bookworm/Trixie/Noble .deb packages |
+| Stellarmate 1.8.x               | Pre-installed           | INDI pre-installed |
 
 
 ## Platform support
 | Platform        | Support         | Note |
 | --------------- | --------------- | ---- |
-| x86_64 (amd64)  | Excellent       |      |
-| aarch64 (arm64) | Excellent       |      |
-| armv7l (armhf)  | Not working (Apr 2026) | Current not working due to having to compile python module `dask-image` which requires `dask[array,dataframe]` which requires `pyarrow`.  pyarrow will not compile without Apache Arrow libs (not available on 32-bit platforms)<br>Many python packages do not distribute armhf python wheels which have to be compiled from source |
-| armv6l (armhf)  | Not Recommended | Raspberry Pi [v1] and Raspberry Pi Zero [v1] - In addition, some python modules will install armv7l versions which can contain CPU instructions not compatible with armv6l resulting in segfaults<br>Restricted memory environments (<= 512MB) make compiling python modules difficult |
-| x86 (32-bit)    | Problematic     | Many python packages do not distribute x86 python wheels which have to be compiled from source |
+| x86_64 (amd64)  | Excellent       | Native `.deb` packages provided |
+| aarch64 (arm64) | Excellent       | Native `.deb` packages provided (Raspberry Pi 4 / 5, etc.) |
+| armv7l (armhf)  | Not working     | 32-bit platforms lack required scientific Python wheels (`dask-image`, `pyarrow`) |
+| armv6l (armhf)  | Not Recommended | Raspberry Pi 1 / Zero v1 |
+| x86 (32-bit)    | Problematic     | Lack of pre-compiled wheels |
 
 
 ## INDI support
 | Version         | Note |
 | --------------- | ---- |
-| v2.2.3          | **Recommended for new builds** |
-| v2.2.2          |      |
-| v2.2.1          |      |
-| v2.2.0          |      |
+| v2.2.4+         | **Bundled in official `.deb` releases** |
+| v2.2.3          | Supported |
+| v2.2.2          | Supported |
+| v2.2.0          | Supported |
 | v2.1.9          | indi_libcamera_ccd is stable |
-| v2.1.8          | Minimum for rpicam-apps 1.10.1 (indi_libcamera_ccd)<br>Minimum for ASI676MM |
-| v2.1.7          |      |
-| v2.1.6          | Reports as 2.1.5 after build<br>Minimum for rpicam-apps 1.9.0 (indi_libcamera_ccd)<br>`indi_altair_ccd` renamed to `indi_altaircam_ccd` |
-| v2.1.5          |      |
-| v2.1.4          |      |
-| v2.1.3          |      |
-| v2.1.2          |      |
-| v2.1.1          |      |
-| v2.1.0          |      |
-| v2.0.9          |      |
-| v2.0.8          | Minimum for Ubuntu 24.04 (pyindi-client) |
-| v2.0.7          | Minimum for ASI676MC |
-| v2.0.6          |      |
-| v2.0.5          | Requires upgrade to indi-allsky v7.7<br>[ZWO ASI problem](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-2.0.5-notes) |
-| v2.0.4          | [Typo in indibash.h prevents building pyindi-client](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-2.0.4-bug)<br>Svbony support is broken |
-| v2.0.3          |      |
-| v2.0.2          |      |
-| v2.0.1          |      |
+| v2.0.8          | Minimum for Ubuntu 24.04 |
 
 
 ### Camera SDK Versions
@@ -263,22 +242,22 @@ https://github.com/aaronwmorris/indi-allsky/wiki/indilib-3rdparty-SDK-versions
 ## Single Board Computer support
 | Board                         | Note |
 | ----------------------------- | ---- |
-| Raspberry Pi 5                | Recommend 64-bit trixie (13) |
-| Raspberry Pi 4                | Recommend 64-bit trixie (13) |
-| Raspberry Pi 3                | Recommend 64-bit trixie (13), recommend 1GB of swap |
-| Raspberry Pi Zero 2           | Recommend 64-bit trixie (13), memory constrained |
+| Raspberry Pi 5                | Recommend 64-bit trixie (13) or bookworm (12) with native `.deb` |
+| Raspberry Pi 4                | Recommend 64-bit trixie (13) or bookworm (12) with native `.deb` |
+| Raspberry Pi 3                | Recommend 64-bit trixie (13) or bookworm (12), recommend 1GB of swap |
+| Raspberry Pi Zero 2           | Recommend 64-bit trixie (13) or bookworm (12), memory constrained |
 | Raspberry Pi Zero             | Recommend 32-bit bullseye (11), memory constrained |
-| Raspberry Pi Zero W           | Recommend 32-bit bullseye (11), memory constrained, WiFi gets disabled so build from the console |
-| Rock Pi                       |      |
-| Libre Computer (Le Potato)    |      |
-| Orange Pi                     |      |
+| Raspberry Pi Zero W           | Recommend 32-bit bullseye (11), memory constrained, WiFi gets disabled so build from console |
+| Rock Pi                       | Supported with 64-bit Debian/Ubuntu `.deb` |
+| Libre Computer (Le Potato)    | Supported with 64-bit Debian/Ubuntu `.deb` |
+| Orange Pi                     | Supported with 64-bit Debian/Ubuntu `.deb` |
 | Orange Pi PC Plus             | Requires 2GB swap (and patience) to build all python modules |
-| Banana Pi                     |      |
-| BeagleBone                    |      |
+| Banana Pi                     | Supported with 64-bit Debian/Ubuntu `.deb` |
+| BeagleBone                    | Supported with 64-bit Debian/Ubuntu `.deb` |
 
 
 ## Memory Requirements for Timelapses
-Memory requirements are primarily driven by the resolution of the timelapse generated by the FFMPEG utility.  A higher resolution camera can be used on lower memory system by scaling the output resolution of the FFMPEG process.
+Memory requirements are primarily driven by the resolution of the timelapse generated by the FFMPEG utility. A higher resolution camera can be used on lower memory systems by scaling the output resolution of the FFMPEG process.
 
 | Output Resolution  | Recommended Memory | Minimum Memory        | FFMPEG Process Memory |
 | ------------------ | ------------------ | --------------------- | --------------------- |
@@ -291,28 +270,56 @@ Memory requirements are primarily driven by the resolution of the timelapse gene
 | 6224 x 4168 (26MP) | 8GB                |                       | 5.0GB                 |
 | 9152 x 6944 (64MP) | 16GB               |                       | 12.0GB                |
 
-
 # Installation
-The process for installing indi-allsky is documented in the wiki.
 
-https://github.com/aaronwmorris/indi-allsky/wiki/Getting-Started
+### Option 1: Native Debian Package (`.deb`) — Recommended
+Pre-compiled `.deb` packages bundle all 100+ dependencies, pre-compiled wheels, and camera drivers for a 10-second installation without compilation.
+
+1. **Download Packages**:
+   Download the `.deb` release matching your distribution (Bookworm, Noble, or Trixie) and architecture (`arm64` or `amd64`) from the [GitHub Releases](https://github.com/aaronwmorris/indi-allsky/releases).
+2. **Install**:
+   ```bash
+   sudo apt update
+   sudo apt install -y ./*.deb
+   ```
+3. **Interactive Configuration**:
+   Follow the interactive setup wizard to select your camera driver, admin credentials, and observatory coordinates.
+4. **Access Web Dashboard**:
+   Open `https://<device-ip>/indi-allsky/` in your browser.
 
 
-### Docker Containerization
-indi-allsky has full support for running in a containerized environment.  Check out the `docker/` folder for the Docker assets.
+### Option 2: Docker Containerization
+indi-allsky has full support for running in a unified containerized environment. Check out the `docker/` folder for Docker assets and documentation:
 
 https://github.com/aaronwmorris/indi-allsky/wiki/Docker
 
 
+### Option 3: Manual Source Installation (`setup.sh`)
+For rolling development or unsupported distributions, the traditional installation script remains available:
+
+https://github.com/aaronwmorris/indi-allsky/wiki/Getting-Started
+
+
 ### Logs
-* When indi-allsky is run from the command line, logs are sent to STDERR by default.
-* When the indi-allsky service is started, logs are sent to syslog via facility local6.  Logs are stored in `/var/log/indi-allsky/indi-allsky.log` and rotated daily.
-    * Web interface logs are located at `/var/log/indi-allsky/webapp-indi-allsky.log`
+* Main daemon logs: `/var/log/indi-allsky/indi-allsky.log` (syslog facility local6, rotated daily)
+* Web interface logs: `/var/log/indi-allsky/webapp-indi-allsky.log` (syslog facility local7)
+* Systemd service status:
+  ```bash
+  sudo systemctl status indi-allsky.service gunicorn-indi-allsky.socket indiserver.service apache2
+  ```
 
 
 ## Updating
-indi-allsky updates are designed to be rolling releases.  I do everything I can to prevent breaking changes.  Most changes only require pulling updates from GitHub and re-running setup.sh.
 
+### Updating `.deb` Package Installations
+```bash
+sudo apt update
+sudo apt install -y ./indi-allsky_*.deb
+```
+Package upgrades automatically backup and preserve existing configurations (`/etc/indi-allsky/flask.json`), retain database data, and run schema migrations seamlessly.
+
+### Updating Source / `setup.sh` Installations
+Pull updates from GitHub and re-run `setup.sh`:
 https://github.com/aaronwmorris/indi-allsky/wiki/Updating-indi-allsky
 
 

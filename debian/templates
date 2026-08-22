@@ -1,0 +1,182 @@
+Template: indi-allsky/reuse_existing_config
+Type: boolean
+Default: true
+Description: Reuse existing configuration and settings?
+ An existing indi-allsky installation was detected.
+ .
+ If you select 'Yes', your existing configuration, camera drivers, web ports, admin accounts, and observatory settings will be preserved automatically.
+ .
+ If you select 'No', you will be guided through the interactive setup wizard to reconfigure your settings.
+
+Template: indi-allsky/camera_interface
+Type: select
+Choices: indi, libcamera, simulator, test_rotating_stars, test_bubbles, indi_accumulator, indi_passive, pycurl_camera, mqtt_libcamera
+Default: indi
+Description: Select primary camera interface:
+ Choose the camera capture subsystem for indi-allsky.
+ .
+  * indi: Standard INDI camera drivers (ZWO ASI, QHY, PlayerOne, ToupTek, SVBony, DSLR, etc.)
+  * libcamera: Raspberry Pi native libcamera CSI subsystem (Raspi HQ Camera, Camera Module 3, etc.)
+  * simulator: Simulated test camera for demonstration/testing
+  * test_rotating_stars: Rotating Stars simulated sky
+  * test_bubbles: Animated Bubbles simulated pattern
+  * indi_accumulator: Synthetic long-exposure accumulator
+  * indi_passive: Passive listener connected to existing indiserver
+  * pycurl_camera: Remote HTTP camera stream downloader
+  * mqtt_libcamera: Remote MQTT-controlled libcamera stream
+
+Template: indi-allsky/libcamera_sensor
+Type: select
+Choices: libcamera_imx477, libcamera_imx378, libcamera_imx708, libcamera_imx519, libcamera_imx500_ai, libcamera_imx283, libcamera_imx462, libcamera_imx327, libcamera_imx678, libcamera_imx335, libcamera_ov5647, libcamera_imx219, libcamera_imx296_gs, libcamera_imx296_gs_color, libcamera_imx290, libcamera_imx298, libcamera_64mp_hawkeye, libcamera_64mp_owlsight, libcamera_generic
+Default: libcamera_imx477
+Description: Select libcamera sensor profile:
+ Choose your specific Raspberry Pi camera sensor model for optimized gain/exposure tuning.
+
+Template: indi-allsky/ccd_driver
+Type: select
+Choices: indi_simulator_ccd, indi_asi_ccd, indi_asi_single_ccd, indi_playerone_ccd, indi_playerone_single_ccd, indi_toupcam_ccd, indi_altaircam_ccd, indi_altair_ccd, indi_omegonprocam_ccd, indi_ogmacam_ccd, indi_tscam_ccd, indi_nncam_ccd, indi_svbony_ccd, indi_svbonycam_ccd, indi_qhy_ccd, indi_sx_ccd, indi_dsi_ccd, indi_libcamera_ccd, indi_gphoto_ccd, indi_canon_ccd, indi_sony_ccd, indi_nikon_ccd, indi_fuji_ccd, indi_pentax_ccd, indi_v4l2_ccd, indi_webcam_ccd
+Default: indi_simulator_ccd
+Description: Select INDI CCD camera driver:
+ Choose the specific INDI CCD driver for your camera hardware.
+
+Template: indi-allsky/gps_driver
+Type: select
+Choices: None, indi_gpsd, indi_gpsnmea, indi_simulator_gps
+Default: None
+Description: Select optional INDI GPS driver:
+ Choose a GPS driver if you have a GPS receiver connected for automatic geolocation/time sync.
+
+Template: indi-allsky/http_port
+Type: string
+Default: 80
+Description: Web server HTTP port:
+ Port number used by the web server (Apache/Nginx) for standard HTTP traffic.
+
+Template: indi-allsky/https_port
+Type: string
+Default: 443
+Description: Web server HTTPS port:
+ Port number used by the web server (Apache/Nginx) for secure HTTPS traffic.
+
+Template: indi-allsky/indi_port
+Type: string
+Default: 7624
+Description: INDI server port:
+ Port number used by the local indiserver daemon to accept camera connections.
+
+Template: indi-allsky/web_auth_all_views
+Type: boolean
+Default: false
+Description: Require login for all web views?
+ If false, public pages (such as live sky view and public gallery) are visible to guests, while administrative functions remain password-protected.
+
+Template: indi-allsky/web_user
+Type: string
+Default: admin
+Description: Initial web admin username:
+ Username for the administrative account in the indi-allsky web interface.
+
+Template: indi-allsky/web_name
+Type: string
+Default: Admin User
+Description: Initial web admin full name:
+ Full name or display label for the administrative user account.
+
+Template: indi-allsky/web_pass
+Type: password
+Description: Initial web admin password (minimum 8 characters):
+ Enter a password for the administrative account. It must be at least 8 characters long.
+
+Template: indi-allsky/web_pass_confirm
+Type: password
+Description: Confirm web admin password:
+ Please enter the same admin password again to confirm.
+
+Template: indi-allsky/password_too_short
+Type: error
+Description: Password is too short
+ The password must be at least 8 characters long. Please try again.
+
+Template: indi-allsky/password_mismatch
+Type: error
+Description: Passwords do not match
+ The two passwords you entered did not match. Please try again.
+
+Template: indi-allsky/web_email
+Type: string
+Default: admin@example.org
+Description: Web admin contact email address:
+ Contact email address for the initial web administrator account.
+
+Template: indi-allsky/latitude
+Type: string
+Default: 0.0
+Description: Observatory Latitude (-90.0 to 90.0):
+ Geographical latitude in decimal degrees for celestial calculations and solar/lunar ephemeris.
+
+Template: indi-allsky/longitude
+Type: string
+Default: 0.0
+Description: Observatory Longitude (-180.0 to 180.0):
+ Geographical longitude in decimal degrees for celestial calculations and solar/lunar ephemeris.
+
+Template: indi-allsky/elevation
+Type: string
+Default: 0
+Description: Observatory Elevation in meters:
+ Height above sea level in meters for the observatory site.
+
+Template: indi-allsky/invalid_latitude
+Type: error
+Description: Invalid Latitude
+ Latitude must be a numeric value between -90.0 and 90.0. Please try again.
+
+Template: indi-allsky/invalid_longitude
+Type: error
+Description: Invalid Longitude
+ Longitude must be a numeric value between -180.0 and 180.0. Please try again.
+
+Template: indi-allsky/oidc_enable
+Type: boolean
+Default: false
+Description: Enable OIDC (OpenID Connect) Single Sign-On?
+ Select true to enable OpenID Connect single sign-on authentication for the web interface.
+
+Template: indi-allsky/oidc_client_id
+Type: string
+Description: OIDC Client ID:
+ Client ID configured in your OpenID Connect identity provider (e.g., Keycloak, Authentik, Authelia, Google).
+
+Template: indi-allsky/oidc_client_secret
+Type: password
+Description: OIDC Client Secret:
+ Client Secret configured in your OpenID Connect identity provider.
+
+Template: indi-allsky/oidc_discovery_url
+Type: string
+Description: OIDC Discovery URL (.well-known/openid-configuration):
+ Full OpenID Connect discovery endpoint URL (e.g. https://auth.example.com/.well-known/openid-configuration).
+
+Template: indi-allsky/install_mosquitto
+Type: boolean
+Default: false
+Description: Setup local Mosquitto MQTT broker?
+ Install and enable the Mosquitto MQTT broker service for local telemetry and remote camera controls.
+
+Template: indi-allsky/disable_leds
+Type: boolean
+Default: false
+Description: Disable activity LEDs at boot?
+ Disable Raspberry Pi hardware power and activity LEDs at boot to minimize stray light around the camera dome.
+
+Template: indi-allsky/enable_watchdog
+Type: boolean
+Default: false
+Description: Enable SystemD hardware watchdog daemon?
+ Automatically reboot the device if the operating system or services hang or become unresponsive.
+
+Template: indi-allsky/system_optimize
+Type: boolean
+Default: false
+Description: Apply recommended system performance optimizations?
+ Optimize kernel swappiness (vm.swappiness=1) and volatile RAM journald storage to minimize SD card / SSD wear.

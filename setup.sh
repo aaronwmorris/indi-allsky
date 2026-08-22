@@ -164,9 +164,23 @@ if which whiptail >/dev/null 2>&1; then
 fi
 
 
-echo "###############################################"
-echo "### Welcome to the indi-allsky setup script ###"
-echo "###############################################"
+echo "################################################################################"
+echo "###                    DEPRECATION NOTICE: SETUP.SH                         ###"
+echo "###                                                                          ###"
+echo "###  setup.sh is now deprecated in favor of official Debian packaging (.deb).###"
+echo "###                                                                          ###"
+echo "###  Recommended install / upgrade from GitHub Releases:                     ###"
+echo "###    1. Download the latest .deb for your architecture (arm64/amd64):       ###"
+echo "###       https://github.com/aaronwmorris/indi-allsky/releases/latest         ###"
+echo "###    2. Install via apt:                                                   ###"
+echo "###       sudo apt update && sudo apt install ./indi-allsky_*.deb             ###"
+echo "###                                                                          ###"
+echo "###  Migration Guide: docs/setup_to_deb_migration.md                         ###"
+echo "################################################################################"
+echo
+echo "Welcome to the legacy indi-allsky setup script."
+echo "Setup proceeding in 5 seconds... (Press Ctrl+C to cancel and use .deb instead)"
+sleep 5
 
 
 if [[ -n "${VIRTUAL_ENV:-}" ]]; then

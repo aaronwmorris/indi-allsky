@@ -7,7 +7,7 @@
         "pool_size" : 25
     },
 
-    "MIGRATION_FOLDER" : "/var/lib/indi-allsky/migrations",
+    "MIGRATION_FOLDER" : "/usr/share/indi-allsky/migrations",
 
     "SESSION_COOKIE_SECURE_comment" : "True will prevent using http-only mode",
     "SESSION_COOKIE_SECURE" : true,

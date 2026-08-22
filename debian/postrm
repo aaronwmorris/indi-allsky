@@ -1,0 +1,48 @@
+#!/bin/sh
+set -e
+
+if [ -f /usr/share/debconf/confmodule ]; then
+    . /usr/share/debconf/confmodule
+fi
+
+case "$1" in
+    purge)
+        if [ -e /usr/share/debconf/confmodule ]; then
+            db_purge
+        fi
+
+        # Remove indi-allsky core data and configuration directories
+        rm -rf /var/lib/indi-allsky /etc/indi-allsky /var/log/indi-allsky
+
+        # Clean up generated web server configuration and certificates
+        rm -f /etc/apache2/sites-available/indi-allsky.conf /etc/apache2/sites-enabled/indi-allsky.conf
+        rm -rf /etc/apache2/ssl/indi-allsky_apache.*
+        rm -f /etc/nginx/sites-available/indi-allsky.conf /etc/nginx/sites-enabled/indi-allsky.conf
+        rm -rf /etc/nginx/ssl/indi-allsky_nginx.*
+
+        # Clean up system integration configs
+        rm -f /etc/rsyslog.d/10-indi-allsky.conf
+        rm -f /etc/logrotate.d/indi-allsky
+        rm -f /etc/sudoers.d/indi-allsky
+        rm -f /etc/polkit-1/rules.d/90-indi-allsky.rules
+
+        # Remove system user and group
+        if getent passwd indi-allsky >/dev/null 2>&1; then
+            deluser --system --quiet indi-allsky 2>/dev/null || true
+        fi
+        if getent group indi-allsky >/dev/null 2>&1; then
+            delgroup --system --quiet indi-allsky 2>/dev/null || true
+        fi
+
+        # Clean up any leftover application directories
+        rm -rf /usr/share/indi-allsky
+    ;;
+    remove)
+        rm -rf /usr/share/indi-allsky 2>/dev/null || true
+    ;;
+esac
+
+#DEBHELPER#
+
+exit 0
+

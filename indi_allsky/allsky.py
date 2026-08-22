@@ -90,13 +90,13 @@ class IndiAllSky(object):
 
 
         if __config_level__ != self._config_obj.config_level:
-            logger.error('indi-allsky version does not match config, please rerun setup.sh')
+            logger.error('indi-allsky version does not match config, please upgrade/reconfigure indi-allsky')
 
             with app.app_context():
                 self._miscDb.addNotification(
                     NotificationCategory.STATE,
                     'config_version',
-                    'WARNING: indi-allsky version does not match config, please rerun setup.sh',
+                    'WARNING: indi-allsky version does not match config, please upgrade indi-allsky',
                     expire=timedelta(hours=2),
                 )
 
@@ -796,12 +796,12 @@ class IndiAllSky(object):
 
 
         if __config_level__ != self._config_obj.config_level:
-            logger.error('indi-allsky version does not match config, please rerun setup.sh')
+            logger.error('indi-allsky version does not match config, please upgrade/reconfigure indi-allsky')
 
             self._miscDb.addNotification(
                 NotificationCategory.STATE,
                 'config_version',
-                'WARNING: indi-allsky version does not match config, please rerun setup.sh',
+                'WARNING: indi-allsky version does not match config, please upgrade indi-allsky',
                 expire=timedelta(hours=2),
             )
 
