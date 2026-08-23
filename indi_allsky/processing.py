@@ -149,6 +149,7 @@ class ImageProcessor(object):
         self._alpha_mask_dict = dict()  # index for every bin mode
 
         self._gamma_lut = None
+        self._gamma_lut_gamma = None
 
         self.focus_mode = self.config.get('FOCUS_MODE', False)
 
@@ -2509,9 +2510,10 @@ class ImageProcessor(object):
 
 
     def _apply_gamma_correction(self, gamma):
-        if isinstance(self._gamma_lut, type(None)):
+        if self._gamma_lut is None or self._gamma_lut_gamma != gamma:
             range_array = numpy.arange(0, 256, dtype=numpy.float32)
             self._gamma_lut = (((range_array / 255) ** (1.0 / gamma)) * 255).astype(numpy.uint8)
+            self._gamma_lut_gamma = gamma
 
 
         self.image = self._gamma_lut.take(self.image, mode='raise')

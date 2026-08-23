@@ -24,6 +24,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_LABEL_TEMPLATE.label.text }}</span>
                         {{ form_config.IMAGE_LABEL_TEMPLATE(class='tw:textarea tw:textarea-bordered tw:bg-base-100 tw:text-base-content tw:w-full tw:text-xs', rows='3') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Image-label template using Python format syntax. See the Image Labels wiki for available variables.</span>
                         <div id="IMAGE_LABEL_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -34,11 +35,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEXT_PROPERTIES__PIL_FONT_FILE.label.text }}</span>
                         {{ form_config.TEXT_PROPERTIES__PIL_FONT_FILE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Path to a TrueType or OpenType font used by Pillow.</span>
                         <div id="TEXT_PROPERTIES__PIL_FONT_FILE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEXT_PROPERTIES__PIL_FONT_SIZE.label.text }}</span>
                         {{ form_config.TEXT_PROPERTIES__PIL_FONT_SIZE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Font size in pixels when Pillow renders this label.</span>
                         <div id="TEXT_PROPERTIES__PIL_FONT_SIZE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -62,24 +65,28 @@
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEXT_PROPERTIES__FONT_THICKNESS.label.text }}</span>
                         {{ form_config.TEXT_PROPERTIES__FONT_THICKNESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="TEXT_PROPERTIES__FONT_THICKNESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Font height for row spacing.</span>
                         {{ form_config.TEXT_PROPERTIES__FONT_HEIGHT(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1', placeholder='Height') }}
                         <div id="TEXT_PROPERTIES__FONT_HEIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">Position (X, Y)</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">X coordinate to start writing metadata - Maybe overridden in template.</span>
                         {{ form_config.TEXT_PROPERTIES__FONT_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full', placeholder='X') }}
                         <div id="TEXT_PROPERTIES__FONT_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Y coordinate to start writing metadata.</span>
                         {{ form_config.TEXT_PROPERTIES__FONT_Y(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1', placeholder='Y') }}
                         <div id="TEXT_PROPERTIES__FONT_Y-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEXT_PROPERTIES__FONT_COLOR.label.text }}</span>
                         {{ form_config.TEXT_PROPERTIES__FONT_COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Font color in R,G,B - May be overridden in template.</span>
                         <div id="TEXT_PROPERTIES__FONT_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         <div class="tw:flex tw:items-center tw:justify-between tw:p-2 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:mt-1">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">Outline</span>
                             {{ form_config.TEXT_PROPERTIES__FONT_OUTLINE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
-                        <div id="TEXT_PROPERTIES__FONT_OUTLINE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div id="TEXT_PROPERTIES__FONT_OUTLINE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
                     </div>
                 </div>
@@ -101,15 +108,20 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.MOON_OVERLAY__X.label.text }}</span>
                         {{ form_config.MOON_OVERLAY__X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Horizontal position in pixels. Negative values offset from the image's right edge.</span>
                         <div id="MOON_OVERLAY__X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.MOON_OVERLAY__Y.label.text }}</span>
                         {{ form_config.MOON_OVERLAY__Y(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Negative is offset from the bottom of image.</span>
                         <div id="MOON_OVERLAY__Y-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.MOON_OVERLAY__FLIP_V.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.MOON_OVERLAY__FLIP_V.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Flip vertically; use with horizontal flip to show the Southern Hemisphere view.</span>
+                        </div>
                         {{ form_config.MOON_OVERLAY__FLIP_V(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="MOON_OVERLAY__FLIP_V-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -120,8 +132,10 @@
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">Scale & Shading</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Original Moon image is 400x400.</span>
                         {{ form_config.MOON_OVERLAY__SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Scale') }}
                         <div id="MOON_OVERLAY__SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default: 0.4 - 0.0 would make the shaded area completely black.</span>
                         {{ form_config.MOON_OVERLAY__DARK_SIDE_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1', placeholder='Dark Scale') }}
                         <div id="MOON_OVERLAY__DARK_SIDE_SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -160,11 +174,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__OFFSET_X.label.text }}</span>
                         {{ form_config.LIGHTGRAPH_OVERLAY__OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Horizontal offset in pixels.</span>
                         <div id="LIGHTGRAPH_OVERLAY__OFFSET_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__Y.label.text }}</span>
                         {{ form_config.LIGHTGRAPH_OVERLAY__Y(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Negative is offset from the bottom of image.</span>
                         <div id="LIGHTGRAPH_OVERLAY__Y-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -202,6 +218,7 @@
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">Scale & Toggles</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default size: 1446 x 86 (including borders).</span>
                         {{ form_config.LIGHTGRAPH_OVERLAY__SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Scale') }}
                         <div id="LIGHTGRAPH_OVERLAY__SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         {{ form_config.LIGHTGRAPH_OVERLAY__OPACITY(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1', placeholder='Opacity') }}
@@ -218,6 +235,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE.label.text }}</span>
                         {{ form_config.LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Text scale used when OpenCV renders this label.</span>
                         <div id="LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
@@ -281,6 +299,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__A_WIDTH.label.text }}</span>
                         {{ form_config.IMAGE_OVERLAY__A_WIDTH(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Image will be resized to this specification.</span>
                         <div id="IMAGE_OVERLAY__A_WIDTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -291,11 +310,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__A_X.label.text }}</span>
                         {{ form_config.IMAGE_OVERLAY__A_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Negative is offset from the right side of image.</span>
                         <div id="IMAGE_OVERLAY__A_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_OVERLAY__A_Y.label.text }}</span>
                         {{ form_config.IMAGE_OVERLAY__A_Y(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Negative is offset from the bottom of image.</span>
                         <div id="IMAGE_OVERLAY__A_Y-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -311,7 +332,10 @@
                 <!-- Toggles & Color -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__ENABLE.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__ENABLE.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Draw cardinal directions using the lens azimuth configured on the Location tab.</span>
+                        </div>
                         {{ form_config.CARDINAL_DIRS__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="CARDINAL_DIRS__ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -337,6 +361,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__CHAR_NORTH.label.text }}</span>
                         {{ form_config.CARDINAL_DIRS__CHAR_NORTH(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Blank to not show direction.</span>
                         <div id="CARDINAL_DIRS__CHAR_NORTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -365,6 +390,7 @@
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">Offsets (X, Y)</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Horizontal offset in pixels.</span>
                         {{ form_config.CARDINAL_DIRS__OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='X') }}
                         <div id="CARDINAL_DIRS__OFFSET_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         {{ form_config.CARDINAL_DIRS__OFFSET_Y(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:mt-1', placeholder='Y') }}
@@ -392,7 +418,10 @@
                         <div id="CARDINAL_DIRS__PIL_FONT_SIZE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__OUTLINE_CIRCLE.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.CARDINAL_DIRS__OUTLINE_CIRCLE.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Enable for debugging.</span>
+                        </div>
                         {{ form_config.CARDINAL_DIRS__OUTLINE_CIRCLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="CARDINAL_DIRS__OUTLINE_CIRCLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -414,6 +443,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ORB_PROPERTIES__MODE.label.text }}</span>
                         {{ form_config.ORB_PROPERTIES__MODE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Select how Sun, Moon, and planet orbs are positioned on the image.</span>
                         <div id="ORB_PROPERTIES__MODE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -427,7 +457,10 @@
                         <div id="ORB_PROPERTIES__AZ_OFFSET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ORB_PROPERTIES__RETROGRADE.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.ORB_PROPERTIES__RETROGRADE.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Reverse orb movement; this also mirrors orb positions horizontally.</span>
+                        </div>
                         {{ form_config.ORB_PROPERTIES__RETROGRADE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="ORB_PROPERTIES__RETROGRADE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -447,7 +480,7 @@
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4 tw:pt-2 tw:items-center">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LOGO_OVERLAY.label.text }}</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Watermark PNG file with alpha channel</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Logo overlay image. Must have an alpha channel.</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.LOGO_OVERLAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}

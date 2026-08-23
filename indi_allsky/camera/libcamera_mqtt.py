@@ -440,6 +440,8 @@ class IndiClientLibCameraImx477Mqtt(IndiClientLibCameraMqttGeneric):
             'pixel'         : 1.55,
             'min_gain'      : 1.0,
             'max_gain'      : 22.260870,
+            'min_binning'   : 1,
+            'max_binning'   : 4,
             'min_exposure'  : 0.000114,
             'max_exposure'  : 694.0,
             'cfa'           : 'BGGR',
