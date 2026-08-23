@@ -150,7 +150,7 @@
             <div class="tw:px-4 tw:py-3 tw:flex tw:items-center tw:justify-center">
                 <a href="{{ url_for('indi_allsky.index_view') }}" class="tw:no-underline">
                     <img src="{{ url_for('indi_allsky.static', filename='images/logo_outline_full.png') }}"
-                        class="tw:w-36 tw:h-auto tw:transition-transform hover:tw:scale-105" alt="indi-allsky">
+                        class="tw:w-32 tw:h-auto tw:transition-transform hover:tw:scale-105" alt="indi-allsky">
                 </a>
             </div>
         </div>
@@ -268,7 +268,7 @@
                     class="tw:flex tw:items-center tw:justify-between tw:w-full tw:px-1 tw:py-1 tw:rounded-[var(--radius-selector)] tw:cursor-pointer tw:list-none tw:text-base-content/70 hover:tw:text-base-content tw:transition-all">
                     <div class="tw:flex tw:items-center tw:gap-2">
                         <i class="tw:icon-[lucide--camera] tw:w-3.5 tw:h-3.5 tw:opacity-50"></i>
-                        <span class="tw:font-semibold tw:text-[0.75rem] tw:uppercase tw:tracking-wider">Camera</span>
+                        <span class="tw:font-bold tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60">Camera</span>
                     </div>
                     <i class="tw:icon-[lucide--chevron-down] camera-chevron tw:w-3.5 tw:h-3.5 tw:opacity-50"></i>
                 </summary>
@@ -286,12 +286,12 @@
                     class="tw:flex tw:items-center tw:justify-between tw:w-full tw:px-1 tw:py-1 tw:rounded-[var(--radius-selector)] tw:cursor-pointer tw:list-none tw:text-base-content/70 hover:tw:text-base-content tw:transition-all">
                     <div class="tw:flex tw:items-center tw:gap-2">
                         <i class="tw:icon-[lucide--activity] tw:w-3.5 tw:h-3.5 tw:opacity-50"></i>
-                        <span class="tw:font-semibold tw:text-[0.75rem] tw:uppercase tw:tracking-wider">Status</span>
+                        <span class="tw:font-bold tw:text-[0.625rem] tw:uppercase tw:tracking-widest tw:text-base-content/60">Status</span>
                     </div>
                     <i class="tw:icon-[lucide--chevron-down] status-chevron tw:w-3.5 tw:h-3.5 tw:opacity-50"></i>
                 </summary>
                 <div id="status_text"
-                    class="tw:pt-2 tw:px-1 tw:text-[0.781rem] tw:opacity-85 tw:grid tw:grid-cols-[auto_1fr] tw:gap-x-3 [&_br]:tw:hidden [&_b]:tw:font-semibold [&_b]:tw:text-base-content/70 [&_b]:after:tw:content-[':']">
+                    class="tw:pt-2 tw:px-1 tw:text-[0.6875rem] tw:opacity-85 tw:grid tw:grid-cols-[auto_1fr] tw:gap-x-3 tw:leading-relaxed [&_br]:tw:hidden [&_b]:tw:font-semibold [&_b]:tw:text-base-content/70 [&_b]:after:tw:content-[':']">
                     {{ status_text|safe }}
                 </div>
             </details>
