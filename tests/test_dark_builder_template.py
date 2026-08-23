@@ -176,7 +176,7 @@ def test_builder_explains_each_library_state(
     assert 'One master set is a master dark and matching bad-pixel map' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.23.6' in html
+    assert 'Preview 2026.08.23.7' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'masters from 15.0°C to 25.0°C count as matched' in html
     assert 'Every required master set is checked separately, so capture drift may leave only some' in html
@@ -523,8 +523,9 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert '2 master sets: 1 active, 1 inactive' in html
     assert '>Active</span>' in html
     assert '>Inactive</span>' in html
-    assert 'Delete temperature group…' in html
-    assert 'Delete temperature layer…' not in html
+    assert 'Delete temperature group' in html
+    assert 'Delete temperature group…' not in html
+    assert 'Delete temperature layer' not in html
 
     recommendation = html.split('aria-labelledby="dark-recommendation-title"', 1)[1].split(
         'id="dark-recommendation-explanation"',
@@ -547,7 +548,10 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert 'Storage used' in maintenance
     assert maintenance.count('dark-library-scope-row') >= 5
     assert maintenance.count('dark-library-action-column') >= 5
-    assert 'Delete complete camera library…' in maintenance
+    assert 'Delete complete camera library' in maintenance
+    assert 'Delete complete camera library…' not in maintenance
+    assert 'Delete sensor profile…' not in maintenance
+    assert 'inactive files…' not in maintenance
     assert 'dark-remove-selection tw:btn tw:btn-sm' in maintenance
     assert 'Select several master sets' not in maintenance
     assert 'Select one or more master sets to manage them together.' in maintenance
@@ -561,7 +565,10 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert 'id="dark-library-deactivate-selected"' in maintenance
     assert 'id="dark-library-activate-selected"' in maintenance
     assert 'id="dark-library-delete-selected"' in maintenance
-    assert 'Deactivate (exclude from calibration)…' in maintenance
+    assert 'Deactivate (exclude from calibration)' in maintenance
+    assert 'Deactivate…' not in maintenance
+    assert 'Activate…' not in maintenance
+    assert 'Delete…' not in maintenance
     assert 'Delete selected master sets' in maintenance
     assert "'Delete ' + masterCount + ' ' + masterLabel" in html
     assert '--dark-readable-muted:' in html
@@ -573,7 +580,14 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert '.dt-paging-button.current' in html
     assert 'color: var(--color-base-100) !important;' in html
     assert 'background-color: var(--dark-readable-primary) !important;' in html
-    assert 'Activate (make eligible again)…' in maintenance
+    assert 'Activate (make eligible again)' in maintenance
+    assert 'id="dark-library-selection-guidance"' in maintenance
+    assert 'Mixed active/inactive selection.' in html
+    assert 'function setDarkSelectionConfirmationOpen(open)' in html
+    assert 'darkSelectionConfirmationOpen || !hasSelection' in html
+    assert 'setDarkSelectionConfirmationOpen(true);' in html
+    assert html.count('setDarkSelectionConfirmationOpen(false);') >= 2
+    assert 'preview.unchanged_entry_count' in html
     assert 'Clear this selection before choosing another camera.' in maintenance
     assert 'id="dark-eligibility-confirmation"' in maintenance
     assert 'Deactivation leaves the files stored and can be reversed' in maintenance
@@ -601,7 +615,7 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert 'let activeDarkSelectionCameraId = null;' in html
     assert "activeDarkSelectionCameraId !== cameraId" in html
     assert "otherCamera = hasSelection" in html
-    assert "toolbar.toggleClass('tw:hidden', !hasSelection);" in html
+    assert "toolbar.toggleClass('tw:hidden', !hasSelection || darkSelectionConfirmationOpen);" in html
     assert 'const hasStagedSelection' in html
     assert 'const canRestore = !hasStagedSelection' in html
     assert 'function renderDarkCoverageImpact(selector, impact, fallbackMessage)' in html

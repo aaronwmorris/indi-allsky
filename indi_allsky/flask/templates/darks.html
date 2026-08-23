@@ -532,6 +532,11 @@
     background-color: color-mix(in oklab, var(--color-info) 6%, var(--color-base-100));
 }
 
+#dark-removal-confirmation,
+#dark-eligibility-confirmation {
+    scroll-margin-block: 1rem;
+}
+
 .dark-library-scope-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(13rem, 16rem);
@@ -808,7 +813,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
 {% endblock %}
 
 {% block content %}
-{% set dark_builder_preview_version = '2026.08.23.6' %}
+{% set dark_builder_preview_version = '2026.08.23.7' %}
 <div id="dark-page-content" class="tw:container tw:mx-auto tw:w-full tw:px-4 tw:py-6 tw:flex tw:flex-col tw:gap-4">
 
     <nav aria-label="Dark library sections">
@@ -1475,7 +1480,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                 data-label="inactive or replaced records for {{ library.name }}"
                                 data-selection='{{ library.inactive_selection | tojson | forceescape }}'
                                 {% if dark_library_task_active %}disabled{% endif %}>
-                                Delete {{ library.inactive_count }} inactive files…
+                                Delete {{ library.inactive_count }} inactive files
                             </button>
                             {% endif %}
                             <button type="button" class="dark-remove-selection tw:btn tw:btn-sm tw:btn-error tw:btn-outline"
@@ -1483,7 +1488,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                 data-label="the complete library for {{ library.name }}"
                                 data-selection='{{ library.selection | tojson | forceescape }}'
                                 {% if dark_library_task_active %}disabled{% endif %}>
-                                Delete complete camera library…
+                                Delete complete camera library
                             </button>
                             </div>
                         </div>
@@ -1502,7 +1507,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                     data-label="the {{ profile.width if profile.width is not none else '?' }}×{{ profile.height if profile.height is not none else '?' }}, bin {{ profile.binning }}, {{ profile.bit_depth if profile.bit_depth is not none else 'unknown' }}-bit sensor profile"
                                     data-selection='{{ profile.selection | tojson | forceescape }}'
                                     {% if dark_library_task_active %}disabled{% endif %}>
-                                    Delete sensor profile…
+                                    Delete sensor profile
                                 </button>
                                 </div>
                             </div>
@@ -1529,7 +1534,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                             data-label="the {{ layer.temperature_label }} temperature group for {{ library.name }}"
                                             data-selection='{{ layer.selection | tojson | forceescape }}'
                                             {% if dark_library_task_active %}disabled{% endif %}>
-                                            Delete temperature group…
+                                            Delete temperature group
                                         </button>
                                         </div>
                                     </div>
@@ -1563,7 +1568,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                                         data-label="gain {{ '%g'|format(master.gain) }}, {{ '%g'|format(master.exposure) }}s master set for {{ library.name }}"
                                                         data-selection='{{ master.selection | tojson | forceescape }}'
                                                         {% if dark_library_task_active %}disabled{% endif %}>
-                                                        Deactivate…
+                                                        Deactivate
                                                     </button>
                                                     {% endif %}
                                                     {% if master.status in ('inactive', 'mixed') and not master.staged %}
@@ -1572,7 +1577,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                                         data-label="gain {{ '%g'|format(master.gain) }}, {{ '%g'|format(master.exposure) }}s master set for {{ library.name }}"
                                                         data-selection='{{ master.selection | tojson | forceescape }}'
                                                         {% if dark_library_task_active %}disabled{% endif %}>
-                                                        Activate…
+                                                        Activate
                                                     </button>
                                                     {% endif %}
                                                     <button type="button" class="dark-remove-selection tw:btn tw:btn-xs tw:btn-error tw:btn-ghost"
@@ -1580,7 +1585,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                                         data-label="{% if master.status == 'inactive' %}inactive {% endif %}gain {{ '%g'|format(master.gain) }}, {{ '%g'|format(master.exposure) }}s master set for {{ library.name }}"
                                                         data-selection='{{ master.selection | tojson | forceescape }}'
                                                         {% if dark_library_task_active %}disabled{% endif %}>
-                                                        Delete…
+                                                        Delete
                                                     </button>
                                                 </div>
                                             </div>
@@ -1634,17 +1639,17 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
             <div class="tw:min-w-0">
                 <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Selected master sets · <span id="dark-library-selection-camera"></span></div>
                 <div id="dark-library-selection-summary" class="tw:text-sm tw:font-semibold tw:mt-1" aria-live="polite"></div>
-                <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">A dark and its matching map stay together. Clear this selection before choosing another camera.</div>
+                <div id="dark-library-selection-guidance" class="tw:text-xs tw:text-base-content/60 tw:mt-1">A dark and its matching map stay together. Clear this selection before choosing another camera.</div>
             </div>
             <div class="dark-library-selection-actions">
                 <button id="dark-library-clear-selection" type="button" class="dark-library-clear-selection tw:btn tw:btn-sm tw:btn-ghost" disabled>Clear</button>
                 <button id="dark-library-deactivate-selected" type="button" class="dark-exclude-marked dark-eligibility-selection tw:btn tw:btn-sm tw:btn-warning tw:btn-outline"
                     data-active="false" data-selection='{"dark_ids":[],"bpm_ids":[]}' disabled>
-                    Deactivate (exclude from calibration)…
+                    Deactivate (exclude from calibration)
                 </button>
                 <button id="dark-library-activate-selected" type="button" class="dark-restore-marked dark-eligibility-selection tw:btn tw:btn-sm tw:btn-success tw:btn-outline"
                     data-active="true" data-selection='{"dark_ids":[],"bpm_ids":[]}' disabled>
-                    Activate (make eligible again)…
+                    Activate (make eligible again)
                 </button>
                 <button id="dark-library-delete-selected" type="button" class="dark-remove-marked dark-remove-selection tw:btn tw:btn-sm tw:btn-error tw:btn-outline"
                     data-selection='{"dark_ids":[],"bpm_ids":[]}' disabled>
@@ -1943,6 +1948,7 @@ let darkPlanRefreshTimer = null;
 let pendingDarkRemoval = null;
 let pendingDarkEligibility = null;
 let activeDarkSelectionCameraId = null;
+let darkSelectionConfirmationOpen = false;
 let darkSelectionLayoutFrame = null;
 let darkSelectionResizeObserver = null;
 let darkSelectionObservedWidth = null;
@@ -3026,6 +3032,7 @@ function hideDarkRemovalConfirmation() {
     pendingDarkRemoval = null;
     $('#dark-removal-confirmation-input').val('');
     $('#dark-removal-confirmation').addClass('tw:hidden');
+    setDarkSelectionConfirmationOpen(false);
     showDarkActionError('');
     updateDarkRemovalConfirmation();
 }
@@ -3102,6 +3109,16 @@ function initializeDarkSelectionBarLayout() {
         darkSelectionResizeObserver.observe(anchor);
     }
     window.addEventListener('resize', scheduleDarkSelectionBarLayout);
+}
+
+function setDarkSelectionConfirmationOpen(open) {
+    darkSelectionConfirmationOpen = Boolean(open);
+    const hasSelection = $('.dark-library-master-checkbox:checked').length > 0;
+    $('#dark-library-selection-bar').toggleClass(
+        'tw:hidden',
+        darkSelectionConfirmationOpen || !hasSelection
+    );
+    scheduleDarkSelectionBarLayout();
 }
 
 function updateDarkMarkedSelection(cameraId) {
@@ -3205,11 +3222,14 @@ function updateDarkMarkedSelection(cameraId) {
     });
     $('#dark-library-maintenance').toggleClass('dark-library-selection-active', hasSelection);
     $('#dark-page-content').toggleClass('dark-library-selection-mode', hasSelection);
-    toolbar.toggleClass('tw:hidden', !hasSelection);
+    toolbar.toggleClass('tw:hidden', !hasSelection || darkSelectionConfirmationOpen);
     $('#dark-library-selection-camera').text(hasSelection ? cameraLabel : '');
     $('#dark-library-selection-summary').text(hasSelection
         ? masterCount + ' ' + masterLabel + ' selected · ' + fileCount + ' file' + (fileCount === 1 ? '' : 's')
         : '');
+    $('#dark-library-selection-guidance').text(canExclude && canRestore
+        ? 'Mixed active/inactive selection. Deactivate changes only active files; Activate changes only inactive files.'
+        : 'A dark and its matching map stay together. Clear this selection before choosing another camera.');
 
     button
         .attr('data-camera-id', activeDarkSelectionCameraId || '')
@@ -3227,7 +3247,7 @@ function updateDarkMarkedSelection(cameraId) {
         .attr('data-label', masterCount + ' selected ' + masterLabel + ' for ' + cameraName)
         .prop('disabled', !masterCount || !canExclude || blocked)
         .toggleClass('tw:hidden', !canExclude)
-        .text('Deactivate (exclude from calibration)…');
+        .text('Deactivate (exclude from calibration)');
     restoreButton
         .attr('data-camera-id', activeDarkSelectionCameraId || '')
         .attr('data-camera-name', cameraName)
@@ -3235,7 +3255,7 @@ function updateDarkMarkedSelection(cameraId) {
         .attr('data-label', masterCount + ' selected ' + masterLabel + ' for ' + cameraName)
         .prop('disabled', !masterCount || !canRestore || blocked)
         .toggleClass('tw:hidden', !canRestore)
-        .text('Activate (make eligible again)…');
+        .text('Activate (make eligible again)');
     clearButton
         .attr('data-camera-id', activeDarkSelectionCameraId || '')
         .prop('disabled', !masterCount || blocked);
@@ -3246,6 +3266,7 @@ function hideDarkEligibilityConfirmation() {
     pendingDarkEligibility = null;
     $('#dark-eligibility-confirmation').addClass('tw:hidden');
     $('#dark-eligibility-confirm').prop('disabled', true);
+    setDarkSelectionConfirmationOpen(false);
     showDarkActionError('');
 }
 
@@ -3284,7 +3305,13 @@ async function previewDarkEligibility(button) {
         $('#dark-eligibility-preview-summary').text(
             preview.dark_frames + ' dark frame' + (preview.dark_frames === 1 ? '' : 's')
             + ' + ' + preview.bad_pixel_maps + ' bad-pixel map'
-            + (preview.bad_pixel_maps === 1 ? '' : 's') + ' will change'
+            + (preview.bad_pixel_maps === 1 ? '' : 's') + ' will change.'
+            + (preview.unchanged_entry_count
+                ? ' ' + preview.unchanged_entry_count + ' selected file'
+                    + (preview.unchanged_entry_count === 1 ? ' is' : 's are')
+                    + ' already ' + (preview.active ? 'active' : 'inactive')
+                    + ' and will stay unchanged.'
+                : '')
         );
         const impact = preview.coverage_impact || {};
         renderDarkCoverageImpact(
@@ -3298,9 +3325,10 @@ async function previewDarkEligibility(button) {
             .text(preview.active ? 'Activate selected' : 'Deactivate selected')
             .prop('disabled', false);
         $('#dark-eligibility-confirmation').removeClass('tw:hidden');
+        setDarkSelectionConfirmationOpen(true);
         document.getElementById('dark-eligibility-confirmation').scrollIntoView({
             behavior: 'smooth',
-            block: 'nearest',
+            block: 'center',
         });
     } catch (error) {
         showDarkActionError(error.message);
@@ -3366,9 +3394,10 @@ async function previewDarkRemoval(button) {
         $('#dark-removal-confirmation').removeClass('tw:hidden');
         $('#dark-removal-confirmation-input').val('').trigger('focus');
         updateDarkRemovalConfirmation();
+        setDarkSelectionConfirmationOpen(true);
         document.getElementById('dark-removal-confirmation').scrollIntoView({
             behavior: 'smooth',
-            block: 'nearest',
+            block: 'center',
         });
     } catch (error) {
         showDarkActionError(error.message);

@@ -1957,6 +1957,23 @@ def test_manual_eligibility_changes_are_reversible_and_recorded():
     )
 
 
+def test_manual_eligibility_change_skips_entries_already_in_the_target_state():
+    active_frame = SimpleNamespace(active=True, data={})
+    inactive_frame = SimpleNamespace(active=False, data={})
+
+    changed = update_library_entries_eligibility(
+        [active_frame, inactive_frame],
+        False,
+        changed_utc='now',
+    )
+
+    assert changed == (active_frame,)
+    assert active_frame.active is False
+    assert inactive_frame.active is False
+    assert library_entry_eligibility(active_frame)['reason_label'] == 'Manually deactivated'
+    assert library_entry_eligibility(inactive_frame)['reason_label'] is None
+
+
 def test_capture_staging_cannot_be_manually_activated():
     frame = SimpleNamespace(active=False, data={
         'dark_automation': {

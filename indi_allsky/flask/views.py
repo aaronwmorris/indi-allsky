@@ -2297,6 +2297,8 @@ class AjaxDarkLibraryEligibilityView(BaseView):
                     1 for frame in changing_entries if 'BadPixelMap' in type(frame).__name__
                 ),
                 'entry_count': len(changing_entries),
+                'selected_entry_count': entry_count,
+                'unchanged_entry_count': entry_count - len(changing_entries),
                 'selection': resolved['selection'],
                 'selection_signature': resolved['signature'],
                 'coverage_impact': coverage_impact,
