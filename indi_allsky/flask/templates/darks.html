@@ -425,11 +425,13 @@
 
 .dark-library-selection-bar {
     position: fixed;
-    left: 50%;
+    left: var(--dark-library-selection-center, 50%);
     bottom: max(0.75rem, env(safe-area-inset-bottom));
     z-index: 100;
-    width: min(72rem, calc(100vw - 1.5rem));
-    max-width: 100%;
+    width: var(--dark-library-selection-width, calc(100vw - 1rem));
+    max-width: calc(100vw - 1rem);
+    box-sizing: border-box;
+    container-type: inline-size;
     transform: translateX(-50%);
     border: 1px solid color-mix(in oklab, var(--color-error) 38%, var(--color-base-300));
     border-radius: var(--radius-box);
@@ -451,6 +453,8 @@
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 0.5rem;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .dark-library-selection-actions .tw\:btn {
@@ -461,7 +465,7 @@
 }
 
 #dark-page-content.dark-library-selection-mode {
-    padding-bottom: 8rem;
+    padding-bottom: calc(var(--dark-library-selection-height, 0px) + 2.5rem);
 }
 
 #dark-library-maintenance.dark-library-selection-active .dark-library-master-row {
@@ -470,6 +474,23 @@
 
 #dark-library-maintenance.dark-library-selection-active .dark-library-master-actions {
     display: none;
+}
+
+@container (max-width: 60rem) {
+    .dark-library-selection-bar-inner {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .dark-library-selection-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    }
+
+    .dark-library-selection-actions .tw\:btn {
+        width: 100%;
+    }
 }
 
 .dark-library-master-choice {
@@ -513,7 +534,6 @@
 
     .dark-library-selection-bar {
         bottom: max(0.5rem, env(safe-area-inset-bottom));
-        width: calc(100vw - 1rem);
     }
 
     .dark-library-selection-bar-inner {
@@ -532,9 +552,6 @@
         width: 100%;
     }
 
-    #dark-page-content.dark-library-selection-mode {
-        padding-bottom: 13rem;
-    }
 }
 
 #dark-cover-confirmation {
@@ -644,7 +661,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
 {% endblock %}
 
 {% block content %}
-{% set dark_builder_preview_version = '2026.08.23.2' %}
+{% set dark_builder_preview_version = '2026.08.23.4' %}
 <div id="dark-page-content" class="tw:container tw:mx-auto tw:w-full tw:px-4 tw:py-6 tw:flex tw:flex-col tw:gap-4">
 
     <nav aria-label="Dark library sections">
@@ -1779,6 +1796,9 @@ let darkPlanRefreshTimer = null;
 let pendingDarkRemoval = null;
 let pendingDarkEligibility = null;
 let activeDarkSelectionCameraId = null;
+let darkSelectionLayoutFrame = null;
+let darkSelectionResizeObserver = null;
+let darkSelectionObservedWidth = null;
 let darkSingleStrategy = initialDarkPlan.capture_mode === 'temperature_series'
     ? 'complete'
     : (initialDarkPlan.strategy || 'complete');
@@ -2863,6 +2883,80 @@ function hideDarkRemovalConfirmation() {
     updateDarkRemovalConfirmation();
 }
 
+function scheduleDarkSelectionBarLayout() {
+    if (darkSelectionLayoutFrame !== null) {
+        window.cancelAnimationFrame(darkSelectionLayoutFrame);
+    }
+    darkSelectionLayoutFrame = window.requestAnimationFrame(function() {
+        darkSelectionLayoutFrame = null;
+        const page = document.getElementById('dark-page-content');
+        const toolbar = document.getElementById('dark-library-selection-bar');
+        if (!page || !toolbar || toolbar.classList.contains('tw:hidden')) {
+            if (page) page.style.removeProperty('--dark-library-selection-height');
+            return;
+        }
+
+        const anchor = document.getElementById('dark-library-maintenance') || page;
+        const anchorBounds = anchor.getBoundingClientRect();
+        const viewportGutter = 8;
+        const visibleLeft = Math.max(viewportGutter, anchorBounds.left);
+        const visibleRight = Math.min(window.innerWidth - viewportGutter, anchorBounds.right);
+        const availableWidth = Math.max(0, visibleRight - visibleLeft);
+        toolbar.style.setProperty(
+            '--dark-library-selection-center',
+            (visibleLeft + visibleRight) / 2 + 'px'
+        );
+        toolbar.style.setProperty(
+            '--dark-library-selection-width',
+            availableWidth + 'px'
+        );
+        page.style.setProperty(
+            '--dark-library-selection-height',
+            Math.ceil(toolbar.getBoundingClientRect().height) + 'px'
+        );
+    });
+}
+
+function keepDarkSelectionRowVisible(checkbox) {
+    window.requestAnimationFrame(function() {
+        const toolbar = document.getElementById('dark-library-selection-bar');
+        const row = checkbox ? checkbox.closest('.dark-library-master-row') : null;
+        if (!toolbar || !row || toolbar.classList.contains('tw:hidden')) return;
+
+        const toolbarBounds = toolbar.getBoundingClientRect();
+        const rowBounds = row.getBoundingClientRect();
+        const coveredHeight = rowBounds.bottom - toolbarBounds.top + 12;
+        if (coveredHeight <= 0) return;
+
+        let scrollContainer = row.parentElement;
+        while (scrollContainer && scrollContainer !== document.body) {
+            const overflowY = window.getComputedStyle(scrollContainer).overflowY;
+            if (overflowY === 'auto' || overflowY === 'scroll') break;
+            scrollContainer = scrollContainer.parentElement;
+        }
+        if (scrollContainer && scrollContainer !== document.body) {
+            scrollContainer.scrollTop += coveredHeight;
+        } else {
+            window.scrollBy(0, coveredHeight);
+        }
+    });
+}
+
+function initializeDarkSelectionBarLayout() {
+    const page = document.getElementById('dark-page-content');
+    const anchor = document.getElementById('dark-library-maintenance') || page;
+    if (window.ResizeObserver && anchor) {
+        darkSelectionResizeObserver = new ResizeObserver(function(entries) {
+            const width = entries[0] ? entries[0].contentRect.width : null;
+            if (width === darkSelectionObservedWidth) return;
+            darkSelectionObservedWidth = width;
+            scheduleDarkSelectionBarLayout();
+        });
+        darkSelectionResizeObserver.observe(anchor);
+    }
+    window.addEventListener('resize', scheduleDarkSelectionBarLayout);
+}
+
 function updateDarkMarkedSelection(cameraId) {
     const allCheckboxes = $('.dark-library-master-checkbox');
     const requestedCameraId = cameraId === undefined || cameraId === null
@@ -2996,6 +3090,7 @@ function updateDarkMarkedSelection(cameraId) {
     clearButton
         .attr('data-camera-id', activeDarkSelectionCameraId || '')
         .prop('disabled', !masterCount || blocked);
+    scheduleDarkSelectionBarLayout();
 }
 
 function hideDarkEligibilityConfirmation() {
@@ -3457,6 +3552,7 @@ $( document ).ready(function() {
                 return;
             }
             updateDarkMarkedSelection(cameraId);
+            if ($(this).is(':checked')) keepDarkSelectionRowVisible(this);
         });
         $('.dark-library-clear-selection').on('click', function() {
             const cameraId = activeDarkSelectionCameraId;
@@ -3465,6 +3561,7 @@ $( document ).ready(function() {
                 .prop('checked', false);
             updateDarkMarkedSelection(cameraId);
         });
+        initializeDarkSelectionBarLayout();
         updateDarkMarkedSelection(null);
         $('.dark-remove-selection').on('click', function() {
             previewDarkRemoval($(this));

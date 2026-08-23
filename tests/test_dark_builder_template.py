@@ -176,7 +176,7 @@ def test_builder_explains_each_library_state(
     assert 'One master set is a master dark and matching bad-pixel map' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.23.2' in html
+    assert 'Preview 2026.08.23.4' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'masters from 15.0°C to 25.0°C count as matched' in html
     assert 'Every required master set is checked separately, so capture drift may leave only some' in html
@@ -579,6 +579,13 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert 'bottom: max(0.75rem, env(safe-area-inset-bottom));' in html
     assert '#dark-library-maintenance.dark-library-selection-active .dark-library-master-actions' in html
     assert '#dark-page-content.dark-library-selection-mode' in html
+    assert 'function scheduleDarkSelectionBarLayout()' in html
+    assert "'--dark-library-selection-center'" in html
+    assert "'--dark-library-selection-height'" in html
+    assert "document.getElementById('dark-library-maintenance') || page" in html
+    assert '@container (max-width: 60rem)' in html
+    assert 'function keepDarkSelectionRowVisible(checkbox)' in html
+    assert 'initializeDarkSelectionBarLayout();' in html
     assert 'function updateDarkMarkedSelection(cameraId)' in html
     assert 'let activeDarkSelectionCameraId = null;' in html
     assert "activeDarkSelectionCameraId !== cameraId" in html
