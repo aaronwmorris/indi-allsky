@@ -176,7 +176,7 @@ def test_builder_explains_each_library_state(
     assert 'One master set is a master dark and matching bad-pixel map' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.23.1' in html
+    assert 'Preview 2026.08.23.2' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'masters from 15.0°C to 25.0°C count as matched' in html
     assert 'Every required master set is checked separately, so capture drift may leave only some' in html
@@ -536,7 +536,7 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert 'tw:divide-x' not in recommendation
 
     maintenance = html.split('id="dark-library-maintenance"', 1)[1].split(
-        'id="dark-removal-confirmation"',
+        '<!-- Dark Frames Tab Panel -->',
         1,
     )[0]
     assert 'dark-builder-step-header' in maintenance
@@ -549,13 +549,21 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert maintenance.count('dark-library-action-column') >= 5
     assert 'Delete complete camera library…' in maintenance
     assert 'dark-remove-selection tw:btn tw:btn-sm' in maintenance
-    assert 'Select several master sets' in maintenance
-    assert 'Each selection keeps its dark and matching map together.' in maintenance
+    assert 'Select several master sets' not in maintenance
+    assert 'Select one or more master sets to manage them together.' in maintenance
+    assert 'Actions appear at the bottom of the screen.' in maintenance
     assert maintenance.count('dark-library-master-checkbox') == 2
-    assert 'Delete selected master sets…' in maintenance
-    assert 'dark-library-clear-selection' in maintenance
-    assert 'Deactivate selected (exclude from calibration)…' in maintenance
-    assert 'Activate selected (make eligible again)…' in maintenance
+    assert 'dark-library-batch-toolbar' not in maintenance
+    assert 'id="dark-library-selection-bar"' in maintenance
+    assert 'id="dark-library-selection-camera"' in maintenance
+    assert 'id="dark-library-selection-summary"' in maintenance
+    assert 'id="dark-library-clear-selection"' in maintenance
+    assert 'id="dark-library-deactivate-selected"' in maintenance
+    assert 'id="dark-library-activate-selected"' in maintenance
+    assert 'id="dark-library-delete-selected"' in maintenance
+    assert 'Deactivate (exclude from calibration)…' in maintenance
+    assert 'Activate (make eligible again)…' in maintenance
+    assert 'Clear this selection before choosing another camera.' in maintenance
     assert 'id="dark-eligibility-confirmation"' in maintenance
     assert 'Deactivation leaves the files stored and can be reversed' in maintenance
 
@@ -566,7 +574,16 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert 'border-color: color-mix(in oklab, var(--color-error) 38%, var(--color-base-300));' in html
     assert 'background-color: color-mix(in oklab, var(--color-warning) 12%, var(--color-base-100));' in html
     assert 'id="dark-removal-confirmation-input" class="tw:input tw:input-bordered tw:input-error' in html
+    assert '.dark-library-selection-bar {' in html
+    assert 'position: fixed;' in html
+    assert 'bottom: max(0.75rem, env(safe-area-inset-bottom));' in html
+    assert '#dark-library-maintenance.dark-library-selection-active .dark-library-master-actions' in html
+    assert '#dark-page-content.dark-library-selection-mode' in html
     assert 'function updateDarkMarkedSelection(cameraId)' in html
+    assert 'let activeDarkSelectionCameraId = null;' in html
+    assert "activeDarkSelectionCameraId !== cameraId" in html
+    assert "otherCamera = hasSelection" in html
+    assert "toolbar.toggleClass('tw:hidden', !hasSelection);" in html
     assert 'const hasStagedSelection' in html
     assert 'const canRestore = !hasStagedSelection' in html
     assert 'function renderDarkCoverageImpact(selector, impact, fallbackMessage)' in html
