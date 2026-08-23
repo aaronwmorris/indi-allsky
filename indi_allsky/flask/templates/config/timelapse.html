@@ -56,7 +56,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_BITRATE.label.text }}</span>
                         {{ form_config.FFMPEG_BITRATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">e.g. 5000k, 15000k (1080p), 30000k (4K)</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Video bitrate, for example 5000k. Use about 15000–20000k for dynamic 1080p video or 30000–40000k for 4K.</span>
                         <div id="FFMPEG_BITRATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -66,11 +66,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_VFSCALE.label.text }}</span>
                         {{ form_config.FFMPEG_VFSCALE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">FFmpeg scale filter for night timelapses. Reduce resolution on systems with under 4 GB RAM to avoid failures.</span>
                         <div id="FFMPEG_VFSCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_VFSCALE_STARTRAIL.label.text }}</span>
                         {{ form_config.FFMPEG_VFSCALE_STARTRAIL(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Separate FFmpeg scale filter for star-trail timelapses.</span>
                         <div id="FFMPEG_VFSCALE_STARTRAIL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -85,11 +87,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_EXTRA_OPTIONS.label.text }}</span>
                         {{ form_config.FFMPEG_EXTRA_OPTIONS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Additional FFmpeg options; values are not validated. “-level 3.1” can reduce artifacts and improve iOS compatibility.</span>
                         <div id="FFMPEG_EXTRA_OPTIONS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE_SKIP_FRAMES.label.text }}</span>
                         {{ form_config.TIMELAPSE_SKIP_FRAMES(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Skip the first N timelapse frames, which may be poor while gain changes between day and night.</span>
                         <div id="TIMELAPSE_SKIP_FRAMES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -136,6 +140,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_BITRATE_DAY.label.text }}</span>
                         {{ form_config.FFMPEG_BITRATE_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Video bitrate, for example 5000k. Use about 15000–20000k for dynamic 1080p video or 30000–40000k for 4K.</span>
                         <div id="FFMPEG_BITRATE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -145,11 +150,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_VFSCALE_DAY.label.text }}</span>
                         {{ form_config.FFMPEG_VFSCALE_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">FFmpeg scale filter for daytime timelapses. Reduce resolution on systems with under 4 GB RAM to avoid failures.</span>
                         <div id="FFMPEG_VFSCALE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_EXTRA_OPTIONS_DAY.label.text }}</span>
                         {{ form_config.FFMPEG_EXTRA_OPTIONS_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Additional FFmpeg options; values are not validated. “-level 3.1” can reduce artifacts and improve iOS compatibility.</span>
                         <div id="FFMPEG_EXTRA_OPTIONS_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -179,16 +186,19 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE__IMAGE_CIRCLE.label.text }}</span>
                         {{ form_config.TIMELAPSE__IMAGE_CIRCLE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Image-circle diameter used to wrap the keogram. Configure circle offsets on the Location tab.</span>
                         <div id="TIMELAPSE__IMAGE_CIRCLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE__PRE_SCALE.label.text }}</span>
                         {{ form_config.TIMELAPSE__PRE_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Percentage to pre-scale image. Only valid in timelapse processors that modify the image.</span>
                         <div id="TIMELAPSE__PRE_SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE__KEOGRAM_RATIO.label.text }}</span>
                         {{ form_config.TIMELAPSE__KEOGRAM_RATIO(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">The ratio of the size of the keogram as it relates to the image circle. 0.05 - 0.15 is a good starting point.</span>
                         <div id="TIMELAPSE__KEOGRAM_RATIO-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
