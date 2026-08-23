@@ -32,6 +32,7 @@ def _render_builder(
     bpm_list=None,
     darkframe_summary=None,
     bpm_summary=None,
+    preview_strategy=None,
 ):
     if temperature_ready_count is None:
         temperature_ready_count = ready_count
@@ -72,7 +73,9 @@ def _render_builder(
         'csrf_token': lambda: 'test-token',
     })
     preview = {
-        'strategy': action if action in ('complete', 'rebuild') else 'complete',
+        'strategy': preview_strategy or (
+            action if action in ('complete', 'rebuild') else 'complete'
+        ),
         'capture_mode': 'single',
         'estimated_time': '1h 00m 00s',
         'estimated_library_storage': '500 MiB',
@@ -176,7 +179,7 @@ def test_builder_explains_each_library_state(
     assert 'One master set is a master dark and matching bad-pixel map' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.23.8' in html
+    assert 'Preview 2026.08.23.11' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'masters from 15.0°C to 25.0°C count as matched' in html
     assert 'Every required master set is checked separately, so capture drift may leave only some' in html
@@ -227,13 +230,12 @@ def test_recommended_library_update_uses_the_same_name_everywhere(
     strategy_options = html.split('id="dark-strategy"', 1)[1].split('</select>', 1)[0]
     assert title in title_markup
     if recommended_option:
-        assert f'id="{recommended_option}" class="dark-update-option dark-update-option--recommended' in update_choices
+        assert f'id="{recommended_option}-badge"' in update_choices
         assert f'{title} · recommended</option>' in strategy_options
-        assert 'The choice made by the recommendation above is highlighted.' in update_choices
     else:
-        assert 'dark-update-option--recommended' not in update_choices
         assert ' · recommended</option>' not in strategy_options
-        assert 'No option is highlighted because no library update is recommended.' in update_choices
+    assert 'badge marks the builder’s choice' in update_choices
+    assert 'the highlight follows the currently selected Library update' in update_choices
 
 
 def test_library_tabs_show_health_pairing_compatibility_and_temperature_range():
@@ -663,12 +665,78 @@ def test_library_update_choices_have_distinct_capture_and_retirement_outcomes():
     assert 'Under Advanced options, choose <strong>Edit capture groups manually</strong>' in html
     assert 'to change which rows, gains or exposures will be captured' in html
     assert 'Advanced options → Library update' in html
-    assert 'id="dark-completion-option" class="dark-update-option dark-update-option--recommended' in html
+    assert 'id="dark-completion-option" class="dark-update-option dark-update-option--selected' in html
     assert 'id="dark-completion-option-badge" class="tw:badge tw:badge-primary tw:badge-sm">Recommended' in html
     assert 'Refresh recommended master sets only</strong> and <strong>Build or rebuild selected profiles</strong> both capture 17 master sets' in html
     assert 'Refresh replaces only those recommended sets' in html
     assert 'Build or rebuild also deactivates older extras' in html
     assert 'Inactive masters stay stored but are not used for calibration.' in html
+
+
+@pytest.mark.parametrize(
+    'strategy, selected_option',
+    (
+        ('complete', 'dark-completion-option'),
+        ('refresh', 'dark-refresh-option'),
+        ('rebuild', 'dark-rebuild-option'),
+        ('custom', 'dark-custom-option'),
+    ),
+)
+def test_library_update_highlight_follows_the_selected_strategy(
+    strategy,
+    selected_option,
+):
+    html = _render_builder(
+        'complete',
+        stored_dark_count=20,
+        stored_bpm_count=20,
+        ready_count=5,
+        suggested_count=12,
+        preview_strategy=strategy,
+    )
+    choices = html.split('Library update choices', 1)[1].split(
+        'id="dark-planning-warnings"',
+        1,
+    )[0]
+
+    assert choices.count('dark-update-option--selected') == 1
+    assert f'id="{selected_option}" class="dark-update-option dark-update-option--selected' in choices
+    assert 'id="dark-completion-option-badge" class="tw:badge tw:badge-primary tw:badge-sm">Recommended' in choices
+    assert "$('.dark-update-option').removeClass('dark-update-option--selected');" in html
+    assert "if (selectedOption) $(selectedOption).addClass('dark-update-option--selected');" in html
+    capture_mode_controls = html.split('function updateDarkCaptureModeControls()', 1)[1].split(
+        'function setDarkPlanRefreshing',
+        1,
+    )[0]
+    assert 'updateDarkUpdateChoiceHighlight();' in capture_mode_controls
+
+
+def test_how_decided_marks_every_advanced_plan_deviation_as_customized():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=20,
+        stored_bpm_count=20,
+        ready_count=5,
+        suggested_count=12,
+    )
+    explanation = html.split('id="dark-recommendation-explanation"', 1)[1].split(
+        'id="dark-capture-controls"',
+        1,
+    )[0]
+
+    assert 'id="dark-customized-plan-note"' in explanation
+    assert 'Customized capture plan' in explanation
+    assert 'no longer the builder’s unchanged recommendation' in explanation
+    assert 'badge below still marks the builder’s choice' in explanation
+    assert 'function resolveDarkPreparedPlanCustomization(state)' in html
+    assert "selected_strategy: $('#dark-strategy').val()" in html
+    assert 'plan_inputs_changed: planInputsChanged' in html
+    assert 'capture_groups_changed: darkCaptureGroupsEdited' in html
+    assert "capture_mode_changed: $('#dark-capture-mode').val() !== 'single'" in html
+    assert "stacking_method_changed: $('#dark-method').val() !== recommendedMethod" in html
+    assert "frame_count_changed: Number($('#dark-frame-count').val()) !== initialFrameCount" in html
+    assert "capture_order_changed: $('#dark-capture-order').val() !== initialCaptureOrder" in html
+    assert "$('#dark-customized-plan-note').toggleClass(" in html
 
 
 def test_recommendation_origin_and_overviews_are_explicitly_labelled():
@@ -733,7 +801,6 @@ def test_recalculated_plan_updates_every_recommendation_surface():
         'dark-completion-option-description',
         'dark-refresh-option-description',
         'dark-rebuild-option-description',
-        'dark-update-choice-state',
         'dark-recommendation-overview-body',
         'dark-input-temperature-source',
         'dark-input-temperature-range',
@@ -856,11 +923,13 @@ def test_every_capture_group_edit_switches_to_manual_and_can_restore_its_base_st
     )
 
     assert "let darkCaptureGroupBaseStrategy = darkSingleStrategy;" in html
-    assert ".on('change input', syncDarkCaptureGroupStrategy);" in html
-    assert "const strategy = changed ? 'custom' : darkCaptureGroupBaseStrategy;" in html
-    assert "darkCaptureGroupBaseStrategy = strategyControl.val();" in html
+    assert ".on('change input', function() { syncDarkCaptureGroupStrategy(true); });" in html
+    assert "function resolveDarkCapturePlanStrategy(" in html
+    assert "strategyControl.val(resolveDarkCapturePlanStrategy(" in html
+    assert "darkCapturePlanInputSignature(readDarkCapturePlanInputState())" in html
+    assert "$('#dark-exposure-max, #dark-exposure-step').on('input', function()" in html
+    assert "syncDarkCaptureGroupStrategy(true);" in html
     assert "$('#dark-refresh-plan').on('click', restoreDarkRecommendedCaptureGroups);" in html
-    assert "discardDarkCaptureGroupEdits(true);" in html
     assert "preserve_group_edits: true" in html
 
 

@@ -445,7 +445,7 @@
     background-color: var(--color-base-100);
 }
 
-.dark-update-option--recommended {
+.dark-update-option--selected {
     border-color: color-mix(in oklab, var(--color-primary) 48%, var(--color-base-300));
     background-color: color-mix(in oklab, var(--color-primary) 9%, var(--color-base-100));
     box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-primary) 18%, transparent);
@@ -813,7 +813,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
 {% endblock %}
 
 {% block content %}
-{% set dark_builder_preview_version = '2026.08.23.8' %}
+{% set dark_builder_preview_version = '2026.08.23.11' %}
 <div id="dark-page-content" class="tw:container tw:mx-auto tw:w-full tw:px-4 tw:py-6 tw:flex tw:flex-col tw:gap-4">
 
     <nav aria-label="Dark library sections">
@@ -992,6 +992,13 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     <span class="tw:badge tw:badge-ghost tw:badge-sm">Technical details</span>
                 </summary>
                 <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-4">
+                <div id="dark-customized-plan-note" class="tw:alert tw:alert-info tw:items-start tw:hidden" role="status" aria-live="polite">
+                    <i class="tw:icon-[lucide--sliders-horizontal] tw:w-5 tw:h-5 tw:mt-0.5 tw:shrink-0"></i>
+                    <div>
+                        <div class="tw:font-semibold tw:text-sm">Customized capture plan</div>
+                        <div class="tw:text-xs tw:text-base-content/70 tw:mt-1">The prepared plan now follows one or more user customizations and is no longer the builder’s unchanged recommendation. The <strong>Recommended</strong> badge below still marks the builder’s choice.</div>
+                    </div>
+                </div>
                 <div>
                     <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50 tw:mb-1">How the recommended grid is built</div>
                     <p class="tw:text-sm tw:text-base-content/70">
@@ -1063,29 +1070,29 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 </div>
                 <div>
                 <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50 tw:mb-1">Library update choices</div>
-                <p class="tw:text-xs tw:text-base-content/60 tw:mb-2">Select any of these under <strong>Advanced options → Library update</strong>. <span id="dark-update-choice-state">{% if dark_analysis.suggested_action == 'none' %}No option is highlighted because no library update is recommended.{% else %}The choice made by the recommendation above is highlighted.{% endif %}</span></p>
+                <p class="tw:text-xs tw:text-base-content/60 tw:mb-2">Select any of these under <strong>Advanced options → Library update</strong>. A <strong>Recommended</strong> badge marks the builder’s choice; the highlight follows the currently selected Library update.</p>
                 <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-4 tw:gap-2">
-                    <div id="dark-completion-option" class="dark-update-option{% if dark_analysis.suggested_action in ('complete', 'temperature') %} dark-update-option--recommended{% endif %} tw:p-3">
+                    <div id="dark-completion-option" class="dark-update-option{% if dark_execution_preview.strategy == 'complete' %} dark-update-option--selected{% endif %} tw:p-3">
                         <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2">
                             <div class="tw:font-semibold tw:text-sm">Fill gaps only</div>
                             <span id="dark-completion-option-badge" class="tw:badge tw:badge-primary tw:badge-sm{% if dark_analysis.suggested_action not in ('complete', 'temperature') %} tw:hidden{% endif %}">Recommended</span>
                         </div>
                         <div id="dark-completion-option-description" class="tw:text-xs tw:text-base-content/60 tw:mt-1">Capture {{ dark_analysis.completion_target_count }} uncovered set{% if dark_analysis.completion_target_count != 1 %}s{% endif %}. Existing masters keep their active/inactive status.</div>
                     </div>
-                    <div class="dark-update-option tw:p-3">
+                    <div id="dark-refresh-option" class="dark-update-option{% if dark_execution_preview.strategy == 'refresh' %} dark-update-option--selected{% endif %} tw:p-3">
                         <div class="tw:font-semibold tw:text-sm">Refresh recommended master sets only</div>
                         <div id="dark-refresh-option-description" class="tw:text-xs tw:text-base-content/60 tw:mt-1">Capture all {{ dark_analysis.refresh_target_count }} recommended master sets. After success, deactivate only older copies of those same gain/exposure combinations in the same temperature range. Other stored sets remain active.</div>
                     </div>
-                    <div id="dark-rebuild-option" class="dark-update-option{% if dark_analysis.suggested_action == 'rebuild' %} dark-update-option--recommended{% endif %} tw:p-3">
+                    <div id="dark-rebuild-option" class="dark-update-option{% if dark_execution_preview.strategy == 'rebuild' %} dark-update-option--selected{% endif %} tw:p-3">
                         <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2">
                             <div class="tw:font-semibold tw:text-sm">Build or rebuild selected profiles</div>
                             <span id="dark-rebuild-option-badge" class="tw:badge tw:badge-primary tw:badge-sm{% if dark_analysis.suggested_action != 'rebuild' %} tw:hidden{% endif %}">Recommended</span>
                         </div>
                         <div id="dark-rebuild-option-description" class="tw:text-xs tw:text-base-content/60 tw:mt-1">Capture the same {{ dark_analysis.rebuild_target_count }} recommended master sets. After success, deactivate every older set in the enabled profiles and temperature range—including gains or exposures no longer recommended—so those profiles match today’s grid.</div>
                     </div>
-                    <div class="dark-update-option tw:p-3">
+                    <div id="dark-custom-option" class="dark-update-option{% if dark_execution_preview.strategy == 'custom' %} dark-update-option--selected{% endif %} tw:p-3">
                         <div class="tw:font-semibold tw:text-sm">Edit capture groups manually</div>
-                        <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">Under Advanced options, choose <strong>Edit capture groups manually</strong> to change which rows, gains or exposures will be captured. It starts with the recommended grid, and existing masters keep their active/inactive status.</div>
+                        <div class="tw:text-xs tw:text-base-content/60 tw:mt-1">Under Advanced options, choose <strong>Edit capture groups manually</strong> to change which rows, gains or exposures will be captured. The generated rows become a manual plan, and existing masters keep their active/inactive status.</div>
                     </div>
                 </div>
                 <div id="dark-refresh-rebuild-note" class="tw:alert tw:alert-info tw:py-2 tw:text-xs tw:items-start tw:mt-2{% if dark_analysis.refresh_target_count != dark_analysis.rebuild_target_count %} tw:hidden{% endif %}">
@@ -1959,6 +1966,14 @@ let darkSingleTemperaturePolicy = initialDarkPlan.temperature_policy || 'recomme
 let darkCaptureGroupBaseline = null;
 let darkCaptureGroupsEdited = false;
 let darkCaptureGroupBaseStrategy = darkSingleStrategy;
+let darkStrategySelectionExplicit = false;
+let darkSingleStrategySelectionExplicit = false;
+const darkCapturePlanInputBaseline = darkCapturePlanInputSignature({
+    quality: initialDarkPlan.quality || 'balanced',
+    temperature_policy: initialDarkPlan.temperature_policy || 'recommended',
+    exposure_max: initialDarkPlan.exposure_max,
+    exposure_step: initialDarkPlan.exposure_step,
+});
 
 function darkEndpoint(template, taskId) {
     return template.replace(/\/0$/, '/' + taskId);
@@ -2300,13 +2315,17 @@ function updateDarkCaptureModeControls() {
     $('#dark-strategy-control').toggleClass('tw:hidden', temperatureSeries);
     if (temperatureSeries) {
         if (!wasTemperatureSeries) {
-            darkSingleStrategy = strategyControl.val();
+            darkSingleStrategy = darkCaptureGroupBaseStrategy;
+            darkSingleStrategySelectionExplicit = darkStrategySelectionExplicit;
             darkSingleTemperaturePolicy = temperaturePolicyControl.val();
         }
+        darkStrategySelectionExplicit = false;
         strategyControl.val('custom').prop('disabled', true);
         temperaturePolicyControl.val('recommended').prop('disabled', true);
     } else {
         if (wasTemperatureSeries) {
+            darkCaptureGroupBaseStrategy = darkSingleStrategy;
+            darkStrategySelectionExplicit = darkSingleStrategySelectionExplicit;
             strategyControl.val(darkSingleStrategy);
             temperaturePolicyControl.val(darkSingleTemperaturePolicy);
         }
@@ -2316,6 +2335,8 @@ function updateDarkCaptureModeControls() {
     $('#dark-start').html(temperatureSeries
         ? '<i class="tw:icon-[lucide--thermometer-snowflake] tw:w-5 tw:h-5"></i> Start temperature series'
         : '<i class="tw:icon-[lucide--aperture] tw:w-5 tw:h-5"></i> Start dark calibration');
+    updateDarkUpdateChoiceHighlight();
+    updateDarkPreparedPlanCustomizationNote();
 }
 
 function setDarkPlanRefreshing(refreshing) {
@@ -2373,7 +2394,7 @@ function updateDarkOptionGuidance(plan) {
         complete: 'Capture only uncovered master sets. Existing masters keep their active/inactive status.',
         refresh: 'Capture every recommended master set. After success, deactivate only older copies of those same recommended gain/exposure combinations in the same temperature range; leave all other stored sets unchanged.',
         rebuild: 'Capture the same recommended grid. After success, deactivate every older master in the enabled profiles and temperature range, including gains or exposures no longer recommended.',
-        custom: 'Start with every recommended master set, then edit or disable rows. Existing masters keep their active/inactive status.',
+        custom: 'Capture only the enabled groups and values shown below. Existing masters keep their active/inactive status.',
     };
     $('#dark-strategy-help').text(temperatureSeries
         ? 'Temperature series uses a custom night-only plan at every completed temperature step.'
@@ -2615,8 +2636,6 @@ function renderDarkRecommendation(plan) {
 
     const completionRecommended = action === 'complete' || action === 'temperature';
     const rebuildRecommended = action === 'rebuild';
-    $('#dark-completion-option').toggleClass('dark-update-option--recommended', completionRecommended);
-    $('#dark-rebuild-option').toggleClass('dark-update-option--recommended', rebuildRecommended);
     $('#dark-completion-option-badge').toggleClass('tw:hidden', !completionRecommended);
     $('#dark-rebuild-option-badge').toggleClass('tw:hidden', !rebuildRecommended);
     $('#dark-strategy-complete-option').text(
@@ -2625,9 +2644,7 @@ function renderDarkRecommendation(plan) {
     $('#dark-strategy-rebuild-option').text(
         'Build or rebuild selected profiles' + (rebuildRecommended ? ' · recommended' : '')
     );
-    $('#dark-update-choice-state').text(action === 'none'
-        ? 'No option is highlighted because no library update is recommended.'
-        : 'The choice made by the recommendation above is highlighted.');
+    updateDarkUpdateChoiceHighlight();
 
     $('#dark-recommendation-structural-coverage').text(
         structuralReadyCount + ' of ' + targetCount + ' master sets covered across all temperatures'
@@ -2793,18 +2810,16 @@ function renderDarkPlan(plan, preservedGroupState) {
     });
 
     $('.dark-group-enabled, .dark-group-binning, .dark-group-bitmax, .dark-group-gains, .dark-group-exposures')
-        .on('change input', syncDarkCaptureGroupStrategy);
+        .on('change input', function() { syncDarkCaptureGroupStrategy(true); });
     darkCaptureGroupBaseline = darkCaptureGroupSignature(readDarkCaptureGroupState());
-    darkCaptureGroupBaseStrategy = preservedGroupState
-        ? preservedGroupState.base_strategy
-        : $('#dark-strategy').val();
+    if (preservedGroupState) {
+        darkCaptureGroupBaseStrategy = preservedGroupState.base_strategy;
+    }
     darkCaptureGroupsEdited = Boolean(preservedGroupState);
     if (preservedGroupState) {
         applyDarkCaptureGroupState(preservedGroupState.groups);
-        syncDarkCaptureGroupStrategy();
-    } else {
-        updateDarkPlanSummary();
     }
+    syncDarkCaptureGroupStrategy();
 }
 
 function collectDarkGroups() {
@@ -2858,6 +2873,32 @@ function darkCaptureGroupSignature(groups) {
     })).sort((first, second) => first.id.localeCompare(second.id)));
 }
 
+function readDarkCapturePlanInputState() {
+    return {
+        quality: String($('#dark-quality').val() || ''),
+        temperature_policy: String($('#dark-temperature-policy').val() || ''),
+        exposure_max: String($('#dark-exposure-max').val() || '').trim(),
+        exposure_step: String($('#dark-exposure-step').val() || '').trim(),
+    };
+}
+
+function darkCapturePlanInputSignature(state) {
+    const normaliseNumber = function(value) {
+        const number = Number(value);
+        return value !== null && value !== undefined && String(value).trim() !== ''
+            && Number.isFinite(number)
+            ? number
+            : ['invalid', String(value === null || value === undefined ? '' : value).trim()];
+    };
+    state = state || {};
+    return JSON.stringify({
+        quality: String(state.quality || ''),
+        temperature_policy: String(state.temperature_policy || ''),
+        exposure_max: normaliseNumber(state.exposure_max),
+        exposure_step: normaliseNumber(state.exposure_step),
+    });
+}
+
 function applyDarkCaptureGroupState(groups) {
     const groupsById = new Map((groups || []).map((group) => [String(group.id), group]));
     $('.dark-plan-row').each(function() {
@@ -2872,36 +2913,102 @@ function applyDarkCaptureGroupState(groups) {
     });
 }
 
-function syncDarkCaptureGroupStrategy() {
+function resolveDarkCapturePlanStrategy(
+        baseStrategy,
+        groupsChanged,
+        planInputsChanged,
+        strategySelectionExplicit,
+        temperatureSeries) {
+    if (temperatureSeries) return 'custom';
+    return (groupsChanged || planInputsChanged) && !strategySelectionExplicit
+        ? 'custom'
+        : baseStrategy;
+}
+
+function updateDarkUpdateChoiceHighlight() {
+    const optionByStrategy = {
+        complete: '#dark-completion-option',
+        refresh: '#dark-refresh-option',
+        rebuild: '#dark-rebuild-option',
+        custom: '#dark-custom-option',
+    };
+    $('.dark-update-option').removeClass('dark-update-option--selected');
+    const selectedOption = optionByStrategy[$('#dark-strategy').val()];
+    if (selectedOption) $(selectedOption).addClass('dark-update-option--selected');
+}
+
+function darkRecommendedUpdateStrategy(plan) {
+    return (((plan || {}).analysis || {}).suggested_action === 'rebuild')
+        ? 'rebuild'
+        : 'complete';
+}
+
+function resolveDarkPreparedPlanCustomization(state) {
+    return state.selected_strategy !== state.recommended_strategy
+        || state.plan_inputs_changed
+        || state.capture_groups_changed
+        || state.capture_mode_changed
+        || state.stacking_method_changed
+        || state.frame_count_changed
+        || state.capture_order_changed;
+}
+
+function darkPreparedPlanIsCustomized() {
+    const plan = currentDarkPlan || {};
+    const recommendedMethod = plan.recommended_method || 'sigmaclip';
+    const initialFrameCount = Number(initialDarkPlan.frame_count) || 10;
+    const initialCaptureOrder = initialDarkPlan.capture_order || 'long_first';
+    const planInputsChanged = darkCapturePlanInputSignature(readDarkCapturePlanInputState())
+        !== darkCapturePlanInputBaseline;
+    return resolveDarkPreparedPlanCustomization({
+        selected_strategy: $('#dark-strategy').val(),
+        recommended_strategy: darkRecommendedUpdateStrategy(plan),
+        plan_inputs_changed: planInputsChanged,
+        capture_groups_changed: darkCaptureGroupsEdited,
+        capture_mode_changed: $('#dark-capture-mode').val() !== 'single',
+        stacking_method_changed: $('#dark-method').val() !== recommendedMethod,
+        frame_count_changed: Number($('#dark-frame-count').val()) !== initialFrameCount,
+        capture_order_changed: $('#dark-capture-order').val() !== initialCaptureOrder,
+    });
+}
+
+function updateDarkPreparedPlanCustomizationNote() {
+    $('#dark-customized-plan-note').toggleClass(
+        'tw:hidden',
+        !darkPreparedPlanIsCustomized(),
+    );
+}
+
+function syncDarkCaptureGroupStrategy(manualChange) {
+    if (manualChange === true) {
+        darkStrategySelectionExplicit = false;
+        if ($('#dark-capture-mode').val() === 'temperature_series') {
+            darkSingleStrategySelectionExplicit = false;
+        }
+    }
     const currentSignature = darkCaptureGroupSignature(readDarkCaptureGroupState());
-    const changed = darkCaptureGroupBaseline !== null
+    const groupsChanged = darkCaptureGroupBaseline !== null
         && currentSignature !== darkCaptureGroupBaseline;
+    const planInputsChanged = darkCapturePlanInputSignature(readDarkCapturePlanInputState())
+        !== darkCapturePlanInputBaseline;
     const temperatureSeries = $('#dark-capture-mode').val() === 'temperature_series';
     const strategyControl = $('#dark-strategy');
 
-    if (changed && !darkCaptureGroupsEdited) {
-        darkCaptureGroupBaseStrategy = strategyControl.val();
-    }
-    darkCaptureGroupsEdited = changed;
-    if (!temperatureSeries) {
-        const strategy = changed ? 'custom' : darkCaptureGroupBaseStrategy;
-        strategyControl.val(strategy);
-        darkSingleStrategy = strategy;
-    }
+    darkCaptureGroupsEdited = groupsChanged;
+    strategyControl.val(resolveDarkCapturePlanStrategy(
+        darkCaptureGroupBaseStrategy,
+        groupsChanged,
+        planInputsChanged,
+        darkStrategySelectionExplicit,
+        temperatureSeries,
+    ));
+    updateDarkUpdateChoiceHighlight();
     updateDarkOptionGuidance(currentDarkPlan);
     updateDarkPlanSummary();
 }
 
-function discardDarkCaptureGroupEdits(restoreStrategy) {
-    if (restoreStrategy && darkCaptureGroupsEdited && darkCaptureGroupBaseStrategy) {
-        $('#dark-strategy').val(darkCaptureGroupBaseStrategy);
-        darkSingleStrategy = darkCaptureGroupBaseStrategy;
-    }
-    darkCaptureGroupsEdited = false;
-}
-
 function restoreDarkRecommendedCaptureGroups() {
-    refreshDarkPlan({reset_group_edits: true});
+    refreshDarkPlan();
 }
 
 function updateDarkPlanSummary() {
@@ -2979,11 +3086,12 @@ function updateDarkPlanSummary() {
         complete: 'Capture only uncovered master sets. Existing masters keep their active/inactive status.',
         refresh: 'Capture every recommended master set. After success, deactivate only older copies of those same recommended gain/exposure combinations in the same temperature range.',
         rebuild: 'Capture the same recommended grid. After success, deactivate every older master in the enabled profiles and temperature range, including gains or exposures no longer recommended.',
-        custom: 'Start with every recommended master set. Edit or disable rows; existing masters keep their active/inactive status.',
+        custom: 'Capture only the enabled groups and values shown below. Existing masters keep their active/inactive status.',
     };
     $('#dark-plan-note').text(temperatureSeries
         ? 'Capture the full night plan now, then repeat after each selected sensor drop. A stop temperature ends the series after a complete set; a blank value repeats until cancelled.'
         : (notes[strategy] || ''));
+    updateDarkPreparedPlanCustomizationNote();
     updateDarkStartButton(masterCount);
 }
 
@@ -3034,9 +3142,6 @@ async function refreshDarkPlan(options) {
         updateDarkStartButton();
         return;
     }
-    if (refreshOptions.reset_group_edits) {
-        discardDarkCaptureGroupEdits(true);
-    }
     const requestRevision = ++darkPlanRequestRevision;
     showDarkActionError('');
     $('#dark-start').prop('disabled', true);
@@ -3054,9 +3159,9 @@ async function refreshDarkPlan(options) {
             method: 'POST',
             body: JSON.stringify({
                 camera_id: camera_id,
-                strategy: preservedGroupState
-                    ? preservedGroupState.base_strategy
-                    : $('#dark-strategy').val(),
+                strategy: $('#dark-capture-mode').val() === 'temperature_series'
+                    ? 'custom'
+                    : darkCaptureGroupBaseStrategy,
                 quality: $('#dark-quality').val(),
                 frame_count: Number($('#dark-frame-count').val()),
                 exposure_max: Number($('#dark-exposure-max').val()),
@@ -3789,23 +3894,27 @@ $( document ).ready(function() {
         $('#dark-method').on('change', function() {
             darkMethodTouched = true;
             updateDarkOptionGuidance(currentDarkPlan);
+            updateDarkPreparedPlanCustomizationNote();
         });
         $('#dark-capture-mode').on('change', function() {
-            discardDarkCaptureGroupEdits(true);
             updateDarkCaptureModeControls();
             updateDarkOptionGuidance(currentDarkPlan);
             refreshDarkPlan();
         });
         $('#dark-strategy').on('change', function() {
-            discardDarkCaptureGroupEdits(false);
             darkCaptureGroupBaseStrategy = $(this).val();
-            darkSingleStrategy = $(this).val();
+            darkSingleStrategy = darkCaptureGroupBaseStrategy;
+            darkStrategySelectionExplicit = true;
+            darkSingleStrategySelectionExplicit = true;
+            darkCaptureGroupsEdited = false;
+            updateDarkUpdateChoiceHighlight();
             updateDarkOptionGuidance(currentDarkPlan);
+            updateDarkPreparedPlanCustomizationNote();
             refreshDarkPlan();
         });
         $('#dark-quality').on('change', function() {
-            updateDarkOptionGuidance(currentDarkPlan);
-            refreshDarkPlan({reset_group_edits: true});
+            syncDarkCaptureGroupStrategy(true);
+            refreshDarkPlan();
         });
         $('#dark-frame-count').on('input', function() {
             updateDarkPlanSummary();
@@ -3814,12 +3923,19 @@ $( document ).ready(function() {
             updateDarkPlanSummary();
             if (this.checkValidity()) refreshDarkPlan({preserve_group_edits: true});
         });
-        $('#dark-exposure-max, #dark-exposure-step, #dark-temperature-range').on('input', function() {
+        $('#dark-exposure-max, #dark-exposure-step').on('input', function() {
+            syncDarkCaptureGroupStrategy(true);
+            if (this.checkValidity()) scheduleDarkPlanRefresh(350);
+        }).on('change', function() {
+            syncDarkCaptureGroupStrategy(true);
+            if (this.checkValidity()) refreshDarkPlan();
+        });
+        $('#dark-temperature-range').on('input', function() {
             updateDarkPlanSummary();
-            if (this.checkValidity()) scheduleDarkPlanRefresh(350, {reset_group_edits: true});
+            if (this.checkValidity()) scheduleDarkPlanRefresh(350);
         }).on('change', function() {
             updateDarkPlanSummary();
-            if (this.checkValidity()) refreshDarkPlan({reset_group_edits: true});
+            if (this.checkValidity()) refreshDarkPlan();
         });
         $('#dark-temperature-delta, #dark-temperature-target').on('input', function() {
             updateDarkPlanSummary();
@@ -3828,8 +3944,12 @@ $( document ).ready(function() {
             updateDarkPlanSummary();
             if (this.checkValidity()) refreshDarkPlan({preserve_group_edits: true});
         });
-        $('#dark-temperature-policy, #dark-temperature-source').on('change', function() {
-            refreshDarkPlan({reset_group_edits: true});
+        $('#dark-temperature-policy').on('change', function() {
+            syncDarkCaptureGroupStrategy(true);
+            refreshDarkPlan();
+        });
+        $('#dark-temperature-source').on('change', function() {
+            refreshDarkPlan();
         });
         $('#dark-capture-order').on('change', function() {
             updateDarkOptionGuidance(currentDarkPlan);
