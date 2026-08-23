@@ -2,6 +2,7 @@ import hashlib
 import json
 import math
 import os
+import shutil
 import signal
 import subprocess
 import sys
@@ -73,6 +74,13 @@ ELIGIBILITY_REASON_LABELS = {
     ELIGIBILITY_REASON_MANUAL_EXCLUSION: 'Manually deactivated',
     ELIGIBILITY_REASON_MANUAL_RESTORE: 'Manually activated',
 }
+
+DARK_CAPTURE_TEMP_PREFIXES = (
+    'indi-allsky-dark-automation-',
+    'indi-allsky-dark-temperature-',
+    'indi-allsky-dark-source-',
+)
+DARK_MASTER_FILE_PREFIXES = ('dark_', 'bpm_', '.dark-automation-')
 
 
 class DarkAutomationError(RuntimeError):
@@ -1478,6 +1486,7 @@ def run_task(app, task_id, repository_root, stop_requested=None):
 
     repository_root = Path(repository_root).resolve()
     child_script = repository_root.joinpath('darks_automation.py')
+    darks_dir = repository_root.joinpath('indi_allsky', 'html', 'images', 'darks')
     stop_requested = stop_requested or (lambda: False)
     def load_task():
         db.session.expire_all()
@@ -1578,6 +1587,8 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                     'Reload indi-allsky, then review the updated plan; no dark frames were taken.'
                 )
             config = config_obj.config
+            if config.get('IMAGE_FOLDER'):
+                darks_dir = Path(config['IMAGE_FOLDER']).absolute().joinpath('darks')
             if (
                     task_data.get('temperature_source_signature')
                     and temperature_source_signature(config)
@@ -1694,7 +1705,7 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                     ))
                 if _task_cancelled(app, task_id) or stop_requested() or return_code == 130:
                     raise DarkAutomationCancelled(
-                        'Temperature-series dark capture was stopped; completed temperature sets remain active.'
+                        'Temperature-series dark capture was stopped; completed master sets remain active.'
                     )
                 if return_code == 75 or last_progress.get('phase') == 'review_required':
                     raise DarkAutomationReviewRequired(
@@ -1826,7 +1837,7 @@ def run_task(app, task_id, repository_root, stop_requested=None):
         with app.app_context():
             update_data(progress={
                 'phase': 'activating_library',
-                'message': 'Checking and activating the completed library generation.',
+                'message': 'Verifying the completed library generation.',
             })
             activation = _activate_generation(
                 db,
@@ -1863,7 +1874,10 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                 },
                 progress={
                     'phase': 'restoring_capture',
-                    'message': 'Cancellation confirmed; restarting normal capture.',
+                    'message': (
+                        'Cancellation confirmed; completed master sets remain active; '
+                        'restarting normal capture.'
+                    ),
                 },
                 state=TaskQueueState.EXPIRED,
                 result='Dark library capture cancelled',
@@ -1906,12 +1920,44 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                 },
                 progress={
                     'phase': 'restoring_capture',
-                    'message': 'Dark calibration stopped; restarting normal capture.',
+                    'message': (
+                        'Dark calibration stopped; completed master sets remain active; '
+                        'restarting normal capture.'
+                    ),
                 },
                 state=TaskQueueState.FAILED,
                 result=str(error),
             )
         return 'failed'
+    finally:
+        try:
+            with app.app_context():
+                cleanup = cleanup_interrupted_capture_artifacts(
+                    db,
+                    (IndiAllSkyDbDarkFrameTable, IndiAllSkyDbBadPixelMapTable),
+                    darks_dir,
+                    task_ids=(task_id,),
+                )
+                cleanup_changes = {}
+                if cleanup['database_rows']:
+                    cleanup_changes['discarded_incomplete_database_rows'] = cleanup[
+                        'database_rows'
+                    ]
+                if cleanup['files']:
+                    cleanup_changes['discarded_incomplete_files'] = cleanup['files']
+                if cleanup['temporary_directories']:
+                    cleanup_changes['discarded_temporary_directories'] = cleanup[
+                        'temporary_directories'
+                    ]
+                if cleanup['warnings']:
+                    _cleanup_task, cleanup_task_data = load_task()
+                    cleanup_changes['cleanup_warnings'] = list(
+                        cleanup_task_data.get('cleanup_warnings') or ()
+                    ) + list(cleanup['warnings'])
+                if cleanup_changes:
+                    update_data(changes=cleanup_changes)
+        except Exception:
+            app.logger.exception('Unable to clean interrupted dark-capture artifacts')
 
 
 def mark_capture_restored(app, task_id):
@@ -1979,7 +2025,7 @@ def _mark_task_capture_restored(task):
                 and data.get('temperature_target') is not None
         ):
             progress['message'] = (
-                'Target sensor temperature reached; completed temperature sets are active '
+                'Target sensor temperature reached; completed master sets are active '
                 'and {0:s}.'.format(restore_phrase)
             )
         else:
@@ -1987,11 +2033,14 @@ def _mark_task_capture_restored(task):
     elif data.get('status') == 'cancelled':
         if data.get('capture_mode') == CAPTURE_MODE_TEMPERATURE_SERIES:
             progress['message'] = (
-                'Temperature series stopped; completed temperature sets remain active '
+                'Temperature series stopped; completed master sets remain active '
                 'and {0:s}.'.format(restore_phrase)
             )
         else:
-            progress['message'] = 'Dark calibration cancelled; {0:s}.'.format(restore_phrase)
+            progress['message'] = (
+                'Dark calibration cancelled; completed master sets remain active '
+                'and {0:s}.'.format(restore_phrase)
+            )
     elif data.get('status') == 'review_required':
         if data.get('operation') == 'flush':
             progress['message'] = (
@@ -2006,8 +2055,10 @@ def _mark_task_capture_restored(task):
                 )
             )
     else:
-        progress['message'] = '{0:s} after the calibration error.'.format(
-            restore_phrase.capitalize(),
+        progress['message'] = (
+            'Completed master sets remain active; {0:s} after the calibration error.'.format(
+                restore_phrase,
+            )
         )
     progress['heartbeat_utc'] = _utc_now_text()
     data['progress'] = progress
@@ -2111,8 +2162,295 @@ def _overall_progress(child_progress, offset, total, group_index, group_count):
         'temperature_set': child_progress.get('temperature_set'),
         'planned_temperature_sets': child_progress.get('planned_temperature_sets'),
         'completed_temperature_sets': child_progress.get('completed_temperature_sets', 0),
-        'activated_master_files': child_progress.get('activated_master_files', 0),
+        'activated_master_files': min(
+            (int(offset) * 2)
+            + int(child_progress.get('activated_master_files') or 0),
+            int(total) * 2,
+        ),
         'temperature_set_started_utc': child_progress.get('temperature_set_started_utc'),
+    }
+
+
+def checkpoint_master_pair(db, models, new_frames, task_data):
+    """Activate one completed dark/BPM pair inside the caller's transaction."""
+    new_frames = tuple(new_frames)
+    if len(new_frames) != 2:
+        raise DarkAutomationError('A completed master set must contain one dark and one bad-pixel map')
+
+    frame_types = set()
+    for frame in new_frames:
+        model_name = type(frame).__name__
+        if 'DarkFrame' in model_name:
+            frame_types.add('dark')
+        elif 'BadPixelMap' in model_name:
+            frame_types.add('bpm')
+    if frame_types != {'dark', 'bpm'}:
+        raise DarkAutomationError('A completed master set must contain one dark and one bad-pixel map')
+
+    automation_rows = [_frame_automation_data(frame) for frame in new_frames]
+    expected_generation = str(task_data.get('generation_id') or '')
+    expected_task_id = task_data.get('task_id')
+    expected_group_id = str(task_data.get('group_id') or task_data.get('id') or '')
+    if not expected_generation or any(
+            str(data.get('generation_id') or '') != expected_generation
+            for data in automation_rows
+    ):
+        raise DarkAutomationError('The completed master set does not match its capture generation')
+    if expected_task_id is not None and any(
+            str(data.get('task_id')) != str(expected_task_id)
+            for data in automation_rows
+    ):
+        raise DarkAutomationError('The completed master set does not match its capture task')
+    if expected_group_id and any(
+            str(data.get('group_id') or '') != expected_group_id
+            for data in automation_rows
+    ):
+        raise DarkAutomationError('The completed master set does not match its capture group')
+
+    master_keys = {
+        _library_master_key(frame, automation_data)
+        for frame, automation_data in zip(new_frames, automation_rows)
+    }
+    if len(master_keys) != 1:
+        raise DarkAutomationError('The completed dark and bad-pixel map do not describe the same master set')
+    if any(not _frame_matches_approved_target(frame, task_data) for frame in new_frames):
+        raise DarkAutomationError('The completed master set does not match the approved capture target')
+
+    camera_ids = {int(frame.camera_id) for frame in new_frames}
+    if len(camera_ids) != 1:
+        raise DarkAutomationError('The completed dark and bad-pixel map belong to different cameras')
+    camera_id = camera_ids.pop()
+    old_frames = []
+    for model in models:
+        old_frames.extend(
+            frame for frame in model.query.filter(model.camera_id == camera_id).all()
+            if all(frame is not new_frame for new_frame in new_frames)
+            and bool(frame.active)
+        )
+
+    strategy = str(task_data.get('strategy') or STRATEGY_COMPLETE)
+    if strategy in (STRATEGY_COMPLETE, STRATEGY_CUSTOM):
+        to_deactivate = ()
+    elif strategy in (STRATEGY_REFRESH, STRATEGY_REBUILD):
+        temperature_range = float(
+            task_data.get('temperature_range', DEFAULT_TEMPERATURE_RANGE)
+        )
+        to_deactivate = tuple(
+            old_frame for old_frame in old_frames
+            if any(
+                _frames_equivalent(old_frame, new_frame, temperature_range)
+                for new_frame in new_frames
+            )
+        )
+    else:
+        raise DarkAutomationError('Unknown dark-library activation strategy')
+
+    for frame in new_frames:
+        _set_frame_eligibility(
+            frame,
+            True,
+            ELIGIBILITY_REASON_CAPTURE_COMPLETED,
+            source='automation',
+        )
+    retirement_reason = (
+        ELIGIBILITY_REASON_REFRESH_REPLACED
+        if strategy == STRATEGY_REFRESH else ELIGIBILITY_REASON_REBUILD_REPLACED
+    )
+    for frame in to_deactivate:
+        _set_frame_eligibility(
+            frame,
+            False,
+            retirement_reason,
+            source='automation',
+        )
+
+    flush = getattr(db.session, 'flush', None)
+    if flush is not None:
+        flush()
+    return {
+        'activated': len(new_frames),
+        'deactivated': len(to_deactivate),
+    }
+
+
+def cleanup_dark_capture_tempdirs(temp_root=None):
+    """Remove abandoned automation scratch directories after no child is running."""
+    root = Path(temp_root or tempfile.gettempdir())
+    removed = 0
+    warnings = []
+    try:
+        children = tuple(root.iterdir())
+    except OSError as error:
+        return {'directories': 0, 'warnings': [str(error)]}
+
+    for child in children:
+        if not child.name.startswith(DARK_CAPTURE_TEMP_PREFIXES):
+            continue
+        try:
+            if child.is_symlink():
+                child.unlink()
+            elif child.is_dir():
+                shutil.rmtree(child)
+            else:
+                child.unlink()
+            removed += 1
+        except OSError as error:
+            warnings.append('{0:s}: {1:s}'.format(str(child), str(error)))
+    return {'directories': removed, 'warnings': warnings}
+
+
+def cleanup_interrupted_capture_artifacts(
+        db,
+        models,
+        darks_dir,
+        task_ids=None,
+        temp_root=None,
+):
+    """Keep complete active/inactive pairs and delete every interrupted artifact."""
+    darks_path = Path(darks_dir)
+    try:
+        resolved_darks_path = darks_path.resolve()
+    except (OSError, RuntimeError):
+        resolved_darks_path = darks_path.absolute()
+    warnings = []
+    requested_task_ids = None
+    if task_ids is not None:
+        requested_task_ids = {str(value) for value in task_ids}
+
+    typed_entries = []
+    for model in models:
+        frame_type = 'dark' if 'DarkFrame' in model.__name__ else 'bpm'
+        typed_entries.extend((frame_type, frame) for frame in model.query.all())
+
+    groups = {}
+    invalid_entries = []
+    for frame_type, frame in typed_entries:
+        automation_data = _frame_automation_data(frame)
+        generation_id = str(automation_data.get('generation_id') or '')
+        if not generation_id:
+            continue
+        task_id = str(automation_data.get('task_id'))
+        if requested_task_ids is not None and task_id not in requested_task_ids:
+            continue
+        try:
+            group_key = (
+                int(frame.camera_id),
+                _library_master_key(frame, automation_data),
+            )
+        except (AttributeError, TypeError, ValueError):
+            invalid_entries.append(frame)
+            continue
+        group = groups.setdefault(group_key, {'dark': [], 'bpm': []})
+        group[frame_type].append(frame)
+
+    for group in groups.values():
+        entries = group['dark'] + group['bpm']
+        complete_pair = len(group['dark']) == 1 and len(group['bpm']) == 1
+        eligibility_states = [
+            library_entry_eligibility(frame)['state'] for frame in entries
+        ]
+        eligible_pair = (
+            complete_pair
+            and len(set(eligibility_states)) == 1
+            and eligibility_states[0]
+            in (ELIGIBILITY_STATE_ACTIVE, ELIGIBILITY_STATE_INACTIVE)
+            and all(
+                bool(frame.active)
+                == (eligibility_states[0] == ELIGIBILITY_STATE_ACTIVE)
+                for frame in entries
+            )
+        )
+        automation_identities = {
+            (
+                str(_frame_automation_data(frame).get('task_id')),
+                str(_frame_automation_data(frame).get('group_id') or ''),
+            )
+            for frame in entries
+        }
+        eligible_pair = eligible_pair and len(automation_identities) == 1
+        existing_pair = eligible_pair
+        if existing_pair:
+            for frame in entries:
+                try:
+                    if not Path(frame.getFilesystemPath()).is_file():
+                        existing_pair = False
+                        break
+                except (AttributeError, OSError, RuntimeError, TypeError, ValueError):
+                    existing_pair = False
+                    break
+        if existing_pair:
+            continue
+        invalid_entries.extend(entries)
+
+    invalid_paths = []
+    for frame in invalid_entries:
+        try:
+            file_path = Path(frame.getFilesystemPath()).resolve()
+            file_path.relative_to(resolved_darks_path)
+        except (AttributeError, OSError, RuntimeError, TypeError, ValueError):
+            continue
+        invalid_paths.append(file_path)
+
+    invalid_identities = {id(frame) for frame in invalid_entries}
+    if invalid_entries:
+        try:
+            for frame in invalid_entries:
+                db.session.delete(frame)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
+    removed_files = 0
+    for file_path in invalid_paths:
+        try:
+            file_path.unlink()
+            removed_files += 1
+        except FileNotFoundError:
+            pass
+        except OSError as error:
+            warnings.append('{0:s}: {1:s}'.format(str(file_path), str(error)))
+
+    referenced_paths = set()
+    for _frame_type, frame in typed_entries:
+        if id(frame) in invalid_identities:
+            continue
+        try:
+            referenced_paths.add(Path(frame.getFilesystemPath()).resolve())
+        except (AttributeError, OSError, RuntimeError, TypeError, ValueError):
+            continue
+
+    try:
+        master_files = tuple(darks_path.iterdir()) if darks_path.is_dir() else ()
+    except OSError as error:
+        master_files = ()
+        warnings.append('{0:s}: {1:s}'.format(str(darks_path), str(error)))
+    for file_path in master_files:
+        if not file_path.is_file() or not file_path.name.lower().startswith(
+                DARK_MASTER_FILE_PREFIXES
+        ):
+            continue
+        try:
+            resolved_path = file_path.resolve()
+        except OSError:
+            resolved_path = file_path.absolute()
+        if resolved_path in referenced_paths:
+            continue
+        try:
+            file_path.unlink()
+            removed_files += 1
+        except FileNotFoundError:
+            pass
+        except OSError as error:
+            warnings.append('{0:s}: {1:s}'.format(str(file_path), str(error)))
+
+    temp_cleanup = cleanup_dark_capture_tempdirs(temp_root=temp_root)
+    warnings.extend(temp_cleanup['warnings'])
+    return {
+        'database_rows': len(invalid_entries),
+        'files': removed_files,
+        'temporary_directories': temp_cleanup['directories'],
+        'warnings': warnings,
     }
 
 

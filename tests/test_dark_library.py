@@ -32,6 +32,8 @@ from indi_allsky.dark_automation import build_library_partner_index
 from indi_allsky.dark_automation import build_dark_command
 from indi_allsky.dark_automation import build_execution_groups
 from indi_allsky.dark_automation import capture_controller_available
+from indi_allsky.dark_automation import checkpoint_master_pair
+from indi_allsky.dark_automation import cleanup_interrupted_capture_artifacts
 from indi_allsky.dark_automation import determine_capture_restore_state
 from indi_allsky.dark_automation import execution_preview
 from indi_allsky.dark_automation import estimate_execution_storage
@@ -1352,12 +1354,20 @@ def test_supervised_dark_command_uses_only_private_launcher_and_manifest():
     'status,expected_message',
     (
         ('success', 'Dark library complete; normal capture has resumed.'),
-        ('cancelled', 'Dark calibration cancelled; normal capture has resumed.'),
+        (
+            'cancelled',
+            'Dark calibration cancelled; completed master sets remain active '
+            'and normal capture has resumed.',
+        ),
         (
             'review_required',
             'Normal capture has resumed. Review the revised camera plan before retrying.',
         ),
-        ('failed', 'Normal capture has resumed after the calibration error.'),
+        (
+            'failed',
+            'Completed master sets remain active; normal capture has resumed '
+            'after the calibration error.',
+        ),
     ),
 )
 def test_capture_restore_closes_terminal_progress(status, expected_message):
@@ -1573,7 +1583,7 @@ def test_temperature_series_restore_message_preserves_completed_sets():
 
     _mark_task_capture_restored(task)
 
-    assert 'completed temperature sets remain active' in task.data['progress']['message']
+    assert 'completed master sets remain active' in task.data['progress']['message']
 
 
 class _FakeColumn:
@@ -1600,6 +1610,7 @@ class _FakeSession:
         self.deleted = []
         self.committed = False
         self.rolled_back = False
+        self.flushed = False
 
     def delete(self, entry):
         self.deleted.append(entry)
@@ -1608,6 +1619,9 @@ class _FakeSession:
         if self.fail_commit:
             raise RuntimeError('database commit failed')
         self.committed = True
+
+    def flush(self):
+        self.flushed = True
 
     def rollback(self):
         self.rolled_back = True
@@ -2152,6 +2166,227 @@ def _activation_group(**overrides):
     }
     group.update(overrides)
     return group
+
+
+def _automation_model(name):
+    return type(name, (), {'camera_id': _FakeColumn()})
+
+
+def _automation_model_frame(
+        model,
+        path,
+        generation,
+        frame_task_id=42,
+        group_id='group-1',
+        active=False,
+        eligibility_state='staged',
+        gain=100,
+        exposure=5,
+        temperature=20,
+):
+    frame = model()
+    frame.camera_id = 1
+    frame.active = bool(active)
+    frame.gain = float(gain)
+    frame.exposure = float(exposure)
+    frame.binmode = 1
+    frame.bitdepth = 16
+    frame.width = 100
+    frame.height = 50
+    frame.temp = temperature
+    frame.data = {
+        'dark_automation': {
+            'generation_id': generation,
+            'task_id': frame_task_id,
+            'group_id': group_id,
+            'eligibility': {
+                'state': eligibility_state,
+                'reason': 'capture_staging',
+                'source': 'automation',
+            },
+        },
+    }
+    frame.getFilesystemPath = lambda: Path(path)
+    return frame
+
+
+def test_completed_master_pair_is_checkpointed_atomically():
+    dark_model = _automation_model('IndiAllSkyDbDarkFrameTable')
+    bpm_model = _automation_model('IndiAllSkyDbBadPixelMapTable')
+    new_dark = _automation_model_frame(dark_model, 'new-dark.fit', 'new')
+    new_bpm = _automation_model_frame(bpm_model, 'new-bpm.fit', 'new')
+    old_dark = _automation_model_frame(
+        dark_model,
+        'old-dark.fit',
+        'old-dark',
+        active=True,
+        eligibility_state='active',
+    )
+    old_bpm = _automation_model_frame(
+        bpm_model,
+        'old-bpm.fit',
+        'old-bpm',
+        active=True,
+        eligibility_state='active',
+    )
+    dark_model.query = _FakeQuery([new_dark, old_dark])
+    bpm_model.query = _FakeQuery([new_bpm, old_bpm])
+    session = _FakeSession()
+
+    result = checkpoint_master_pair(
+        SimpleNamespace(session=session),
+        (dark_model, bpm_model),
+        (new_dark, new_bpm),
+        {
+            'generation_id': 'new',
+            'task_id': 42,
+            'group_id': 'group-1',
+            'strategy': 'refresh',
+            'temperature_range': 5.0,
+            'binning': 1,
+            'bit_depth': 16,
+            'width': 100,
+            'height': 50,
+            'gains': [100.0],
+            'exposures': [5.0],
+        },
+    )
+
+    assert result == {'activated': 2, 'deactivated': 2}
+    assert session.flushed is True
+    assert session.committed is False
+    assert new_dark.active is True
+    assert new_bpm.active is True
+    assert old_dark.active is False
+    assert old_bpm.active is False
+    assert library_entry_eligibility(new_dark)['state'] == 'active'
+    assert library_entry_eligibility(new_bpm)['state'] == 'active'
+
+
+def test_interrupted_artifact_cleanup_preserves_only_complete_eligible_pairs(tmp_path):
+    darks_dir = tmp_path.joinpath('darks')
+    darks_dir.mkdir()
+    scratch_dir = tmp_path.joinpath('indi-allsky-dark-source-abandoned')
+    scratch_dir.mkdir()
+    scratch_dir.joinpath('source.fit').write_bytes(b'source')
+
+    dark_model = _automation_model('IndiAllSkyDbDarkFrameTable')
+    bpm_model = _automation_model('IndiAllSkyDbBadPixelMapTable')
+
+    def master_path(name):
+        path = darks_dir.joinpath(name)
+        path.write_bytes(b'master')
+        return path
+
+    valid_dark = _automation_model_frame(
+        dark_model,
+        master_path('dark_valid.fit'),
+        'valid',
+        active=True,
+        eligibility_state='active',
+    )
+    valid_bpm = _automation_model_frame(
+        bpm_model,
+        master_path('bpm_valid.fit'),
+        'valid',
+        active=True,
+        eligibility_state='active',
+    )
+    inactive_dark = _automation_model_frame(
+        dark_model,
+        master_path('dark_inactive.fit'),
+        'inactive',
+        active=False,
+        eligibility_state='inactive',
+    )
+    inactive_bpm = _automation_model_frame(
+        bpm_model,
+        master_path('bpm_inactive.fit'),
+        'inactive',
+        active=False,
+        eligibility_state='inactive',
+    )
+    staged_dark = _automation_model_frame(
+        dark_model,
+        master_path('dark_staged.fit'),
+        'staged',
+    )
+    staged_bpm = _automation_model_frame(
+        bpm_model,
+        master_path('bpm_staged.fit'),
+        'staged',
+    )
+    incomplete_dark = _automation_model_frame(
+        dark_model,
+        master_path('dark_incomplete.fit'),
+        'incomplete',
+        active=True,
+        eligibility_state='active',
+    )
+    orphan_path = master_path('bpm_orphan.fit')
+    dark_model.query = _FakeQuery([
+        valid_dark,
+        inactive_dark,
+        staged_dark,
+        incomplete_dark,
+    ])
+    bpm_model.query = _FakeQuery([valid_bpm, inactive_bpm, staged_bpm])
+    session = _FakeSession()
+
+    result = cleanup_interrupted_capture_artifacts(
+        SimpleNamespace(session=session),
+        (dark_model, bpm_model),
+        darks_dir,
+        temp_root=tmp_path,
+    )
+
+    assert result == {
+        'database_rows': 3,
+        'files': 4,
+        'temporary_directories': 1,
+        'warnings': [],
+    }
+    assert session.committed is True
+    assert set(session.deleted) == {staged_dark, staged_bpm, incomplete_dark}
+    assert Path(valid_dark.getFilesystemPath()).is_file()
+    assert Path(valid_bpm.getFilesystemPath()).is_file()
+    assert Path(inactive_dark.getFilesystemPath()).is_file()
+    assert Path(inactive_bpm.getFilesystemPath()).is_file()
+    assert not Path(staged_dark.getFilesystemPath()).exists()
+    assert not Path(staged_bpm.getFilesystemPath()).exists()
+    assert not Path(incomplete_dark.getFilesystemPath()).exists()
+    assert not orphan_path.exists()
+    assert not scratch_dir.exists()
+
+
+def test_interrupted_cleanup_keeps_files_when_database_cleanup_cannot_commit(tmp_path):
+    darks_dir = tmp_path.joinpath('darks')
+    darks_dir.mkdir()
+    dark_path = darks_dir.joinpath('dark_staged.fit')
+    bpm_path = darks_dir.joinpath('bpm_staged.fit')
+    dark_path.write_bytes(b'dark')
+    bpm_path.write_bytes(b'bpm')
+    dark_model = _automation_model('IndiAllSkyDbDarkFrameTable')
+    bpm_model = _automation_model('IndiAllSkyDbBadPixelMapTable')
+    dark_model.query = _FakeQuery([
+        _automation_model_frame(dark_model, dark_path, 'staged'),
+    ])
+    bpm_model.query = _FakeQuery([
+        _automation_model_frame(bpm_model, bpm_path, 'staged'),
+    ])
+    session = _FakeSession(fail_commit=True)
+
+    with pytest.raises(RuntimeError, match='database commit failed'):
+        cleanup_interrupted_capture_artifacts(
+            SimpleNamespace(session=session),
+            (dark_model, bpm_model),
+            darks_dir,
+            temp_root=tmp_path,
+        )
+
+    assert session.rolled_back is True
+    assert dark_path.is_file()
+    assert bpm_path.is_file()
 
 
 @pytest.mark.parametrize('strategy', ('complete', 'custom'))

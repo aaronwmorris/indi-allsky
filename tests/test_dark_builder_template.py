@@ -660,7 +660,8 @@ def test_library_update_choices_have_distinct_capture_and_retirement_outcomes():
     assert (
         "complete: 'Capture only uncovered master sets. Existing masters keep their active/inactive status.'"
     ) in html
-    assert 'deactivate only older copies of those same gain/exposure combinations' in html
+    assert 'Each completed dark + map set becomes active immediately' in html
+    assert 'deactivates only older copies of that same gain/exposure combination' in html
     assert 'including gains or exposures no longer recommended' in html
     assert 'Under Advanced options, choose <strong>Edit capture groups manually</strong>' in html
     assert 'to change which rows, gains or exposures will be captured' in html
@@ -671,6 +672,11 @@ def test_library_update_choices_have_distinct_capture_and_retirement_outcomes():
     assert 'Refresh replaces only those recommended sets' in html
     assert 'Build or rebuild also deactivates older extras' in html
     assert 'Inactive masters stay stored but are not used for calibration.' in html
+    assert (
+        'If stopped, completed dark + map sets remain active; '
+        'the current partial set is discarded.'
+    ) in html
+    assert "$('#dark-cancel-safety').toggleClass('tw:hidden', terminal);" in html
 
 
 @pytest.mark.parametrize(

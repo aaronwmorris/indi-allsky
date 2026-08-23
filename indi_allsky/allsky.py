@@ -41,6 +41,8 @@ from .flask.models import TaskQueueState
 from .flask.models import NotificationCategory
 
 from .flask.models import IndiAllSkyDbCameraTable
+from .flask.models import IndiAllSkyDbDarkFrameTable
+from .flask.models import IndiAllSkyDbBadPixelMapTable
 from .flask.models import IndiAllSkyDbImageTable
 from .flask.models import IndiAllSkyDbVideoTable
 from .flask.models import IndiAllSkyDbKeogramTable
@@ -727,6 +729,30 @@ class IndiAllSky(object):
             self.write_pid()
 
             self._expireOrphanedTasks()
+
+            try:
+                dark_cleanup = dark_automation.cleanup_interrupted_capture_artifacts(
+                    db,
+                    (IndiAllSkyDbDarkFrameTable, IndiAllSkyDbBadPixelMapTable),
+                    self._miscDb.image_dir.joinpath('darks'),
+                )
+            except Exception:
+                db.session.rollback()
+                logger.exception('Unable to clean interrupted dark-capture artifacts')
+            else:
+                if any(
+                        dark_cleanup[key]
+                        for key in ('database_rows', 'files', 'temporary_directories')
+                ):
+                    logger.warning(
+                        'Discarded interrupted dark-capture artifacts: '
+                        '%d database rows, %d files, %d temporary directories',
+                        dark_cleanup['database_rows'],
+                        dark_cleanup['files'],
+                        dark_cleanup['temporary_directories'],
+                    )
+                for cleanup_warning in dark_cleanup['warnings']:
+                    logger.warning('Dark-capture cleanup warning: %s', cleanup_warning)
 
             self._startup()
 

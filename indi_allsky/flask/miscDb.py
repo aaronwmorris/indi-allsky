@@ -325,7 +325,7 @@ class miscDb(object):
         return image
 
 
-    def addDarkFrame(self, filename, camera_id, metadata):
+    def addDarkFrame(self, filename, camera_id, metadata, commit=True):
 
         ### expected metadata
         #{
@@ -386,12 +386,13 @@ class miscDb(object):
         )
 
         db.session.add(dark)
-        db.session.commit()
+        if commit:
+            db.session.commit()
 
         return dark
 
 
-    def addBadPixelMap(self, filename, camera_id, metadata):
+    def addBadPixelMap(self, filename, camera_id, metadata, commit=True):
 
         ### expected metadata
         #{
@@ -452,7 +453,8 @@ class miscDb(object):
         )
 
         db.session.add(bpm)
-        db.session.commit()
+        if commit:
+            db.session.commit()
 
         return bpm
 

@@ -1296,12 +1296,11 @@ class IndiAllSkyDarks(object):
             'groups': groups,
             'strategy': STRATEGY_CUSTOM,
         }
-        activation = _activate_generation(
+        _activate_generation(
             db,
             (IndiAllSkyDbDarkFrameTable, IndiAllSkyDbBadPixelMapTable),
             activation_task,
         )
-        self._progress_activated_master_files += int(activation['activated'])
         self._progress_completed_master_sets = total_master_sets
         self._publish_progress(
             'temperature_set_complete',
@@ -1556,7 +1555,7 @@ class IndiAllSkyDarks(object):
                     'Capturing gain {0:g}, exposure {1:g}s.'.format(gain, exposure),
                     current_frame=0,
                 )
-                self._take_exposures(
+                activation = self._take_exposures(
                     exposure,
                     gain,
                     self.binning,
@@ -1564,6 +1563,7 @@ class IndiAllSkyDarks(object):
                     bpm_filename_t,
                     stacking_class,
                 )
+                self._progress_activated_master_files += int(activation['activated'])
                 self._progress_completed_master_sets += 1
                 self._publish_progress(
                     'capturing',
@@ -1800,7 +1800,9 @@ class IndiAllSkyDarks(object):
 
 
     def _take_exposures(self, exposure, gain, binning, dark_filename_t, bpm_filename_t, stacking_class):
-        tmp_fit_dir = tempfile.TemporaryDirectory()    # context manager automatically deletes files when finished
+        tmp_fit_dir = tempfile.TemporaryDirectory(
+            prefix='indi-allsky-dark-source-',
+        )  # context manager automatically deletes files when finished
         tmp_fit_dir_p = Path(tmp_fit_dir.name)
 
         logger.info('Temp folder: %s', tmp_fit_dir_p)
@@ -1992,19 +1994,57 @@ class IndiAllSkyDarks(object):
             dark_metadata['active'] = staged_active
 
 
-        self._miscDb.addBadPixelMap(
-            full_bpm_filename_p.relative_to(self.image_dir),
-            self.camera_id,
-            bpm_metadata,
-        )
+        activation = {'activated': 0, 'deactivated': 0}
+        try:
+            self._check_shutdown()
+            if automation_data:
+                from .dark_automation import checkpoint_master_pair
 
-        self._miscDb.addDarkFrame(
-            full_dark_filename_p.relative_to(self.image_dir),
-            self.camera_id,
-            dark_metadata,
-        )
+                bpm_frame = self._miscDb.addBadPixelMap(
+                    full_bpm_filename_p.relative_to(self.image_dir),
+                    self.camera_id,
+                    bpm_metadata,
+                    commit=False,
+                )
+                dark_frame = self._miscDb.addDarkFrame(
+                    full_dark_filename_p.relative_to(self.image_dir),
+                    self.camera_id,
+                    dark_metadata,
+                    commit=False,
+                )
+                activation = checkpoint_master_pair(
+                    db,
+                    (IndiAllSkyDbDarkFrameTable, IndiAllSkyDbBadPixelMapTable),
+                    (dark_frame, bpm_frame),
+                    self.automation_manifest,
+                )
+                db.session.commit()
+            else:
+                self._miscDb.addBadPixelMap(
+                    full_bpm_filename_p.relative_to(self.image_dir),
+                    self.camera_id,
+                    bpm_metadata,
+                )
+                self._miscDb.addDarkFrame(
+                    full_dark_filename_p.relative_to(self.image_dir),
+                    self.camera_id,
+                    dark_metadata,
+                )
+        except BaseException:
+            if automation_data:
+                db.session.rollback()
+            for output_path in (full_dark_filename_p, full_bpm_filename_p):
+                try:
+                    output_path.unlink()
+                except FileNotFoundError:
+                    pass
+                except OSError:
+                    logger.exception('Unable to discard incomplete dark artifact: %s', output_path)
+            raise
+        finally:
+            tmp_fit_dir.cleanup()
 
-        tmp_fit_dir.cleanup()
+        return activation
 
 
     def _automation_frame_data(

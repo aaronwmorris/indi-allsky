@@ -1091,14 +1091,14 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     </div>
                     <div id="dark-refresh-option" class="dark-update-option{% if dark_execution_preview.strategy == 'refresh' %} dark-update-option--selected{% endif %} tw:p-3">
                         <div class="tw:font-semibold tw:text-sm">Refresh recommended master sets only</div>
-                        <div id="dark-refresh-option-description" class="tw:text-xs tw:text-base-content/60 tw:mt-1">Capture all {{ dark_analysis.refresh_target_count }} recommended master sets. After success, deactivate only older copies of those same gain/exposure combinations in the same temperature range. Other stored sets remain active.</div>
+                        <div id="dark-refresh-option-description" class="tw:text-xs tw:text-base-content/60 tw:mt-1">Capture all {{ dark_analysis.refresh_target_count }} recommended master sets. Each completed dark + map set becomes active immediately and deactivates only older copies of that same gain/exposure combination in the same temperature range. Other stored sets remain active.</div>
                     </div>
                     <div id="dark-rebuild-option" class="dark-update-option{% if dark_execution_preview.strategy == 'rebuild' %} dark-update-option--selected{% endif %} tw:p-3">
                         <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2">
                             <div class="tw:font-semibold tw:text-sm">Build or rebuild selected profiles</div>
                             <span id="dark-rebuild-option-badge" class="tw:badge tw:badge-primary tw:badge-sm{% if dark_analysis.suggested_action != 'rebuild' %} tw:hidden{% endif %}">Recommended</span>
                         </div>
-                        <div id="dark-rebuild-option-description" class="tw:text-xs tw:text-base-content/60 tw:mt-1">Capture the same {{ dark_analysis.rebuild_target_count }} recommended master sets. After success, deactivate every older set in the enabled profiles and temperature range—including gains or exposures no longer recommended—so those profiles match today’s grid.</div>
+                        <div id="dark-rebuild-option-description" class="tw:text-xs tw:text-base-content/60 tw:mt-1">Capture the same {{ dark_analysis.rebuild_target_count }} recommended master sets. Each completed dark + map set becomes active immediately and replaces its older equivalent. When the whole job succeeds, older extras in the enabled profiles and temperature range—including gains or exposures no longer recommended—are also deactivated so those profiles match today’s grid.</div>
                     </div>
                     <div id="dark-custom-option" class="dark-update-option{% if dark_execution_preview.strategy == 'custom' %} dark-update-option--selected{% endif %} tw:p-3">
                         <div class="tw:font-semibold tw:text-sm">Edit capture groups manually</div>
@@ -1400,7 +1400,8 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                         <pre id="dark-progress-diagnostic-log" class="tw:text-xs tw:whitespace-pre-wrap tw:break-words tw:max-h-80 tw:overflow-auto"></pre>
                     </div>
                 </details>
-                <div class="tw:flex tw:justify-end tw:gap-2">
+                <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2">
+                    <span id="dark-cancel-safety" class="tw:text-xs tw:text-base-content/60">If stopped, completed dark + map sets remain active; the current partial set is discarded.</span>
                     <button id="dark-review-library" type="button" class="tw:btn tw:btn-sm tw:btn-primary tw:hidden">Review library</button>
                     <button id="dark-cancel" type="button" class="tw:btn tw:btn-sm tw:btn-error tw:btn-outline">Cancel calibration</button>
                 </div>
@@ -3731,6 +3732,7 @@ function renderDarkProgress(status) {
         $('#dark-progress-diagnostic-log').empty();
     }
     $('#dark-cancel').toggleClass('tw:hidden', terminal);
+    $('#dark-cancel-safety').toggleClass('tw:hidden', terminal);
     $('#dark-review-library').toggleClass('tw:hidden', !(terminal && status.capture_restored));
     $('#dark-review-library').text(status.status === 'review_required'
         ? (status.operation === 'flush' ? 'Preview deletion again' : 'Review revised plan')
