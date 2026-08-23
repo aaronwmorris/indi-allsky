@@ -179,7 +179,7 @@ def test_builder_explains_each_library_state(
     assert 'One master set is a master dark and matching bad-pixel map' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.23.11' in html
+    assert 'Preview 2026.08.23.12' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'masters from 15.0°C to 25.0°C count as matched' in html
     assert 'Every required master set is checked separately, so capture drift may leave only some' in html
@@ -869,6 +869,22 @@ def test_guided_steps_and_maintenance_share_a_theme_aware_visual_system():
     assert 'tw:bg-warning/' not in html
     assert 'tw:bg-info/' not in html
     assert 'tw:bg-error/' not in html
+
+
+def test_disabled_action_buttons_remain_visibly_distinct_in_every_theme():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=20,
+        stored_bpm_count=20,
+        ready_count=5,
+        suggested_count=12,
+    )
+
+    assert '#dark-page-content .tw\\:btn:disabled' in html
+    assert '#dark-page-content .tw\\:btn[aria-disabled="true"]' in html
+    assert 'color-mix(in oklab, var(--color-base-content) 48%, transparent)' in html
+    assert 'color-mix(in oklab, var(--color-base-content) 6%, var(--color-base-200))' in html
+    assert 'cursor: not-allowed !important;' in html
 
 
 def test_advanced_fields_and_options_describe_user_visible_outcomes():

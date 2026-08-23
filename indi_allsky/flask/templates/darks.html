@@ -133,25 +133,35 @@
     background-color: var(--dark-readable-error) !important;
 }
 
-#dark-page-content .tw\:btn-info:is(.tw\:btn-outline, .tw\:btn-ghost):hover {
+#dark-page-content .tw\:btn:disabled,
+#dark-page-content .tw\:btn[aria-disabled="true"] {
+    color: color-mix(in oklab, var(--color-base-content) 48%, transparent) !important;
+    border-color: color-mix(in oklab, var(--color-base-content) 16%, var(--color-base-300)) !important;
+    background-color: color-mix(in oklab, var(--color-base-content) 6%, var(--color-base-200)) !important;
+    box-shadow: none !important;
+    cursor: not-allowed !important;
+    opacity: 1 !important;
+}
+
+#dark-page-content .tw\:btn-info:is(.tw\:btn-outline, .tw\:btn-ghost):not(:disabled, [aria-disabled="true"]):hover {
     color: var(--color-base-100) !important;
     border-color: var(--dark-readable-info) !important;
     background-color: var(--dark-readable-info) !important;
 }
 
-#dark-page-content .tw\:btn-success:is(.tw\:btn-outline, .tw\:btn-ghost):hover {
+#dark-page-content .tw\:btn-success:is(.tw\:btn-outline, .tw\:btn-ghost):not(:disabled, [aria-disabled="true"]):hover {
     color: var(--color-base-100) !important;
     border-color: var(--dark-readable-success) !important;
     background-color: var(--dark-readable-success) !important;
 }
 
-#dark-page-content .tw\:btn-warning:is(.tw\:btn-outline, .tw\:btn-ghost):hover {
+#dark-page-content .tw\:btn-warning:is(.tw\:btn-outline, .tw\:btn-ghost):not(:disabled, [aria-disabled="true"]):hover {
     color: var(--color-base-100) !important;
     border-color: var(--dark-readable-warning) !important;
     background-color: var(--dark-readable-warning) !important;
 }
 
-#dark-page-content .tw\:btn-error:is(.tw\:btn-outline, .tw\:btn-ghost):hover {
+#dark-page-content .tw\:btn-error:is(.tw\:btn-outline, .tw\:btn-ghost):not(:disabled, [aria-disabled="true"]):hover {
     color: var(--color-base-100) !important;
     border-color: var(--dark-readable-error) !important;
     background-color: var(--dark-readable-error) !important;
@@ -813,7 +823,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
 {% endblock %}
 
 {% block content %}
-{% set dark_builder_preview_version = '2026.08.23.11' %}
+{% set dark_builder_preview_version = '2026.08.23.12' %}
 <div id="dark-page-content" class="tw:container tw:mx-auto tw:w-full tw:px-4 tw:py-6 tw:flex tw:flex-col tw:gap-4">
 
     <nav aria-label="Dark library sections">
