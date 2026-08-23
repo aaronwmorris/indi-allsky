@@ -1419,6 +1419,44 @@ def task_public_status(task):
     }
 
 
+def _monitor_capture_child(
+        app,
+        task_id,
+        child,
+        progress_path,
+        update_data,
+        progress_context,
+        stop_requested,
+):
+    cancel_sent_at = None
+    last_published = 0.0
+    last_progress = {}
+    while child.poll() is None:
+        cancelled = _task_cancelled(app, task_id) or stop_requested()
+        if cancelled and cancel_sent_at is None:
+            child.send_signal(signal.SIGINT)
+            cancel_sent_at = time.monotonic()
+        elif cancelled and time.monotonic() - cancel_sent_at > 60.0:
+            _kill_process_group(child)
+        elif cancelled and time.monotonic() - cancel_sent_at > 30.0:
+            _terminate_process_group(child)
+
+        child_progress = _read_progress(progress_path)
+        if child_progress:
+            last_progress = child_progress
+        now = time.monotonic()
+        if now - last_published >= 1.0:
+            with app.app_context():
+                update_data(progress=_overall_progress(last_progress, *progress_context))
+            last_published = now
+        time.sleep(0.5)
+
+    final_progress = _read_progress(progress_path)
+    if final_progress:
+        last_progress = final_progress
+    return child.returncode, last_progress
+
+
 def run_task(app, task_id, repository_root, stop_requested=None):
     """Execute one validated task inside the capture controller.
 
@@ -1641,39 +1679,11 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                         start_new_session=True,
                     )
 
-                cancel_sent_at = None
-                last_published = 0.0
-                last_progress = {}
-                while child.poll() is None:
-                    cancelled = _task_cancelled(app, task_id) or stop_requested()
-                    if cancelled and cancel_sent_at is None:
-                        child.send_signal(signal.SIGINT)
-                        cancel_sent_at = time.monotonic()
-                    elif cancelled and time.monotonic() - cancel_sent_at > 60.0:
-                        _kill_process_group(child)
-                    elif cancelled and time.monotonic() - cancel_sent_at > 30.0:
-                        _terminate_process_group(child)
-
-                    child_progress = _read_progress(progress_path)
-                    if child_progress:
-                        last_progress = child_progress
-                    now = time.monotonic()
-                    if now - last_published >= 1.0:
-                        with app.app_context():
-                            update_data(progress=_overall_progress(
-                                last_progress,
-                                0,
-                                int(task_data['target_count']),
-                                1,
-                                1,
-                            ))
-                        last_published = now
-                    time.sleep(0.5)
-
-                return_code = child.returncode
-                final_progress = _read_progress(progress_path)
-                if final_progress:
-                    last_progress = final_progress
+                return_code, last_progress = _monitor_capture_child(
+                    app, task_id, child, progress_path, update_data,
+                    (0, int(task_data['target_count']), 1, 1),
+                    stop_requested,
+                )
                 with app.app_context():
                     update_data(progress=_overall_progress(
                         last_progress,
@@ -1768,39 +1778,11 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                         start_new_session=True,
                     )
 
-                cancel_sent_at = None
-                last_published = 0.0
-                last_progress = {}
-                while child.poll() is None:
-                    cancelled = _task_cancelled(app, task_id) or stop_requested()
-                    if cancelled and cancel_sent_at is None:
-                        child.send_signal(signal.SIGINT)
-                        cancel_sent_at = time.monotonic()
-                    elif cancelled and time.monotonic() - cancel_sent_at > 60.0:
-                        _kill_process_group(child)
-                    elif cancelled and time.monotonic() - cancel_sent_at > 30.0:
-                        _terminate_process_group(child)
-
-                    child_progress = _read_progress(progress_path)
-                    if child_progress:
-                        last_progress = child_progress
-                    now = time.monotonic()
-                    if now - last_published >= 1.0:
-                        with app.app_context():
-                            update_data(progress=_overall_progress(
-                                last_progress,
-                                completed_offset,
-                                int(task_data['target_count']),
-                                group_index,
-                                len(groups),
-                            ))
-                        last_published = now
-                    time.sleep(0.5)
-
-                return_code = child.returncode
-                final_progress = _read_progress(progress_path)
-                if final_progress:
-                    last_progress = final_progress
+                return_code, last_progress = _monitor_capture_child(
+                    app, task_id, child, progress_path, update_data,
+                    (completed_offset, int(task_data['target_count']), group_index, len(groups)),
+                    stop_requested,
+                )
                 group_count = int(group['target_count'])
                 if return_code != 0:
                     if _task_cancelled(app, task_id) or stop_requested() or return_code == 130:
