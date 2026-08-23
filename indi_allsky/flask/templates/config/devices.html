@@ -18,7 +18,7 @@
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MANUAL_GPIO__A_CLASSNAME.label.text }}</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Manual GPIO Driver</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Select the manual GPIO driver. Avoid GPIOs 1–8 because their internal pull-ups are enabled by default.</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.MANUAL_GPIO__A_CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -30,16 +30,19 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MANUAL_GPIO__A_PIN_1.label.text }}</span>
                         {{ form_config.MANUAL_GPIO__A_PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Example: 21 (GPIO21 / Pin 40 Raspberry Pi).</span>
                         <div id="MANUAL_GPIO__A_PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MANUAL_GPIO__A_PIN_2.label.text }}</span>
                         {{ form_config.MANUAL_GPIO__A_PIN_2(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Example: 25 (GPIO25 / Pin 22 Raspberry Pi).</span>
                         <div id="MANUAL_GPIO__A_PIN_2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MANUAL_GPIO__A_PIN_3.label.text }}</span>
                         {{ form_config.MANUAL_GPIO__A_PIN_3(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Example: 16 (GPIO16 / Pin 36 Raspberry Pi).</span>
                         <div id="MANUAL_GPIO__A_PIN_3-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -48,7 +51,7 @@
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.GENERIC_GPIO__A_CLASSNAME.label.text }}</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Automatic Night/Day Driver</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Activates a device/pin at night and off during day (or reversed).</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.GENERIC_GPIO__A_CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -60,11 +63,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.GENERIC_GPIO__A_I2C_ADDRESS.label.text }}</span>
                         {{ form_config.GENERIC_GPIO__A_I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Hexadecimal I²C address, for example 0x77.</span>
                         <div id="GENERIC_GPIO__A_I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.GENERIC_GPIO__A_PIN_1.label.text }}</span>
                         {{ form_config.GENERIC_GPIO__A_PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Example: D21 (GPIO21 / Pin 40 Raspberry Pi).</span>
                         <div id="GENERIC_GPIO__A_PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
@@ -95,11 +100,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__I2C_ADDRESS.label.text }}</span>
                         {{ form_config.DEW_HEATER__I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Hexadecimal I²C address, for example 0x77.</span>
                         <div id="DEW_HEATER__I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__PIN_1.label.text }}</span>
                         {{ form_config.DEW_HEATER__PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Example: D12 (GPIO12 / Pin 32 Raspberry Pi).</span>
                         <div id="DEW_HEATER__PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -124,6 +131,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__LEVEL_DEF.label.text }}</span>
                         {{ form_config.DEW_HEATER__LEVEL_DEF(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default duty cycle of PWM. If you enable dew heater thresholds, this should be set to 0.</span>
                         <div id="DEW_HEATER__LEVEL_DEF-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -133,7 +141,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__TEMP_USER_VAR_SLOT.label.text }}</span>
                         {{ form_config.DEW_HEATER__TEMP_USER_VAR_SLOT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Last temp: {{ dh_temp_str }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">User-variable slot containing the current temperature compared with the dew point or manual target. (Last temp: {{ dh_temp_str }})</span>
                         <div id="DEW_HEATER__TEMP_USER_VAR_SLOT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -148,11 +156,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__MANUAL_TARGET.label.text }}</span>
                         {{ form_config.DEW_HEATER__MANUAL_TARGET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Manual target temperature if dew point calculations are not available. 0 = disabled.</span>
                         <div id="DEW_HEATER__MANUAL_TARGET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__HOLD_SECONDS.label.text }}</span>
                         {{ form_config.DEW_HEATER__HOLD_SECONDS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Prevent Dew Heater status from changing too often.</span>
                         <div id="DEW_HEATER__HOLD_SECONDS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -162,6 +172,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__PWM_FREQUENCY.label.text }}</span>
                         {{ form_config.DEW_HEATER__PWM_FREQUENCY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default: 500 - Only used for Hardware PWM.</span>
                         <div id="DEW_HEATER__PWM_FREQUENCY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -206,16 +217,19 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__CLASSNAME.label.text }}</span>
                         {{ form_config.FAN__CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Select the fan-control driver.</span>
                         <div id="FAN__CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__I2C_ADDRESS.label.text }}</span>
                         {{ form_config.FAN__I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Hexadecimal I²C address, for example 0x77.</span>
                         <div id="FAN__I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__PIN_1.label.text }}</span>
                         {{ form_config.FAN__PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Example: D13 (GPIO13 / Pin 33 Raspberry Pi).</span>
                         <div id="FAN__PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -240,6 +254,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__LEVEL_DEF.label.text }}</span>
                         {{ form_config.FAN__LEVEL_DEF(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default duty cycle of PWM. If you enable fan thresholds, this should be set to 0.</span>
                         <div id="FAN__LEVEL_DEF-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -249,7 +264,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__TEMP_USER_VAR_SLOT.label.text }}</span>
                         {{ form_config.FAN__TEMP_USER_VAR_SLOT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Last temp: {{ fan_temp_str }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">User-variable slot containing the current temperature compared with the fan target. (Last temp: {{ fan_temp_str }})</span>
                         <div id="FAN__TEMP_USER_VAR_SLOT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -261,6 +276,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__HOLD_SECONDS.label.text }}</span>
                         {{ form_config.FAN__HOLD_SECONDS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Prevent Fan status from changing too often.</span>
                         <div id="FAN__HOLD_SECONDS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -270,6 +286,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__PWM_FREQUENCY.label.text }}</span>
                         {{ form_config.FAN__PWM_FREQUENCY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default: 500.</span>
                         <div id="FAN__PWM_FREQUENCY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -314,24 +331,38 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FOCUSER__CLASSNAME.label.text }}</span>
                         {{ form_config.FOCUSER__CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Select the focuser driver.</span>
                         <div id="FOCUSER__CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FOCUSER__I2C_ADDRESS.label.text }}</span>
                         {{ form_config.FOCUSER__I2C_ADDRESS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Hexadecimal I²C address, for example 0x77.</span>
                         <div id="FOCUSER__I2C_ADDRESS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">Focuser GPIO Pins</span>
                         <div class="tw:grid tw:grid-cols-2 tw:gap-2">
-                            {{ form_config.FOCUSER__GPIO_PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content') }}
-                        <div id="FOCUSER__GPIO_PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                            {{ form_config.FOCUSER__GPIO_PIN_2(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content') }}
-                        <div id="FOCUSER__GPIO_PIN_2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                            {{ form_config.FOCUSER__GPIO_PIN_3(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content') }}
-                        <div id="FOCUSER__GPIO_PIN_3-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                            {{ form_config.FOCUSER__GPIO_PIN_4(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content') }}
-                        <div id="FOCUSER__GPIO_PIN_4-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            <div>
+                                {{ form_config.FOCUSER__GPIO_PIN_1(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                                <span class="tw:text-[0.625rem] tw:text-base-content/40">Example: D17 (GPIO17 / Pin 11 Raspberry Pi).</span>
+                                <div id="FOCUSER__GPIO_PIN_1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            </div>
+                            <div>
+                                {{ form_config.FOCUSER__GPIO_PIN_2(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                                <span class="tw:text-[0.625rem] tw:text-base-content/40">Example: D18 (GPIO18 / Pin 12 Raspberry Pi).</span>
+                                <div id="FOCUSER__GPIO_PIN_2-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            </div>
+                            <div>
+                                {{ form_config.FOCUSER__GPIO_PIN_3(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                                <span class="tw:text-[0.625rem] tw:text-base-content/40">Example: D27 (GPIO27 / Pin 13 Raspberry Pi).</span>
+                                <div id="FOCUSER__GPIO_PIN_3-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            </div>
+                            <div>
+                                {{ form_config.FOCUSER__GPIO_PIN_4(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                                <span class="tw:text-[0.625rem] tw:text-base-content/40">Example: D22 (GPIO22 / Pin 15 Raspberry Pi).</span>
+                                <div id="FOCUSER__GPIO_PIN_4-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -347,6 +378,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.DEVICE__MQTT_PORT.label.text }}</span>
                         {{ form_config.DEVICE__MQTT_PORT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">MQTT port - 8883 = TLS, 1883 = standard.</span>
                         <div id="DEVICE__MQTT_PORT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
