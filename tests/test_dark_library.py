@@ -27,6 +27,7 @@ from indi_allsky.dark_automation import _log_error_summary
 from indi_allsky.dark_automation import _mark_task_capture_restored
 from indi_allsky.dark_automation import _activate_generation
 from indi_allsky.dark_automation import activation_changes
+from indi_allsky.dark_automation import automation_master_filename
 from indi_allsky.dark_automation import build_library_catalog
 from indi_allsky.dark_automation import build_library_partner_index
 from indi_allsky.dark_automation import build_dark_command
@@ -2263,6 +2264,13 @@ def test_completed_master_pair_is_checkpointed_atomically():
     assert library_entry_eligibility(new_bpm)['state'] == 'active'
 
 
+def test_builder_master_filenames_use_a_legacy_independent_namespace():
+    assert automation_master_filename('dark_ccd1.fit') == 'dark_automation_ccd1.fit'
+    assert automation_master_filename('bpm_ccd1.fit') == 'bpm_automation_ccd1.fit'
+    with pytest.raises(DarkAutomationError, match='invalid master filename'):
+        automation_master_filename('legacy.fit')
+
+
 def test_interrupted_artifact_cleanup_preserves_only_complete_eligible_pairs(tmp_path):
     darks_dir = tmp_path.joinpath('darks')
     darks_dir.mkdir()
@@ -2323,7 +2331,8 @@ def test_interrupted_artifact_cleanup_preserves_only_complete_eligible_pairs(tmp
         active=True,
         eligibility_state='active',
     )
-    orphan_path = master_path('bpm_orphan.fit')
+    orphan_path = master_path('bpm_automation_orphan.fit')
+    legacy_orphan_path = master_path('dark_legacy_orphan.fit')
     dark_model.query = _FakeQuery([
         valid_dark,
         inactive_dark,
@@ -2356,6 +2365,7 @@ def test_interrupted_artifact_cleanup_preserves_only_complete_eligible_pairs(tmp
     assert not Path(staged_bpm.getFilesystemPath()).exists()
     assert not Path(incomplete_dark.getFilesystemPath()).exists()
     assert not orphan_path.exists()
+    assert legacy_orphan_path.is_file()
     assert not scratch_dir.exists()
 
 

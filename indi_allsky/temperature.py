@@ -11,6 +11,13 @@ TEMPERATURE_SOURCE_CAMERA = 'camera'
 TEMPERATURE_SOURCE_SCRIPT = 'external_script'
 
 
+def database_temperature(value, preserve_zero=False):
+    """Normalize stored temperatures while retaining the legacy zero rule."""
+    if value is None or (not preserve_zero and not value):
+        return None
+    return float(value)
+
+
 @dataclass(frozen=True)
 class TemperatureSource:
     key: str

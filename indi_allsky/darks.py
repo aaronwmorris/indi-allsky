@@ -72,6 +72,38 @@ class DarkCapturePlanChanged(RuntimeError):
     pass
 
 
+def _falling_temperature_thresholds(
+        start_temperature,
+        target_temperature,
+        temperature_delta,
+):
+    """Build finite-series thresholds without depending on the library builder."""
+    if target_temperature is None:
+        return ()
+    try:
+        start_temperature = float(start_temperature)
+        target_temperature = float(target_temperature)
+        temperature_delta = float(temperature_delta)
+    except (TypeError, ValueError):
+        return ()
+    if (
+            not math.isfinite(start_temperature)
+            or not math.isfinite(target_temperature)
+            or not math.isfinite(temperature_delta)
+            or temperature_delta <= 0
+            or start_temperature <= target_temperature
+    ):
+        return ()
+
+    thresholds = []
+    next_temperature = start_temperature - temperature_delta
+    while next_temperature > target_temperature + 0.000001:
+        thresholds.append(float(round(next_temperature, 3)))
+        next_temperature -= temperature_delta
+    thresholds.append(float(round(target_temperature, 3)))
+    return tuple(thresholds)
+
+
 class IndiAllSkyDarks(object):
 
     def __init__(self):
@@ -1071,8 +1103,6 @@ class IndiAllSkyDarks(object):
 
 
     def _run_temperature_series(self, stacking_class):
-        from .dark_automation import temperature_thresholds
-
         # disable daytime darks processing when doing temperature calibrated frames
         self.daytime = False
 
@@ -1087,7 +1117,7 @@ class IndiAllSkyDarks(object):
             self.temperature_target = manifest_target
         target_temperature = self.temperature_target
         self._progress_target_temperature = target_temperature
-        pending_thresholds = list(temperature_thresholds(
+        pending_thresholds = list(_falling_temperature_thresholds(
             current_temperature,
             target_temperature,
             self.temp_delta,
@@ -1800,9 +1830,15 @@ class IndiAllSkyDarks(object):
 
 
     def _take_exposures(self, exposure, gain, binning, dark_filename_t, bpm_filename_t, stacking_class):
-        tmp_fit_dir = tempfile.TemporaryDirectory(
-            prefix='indi-allsky-dark-source-',
-        )  # context manager automatically deletes files when finished
+        automation_capture = bool(self.automation_manifest.get('automation'))
+        if automation_capture:
+            tmp_fit_dir = tempfile.TemporaryDirectory(
+                prefix='indi-allsky-dark-source-',
+            )
+        else:
+            # Preserve the legacy CLI's ordinary private temp directory.  The
+            # builder's interrupted-run cleanup must never claim this folder.
+            tmp_fit_dir = tempfile.TemporaryDirectory()
         tmp_fit_dir_p = Path(tmp_fit_dir.name)
 
         logger.info('Temp folder: %s', tmp_fit_dir_p)
@@ -1917,6 +1953,11 @@ class IndiAllSkyDarks(object):
             int(self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]),
             date_str,
         )
+        if automation_capture:
+            from .dark_automation import automation_master_filename
+
+            dark_filename = automation_master_filename(dark_filename)
+            bpm_filename = automation_master_filename(bpm_filename)
 
         full_dark_filename_p = self.darks_dir.joinpath(dark_filename)
         full_bpm_filename_p = self.darks_dir.joinpath(bpm_filename)
@@ -1995,44 +2036,50 @@ class IndiAllSkyDarks(object):
 
 
         activation = {'activated': 0, 'deactivated': 0}
+        if not automation_data:
+            # Keep the original CLI persistence path independent: BPM first,
+            # one commit per entry, then the dark frame.  No builder rollback,
+            # activation, or artifact deletion is involved.
+            self._miscDb.addBadPixelMap(
+                full_bpm_filename_p.relative_to(self.image_dir),
+                self.camera_id,
+                bpm_metadata,
+            )
+            self._miscDb.addDarkFrame(
+                full_dark_filename_p.relative_to(self.image_dir),
+                self.camera_id,
+                dark_metadata,
+            )
+            tmp_fit_dir.cleanup()
+            return activation
+
         try:
             self._check_shutdown()
-            if automation_data:
-                from .dark_automation import checkpoint_master_pair
+            from .dark_automation import checkpoint_master_pair
 
-                bpm_frame = self._miscDb.addBadPixelMap(
-                    full_bpm_filename_p.relative_to(self.image_dir),
-                    self.camera_id,
-                    bpm_metadata,
-                    commit=False,
-                )
-                dark_frame = self._miscDb.addDarkFrame(
-                    full_dark_filename_p.relative_to(self.image_dir),
-                    self.camera_id,
-                    dark_metadata,
-                    commit=False,
-                )
-                activation = checkpoint_master_pair(
-                    db,
-                    (IndiAllSkyDbDarkFrameTable, IndiAllSkyDbBadPixelMapTable),
-                    (dark_frame, bpm_frame),
-                    self.automation_manifest,
-                )
-                db.session.commit()
-            else:
-                self._miscDb.addBadPixelMap(
-                    full_bpm_filename_p.relative_to(self.image_dir),
-                    self.camera_id,
-                    bpm_metadata,
-                )
-                self._miscDb.addDarkFrame(
-                    full_dark_filename_p.relative_to(self.image_dir),
-                    self.camera_id,
-                    dark_metadata,
-                )
+            bpm_frame = self._miscDb.addBadPixelMap(
+                full_bpm_filename_p.relative_to(self.image_dir),
+                self.camera_id,
+                bpm_metadata,
+                commit=False,
+                preserve_zero_temperature=True,
+            )
+            dark_frame = self._miscDb.addDarkFrame(
+                full_dark_filename_p.relative_to(self.image_dir),
+                self.camera_id,
+                dark_metadata,
+                commit=False,
+                preserve_zero_temperature=True,
+            )
+            activation = checkpoint_master_pair(
+                db,
+                (IndiAllSkyDbDarkFrameTable, IndiAllSkyDbBadPixelMapTable),
+                (dark_frame, bpm_frame),
+                self.automation_manifest,
+            )
+            db.session.commit()
         except BaseException:
-            if automation_data:
-                db.session.rollback()
+            db.session.rollback()
             for output_path in (full_dark_filename_p, full_bpm_filename_p):
                 try:
                     output_path.unlink()

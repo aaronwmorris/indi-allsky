@@ -80,7 +80,11 @@ DARK_CAPTURE_TEMP_PREFIXES = (
     'indi-allsky-dark-temperature-',
     'indi-allsky-dark-source-',
 )
-DARK_MASTER_FILE_PREFIXES = ('dark_', 'bpm_', '.dark-automation-')
+DARK_AUTOMATION_MASTER_FILE_PREFIXES = (
+    'dark_automation_',
+    'bpm_automation_',
+    '.dark-automation-',
+)
 
 
 class DarkAutomationError(RuntimeError):
@@ -93,6 +97,18 @@ class DarkAutomationCancelled(DarkAutomationError):
 
 class DarkAutomationReviewRequired(DarkAutomationError):
     pass
+
+
+def automation_master_filename(filename):
+    """Give builder-owned masters a namespace the legacy CLI never uses."""
+    filename = str(filename)
+    for legacy_prefix, automation_prefix in (
+            ('dark_', 'dark_automation_'),
+            ('bpm_', 'bpm_automation_'),
+    ):
+        if filename.startswith(legacy_prefix):
+            return automation_prefix + filename[len(legacy_prefix):]
+    raise DarkAutomationError('The builder produced an invalid master filename')
 
 
 def reject_task_for_config_drift(task, active_config_id):
@@ -2427,7 +2443,7 @@ def cleanup_interrupted_capture_artifacts(
         warnings.append('{0:s}: {1:s}'.format(str(darks_path), str(error)))
     for file_path in master_files:
         if not file_path.is_file() or not file_path.name.lower().startswith(
-                DARK_MASTER_FILE_PREFIXES
+                DARK_AUTOMATION_MASTER_FILE_PREFIXES
         ):
             continue
         try:

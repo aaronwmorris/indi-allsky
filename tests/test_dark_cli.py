@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import pytest
 
 import darks_automation as automation_cli
+from indi_allsky.temperature import database_temperature
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -178,3 +179,10 @@ def test_private_launcher_handles_plan_changes_and_installs_signals(monkeypatch,
         automation_cli.signal.SIGINT,
         automation_cli.signal.SIGTERM,
     ]
+
+
+def test_builder_temperature_storage_opt_in_does_not_change_legacy_default():
+    assert database_temperature(0) is None
+    assert database_temperature(0, preserve_zero=True) == 0.0
+    assert database_temperature(-5) == -5.0
+    assert database_temperature(None, preserve_zero=True) is None

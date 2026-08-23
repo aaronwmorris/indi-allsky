@@ -37,6 +37,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
 
 from .. import constants
+from ..temperature import database_temperature
 #from ..exceptions import BadImage
 
 logger = logging.getLogger('indi_allsky')
@@ -325,7 +326,14 @@ class miscDb(object):
         return image
 
 
-    def addDarkFrame(self, filename, camera_id, metadata, commit=True):
+    def addDarkFrame(
+            self,
+            filename,
+            camera_id,
+            metadata,
+            commit=True,
+            preserve_zero_temperature=False,
+    ):
 
         ### expected metadata
         #{
@@ -360,11 +368,12 @@ class miscDb(object):
         exposure_int = int(metadata['exposure'])
 
 
-        if metadata.get('temp') is not None:
-            temp_val = float(metadata['temp'])
-        else:
+        temp_val = database_temperature(
+            metadata['temp'],
+            preserve_zero=preserve_zero_temperature,
+        )
+        if temp_val is None:
             logger.warning('Temperature is not defined')
-            temp_val = None
 
 
         dark = IndiAllSkyDbDarkFrameTable(
@@ -392,7 +401,14 @@ class miscDb(object):
         return dark
 
 
-    def addBadPixelMap(self, filename, camera_id, metadata, commit=True):
+    def addBadPixelMap(
+            self,
+            filename,
+            camera_id,
+            metadata,
+            commit=True,
+            preserve_zero_temperature=False,
+    ):
 
         ### expected metadata
         #{
@@ -427,11 +443,12 @@ class miscDb(object):
         exposure_int = int(metadata['exposure'])
 
 
-        if metadata.get('temp') is not None:
-            temp_val = float(metadata['temp'])
-        else:
+        temp_val = database_temperature(
+            metadata['temp'],
+            preserve_zero=preserve_zero_temperature,
+        )
+        if temp_val is None:
             logger.warning('Temperature is not defined')
-            temp_val = None
 
 
         bpm = IndiAllSkyDbBadPixelMapTable(
