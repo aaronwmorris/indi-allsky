@@ -44,17 +44,26 @@
                 <!-- Dark, BPM & Fix Holes Toggles -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CALIBRATE_DARK.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CALIBRATE_DARK.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Disable dark calibration only when hot pixels should remain in the final image.</span>
+                        </div>
                         {{ form_config.IMAGE_CALIBRATE_DARK(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_CALIBRATE_DARK-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CALIBRATE_BPM.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CALIBRATE_BPM.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Normally disabled - Enable if you have problems with pulsing pixels.</span>
+                        </div>
                         {{ form_config.IMAGE_CALIBRATE_BPM(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_CALIBRATE_BPM-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CALIBRATE_FIX_HOLES.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CALIBRATE_FIX_HOLES.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Fix holes left by dark frame calibration (BETA).</span>
+                        </div>
                         {{ form_config.IMAGE_CALIBRATE_FIX_HOLES(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_CALIBRATE_FIX_HOLES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -65,13 +74,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CALIBRATE_MANUAL_OFFSET.label.text }}</span>
                         {{ form_config.IMAGE_CALIBRATE_MANUAL_OFFSET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Manual offset for dark subtraction</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Some cameras need a manual offset (libcamera). Only applied if dark calibration is not active. Example: IMX477 the offset is 4096 (full 16-bit range).</span>
                         <div id="IMAGE_CALIBRATE_MANUAL_OFFSET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CALIBRATE_HOLE_THOLD.label.text }}</span>
                         {{ form_config.IMAGE_CALIBRATE_HOLE_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Percentage threshold for fixing holes</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Percentage of max ADU for fixing holes left by dark frames [default: 30%].</span>
                         <div id="IMAGE_CALIBRATE_HOLE_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -89,21 +98,25 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TARGET_ADU.label.text }}</span>
                         {{ form_config.TARGET_ADU(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Target Average Image Brightness - Max value: 255 [8-bit]. Default: 75 (~30% of histogram).</span>
                         <div id="TARGET_ADU-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TARGET_ADU_DEV.label.text }}</span>
                         {{ form_config.TARGET_ADU_DEV(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Allowed ADU deadband around the target before adjusting exposure.</span>
                         <div id="TARGET_ADU_DEV-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TARGET_ADU_DAY.label.text }}</span>
                         {{ form_config.TARGET_ADU_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Daytime target mean ADU (0–255).</span>
                         <div id="TARGET_ADU_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TARGET_ADU_DEV_DAY.label.text }}</span>
                         {{ form_config.TARGET_ADU_DEV_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Allowed Brightness deviation. Setting this value too low can cause exposure flapping.</span>
                         <div id="TARGET_ADU_DEV_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -113,10 +126,14 @@
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ADU_FOV_DIV.label.text }}</span>
                         {{ form_config.ADU_FOV_DIV(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Central region to use for ADU calculations (not used if ROI defined).</span>
                         <div id="ADU_FOV_DIV-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">ADU Region of Interest (ROI Coordinates x1, y1, x2, y2)</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">ADU Region of Interest (ROI Coordinates x1, y1, x2, y2)</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Not used if Detection Mask is defined. Coordinates are used before geometry changes (scaling, flipping, etc).</span>
+                        </div>
                         <div class="tw:grid tw:grid-cols-2 sm:tw:grid-cols-4 tw:gap-2">
                             {{ form_config.ADU_ROI_X1(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='x1') }}
                         <div id="ADU_ROI_X1-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -151,7 +168,10 @@
                         <div id="NIGHT_CONTRAST_ENHANCE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CONTRAST_ENHANCE_16BIT.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CONTRAST_ENHANCE_16BIT.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Run CLAHE before 8-bit conversion. Increase the clip limit about 3–4×; large images require at least 2 GB RAM.</span>
+                        </div>
                         {{ form_config.CONTRAST_ENHANCE_16BIT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="CONTRAST_ENHANCE_16BIT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -161,16 +181,19 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CLAHE_CLIPLIMIT.label.text }}</span>
                         {{ form_config.CLAHE_CLIPLIMIT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Increase value for more contrast.</span>
                         <div id="CLAHE_CLIPLIMIT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CLAHE_GRIDSIZE.label.text }}</span>
                         {{ form_config.CLAHE_GRIDSIZE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Tile-grid size used by CLAHE; smaller tiles increase local contrast.</span>
                         <div id="CLAHE_GRIDSIZE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STRETCH__CLASSNAME.label.text }}</span>
                         {{ form_config.IMAGE_STRETCH__CLASSNAME(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Select the stretch algorithm used whenever stretching is enabled.</span>
                         <div id="IMAGE_STRETCH__CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -181,30 +204,39 @@
                     <!-- Mode 1 -->
                     <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/70">Stretch Mode 1</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default 2.25 - Black level cutoff in standard deviations. Lower number results in greater dynamic range.</span>
                         {{ form_config.IMAGE_STRETCH__MODE1_STDDEVS(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-200 tw:text-base-content', placeholder='StdDevs') }}
                         <div id="IMAGE_STRETCH__MODE1_STDDEVS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default 3.0.</span>
                         {{ form_config.IMAGE_STRETCH__MODE1_GAMMA(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-200 tw:text-base-content', placeholder='Gamma') }}
                         <div id="IMAGE_STRETCH__MODE1_GAMMA-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <!-- Mode 2 -->
                     <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/70">Stretch Mode 2</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default 0.0 - With 0.03 this gives a nice subtle effect.</span>
                         {{ form_config.IMAGE_STRETCH__MODE2_SHADOWS(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-200 tw:text-base-content', placeholder='Shadows') }}
                         <div id="IMAGE_STRETCH__MODE2_SHADOWS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Values below 0.5 enhance midtones, values above 0.5 darken midtones (0.5 results in the original image). 0.25 - 0.35 are good values to start.</span>
                         {{ form_config.IMAGE_STRETCH__MODE2_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-200 tw:text-base-content', placeholder='Midtones') }}
                         <div id="IMAGE_STRETCH__MODE2_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default 1.0 - It is recommended not to adjust this setting.</span>
                         {{ form_config.IMAGE_STRETCH__MODE2_HIGHLIGHTS(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-200 tw:text-base-content', placeholder='Highlights') }}
                         <div id="IMAGE_STRETCH__MODE2_HIGHLIGHTS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <!-- Mode 3 -->
                     <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/70">Stretch Mode 3</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Black clipping point in normalized MAD units from the median pixel value of the image. Default -2.8 - It is recommended to prefer adjusting shadows instead of this.</span>
                         {{ form_config.IMAGE_STRETCH__MODE3_BLACK_CLIP(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-200 tw:text-base-content', placeholder='Black Clip') }}
                         <div id="IMAGE_STRETCH__MODE3_BLACK_CLIP-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default 0.0 - With 0.03 this gives a nice subtle effect.</span>
                         {{ form_config.IMAGE_STRETCH__MODE3_SHADOWS(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-200 tw:text-base-content', placeholder='Shadows') }}
                         <div id="IMAGE_STRETCH__MODE3_SHADOWS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Target median pixel value of the image. 0.25 - 0.35 are good values to start. Lower may be ideal if the FOV fills a small proportion of the sensor area.</span>
                         {{ form_config.IMAGE_STRETCH__MODE3_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-200 tw:text-base-content', placeholder='Midtones') }}
                         <div id="IMAGE_STRETCH__MODE3_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Default 1.0 - It is recommended not to adjust this setting.</span>
                         {{ form_config.IMAGE_STRETCH__MODE3_HIGHLIGHTS(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-200 tw:text-base-content', placeholder='Highlights') }}
                         <div id="IMAGE_STRETCH__MODE3_HIGHLIGHTS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -223,7 +255,10 @@
                         <div id="IMAGE_STRETCH__DAYTIME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STRETCH__SPLIT.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STRETCH__SPLIT.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Left is original, right is stretched.</span>
+                        </div>
                         {{ form_config.IMAGE_STRETCH__SPLIT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_STRETCH__SPLIT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -255,36 +290,42 @@
                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Night SCNR & Denoise Options</span>
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.SCNR_ALGORITHM.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SCNR_ALGORITHM.label.text }}</span>
                         {{ form_config.SCNR_ALGORITHM(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">SCNR algorithm to apply to reduce green bias in image.</span>
                         <div id="SCNR_ALGORITHM-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.SCNR_MTF_MIDTONES.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SCNR_MTF_MIDTONES.label.text }}</span>
                         {{ form_config.SCNR_MTF_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Range: 0.5-1.0. 0.5 = No change.</span>
                         <div id="SCNR_MTF_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_DENOISE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_DENOISE.label.text }}</span>
                         {{ form_config.IMAGE_DENOISE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Noise-reduction method applied before stretching. Wavelet gives the best quality but is slowest; denoising increases processing time.</span>
                         <div id="IMAGE_DENOISE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_DENOISE_STRENGTH.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_DENOISE_STRENGTH.label.text }}</span>
                         {{ form_config.IMAGE_DENOISE_STRENGTH(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Range: 1-5. Higher = stronger noise reduction but may come at a cost of fine detail.</span>
                         <div id="IMAGE_DENOISE_STRENGTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
 
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.BILATERAL_SIGMA_COLOR.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.BILATERAL_SIGMA_COLOR.label.text }}</span>
                         {{ form_config.BILATERAL_SIGMA_COLOR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Brightness threshold for blending (1-50). Low (10-20) preserves star edges tightly. High (40+) smooths aggressively. Default: 10.</span>
                         <div id="BILATERAL_SIGMA_COLOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.BILATERAL_SIGMA_SPACE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.BILATERAL_SIGMA_SPACE.label.text }}</span>
                         {{ form_config.BILATERAL_SIGMA_SPACE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Distance pixels can influence each other (1-50). Low (15-35) for fine detail. High (40+) for broad smooth gradients. Default: 15.</span>
                         <div id="BILATERAL_SIGMA_SPACE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -293,36 +334,42 @@
                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Daytime SCNR & Denoise Options</span>
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.SCNR_ALGORITHM_DAY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SCNR_ALGORITHM_DAY.label.text }}</span>
                         {{ form_config.SCNR_ALGORITHM_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">SCNR algorithm to apply to reduce green bias in image. Average Neutral.</span>
                         <div id="SCNR_ALGORITHM_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.SCNR_MTF_MIDTONES_DAY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SCNR_MTF_MIDTONES_DAY.label.text }}</span>
                         {{ form_config.SCNR_MTF_MIDTONES_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Range: 0.5-1.0. 0.5 = No change.</span>
                         <div id="SCNR_MTF_MIDTONES_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_DENOISE_DAY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_DENOISE_DAY.label.text }}</span>
                         {{ form_config.IMAGE_DENOISE_DAY(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Daytime noise-reduction method applied before stretching. Wavelet gives the best quality but is slowest.</span>
                         <div id="IMAGE_DENOISE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.IMAGE_DENOISE_STRENGTH_DAY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_DENOISE_STRENGTH_DAY.label.text }}</span>
                         {{ form_config.IMAGE_DENOISE_STRENGTH_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Range: 1-5. Higher = stronger noise reduction but may come at a cost of fine detail.</span>
                         <div id="IMAGE_DENOISE_STRENGTH_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
 
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.BILATERAL_SIGMA_COLOR_DAY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.BILATERAL_SIGMA_COLOR_DAY.label.text }}</span>
                         {{ form_config.BILATERAL_SIGMA_COLOR_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Brightness threshold for blending (1-50). Low (10-20) preserves star edges tightly. High (40+) smooths aggressively. Default: 10.</span>
                         <div id="BILATERAL_SIGMA_COLOR_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.BILATERAL_SIGMA_SPACE_DAY.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.BILATERAL_SIGMA_SPACE_DAY.label.text }}</span>
                         {{ form_config.BILATERAL_SIGMA_SPACE_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Distance pixels can influence each other (1-50). Low (15-35) for fine detail. High (40+) for broad smooth gradients. Default: 15.</span>
                         <div id="BILATERAL_SIGMA_SPACE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -339,23 +386,29 @@
                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">Night White Balance Controls</span>
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.WBR_FACTOR.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WBR_FACTOR.label.text }}</span>
                         {{ form_config.WBR_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Multiply the red channel by this factor.</span>
                         <div id="WBR_FACTOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Midtone adjustment for the red channel: 0.5 is unchanged; lower increases it and higher decreases it.</span>
                         {{ form_config.WBR_MTF_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1', placeholder='MTF') }}
                         <div id="WBR_MTF_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.WBG_FACTOR.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WBG_FACTOR.label.text }}</span>
                         {{ form_config.WBG_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Multiply the green channel by this factor.</span>
                         <div id="WBG_FACTOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Midtone adjustment for the green channel: 0.5 is unchanged; lower increases it and higher decreases it.</span>
                         {{ form_config.WBG_MTF_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1', placeholder='MTF') }}
                         <div id="WBG_MTF_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.WBB_FACTOR.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WBB_FACTOR.label.text }}</span>
                         {{ form_config.WBB_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Multiply the blue channel by this factor.</span>
                         <div id="WBB_FACTOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Midtone adjustment for the blue channel: 0.5 is unchanged; lower increases it and higher decreases it.</span>
                         {{ form_config.WBB_MTF_MIDTONES(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1', placeholder='MTF') }}
                         <div id="WBB_MTF_MIDTONES-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -364,23 +417,29 @@
                 <!-- Night Auto WB, Saturation, Gamma & Sharpen -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.AUTO_WB.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.AUTO_WB.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Auto WB is applied after manual WB settings.</span>
+                        </div>
                         {{ form_config.AUTO_WB(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="AUTO_WB-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.SATURATION_FACTOR.label.text }}</span>
                         {{ form_config.SATURATION_FACTOR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">1.0 is disabled. 1.5 is a good starting point.</span>
                         <div id="SATURATION_FACTOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.GAMMA_CORRECTION.label.text }}</span>
                         {{ form_config.GAMMA_CORRECTION(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">1.0 is disabled.</span>
                         <div id="GAMMA_CORRECTION-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.SHARPEN_AMOUNT.label.text }}</span>
                         {{ form_config.SHARPEN_AMOUNT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">0.0 is disabled. Unsharp mask highpass filter. 0.5 is a good starting point, max 2.0.</span>
                         <div id="SHARPEN_AMOUNT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -391,21 +450,27 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.WBR_FACTOR_DAY.label.text }}</span>
                         {{ form_config.WBR_FACTOR_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Multiply the daytime red channel by this factor.</span>
                         <div id="WBR_FACTOR_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Midtone adjustment for the red channel: 0.5 is unchanged; lower increases it and higher decreases it.</span>
                         {{ form_config.WBR_MTF_MIDTONES_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1', placeholder='MTF Day') }}
                         <div id="WBR_MTF_MIDTONES_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.WBG_FACTOR_DAY.label.text }}</span>
                         {{ form_config.WBG_FACTOR_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Multiply the daytime green channel by this factor.</span>
                         <div id="WBG_FACTOR_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Midtone adjustment for the green channel: 0.5 is unchanged; lower increases it and higher decreases it.</span>
                         {{ form_config.WBG_MTF_MIDTONES_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1', placeholder='MTF Day') }}
                         <div id="WBG_MTF_MIDTONES_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.WBB_FACTOR_DAY.label.text }}</span>
                         {{ form_config.WBB_FACTOR_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Multiply the daytime blue channel by this factor.</span>
                         <div id="WBB_FACTOR_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Midtone adjustment for the blue channel: 0.5 is unchanged; lower increases it and higher decreases it.</span>
                         {{ form_config.WBB_MTF_MIDTONES_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content tw:w-full tw:mt-1', placeholder='MTF Day') }}
                         <div id="WBB_MTF_MIDTONES_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -414,23 +479,29 @@
                 <!-- Day Auto WB, Saturation, Gamma & Sharpen -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.AUTO_WB_DAY.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.AUTO_WB_DAY.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Auto WB is applied after manual WB settings.</span>
+                        </div>
                         {{ form_config.AUTO_WB_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="AUTO_WB_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.SATURATION_FACTOR_DAY.label.text }}</span>
                         {{ form_config.SATURATION_FACTOR_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">1.0 is disabled. 1.5 is a good starting point.</span>
                         <div id="SATURATION_FACTOR_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.GAMMA_CORRECTION_DAY.label.text }}</span>
                         {{ form_config.GAMMA_CORRECTION_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">1.0 is disabled.</span>
                         <div id="GAMMA_CORRECTION_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.SHARPEN_AMOUNT_DAY.label.text }}</span>
                         {{ form_config.SHARPEN_AMOUNT_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">0.0 is disabled. Unsharp mask highpass filter. 0.5 is a good starting point, max 2.0.</span>
                         <div id="SHARPEN_AMOUNT_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -447,7 +518,7 @@
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_FILE_TYPE.label.text }}</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Primary image format</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Primary image format. PNG uses much more space than JPEG, and browser support for TIFF is limited.</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.IMAGE_FILE_TYPE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -461,13 +532,13 @@
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_FILE_COMPRESSION__JPG.label.text }}</span>
                         {{ form_config.IMAGE_FILE_COMPRESSION__JPG(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_FILE_COMPRESSION__JPG-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">JPEG quality (1-100)</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">[1-100] Quality factor for JPEG images. Higher numbers increase quality and file sizes. Default: 90.</span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_FILE_COMPRESSION__PNG.label.text }}</span>
                         {{ form_config.IMAGE_FILE_COMPRESSION__PNG(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_FILE_COMPRESSION__PNG-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">PNG compression (1-9)</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">[1-9] Compression factor for PNG images. Lower numbers increase file sizes. Default: 5.</span>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_FILE_COMPRESSION__TIF.label.text }}</span>
@@ -494,16 +565,21 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ROTATE_ANGLE.label.text }}</span>
                         {{ form_config.IMAGE_ROTATE_ANGLE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Rotate by arbitrary angle (0 = disabled).</span>
                         <div id="IMAGE_ROTATE_ANGLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ROTATE_KEEP_SIZE.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ROTATE_KEEP_SIZE.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Keep the current canvas size when rotating by an angle; content outside the bounds is cropped.</span>
+                        </div>
                         {{ form_config.IMAGE_ROTATE_KEEP_SIZE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_ROTATE_KEEP_SIZE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SCALE.label.text }}</span>
                         {{ form_config.IMAGE_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Scale factor for timelapse images.</span>
                         <div id="IMAGE_SCALE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -536,7 +612,7 @@
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">Crop ROI Coordinates</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">x1, y1, x2, y2</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Lower-right (x2, y2).</span>
                     </div>
                     <div class="md:tw:col-span-2 tw:flex tw:flex-col tw:gap-1">
                         <div class="tw:grid tw:grid-cols-2 sm:tw:grid-cols-4 tw:gap-2">
@@ -551,7 +627,10 @@
                         </div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CROP_IMAGE_CIRCLE.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CROP_IMAGE_CIRCLE.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Crop image to image circle boundary. Image circle offsets are maintained in the final image.</span>
+                        </div>
                         {{ form_config.IMAGE_CROP_IMAGE_CIRCLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_CROP_IMAGE_CIRCLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -565,7 +644,10 @@
                         <div id="IMAGE_COLORMAP-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">Image Borders (Top, Left, Right, Bottom & Color)</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">Image Borders (Top, Left, Right, Bottom & Color)</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Additional border height added above the image, in pixels.</span>
+                        </div>
                         <div class="tw:grid tw:grid-cols-2 sm:tw:grid-cols-5 tw:gap-2">
                             {{ form_config.IMAGE_BORDER__TOP(class='tw:input tw:input-bordered tw:input-sm tw:h-9 tw:bg-base-100 tw:text-base-content', placeholder='Top') }}
                         <div id="IMAGE_BORDER__TOP-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -594,6 +676,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_EXPORT_RAW.label.text }}</span>
                         {{ form_config.IMAGE_EXPORT_RAW(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Save an unprocessed image without labels. This is not sensor-raw data; use FITS for true raw data.</span>
                         <div id="IMAGE_EXPORT_RAW-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -616,23 +699,33 @@
                 <!-- FITS Storage Toggles & Period -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_FITS.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_FITS.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Enable saving RAW (unprocessed, non-stacked, etc) data in FITS format.</span>
+                        </div>
                         {{ form_config.IMAGE_SAVE_FITS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_SAVE_FITS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_FITS_COMPRESSED.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_FITS_COMPRESSED.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">FITS file will be compressed with GZIP (.fit.gz extension).</span>
+                        </div>
                         {{ form_config.IMAGE_SAVE_FITS_COMPRESSED(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_SAVE_FITS_COMPRESSED-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_FITS_PRE_DARK.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_FITS_PRE_DARK.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Save FITS files before subtracting dark calibration.</span>
+                        </div>
                         {{ form_config.IMAGE_SAVE_FITS_PRE_DARK(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_SAVE_FITS_PRE_DARK-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SAVE_FITS_PERIOD.label.text }}</span>
                         {{ form_config.IMAGE_SAVE_FITS_PERIOD(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Save a FITS frame at the selected interval while FITS saving is enabled.</span>
                         <div id="IMAGE_SAVE_FITS_PERIOD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>

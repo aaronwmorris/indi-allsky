@@ -6,7 +6,6 @@
 <meta charset="UTF-8">
 <script src="{{ url_for('indi_allsky.static', filename='virtualsky/stuquery.min.js') }}"></script>
 <script src="{{ url_for('indi_allsky.static', filename='virtualsky/virtualsky.min.js') }}" type="text/javascript"></script>
-<script src="{{ url_for('indi_allsky.static', filename='html2canvas/html2canvas.min.js') }}" type="text/javascript"></script>
 
 <script type="text/javascript">
 var img;
@@ -105,6 +104,7 @@ async function loop() {
     var image_timestamp = json_data['image_list'][0]['timestamp'];
 
     img = new Image();
+    img.crossOrigin = "anonymous";
     img.onload = function() {
         $('#latest-image').attr({
             'src': this.src,
@@ -384,15 +384,20 @@ function loadJS(url, data, onDone, onError) {
         </div>
 
         <div id="wrapper" class="tw:relative tw:bg-neutral-950 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300/40 tw:overflow-hidden tw:shadow-2xl tw:w-fit tw:max-w-full tw:mx-auto">
-            <img id="latest-image" class="tw:max-h-[calc(100dvh-14rem)] tw:w-auto tw:h-auto tw:object-contain tw:block" alt="Live Allsky View">
+            <img id="latest-image" crossorigin="anonymous" class="tw:max-h-[calc(100dvh-14rem)] tw:w-auto tw:h-auto tw:object-contain tw:block" alt="Live Allsky View">
             <div id="starmap_container" class="tw:absolute tw:inset-0">
                 <div id="starmap"></div>
             </div>
         </div>
 
-        <button id="download" class="tw:btn tw:btn-sm tw:btn-info tw:btn-outline tw:h-11 tw:px-8 tw:mt-4 tw:rounded-[var(--radius-box)] shadow-sm tw:gap-2">
-            <i class="tw:icon-[lucide--download] tw:w-4 tw:h-4 tw:block"></i> Download Map Data
-        </button>
+        <div class="tw:flex tw:flex-wrap tw:justify-center tw:items-center tw:gap-3 tw:mt-4">
+            <button id="download_overlay" type="button" class="tw:btn tw:btn-sm tw:btn-primary tw:h-11 tw:px-6 tw:rounded-[var(--radius-box)] shadow-sm tw:gap-2">
+                <i class="tw:icon-[lucide--layers] tw:w-4 tw:h-4 tw:block"></i> Download Image with Overlay
+            </button>
+            <button id="download_map" type="button" class="tw:btn tw:btn-sm tw:btn-info tw:btn-outline tw:h-11 tw:px-6 tw:rounded-[var(--radius-box)] shadow-sm tw:gap-2">
+                <i class="tw:icon-[lucide--download] tw:w-4 tw:h-4 tw:block"></i> Download Map Data
+            </button>
+        </div>
     </div>
 </div>
 
@@ -521,56 +526,175 @@ $( document ).ready(function() {
 });
 
 
-(() => {
-  const btn = document.getElementById('download');
-  let inProgress = false;
+function saveBlob(blob, filename) {
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = filename;
+    a.target = '_self';
+    document.body.appendChild(a);
+    a.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    setTimeout(() => {
+        a.remove();
+        URL.revokeObjectURL(url);
+    }, 1500);
+}
 
-  btn.addEventListener('click', async (e) => {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    if (inProgress) return;
-    inProgress = true;
-    btn.disabled = true;
+function getDownloadTimestamp() {
+    return last_image_timestamp || Math.floor(Date.now() / 1000);
+}
+
+async function downloadImageWithOverlay() {
+    const $btn = $('#download_overlay');
+    $btn.prop('disabled', true);
 
     try {
-      const el = document.getElementById('wrapper');
-      if (!el) throw new Error('#wrapper not found');
+        const imgElem = document.getElementById('latest-image');
+        if (!imgElem || !imgElem.src || !imgElem.complete || !imgElem.naturalWidth) {
+            console.warn('Image is not loaded yet.');
+            return;
+        }
 
-      if (document.fonts) await document.fonts.ready;
+        const fullWidth = imgElem.naturalWidth;
+        const fullHeight = imgElem.naturalHeight;
+        const image_circle_diameter = Number($("#IMAGE_CIRCLE_DIAMETER").val()) || fullWidth;
+        const offset_x = Number($("#OFFSET_X").val()) || 0;
+        const offset_y = Number($("#OFFSET_Y").val()) || 0;
 
-      const canvas = await html2canvas(el, {
-        backgroundColor: null,
-        scale: 1,
-        useCORS: true
-      });
+        const full_bias_left = ((( image_circle_diameter - fullWidth ) / 2) - offset_x ) * -1;
+        const full_bias_top = ((( image_circle_diameter - fullHeight ) / 2) + offset_y ) * -1;
 
-      canvas.toBlob(blob => {
-        if (!blob) return;
+        const canvas = document.createElement('canvas');
+        canvas.width = fullWidth;
+        canvas.height = fullHeight;
+        const ctx = canvas.getContext('2d');
 
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = 'virtualsky_' + Math.floor(Date.now() / 1000) + '.png';
-        a.target = '_self';
+        // Draw camera image at full resolution
+        ctx.drawImage(imgElem, 0, 0, fullWidth, fullHeight);
 
-        document.body.appendChild(a);
-        a.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+        // Draw starmap overlay at full resolution if planetarium is active
+        if (planetarium && typeof planetarium.resize === 'function') {
+            const currWidth = planetarium.wide;
+            const currHeight = planetarium.tall;
 
-        setTimeout(() => {
-          a.remove();
-          URL.revokeObjectURL(url);
-        }, 1500);
-      }, 'image/png');
+            // Render VirtualSky at full circle resolution
+            planetarium.resize(image_circle_diameter, image_circle_diameter);
+            if (typeof planetarium.drawImmediate === 'function') {
+                planetarium.drawImmediate();
+            }
 
+            const starmapCanvas = document.querySelector('#starmap canvas');
+            if (starmapCanvas) {
+                ctx.drawImage(starmapCanvas, full_bias_left, full_bias_top, image_circle_diameter, image_circle_diameter);
+            }
+
+            // Restore VirtualSky back to rendered preview size
+            if (currWidth && currHeight) {
+                planetarium.resize(currWidth, currHeight);
+                if (typeof planetarium.drawImmediate === 'function') {
+                    planetarium.drawImmediate();
+                }
+            }
+        } else {
+            const starmapCanvas = document.querySelector('#starmap canvas');
+            const starmapElem = document.getElementById('starmap');
+            if (starmapCanvas && starmapElem) {
+                const renderWidth = $('#latest-image').width() || fullWidth;
+                const scale = fullWidth / renderWidth;
+                const left = (parseFloat(starmapElem.style.left) || 0) * scale;
+                const top = (parseFloat(starmapElem.style.top) || 0) * scale;
+                const sw = (starmapCanvas.width || renderWidth) * scale;
+                const sh = (starmapCanvas.height || renderWidth) * scale;
+                ctx.drawImage(starmapCanvas, left, top, sw, sh);
+            }
+        }
+
+        canvas.toBlob(blob => {
+            saveBlob(blob, 'virtualsky_overlay_' + getDownloadTimestamp() + '.png');
+        }, 'image/png');
+    } catch (err) {
+        console.error('Failed to download composite image:', err);
     } finally {
-      setTimeout(() => {
-        inProgress = false;
-        btn.disabled = false;
-      }, 1000);
+        setTimeout(() => {
+            $btn.prop('disabled', false);
+        }, 500);
     }
-  }, { capture: true, passive: false });
-})();
+}
+
+async function downloadMapData() {
+    const $btn = $('#download_map');
+    $btn.prop('disabled', true);
+
+    try {
+        const imgElem = document.getElementById('latest-image');
+        const fullWidth = (imgElem && imgElem.naturalWidth) ? imgElem.naturalWidth : 3500;
+        const image_circle_diameter = Number($("#IMAGE_CIRCLE_DIAMETER").val()) || fullWidth;
+
+        if (planetarium && typeof planetarium.resize === 'function') {
+            const currWidth = planetarium.wide;
+            const currHeight = planetarium.tall;
+
+            // Render VirtualSky at full circle resolution
+            planetarium.resize(image_circle_diameter, image_circle_diameter);
+            if (typeof planetarium.drawImmediate === 'function') {
+                planetarium.drawImmediate();
+            }
+
+            const starmapCanvas = document.querySelector('#starmap canvas');
+            if (!starmapCanvas) {
+                console.warn('Star map canvas is not rendered yet.');
+                return;
+            }
+
+            // Copy to offscreen canvas before restoring planetarium size
+            const mapCanvas = document.createElement('canvas');
+            mapCanvas.width = image_circle_diameter;
+            mapCanvas.height = image_circle_diameter;
+            const mapCtx = mapCanvas.getContext('2d');
+            mapCtx.drawImage(starmapCanvas, 0, 0);
+
+            // Restore VirtualSky back to rendered preview size
+            if (currWidth && currHeight) {
+                planetarium.resize(currWidth, currHeight);
+                if (typeof planetarium.drawImmediate === 'function') {
+                    planetarium.drawImmediate();
+                }
+            }
+
+            mapCanvas.toBlob(blob => {
+                saveBlob(blob, 'virtualsky_map_' + getDownloadTimestamp() + '.png');
+            }, 'image/png');
+        } else {
+            const starmapCanvas = document.querySelector('#starmap canvas');
+            if (!starmapCanvas) {
+                console.warn('Star map canvas is not rendered yet.');
+                return;
+            }
+
+            starmapCanvas.toBlob(blob => {
+                saveBlob(blob, 'virtualsky_map_' + getDownloadTimestamp() + '.png');
+            }, 'image/png');
+        }
+    } catch (err) {
+        console.error('Failed to download map data:', err);
+    } finally {
+        setTimeout(() => {
+            $btn.prop('disabled', false);
+        }, 500);
+    }
+}
+
+$('#download_overlay, #download').on('click', function(e) {
+    e.preventDefault();
+    downloadImageWithOverlay();
+});
+
+$('#download_map').on('click', function(e) {
+    e.preventDefault();
+    downloadMapData();
+});
 
 
 const SOLVE_FIELDS = ['AZIMUTH_ANGLE', 'LATITUDE_OFFSET', 'LONGITUDE_OFFSET',

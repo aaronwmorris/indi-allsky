@@ -53,7 +53,7 @@ setuptools-rust
 # https://www.wheelodex.org/projects/bcrypt/
 bcrypt
 passlib[argon2] >= 1.7.4
-prettytable
+prettytable >= 3.14.0
 lxml >= 6.1.0
 shapely
 requests-toolbelt

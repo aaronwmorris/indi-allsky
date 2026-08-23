@@ -73,7 +73,7 @@ var camera_id = {{ camera_id }};
         </button>
         <label class="tw:flex tw:items-center tw:gap-2 tw:cursor-pointer tw:select-none tw:flex-shrink-0 tw:px-1">
             {{ form_config.RELOAD_ON_SAVE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
-            <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80 tw:whitespace-nowrap" title="Automatically restart capture service upon saving configuration">{{ form_config.RELOAD_ON_SAVE.label.text }}</span>
+            <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80 tw:whitespace-nowrap" title="Restart capture after saving. The restart can take 1–3 minutes.">{{ form_config.RELOAD_ON_SAVE.label.text }}</span>
         </label>
         <div id="RELOAD_ON_SAVE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
         <div class="tw:flex tw:items-center tw:gap-3 tw:flex-1 tw:min-w-[200px]">

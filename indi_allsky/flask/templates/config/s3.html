@@ -99,7 +99,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__REGION.label.text }}</span>
                         {{ form_config.S3UPLOAD__REGION(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Use "auto" for Cloudflare R2</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Storage region. Not used by GCP; use “auto” for Cloudflare R2. The value is not validated.</span>
                         <div id="S3UPLOAD__REGION-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -121,6 +121,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__URL_TEMPLATE.label.text }}</span>
                         {{ form_config.S3UPLOAD__URL_TEMPLATE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Object-storage URL template. Supports {bucket}, {region}, {namespace}, and {host}.</span>
                         <div id="S3UPLOAD__URL_TEMPLATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -138,12 +139,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__ACL.label.text }}</span>
                         {{ form_config.S3UPLOAD__ACL(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">public-read / publicRead</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Optional object ACL. Leave blank to use the bucket default; the value is not validated.</span>
                         <div id="S3UPLOAD__ACL-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__STORAGE_CLASS.label.text }}</span>
                         {{ form_config.S3UPLOAD__STORAGE_CLASS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">AWS storage class. Not used by GCP or OCI; the value is not validated.</span>
                         <div id="S3UPLOAD__STORAGE_CLASS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -153,6 +155,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__PORT.label.text }}</span>
                         {{ form_config.S3UPLOAD__PORT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">S3 transfer port (0 for default).</span>
                         <div id="S3UPLOAD__PORT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
@@ -163,6 +166,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__TIMEOUT.label.text }}</span>
                         {{ form_config.S3UPLOAD__TIMEOUT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Maximum seconds for the entire upload. Allow enough time for video files.</span>
                         <div id="S3UPLOAD__TIMEOUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>

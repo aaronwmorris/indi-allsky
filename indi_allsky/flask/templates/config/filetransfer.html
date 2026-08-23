@@ -77,7 +77,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__TIMEOUT.label.text }}</span>
                         {{ form_config.FILETRANSFER__TIMEOUT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Whole transfer timeout (seconds)</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Maximum seconds to wait for the file-transfer connection or operation.</span>
                         <div id="FILETRANSFER__TIMEOUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -90,12 +90,18 @@
                         <div id="FILETRANSFER__CERT_BYPASS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__ATOMIC_TRANSFERS.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__ATOMIC_TRANSFERS.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Transfer files to a temporary name before renaming to the final name.</span>
+                        </div>
                         {{ form_config.FILETRANSFER__ATOMIC_TRANSFERS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__ATOMIC_TRANSFERS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__FORCE_IPV4.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__FORCE_IPV4.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Force IPv4 (PycURL Only). This can be helpful if you receive connection timeout errors.</span>
+                        </div>
                         {{ form_config.FILETRANSFER__FORCE_IPV4(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__FORCE_IPV4-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
@@ -131,11 +137,13 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_IMAGE_NAME.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_IMAGE_NAME(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Remote filename template for image. Supports the documented date, camera, and asset variables.</span>
                         <div id="FILETRANSFER__REMOTE_IMAGE_NAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_IMAGE_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_IMAGE_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Remote folder template for image. Supports the documented date and camera variables.</span>
                         <div id="FILETRANSFER__REMOTE_IMAGE_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -234,6 +242,7 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_KEOGRAM_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_KEOGRAM_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Remote folder template for keogram. Supports the documented date and camera variables.</span>
                         <div id="FILETRANSFER__REMOTE_KEOGRAM_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -299,16 +308,19 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Remote folder template for endofnight. Supports the documented date and camera variables.</span>
                         <div id="FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_LATEST_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_LATEST_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Remote folder template for latest. Supports the documented date and camera variables.</span>
                         <div id="FILETRANSFER__REMOTE_LATEST_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__REMOTE_DB_BACKUP_FOLDER.label.text }}</span>
                         {{ form_config.FILETRANSFER__REMOTE_DB_BACKUP_FOLDER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Remote folder template for db backup. Supports the documented date and camera variables.</span>
                         <div id="FILETRANSFER__REMOTE_DB_BACKUP_FOLDER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -346,7 +358,10 @@
                 <!-- Toggles Grid (Metadata, RAW, FITS, Video, Mini, Keogram, Star Trail, Star Trail Video, Panorama Video, EndOfNight, DB Backup) -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_METADATA.label.text }}</span>
+                        <div class="tw:flex tw:flex-col">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FILETRANSFER__UPLOAD_METADATA.label.text }}</span>
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Upload metadata only when image transfer is enabled.</span>
+                        </div>
                         {{ form_config.FILETRANSFER__UPLOAD_METADATA(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FILETRANSFER__UPLOAD_METADATA-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>

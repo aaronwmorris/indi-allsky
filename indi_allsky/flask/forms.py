@@ -9503,6 +9503,7 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     SHARPEN_AMOUNT                   = FloatField('Sharpen Amount', validators=[SHARPEN_AMOUNT_validator], widget=NumberInput(step=0.01))
     IMAGE_ROTATE                     = SelectField('Rotate Image', choices=IndiAllskyConfigForm.IMAGE_ROTATE_choices, validators=[IMAGE_ROTATE_validator])
     IMAGE_ROTATE_ANGLE               = IntegerField('Rotation Angle', validators=[IMAGE_ROTATE_ANGLE_validator])
+    IMAGE_ROTATE_KEEP_SIZE           = BooleanField('Maintain Size After Rotation')
     IMAGE_FLIP_V                     = BooleanField('Flip Image Vertically')
     IMAGE_FLIP_H                     = BooleanField('Flip Image Horizontally')
     IMAGE_COLORMAP                   = SelectField('Apply Colormap', choices=IMAGE_COLORMAP_choices, validators=[IMAGE_COLORMAP_validator])

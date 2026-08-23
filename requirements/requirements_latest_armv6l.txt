@@ -54,7 +54,7 @@ setuptools-rust
 # segfault in newer versions
 bcrypt == 3.2.2
 passlib[argon2] >= 1.7.4
-prettytable
+prettytable >= 3.14.0
 lxml
 shapely
 requests-toolbelt
