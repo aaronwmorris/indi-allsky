@@ -425,6 +425,24 @@ def normalize_execution_request(analysis, capabilities, capture_state, request_d
         temperature_target=temperature_target,
     )
     groups_by_id = {group['id']: group for group in blueprint['groups']}
+    if strategy == STRATEGY_CUSTOM and capture_mode == CAPTURE_MODE_SINGLE:
+        # A one-run completion plan may contain irregular subsets whose IDs
+        # differ from the full custom grid.  Once the user edits one of those
+        # rows the UI correctly changes the strategy to custom, but the
+        # submitted subset is still a valid part of the current plan.
+        completion_blueprint = execution_preview(
+            analysis,
+            STRATEGY_COMPLETE,
+            frame_count=frame_count,
+            capture_order=capture_order,
+            temperature_policy=temperature_policy,
+            temperature_source=temperature_source,
+            capture_mode=capture_mode,
+            temperature_delta=temperature_delta,
+            temperature_target=temperature_target,
+        )
+        for group in completion_blueprint['groups']:
+            groups_by_id.setdefault(group['id'], group)
     requested_groups = request_data.get('groups')
     if requested_groups is None:
         requested_groups = blueprint['groups']

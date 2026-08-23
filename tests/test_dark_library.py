@@ -1100,6 +1100,52 @@ def test_adjusted_execution_plan_is_validated_and_counted():
     assert len(execution['plan_signature']) == 64
 
 
+def test_manual_edit_accepts_an_irregular_fill_gaps_group():
+    config = _config(EXPOSURE_MODE_DB_1_10, exposure_max=5)
+    config['CCD_CONFIG']['MOONMODE']['BINNING'] = 1
+    capabilities = _capabilities()
+    state = build_effective_capture_state(config, capabilities)
+    plan = build_dark_plan(state, capabilities, camera_id=1)
+    targets = {
+        (target.gain, target.exposure): target
+        for target in plan.targets
+        if target.capture_profile == 'night'
+    }
+    analysis = SimpleNamespace(
+        completion_targets=(
+            targets[(0.0, 1.0)],
+            targets[(0.0, 5.0)],
+            targets[(30.0, 5.0)],
+        ),
+        plan=plan,
+    )
+    completion_groups = execution_preview(analysis, 'complete')['groups']
+    custom_group_ids = {
+        group['id'] for group in execution_preview(analysis, 'custom')['groups']
+    }
+    completion_group = next(
+        group for group in completion_groups
+        if group['id'] not in custom_group_ids
+    )
+
+    execution = normalize_execution_request(
+        analysis,
+        capabilities,
+        state,
+        {
+            'strategy': 'custom',
+            'method': 'sigmaclip',
+            'frame_count': 10,
+            'config_signature': plan.config_signature,
+            'groups': [{**completion_group, 'enabled': True}],
+        },
+    )
+
+    assert execution['strategy'] == 'custom'
+    assert execution['groups'][0]['id'] == completion_group['id']
+    assert execution['target_count'] == completion_group['target_count']
+
+
 def test_manual_binning_and_bitmax_overrides_are_validated_and_normalised():
     config = _config(EXPOSURE_MODE_BASIC, exposure_max=1)
     capabilities = _capabilities()

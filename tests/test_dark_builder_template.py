@@ -176,7 +176,7 @@ def test_builder_explains_each_library_state(
     assert 'One master set is a master dark and matching bad-pixel map' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.23.7' in html
+    assert 'Preview 2026.08.23.8' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'masters from 15.0°C to 25.0°C count as matched' in html
     assert 'Every required master set is checked separately, so capture drift may leave only some' in html
@@ -844,6 +844,24 @@ def test_advanced_fields_and_options_describe_user_visible_outcomes():
         'Source frames per master',
     ):
         assert obsolete_copy not in html
+
+
+def test_every_capture_group_edit_switches_to_manual_and_can_restore_its_base_strategy():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=20,
+        stored_bpm_count=20,
+        ready_count=5,
+        suggested_count=12,
+    )
+
+    assert "let darkCaptureGroupBaseStrategy = darkSingleStrategy;" in html
+    assert ".on('change input', syncDarkCaptureGroupStrategy);" in html
+    assert "const strategy = changed ? 'custom' : darkCaptureGroupBaseStrategy;" in html
+    assert "darkCaptureGroupBaseStrategy = strategyControl.val();" in html
+    assert "$('#dark-refresh-plan').on('click', restoreDarkRecommendedCaptureGroups);" in html
+    assert "discardDarkCaptureGroupEdits(true);" in html
+    assert "preserve_group_edits: true" in html
 
 
 def test_advanced_plan_validation_blocks_invalid_capture_requests():
