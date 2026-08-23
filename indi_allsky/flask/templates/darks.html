@@ -22,6 +22,153 @@
     text-overflow: ellipsis;
 }
 
+#dark-page-content {
+    --dark-readable-muted: color-mix(in oklab, var(--color-base-content) 80%, transparent);
+    --dark-readable-secondary: color-mix(in oklab, var(--color-base-content) 85%, transparent);
+    --dark-readable-primary: color-mix(in oklab, var(--color-primary) 28%, var(--color-base-content));
+    --dark-readable-info: color-mix(in oklab, var(--color-info) 28%, var(--color-base-content));
+    --dark-readable-success: color-mix(in oklab, var(--color-success) 28%, var(--color-base-content));
+    --dark-readable-warning: color-mix(in oklab, var(--color-warning) 28%, var(--color-base-content));
+    --dark-readable-error: color-mix(in oklab, var(--color-error) 28%, var(--color-base-content));
+}
+
+#dark-page-content .tw\:text-base-content\/40,
+#dark-page-content .tw\:text-base-content\/50,
+#dark-page-content .tw\:text-base-content\/60 {
+    color: var(--dark-readable-muted) !important;
+}
+
+#dark-page-content .tw\:text-base-content\/70 {
+    color: var(--dark-readable-secondary) !important;
+}
+
+#dark-page-content .tw\:text-info {
+    color: var(--dark-readable-info) !important;
+}
+
+#dark-page-content .tw\:text-success {
+    color: var(--dark-readable-success) !important;
+}
+
+#dark-page-content .tw\:text-warning {
+    color: var(--dark-readable-warning) !important;
+}
+
+#dark-page-content .tw\:text-error {
+    color: var(--dark-readable-error) !important;
+}
+
+#dark-page-content .tw\:btn-info.tw\:btn-outline,
+#dark-page-content .tw\:badge-info.tw\:badge-outline {
+    color: var(--dark-readable-info) !important;
+    border-color: var(--dark-readable-info) !important;
+}
+
+#dark-page-content .tw\:btn-success.tw\:btn-outline,
+#dark-page-content .tw\:badge-success.tw\:badge-outline {
+    color: var(--dark-readable-success) !important;
+    border-color: var(--dark-readable-success) !important;
+}
+
+#dark-page-content .tw\:btn-warning.tw\:btn-outline,
+#dark-page-content .tw\:badge-warning.tw\:badge-outline {
+    color: var(--dark-readable-warning) !important;
+    border-color: var(--dark-readable-warning) !important;
+}
+
+#dark-page-content .tw\:btn-error.tw\:btn-outline,
+#dark-page-content .tw\:badge-error.tw\:badge-outline {
+    color: var(--dark-readable-error) !important;
+    border-color: var(--dark-readable-error) !important;
+}
+
+#dark-page-content .tw\:btn-info.tw\:btn-ghost {
+    color: var(--dark-readable-info) !important;
+}
+
+#dark-page-content .tw\:btn-success.tw\:btn-ghost {
+    color: var(--dark-readable-success) !important;
+}
+
+#dark-page-content .tw\:btn-warning.tw\:btn-ghost {
+    color: var(--dark-readable-warning) !important;
+}
+
+#dark-page-content .tw\:btn-error.tw\:btn-ghost {
+    color: var(--dark-readable-error) !important;
+}
+
+#dark-page-content .tw\:badge-primary:not(.tw\:badge-outline),
+#dark-page-content .tw\:btn-primary:not(.tw\:btn-outline, .tw\:btn-ghost) {
+    color: var(--color-base-100) !important;
+    border-color: var(--dark-readable-primary) !important;
+    background-color: var(--dark-readable-primary) !important;
+}
+
+#dark-page-content .tw\:badge-info:not(.tw\:badge-outline),
+#dark-page-content .tw\:btn-info:not(.tw\:btn-outline, .tw\:btn-ghost) {
+    color: var(--color-base-100) !important;
+    border-color: var(--dark-readable-info) !important;
+    background-color: var(--dark-readable-info) !important;
+}
+
+#dark-page-content .tw\:badge-success:not(.tw\:badge-outline),
+#dark-page-content .tw\:btn-success:not(.tw\:btn-outline, .tw\:btn-ghost) {
+    color: var(--color-base-100) !important;
+    border-color: var(--dark-readable-success) !important;
+    background-color: var(--dark-readable-success) !important;
+}
+
+#dark-page-content .tw\:badge-warning:not(.tw\:badge-outline),
+#dark-page-content .tw\:btn-warning:not(.tw\:btn-outline, .tw\:btn-ghost) {
+    color: var(--color-base-100) !important;
+    border-color: var(--dark-readable-warning) !important;
+    background-color: var(--dark-readable-warning) !important;
+}
+
+#dark-page-content .tw\:badge-error:not(.tw\:badge-outline),
+#dark-page-content .tw\:btn-error:not(.tw\:btn-outline, .tw\:btn-ghost) {
+    color: var(--color-base-100) !important;
+    border-color: var(--dark-readable-error) !important;
+    background-color: var(--dark-readable-error) !important;
+}
+
+#dark-page-content .tw\:btn-info:is(.tw\:btn-outline, .tw\:btn-ghost):hover {
+    color: var(--color-base-100) !important;
+    border-color: var(--dark-readable-info) !important;
+    background-color: var(--dark-readable-info) !important;
+}
+
+#dark-page-content .tw\:btn-success:is(.tw\:btn-outline, .tw\:btn-ghost):hover {
+    color: var(--color-base-100) !important;
+    border-color: var(--dark-readable-success) !important;
+    background-color: var(--dark-readable-success) !important;
+}
+
+#dark-page-content .tw\:btn-warning:is(.tw\:btn-outline, .tw\:btn-ghost):hover {
+    color: var(--color-base-100) !important;
+    border-color: var(--dark-readable-warning) !important;
+    background-color: var(--dark-readable-warning) !important;
+}
+
+#dark-page-content .tw\:btn-error:is(.tw\:btn-outline, .tw\:btn-ghost):hover {
+    color: var(--color-base-100) !important;
+    border-color: var(--dark-readable-error) !important;
+    background-color: var(--dark-readable-error) !important;
+}
+
+.dark-library-card .dt-paging .dt-paging-button.current,
+.dark-library-card .dt-paging .dt-paging-button.active {
+    color: var(--color-base-100) !important;
+    border-color: var(--dark-readable-primary) !important;
+    background-color: var(--dark-readable-primary) !important;
+}
+
+.dark-library-card .dt-paging .dt-paging-button.disabled {
+    color: var(--color-base-content) !important;
+    opacity: 0.65 !important;
+}
+
 .dark-fact-card,
 .dark-coverage-card,
 .dark-progress-fact {
@@ -207,7 +354,7 @@
 }
 
 .dark-builder-step-eyebrow {
-    color: color-mix(in oklab, var(--color-base-content) 50%, transparent);
+    color: var(--dark-readable-muted);
     font-size: 0.625rem;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -226,7 +373,7 @@
 .dark-builder-step-copy {
     max-width: 64rem;
     margin-top: 0.25rem;
-    color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+    color: var(--dark-readable-secondary);
     font-size: 0.875rem;
     line-height: 1.5;
 }
@@ -661,7 +808,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
 {% endblock %}
 
 {% block content %}
-{% set dark_builder_preview_version = '2026.08.23.5' %}
+{% set dark_builder_preview_version = '2026.08.23.6' %}
 <div id="dark-page-content" class="tw:container tw:mx-auto tw:w-full tw:px-4 tw:py-6 tw:flex tw:flex-col tw:gap-4">
 
     <nav aria-label="Dark library sections">
@@ -1501,7 +1648,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 </button>
                 <button id="dark-library-delete-selected" type="button" class="dark-remove-marked dark-remove-selection tw:btn tw:btn-sm tw:btn-error tw:btn-outline"
                     data-selection='{"dark_ids":[],"bpm_ids":[]}' disabled>
-                    Delete selected master sets…
+                    Delete selected master sets
                 </button>
             </div>
         </div>
@@ -3071,8 +3218,8 @@ function updateDarkMarkedSelection(cameraId) {
         .attr('data-label', masterCount + ' selected ' + masterLabel + ' for ' + cameraName)
         .prop('disabled', !masterCount || blocked)
         .text(masterCount
-            ? 'Delete ' + masterCount + ' ' + masterLabel + '…'
-            : 'Delete selected master sets…');
+            ? 'Delete ' + masterCount + ' ' + masterLabel
+            : 'Delete selected master sets');
     excludeButton
         .attr('data-camera-id', activeDarkSelectionCameraId || '')
         .attr('data-camera-name', cameraName)

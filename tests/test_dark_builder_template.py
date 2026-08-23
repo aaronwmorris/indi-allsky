@@ -176,7 +176,7 @@ def test_builder_explains_each_library_state(
     assert 'One master set is a master dark and matching bad-pixel map' in html
     assert 'One master set creates one master dark and one matching bad-pixel map' in html \
         if suggested_count else 'No action is required.' in html
-    assert 'Preview 2026.08.23.5' in html
+    assert 'Preview 2026.08.23.6' in html
     assert 'lengthens exposure first, then changes gain at maximum exposure' in html
     assert 'masters from 15.0°C to 25.0°C count as matched' in html
     assert 'Every required master set is checked separately, so capture drift may leave only some' in html
@@ -562,8 +562,17 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert 'id="dark-library-activate-selected"' in maintenance
     assert 'id="dark-library-delete-selected"' in maintenance
     assert 'Deactivate (exclude from calibration)…' in maintenance
-    assert 'Delete selected master sets…' in maintenance
-    assert "'Delete ' + masterCount + ' ' + masterLabel + '…'" in html
+    assert 'Delete selected master sets' in maintenance
+    assert "'Delete ' + masterCount + ' ' + masterLabel" in html
+    assert '--dark-readable-muted:' in html
+    assert '--dark-readable-primary:' in html
+    assert '--dark-readable-info:' in html
+    assert '--dark-readable-success:' in html
+    assert '--dark-readable-warning:' in html
+    assert '--dark-readable-error:' in html
+    assert '.dt-paging-button.current' in html
+    assert 'color: var(--color-base-100) !important;' in html
+    assert 'background-color: var(--dark-readable-primary) !important;' in html
     assert 'Activate (make eligible again)…' in maintenance
     assert 'Clear this selection before choosing another camera.' in maintenance
     assert 'id="dark-eligibility-confirmation"' in maintenance
