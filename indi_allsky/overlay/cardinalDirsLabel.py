@@ -122,12 +122,7 @@ class IndiAllskyCardinalDirsLabel(object):
     def findDirectionCoordinate(self, image, dir_az):
         height, width = image.shape[:2]
 
-        if dir_az >= 360:
-            angle = dir_az - 360
-        elif dir_az < 0:
-            angle = dir_az + 360
-        else:
-            angle = dir_az
+        angle = dir_az % 360
 
         #logger.info('Finding direction angle for: %0.1f', angle)
 
