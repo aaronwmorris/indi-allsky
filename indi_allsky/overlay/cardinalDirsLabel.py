@@ -437,13 +437,7 @@ class IndiAllskyCardinalDirsLabel(object):
         height, width = image.shape[:2]
 
         dir_az -= self.panorama_rotate_angle
-
-        if dir_az >= 360:
-            angle = dir_az - 360
-        elif dir_az < 0:
-            angle = dir_az + 360
-        else:
-            angle = dir_az
+        angle = dir_az % 360
 
 
         x = int(angle / 360 * width)
