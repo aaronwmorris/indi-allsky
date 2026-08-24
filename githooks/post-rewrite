@@ -1,0 +1,5 @@
+#!/bin/sh
+# Automatically rebuild frontend assets after git rebase
+if [ "$1" = "rebase" ]; then
+    npm run build 2>/dev/null || true
+fi

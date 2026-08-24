@@ -1,0 +1,2 @@
+# Automatically rebuild compiled frontend assets on merge/rebase conflict
+indi_allsky/flask/static/css/dist.css merge=build_css
