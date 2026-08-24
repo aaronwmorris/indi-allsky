@@ -22,15 +22,27 @@ var file_view = "{{ file_view }}";
             <div class="tw:flex tw:items-center tw:gap-3">
                 <i class="tw:icon-[lucide--video] tw:w-6 tw:h-6 tw:text-primary"></i>
                 <div>
-                    <h1 class="tw:text-lg tw:font-bold tw:text-base-content">{{ dayDate_full }}</h1>
+                    <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-2">
+                        <h1 class="tw:text-lg tw:font-bold tw:text-base-content">{{ dayDate_full }}</h1>
+                        {% if video_source == 'panorama' %}
+                        <span class="tw:badge tw:badge-info tw:badge-sm tw:font-bold">Panorama</span>
+                        {% endif %}
+                    </div>
                     <p class="tw:text-xs tw:text-base-content/60 tw:capitalize">{{ timeofday }} Timelapse Video</p>
                 </div>
             </div>
-            <div class="tw:flex tw:items-center tw:gap-2">
+            <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-center tw:gap-2">
                 <span id="permalink"></span>
                 <span id="download"></span>
+                {% if video_delete_allowed %}
+                <span id="delete"></span>
+                {% endif %}
             </div>
         </div>
+
+        {% if video_delete_allowed %}
+        <div id="delete-failure-message" class="tw:alert tw:alert-error tw:text-sm" style="display: none;" role="alert"></div>
+        {% endif %}
 
         <!-- Video Player Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-md tw:p-4 tw:flex tw:items-center tw:justify-center">
@@ -61,7 +73,50 @@ function init() {
             'class' : "tw:btn tw:btn-sm tw:btn-error tw:gap-2 tw:no-underline shadow-sm",
         }).html('<i class="tw:icon-[lucide--download] tw:w-4 tw:h-4"></i> Download Video')
     );
+
+    {% if video_delete_allowed %}
+    $('#delete').html(
+        $('<button />', {
+            'type' : 'button',
+            'class' : "tw:btn tw:btn-sm tw:btn-error tw:btn-outline tw:gap-2 shadow-sm",
+        }).html('<i class="tw:icon-[lucide--trash-2] tw:w-4 tw:h-4"></i> Delete Video')
+            .on('click', deleteMiniTimelapse)
+    );
+    {% endif %}
 }
+
+{% if video_delete_allowed %}
+function deleteMiniTimelapse() {
+    if(!window.confirm('Delete this mini timelapse from indi-allsky? The local video and thumbnail will be removed. Uploaded copies are not affected.')) {
+        return;
+    }
+
+    $('#delete button').prop('disabled', true);
+    $('#delete-failure-message').hide();
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_mini_videodelete_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify({
+            'CAMERA_ID' : {{ video_camera_id }},
+            'VIDEO_ID' : video_id,
+        }),
+        success: function() {
+            window.location.assign("{{ url_for('indi_allsky.mini_videoviewer_view') }}");
+        },
+        error: function(rdata) {
+            var message = 'Unable to delete mini timelapse';
+            if(rdata.responseJSON && rdata.responseJSON['failure-message']) {
+                message = rdata.responseJSON['failure-message'];
+            }
+
+            $('#delete button').prop('disabled', false);
+            $('#delete-failure-message').text(message).show();
+        },
+    });
+}
+{% endif %}
 
 $(document).ready(function() {
     init();
