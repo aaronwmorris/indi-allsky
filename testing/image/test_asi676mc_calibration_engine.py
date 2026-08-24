@@ -329,6 +329,64 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
             1.26,
         )
 
+    def test_upload_analysis_keeps_unmatched_frames_in_detector_evidence(self):
+        records = self._threshold_population_records()
+        for record in records:
+            record.signature['is_bad'] = record.path.name.startswith(
+                'likely_purple_'
+            )
+        unmatched_bad = self._threshold_record(
+            'unmatched_bad.fit',
+            100000,
+            0.001,
+            (2.20, 1.70, 2.20),
+        )
+        unmatched_bad.signature['is_bad'] = True
+        records.append(unmatched_bad)
+        preliminary = {
+            'outcome': 'threshold_suggestion',
+            'quality': {},
+            'threshold_suggestions': [],
+            'signature_ranges': {},
+        }
+
+        with mock.patch.object(
+            calibration_engine,
+            'scan_folder',
+            return_value=(records, []),
+        ), mock.patch.object(
+            calibration_engine,
+            'validate_evidence',
+            wraps=calibration_engine.validate_evidence,
+        ) as validate_evidence, mock.patch.object(
+            calibration_engine,
+            'signature_ranges',
+            wraps=calibration_engine.signature_ranges,
+        ) as signature_ranges, mock.patch.object(
+            calibration_engine,
+            'validate_signature_separation',
+            side_effect=calibration_engine.CalibrationError('test stop'),
+        ), mock.patch.object(
+            calibration_engine,
+            'build_detection_threshold_suggestions',
+            return_value=[],
+        ), mock.patch.object(
+            calibration_engine,
+            'threshold_suggestion_payload',
+            return_value=preliminary,
+        ):
+            calibration_engine.calibrate_folder(
+                Path('unused'),
+                allow_unmatched=True,
+            )
+
+        self.assertEqual(validate_evidence.call_args.args[0], records)
+        self.assertEqual(signature_ranges.call_args.args[0], records)
+        self.assertIn(
+            unmatched_bad,
+            validate_evidence.call_args.args[2],
+        )
+
     def test_all_rejected_failure_preserves_grouped_reasons_without_paths(self):
         rejected = [
             (Path('private_one.fit'), 'missing explicit BAYERPAT=RGGB metadata'),
@@ -814,6 +872,221 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
                 delta=0.02,
             )
 
+    def test_database_validation_promotes_reserve_then_reduces_without_one(self):
+        def evidence_records(group_count):
+            records = []
+            for index in range(group_count):
+                exposure = 0.001 if index < 4 else 0.002
+                base_time = 1000 + index * 300
+                for role, offset, ratios, is_bad in (
+                    ('before', 0, (0.90, 0.70, 1.10), False),
+                    ('bad', 20, (2.20, 1.70, 2.20), True),
+                    ('after', 40, (0.92, 0.72, 1.12), False),
+                ):
+                    record = self._threshold_record(
+                        '{0:02d}_{1}.fit'.format(index, role),
+                        base_time + offset,
+                        exposure,
+                        ratios,
+                    )
+                    record.signature['is_bad'] = is_bad
+                    records.append(record)
+            return records
+
+        gains = {
+            name: {'value': 1.0, 'mad': 0.0, 'sample_count': 1000}
+            for name in ('GAIN_R', 'GAIN_G1', 'GAIN_G2', 'GAIN_B')
+        }
+        highlight = {
+            'start_ratio': 0.55,
+            'end_ratio': 0.75,
+            'pair_count': 8,
+            'sample_count': 1000,
+            'score': 0.01,
+            'default_score': 0.01,
+            'raw_best_score': 0.01,
+            'raw_best_start_ratio': 0.55,
+            'raw_best_end_ratio': 0.75,
+            'preferred_default': True,
+            'runner_up_score': 0.011,
+        }
+
+        for available_groups, expected_replacements, expected_used in (
+            (10, 1, 8),
+            (8, 0, 7),
+        ):
+            with self.subTest(available_groups=available_groups):
+                records = evidence_records(available_groups)
+                validation_calls = []
+
+                def validate(candidate_pairs, _settings, **_kwargs):
+                    validation_calls.append(list(candidate_pairs))
+                    checks = [{
+                        'name': pair.bad.path.name,
+                        'original_error': 0.49,
+                        'gain_only_error': 0.086,
+                        'repaired_error': 0.070,
+                        'improvement_vs_original': 0.85,
+                        'improvement_vs_gain_only': 0.18,
+                        'required_improvement': 0.10,
+                    } for pair in candidate_pairs]
+                    if len(validation_calls) == 1:
+                        failed_pair = candidate_pairs[-1]
+                        failure_check = {
+                            **checks[-1],
+                            'name': failed_pair.bad.path.name,
+                            'gain_only_error': 0.086,
+                            'repaired_error': 0.0814,
+                            'improvement_vs_gain_only': 0.053,
+                            'failure_code': 'phase_improvement',
+                            'reason': (
+                                'full repair matched the nearby normal frame '
+                                '5.3% better than colour-only correction; at '
+                                'least 10.0% is required'
+                            ),
+                        }
+                        return (
+                            len(candidate_pairs) - 1,
+                            len(candidate_pairs) * 2,
+                            checks[:-1],
+                            [{'pair': failed_pair, 'check': failure_check}],
+                        )
+                    return (
+                        len(candidate_pairs),
+                        len(candidate_pairs) * 2,
+                        checks,
+                        [],
+                    )
+
+                with mock.patch.object(
+                    calibration_engine,
+                    'scan_folder',
+                    return_value=(records, []),
+                ), mock.patch.object(
+                    calibration_engine,
+                    'collect_pair_samples',
+                    return_value=[],
+                ), mock.patch.object(
+                    calibration_engine,
+                    'estimate_gains',
+                    return_value=gains,
+                ), mock.patch.object(
+                    calibration_engine,
+                    'estimate_saturation_threshold',
+                    return_value=(65000, 65534),
+                ), mock.patch.object(
+                    calibration_engine,
+                    'estimate_highlight_ratios',
+                    return_value=highlight,
+                ), mock.patch.object(
+                    calibration_engine,
+                    'validate_calibrated_frames',
+                    side_effect=validate,
+                ):
+                    payload = calibration_engine.calibrate_folder(
+                        Path('unused'),
+                        target_group_count=8,
+                        marginal_exclusion_limit=3,
+                    )
+
+                quality = payload['quality']
+                self.assertEqual(len(validation_calls), 2)
+                self.assertEqual(quality['requested_group_count'], 8)
+                self.assertEqual(quality['used_group_count'], expected_used)
+                self.assertEqual(
+                    quality['replacement_group_count'],
+                    expected_replacements,
+                )
+                self.assertEqual(quality['excluded_marginal_group_count'], 1)
+                self.assertEqual(
+                    quality['marginal_exclusions'][0][
+                        'improvement_vs_gain_only'
+                    ],
+                    0.053,
+                )
+                self.assertNotIn(
+                    validation_calls[0][-1],
+                    validation_calls[1],
+                )
+                if expected_replacements:
+                    self.assertIn(
+                        '08_bad.fit',
+                        [pair.bad.path.name for pair in validation_calls[1]],
+                    )
+
+    def test_only_phase_improvement_failure_is_collectable(self):
+        bad = self._threshold_record(
+            'marginal_bad.fit',
+            1000,
+            0.001,
+            (2.2, 1.7, 2.2),
+        )
+        bad.signature['is_bad'] = True
+        pair = calibration_engine.MatchedPair(bad=bad, references=())
+        placeholder_planes = tuple(numpy.ones((8, 8)) for _index in range(4))
+        placeholder_masks = tuple(
+            numpy.ones((8, 8), dtype=bool) for _index in range(4)
+        )
+
+        def validate(reference_errors):
+            with mock.patch.object(
+                calibration_engine,
+                '_read_fits',
+                return_value=(
+                    numpy.zeros((16, 16), dtype=numpy.uint16),
+                    {},
+                    0,
+                ),
+            ), mock.patch.object(
+                calibration_engine,
+                '_reference_planes',
+                return_value=(placeholder_planes, placeholder_masks),
+            ), mock.patch.object(
+                calibration_engine,
+                '_sample_array_planes',
+                return_value=placeholder_planes,
+            ), mock.patch.object(
+                calibration_engine,
+                '_best_gain_only_planes',
+                return_value=placeholder_planes,
+            ), mock.patch.object(
+                calibration_engine,
+                '_reference_error',
+                side_effect=reference_errors,
+            ), mock.patch.object(
+                calibration_engine.asi676mc,
+                'repair_if_needed',
+                return_value={'repaired': True, 'validation_failed': False},
+            ):
+                return calibration_engine.validate_calibrated_frames(
+                    [pair],
+                    calibration_engine.DEFAULT_SETTINGS,
+                    collect_phase_failures=True,
+                )
+
+        repaired, normal, checks, failures = validate(
+            (0.493104, 0.081437, 0.085976)
+        )
+
+        self.assertEqual((repaired, normal, checks), (0, 0, []))
+        self.assertEqual(len(failures), 1)
+        self.assertAlmostEqual(
+            failures[0]['check']['improvement_vs_gain_only'],
+            1.0 - 0.081437 / 0.085976,
+        )
+
+        with self.assertRaisesRegex(
+            calibration_engine.CalibrationError,
+            'validation_original_improvement',
+        ):
+            validate((0.100, 0.095, 0.200))
+
+        with self.assertRaisesRegex(
+            calibration_engine.CalibrationError,
+            'validation_phase_improvement',
+        ):
+            validate((0.490, 0.090, 0.086))
+
     def test_two_normal_colour_regimes_do_not_pass_as_phase_shift_failure(self):
         normal = self._normal_frame()
         higher_ratio = normal.copy()
@@ -867,7 +1140,7 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
             ):
                 with self.assertRaisesRegex(
                     calibration_engine.CalibrationError,
-                    'one-row phase shift',
+                    'validation_phase_improvement',
                 ):
                     calibration_engine.calibrate_folder(folder)
 
