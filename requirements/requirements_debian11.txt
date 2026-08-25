@@ -2,6 +2,7 @@
 # https://www.wheelodex.org/projects/astropy/
 astropy >= 5.3.3, <= 6.0.1
 photutils >= 1.5.0
+sep >= 1.4.1
 # https://www.wheelodex.org/projects/numpy/
 numpy >= 1.22.2, < 2.0
 # https://www.wheelodex.org/projects/opencv-python-headless/
