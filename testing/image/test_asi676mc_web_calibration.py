@@ -317,6 +317,37 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 settings=calibration_engine.DEFAULT_SETTINGS,
             )
 
+    def test_full_retention_discovery_stages_three_reserve_groups(self):
+        records = []
+        bad_ids = set(range(2, 30, 3))
+        for record_id in range(1, 31):
+            record = self._database_record(record_id, record_id * 20)
+            if record_id >= 28:
+                record['exposure'] = 0.002
+            ratio = 3.0 if record_id in bad_ids else 1.0
+            record['signature'] = {
+                'purple_ratio': ratio,
+                'red_side_ratio': ratio,
+                'blue_side_ratio': ratio,
+            }
+            records.append(record)
+
+        selected, summary = (
+            asi676mc_calibration.discover_full_retention_database_evidence(
+                records,
+                bad_frames=[],
+                target_groups=7,
+                max_pair_seconds=30.0,
+                settings=calibration_engine.DEFAULT_SETTINGS,
+            )
+        )
+
+        self.assertEqual(summary['selected_group_count'], 7)
+        self.assertEqual(summary['staged_group_count'], 10)
+        self.assertEqual(summary['reserve_group_count'], 3)
+        self.assertEqual(summary['validation_exclusion_limit'], 3)
+        self.assertEqual(len(selected), 30)
+
     def test_full_retention_discovery_finds_unmarked_bad_frames_5000_files_back(self):
         records = []
         bad_ids = {50, 150, 250, 350, 450, 550, 650}
@@ -609,7 +640,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         ):
             with self.assertRaisesRegex(
                 calibration_engine.CalibrationError,
-                'within the 200-file/2-GiB evidence staging limit',
+                'within the 200-file/2.5-GiB evidence staging limit',
             ):
                 asi676mc_calibration.discover_full_retention_database_evidence(
                     records,
@@ -1009,6 +1040,14 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
                 'full_retention_detector_groups',
             )
             self.assertTrue(calibrate_folder.call_args.kwargs['metadata_by_name'])
+            self.assertEqual(
+                calibrate_folder.call_args.kwargs['target_group_count'],
+                7,
+            )
+            self.assertEqual(
+                calibrate_folder.call_args.kwargs['marginal_exclusion_limit'],
+                3,
+            )
             completed = asi676mc_calibration._read_manifest(
                 root.joinpath(manifest['session_id'])
             )
@@ -1124,6 +1163,70 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertNotIn('operator', report.lower())
         self.assertNotIn('They repaired', report)
 
+    def test_success_report_records_marginal_exclusion_and_replacement(self):
+        payload = self._successful_payload()
+        payload['quality'].update({
+            'requested_group_count': 20,
+            'used_group_count': 20,
+            'examined_group_count': 21,
+            'excluded_marginal_group_count': 1,
+            'replacement_group_count': 1,
+            'marginal_exclusions': [{
+                'name': 'marginal_bad.fit',
+                'original_error': 0.493104,
+                'gain_only_error': 0.085976,
+                'repaired_error': 0.081437,
+                'improvement_vs_original': 0.83485,
+                'improvement_vs_gain_only': 0.05279,
+                'required_improvement': 0.10,
+                'reason': (
+                    'full repair matched the nearby normal frame 5.3% better '
+                    'than colour-only correction; at least 10.0% is required'
+                ),
+            }],
+        })
+        manifest = {
+            'settings': dict(calibration_engine.DEFAULT_SETTINGS),
+            'max_pair_seconds': 90.0,
+            'files': [],
+            'source': {
+                'kind': 'database',
+                'camera_name': 'ASI676MC',
+                'requested_group_count': 20,
+                'selected_group_count': 20,
+                'staged_group_count': 23,
+                'reserve_group_count': 3,
+                'selection_mode': 'full_retention_detector_groups',
+            },
+        }
+
+        report = asi676mc_calibration.format_integrated_report(
+            payload,
+            manifest,
+        )
+        result = asi676mc_calibration._result_summary(payload)
+        warning = ' '.join(result['warnings'])
+        flat_report = ' '.join(report.split())
+
+        self.assertIn('Purple-frame groups staged: 23', report)
+        self.assertIn('Reserve groups staged: 3', report)
+        self.assertIn('Reserve groups promoted:', report)
+        self.assertIn('Frame groups set aside', report)
+        self.assertIn('marginal_bad.fit', report)
+        self.assertIn('extra improvement from full repair 5.279%', flat_report)
+        self.assertIn('minimum required 10.000%', flat_report)
+        self.assertIn('marginal_bad.fit', warning)
+        self.assertIn('5.3%', warning)
+        self.assertIn('1 reserve group replaced it', warning)
+        for technical_term in (
+            'gain-only',
+            'row-shift',
+            'repaired-reference',
+            'adjacent-reference',
+        ):
+            self.assertNotIn(technical_term, report.lower())
+            self.assertNotIn(technical_term, warning.lower())
+
     def test_report_timestamp_uses_explicit_local_timezone(self):
         local_timezone = timezone(timedelta(hours=2), name='CEST')
         with mock.patch.object(
@@ -1210,6 +1313,89 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             download_name,
             '2026-08-02_14-34-56_asi676mc_calibration_report.txt',
         )
+
+    def test_failed_validation_has_same_specific_downloadable_report(self):
+        engine_message = (
+            'validation_phase_improvement: marginal_bad.fit: full repair '
+            'matched the nearby normal frame 5.3% better than colour-only '
+            'correction; at least 10.0% is required'
+        )
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            session_id = asi676mc_calibration.create_session(
+                'alice', root
+            )['session_id']
+            for index in range(14):
+                asi676mc_calibration.store_upload(
+                    session_id,
+                    'alice',
+                    self._fits_upload('failure_{0:02d}.fit'.format(index)),
+                    root,
+                )
+            asi676mc_calibration.mark_queued(
+                session_id,
+                'alice',
+                task_id=55,
+                max_pair_seconds=90.0,
+                settings=calibration_engine.DEFAULT_SETTINGS,
+                source_details={'kind': 'upload', 'selected_file_count': 14},
+                storage_root=root,
+            )
+            with mock.patch.object(
+                calibration_engine,
+                'calibrate_folder',
+                side_effect=calibration_engine.CalibrationError(engine_message),
+            ):
+                with self.assertRaises(calibration_engine.CalibrationError):
+                    asi676mc_calibration.run_calibration_session(
+                        session_id,
+                        root,
+                    )
+
+            status = asi676mc_calibration.get_status(
+                session_id,
+                'alice',
+                root,
+            )
+            self.assertEqual(status['status'], 'failed')
+            self.assertTrue(status['report_available'])
+            self.assertIn('marginal_bad.fit', status['error'])
+            self.assertIn('5.3%', status['error'])
+            self.assertIn('10.0%', status['error'])
+            self.assertIn('colour-only correction', status['error'])
+            self.assertIn('inconclusive', status['error'])
+            report_path = asi676mc_calibration.get_report_path(
+                session_id,
+                'alice',
+                root,
+            )
+            report = report_path.read_text(encoding='utf-8')
+            self.assertIn('Status: Failed', report)
+            self.assertIn('marginal_bad.fit', report)
+            self.assertIn('5.3%', report)
+            self.assertIn('10.0%', report)
+            self.assertIn('colour-only correction', report)
+            self.assertIn('inconclusive', report)
+            self.assertIn('No calibration values were produced', report)
+            self.assertIn('private uploaded copies were removed', report)
+
+            cleanup_pending = asi676mc_calibration.format_failure_report(
+                engine_message,
+                {
+                    'source': {'kind': 'upload'},
+                    'files': [{}] * 14,
+                    'sources_deleted_utc': None,
+                },
+            )
+            cleanup_pending = ' '.join(cleanup_pending.split())
+            self.assertIn(
+                'could not be removed immediately',
+                cleanup_pending,
+            )
+            self.assertIn(
+                'will be removed automatically later',
+                cleanup_pending,
+            )
 
     def test_population_preview_candidates_are_bounded_and_representative(self):
         evidence = []
@@ -1369,6 +1555,8 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('Current value is already safe', report)
         self.assertIn('Post-repair standard FITS excluded: 2', report)
         self.assertNotIn('Recommended calibration values', report)
+        self.assertNotIn('Purple-frame groups staged', report)
+        self.assertNotIn('Reserve groups staged', report)
         self.assertNotIn('operator', report.lower())
 
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -1449,6 +1637,9 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('Method: Manual FITS upload', report)
         self.assertIn('FITS selected: 21', report)
         self.assertIn('private uploaded copies were removed', report)
+        self.assertNotIn('Purple-frame groups requested', report)
+        self.assertNotIn('Reserve groups promoted', report)
+        self.assertNotIn('Inconclusive groups set aside', report)
         self.assertIn(
             '21 uploaded FITS files did not name the camera model',
             report,
@@ -1556,9 +1747,20 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             call_kwargs = calibrate_folder.call_args.kwargs
             self.assertTrue(call_kwargs['allow_unmatched'])
             self.assertFalse(call_kwargs['recursive'])
+            self.assertIsNone(call_kwargs['target_group_count'])
+            self.assertEqual(call_kwargs['marginal_exclusion_limit'], 0)
             self.assertNotIn('report_title', call_kwargs)
             self.assertEqual(result['quality']['matched_bad_count'], 7)
             self.assertEqual(len(result['values']), 7)
+            for reserve_key in (
+                'requested_group_count',
+                'staged_group_count',
+                'used_group_count',
+                'replacement_group_count',
+                'excluded_marginal_group_count',
+                'marginal_exclusions',
+            ):
+                self.assertNotIn(reserve_key, result['quality'])
             self.assertFalse(root.joinpath(session_id, 'uploads').exists())
             self.assertEqual(success_saw_deleted_sources, [True])
 
@@ -1788,8 +1990,46 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
             'evidence does not confirm the ASI676MC one-row phase shift: '
             'C:\\private\\purple.fit'
         )
-        self.assertIn('do not behave like', wrong_failure_type)
+        self.assertIn('complete repair was not enough better', wrong_failure_type)
         self.assertNotIn('purple.fit', wrong_failure_type)
+
+        specific_failures = (
+            (
+                'validation_repaired_reference_error: bad.fit: '
+                'the repaired frame differs from its nearby normal frame by '
+                '36.0%; the maximum allowed is 35.0%',
+                ('bad.fit', '36.0%', '35.0%', 'scene probably changed'),
+            ),
+            (
+                'validation_original_improvement: bad.fit: full repair made '
+                'the purple frame 7.0% closer to its nearby normal frame; at '
+                'least 10.0% is required',
+                ('bad.fit', '7.0%', '10.0%', 'too small to prove'),
+            ),
+            (
+                'validation_phase_improvement: bad.fit: full repair matched '
+                'the nearby normal frame 5.3% better than colour-only '
+                'correction; at least 10.0% is required',
+                ('bad.fit', '5.3%', '10.0%', 'inconclusive'),
+            ),
+        )
+        for raw_message, expected_parts in specific_failures:
+            with self.subTest(raw_message=raw_message):
+                friendly = asi676mc_calibration._friendly_failure_message(
+                    raw_message
+                )
+                for expected in expected_parts:
+                    self.assertIn(expected, friendly)
+                self.assertNotIn('gain-only', friendly.lower())
+                self.assertNotIn('row-shift', friendly.lower())
+                self.assertNotIn('repaired-reference', friendly.lower())
+        phase_task_message = asi676mc_calibration.task_failure_message(
+            specific_failures[-1][0]
+        )
+        self.assertIn('bad.fit', phase_task_message)
+        self.assertIn('5.3%', phase_task_message)
+        self.assertIn('10.0%', phase_task_message)
+        self.assertIn('colour-only correction', phase_task_message)
 
         safety_failure = asi676mc_calibration._friendly_failure_message(
             'normal-frame validation mutated C:\\private\\normal.fit'
@@ -2174,7 +2414,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('function showCalibrationSetupView()', template)
         self.assertIn('function showCalibrationProgressView()', template)
         self.assertIn(
-            'function showCalibrationFailure(sessionId, message)',
+            'function showCalibrationFailure(sessionId, message, reportAvailable)',
             template,
         )
         self.assertIn(
@@ -2326,6 +2566,14 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         )
         self.assertEqual(asi676mc_calibration.MAX_FILE_COUNT, 80)
         self.assertEqual(asi676mc_calibration.DATABASE_MAX_FILES, 200)
+        self.assertEqual(
+            asi676mc_calibration.DATABASE_MAX_BYTES,
+            5 * 1024 * 1024 * 1024 // 2,
+        )
+        self.assertEqual(
+            asi676mc_calibration.MAX_SESSION_BYTES,
+            2 * 1024 * 1024 * 1024,
+        )
         self.assertIn('def _can_save_standard_configuration()', views_source)
         self.assertIn('def _asi676mc_feature_enabled()', views_source)
         self.assertIn('if not _asi676mc_feature_enabled():', views_source)

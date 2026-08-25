@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# Ensure the custom git merge driver is configured locally
+git config merge.build_css.driver "npm run build -- && cp indi_allsky/flask/static/css/dist.css %A" 2>/dev/null || true
+git config merge.build_css.name "Rebuild Tailwind dist.css on merge conflict" 2>/dev/null || true
+
 # Generate the latest assets before committing
 npm run build
 

@@ -8615,6 +8615,7 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
                 'id'                : v.id,
                 'url'               : str(url),
                 'success'           : v.success,
+                'source'            : data.get('source', 'standard'),
                 'thumbnail_url'     : str(thumbnail_url),
                 'dayDate_long'      : v.dayDate.strftime('%B %d, %Y'),
                 'dayDate'           : v.dayDate.strftime('%Y%m%d'),
@@ -9679,12 +9680,14 @@ class IndiAllskyMiniTimelapseForm(FlaskForm):
         ('5', '5 FPS'),
         ('10', '10 FPS'),
         ('25', '25 FPS'),
+        ('30', '30 FPS'),
+        ('60', '60 FPS'),
     )
 
     CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
     IMAGE_ID                         = HiddenField('Image ID', validators=[DataRequired()])
-    PRE_SECONDS_SELECT               = SelectField('Pre-Selection Time', choices=SECONDS_choices, validators=[DataRequired()])
-    POST_SECONDS_SELECT              = SelectField('Post-Selection Time', choices=SECONDS_choices, validators=[DataRequired()])
+    PRE_SECONDS_SELECT               = SelectField('Before selected image', choices=SECONDS_choices, validators=[DataRequired()])
+    POST_SECONDS_SELECT              = SelectField('After selected image', choices=SECONDS_choices, validators=[DataRequired()])
     FRAMERATE_SELECT                 = SelectField('Speed', choices=FRAMERATE_SELECT_choices, validators=[DataRequired()])
     NOTE                             = StringField('Description', validators=[DataRequired()])
 

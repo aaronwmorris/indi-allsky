@@ -343,6 +343,7 @@ class FrameRecord:
     x_bayer_offset: int = 0
     y_bayer_offset: int = 0
     camera_identity_source: str = 'fits_header'
+    source_name: str = None
 
     @property
     def is_bad(self):
@@ -467,6 +468,7 @@ def inspect_fits(path, settings, trusted_camera_name=None):
         camera_name=camera_name,
         signature=signature,
         camera_identity_source=camera_identity_source,
+        source_name=path.name,
     )
 
 
@@ -531,6 +533,7 @@ def inspect_fits_metadata(path, metadata, settings, verify_header=False):
         camera_name=camera_name,
         signature=signature,
         camera_identity_source='database_metadata',
+        source_name=str(metadata.get('original_name') or path.name),
     )
 
 
@@ -608,6 +611,12 @@ def scan_folder(
                             record,
                             camera_identity_source='bound_database',
                         )
+                    record = replace(
+                        record,
+                        source_name=str(
+                            metadata.get('original_name') or path.name
+                        ),
+                    )
             else:
                 record = inspect_fits(
                     path,
@@ -1736,11 +1745,14 @@ def _best_gain_only_planes(observed_planes, reference_planes, stable_masks):
         )
         if not numpy.any(mask):
             raise CalibrationError(
-                'too few samples for the gain-only phase countercheck'
+                'too few stable pixels to compare full repair with '
+                'colour-only correction'
             )
         ratio = float(numpy.median(observed_float[mask] / reference[mask]))
         if not numpy.isfinite(ratio) or ratio <= 0.0:
-            raise CalibrationError('invalid gain-only phase countercheck')
+            raise CalibrationError(
+                'the colour-only comparison could not be calculated'
+            )
         corrected.append(observed_float / ratio)
     return tuple(corrected)
 
@@ -1749,11 +1761,13 @@ def validate_calibrated_frames(
     pairs,
     settings,
     checkpoint_callback=None,
+    collect_phase_failures=False,
 ):
     """Apply final rounded settings to every pair without writing outputs."""
     repaired_count = 0
     normal_count = 0
     similarity_checks = []
+    phase_failures = []
     unique_normal = {
         reference.path: reference
         for pair in pairs
@@ -1784,7 +1798,10 @@ def validate_calibrated_frames(
         result = asi676mc.repair_if_needed(data, settings)
         if not result['repaired'] or result['validation_failed']:
             raise CalibrationError(
-                f'calibrated repair validation failed for {pair.bad.path}'
+                'validation_runtime_repair: {0}: the calculated repair values '
+                'did not produce a valid repaired frame'.format(
+                    pair.bad.source_name or pair.bad.path.name
+                )
             )
         repaired_planes = _sample_array_planes(
             data,
@@ -1812,27 +1829,66 @@ def validate_calibrated_frames(
             stable_masks,
         )
         improvement = CALIBRATION_OPTIONS['MIN_REFERENCE_ERROR_IMPROVEMENT']
-        if repaired_error > CALIBRATION_OPTIONS['MAX_REPAIRED_REFERENCE_ERROR']:
-            raise CalibrationError(
-                'repaired frame remains too different from its normal '
-                'reference: {0}'.format(pair.bad.path)
-            )
-        if repaired_error > original_error * (1.0 - improvement):
-            raise CalibrationError(
-                'repair does not materially improve agreement with the normal '
-                'reference: {0}'.format(pair.bad.path)
-            )
-        if repaired_error > unshifted_error * (1.0 - improvement):
-            raise CalibrationError(
-                'evidence does not confirm the ASI676MC one-row phase shift: '
-                '{0}'.format(pair.bad.path)
-            )
-        similarity_checks.append({
-            'name': pair.bad.path.name,
+        original_improvement = (
+            1.0 - repaired_error / max(original_error, 1.0e-12)
+        )
+        phase_improvement = (
+            1.0 - repaired_error / max(unshifted_error, 1.0e-12)
+        )
+        check = {
+            'name': pair.bad.source_name or pair.bad.path.name,
             'original_error': original_error,
             'gain_only_error': unshifted_error,
             'repaired_error': repaired_error,
-        })
+            'improvement_vs_original': original_improvement,
+            'improvement_vs_gain_only': phase_improvement,
+            'required_improvement': improvement,
+        }
+        if repaired_error > CALIBRATION_OPTIONS['MAX_REPAIRED_REFERENCE_ERROR']:
+            raise CalibrationError(
+                'validation_repaired_reference_error: {0}: the repaired frame '
+                'differs from its nearby normal frame by {1:.1%}; the maximum '
+                'allowed is {2:.1%}'.format(
+                    check['name'],
+                    repaired_error,
+                    CALIBRATION_OPTIONS['MAX_REPAIRED_REFERENCE_ERROR'],
+                )
+            )
+        if repaired_error > original_error * (1.0 - improvement):
+            raise CalibrationError(
+                'validation_original_improvement: {0}: full repair made the '
+                'purple frame {1:.1%} closer to its nearby normal frame; at '
+                'least {2:.1%} is required'.format(
+                    check['name'],
+                    original_improvement,
+                    improvement,
+                )
+            )
+        if repaired_error > unshifted_error * (1.0 - improvement):
+            check['failure_code'] = 'phase_improvement'
+            check['reason'] = (
+                'full repair matched the nearby normal frame {0:.1%} better '
+                'than colour-only correction; at least {1:.1%} is required'.format(
+                    phase_improvement,
+                    improvement,
+                )
+            )
+            # A marginal miss still shows positive evidence for row shifting.
+            # If row shifting is no better than gain-only correction, preserve
+            # the hard failure used to reject ordinary colour populations.
+            if collect_phase_failures and phase_improvement > 0.0:
+                phase_failures.append({
+                    'pair': pair,
+                    'check': check,
+                })
+                continue
+            raise CalibrationError(
+                'validation_phase_improvement: {0}: {1}'.format(
+                    check['name'],
+                    check['reason'],
+                )
+            )
+        similarity_checks.append(check)
         repaired_count += 1
 
     # A normal frame must take the fast no-op path.  The array comparison also
@@ -1845,14 +1901,20 @@ def validate_calibrated_frames(
         result = asi676mc.repair_if_needed(data, settings)
         if result['repaired'] or result['signature_before']['is_bad']:
             raise CalibrationError(
-                f'calibrated detector rejects normal frame {record.path}'
+                'validation_normal_rejected: {0}: the calculated detection '
+                'settings mistook a normal frame for a purple frame'.format(
+                    record.source_name or record.path.name
+                )
             )
         if not numpy.array_equal(data, original):
             raise CalibrationError(
-                f'normal-frame validation mutated {record.path}'
+                'validation_normal_modified: {0}: the repair changed pixels '
+                'in a normal frame'.format(
+                    record.source_name or record.path.name
+                )
             )
         normal_count += 1
-    return repaired_count, normal_count, similarity_checks
+    return repaired_count, normal_count, similarity_checks, phase_failures
 
 
 def calibration_payload(
@@ -1971,6 +2033,8 @@ def calibrate_folder(
     progressive=False,
     initial_scan_count=14,
     trusted_camera_name=None,
+    target_group_count=None,
+    marginal_exclusion_limit=0,
 ):
     """Run complete calibration for one staged evidence directory.
 
@@ -2075,117 +2139,222 @@ def calibrate_folder(
     )
 
     pairs, unmatched = match_pairs(records, max_pair_seconds)
-    evidence = validate_evidence(
-        records,
-        pairs,
-        unmatched,
-        allow_unmatched=allow_unmatched,
-    )
-    ranges = signature_ranges(records)
-    try:
-        validate_signature_separation(ranges, config)
-    except CalibrationError as separation_error:
-        # The detector can find enough frames through its three-way AND rule
-        # even when one individual threshold lies outside that metric's safe
-        # gap. Present the same review-and-rerun result used for an outright
-        # detector miss instead of fitting repair constants against a weak
-        # detector configuration.
+    database_reserve_mode = target_group_count is not None
+    marginal_exclusion_limit = max(0, int(marginal_exclusion_limit or 0))
+    if not database_reserve_mode:
+        requested_group_count = len(pairs)
+    else:
+        requested_group_count = max(0, int(target_group_count))
+    working_group_count = min(requested_group_count, len(pairs))
+    active_pairs = list(pairs[:working_group_count])
+    reserve_pairs = list(pairs[working_group_count:])
+    excluded_checks = []
+    replacement_count = 0
+
+    def records_for_pairs(candidate_pairs):
+        """Return the unique bad/reference records in staged pair order."""
+        selected = []
+        selected_paths = set()
+        for candidate_pair in candidate_pairs:
+            for record in (candidate_pair.bad,) + candidate_pair.references:
+                if record.path in selected_paths:
+                    continue
+                selected.append(record)
+                selected_paths.add(record.path)
+        return selected
+
+    while True:
+        # Preserve the original upload and progressive-search behavior: their
+        # evidence and detector ranges include the complete inspected
+        # collection, including unmatched frames. Only the saved-FITS reserve
+        # path intentionally fits a requested subset of the staged groups.
+        active_records = (
+            records_for_pairs(active_pairs)
+            if database_reserve_mode
+            else records
+        )
+        evidence = validate_evidence(
+            active_records,
+            active_pairs,
+            [] if database_reserve_mode else unmatched,
+            allow_unmatched=allow_unmatched,
+        )
+        ranges = signature_ranges(active_records)
         try:
-            suggestions = build_detection_threshold_suggestions(
+            validate_signature_separation(ranges, config)
+        except CalibrationError as separation_error:
+            # The detector can find enough frames through its three-way AND
+            # rule even when one threshold lies outside that metric's safe
+            # gap. This preliminary result is only valid before any final
+            # validation exclusion has changed the working evidence set.
+            if excluded_checks:
+                raise CalibrationError(
+                    'validation_refit_signature_separation: after setting '
+                    'aside an inconclusive group, the remaining groups no '
+                    'longer clearly separate normal and purple frames'
+                ) from separation_error
+            try:
+                suggestions = build_detection_threshold_suggestions(
+                    ranges,
+                    config,
+                )
+            except CalibrationError:
+                raise separation_error
+            payload = threshold_suggestion_payload(
+                active_records,
+                evidence,
                 ranges,
-                config,
+                suggestions,
+                detected_bad_count=bad_count,
             )
-        except CalibrationError:
-            raise separation_error
-        payload = threshold_suggestion_payload(
-            records,
+            payload['quality']['rejected_file_count'] = len(rejected)
+            payload['rejected_files'] = [
+                {
+                    'name': Path(path).name,
+                    'reason': str(reason),
+                }
+                for path, reason in rejected
+            ]
+            print(
+                'Detector populations are clear, but one or more configured '
+                'thresholds lie outside their safe gaps; returning threshold '
+                'suggestions only.'
+            )
+            return finish_scan_payload(payload)
+        threshold_assessment = assess_detection_threshold_margins(
+            ranges,
+            config,
+        )
+        print(
+            'Matched {0} purple frames to {1} distinct normal frames '
+            '({2:.2f}:1)'.format(
+                evidence['pair_count'],
+                evidence['unique_good_count'],
+                evidence['good_bad_ratio'],
+            )
+        )
+
+        if progress_callback:
+            progress_callback({
+                'phase': 'fitting',
+                'processed_files': scanned_file_count,
+                'total_files': available_file_count,
+                'detected_bad_count': bad_count,
+            })
+        samples = collect_pair_samples(
+            active_pairs,
+            checkpoint_callback=checkpoint_callback,
+        )
+        gains_detail = estimate_gains(samples)
+        gain_values = {
+            name: result['value']
+            for name, result in gains_detail.items()
+        }
+        saturation_threshold, plateau = estimate_saturation_threshold(samples)
+        print('Fitting clipped-highlight boundaries...')
+        highlight = estimate_highlight_ratios(
+            samples,
+            gain_values,
+            saturation_threshold,
+            checkpoint_callback=checkpoint_callback,
+        )
+        payload = calibration_payload(
+            config,
             evidence,
             ranges,
-            suggestions,
-            detected_bad_count=bad_count,
+            gains_detail,
+            saturation_threshold,
+            plateau,
+            highlight,
+            rejected,
         )
-        payload['quality']['rejected_file_count'] = len(rejected)
-        payload['rejected_files'] = [
-            {
-                'name': Path(path).name,
-                'reason': str(reason),
-            }
-            for path, reason in rejected
-        ]
-        print(
-            'Detector populations are clear, but one or more configured '
-            'thresholds lie outside their safe gaps; returning threshold '
-            'suggestions only.'
+        payload['threshold_assessment'] = threshold_assessment
+        print('Validating calibrated settings against every matched frame...')
+        if progress_callback:
+            progress_callback({
+                'phase': 'validating',
+                'processed_files': scanned_file_count,
+                'total_files': available_file_count,
+                'detected_bad_count': bad_count,
+            })
+        validation_settings = dict(config)
+        validation_settings.update(payload['derived_settings'])
+        (
+            repaired_count,
+            normal_validation_count,
+            similarity_checks,
+            phase_failures,
+        ) = validate_calibrated_frames(
+            active_pairs,
+            validation_settings,
+            checkpoint_callback=checkpoint_callback,
+            collect_phase_failures=bool(marginal_exclusion_limit),
         )
-        return finish_scan_payload(payload)
-    threshold_assessment = assess_detection_threshold_margins(ranges, config)
-    print(
-        'Matched {0} purple frames to {1} distinct normal frames '
-        '({2:.2f}:1)'.format(
-            evidence['pair_count'],
-            evidence['unique_good_count'],
-            evidence['good_bad_ratio'],
-        )
-    )
+        if not phase_failures:
+            break
 
-    if progress_callback:
-        progress_callback({
-            'phase': 'fitting',
-            'processed_files': scanned_file_count,
-            'total_files': available_file_count,
-            'detected_bad_count': bad_count,
-        })
-    samples = collect_pair_samples(
-        pairs,
-        checkpoint_callback=checkpoint_callback,
-    )
-    gains_detail = estimate_gains(samples)
-    gain_values = {
-        name: result['value']
-        for name, result in gains_detail.items()
-    }
-    saturation_threshold, plateau = estimate_saturation_threshold(samples)
-    print('Fitting clipped-highlight boundaries...')
-    highlight = estimate_highlight_ratios(
-        samples,
-        gain_values,
-        saturation_threshold,
-        checkpoint_callback=checkpoint_callback,
-    )
-    payload = calibration_payload(
-        config,
-        evidence,
-        ranges,
-        gains_detail,
-        saturation_threshold,
-        plateau,
-        highlight,
-        rejected,
-    )
-    payload['threshold_assessment'] = threshold_assessment
-    print('Validating calibrated settings against every matched frame...')
-    if progress_callback:
-        progress_callback({
-            'phase': 'validating',
-            'processed_files': scanned_file_count,
-            'total_files': available_file_count,
-            'detected_bad_count': bad_count,
-        })
-    validation_settings = dict(config)
-    validation_settings.update(payload['derived_settings'])
-    (
-        repaired_count,
-        normal_validation_count,
-        similarity_checks,
-    ) = validate_calibrated_frames(
-        pairs,
-        validation_settings,
-        checkpoint_callback=checkpoint_callback,
-    )
+        if (
+            len(excluded_checks) + len(phase_failures)
+            > marginal_exclusion_limit
+        ):
+            first_check = phase_failures[0]['check']
+            raise CalibrationError(
+                'validation_phase_improvement: {0}: {1}; more than {2} '
+                'inconclusive groups would need to be set aside'.format(
+                    first_check['name'],
+                    first_check['reason'],
+                    marginal_exclusion_limit,
+                )
+            )
+
+        failed_pair_ids = {
+            id(item['pair']) for item in phase_failures
+        }
+        active_pairs = [
+            pair for pair in active_pairs
+            if id(pair) not in failed_pair_ids
+        ]
+        for failure in phase_failures:
+            excluded_checks.append(dict(failure['check']))
+        promoted_count = min(len(phase_failures), len(reserve_pairs))
+        if promoted_count:
+            active_pairs.extend(reserve_pairs[:promoted_count])
+            del reserve_pairs[:promoted_count]
+            replacement_count += promoted_count
+        if len(active_pairs) < minimum:
+            raise CalibrationError(
+                'validation_group_count_after_exclusion: only {0} groups '
+                'remain after setting aside {1} inconclusive {2}; at least {3} '
+                'are required'.format(
+                    len(active_pairs),
+                    len(excluded_checks),
+                    'group' if len(excluded_checks) == 1 else 'groups',
+                    minimum,
+                )
+            )
+        print(
+            'Set aside {0} inconclusive {1}; promoted {2} reserve {3} and '
+            'refitting.'.format(
+                len(phase_failures),
+                'group' if len(phase_failures) == 1 else 'groups',
+                promoted_count,
+                'group' if promoted_count == 1 else 'groups',
+            )
+        )
+
     payload['quality']['validated_bad_repairs'] = repaired_count
     payload['quality']['validated_normal_frames'] = normal_validation_count
     payload['quality']['reference_similarity_checks'] = similarity_checks
     payload['quality']['worst_repaired_reference_error'] = max(
         check['repaired_error'] for check in similarity_checks
     )
+    if database_reserve_mode:
+        payload['quality'].update({
+            'requested_group_count': requested_group_count,
+            'used_group_count': len(active_pairs),
+            'examined_group_count': working_group_count + replacement_count,
+            'excluded_marginal_group_count': len(excluded_checks),
+            'replacement_group_count': replacement_count,
+            'marginal_exclusions': excluded_checks,
+        })
     return finish_scan_payload(payload)
