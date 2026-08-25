@@ -293,12 +293,21 @@ camera identity remains authoritative and is rejected. Missing, corrupt,
 repaired, or incompatible files are skipped and summarized rather than
 silently shortening the search horizon.
 
-The 200-FITS and 2-GiB limits apply to the final purple/reference evidence set,
-not to catalog discovery. Only selected evidence enters the private session. A
-hard link keeps it stable without a second copy; where hard links are
-unavailable, the tool makes a private copy. It never uses a symbolic link whose
-target could change after selection. If a selected source disappears during
-staging, that file is skipped and the remaining evidence is still evaluated.
+The 200-FITS and 2.5-GiB limits apply to the final purple/reference evidence
+set, not to catalog discovery. Only selected evidence enters the private
+session. The saved-FITS path stages up to three groups beyond the requested
+count as validation reserves. If a group passes the main repair checks, but the
+complete repair is less than ten percent better than a simple colour-only
+correction, that inconclusive group is set aside, a reserve is promoted, and the
+fit is repeated. The complete repair must still outperform colour-only
+correction; otherwise calibration fails. The group count is reduced only when
+no reserve remains, and never below the seven-group minimum.
+
+A hard link keeps staged evidence stable without a second copy; where hard
+links are unavailable, the tool makes a private copy. It never uses a symbolic
+link whose target could change after selection. If a selected source disappears
+during staging, that file is skipped and the remaining evidence is still
+evaluated.
 
 Cancellation removes only private links, copies, or partial copies. Source
 FITS pixels and headers are never changed. The only durable discovery update
@@ -396,8 +405,8 @@ normal reference. The complete evidence must also provide:
 - sufficient unsaturated samples for each Bayer parity;
 - sufficient clipped-highlight evidence for both blend boundaries;
 - plausible gains with low between-pair median absolute deviation; and
-- a repair materially closer to adjacent normal evidence than both the
-  original and a gain-only, no-row-shift counterfactual.
+- a repair materially closer to nearby normal evidence than both the original
+  frame and a colour-only correction.
 
 Normal references that change too much across a two-sided triplet are rejected
 at the affected sample locations, limiting the influence of cloud, aircraft,

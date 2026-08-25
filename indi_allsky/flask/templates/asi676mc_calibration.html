@@ -479,6 +479,14 @@
             <button id="calibration-failure-reset" type="button" class="tw:btn tw:btn-neutral" style="display: none;">
                 Try again
             </button>
+            <a
+                id="calibration-failure-report-download"
+                class="tw:btn tw:btn-info tw:no-underline"
+                href="#"
+                style="display: none;"
+            >
+                Download details
+            </a>
         </div>
     </div>
 </div>
@@ -822,7 +830,7 @@ function showCalibrationProgressView() {
     }
 }
 
-function showCalibrationFailure(sessionId, message) {
+function showCalibrationFailure(sessionId, message, reportAvailable) {
     // A worker failure is a completed, discardable session. Keep its message
     // beside the final progress state so a long setup form cannot hide the
     // reason below the fold, and offer the same deliberate reset as results.
@@ -843,6 +851,9 @@ function showCalibrationFailure(sessionId, message) {
         .removeClass('progress-bar-animated')
         .addClass('calibration-progress-error');
     $('#calibration-progress-error').text(message).show();
+    $('#calibration-failure-report-download')
+        .attr('href', calibrationUrl(calibrationReportUrlTemplate, sessionId))
+        .toggle(Boolean(reportAvailable));
     $('#cancel-calibration').hide().prop('disabled', false).text('Cancel calibration');
     $('#calibration-failure-reset').show().prop('disabled', false);
 }
@@ -884,6 +895,7 @@ function resetCalibrationInterface() {
     $('#start-database-calibration').prop('disabled', false);
     $('#cancel-calibration').hide().prop('disabled', false).text('Cancel calibration');
     $('#calibration-failure-reset').hide().prop('disabled', false);
+    $('#calibration-failure-report-download').hide().attr('href', '#');
     $('#calibration-progress-error').hide().empty();
     $('#calibration-files').val('');
     $('#calibration-values, #calibration-threshold-values, #calibration-threshold-advisory-values, #calibration-population-evidence, #calibration-population-previews, #calibration-quality, #calibration-warning-list').empty();
@@ -1700,7 +1712,8 @@ async function pollCalibration(sessionId) {
                 sessionId,
                 'Calibration failed. '
                 + failureReason
-                + settingsUnchangedMessage + ' ' + cleanupMessage
+                + settingsUnchangedMessage + ' ' + cleanupMessage,
+                status.report_available
             );
             return;
         }
