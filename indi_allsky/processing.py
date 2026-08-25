@@ -2734,7 +2734,7 @@ class ImageProcessor(object):
         new_height = new_height - (new_height % 2)
         new_width = new_width - (new_width % 2)
 
-        logger.info('Scaling image by %d%%, new size: %d x %d', new_width, new_height)
+        logger.info('Scaling image by %d%%, new size: %d x %d', scale, new_width, new_height)
 
         self.image = cv2.resize(self.image, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
