@@ -171,7 +171,8 @@ class IndiAllskyDetectLines(object):
 
 
         for line in lines:
-            for x1, y1, x2, y2 in line:
+            # HoughLinesP returns (N, 1, 4) on OpenCV 4 but (N, 4) on OpenCV 5
+            for x1, y1, x2, y2 in numpy.atleast_2d(line):
                 cv2.line(
                     img,
                     (x1, y1),
