@@ -9538,6 +9538,14 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     IMAGE_FLIP_H                     = BooleanField('Flip Image Horizontally')
     IMAGE_COLORMAP                   = SelectField('Apply Colormap', choices=IMAGE_COLORMAP_choices, validators=[IMAGE_COLORMAP_validator])
     DETECT_MASK                      = StringField('Detection Mask', validators=[DETECT_MASK_validator])
+    DETECT_STARS_METHOD_choices = IndiAllskyConfigForm.DETECT_STARS_METHOD_choices
+
+    RUN_DETECTION                    = BooleanField('Run Detection')
+    DETECT_STARS_METHOD              = SelectField('Star Detection Method', choices=DETECT_STARS_METHOD_choices)
+    DETECT_STARS_THOLD               = FloatField('Star Detection Threshold', validators=[DETECT_STARS_THOLD_validator], widget=NumberInput(step=0.01))
+    DETECT_STARS_SEP_THOLD           = FloatField('Star Sigma Threshold', validators=[DETECT_STARS_SEP_THOLD_validator], widget=NumberInput(step=0.5))
+    DETECT_STARS_SEP_MAX_RADIUS      = IntegerField('SEP Max Star Radius', validators=[DETECT_STARS_SEP_MAX_RADIUS_validator])
+    DETECT_METEORS_THOLD             = IntegerField('Meteor Detection Threshold', validators=[DETECT_METEORS_THOLD_validator])
     SQM_ROI_X1                       = IntegerField('SQM ROI x1', validators=[SQM_ROI_validator])
     SQM_ROI_Y1                       = IntegerField('SQM ROI y1', validators=[SQM_ROI_validator])
     SQM_ROI_X2                       = IntegerField('SQM ROI x2', validators=[SQM_ROI_validator])
