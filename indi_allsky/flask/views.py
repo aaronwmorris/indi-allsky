@@ -9626,6 +9626,10 @@ class JsonImageProcessingView(JsonView):
         )
 
 
+        processing_start = time.time()
+
+
+        # Interactive detection: draw stars/meteors on the preview image
         run_detection = bool(request.json.get('RUN_DETECTION', False))
         stars_count = 0
         detections_count = 0
@@ -9670,9 +9674,6 @@ class JsonImageProcessingView(JsonView):
                 stars_detect_o = IndiAllSkyStars(p_config, mask=mask_dict)
 
             stars_count = len(stars_detect_o.detectObjects(image_processor.image, binning))
-
-
-        processing_start = time.time()
 
 
         message_list = list()
