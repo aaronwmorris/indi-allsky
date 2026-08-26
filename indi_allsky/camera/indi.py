@@ -682,6 +682,9 @@ class IndiClient(PyIndi.BaseClient):
         binning_info = self.getCcdBinning()
         ccdinfo['BINNING_INFO'] = binning_info
 
+        serialnumber_info = self.getCcdSerialNumber()
+        ccdinfo['SERIALNUMBER_INFO'] = serialnumber_info
+
         #logger.info('CCD Info: %s', pformat(ccdinfo))
         return ccdinfo
 
@@ -1491,6 +1494,66 @@ class IndiClient(PyIndi.BaseClient):
         except TimeOutException:
             logger.error('Failed to find CCD binning control, bypassing binning config')
 
+
+    def getCcdSerialNumber(self):
+        indi_exec = self.ccd_device.getDriverExec()
+
+        # for cameras that do not support a serial number
+        fake_sn_info = {
+            'current' : None,
+        }
+
+
+        if indi_exec in [
+            'indi_asi_ccd',
+            'indi_asi_single_ccd',
+            'indi_playerone_ccd',
+            'indi_playerone_single_ccd',
+        ]:
+
+            try:
+                sn_ctl = self.get_control(self.ccd_device, 'Serial Number', 'text')
+                sn_index_dict = self.__map_indexes(sn_ctl, ['SN#'])
+                index = sn_index_dict['SN#']
+            except TimeOutException:
+                logger.warning('Timeout: %s does not support serial numbers', indi_exec)
+                return fake_sn_info
+            except KeyError:
+                logger.warning('KeyError: %s does not support serial numbers', indi_exec)
+                return fake_sn_info
+
+        elif indi_exec in [
+            'indi_toupcam_ccd',
+            'indi_altair_ccd',
+            'indi_altaircam_ccd',
+            'indi_nncam_ccd',
+            'indi_tscam_ccd',
+            'indi_ogmacam_ccd',
+            'indi_omegonprocam_ccd',
+        ]:
+
+            try:
+                sn_ctl = self.get_control(self.ccd_device, 'CAMERA', 'text')
+                sn_index_dict = self.__map_indexes(sn_ctl, ['SN'])
+                index = sn_index_dict['SN']
+            except TimeOutException:
+                logger.warning('Timeout: %s does not support serial numbers', indi_exec)
+                return fake_sn_info
+            except KeyError:
+                logger.warning('KeyError: %s does not support serial numbers', indi_exec)
+                return fake_sn_info
+
+        else:
+            logger.warning('%s does not support serial numbers', indi_exec)
+            return fake_sn_info
+
+
+        sn_info = {
+            'current' : sn_ctl[index].getText() or None  # blank strings should be None
+        }
+
+
+        return sn_info
 
 
     ### Most of below was borrowed from https://github.com/GuLinux/indi-lite-tools/blob/master/pyindi_sequence/device.py

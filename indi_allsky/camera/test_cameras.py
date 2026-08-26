@@ -341,6 +341,10 @@ class IndiClientTestCameraBase(IndiClient):
             'format'  : None,
         }
 
+        ccdinfo['SERIALNUMBER_INFO'] = {
+            'current' : None,
+        }
+
         return ccdinfo
 
 
