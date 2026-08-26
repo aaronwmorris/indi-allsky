@@ -11016,6 +11016,10 @@ class CameraLensView(TemplateView):
         context['image_circle_diameter_mm'] = image_circle_diameter * camera.pixelSize / 1000.0
 
 
+        circle_of_confusion = camera_diagonal_mm / 1730
+        context['hyperfocal_distance_mm'] = ((camera.lensFocalLength ** 2) / (camera.lensFocalRatio * circle_of_confusion)) + camera.lensFocalLength
+
+
         # since the arcsec/px increases near the edges of the image, this factor tries to account for that
         arcsec_pix_factor = 1.2
 
@@ -14323,7 +14327,7 @@ class WsControlView(BaseView):
                             }, default=str))
                     elif msg_type in ('pause', 'unpause', 'reload_config', 'reload', 'generate_keogram', 'generate_timelapse', 'generate_startrail', 'trigger_darks'):
                         from .models import IndiAllSkyDbTaskQueueTable, TaskQueueQueue, TaskQueueState
-                        
+
                         task_name_map = {
                             'pause': 'pause',
                             'unpause': 'unpause',
@@ -14334,7 +14338,7 @@ class WsControlView(BaseView):
                             'generate_startrail': 'startrail',
                             'trigger_darks': 'darks',
                         }
-                        
+
                         target_action = task_name_map.get(msg_type, msg_type)
                         task = IndiAllSkyDbTaskQueueTable(
                             queue=TaskQueueQueue.MAIN,
