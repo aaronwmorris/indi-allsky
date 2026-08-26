@@ -9626,6 +9626,52 @@ class JsonImageProcessingView(JsonView):
         )
 
 
+        run_detection = bool(request.json.get('RUN_DETECTION', False))
+        stars_count = 0
+        detections_count = 0
+        detect_method = p_config.get('DETECT_STARS_METHOD', 'template')
+
+        def runDetection():
+            nonlocal stars_count, detections_count, detect_method
+
+            if not run_detection:
+                return
+
+            from ..stars import IndiAllSkyStars
+            from ..detectLines import IndiAllskyDetectLines
+
+            # tuned per-run, the saved config is not modified
+            detect_method = str(request.json.get('DETECT_STARS_METHOD', detect_method))
+            p_config['DETECT_STARS_METHOD']         = detect_method
+            p_config['DETECT_STARS_THOLD']          = float(request.json['DETECT_STARS_THOLD'])
+            p_config['DETECT_STARS_SEP_THOLD']      = float(request.json['DETECT_STARS_SEP_THOLD'])
+            p_config['DETECT_STARS_SEP_MAX_RADIUS'] = int(request.json['DETECT_STARS_SEP_MAX_RADIUS'])
+            p_config['DETECT_METEORS_THOLD']        = int(request.json['DETECT_METEORS_THOLD'])
+            p_config['DETECT_DRAW']                 = True
+
+            detect_mask_path = Path(p_config.get('DETECT_MASK', ''))
+            if detect_mask_path.is_file():
+                indi_mask = cv2.imread(str(detect_mask_path), cv2.IMREAD_GRAYSCALE)
+            else:
+                indi_mask = None
+
+            mask_dict = {binning: indi_mask}
+
+            # lines before stars, as in the capture pipeline - star markers would
+            # otherwise be detected as lines
+            lines_detect_o = IndiAllskyDetectLines(p_config, mask=mask_dict)
+            detections_count = len(lines_detect_o.detectLines(image_processor.image, binning))
+
+            if detect_method == 'sep':
+                # imported on demand: sep is unavailable on some legacy platforms
+                from ..starsSep import IndiAllSkyStarsSEP
+                stars_detect_o = IndiAllSkyStarsSEP(p_config, mask=mask_dict)
+            else:
+                stars_detect_o = IndiAllSkyStars(p_config, mask=mask_dict)
+
+            stars_count = len(stars_detect_o.detectObjects(image_processor.image, binning))
+
+
         processing_start = time.time()
 
 
@@ -9652,6 +9698,8 @@ class JsonImageProcessingView(JsonView):
             image_processor.stack()  # populates self.image
 
             image_processor.convert_16bit_to_8bit()
+
+            runDetection()
 
 
             # rotation
@@ -9748,6 +9796,8 @@ class JsonImageProcessingView(JsonView):
 
             image_processor.convert_16bit_to_8bit()
 
+            runDetection()
+
 
             if p_config.get('IMAGE_ROTATE'):
                 image_processor.rotate_90()
@@ -9833,50 +9883,6 @@ class JsonImageProcessingView(JsonView):
 
 
                 image_processor.image = pano_data
-
-
-        # Interactive detection: draw stars/meteors on the preview image
-        run_detection = bool(request.json.get('RUN_DETECTION', False))
-        stars_count = 0
-        detections_count = 0
-
-        detect_method = p_config.get('DETECT_STARS_METHOD', 'template')
-
-        if run_detection:
-            from ..stars import IndiAllSkyStars
-            from ..detectLines import IndiAllskyDetectLines
-
-            # tuned per-run, the saved config is not modified
-            detect_method = str(request.json.get('DETECT_STARS_METHOD', detect_method))
-            p_config['DETECT_STARS_METHOD']         = detect_method
-            p_config['DETECT_STARS_THOLD']          = float(request.json['DETECT_STARS_THOLD'])
-            p_config['DETECT_STARS_SEP_THOLD']      = float(request.json['DETECT_STARS_SEP_THOLD'])
-            p_config['DETECT_STARS_SEP_MAX_RADIUS'] = int(request.json['DETECT_STARS_SEP_MAX_RADIUS'])
-            p_config['DETECT_METEORS_THOLD']        = int(request.json['DETECT_METEORS_THOLD'])
-            p_config['DETECT_DRAW']                 = True
-
-            detect_mask_path = Path(p_config.get('DETECT_MASK', ''))
-            if detect_mask_path.is_file():
-                indi_mask = cv2.imread(str(detect_mask_path), cv2.IMREAD_GRAYSCALE)
-            else:
-                indi_mask = None
-
-            mask_dict = {binning: indi_mask}
-
-            # lines before stars, as in the capture pipeline - star markers would
-            # otherwise be detected as lines
-            lines_detect_o = IndiAllskyDetectLines(p_config, mask=mask_dict)
-            detections_count = len(lines_detect_o.detectLines(image_processor.image, binning))
-
-            if detect_method == 'sep':
-                # imported on demand: sep is unavailable on some legacy platforms
-                from ..starsSep import IndiAllSkyStarsSEP
-                stars_detect_o = IndiAllSkyStarsSEP(p_config, mask=mask_dict)
-            else:
-                stars_detect_o = IndiAllSkyStars(p_config, mask=mask_dict)
-
-            stars_count = len(stars_detect_o.detectObjects(image_processor.image, binning))
-
 
         processing_elapsed_s = time.time() - processing_start
         app.logger.info('Image processed in %0.4f s', processing_elapsed_s)
