@@ -908,7 +908,8 @@ class IndiAllSkyDbNotificationTable(db.Model):
 
 
     def setExpired(self):
-        self.expired = True
+        from datetime import datetime
+        self.expireDate = datetime.now()
         db.session.commit()
 
 
