@@ -1098,6 +1098,28 @@ class miscDb(object):
         return new_notice
 
 
+    def clearNotification(self, category, item):
+        now = datetime.now()
+
+        notices = IndiAllSkyDbNotificationTable.query\
+            .filter(IndiAllSkyDbNotificationTable.item == item)\
+            .filter(IndiAllSkyDbNotificationTable.category == category)\
+            .filter(IndiAllSkyDbNotificationTable.expireDate > now)\
+            .all()
+
+        if not notices:
+            return
+
+        for notice in notices:
+            notice.expireDate = now
+            notice.ack = True
+
+        db.session.commit()
+
+        cat_val = category.value if hasattr(category, 'value') else category
+        logger.info('Cleared %d %s notification(s) for %s', len(notices), cat_val, item)
+
+
     def setState(self, key, value, encrypted=False):
         now = datetime.now()
 
