@@ -10992,7 +10992,9 @@ class CameraLensView(TemplateView):
 
 
         context['camera_cfa'] = constants.CFA_MAP_STR[camera.cfa]
-        context['lensAperture'] = camera.lensFocalLength / camera.lensFocalRatio
+
+        lens_aperature_mm = camera.lensFocalLength / camera.lensFocalRatio
+        context['lensAperture'] = lens_aperature_mm
 
 
         camera_width_mm = camera.width * camera.pixelSize / 1000.0
@@ -11016,8 +11018,23 @@ class CameraLensView(TemplateView):
         context['image_circle_diameter_mm'] = image_circle_diameter * camera.pixelSize / 1000.0
 
 
-        circle_of_confusion = camera_diagonal_mm / 1730
+        #circle_of_confusion = camera_diagonal_mm / 1730
+        circle_of_confusion = 2 * (camera.pixelSize * (10 ** -3))
+
         context['hyperfocal_distance_mm'] = ((camera.lensFocalLength ** 2) / (camera.lensFocalRatio * circle_of_confusion)) + camera.lensFocalLength
+
+        # thin lens equation
+        #context['hyperfocal_distance_mm'] = (camera.lensFocalLength ** 2) / (camera.lensFocalRatio * circle_of_confusion)
+
+        # Geometric limit
+        #context['geometric_distance_mm'] = (camera.lensFocalLength ** 2) / ((camera.pixelSize * (10 ** -3)) / camera.lenFocalRatio)
+
+
+        # Fresnel Distance - 550nm - Near-Field
+        context['fresnel_distance_mm'] = (lens_aperature_mm ** 2) / (550 * (10 ** -6))
+
+        # Fraunhofer boundary - 550nm - Strict Far-Field Zone
+        context['fraunhofer_distance_mm'] = (2 * (lens_aperature_mm ** 2)) / (550 * (10 ** -6))
 
 
         # since the arcsec/px increases near the edges of the image, this factor tries to account for that
