@@ -11030,11 +11030,11 @@ class CameraLensView(TemplateView):
         #context['geometric_distance_mm'] = (camera.lensFocalLength ** 2) / ((camera.pixelSize * (10 ** -3)) / camera.lenFocalRatio)
 
 
-        # Fresnel Distance - 550nm - Near-Field
-        context['fresnel_distance_mm'] = (lens_aperature_mm ** 2) / (550 * (10 ** -6))
+        # Fresnel Distance - 450nm (blue) - Near-Field
+        #context['fresnel_distance_mm'] = (lens_aperature_mm ** 2) / (450 * (10 ** -6))
 
-        # Fraunhofer boundary - 550nm - Strict Far-Field Zone
-        context['fraunhofer_distance_mm'] = (2 * (lens_aperature_mm ** 2)) / (550 * (10 ** -6))
+        # Fraunhofer Infinity Threshold - 450nm (blue) - Strict Far-Field Zone
+        context['fraunhofer_distance_mm'] = (2 * (lens_aperature_mm ** 2)) / (450 * (10 ** -6))
 
 
         # since the arcsec/px increases near the edges of the image, this factor tries to account for that
