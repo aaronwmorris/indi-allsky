@@ -57,31 +57,58 @@ class miscDb(object):
     def addCamera(self, metadata):
         now = datetime.now()
 
-        try:
-            # not catching MultipleResultsFound
-            camera = IndiAllSkyDbCameraTable.query\
-                .filter(
-                    or_(
-                        IndiAllSkyDbCameraTable.name == metadata['name'],
-                        IndiAllSkyDbCameraTable.name_alt1 == metadata['name'],
-                        IndiAllSkyDbCameraTable.name_alt2 == metadata['name'],
-                    )
-                )\
-                .one()
-            camera.connectDate = now
 
-            if not camera.uuid:
-                camera.uuid = str(uuid.uuid4())
-        except NoResultFound:
-            camera = IndiAllSkyDbCameraTable(
-                name=metadata['name'],
-                connectDate=now,
-                local=True,
-                uuid=str(uuid.uuid4()),
-            )
+        if metadata['serialNumber']:
+            # match serial number first
+            try:
+                # not catching MultipleResultsFound
+                camera = IndiAllSkyDbCameraTable.query\
+                    .filter(IndiAllSkyDbCameraTable.serialNumber == metadata['serialNumber'])\
+                    .one()
 
-            db.session.add(camera)
-            db.session.commit()
+
+                logger.info('Matched camera serial number: %s', metadata['serialNumber'])
+
+                camera.connectDate = now
+
+                if not camera.uuid:
+                    camera.uuid = str(uuid.uuid4())
+            except NoResultFound:
+                camera = None
+
+
+        if isinstance(camera, type(None)):
+            # if no serial matched, match camera name
+            try:
+                # not catching MultipleResultsFound
+                camera = IndiAllSkyDbCameraTable.query\
+                    .filter(
+                        or_(
+                            IndiAllSkyDbCameraTable.name == metadata['name'],
+                            IndiAllSkyDbCameraTable.name_alt1 == metadata['name'],
+                            IndiAllSkyDbCameraTable.name_alt2 == metadata['name'],
+                        )
+                    )\
+                    .one()
+
+
+                logger.info('Matched camera name: %s', metadata['name'])
+
+                camera.connectDate = now
+
+                if not camera.uuid:
+                    camera.uuid = str(uuid.uuid4())
+
+            except NoResultFound:
+                camera = IndiAllSkyDbCameraTable(
+                    name=metadata['name'],
+                    connectDate=now,
+                    local=True,
+                    uuid=str(uuid.uuid4()),
+                )
+
+                db.session.add(camera)
+                db.session.commit()
 
 
         keys_exclude = [
