@@ -58,6 +58,8 @@ class miscDb(object):
         now = datetime.now()
 
 
+        camera = None
+
         if metadata['serialNumber']:
             # match serial number first
             try:
@@ -74,7 +76,7 @@ class miscDb(object):
                 if not camera.uuid:
                     camera.uuid = str(uuid.uuid4())
             except NoResultFound:
-                camera = None
+                pass
 
 
         if isinstance(camera, type(None)):
@@ -100,6 +102,8 @@ class miscDb(object):
                     camera.uuid = str(uuid.uuid4())
 
             except NoResultFound:
+                logger.info('Creating new camera entry: %s', metadata['name'])
+
                 camera = IndiAllSkyDbCameraTable(
                     name=metadata['name'],
                     connectDate=now,
