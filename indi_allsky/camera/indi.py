@@ -1507,6 +1507,20 @@ class IndiClient(PyIndi.BaseClient):
         if indi_exec in [
             'indi_asi_ccd',
             'indi_asi_single_ccd',
+        ]:
+
+            try:
+                sn_ctl = self.get_control(self.ccd_device, 'Serial Number', 'text')
+                sn_index_dict = self.__map_indexes(sn_ctl, ['SN'])
+                index = sn_index_dict['SN']
+            except TimeOutException:
+                logger.warning('Timeout: %s does not support serial numbers', indi_exec)
+                return fake_sn_info
+            except KeyError:
+                logger.warning('KeyError: %s does not support serial numbers', indi_exec)
+                return fake_sn_info
+
+        elif indi_exec in [
             'indi_playerone_ccd',
             'indi_playerone_single_ccd',
         ]:
