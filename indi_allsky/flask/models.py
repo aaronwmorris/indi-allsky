@@ -49,6 +49,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     name_alt2 = db.Column(db.String(length=100), nullable=True, index=True)
     driver = db.Column(db.String(length=100), nullable=True)
     friendlyName = db.Column(db.String(length=100), unique=True, index=True)
+    serialNumber = db.Column(db.String(length=100), nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, server_default=db.func.now())
     connectDate = db.Column(db.DateTime(), nullable=True)
     hidden = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
