@@ -11688,7 +11688,7 @@ class AjaxMiniTimelapseGeneratorView(BaseView):
             request_values['bitrate'] is not None
             and not re.fullmatch(r'\d+[km]', request_values['bitrate'])
         ):
-            return None, 'Choose a valid video quality, then try again.'
+            return None, 'Choose a valid bitrate/file size, then try again.'
         if (
             request_values['pre_seconds'] < 1
             or request_values['pre_seconds'] > 43200

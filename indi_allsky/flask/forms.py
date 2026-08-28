@@ -9693,11 +9693,11 @@ class IndiAllskyMiniTimelapseForm(FlaskForm):
             ('10000k', '10 Mbps — about 75 MB/min'),
             ('15000k', '15 Mbps — about 113 MB/min'),
         ),
-        'High quality': (
+        'Large files': (
             ('20000k', '20 Mbps — about 150 MB/min'),
             ('30000k', '30 Mbps — about 225 MB/min'),
         ),
-        'Very high quality / large files': (
+        'Very large files': (
             ('40000k', '40 Mbps — about 300 MB/min'),
             ('50000k', '50 Mbps — about 375 MB/min'),
         ),
@@ -9708,7 +9708,7 @@ class IndiAllskyMiniTimelapseForm(FlaskForm):
     PRE_SECONDS_SELECT               = SelectField('Before selected image', choices=SECONDS_choices, validators=[DataRequired()])
     POST_SECONDS_SELECT              = SelectField('After selected image', choices=SECONDS_choices, validators=[DataRequired()])
     FRAMERATE_SELECT                 = SelectField('Speed', choices=FRAMERATE_SELECT_choices, validators=[DataRequired()])
-    BITRATE_SELECT                   = SelectField('Quality', choices=BITRATE_SELECT_choices, validators=[DataRequired()])
+    BITRATE_SELECT                   = SelectField('Bitrate/File size', choices=BITRATE_SELECT_choices, validators=[DataRequired()])
     NOTE                             = StringField('Description', validators=[DataRequired()])
 
 
