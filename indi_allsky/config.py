@@ -886,10 +886,10 @@ class IndiAllSkyConfigBase(object):
             "LUX_MAGNITUDE_OFFSET"   : 26.0,
             "FC37_ACTIVE_LOW"        : True,
             # cloud detection derived from any configured MLX90614/90615/90640 sky-temp sensor
-            "CLOUD_SKY_TEMP_CLEAR"          : -30.0,  # max negative delta = 0% cloud
-            "CLOUD_SKY_TEMP_CLOUDY"         : 0,      # delta at/above this = 100% cloud
+            "CLOUD_SKY_TEMP_CLEAR"          : -10.0,  # maximum clear-sky threshold = 0% cloud
+            "CLOUD_SKY_TEMP_CLOUDY"         : 15,      # cloudy threshold = 100% cloud
             "CLOUD_CALIBRATION_COEFFICIENT" : 1.0,
-            "CLOUD_AMBIENT_SENSOR_REF"      : "",     # blank = use sensor's own ambient reading, else camera temp
+            "CLOUD_AMBIENT_SENSOR_REF"      : "",     # blank = use sensor's own ambient reading (required for sensors with no ambient output, e.g. MLX90640)
         },
         "CHARTS" : {
             "CUSTOM_SLOT_1"          : "sensor_user_10",

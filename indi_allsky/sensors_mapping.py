@@ -53,6 +53,16 @@ CLOUD_SKY_TEMP_LABEL = 'Sky Temperature'
 CLOUD_AMBIENT_TEMP_LABEL = 'Temperature'
 
 
+def _display_temperature_to_celsius(value: float, temp_display: str) -> float:
+    if temp_display == 'f':
+        return (value - 32.0) * 5.0 / 9.0
+
+    if temp_display == 'k':
+        return value - 273.15
+
+    return value
+
+
 def calculate_cloud_percentage(config: Dict[str, Any], get_sensor_value) -> Any:
     """
     Scans configured TEMP_SENSOR slots (A-F) for an MLX90614/90615/90640
@@ -108,18 +118,23 @@ def calculate_cloud_percentage(config: Dict[str, Any], get_sensor_value) -> Any:
             ambient_temp = get_sensor_value(ambient_index)
 
     if ambient_temp is None:
-        # sensor has no ambient reading of its own (e.g. MLX90640) and no reference configured
-        ambient_temp = get_sensor_value(constants.SENSOR_USER_CCD_TEMP)
+        # sensor has no ambient reading of its own (e.g. MLX90640) and no reference configured -
+        # camera temperature is not a valid ambient-air proxy, so this is left unavailable
+        return None
 
-    clear_temp = float(temp_sensor_cfg.get('CLOUD_SKY_TEMP_CLEAR', -30.0))
-    cloudy_temp = float(temp_sensor_cfg.get('CLOUD_SKY_TEMP_CLOUDY', 0.0))
+    # Cloud thresholds are configured in Celsius regardless of display units.
+    sky_temp_c = _display_temperature_to_celsius(float(sky_temp), config.get('TEMP_DISPLAY', 'c'))
+    ambient_temp_c = _display_temperature_to_celsius(float(ambient_temp), config.get('TEMP_DISPLAY', 'c'))
+
+    clear_temp = float(temp_sensor_cfg.get('CLOUD_SKY_TEMP_CLEAR', -10.0))
+    cloudy_temp = float(temp_sensor_cfg.get('CLOUD_SKY_TEMP_CLOUDY', 15.0))
     span = cloudy_temp - clear_temp
     if span <= 0:
         logger.error('CLOUD_SKY_TEMP_CLOUDY must be greater than CLOUD_SKY_TEMP_CLEAR')
         return None
 
     coefficient = float(temp_sensor_cfg.get('CLOUD_CALIBRATION_COEFFICIENT', 1.0))
-    corrected_delta = (float(sky_temp) - float(ambient_temp)) * coefficient
+    corrected_delta = (sky_temp_c - ambient_temp_c) * coefficient
 
     percentage = ((corrected_delta - clear_temp) / span) * 100.0
     return max(0.0, min(100.0, percentage))

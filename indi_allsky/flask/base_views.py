@@ -835,7 +835,7 @@ class BaseView(View):
 
             cloud_percentage = sensors_mapping.calculate_cloud_percentage(
                 self.indi_allsky_config,
-                lambda idx: float(data.get('sensor_user_{0:d}'.format(idx), 0.0)),
+                lambda idx: image_metadata.get('sensor_user_{0:d}'.format(idx)),
             )
 
             if cloud_percentage is None:

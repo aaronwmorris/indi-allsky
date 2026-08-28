@@ -3359,16 +3359,16 @@ def CLOUD_SKY_TEMP_CLEAR_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter a valid number')
 
-    if field.data > 0:
-        raise ValidationError('Clear-sky temperature delta must be 0 or negative')
+    if field.data >= 0:
+        raise ValidationError('Clear-sky threshold must be negative')
 
 
 def CLOUD_SKY_TEMP_CLOUDY_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter a whole number')
 
-    if field.data < 0:
-        raise ValidationError('Cloudy temperature delta must be 0 or greater')
+    if field.data <= 0:
+        raise ValidationError('Cloudy threshold must be positive')
 
 
 def CLOUD_CALIBRATION_COEFFICIENT_validator(form, field):
@@ -3384,11 +3384,11 @@ def CLOUD_CALIBRATION_COEFFICIENT_validator(form, field):
 
 def CLOUD_AMBIENT_SENSOR_REF_validator(form, field):
     if not field.data:
-        # blank = auto (sensor's own ambient reading, else camera temp)
+        # blank = auto (sensor's own ambient reading, if it reports one)
         return
 
     slots = list()
-    for v in form.SENSOR_SLOT_choices.values():
+    for v in form.TEMP_SENSOR__CLOUD_AMBIENT_SENSOR_REF.choices.values():
         slots.extend(list(zip(*v))[0])
 
     if field.data not in slots:
@@ -5208,8 +5208,8 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__F_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
     TEMP_SENSOR__F_TITLE_TEMPLATE    = StringField('Chart Title Template', validators=[DataRequired(), TEMP_SENSOR__TITLE_TEMPLATE_validator])
     TEMP_SENSOR__FC37_ACTIVE_LOW     = BooleanField('Rain Sensor FC-37 - Invert logic')
-    TEMP_SENSOR__CLOUD_SKY_TEMP_CLEAR       = FloatField('Cloudless Sky Temp Delta (°, max negative)', validators=[CLOUD_SKY_TEMP_CLEAR_validator], widget=NumberInput(step=0.1))
-    TEMP_SENSOR__CLOUD_SKY_TEMP_CLOUDY      = IntegerField('Cloudy Sky Temp Delta (°, positive)', validators=[CLOUD_SKY_TEMP_CLOUDY_validator], widget=NumberInput(step=1))
+    TEMP_SENSOR__CLOUD_SKY_TEMP_CLEAR       = FloatField('Clear-Sky Threshold (C, max negative)', validators=[CLOUD_SKY_TEMP_CLEAR_validator], widget=NumberInput(step=0.1))
+    TEMP_SENSOR__CLOUD_SKY_TEMP_CLOUDY      = IntegerField('Cloudy Threshold (C, positive)', validators=[CLOUD_SKY_TEMP_CLOUDY_validator], widget=NumberInput(step=1, min=1))
     TEMP_SENSOR__CLOUD_CALIBRATION_COEFFICIENT = FloatField('Cloud Calibration Coefficient', validators=[CLOUD_CALIBRATION_COEFFICIENT_validator], widget=NumberInput(step=0.05))
     TEMP_SENSOR__CLOUD_AMBIENT_SENSOR_REF   = SelectField('Cloud Ambient Reference Sensor', choices=[], validators=[CLOUD_AMBIENT_SENSOR_REF_validator])
     TEMP_SENSOR__OPENWEATHERMAP_APIKEY = PasswordField('OpenWeatherMap API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
@@ -5520,11 +5520,44 @@ class IndiAllskyConfigForm(FlaskForm):
         self.DEW_HEATER__DEWPOINT_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
         self.FAN__TEMP_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
 
+        cloud_ambient_choices = list()
+        sensor_slot_labels = dict(self.SENSOR_SLOT_choices['User Sensors'])
+
+        for slot_index in (0, 2, 3, 5):
+            slot_key = 'sensor_user_{0:d}'.format(slot_index)
+            cloud_ambient_choices.append((slot_key, sensor_slot_labels[slot_key]))
+
+        for classname, user_var_slot, pin_1_name in (
+            (temp_sensor__a_classname, temp_sensor__a_user_var_slot, temp_sensor__a_pin_1_name),
+            (temp_sensor__b_classname, temp_sensor__b_user_var_slot, temp_sensor__b_pin_1_name),
+            (temp_sensor__c_classname, temp_sensor__c_user_var_slot, temp_sensor__c_pin_1_name),
+            (temp_sensor__d_classname, temp_sensor__d_user_var_slot, temp_sensor__d_pin_1_name),
+            (temp_sensor__e_classname, temp_sensor__e_user_var_slot, temp_sensor__e_pin_1_name),
+            (temp_sensor__f_classname, temp_sensor__f_user_var_slot, temp_sensor__f_pin_1_name),
+        ):
+            if not classname:
+                continue
+
+            try:
+                sensor_class = getattr(indi_allsky_sensors, classname)
+                base_index = constants.SENSOR_INDEX_MAP[user_var_slot]
+                labels = sensor_class.get_labels(pin_1_name)
+                sensor_types = sensor_class.METADATA.get('types', ())
+
+                for offset, sensor_type in enumerate(sensor_types):
+                    if sensor_type != constants.SENSOR_TEMPERATURE or labels[offset] == 'Sky Temperature':
+                        continue
+
+                    slot_key = 'sensor_user_{0:d}'.format(base_index + offset)
+                    cloud_ambient_choices.append((slot_key, sensor_slot_labels[slot_key]))
+            except (AttributeError, IndexError, KeyError):
+                app.logger.error('Unable to identify temperature outputs for sensor class: %s', classname)
+
         self.TEMP_SENSOR__CLOUD_AMBIENT_SENSOR_REF.choices = {
             'Auto' : (
-                ['', 'Auto (sensor ambient, else camera temp)'],
+                ['', 'Auto (sensor\'s own ambient reading, if available)'],
             ),
-            **self.SENSOR_SLOT_choices,
+            'Temperature Sensors' : tuple(cloud_ambient_choices),
         }
 
         # Merge dictionaries
