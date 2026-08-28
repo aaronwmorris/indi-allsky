@@ -889,6 +889,7 @@ class IndiAllSkyConfigBase(object):
             "CLOUD_SKY_TEMP_CLEAR"          : -10.0,  # maximum clear-sky threshold = 0% cloud
             "CLOUD_SKY_TEMP_CLOUDY"         : 15,      # cloudy threshold = 100% cloud
             "CLOUD_CALIBRATION_COEFFICIENT" : 1.0,
+            "CLOUD_CALIBRATION_OFFSET"      : 0.0,    # fixed +/- degrees added to the sky reading to correct a known sensor bias
             "CLOUD_AMBIENT_SENSOR_REF"      : "",     # blank = use sensor's own ambient reading (required for sensors with no ambient output, e.g. MLX90640)
         },
         "CHARTS" : {

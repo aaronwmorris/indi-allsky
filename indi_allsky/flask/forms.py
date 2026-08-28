@@ -3382,6 +3382,14 @@ def CLOUD_CALIBRATION_COEFFICIENT_validator(form, field):
         raise ValidationError('Calibration coefficient must be 10.0 or less')
 
 
+def CLOUD_CALIBRATION_OFFSET_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter a valid number')
+
+    if abs(field.data) > 20.0:
+        raise ValidationError('Calibration offset must be between -20.0 and 20.0')
+
+
 def CLOUD_AMBIENT_SENSOR_REF_validator(form, field):
     if not field.data:
         # blank = auto (sensor's own ambient reading, if it reports one)
@@ -4300,6 +4308,9 @@ class IndiAllskyConfigForm(FlaskForm):
         'SQM' : (
             ['camera_sqm_raw_mag', 'Camera SQM - Raw Magnitude'],
         ),
+        'Cloud' : (
+            ['cloud_percentage', 'Cloud Percentage'],
+        ),
     }
 
 
@@ -5211,6 +5222,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__CLOUD_SKY_TEMP_CLEAR       = FloatField('Clear-Sky Threshold (C, max negative)', validators=[CLOUD_SKY_TEMP_CLEAR_validator], widget=NumberInput(step=0.1))
     TEMP_SENSOR__CLOUD_SKY_TEMP_CLOUDY      = IntegerField('Cloudy Threshold (C, positive)', validators=[CLOUD_SKY_TEMP_CLOUDY_validator], widget=NumberInput(step=1, min=1))
     TEMP_SENSOR__CLOUD_CALIBRATION_COEFFICIENT = FloatField('Cloud Calibration Coefficient', validators=[CLOUD_CALIBRATION_COEFFICIENT_validator], widget=NumberInput(step=0.05))
+    TEMP_SENSOR__CLOUD_CALIBRATION_OFFSET   = FloatField('Cloud Calibration Offset (C, +/-)', validators=[CLOUD_CALIBRATION_OFFSET_validator], widget=NumberInput(step=0.1))
     TEMP_SENSOR__CLOUD_AMBIENT_SENSOR_REF   = SelectField('Cloud Ambient Reference Sensor', choices=[], validators=[CLOUD_AMBIENT_SENSOR_REF_validator])
     TEMP_SENSOR__OPENWEATHERMAP_APIKEY = PasswordField('OpenWeatherMap API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__WUNDERGROUND_APIKEY = PasswordField('Weather Underground API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__WUNDERGROUND_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})

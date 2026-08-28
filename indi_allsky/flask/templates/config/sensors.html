@@ -753,7 +753,7 @@
                     <span class="tw:text-[0.625rem] tw:text-base-content/40">Derived from the sky temperature of any configured MLX90614, MLX90615, or MLX90640 sensor (Probes A-F above). Use {cloud_percentage:s} in overlay templates for text output.</span>
                 </div>
 
-                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4">
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-5 tw:gap-4">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__CLOUD_SKY_TEMP_CLEAR.label.text }}</span>
                         {{ form_config.TEMP_SENSOR__CLOUD_SKY_TEMP_CLEAR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -771,6 +771,12 @@
                         {{ form_config.TEMP_SENSOR__CLOUD_CALIBRATION_COEFFICIENT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Multiplier applied to the calculated sky-minus-ambient value.</span>
                         <div id="TEMP_SENSOR__CLOUD_CALIBRATION_COEFFICIENT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__CLOUD_CALIBRATION_OFFSET.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__CLOUD_CALIBRATION_OFFSET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Fixed +/- correction added to the sky reading if the sensor is known to run high or low.</span>
+                        <div id="TEMP_SENSOR__CLOUD_CALIBRATION_OFFSET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__CLOUD_AMBIENT_SENSOR_REF.label.text }}</span>

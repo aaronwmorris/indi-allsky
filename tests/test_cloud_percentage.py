@@ -115,6 +115,25 @@ def test_calibration_coefficient_scales_delta():
     assert percentage == 0.0
 
 
+def test_calibration_offset_corrects_sensor_bias():
+    config = {
+        'TEMP_SENSOR': {
+            'A_CLASSNAME': 'blinka_temp_sensor_mlx90614_i2c',
+            'A_USER_VAR_SLOT': 'sensor_user_10',
+            'CLOUD_SKY_TEMP_CLEAR': -30.0,
+            'CLOUD_SKY_TEMP_CLOUDY': 0.0,
+            'CLOUD_CALIBRATION_COEFFICIENT': 1.0,
+            'CLOUD_CALIBRATION_OFFSET': -5.0,
+        },
+    }
+    # sensor reads 5 C hot: raw delta = -10 - 0 = -10, offset -5 -> -15 -> halfway -> 50%
+    get_value = _values({10: 0.0, 11: -10.0})
+
+    percentage = sensors_mapping.calculate_cloud_percentage(config, get_value)
+
+    assert percentage == 50.0
+
+
 def test_invalid_threshold_order_returns_none():
     config = {
         'TEMP_SENSOR': {

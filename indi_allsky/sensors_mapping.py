@@ -69,6 +69,24 @@ def calculate_cloud_percentage(config: Dict[str, Any], get_sensor_value) -> Any:
     family sensor and derives a 0-100 cloud percentage from its sky
     temperature relative to an ambient reference.
 
+    Physical basis: under a clear sky the 8-14 micron atmospheric window lets
+    a zenith-pointed IR sensor see through to the cold effective sky
+    temperature, so its reading falls well below the ambient air temperature
+    (low atmospheric emissivity - Staley & Jurica, 1972, J. Appl. Meteorol.,
+    11(2), 349-356, "Effective atmospheric emissivity under clear skies").
+    Cloud closes that window; clouds radiate close to a blackbody near
+    ambient temperature (emissivity approaching 1 - Mendoza et al., 2017,
+    Atmos. Environ., 155, 174-188), so the sky reading converges toward
+    ambient as cloud cover increases. That is why cloud percentage here is a
+    linear scaling of the sky-minus-ambient delta between a clear-sky
+    (large negative) and cloudy (near-zero/positive) threshold, rather than
+    the raw sky temperature alone.
+
+    Equation (all temperatures in Celsius, T_clear < T_cloudy)::
+
+        delta   = (T_sky + offset - T_ambient) * coefficient
+        percent = clamp(0, 100, (delta - T_clear) / (T_cloudy - T_clear) * 100)
+
     ``get_sensor_value`` is a callable accepting a sensor_user index and
     returning its current float value, so this works against either the
     live shared sensor array or persisted image metadata.
@@ -125,6 +143,10 @@ def calculate_cloud_percentage(config: Dict[str, Any], get_sensor_value) -> Any:
     # Cloud thresholds are configured in Celsius regardless of display units.
     sky_temp_c = _display_temperature_to_celsius(float(sky_temp), config.get('TEMP_DISPLAY', 'c'))
     ambient_temp_c = _display_temperature_to_celsius(float(ambient_temp), config.get('TEMP_DISPLAY', 'c'))
+
+    # fixed offset corrects a sensor known to read a set amount high/low, before scaling
+    offset = float(temp_sensor_cfg.get('CLOUD_CALIBRATION_OFFSET', 0.0))
+    sky_temp_c += offset
 
     clear_temp = float(temp_sensor_cfg.get('CLOUD_SKY_TEMP_CLEAR', -10.0))
     cloudy_temp = float(temp_sensor_cfg.get('CLOUD_SKY_TEMP_CLOUDY', 15.0))

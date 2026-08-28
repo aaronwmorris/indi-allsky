@@ -31,6 +31,7 @@ from fractions import Fraction
 
 from . import constants
 from . import asi676mc
+from . import sensors_mapping
 
 from .processing import ImageProcessor
 from .panorama import panoramaSourceCircleClipped
@@ -906,6 +907,16 @@ class ImageWorker(Process):
                 image_add_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
 
 
+            # cloud percentage - raw numeric value for chart selection, distinct from the overlay string
+            cloud_percentage = sensors_mapping.calculate_cloud_percentage(
+                self.config,
+                lambda idx: self.sensors_user_av[idx],
+            )
+
+            if cloud_percentage is not None:
+                image_add_data['cloud_percentage'] = cloud_percentage
+
+
             if self.adsb_aircraft_list:
                 image_add_data['aircraft'] = list()
 
@@ -1118,6 +1129,16 @@ class ImageWorker(Process):
             for i in range(100, 110):
                 sensor_topic = 'sensor_user_{0:d}'.format(i)
                 mqtt_data[sensor_topic] = round(self.sensors_user_av[i], 3)
+
+
+            # cloud percentage - derived value, published under its own topic rather than a sensor slot
+            cloud_percentage = sensors_mapping.calculate_cloud_percentage(
+                self.config,
+                lambda idx: self.sensors_user_av[idx],
+            )
+
+            if cloud_percentage is not None:
+                mqtt_data['cloud_percentage'] = round(cloud_percentage, 1)
 
 
             if new_filename:
