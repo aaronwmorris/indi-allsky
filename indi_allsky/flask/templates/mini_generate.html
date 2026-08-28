@@ -1156,13 +1156,30 @@ function generationFrameRange() {
 
 function updateVideoLength() {
     var image_count = generationFrameCount();
-    var duration_seconds = Math.round((image_count / parseFloat(framerate)) * 10) / 10;
+    var exact_duration_seconds = image_count / parseFloat(framerate);
+    var duration_seconds = Math.round(exact_duration_seconds * 10) / 10;
     var frame_range = generationFrameRange();
     var length_text = image_count + ' frames';
     if(frame_range) {
         length_text += ' · ' + frame_range;
     }
-    $('#video_length').text(length_text + ' · about ' + duration_seconds + ' seconds');
+
+    var bitrate_match = String($('#BITRATE_SELECT').val() || '').match(/^(\d+)([km])$/);
+    var size_text = '';
+    if(bitrate_match) {
+        var bitrate_kbps = parseInt(bitrate_match[1]);
+        if(bitrate_match[2] === 'm') {
+            bitrate_kbps *= 1000;
+        }
+        var estimated_megabytes = bitrate_kbps * exact_duration_seconds / 8000;
+        if(estimated_megabytes >= 1000) {
+            size_text = ' · estimated ' + (estimated_megabytes / 1000).toFixed(1) + ' GB';
+        } else {
+            size_text = ' · estimated ' + estimated_megabytes.toFixed(1) + ' MB';
+        }
+    }
+
+    $('#video_length').text(length_text + ' · about ' + duration_seconds + ' seconds' + size_text);
 }
 
 function setPreviewLoading(loading) {
@@ -1336,7 +1353,7 @@ $( document ).ready(function() {
                     </div>
                 </div>
 
-                <div id="timing-controls" class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-3 tw:gap-3 tw:items-end">
+                <div id="timing-controls" class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:lg:grid-cols-4 tw:gap-3 tw:items-end">
                     <div class="tw:form-control tw:w-full">
                         <label class="tw:label tw:pb-1">
                             <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
@@ -1363,9 +1380,18 @@ $( document ).ready(function() {
                         </label>
                         {{ form_mini_timelapse.FRAMERATE_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm tw:focus:outline-none tw:focus:border-primary') }}
                     </div>
+
+                    <div class="tw:form-control tw:w-full">
+                        <label class="tw:label tw:pb-1">
+                            <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
+                                {{ form_mini_timelapse.BITRATE_SELECT.label.text }}
+                            </span>
+                        </label>
+                        {{ form_mini_timelapse.BITRATE_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm tw:focus:outline-none tw:focus:border-primary') }}
+                    </div>
                 </div>
                 <div class="tw:text-xs tw:text-base-content/60">
-                    Before and after set the time range around the selected image. Speed controls how quickly those images play.
+                    Before and after set the time range around the selected image. Speed controls playback; quality controls bitrate and file size.
                 </div>
 
                 <div id="panorama-controls" class="tw:flex tw:flex-col tw:gap-3 tw:pt-2 tw:border-t tw:border-base-300" style="display: none;">
@@ -1615,6 +1641,10 @@ $("#FRAMERATE_SELECT").on("change", function() {
     updateVideoLength();
 });
 
+$("#BITRATE_SELECT").on("change", function() {
+    updateVideoLength();
+});
+
 
 $('#form_mini_timelapse').on('submit', function(event) {
     event.preventDefault();
@@ -1628,6 +1658,7 @@ $('#form_mini_timelapse').on('submit', function(event) {
         'PRE_SECONDS' : parseInt($('#PRE_SECONDS_SELECT').val()),
         'POST_SECONDS' : parseInt($('#POST_SECONDS_SELECT').val()),
         'FRAMERATE' : $('#FRAMERATE_SELECT').val(),
+        'BITRATE' : $('#BITRATE_SELECT').val(),
         'NOTE' : $('#NOTE').val(),
         'CROP_X' : panorama_start_selection['x'],
         'CROP_Y' : panorama_start_selection['y'],

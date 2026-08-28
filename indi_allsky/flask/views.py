@@ -11619,15 +11619,38 @@ class MiniTimelapseGeneratorView(TemplateView):
             context['source_type'] = 'standard'
 
 
+        use_night_config = self.indi_allsky_config.get('TIMELAPSE', {}).get('USE_NIGHT_CONFIG', True)
+        if use_night_config or image_entry.night:
+            bitrate = str(self.indi_allsky_config.get('FFMPEG_BITRATE', '5000k'))
+        else:
+            bitrate = str(self.indi_allsky_config.get('FFMPEG_BITRATE_DAY', '5000k'))
+
+
         form_data = {
             'CAMERA_ID'             : self.camera.id,
             'IMAGE_ID'              : image_entry.id,
             'PRE_SECONDS_SELECT'    : '240',
             'POST_SECONDS_SELECT'   : '120',
             'FRAMERATE_SELECT'      : '10',
+            'BITRATE_SELECT'        : bitrate,
         }
 
-        context['form_mini_timelapse'] = IndiAllskyMiniTimelapseForm(data=form_data)
+        form_mini_timelapse = IndiAllskyMiniTimelapseForm(data=form_data)
+        bitrate_choices = dict(form_mini_timelapse.BITRATE_SELECT_choices)
+        preset_bitrates = {
+            value
+            for choices in bitrate_choices.values()
+            for value, label in choices
+        }
+        if bitrate not in preset_bitrates:
+            bitrate_choices = {
+                'Configured default': (
+                    (bitrate, '{0:s} — configured default'.format(bitrate)),
+                ),
+                **bitrate_choices,
+            }
+        form_mini_timelapse.BITRATE_SELECT.choices = bitrate_choices
+        context['form_mini_timelapse'] = form_mini_timelapse
 
         return context
 
@@ -11649,6 +11672,7 @@ class AjaxMiniTimelapseGeneratorView(BaseView):
                 'pre_seconds' : int(request_data['PRE_SECONDS']),
                 'post_seconds': int(request_data['POST_SECONDS']),
                 'framerate'   : float(request_data['FRAMERATE']),
+                'bitrate'     : request_data.get('BITRATE'),
                 'note'        : str(request_data.get('NOTE') or ''),
             }
         except (KeyError, TypeError, ValueError):
@@ -11658,6 +11682,13 @@ class AjaxMiniTimelapseGeneratorView(BaseView):
             return None, 'Enter a description for this video.'
         if len(request_values['note']) > 255:
             return None, 'Keep the description to 255 characters or fewer.'
+        if request_values['bitrate'] is not None:
+            request_values['bitrate'] = str(request_values['bitrate'])
+        if (
+            request_values['bitrate'] is not None
+            and not re.fullmatch(r'\d+[km]', request_values['bitrate'])
+        ):
+            return None, 'Choose a valid video quality, then try again.'
         if (
             request_values['pre_seconds'] < 1
             or request_values['pre_seconds'] > 43200

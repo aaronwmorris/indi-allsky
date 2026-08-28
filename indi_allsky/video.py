@@ -783,6 +783,7 @@ class VideoWorker(Process):
         pre_seconds = int(kwargs['pre_seconds'])
         post_seconds = int(kwargs['post_seconds'])
         framerate = float(kwargs['framerate'])
+        bitrate_override = kwargs.get('bitrate')
         note = str(kwargs['note'])
 
 
@@ -1177,6 +1178,9 @@ class VideoWorker(Process):
                 bitrate = self.config.get('FFMPEG_BITRATE_DAY', '5000k')
                 vf_scale = self.config.get('FFMPEG_VFSCALE_DAY', '')
                 ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS_DAY', '')
+
+        if bitrate_override:
+            bitrate = str(bitrate_override)
 
 
         pan_command_file = None

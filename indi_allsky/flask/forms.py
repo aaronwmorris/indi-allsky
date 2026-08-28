@@ -9684,11 +9684,31 @@ class IndiAllskyMiniTimelapseForm(FlaskForm):
         ('60', '60 FPS'),
     )
 
+    BITRATE_SELECT_choices = {
+        'Compact files': (
+            ('2500k', '2.5 Mbps — about 19 MB/min'),
+            ('5000k', '5 Mbps — about 38 MB/min'),
+        ),
+        'Balanced': (
+            ('10000k', '10 Mbps — about 75 MB/min'),
+            ('15000k', '15 Mbps — about 113 MB/min'),
+        ),
+        'High quality': (
+            ('20000k', '20 Mbps — about 150 MB/min'),
+            ('30000k', '30 Mbps — about 225 MB/min'),
+        ),
+        'Very high quality / large files': (
+            ('40000k', '40 Mbps — about 300 MB/min'),
+            ('50000k', '50 Mbps — about 375 MB/min'),
+        ),
+    }
+
     CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
     IMAGE_ID                         = HiddenField('Image ID', validators=[DataRequired()])
     PRE_SECONDS_SELECT               = SelectField('Before selected image', choices=SECONDS_choices, validators=[DataRequired()])
     POST_SECONDS_SELECT              = SelectField('After selected image', choices=SECONDS_choices, validators=[DataRequired()])
     FRAMERATE_SELECT                 = SelectField('Speed', choices=FRAMERATE_SELECT_choices, validators=[DataRequired()])
+    BITRATE_SELECT                   = SelectField('Quality', choices=BITRATE_SELECT_choices, validators=[DataRequired()])
     NOTE                             = StringField('Description', validators=[DataRequired()])
 
 
