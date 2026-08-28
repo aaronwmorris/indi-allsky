@@ -9689,7 +9689,7 @@ class IndiAllskyMiniTimelapseForm(FlaskForm):
             ('2500k', '2.5 Mbps — about 19 MB/min'),
             ('5000k', '5 Mbps — about 38 MB/min'),
         ),
-        'Balanced': (
+        'Medium files': (
             ('10000k', '10 Mbps — about 75 MB/min'),
             ('15000k', '15 Mbps — about 113 MB/min'),
         ),

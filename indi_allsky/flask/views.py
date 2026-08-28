@@ -11671,6 +11671,23 @@ class MiniTimelapseGeneratorView(TemplateView):
         }
 
 
+        bitrate_choices = dict(IndiAllskyMiniTimelapseForm.BITRATE_SELECT_choices)
+
+        def bitrate_kbps(value):
+            bitrate_match = re.fullmatch(r'(\d+)([km])', value)
+            if not bitrate_match:
+                return None
+
+            multiplier = 1000 if bitrate_match.group(2) == 'm' else 1
+            return int(bitrate_match.group(1)) * multiplier
+
+        preset_bitrates = {
+            bitrate_kbps(value): value
+            for choices in bitrate_choices.values()
+            for value, label in choices
+        }
+        bitrate = preset_bitrates.get(bitrate_kbps(bitrate), bitrate)
+
         form_data = {
             'CAMERA_ID'             : self.camera.id,
             'IMAGE_ID'              : image_entry.id,
@@ -11681,13 +11698,7 @@ class MiniTimelapseGeneratorView(TemplateView):
         }
 
         form_mini_timelapse = IndiAllskyMiniTimelapseForm(data=form_data)
-        bitrate_choices = dict(form_mini_timelapse.BITRATE_SELECT_choices)
-        preset_bitrates = {
-            value
-            for choices in bitrate_choices.values()
-            for value, label in choices
-        }
-        if bitrate not in preset_bitrates:
+        if bitrate not in preset_bitrates.values():
             bitrate_choices = {
                 'Configured default': (
                     (bitrate, '{0:s} — configured default'.format(bitrate)),
