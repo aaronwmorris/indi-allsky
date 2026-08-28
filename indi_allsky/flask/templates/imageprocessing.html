@@ -107,7 +107,7 @@ var fullscreen = false;  //initial state
                 <!-- Process error hint -->
                 <div id="process-error-msg" class="tw:flex tw:items-center tw:gap-1.5 tw:text-error tw:text-xs tw:font-semibold" style="display: none;">
                     <i class="tw:icon-[lucide--triangle-alert] tw:w-3.5 tw:h-3.5"></i>
-                    Fix the errors below and try again
+                    <span id="process-error-text">Fix the errors below and try again</span>
                 </div>
 
                 <!-- Feedback Messages -->
@@ -1296,6 +1296,7 @@ field_names.concat(checkbox_field_names).forEach(item => {
 function submitProcessingData() {
     // Restore button and hide error hint
     $('#process-btn').attr('class', 'tw:btn tw:btn-primary tw:btn-sm tw:h-11 tw:px-6');
+    $('#process-error-text').text('Fix the errors below and try again');
     $('#process-error-msg').hide();
     $('#processing_time').text('Processing...');
     $("#loader_processing").show();
@@ -1387,6 +1388,7 @@ function submitProcessingData() {
                     if ($btn.length) $btn[0].click();
                 }
             } catch(e) {
+                $('#process-error-text').text('Processing failed (HTTP ' + rdata.status + '). Check the Webapp log for details.');
                 console.error('Error parsing validation response', e);
             }
             $("#loader_processing").hide();
