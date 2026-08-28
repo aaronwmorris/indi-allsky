@@ -127,6 +127,7 @@ class miscDb(object):
             's3_key',
             'remote_url',
             'file_size',
+            'serialNumber',  # manually handle serialNumber
             'data',  # manually handle data
             #'sync_id',
             #'friendlyName',
@@ -151,6 +152,11 @@ class miscDb(object):
             camera_data[k] = v
 
         camera.data = camera_data
+
+
+        # do not overwrite an existing serial number
+        if not camera.serialNumber and metadata.get('serialNumber'):
+            camera.serialNumber = metadata['serialNumber']
 
 
         db.session.commit()
@@ -205,6 +211,7 @@ class miscDb(object):
             'file_size',
             'web_nonlocal_images',
             'web_local_images_admin',
+            'serialNumber',  # manually handle serialNumber
             'data',  # manually handle data
         ]
 
@@ -227,6 +234,11 @@ class miscDb(object):
             camera_data[k] = v
 
         camera.data = camera_data
+
+
+        # do not overwrite an existing serial number
+        if not camera.serialNumber and metadata.get('serialNumber'):
+            camera.serialNumber = metadata['serialNumber']
 
 
         db.session.commit()
