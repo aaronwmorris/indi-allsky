@@ -15,7 +15,6 @@ import ephem
 
 from .. import constants
 from .. import asi676mc
-from .. import sensors_mapping
 
 from flask import request
 from flask import session
