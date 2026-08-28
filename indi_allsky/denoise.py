@@ -15,37 +15,22 @@ import datetime
 
 from . import constants
 
-# caches to avoid rebuilding small objects repeatedly
-_db4_wavelet = None  # will hold a pywt.Wavelet('db4') instance
-_wavelet_level_cache: dict[int, int] = {}  # min_dim -> max_level
-_hotpixel_kernel_cache: dict[int, numpy.ndarray] = {}  # radius -> kernel
+# Cached wavelet setup avoids rebuilding it for every frame.
+_db4_wavelet = None
+_wavelet_level_cache: dict[int, int] = {}
 
 # Shared thread pool to avoid creating executors on every call.  The
 # pool size is deliberately kept small (4 workers) to match the cores on a
 # typical Raspberry Pi.
 _thread_pool = concurrent.futures.ThreadPoolExecutor(max_workers=4)
 
-# tuning constants for various denoising algorithms; extracted from the
-# long series of adjustments sprinkled through the original implementation.
-# Keeping them here makes it easier to audit and tweak.
-
-# wavelet strength adjustment:
-WAVELET_SCALE_ADJUST = 1.10  # 10% boost to the base scale value
-
-# gaussian modifications (sigma & blend) applied as cumulative multipliers.
-# combining them once gives a single constant that is easier to read and reason about.
+# Algorithm tuning constants.
+WAVELET_SCALE_ADJUST = 1.10
 GAUSSIAN_SIGMA_ADJUST = 0.707625
 GAUSSIAN_BLEND_ADJUST = GAUSSIAN_SIGMA_ADJUST
-
-# median strength adjustments for kernel size and blend.
 MEDIAN_KSIZE_ADJUST = 0.851
 MEDIAN_BLEND_ADJUST = MEDIAN_KSIZE_ADJUST
-
-# bilateral strength adjustment
 BILATERAL_BLEND_BUMP = 1.20
-
-# use Astropy for robust statistics
-#from astropy.stats import sigma_clipped_stats  # noqa: F401
 
 
 logger = logging.getLogger('indi_allsky')
@@ -54,9 +39,7 @@ logger = logging.getLogger('indi_allsky')
 class IndiAllskyDenoise(object):
     """Lightweight image denoising for allsky cameras.
 
-    Provides four denoising algorithms.  Bilateral, gaussian and
-    median filters all run at similar speed on target hardware; wavelet is
-    noticeably slower but offers the highest quality.
+    Provides Gaussian, median, bilateral, and wavelet denoising algorithms.
 
     Algorithms exposed to callers:
       - gaussian_blur: Direct Gaussian blur with strength-based blending
@@ -71,10 +54,10 @@ class IndiAllskyDenoise(object):
     Each algorithm respects a configurable strength parameter (1-5).
     Temporal averaging is handled separately by the stacking system.
 
-    Configuration may also tweak algorithm-specific knobs:
+        Configuration may also tweak algorithm-specific settings:
       * GAUSSIAN_SIGMA, GAUSSIAN_BLEND
       * MEDIAN_BLEND
-    * BILATERAL_SIGMA_COLOR, BILATERAL_SIGMA_SPACE (and day variants)
+            * BILATERAL_SIGMA_COLOR, BILATERAL_SIGMA_SPACE (and day variants)
       * DENOISE_STAR_* (star protection parameters)
       * ADAPTIVE_BLEND (enable/disable variance‑based blend adaptivity)
       * LOCAL_STATS_KSIZE (window size for variance map, odd integer >=3)
@@ -516,22 +499,12 @@ class IndiAllskyDenoise(object):
 
 
     def gaussian_blur(self, scidata):
-        # NOTE: any future improvements to gauss/median/bilateral should keep
-        # compute cost comparable to the existing implementation.  We try to
-        # avoid expensive full‑resolution filtering by threading each channel
-        # and by falling back to single‑channel variants when possible.
-
         """Apply a direct Gaussian blur blended with the original.
 
         Applies cv2.GaussianBlur at a strength-dependent sigma and
         linearly blends the blurred result with the original.  Higher
         strengths use a larger sigma *and* a larger blend fraction so
         the smoothing effect is always clearly visible.
-
-        Strength mapping (defaults, configurable via GAUSSIAN_SIGMA_MAP):
-          1 → σ≈1.5, blend=0.30   (gentle)
-          3 → σ≈5.0, blend=0.65   (moderate)
-          5 → σ≈11,  blend=1.00   (strong — fully blurred)
 
         Strength range: 1-5.
         """
@@ -575,9 +548,7 @@ class IndiAllskyDenoise(object):
         """Apply an edge-aware bilateral filter.
 
         Smooths areas of similar brightness (noisy sky background) while
-        preserving sharp intensity transitions (star edges).  Much faster
-        than Non-Local Means but higher quality than Gaussian/Median for
-        astro images.
+        preserving sharp intensity transitions such as star edges.
 
         The strength parameter controls the filter size (d):
           d = strength * 2 + 1   (diameter: 3, 5, 7, 9, 11)
@@ -622,15 +593,6 @@ class IndiAllskyDenoise(object):
         return result
 
     # ------------------------------------------------------------------
-    # Algorithm: Non-local Means (patch-based)
-    # ------------------------------------------------------------------
-    # Older experiments included non-local means filter, but
-    # it proved far too slow on target hardware so the implementation was
-    # dropped.  This is a warning.
-
-
-
-    # ------------------------------------------------------------------
     # Algorithm: Wavelet Denoise (BayesShrink — frequency-domain, best quality)
     # ------------------------------------------------------------------
 
@@ -661,21 +623,13 @@ class IndiAllskyDenoise(object):
         if strength <= 0:
             return scidata
 
-        # Process at full resolution to maintain image quality
-        small = scidata
-
         strength = max(1, min(strength, 5))
 
-        # Simple linear scale: strength 1→1.5x, 3→4.0x, 5→8.0x
-        # These directly multiply the BayesShrink threshold.
         default_scale_map = {1: 1.8, 2: 3.0, 3: 4.6, 4: 7.0, 5: 9.2}
         scale = float(self.config.get('WAVELET_SCALE', default_scale_map.get(strength, 4.6)))
-        # apply the simplified single adjustment constant (≈1.10)
         scale = float(scale) * WAVELET_SCALE_ADJUST
 
-        # Determine dtype range for normalization based on the target image
-        # (always full resolution as `small` is simply the original).
-        target = small
+        target = scidata
         if numpy.issubdtype(target.dtype, numpy.integer):
             dtype_max = float(numpy.iinfo(target.dtype).max)
         else:
@@ -683,10 +637,8 @@ class IndiAllskyDenoise(object):
 
         orig_dtype = target.dtype
 
-        # Auto decomposition levels: 3-4 based on smallest image dimension
-        # (downsampling no longer applies so we just use the full-size dims)
+        # Auto decomposition levels: 3-4 based on the smallest image dimension.
         min_dim = min(target.shape[0], target.shape[1])
-        # cache wavelet object and level computation
         global _db4_wavelet
         if _db4_wavelet is None:
             _db4_wavelet = pywt.Wavelet('db4')
@@ -721,10 +673,6 @@ class IndiAllskyDenoise(object):
             min_sigma = float(self.config.get('WAVELET_MIN_SIGMA', 0.005))
             sigma_noise = max(sigma_noise, min_sigma)
 
-            # Apply BayesShrink to each detail level.  The loops have been
-            # flattened/expressed as comprehensions wherever possible to reduce
-            # Python overhead; bands are small so the savings are modest but
-            # measurable.  We also compute the variance once per band.
             denoised_coeffs = [coeffs[0]]  # keep approximation untouched
             for detail_level in coeffs[1:]:
                 new_details = []
@@ -746,17 +694,14 @@ class IndiAllskyDenoise(object):
 
             return numpy.clip(reconstructed * dtype_max, 0, dtype_max).astype(orig_dtype)
 
-        # Handle grayscale vs color on the *target* image (small or full).
+        # Handle grayscale and color images.
         if target.ndim == 2:
-            result_small = _denoise_channel(target)
+            result = _denoise_channel(target)
         else:
             futures = [_thread_pool.submit(_denoise_channel, target[:, :, c])
                        for c in range(target.shape[2])]
             channels = [f.result() for f in futures]
-            result_small = numpy.stack(channels, axis=2)
-
-        # Use the denoised result directly
-        result = result_small
+            result = numpy.stack(channels, axis=2)
 
         # Compute blend based on strength
         norm_strength = self._norm_strength()
@@ -764,9 +709,6 @@ class IndiAllskyDenoise(object):
         max_blend = float(self.config.get('WAVELET_MAX_BLEND', 1.0))
         blend = max(0.0, min(1.0, blend, max_blend))
 
-        # Blend, match luminance and protect stars using the shared
-        # finalization helper so that any future improvements (eg. a more
-        # efficient luminance matcher) automatically apply here.
         blended = self._finalize_denoise(scidata, result, blend, float(dtype_max))
 
         elapsed = time.time() - start_t
