@@ -25,11 +25,6 @@ _hotpixel_kernel_cache: dict[int, numpy.ndarray] = {}  # radius -> kernel
 # typical Raspberry Pi.
 _thread_pool = concurrent.futures.ThreadPoolExecutor(max_workers=4)
 
-# Hoisted constant maps to avoid reallocating them per-call
-_GAUSSIAN_SIGMA_MAP = {1: 1.0, 2: 1.8, 3: 3.0, 4: 4.2, 5: 5.8}
-_WAVELET_SCALE_MAP = {1: 1.8, 2: 3.0, 3: 4.6, 4: 7.0, 5: 9.2}
-_BILATERAL_TUNED_SIGMA = {1: 8, 2: 8, 3: 8, 4: 12, 5: 16}
-
 # tuning constants for various denoising algorithms; extracted from the
 # long series of adjustments sprinkled through the original implementation.
 # Keeping them here makes it easier to audit and tweak.
@@ -46,9 +41,8 @@ GAUSSIAN_BLEND_ADJUST = GAUSSIAN_SIGMA_ADJUST
 MEDIAN_KSIZE_ADJUST = 0.851
 MEDIAN_BLEND_ADJUST = MEDIAN_KSIZE_ADJUST
 
-# bilateral strength adjustments tuning
+# bilateral strength adjustment
 BILATERAL_BLEND_BUMP = 1.20
-BILATERAL_SIGMA_BUMP = 1.20
 
 # use Astropy for robust statistics
 #from astropy.stats import sigma_clipped_stats  # noqa: F401
@@ -80,7 +74,7 @@ class IndiAllskyDenoise(object):
     Configuration may also tweak algorithm-specific knobs:
       * GAUSSIAN_SIGMA, GAUSSIAN_BLEND
       * MEDIAN_BLEND
-      * BILATERAL_SIGMA_COLOR, BILATERAL_SIGMA_SPACE
+    * BILATERAL_SIGMA_COLOR, BILATERAL_SIGMA_SPACE (and day variants)
       * DENOISE_STAR_* (star protection parameters)
       * ADAPTIVE_BLEND (enable/disable variance‑based blend adaptivity)
       * LOCAL_STATS_KSIZE (window size for variance map, odd integer >=3)
@@ -147,6 +141,7 @@ class IndiAllskyDenoise(object):
             res_f = numpy.clip(res_f, 0.0, dtype_max).astype(result.dtype)
             return res_f
         except Exception:
+            logger.warning('Unable to match denoised image luminance', exc_info=True)
             return result
 
     def _compute_luminance(self, img):
@@ -214,6 +209,7 @@ class IndiAllskyDenoise(object):
 
             return star_mask(gray, **kwargs)
         except Exception:
+            logger.warning('Unable to generate denoise star protection mask', exc_info=True)
             return numpy.zeros(img.shape[:2], dtype=numpy.float32)
 
 
@@ -339,47 +335,34 @@ class IndiAllskyDenoise(object):
 
     def _get_bilateral_sigma(self):
         """Return (sigmaColor, sigmaSpace) for the bilateral filter."""
-        # Tuned sigma_color per strength (derived from benchmarks).
-        # These values provide consistent denoising without external test files.
-        sigma_space = int(self.config.get('BILATERAL_SIGMA_SPACE', 15))
-
-        strength = max(1, min(self._get_strength(), 5))
-        # Tuned mapping: strengths 1-5 -> sigma_color (baseline)
-        tuned_sigma = {
-            1: 8,
-            2: 8,
-            3: 8,
-            4: 12,
-            5: 16,
-        }
-
-        base_sigma = float(tuned_sigma.get(strength, 10))
-
-        # Allow scaling/exponent to reshape strength→sigma mapping.
-        bil_scale_factor = float(self.config.get('BILATERAL_SCALE_FACTOR', 0.4))
-        bil_scale_exp = float(self.config.get('BILATERAL_SCALE_EXP', 1.0))
-
-        t = (float(strength) - 1.0) / 4.0
-        sigma_min = base_sigma * bil_scale_factor * (1.0 ** (bil_scale_exp - 1.0))
-        sigma_max = base_sigma * bil_scale_factor * (5.0 ** (bil_scale_exp - 1.0))
-        sigma_color = int(max(1.0, sigma_min + (sigma_max - sigma_min) * (t ** bil_scale_exp)))
-
-        # If explicit override provided, respect it; otherwise bump by 10%
-        if 'BILATERAL_SIGMA_COLOR' in self.config:
-            sigma_color = int(self.config.get('BILATERAL_SIGMA_COLOR'))
-        else:
-            # bump computed sigma_color by a fixed factor
-            sigma_color = int(max(1.0, sigma_color * BILATERAL_SIGMA_BUMP))
-
+        use_night_settings = (self.config.get('USE_NIGHT_COLOR', True) or
+                              self.night_av[constants.NIGHT_NIGHT])
+        suffix = '' if use_night_settings else '_DAY'
+        sigma_color = int(self.config.get('BILATERAL_SIGMA_COLOR' + suffix, 10))
+        sigma_space = int(self.config.get('BILATERAL_SIGMA_SPACE' + suffix, 15))
         return max(1, sigma_color), max(1, sigma_space)
+
+    def _uses_high_bit_depth_camera(self, img):
+        """Return whether this frame comes from a camera with more than 8 bits."""
+        configured_bit_depth = int(self.config.get('CCD_BIT_DEPTH', 0))
+        if configured_bit_depth:
+            return configured_bit_depth > 8
+        return img.dtype == numpy.uint16
 
 
     def _medianBlur(self, img, ksize):
         """cv2.medianBlur only supports CV_8U for multi-channel images in newer OpenCV.
         Split into per-channel blurs when the image is 16-bit (or deeper) multi-channel."""
+        use_native_uint16 = (img.dtype == numpy.uint16 and
+                             self._uses_high_bit_depth_camera(img) and
+                             ksize <= 5)
+
         def _blur_channel(ch):
             # Fast path for 8-bit single-channel
             if ch.dtype == numpy.uint8:
+                return cv2.medianBlur(ch, ksize)
+
+            if use_native_uint16:
                 return cv2.medianBlur(ch, ksize)
 
             # Integer types (commonly uint16) — scale down to 8-bit, blur, scale back
@@ -439,6 +422,11 @@ class IndiAllskyDenoise(object):
         # Process at full resolution to maintain image quality
         strength = max(1, min(strength, 5))
         ksize = self._compute_median_ksize(strength)
+
+        # OpenCV natively preserves uint16 values only through a 5x5 median.
+        # Cap high-bit-depth cameras at that fast, lossless implementation.
+        if self._uses_high_bit_depth_camera(scidata):
+            ksize = min(ksize, 5)
 
         blurred = self._medianBlur(scidata, ksize)
 
@@ -773,7 +761,8 @@ class IndiAllskyDenoise(object):
         # Compute blend based on strength
         norm_strength = self._norm_strength()
         blend = float(self.config.get('WAVELET_BLEND', 0.46 + 0.54 * norm_strength))
-        blend = max(0.0, min(1.0, blend))
+        max_blend = float(self.config.get('WAVELET_MAX_BLEND', 1.0))
+        blend = max(0.0, min(1.0, blend, max_blend))
 
         # Blend, match luminance and protect stars using the shared
         # finalization helper so that any future improvements (eg. a more
