@@ -106,6 +106,14 @@ class IndiAllSkyConfigBase(object):
         "IMAGE_DENOISE_DAY"          : "",
         "IMAGE_DENOISE_STRENGTH"     : 3,
         "IMAGE_DENOISE_STRENGTH_DAY" : 3,
+        "MEDIAN_SCALE_FACTOR" : 2.4,
+        "MEDIAN_SCALE_EXP"    : 2.0,
+        "GAUSSIAN_SCALE_FACTOR" : 0.2,
+        "GAUSSIAN_SCALE_EXP"    : 0.5,
+        "BILATERAL_SCALE_FACTOR" : 0.4,
+        "BILATERAL_SCALE_EXP"    : 1.0,
+        "WAVELET_SCALE_FACTOR"   : 0.1,
+        "WAVELET_SCALE_EXP"      : 0.5,
         # Maximum blend fraction for wavelet denoise. Controls how much of the
         # wavelet-denoised image is mixed with the original to avoid
         # over-aggressive frequency-domain removal. Range: 0.0-1.0
@@ -1589,7 +1597,6 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         if not isinstance(c.get('INDI_SERVER'), str) or not isinstance(c.get('CCD_CONFIG'), dict) or not isinstance(c.get('INDI_CONFIG_DEFAULTS'), dict):
             logger.error('Not a valid indi-allsky config')
             sys.exit(1)
-
 
         self.config.update(c)
 

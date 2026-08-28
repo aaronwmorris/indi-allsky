@@ -54,10 +54,10 @@ class IndiAllskyDenoise(object):
     Each algorithm respects a configurable strength parameter (1-5).
     Temporal averaging is handled separately by the stacking system.
 
-        Configuration may also tweak algorithm-specific settings:
+    Configuration may also tweak algorithm-specific settings:
       * GAUSSIAN_SIGMA, GAUSSIAN_BLEND
       * MEDIAN_BLEND
-            * BILATERAL_SIGMA_COLOR, BILATERAL_SIGMA_SPACE (and day variants)
+      * BILATERAL_SIGMA_COLOR, BILATERAL_SIGMA_SPACE (and day variants)
       * DENOISE_STAR_* (star protection parameters)
       * ADAPTIVE_BLEND (enable/disable variance‑based blend adaptivity)
       * LOCAL_STATS_KSIZE (window size for variance map, odd integer >=3)
@@ -391,10 +391,13 @@ class IndiAllskyDenoise(object):
         preserves edges (unlike Gaussian) while effectively smoothing
         noise.
 
-        Strength mapping:
+        Strength mapping (kernel size, blend):
           1 → 3×3 kernel, blend=0.40   (gentle)
           3 → 7×7 kernel, blend=0.70   (moderate)
-          5 → 11×11 kernel, blend=1.00  (strong — fully filtered)
+          5 → 9×9 kernel, blend=1.00   (strong — fully filtered)
+
+        High-bit-depth cameras (uint16) are capped at a 5×5 kernel so
+        OpenCV's native uint16 median path can be used losslessly.
 
         Strength range: 1-5.
         """
