@@ -5535,7 +5535,7 @@ class IndiAllskyConfigForm(FlaskForm):
         cloud_ambient_choices = list()
         sensor_slot_labels = dict(self.SENSOR_SLOT_choices['User Sensors'])
 
-        for slot_index in (0, 2, 3, 5):
+        for slot_index in (2, 3, 5):
             slot_key = 'sensor_user_{0:d}'.format(slot_index)
             cloud_ambient_choices.append((slot_key, sensor_slot_labels[slot_key]))
 

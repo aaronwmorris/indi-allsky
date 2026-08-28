@@ -82,19 +82,31 @@ def test_ambient_sensor_ref_overrides_own_ambient():
         'TEMP_SENSOR': {
             'A_CLASSNAME': 'blinka_temp_sensor_mlx90615_i2c',
             'A_USER_VAR_SLOT': 'sensor_user_10',
-            'CLOUD_AMBIENT_SENSOR_REF': 'sensor_user_0',
+            'CLOUD_AMBIENT_SENSOR_REF': 'sensor_user_12',
             'CLOUD_SKY_TEMP_CLEAR': -30.0,
             'CLOUD_SKY_TEMP_CLOUDY': 0.0,
             'CLOUD_CALIBRATION_COEFFICIENT': 1.0,
         },
     }
-    # slot 10 = own Temperature/ambient (must be ignored), slot 0 = referenced ambient, slot 11 = Sky Temperature
-    get_value = _values({10: 999.0, 0: 0.0, 11: -15.0})
+    # slot 10 = own Temperature/ambient (must be ignored), slot 12 = referenced ambient, slot 11 = Sky Temperature
+    get_value = _values({10: 999.0, 12: 0.0, 11: -15.0})
 
     percentage = sensors_mapping.calculate_cloud_percentage(config, get_value)
 
     # delta = -15 - 0 = -15 -> halfway between -30 and 0 -> 50%
     assert percentage == 50.0
+
+
+def test_camera_temperature_cannot_be_used_as_ambient_reference():
+    config = {
+        'TEMP_SENSOR': {
+            'A_CLASSNAME': 'blinka_temp_sensor_mlx90614_i2c',
+            'A_USER_VAR_SLOT': 'sensor_user_10',
+            'CLOUD_AMBIENT_SENSOR_REF': 'sensor_user_0',
+        },
+    }
+
+    assert sensors_mapping.calculate_cloud_percentage(config, _values({0: 0.0, 10: 10.0, 11: -15.0})) is None
 
 
 def test_calibration_coefficient_scales_delta():

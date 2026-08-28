@@ -131,6 +131,10 @@ def calculate_cloud_percentage(config: Dict[str, Any], get_sensor_value) -> Any:
 
     ambient_ref = temp_sensor_cfg.get('CLOUD_AMBIENT_SENSOR_REF', '')
     if ambient_ref:
+        if ambient_ref == 'sensor_user_0':
+            logger.error('Camera temperature cannot be used as a cloud ambient reference')
+            return None
+
         ambient_index = constants.SENSOR_INDEX_MAP.get(str(ambient_ref))
         if ambient_index is not None:
             ambient_temp = get_sensor_value(ambient_index)

@@ -1906,7 +1906,7 @@ class JsonChartView(JsonView):
             try:
                 custom_1_y = i.data[custom_chart_1_key]
             except KeyError:
-                custom_1_y = 0
+                custom_1_y = None if custom_chart_1_key == 'cloud_percentage' else 0
 
             custom_1_data = {
                 'x' : x,
@@ -1919,7 +1919,7 @@ class JsonChartView(JsonView):
             try:
                 custom_2_y = i.data[custom_chart_2_key]
             except KeyError:
-                custom_2_y = 0
+                custom_2_y = None if custom_chart_2_key == 'cloud_percentage' else 0
 
             custom_2_data = {
                 'x' : x,
@@ -1932,7 +1932,7 @@ class JsonChartView(JsonView):
             try:
                 custom_3_y = i.data[custom_chart_3_key]
             except KeyError:
-                custom_3_y = 0
+                custom_3_y = None if custom_chart_3_key == 'cloud_percentage' else 0
 
             custom_3_data = {
                 'x' : x,
@@ -1945,7 +1945,7 @@ class JsonChartView(JsonView):
             try:
                 custom_4_y = i.data[custom_chart_4_key]
             except KeyError:
-                custom_4_y = 0
+                custom_4_y = None if custom_chart_4_key == 'cloud_percentage' else 0
 
             custom_4_data = {
                 'x' : x,
@@ -1958,7 +1958,7 @@ class JsonChartView(JsonView):
             try:
                 custom_5_y = i.data[custom_chart_5_key]
             except KeyError:
-                custom_5_y = 0
+                custom_5_y = None if custom_chart_5_key == 'cloud_percentage' else 0
 
             custom_5_data = {
                 'x' : x,
@@ -1971,7 +1971,7 @@ class JsonChartView(JsonView):
             try:
                 custom_6_y = i.data[custom_chart_6_key]
             except KeyError:
-                custom_6_y = 0
+                custom_6_y = None if custom_chart_6_key == 'cloud_percentage' else 0
 
             custom_6_data = {
                 'x' : x,
@@ -1984,7 +1984,7 @@ class JsonChartView(JsonView):
             try:
                 custom_7_y = i.data[custom_chart_7_key]
             except KeyError:
-                custom_7_y = 0
+                custom_7_y = None if custom_chart_7_key == 'cloud_percentage' else 0
 
             custom_7_data = {
                 'x' : x,
@@ -1997,7 +1997,7 @@ class JsonChartView(JsonView):
             try:
                 custom_8_y = i.data[custom_chart_8_key]
             except KeyError:
-                custom_8_y = 0
+                custom_8_y = None if custom_chart_8_key == 'cloud_percentage' else 0
 
             custom_8_data = {
                 'x' : x,
@@ -2010,7 +2010,7 @@ class JsonChartView(JsonView):
             try:
                 custom_9_y = i.data[custom_chart_9_key]
             except KeyError:
-                custom_9_y = 0
+                custom_9_y = None if custom_chart_9_key == 'cloud_percentage' else 0
 
             custom_9_data = {
                 'x' : x,

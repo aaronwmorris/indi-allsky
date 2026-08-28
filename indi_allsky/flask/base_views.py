@@ -833,10 +833,7 @@ class BaseView(View):
                 data['rain_status'] = 'Error'
 
 
-            cloud_percentage = sensors_mapping.calculate_cloud_percentage(
-                self.indi_allsky_config,
-                lambda idx: image_metadata.get('sensor_user_{0:d}'.format(idx)),
-            )
+            cloud_percentage = image_metadata.get('cloud_percentage')
 
             if cloud_percentage is None:
                 data['cloud_percentage'] = 'N/A'
