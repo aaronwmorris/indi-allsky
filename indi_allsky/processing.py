@@ -22,6 +22,7 @@ import ephem
 
 from . import constants
 from . import asi676mc
+from . import sensors_mapping
 
 from . import stretch as stretch_classes
 from .overlay.orb import IndiAllskyOrbGenerator
@@ -3320,6 +3321,18 @@ class ImageProcessor(object):
             rain_sensor_status = 'Error'
 
         label_data['rain_status'] = rain_sensor_status
+
+
+        # cloud percentage - derived from any configured MLX90614/90615/90640 sky-temp sensor
+        cloud_percentage = sensors_mapping.calculate_cloud_percentage(
+            self.config,
+            lambda idx: self.sensors_user_av[idx],
+        )
+
+        if cloud_percentage is None:
+            label_data['cloud_percentage'] = 'N/A'
+        else:
+            label_data['cloud_percentage'] = '{0:0.0f}'.format(cloud_percentage)
 
 
         # dew heater

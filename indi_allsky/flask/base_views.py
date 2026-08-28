@@ -15,6 +15,7 @@ import ephem
 
 from .. import constants
 from .. import asi676mc
+from .. import sensors_mapping
 
 from flask import request
 from flask import session
@@ -831,11 +832,23 @@ class BaseView(View):
             except KeyError:
                 data['rain_status'] = 'Error'
 
+
+            cloud_percentage = sensors_mapping.calculate_cloud_percentage(
+                self.indi_allsky_config,
+                lambda idx: float(data.get('sensor_user_{0:d}'.format(idx), 0.0)),
+            )
+
+            if cloud_percentage is None:
+                data['cloud_percentage'] = 'N/A'
+            else:
+                data['cloud_percentage'] = '{0:0.0f}'.format(cloud_percentage)
+
         else:
             data['dew_heater_status'] = 'No data'
             data['fan_status'] = 'No data'
             data['wind_dir'] = 'No data'
             data['rain_status'] = 'No data'
+            data['cloud_percentage'] = 'No data'
 
 
         return data

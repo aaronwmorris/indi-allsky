@@ -48,6 +48,83 @@ TYPE_DEVICE_CLASS_MAP = {
 }
 
 
+# labels used by the MLX90614/90615/90640 family to identify sky vs ambient readings
+CLOUD_SKY_TEMP_LABEL = 'Sky Temperature'
+CLOUD_AMBIENT_TEMP_LABEL = 'Temperature'
+
+
+def calculate_cloud_percentage(config: Dict[str, Any], get_sensor_value) -> Any:
+    """
+    Scans configured TEMP_SENSOR slots (A-F) for an MLX90614/90615/90640
+    family sensor and derives a 0-100 cloud percentage from its sky
+    temperature relative to an ambient reference.
+
+    ``get_sensor_value`` is a callable accepting a sensor_user index and
+    returning its current float value, so this works against either the
+    live shared sensor array or persisted image metadata.
+
+    Returns ``None`` when no matching sensor is configured.
+    """
+    from .devices import sensors as indi_allsky_sensors
+
+    temp_sensor_cfg = config.get('TEMP_SENSOR', {})
+
+    sky_temp = None
+    ambient_temp = None
+
+    for letter in ('A', 'B', 'C', 'D', 'E', 'F'):
+        classname = temp_sensor_cfg.get('{0:s}_CLASSNAME'.format(letter))
+        if classname not in constants.CLOUD_SENSOR_CLASSNAMES:
+            continue
+
+        user_var_slot = temp_sensor_cfg.get('{0:s}_USER_VAR_SLOT'.format(letter), 'sensor_user_10')
+        base_index = constants.SENSOR_INDEX_MAP.get(str(user_var_slot), 10)
+
+        try:
+            sensor_cls = getattr(indi_allsky_sensors, classname)
+            labels = sensor_cls.METADATA.get('labels', ())
+            sky_offset = labels.index(CLOUD_SKY_TEMP_LABEL)
+        except (AttributeError, ValueError):
+            continue
+
+        sky_temp = get_sensor_value(base_index + sky_offset)
+
+        try:
+            ambient_offset = labels.index(CLOUD_AMBIENT_TEMP_LABEL)
+            ambient_temp = get_sensor_value(base_index + ambient_offset)
+        except ValueError:
+            ambient_temp = None
+
+        break
+
+    if sky_temp is None:
+        # no configured sensor from the supported family
+        return None
+
+    ambient_ref = temp_sensor_cfg.get('CLOUD_AMBIENT_SENSOR_REF', '')
+    if ambient_ref:
+        ambient_index = constants.SENSOR_INDEX_MAP.get(str(ambient_ref))
+        if ambient_index is not None:
+            ambient_temp = get_sensor_value(ambient_index)
+
+    if ambient_temp is None:
+        # sensor has no ambient reading of its own (e.g. MLX90640) and no reference configured
+        ambient_temp = get_sensor_value(constants.SENSOR_USER_CCD_TEMP)
+
+    clear_temp = float(temp_sensor_cfg.get('CLOUD_SKY_TEMP_CLEAR', -30.0))
+    cloudy_temp = float(temp_sensor_cfg.get('CLOUD_SKY_TEMP_CLOUDY', 0.0))
+    span = cloudy_temp - clear_temp
+    if span <= 0:
+        logger.error('CLOUD_SKY_TEMP_CLOUDY must be greater than CLOUD_SKY_TEMP_CLEAR')
+        return None
+
+    coefficient = float(temp_sensor_cfg.get('CLOUD_CALIBRATION_COEFFICIENT', 1.0))
+    corrected_delta = (float(sky_temp) - float(ambient_temp)) * coefficient
+
+    percentage = ((corrected_delta - clear_temp) / span) * 100.0
+    return max(0.0, min(100.0, percentage))
+
+
 def build_slot_label_map(config: Dict[str, Any]) -> Dict[int, Dict[str, Any]]:
     """
     Builds a map of slot_index -> {name, unit, device_class, key} by inspecting TEMP_SENSOR configuration.

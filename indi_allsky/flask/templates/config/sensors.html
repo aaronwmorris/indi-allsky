@@ -745,5 +745,43 @@
             </div>
         </div>
 
+        <!-- Cloud Detection Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <div class="tw:flex tw:flex-col">
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Cloud Detection (MLX90614 / MLX90615 / MLX90640)</span>
+                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Derived from the sky temperature of any configured MLX90614, MLX90615, or MLX90640 sensor (Probes A-F above). Use {cloud_percentage:s} in overlay templates for text output.</span>
+                </div>
+
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__CLOUD_SKY_TEMP_CLEAR.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__CLOUD_SKY_TEMP_CLEAR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Sky-ambient delta at/below this value = 0% cloud.</span>
+                        <div id="TEMP_SENSOR__CLOUD_SKY_TEMP_CLEAR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__CLOUD_SKY_TEMP_CLOUDY.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__CLOUD_SKY_TEMP_CLOUDY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Sky-ambient delta at/above this value = 100% cloud.</span>
+                        <div id="TEMP_SENSOR__CLOUD_SKY_TEMP_CLOUDY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__CLOUD_CALIBRATION_COEFFICIENT.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__CLOUD_CALIBRATION_COEFFICIENT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Multiplier applied to the sky-ambient delta.</span>
+                        <div id="TEMP_SENSOR__CLOUD_CALIBRATION_COEFFICIENT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__CLOUD_AMBIENT_SENSOR_REF.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__CLOUD_AMBIENT_SENSOR_REF(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Auto = this sensor's own ambient reading (camera temp if it has none, e.g. MLX90640). Pick a different probe's slot to use its temperature instead.</span>
+                        <div id="TEMP_SENSOR__CLOUD_AMBIENT_SENSOR_REF-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
     </div>
 </div><!-- end sensors tab -->

@@ -885,6 +885,11 @@ class IndiAllSkyConfigBase(object):
             "AS3935_SPIKE_REJECTION" : 2,
             "LUX_MAGNITUDE_OFFSET"   : 26.0,
             "FC37_ACTIVE_LOW"        : True,
+            # cloud detection derived from any configured MLX90614/90615/90640 sky-temp sensor
+            "CLOUD_SKY_TEMP_CLEAR"          : -30.0,  # max negative delta = 0% cloud
+            "CLOUD_SKY_TEMP_CLOUDY"         : 0,      # delta at/above this = 100% cloud
+            "CLOUD_CALIBRATION_COEFFICIENT" : 1.0,
+            "CLOUD_AMBIENT_SENSOR_REF"      : "",     # blank = use sensor's own ambient reading, else camera temp
         },
         "CHARTS" : {
             "CUSTOM_SLOT_1"          : "sensor_user_10",

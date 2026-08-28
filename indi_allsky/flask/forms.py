@@ -983,6 +983,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'fan_status' : '',
         'wind_dir' : '',
         'rain_status' : '',
+        'cloud_percentage' : '',
         'custom_1' : '',
         'custom_2' : '',
         'custom_3' : '',
@@ -1090,6 +1091,7 @@ def WEB_STATUS_TEMPLATE_validator(form, field):
         'fan_status'        : '',
         'wind_dir'          : '',
         'rain_status'       : '',
+        'cloud_percentage'  : '',
     }
 
 
@@ -3353,6 +3355,46 @@ def SENSOR_USER_VAR_SLOT_validator(form, field):
         raise ValidationError('Invalid selection')
 
 
+def CLOUD_SKY_TEMP_CLEAR_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter a valid number')
+
+    if field.data > 0:
+        raise ValidationError('Clear-sky temperature delta must be 0 or negative')
+
+
+def CLOUD_SKY_TEMP_CLOUDY_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a whole number')
+
+    if field.data < 0:
+        raise ValidationError('Cloudy temperature delta must be 0 or greater')
+
+
+def CLOUD_CALIBRATION_COEFFICIENT_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter a valid number')
+
+    if field.data <= 0:
+        raise ValidationError('Calibration coefficient must be greater than 0')
+
+    if field.data > 10.0:
+        raise ValidationError('Calibration coefficient must be 10.0 or less')
+
+
+def CLOUD_AMBIENT_SENSOR_REF_validator(form, field):
+    if not field.data:
+        # blank = auto (sensor's own ambient reading, else camera temp)
+        return
+
+    slots = list()
+    for v in form.SENSOR_SLOT_choices.values():
+        slots.extend(list(zip(*v))[0])
+
+    if field.data not in slots:
+        raise ValidationError('Invalid selection')
+
+
 def DEVICE_PIN_NAME_validator(form, field):
     if not field.data:
         return
@@ -5166,6 +5208,10 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__F_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
     TEMP_SENSOR__F_TITLE_TEMPLATE    = StringField('Chart Title Template', validators=[DataRequired(), TEMP_SENSOR__TITLE_TEMPLATE_validator])
     TEMP_SENSOR__FC37_ACTIVE_LOW     = BooleanField('Rain Sensor FC-37 - Invert logic')
+    TEMP_SENSOR__CLOUD_SKY_TEMP_CLEAR       = FloatField('Cloudless Sky Temp Delta (°, max negative)', validators=[CLOUD_SKY_TEMP_CLEAR_validator], widget=NumberInput(step=0.1))
+    TEMP_SENSOR__CLOUD_SKY_TEMP_CLOUDY      = IntegerField('Cloudy Sky Temp Delta (°, positive)', validators=[CLOUD_SKY_TEMP_CLOUDY_validator], widget=NumberInput(step=1))
+    TEMP_SENSOR__CLOUD_CALIBRATION_COEFFICIENT = FloatField('Cloud Calibration Coefficient', validators=[CLOUD_CALIBRATION_COEFFICIENT_validator], widget=NumberInput(step=0.05))
+    TEMP_SENSOR__CLOUD_AMBIENT_SENSOR_REF   = SelectField('Cloud Ambient Reference Sensor', choices=[], validators=[CLOUD_AMBIENT_SENSOR_REF_validator])
     TEMP_SENSOR__OPENWEATHERMAP_APIKEY = PasswordField('OpenWeatherMap API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__WUNDERGROUND_APIKEY = PasswordField('Weather Underground API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__WUNDERGROUND_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__ASTROSPHERIC_APIKEY = PasswordField('Astrospheric API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__ASTROSPHERIC_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
@@ -5473,6 +5519,13 @@ class IndiAllskyConfigForm(FlaskForm):
         self.DEW_HEATER__TEMP_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
         self.DEW_HEATER__DEWPOINT_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
         self.FAN__TEMP_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
+
+        self.TEMP_SENSOR__CLOUD_AMBIENT_SENSOR_REF.choices = {
+            'Auto' : (
+                ['', 'Auto (sensor ambient, else camera temp)'],
+            ),
+            **self.SENSOR_SLOT_choices,
+        }
 
         # Merge dictionaries
         self.CUSTOM_CHART_choices.update(self.SENSOR_SLOT_choices)
