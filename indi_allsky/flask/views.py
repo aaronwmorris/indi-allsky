@@ -10766,6 +10766,53 @@ class JsonImageProcessingView(JsonView):
         processing_start = time.time()
 
 
+        # Interactive detection: draw stars/meteors on the preview image
+        run_detection = bool(request.json.get('RUN_DETECTION', False))
+        stars_count = 0
+        detections_count = 0
+        detect_method = p_config.get('DETECT_STARS_METHOD', 'template')
+
+        def runDetection():
+            nonlocal stars_count, detections_count, detect_method
+
+            if not run_detection:
+                return
+
+            from ..stars import IndiAllSkyStars
+            from ..detectLines import IndiAllskyDetectLines
+
+            # tuned per-run, the saved config is not modified
+            detect_method = str(request.json.get('DETECT_STARS_METHOD', detect_method))
+            p_config['DETECT_STARS_METHOD']         = detect_method
+            p_config['DETECT_STARS_THOLD']          = float(request.json['DETECT_STARS_THOLD'])
+            p_config['DETECT_STARS_SEP_THOLD']      = float(request.json['DETECT_STARS_SEP_THOLD'])
+            p_config['DETECT_STARS_SEP_MAX_RADIUS'] = int(request.json['DETECT_STARS_SEP_MAX_RADIUS'])
+            p_config['DETECT_METEORS_THOLD']        = int(request.json['DETECT_METEORS_THOLD'])
+            p_config['DETECT_DRAW']                 = True
+
+            detect_mask_path = Path(p_config.get('DETECT_MASK', ''))
+            if detect_mask_path.is_file():
+                indi_mask = cv2.imread(str(detect_mask_path), cv2.IMREAD_GRAYSCALE)
+            else:
+                indi_mask = None
+
+            mask_dict = {binning: indi_mask}
+
+            # lines before stars, as in the capture pipeline - star markers would
+            # otherwise be detected as lines
+            lines_detect_o = IndiAllskyDetectLines(p_config, mask=mask_dict)
+            detections_count = len(lines_detect_o.detectLines(image_processor.image, binning))
+
+            if detect_method == 'sep':
+                # imported on demand: sep is unavailable on some legacy platforms
+                from ..starsSep import IndiAllSkyStarsSEP
+                stars_detect_o = IndiAllSkyStarsSEP(p_config, mask=mask_dict)
+            else:
+                stars_detect_o = IndiAllSkyStars(p_config, mask=mask_dict)
+
+            stars_count = len(stars_detect_o.detectObjects(image_processor.image, binning))
+
+
         message_list = list()
 
         if disable_processing:
@@ -10789,6 +10836,8 @@ class JsonImageProcessingView(JsonView):
             image_processor.stack()  # populates self.image
 
             image_processor.convert_16bit_to_8bit()
+
+            runDetection()
 
 
             # rotation
@@ -10885,6 +10934,8 @@ class JsonImageProcessingView(JsonView):
 
             image_processor.convert_16bit_to_8bit()
 
+            runDetection()
+
 
             if p_config.get('IMAGE_ROTATE'):
                 image_processor.rotate_90()
@@ -10970,50 +11021,6 @@ class JsonImageProcessingView(JsonView):
 
 
                 image_processor.image = pano_data
-
-
-        # Interactive detection: draw stars/meteors on the preview image
-        run_detection = bool(request.json.get('RUN_DETECTION', False))
-        stars_count = 0
-        detections_count = 0
-
-        detect_method = p_config.get('DETECT_STARS_METHOD', 'template')
-
-        if run_detection:
-            from ..stars import IndiAllSkyStars
-            from ..detectLines import IndiAllskyDetectLines
-
-            # tuned per-run, the saved config is not modified
-            detect_method = str(request.json.get('DETECT_STARS_METHOD', detect_method))
-            p_config['DETECT_STARS_METHOD']         = detect_method
-            p_config['DETECT_STARS_THOLD']          = float(request.json['DETECT_STARS_THOLD'])
-            p_config['DETECT_STARS_SEP_THOLD']      = float(request.json['DETECT_STARS_SEP_THOLD'])
-            p_config['DETECT_STARS_SEP_MAX_RADIUS'] = int(request.json['DETECT_STARS_SEP_MAX_RADIUS'])
-            p_config['DETECT_METEORS_THOLD']        = int(request.json['DETECT_METEORS_THOLD'])
-            p_config['DETECT_DRAW']                 = True
-
-            detect_mask_path = Path(p_config.get('DETECT_MASK', ''))
-            if detect_mask_path.is_file():
-                indi_mask = cv2.imread(str(detect_mask_path), cv2.IMREAD_GRAYSCALE)
-            else:
-                indi_mask = None
-
-            mask_dict = {binning: indi_mask}
-
-            # lines before stars, as in the capture pipeline - star markers would
-            # otherwise be detected as lines
-            lines_detect_o = IndiAllskyDetectLines(p_config, mask=mask_dict)
-            detections_count = len(lines_detect_o.detectLines(image_processor.image, binning))
-
-            if detect_method == 'sep':
-                # imported on demand: sep is unavailable on some legacy platforms
-                from ..starsSep import IndiAllSkyStarsSEP
-                stars_detect_o = IndiAllSkyStarsSEP(p_config, mask=mask_dict)
-            else:
-                stars_detect_o = IndiAllSkyStars(p_config, mask=mask_dict)
-
-            stars_count = len(stars_detect_o.detectObjects(image_processor.image, binning))
-
 
         processing_elapsed_s = time.time() - processing_start
         app.logger.info('Image processed in %0.4f s', processing_elapsed_s)
@@ -12574,6 +12581,163 @@ class MiniTimelapseGeneratorView(TemplateView):
     page_title = 'Mini Timelapse'
     image_loop_view = 'indi_allsky.js_image_loop_view'
 
+    @staticmethod
+    def _getStandardVideoDimensions(image_entry, vf_scale):
+        try:
+            source_width = int(image_entry.width)
+            source_height = int(image_entry.height)
+        except (TypeError, ValueError):
+            return None, None
+        if source_width < 1 or source_height < 1:
+            return None, None
+
+        if not vf_scale:
+            return source_width, source_height
+
+        height_match = re.fullmatch(r'-[12]:(\d+)', vf_scale)
+        if height_match:
+            output_height = int(height_match.group(1))
+            if output_height < 1:
+                return None, None
+            output_width = round(source_width * output_height / source_height)
+            return max(2, round(output_width / 2) * 2), output_height
+
+        percentage_match = re.fullmatch(r'iw\*(\.\d+):(ih\*\.\d+|-2)', vf_scale)
+        if not percentage_match:
+            return None, None
+
+        width_factor = float(percentage_match.group(1))
+        output_width = max(2, round((source_width * width_factor) / 2) * 2)
+        if percentage_match.group(2) == '-2':
+            output_height = round(source_height * output_width / source_width)
+        else:
+            height_factor = float(percentage_match.group(2).split('*')[1])
+            output_height = round(source_height * height_factor)
+
+        return output_width, max(2, round(output_height / 2) * 2)
+
+
+    def _getPanoramaContext(self, image_entry):
+        panorama_enabled = bool(
+            self.indi_allsky_config.get('FISH2PANO', {}).get('ENABLE', False)
+        )
+        panorama_data = {
+            'available'      : False,
+            'id'             : 0,
+            'url'            : '',
+            'width'          : 0,
+            'height'         : 0,
+            'circle_clipped' : False,
+        }
+        panorama_suggestions = []
+
+        if not panorama_enabled:
+            return panorama_enabled, panorama_data, panorama_suggestions
+
+        panorama_query = IndiAllSkyDbPanoramaImageTable.query\
+            .join(IndiAllSkyDbPanoramaImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
+            .filter(IndiAllSkyDbPanoramaImageTable.exclude == sa_false())
+
+        # Panorama controls follow the same exact-asset rule as other optional
+        # downloads. Nearby panoramas are navigation choices, never substitutes.
+        panorama_image_entry = panorama_query\
+            .filter(IndiAllSkyDbPanoramaImageTable.createDate == image_entry.createDate)\
+            .order_by(IndiAllSkyDbPanoramaImageTable.id.desc())\
+            .first()
+
+        local = not self.web_nonlocal_images or (
+            self.web_local_images_admin and self.verify_admin_network()
+        )
+
+        if panorama_image_entry:
+            try:
+                panorama_path = Path(panorama_image_entry.getFilesystemPath())
+                panorama_url = ''
+                if panorama_path.stat().st_size:
+                    panorama_url = panorama_image_entry.getUrl(
+                        s3_prefix=self.s3_prefix,
+                        local=local,
+                    )
+            except (OSError, ValueError):
+                panorama_url = ''
+
+            if panorama_url:
+                panorama_image_data = panorama_image_entry.data or {}
+                circle_clipped = panorama_image_data.get('fish2pano_circle_clipped')
+                if circle_clipped is None:
+                    # Older panorama rows predate the stored source geometry.
+                    try:
+                        binning = max(int(image_entry.binmode), 1)
+                        diameter = int(self.indi_allsky_config['FISH2PANO']['DIAMETER'] / binning)
+                        offset_x = int(self.indi_allsky_config.get('LENS_OFFSET_X', 0) / binning)
+                        offset_y = int(self.indi_allsky_config.get('LENS_OFFSET_Y', 0) / binning)
+                        circle_clipped = panoramaSourceCircleClipped(
+                            image_entry.width,
+                            image_entry.height,
+                            diameter,
+                            offset_x,
+                            offset_y,
+                        )
+                    except (KeyError, TypeError, ValueError):
+                        circle_clipped = False
+
+                panorama_data = {
+                    'available'      : True,
+                    'id'             : panorama_image_entry.id,
+                    'url'            : str(panorama_url),
+                    'width'          : panorama_image_entry.width,
+                    'height'         : panorama_image_entry.height,
+                    'circle_clipped' : bool(circle_clipped),
+                }
+
+        if panorama_data['available']:
+            return panorama_enabled, panorama_data, panorama_suggestions
+
+        panorama_before = panorama_query\
+            .filter(IndiAllSkyDbPanoramaImageTable.createDate < image_entry.createDate)\
+            .order_by(
+                IndiAllSkyDbPanoramaImageTable.createDate.desc(),
+                IndiAllSkyDbPanoramaImageTable.id.desc(),
+            )\
+            .first()
+        panorama_after = panorama_query\
+            .filter(IndiAllSkyDbPanoramaImageTable.createDate > image_entry.createDate)\
+            .order_by(
+                IndiAllSkyDbPanoramaImageTable.createDate.asc(),
+                IndiAllSkyDbPanoramaImageTable.id.desc(),
+            )\
+            .first()
+
+        for direction, panorama_candidate in (
+            ('Previous panorama', panorama_before),
+            ('Next panorama', panorama_after),
+        ):
+            if not panorama_candidate:
+                continue
+
+            suggestion_image_entry = IndiAllSkyDbImageTable.query\
+                .join(IndiAllSkyDbImageTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
+                .filter(IndiAllSkyDbImageTable.createDate == panorama_candidate.createDate)\
+                .order_by(IndiAllSkyDbImageTable.id.desc())\
+                .first()
+
+            if not suggestion_image_entry:
+                continue
+
+            panorama_suggestions.append({
+                'label'    : direction,
+                'datetime' : panorama_candidate.createDate.strftime('%Y-%m-%d %H:%M:%S'),
+                'url'      : url_for(
+                    'indi_allsky.mini_generate_view',
+                    image_id=suggestion_image_entry.id,
+                    source='panorama',
+                ),
+            })
+
+        return panorama_enabled, panorama_data, panorama_suggestions
+
     def get_context(self):
         context = super(MiniTimelapseGeneratorView, self).get_context()
 
@@ -12593,21 +12757,78 @@ class MiniTimelapseGeneratorView(TemplateView):
                 .order_by(IndiAllSkyDbImageTable.createDate.desc())\
                 .first()
 
+        (
+            panorama_enabled,
+            panorama_data,
+            panorama_suggestions,
+        ) = self._getPanoramaContext(image_entry)
+
 
         context['image_loop_view'] = self.image_loop_view
+        context['panorama_image_loop_view'] = 'indi_allsky.js_panorama_loop_view'
 
         context['timestamp'] = int(image_entry.createDate.timestamp())
+        context['panorama'] = panorama_data
+        context['panorama_enabled'] = panorama_enabled
+        context['panorama_suggestions'] = panorama_suggestions
+        if panorama_enabled:
+            context['source_type'] = request.args.get('source', 'standard')
+        else:
+            context['source_type'] = 'standard'
 
+
+        use_night_config = self.indi_allsky_config.get('TIMELAPSE', {}).get('USE_NIGHT_CONFIG', True)
+        if use_night_config or image_entry.night:
+            bitrate = str(self.indi_allsky_config.get('FFMPEG_BITRATE', '5000k'))
+            vf_scale = self.indi_allsky_config.get('FFMPEG_VFSCALE', '')
+        else:
+            bitrate = str(self.indi_allsky_config.get('FFMPEG_BITRATE_DAY', '5000k'))
+            vf_scale = self.indi_allsky_config.get('FFMPEG_VFSCALE_DAY', '')
+
+        standard_width, standard_height = self._getStandardVideoDimensions(image_entry, vf_scale)
+        context['standard_video'] = {
+            'width'  : standard_width,
+            'height' : standard_height,
+            'codec'  : self.indi_allsky_config.get('FFMPEG_CODEC', 'libx264'),
+        }
+
+
+        bitrate_choices = dict(IndiAllskyMiniTimelapseForm.BITRATE_SELECT_choices)
+
+        def bitrate_kbps(value):
+            bitrate_match = re.fullmatch(r'(\d+)([km])', value)
+            if not bitrate_match:
+                return None
+
+            multiplier = 1000 if bitrate_match.group(2) == 'm' else 1
+            return int(bitrate_match.group(1)) * multiplier
+
+        preset_bitrates = {
+            bitrate_kbps(value): value
+            for choices in bitrate_choices.values()
+            for value, label in choices
+        }
+        bitrate = preset_bitrates.get(bitrate_kbps(bitrate), bitrate)
 
         form_data = {
             'CAMERA_ID'             : self.camera.id,
-            'IMAGE_ID'              : image_id,
+            'IMAGE_ID'              : image_entry.id,
             'PRE_SECONDS_SELECT'    : '240',
             'POST_SECONDS_SELECT'   : '120',
             'FRAMERATE_SELECT'      : '10',
+            'BITRATE_SELECT'        : bitrate,
         }
 
-        context['form_mini_timelapse'] = IndiAllskyMiniTimelapseForm(data=form_data)
+        form_mini_timelapse = IndiAllskyMiniTimelapseForm(data=form_data)
+        if bitrate not in preset_bitrates.values():
+            bitrate_choices = {
+                'Configured default': (
+                    (bitrate, '{0:s} — configured default'.format(bitrate)),
+                ),
+                **bitrate_choices,
+            }
+        form_mini_timelapse.BITRATE_SELECT.choices = bitrate_choices
+        context['form_mini_timelapse'] = form_mini_timelapse
 
         return context
 
@@ -12621,58 +12842,165 @@ class AjaxMiniTimelapseGeneratorView(BaseView):
         super(AjaxMiniTimelapseGeneratorView, self).__init__(**kwargs)
 
 
-    def dispatch_request(self):
-        if not current_user.is_admin:
-            json_data = {
-                'failure-message' : 'User does not have permission to generate content',
+    def _parseMiniVideoRequest(self, request_data):
+        try:
+            request_values = {
+                'image_id'    : int(request_data['IMAGE_ID']),
+                'camera_id'   : int(request_data['CAMERA_ID']),
+                'pre_seconds' : int(request_data['PRE_SECONDS']),
+                'post_seconds': int(request_data['POST_SECONDS']),
+                'framerate'   : float(request_data['FRAMERATE']),
+                'bitrate'     : request_data.get('BITRATE'),
+                'note'        : str(request_data.get('NOTE') or ''),
             }
-            return jsonify(json_data), 400
+        except (KeyError, TypeError, ValueError):
+            return None, 'Check the selected time range and speed, then try again.'
+
+        if not request_values['note'].strip():
+            return None, 'Enter a description for this video.'
+        if len(request_values['note']) > 255:
+            return None, 'Keep the description to 255 characters or fewer.'
+        if request_values['bitrate'] is not None:
+            request_values['bitrate'] = str(request_values['bitrate'])
+        if (
+            request_values['bitrate'] is not None
+            and not re.fullmatch(r'\d+[km]', request_values['bitrate'])
+        ):
+            return None, 'Choose a valid bitrate/file size, then try again.'
+        if (
+            request_values['pre_seconds'] < 1
+            or request_values['pre_seconds'] > 43200
+            or request_values['post_seconds'] < 1
+            or request_values['post_seconds'] > 43200
+            or not math.isfinite(request_values['framerate'])
+            or request_values['framerate'] <= 0
+            or request_values['framerate'] > 60
+        ):
+            return None, 'Check the selected time range and speed, then try again.'
+
+        return request_values, None
 
 
-        image_id = int(request.json['IMAGE_ID'])
-        camera_id = int(request.json['CAMERA_ID'])
-        pre_seconds = int(request.json['PRE_SECONDS'])
-        post_seconds = int(request.json['POST_SECONDS'])
-        framerate = float(request.json['FRAMERATE'])
-        note = str(request.json['NOTE'])
-
-
-        # sanity check
-        IndiAllSkyDbImageTable.query\
-            .join(IndiAllSkyDbImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .filter(IndiAllSkyDbImageTable.id == image_id)\
-            .one()
-
-
-        jobdata = {
-            'action' : 'generateMiniVideo',
-            'kwargs' : {
-                'image_id'      : image_id,
-                'camera_id'     : camera_id,
-                'pre_seconds'   : pre_seconds,
-                'post_seconds'  : post_seconds,
-                'framerate'     : framerate,
-                'note'          : note,
-            },
-        }
-
-
+    def _queueMiniVideo(self, action, job_kwargs):
         task_mini_video = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.VIDEO,
             state=TaskQueueState.MANUAL,
             priority=100,
-            data=jobdata,
+            data={
+                'action' : action,
+                'kwargs' : job_kwargs,
+            },
         )
-
         db.session.add(task_mini_video)
         db.session.commit()
 
-        message = {
-            'success-message' : 'Job Submitted - Check the Mini Timelapses view in a few minutes',
-        }
+        return jsonify({
+            'success-message' : 'Your mini timelapse is being created. Check Mini Timelapses in a few minutes.',
+        })
 
-        return jsonify(message)
+
+    def _queuePanoramaMiniVideo(self, request_data):
+        if not self.indi_allsky_config.get('FISH2PANO', {}).get('ENABLE', False):
+            json_data = {
+                'failure-message' : 'Panorama creation is turned off in the Image Processing settings.',
+            }
+            return jsonify(json_data), 400
+
+        request_values, error_message = self._parseMiniVideoRequest(request_data)
+        if error_message:
+            return jsonify({'failure-message': error_message}), 400
+
+        try:
+            panorama_image_id = int(request_data['PANORAMA_IMAGE_ID'])
+        except (KeyError, TypeError, ValueError):
+            json_data = {
+                'failure-message' : 'Check the selected time range and speed, then try again.',
+            }
+            return jsonify(json_data), 400
+
+        try:
+            image_entry = IndiAllSkyDbImageTable.query\
+                .join(IndiAllSkyDbImageTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == request_values['camera_id'])\
+                .filter(IndiAllSkyDbImageTable.id == request_values['image_id'])\
+                .one()
+
+            panorama_image_entry = IndiAllSkyDbPanoramaImageTable.query\
+                .join(IndiAllSkyDbPanoramaImageTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == request_values['camera_id'])\
+                .filter(IndiAllSkyDbPanoramaImageTable.id == panorama_image_id)\
+                .filter(IndiAllSkyDbPanoramaImageTable.exclude == sa_false())\
+                .one()
+
+            # Nearby panoramas are offered as links, never silent substitutes.
+            if panorama_image_entry.createDate != image_entry.createDate:
+                raise ValueError('The selected panorama does not match the selected image')
+
+            selection = validatePanoramaMiniTimelapseRequest(
+                panorama_image_entry.width,
+                panorama_image_entry.height,
+                request_data,
+            )
+        except (KeyError, NoResultFound, TypeError, ValueError) as e:
+            app.logger.warning('Invalid panorama mini timelapse selection: %s', str(e))
+            json_data = {
+                'failure-message' : 'The selected panorama area is not valid. Reset the area and try again.',
+            }
+            return jsonify(json_data), 400
+
+        request_values.update({
+            'panorama_image_id' : panorama_image_id,
+            'crop_x'            : selection['crop_x'],
+            'crop_y'            : selection['crop_y'],
+            'crop_width'        : selection['crop_width'],
+            'crop_height'       : selection['crop_height'],
+            'aspect_ratio'      : selection['aspect_ratio'],
+            'pan_mode'          : selection['pan_mode'],
+            'end_crop_x'        : selection['end_crop_x'],
+            'end_crop_y'        : selection['end_crop_y'],
+            'pan_direction'     : selection['pan_direction'],
+        })
+        return self._queueMiniVideo('generatePanoramaMiniVideo', request_values)
+
+
+    def dispatch_request(self):
+        if not current_user.is_admin:
+            json_data = {
+                'failure-message' : 'You do not have permission to create mini timelapses.',
+            }
+            return jsonify(json_data), 400
+
+        request_data = request.get_json(silent=True) or {}
+        source_type = str(request_data.get('SOURCE_TYPE', 'standard'))
+        if source_type == 'panorama':
+            return self._queuePanoramaMiniVideo(request_data)
+        if source_type != 'standard':
+            json_data = {
+                'failure-message' : 'Choose all-sky images or panorama images.',
+            }
+            return jsonify(json_data), 400
+
+
+        request_values, error_message = self._parseMiniVideoRequest(request_data)
+        if error_message:
+            return jsonify({'failure-message': error_message}), 400
+
+
+        # sanity check
+        try:
+            IndiAllSkyDbImageTable.query\
+                .join(IndiAllSkyDbImageTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == request_values['camera_id'])\
+                .filter(IndiAllSkyDbImageTable.id == request_values['image_id'])\
+                .one()
+        except NoResultFound:
+            json_data = {
+                'failure-message' : 'The selected image is no longer available. Choose another image.',
+            }
+            return jsonify(json_data), 400
+
+
+        return self._queueMiniVideo('generateMiniVideo', request_values)
 
 
 class FileSpaceUsageView(TemplateView):
