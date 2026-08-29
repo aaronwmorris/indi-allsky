@@ -5215,10 +5215,10 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__F_TITLE_TEMPLATE    = StringField('Chart Title Template', validators=[DataRequired(), TEMP_SENSOR__TITLE_TEMPLATE_validator])
     TEMP_SENSOR__FC37_ACTIVE_LOW     = BooleanField('Rain Sensor FC-37 - Invert logic')
     TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE      = BooleanField('Enable Cloudiness Index')
-    TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR      = SelectField('Cloud Sensor', choices=[], validators=[CLOUDINESS_INDEX_SENSOR_validator])
+    TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR      = SelectField('Cloudiness Sensor', choices=[], validators=[CLOUDINESS_INDEX_SENSOR_validator])
     TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT   = SelectField('Reference Reading Units', choices=TEMP_DISPLAY_choices, validators=[DataRequired(), CLOUDINESS_INDEX_TEMP_UNIT_validator])
     TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP  = FloatField('Clear-Sky Reference: Sky Reading', validators=[CLOUDINESS_INDEX_CLEAR_TEMP_validator], widget=NumberInput(step=0.1))
-    TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_TEMP = FloatField('Cloudy Reference: Sky Reading', validators=[CLOUDINESS_INDEX_CLOUDY_TEMP_validator], widget=NumberInput(step=0.1))
+    TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_TEMP = FloatField('Cloudy-Sky Reference: Sky Reading', validators=[CLOUDINESS_INDEX_CLOUDY_TEMP_validator], widget=NumberInput(step=0.1))
     TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT = FloatField('Cloudiness Index Coefficient', validators=[CLOUDINESS_INDEX_COEFFICIENT_validator], widget=NumberInput(step=0.05, min=0.05, max=10))
     TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET      = FloatField('Cloudiness Index Offset', validators=[CLOUDINESS_INDEX_OFFSET_validator], widget=NumberInput(step=1, min=-100, max=100))
     TEMP_SENSOR__OPENWEATHERMAP_APIKEY = PasswordField('OpenWeatherMap API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
@@ -5560,7 +5560,7 @@ class IndiAllskyConfigForm(FlaskForm):
             'Auto' : (
                 ['', 'Auto'],
             ),
-            'MLX Cloud Sensors' : tuple(cloud_sensor_choices),
+            'MLX Cloudiness Sensors' : tuple(cloud_sensor_choices),
         }
 
         # Merge dictionaries
@@ -5591,10 +5591,10 @@ class IndiAllskyConfigForm(FlaskForm):
                     )
                     result = False
 
-            cloud_sensor_choices = self.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.choices.get('MLX Cloud Sensors', ())
+            cloud_sensor_choices = self.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.choices.get('MLX Cloudiness Sensors', ())
             if len(cloud_sensor_choices) > 1 and not self.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.data:
                 self.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.errors.append(
-                    'Select the MLX sensor used for this calibration'
+                    'Select the MLX sensor used for this cloudiness index'
                 )
                 result = False
 

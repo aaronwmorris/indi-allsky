@@ -745,19 +745,18 @@
             </div>
         </div>
 
-        <!-- Cloud Detection Card -->
+        <!-- Cloudiness Index Card -->
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:flex-col">
-                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Cloud Detection (MLX90614 / MLX90615 / MLX90640)</span>
-                    <span class="tw:text-[0.625rem] tw:text-base-content/40">An installation-specific IR sky-temperature cloudiness index, not a measured whole-sky cloud-cover percentage.</span>
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Cloudiness Index (MLX90614 / MLX90615 / MLX90640)</span>
                 </div>
 
                 <div class="tw:grid tw:grid-cols-1 tw:gap-4">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT.label.text }}</span>
                         {{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full sm:tw:w-1/3') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">The unit used for both calibration readings. It is independent of the camera Temperature Display setting.</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Used for both reference readings.</span>
                         <div id="TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -780,17 +779,16 @@
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP.label.text }}</span>
                         {{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">The raw Sky reading observed under known clear conditions.</span>
                         <div id="TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
 
-                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">Cloudy Reference</span>
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">Cloudy-Sky Reference</span>
                 <div class="tw:grid tw:grid-cols-1 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_TEMP.label.text }}</span>
                         {{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_TEMP(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">The raw Sky reading observed under known overcast conditions. Use {cloudiness_index:s} in overlay templates for text output.</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Use {cloudiness_index:s} in overlay templates.</span>
                         <div id="TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_TEMP-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
