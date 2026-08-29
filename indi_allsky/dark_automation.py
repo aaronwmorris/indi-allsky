@@ -1339,6 +1339,42 @@ def _library_entry_identity(entry, selection_key):
     }
 
 
+def _completed_master_details(value):
+    """Return compact, ordered details for committed dark/BPM master pairs."""
+    if not isinstance(value, (list, tuple)):
+        return []
+
+    details = []
+    for raw_detail in value:
+        if not isinstance(raw_detail, dict):
+            continue
+        detail = {
+            'sequence': len(details) + 1,
+            'capture_profile': str(raw_detail.get('capture_profile') or ''),
+            'gain': raw_detail.get('gain'),
+            'exposure': raw_detail.get('exposure'),
+            'binning': raw_detail.get('binning'),
+            'temperature': raw_detail.get('temperature'),
+            'frame_count': raw_detail.get('frame_count'),
+            'temperature_set': raw_detail.get('temperature_set'),
+            'completed_utc': str(raw_detail.get('completed_utc') or ''),
+        }
+        details.append(detail)
+    return details
+
+
+def task_requires_progress(task_data):
+    """Return whether a task should replace the normal page with progress."""
+    task_data = task_data or {}
+    task_status = task_data.get('status')
+    if task_status in ACTIVE_STATUSES:
+        return True
+    return (
+        task_status in TERMINAL_STATUSES
+        and not task_data.get('capture_restored')
+    )
+
+
 def task_public_status(task):
     data = dict(task.data or {})
     progress = dict(data.get('progress') or {})
@@ -1404,6 +1440,9 @@ def task_public_status(task):
         'frame_count': data.get('frame_count'),
         'target_count': total,
         'completed_master_sets': completed,
+        'completed_master_details': _completed_master_details(
+            progress.get('completed_master_details')
+        ),
         'percent': round(percent, 1),
         'current_gain': progress.get('current_gain'),
         'current_exposure': progress.get('current_exposure'),
@@ -1671,6 +1710,7 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                     'phase': 'preparing_camera',
                     'message': 'Capture is paused; preparing the camera.',
                     'completed_master_sets': 0,
+                    'completed_master_details': [],
                     'total_master_sets': int(task_data['target_count']),
                 },
                 state=TaskQueueState.RUNNING,
@@ -1764,6 +1804,7 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                 )
 
         completed_offset = 0
+        completed_master_details = []
         groups = list(task_data['groups'])
         with tempfile.TemporaryDirectory(prefix='indi-allsky-dark-automation-') as temporary_dir:
             temporary_path = Path(temporary_dir)
@@ -1807,8 +1848,27 @@ def run_task(app, task_id, repository_root, stop_requested=None):
 
                 return_code, last_progress = _monitor_capture_child(
                     app, task_id, child, progress_path, update_data,
-                    (completed_offset, int(task_data['target_count']), group_index, len(groups)),
+                    (
+                        completed_offset,
+                        int(task_data['target_count']),
+                        group_index,
+                        len(groups),
+                        tuple(completed_master_details),
+                    ),
                     stop_requested,
+                )
+                group_progress = _overall_progress(
+                    last_progress,
+                    completed_offset,
+                    int(task_data['target_count']),
+                    group_index,
+                    len(groups),
+                    completed_master_details,
+                )
+                with app.app_context():
+                    update_data(progress=group_progress)
+                completed_master_details = list(
+                    group_progress.get('completed_master_details') or ()
                 )
                 group_count = int(group['target_count'])
                 if return_code != 0:
@@ -1841,6 +1901,7 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                             len(groups),
                         ),
                         'completed_master_sets': completed_offset,
+                        'completed_master_details': list(completed_master_details),
                         'total_master_sets': int(task_data['target_count']),
                         'current_gain': None,
                         'current_exposure': None,
@@ -2155,16 +2216,28 @@ def build_dark_command(
     ]
 
 
-def _overall_progress(child_progress, offset, total, group_index, group_count):
+def _overall_progress(
+        child_progress,
+        offset,
+        total,
+        group_index,
+        group_count,
+        completed_master_details=(),
+):
     completed = offset + int(child_progress.get('completed_master_sets') or 0)
     message = child_progress.get('message') or 'Capturing group {0:d} of {1:d}.'.format(
         group_index,
         group_count,
     )
+    combined_master_details = _completed_master_details(
+        list(completed_master_details)
+        + list(child_progress.get('completed_master_details') or ())
+    )
     return {
         'phase': child_progress.get('phase', 'capturing'),
         'message': message,
         'completed_master_sets': min(completed, total),
+        'completed_master_details': combined_master_details,
         'total_master_sets': total,
         'current_gain': child_progress.get('current_gain'),
         'current_exposure': child_progress.get('current_exposure'),

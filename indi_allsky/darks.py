@@ -137,6 +137,7 @@ class IndiAllSkyDarks(object):
         self._automation_manifest = {}
         self._progress_total_master_sets = 0
         self._progress_completed_master_sets = 0
+        self._progress_completed_master_details = []
         self._progress_current_gain = None
         self._progress_current_exposure = None
         self._progress_current_binning = None
@@ -1465,6 +1466,7 @@ class IndiAllSkyDarks(object):
             'phase': phase,
             'message': str(message),
             'completed_master_sets': self._progress_completed_master_sets,
+            'completed_master_details': list(self._progress_completed_master_details),
             'total_master_sets': self._progress_total_master_sets,
             'current_gain': self._progress_current_gain,
             'current_exposure': self._progress_current_exposure,
@@ -1593,6 +1595,9 @@ class IndiAllSkyDarks(object):
                     bpm_filename_t,
                     stacking_class,
                 )
+                master_detail = activation.get('master_detail')
+                if master_detail:
+                    self._progress_completed_master_details.append(dict(master_detail))
                 self._progress_activated_master_files += int(activation['activated'])
                 self._progress_completed_master_sets += 1
                 self._publish_progress(
@@ -2078,6 +2083,16 @@ class IndiAllSkyDarks(object):
                 self.automation_manifest,
             )
             db.session.commit()
+            activation['master_detail'] = {
+                'capture_profile': str(self.capture_profile),
+                'gain': float(dark_metadata['gain']),
+                'exposure': float(dark_metadata['exposure']),
+                'binning': int(dark_metadata['binmode']),
+                'temperature': dark_metadata['temp'],
+                'frame_count': int(self.count),
+                'temperature_set': self.automation_manifest.get('temperature_set'),
+                'completed_utc': datetime.now().astimezone().isoformat(),
+            }
         except BaseException:
             db.session.rollback()
             for output_path in (full_dark_filename_p, full_bpm_filename_p):

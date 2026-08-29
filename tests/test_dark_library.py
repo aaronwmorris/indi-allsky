@@ -25,6 +25,7 @@ from indi_allsky.dark_library import validate_temperature_range
 from indi_allsky.dark_automation import DarkAutomationError
 from indi_allsky.dark_automation import _log_error_summary
 from indi_allsky.dark_automation import _mark_task_capture_restored
+from indi_allsky.dark_automation import _overall_progress
 from indi_allsky.dark_automation import _activate_generation
 from indi_allsky.dark_automation import activation_changes
 from indi_allsky.dark_automation import automation_master_filename
@@ -45,6 +46,7 @@ from indi_allsky.dark_automation import reject_task_for_config_drift
 from indi_allsky.dark_automation import select_camera_library_entries
 from indi_allsky.dark_automation import select_camera_master_sets
 from indi_allsky.dark_automation import task_public_status
+from indi_allsky.dark_automation import task_requires_progress
 from indi_allsky.dark_automation import temperature_thresholds
 from indi_allsky.dark_automation import validate_execution_profiles
 from indi_allsky.dark_automation import library_entry_eligibility
@@ -1387,6 +1389,21 @@ def test_capture_restore_closes_terminal_progress(status, expected_message):
     assert task.data['progress']['heartbeat_utc']
 
 
+def test_unrestored_terminal_task_remains_the_visible_progress_task():
+    restoring_task = {
+        'action': 'dark_automation',
+        'status': 'success',
+        'capture_restored': False,
+        'owner': 'test-owner',
+        'camera_id': 7,
+    }
+
+    assert task_requires_progress(restoring_task) is True
+    restoring_task['capture_restored'] = True
+    assert task_requires_progress(restoring_task) is False
+    assert task_requires_progress({'status': 'running'}) is True
+
+
 @pytest.mark.parametrize(
     'watchdog,status,now,expected',
     (
@@ -1500,6 +1517,15 @@ def test_public_task_status_combines_child_and_overall_progress():
                 'current_exposure': 10,
                 'current_frame': 7,
                 'current_frame_count': 10,
+                'completed_master_details': [{
+                    'capture_profile': 'night',
+                    'gain': 150,
+                    'exposure': 10,
+                    'binning': 1,
+                    'temperature': 20.5,
+                    'frame_count': 10,
+                    'completed_utc': '2026-08-29T09:00:00+02:00',
+                }],
             },
         },
     )
@@ -1512,6 +1538,52 @@ def test_public_task_status_combines_child_and_overall_progress():
     assert status['current_gain'] == 150
     assert status['current_exposure'] == 10
     assert status['current_frame'] == 7
+    assert status['completed_master_details'] == [{
+        'sequence': 1,
+        'capture_profile': 'night',
+        'gain': 150,
+        'exposure': 10,
+        'binning': 1,
+        'temperature': 20.5,
+        'frame_count': 10,
+        'temperature_set': None,
+        'completed_utc': '2026-08-29T09:00:00+02:00',
+    }]
+
+
+def test_overall_progress_keeps_completed_details_across_capture_groups():
+    earlier = [{
+        'capture_profile': 'day',
+        'gain': 0,
+        'exposure': 1,
+        'binning': 1,
+        'temperature': 19.0,
+        'frame_count': 10,
+        'completed_utc': '2026-08-29T09:00:00+02:00',
+    }]
+    child_progress = {
+        'phase': 'capturing',
+        'completed_master_sets': 1,
+        'completed_master_details': [{
+            'capture_profile': 'night',
+            'gain': 30,
+            'exposure': 30,
+            'binning': 1,
+            'temperature': 20.0,
+            'frame_count': 10,
+            'temperature_set': 2,
+            'completed_utc': '2026-08-29T09:05:00+02:00',
+        }],
+    }
+
+    progress = _overall_progress(child_progress, 1, 4, 2, 3, earlier)
+
+    assert progress['completed_master_sets'] == 2
+    assert [detail['sequence'] for detail in progress['completed_master_details']] == [1, 2]
+    assert [
+        detail['capture_profile'] for detail in progress['completed_master_details']
+    ] == ['day', 'night']
+    assert progress['completed_master_details'][1]['temperature_set'] == 2
 
 
 def test_temperature_series_status_exposes_completed_sets_and_next_threshold():

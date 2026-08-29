@@ -33,6 +33,7 @@ def _render_builder(
     darkframe_summary=None,
     bpm_summary=None,
     preview_strategy=None,
+    automation_task_id=None,
 ):
     if temperature_ready_count is None:
         temperature_ready_count = ready_count
@@ -137,7 +138,7 @@ def _render_builder(
         'dark_temperature_sources': [],
         'dark_automation_can_run': automation_can_run,
         'dark_config_requires_reload': config_requires_reload,
-        'dark_automation_task_id': None,
+        'dark_automation_task_id': automation_task_id,
         'dark_library_can_manage': library_can_manage,
         'dark_library_task_active': False,
         'dark_library_catalog': library_catalog,
@@ -147,6 +148,49 @@ def _render_builder(
         'bpm_summary': bpm_summary,
         'camera_name': 'Test Camera',
     })
+
+
+def test_running_calibration_replaces_builder_with_dedicated_progress_page():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=1,
+        stored_bpm_count=1,
+        ready_count=1,
+        suggested_count=4,
+        automation_task_id=42,
+    )
+
+    assert 'id="dark-standard-page" class="tw:flex tw:flex-col tw:gap-4 tw:hidden"' in html
+    assert 'id="dark-progress-panel" class="tw:card' in html
+    progress_class = html.split('id="dark-progress-panel" class="', 1)[1].split('"', 1)[0]
+    assert 'tw:hidden' not in progress_class
+    assert 'function showDarkProgressPage()' in html
+    assert "$('#dark-standard-page').addClass('tw:hidden');" in html
+    assert 'showDarkProgressPage();' in html
+
+
+def test_progress_page_lists_committed_master_details_and_returns_when_restored():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=1,
+        stored_bpm_count=1,
+        ready_count=1,
+        suggested_count=4,
+    )
+
+    completed_table = html.split(
+        'id="dark-progress-completed-section"',
+        1,
+    )[1].split('id="dark-progress-error"', 1)[0]
+    for heading in ('Set', 'Profile', 'Gain', 'Exposure', 'Binning', 'Temperature', 'Source frames'):
+        assert f'<th>{heading}</th>' in completed_table
+    assert 'Each row is a committed master dark and matching bad-pixel map.' in completed_table
+    assert 'function renderDarkCompletedMasterSets(details)' in html
+    assert 'renderDarkCompletedMasterSets(status.completed_master_details);' in html
+    assert 'function scheduleDarkBuilderReturn(status)' in html
+    assert "!['success', 'cancelled'].includes(status.status)" in html
+    assert 'history.replaceState(null, \'\', \'#tab-tool\');' in html
+    assert 'window.location.reload();' in html
 
 
 @pytest.mark.parametrize(

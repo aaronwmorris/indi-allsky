@@ -825,6 +825,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
 {% block content %}
 {% set dark_builder_preview_version = '2026.08.23.12' %}
 <div id="dark-page-content" class="tw:container tw:mx-auto tw:w-full tw:px-4 tw:py-6 tw:flex tw:flex-col tw:gap-4">
+    <div id="dark-standard-page" class="tw:flex tw:flex-col tw:gap-4{% if dark_automation_task_id %} tw:hidden{% endif %}">
 
     <nav aria-label="Dark library sections">
         <div class="dark-section-tabs tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm" role="tablist">
@@ -1364,48 +1365,6 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 <div id="dark-action-error" class="tw:alert tw:alert-error tw:hidden"></div>
             </section>
 
-            <div id="dark-progress-panel" class="tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-100 tw:p-4 tw:flex tw:flex-col tw:gap-4 tw:hidden">
-                <div class="tw:flex tw:flex-wrap tw:items-start tw:justify-between tw:gap-3">
-                    <div>
-                        <h5 id="dark-progress-title" class="tw:font-bold tw:text-sm">Dark calibration</h5>
-                        <p id="dark-progress-message" class="tw:text-sm tw:text-base-content/70 tw:mt-1">Preparing…</p>
-                    </div>
-                    <span id="dark-progress-status" class="tw:badge tw:badge-info">Queued</span>
-                </div>
-                <progress id="dark-progress-bar" class="tw:progress tw:progress-primary tw:w-full" value="0" max="100"></progress>
-                <div class="tw:grid tw:grid-cols-2 tw:sm:grid-cols-3 tw:xl:grid-cols-6 tw:gap-2 tw:text-sm">
-                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Master sets</span><div id="dark-progress-masters" class="tw:font-semibold">0 / 0</div></div>
-                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Gain</span><div id="dark-progress-gain" class="tw:font-mono">—</div></div>
-                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Exposure</span><div id="dark-progress-exposure" class="tw:font-mono">—</div></div>
-                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Binning</span><div id="dark-progress-binning" class="tw:font-mono">—</div></div>
-                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Captured image</span><div id="dark-progress-frame" class="tw:font-mono">—</div></div>
-                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Temperature</span><div id="dark-progress-temperature" class="tw:font-mono">—</div></div>
-                </div>
-                <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-4 tw:gap-2 tw:text-sm">
-                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Completed temperature sets</span><div id="dark-progress-temperature-sets" class="tw:font-mono">—</div></div>
-                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Next set at</span><div id="dark-progress-next-temperature" class="tw:font-mono">—</div></div>
-                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Stop at</span><div id="dark-progress-target-temperature" class="tw:font-mono">—</div></div>
-                    <div class="dark-progress-fact tw:bg-base-200 tw:rounded-[var(--radius-box)] tw:p-3">
-                        <span class="tw:text-base-content/50">Time</span>
-                        <div class="tw:flex tw:flex-wrap tw:gap-x-3 tw:gap-y-1 tw:font-mono">
-                            <span><span class="tw:text-base-content/50">Elapsed</span> <span id="dark-progress-elapsed">0h 00m 00s</span></span>
-                            <span><span class="tw:text-base-content/50">Left</span> <span id="dark-progress-remaining">—</span></span>
-                        </div>
-                    </div>
-                </div>
-                <div id="dark-progress-error" class="tw:alert tw:alert-error tw:hidden"></div>
-                <details id="dark-progress-diagnostics" class="tw:collapse tw:collapse-arrow tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:hidden">
-                    <summary class="tw:collapse-title tw:text-sm tw:font-semibold">Technical details</summary>
-                    <div class="tw:collapse-content">
-                        <pre id="dark-progress-diagnostic-log" class="tw:text-xs tw:whitespace-pre-wrap tw:break-words tw:max-h-80 tw:overflow-auto"></pre>
-                    </div>
-                </details>
-                <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2">
-                    <span id="dark-cancel-safety" class="tw:text-xs tw:text-base-content/60">If stopped, completed dark + map sets remain active; the current partial set is discarded.</span>
-                    <button id="dark-review-library" type="button" class="tw:btn tw:btn-sm tw:btn-primary tw:hidden">Review library</button>
-                    <button id="dark-cancel" type="button" class="tw:btn tw:btn-sm tw:btn-error tw:btn-outline">Cancel calibration</button>
-                </div>
-            </div>
             {% else %}
             {% if dark_config_requires_reload %}
             <div class="tw:alert tw:alert-warning tw:items-start">
@@ -1951,13 +1910,85 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
             </div>
         </div>
     </div>
+    </div>
 
+    <div id="dark-progress-panel" class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-sm{% if not dark_automation_task_id %} tw:hidden{% endif %}" aria-live="polite">
+        <div class="tw:card-body tw:p-4 tw:sm:p-6 tw:flex tw:flex-col tw:gap-4">
+            <div class="tw:flex tw:flex-wrap tw:items-start tw:justify-between tw:gap-3">
+                <div>
+                    <h4 id="dark-progress-title" class="tw:text-xl tw:font-bold">Dark calibration</h4>
+                    <p id="dark-progress-message" class="tw:text-sm tw:text-base-content/70 tw:mt-1">Preparing…</p>
+                </div>
+                <span id="dark-progress-status" class="tw:badge tw:badge-info">Queued</span>
+            </div>
+            <progress id="dark-progress-bar" class="tw:progress tw:progress-primary tw:w-full" value="0" max="100"></progress>
+            <div class="tw:grid tw:grid-cols-2 tw:sm:grid-cols-3 tw:xl:grid-cols-6 tw:gap-2 tw:text-sm">
+                <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Master sets</span><div id="dark-progress-masters" class="tw:font-semibold">0 / 0</div></div>
+                <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Gain</span><div id="dark-progress-gain" class="tw:font-mono">—</div></div>
+                <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Exposure</span><div id="dark-progress-exposure" class="tw:font-mono">—</div></div>
+                <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Binning</span><div id="dark-progress-binning" class="tw:font-mono">—</div></div>
+                <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Captured image</span><div id="dark-progress-frame" class="tw:font-mono">—</div></div>
+                <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Temperature</span><div id="dark-progress-temperature" class="tw:font-mono">—</div></div>
+            </div>
+            <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-4 tw:gap-2 tw:text-sm">
+                <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Completed temperature sets</span><div id="dark-progress-temperature-sets" class="tw:font-mono">—</div></div>
+                <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Next set at</span><div id="dark-progress-next-temperature" class="tw:font-mono">—</div></div>
+                <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Stop at</span><div id="dark-progress-target-temperature" class="tw:font-mono">—</div></div>
+                <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3">
+                    <span class="tw:text-base-content/50">Time</span>
+                    <div class="tw:flex tw:flex-wrap tw:gap-x-3 tw:gap-y-1 tw:font-mono">
+                        <span><span class="tw:text-base-content/50">Elapsed</span> <span id="dark-progress-elapsed">0h 00m 00s</span></span>
+                        <span><span class="tw:text-base-content/50">Left</span> <span id="dark-progress-remaining">—</span></span>
+                    </div>
+                </div>
+            </div>
+            <section id="dark-progress-completed-section" class="tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-100">
+                <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2 tw:px-4 tw:py-3 tw:border-b tw:border-base-300">
+                    <div>
+                        <h5 class="tw:font-semibold tw:text-sm">Completed master sets</h5>
+                        <p class="tw:text-xs tw:text-base-content/50 tw:mt-0.5">Each row is a committed master dark and matching bad-pixel map.</p>
+                    </div>
+                    <span id="dark-progress-completed-count" class="tw:badge tw:badge-success tw:badge-outline">0 complete</span>
+                </div>
+                <div id="dark-progress-completed-empty" class="tw:px-4 tw:py-5 tw:text-sm tw:text-base-content/50">Completed sets will appear here.</div>
+                <div id="dark-progress-completed-table" class="tw:overflow-x-auto tw:max-h-80 tw:hidden">
+                    <table class="tw:table tw:table-zebra tw:table-sm tw:w-full">
+                        <thead class="tw:sticky tw:top-0 tw:bg-base-100 tw:z-10">
+                            <tr>
+                                <th>Set</th>
+                                <th>Profile</th>
+                                <th>Gain</th>
+                                <th>Exposure</th>
+                                <th>Binning</th>
+                                <th>Temperature</th>
+                                <th>Source frames</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dark-progress-completed-list"></tbody>
+                    </table>
+                </div>
+            </section>
+            <div id="dark-progress-error" class="tw:alert tw:alert-error tw:hidden"></div>
+            <details id="dark-progress-diagnostics" class="tw:collapse tw:collapse-arrow tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-100 tw:hidden">
+                <summary class="tw:collapse-title tw:text-sm tw:font-semibold">Technical details</summary>
+                <div class="tw:collapse-content">
+                    <pre id="dark-progress-diagnostic-log" class="tw:text-xs tw:whitespace-pre-wrap tw:break-words tw:max-h-80 tw:overflow-auto"></pre>
+                </div>
+            </details>
+            <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2">
+                <span id="dark-cancel-safety" class="tw:text-xs tw:text-base-content/60">If stopped, completed dark + map sets remain active; the current partial set is discarded.</span>
+                <button id="dark-review-library" type="button" class="tw:btn tw:btn-sm tw:btn-primary tw:hidden">Review library</button>
+                <button id="dark-cancel" type="button" class="tw:btn tw:btn-sm tw:btn-error tw:btn-outline">Cancel calibration</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
 let currentDarkPlan = initialDarkPlan;
 let activeDarkTaskId = initialDarkTaskId;
 let darkPollTimer = null;
+let darkReturnTimer = null;
 let darkMethodTouched = false;
 let darkFramesDataTable = null;
 let badPixelDataTable = null;
@@ -1988,6 +2019,37 @@ const darkCapturePlanInputBaseline = darkCapturePlanInputSignature({
 
 function darkEndpoint(template, taskId) {
     return template.replace(/\/0$/, '/' + taskId);
+}
+
+function showDarkStandardPage() {
+    $('#dark-progress-panel').addClass('tw:hidden');
+    $('#dark-standard-page').removeClass('tw:hidden');
+}
+
+function showDarkProgressPage() {
+    const progressPanel = $('#dark-progress-panel');
+    const enteringProgressPage = progressPanel.hasClass('tw:hidden');
+    $('#dark-standard-page').addClass('tw:hidden');
+    progressPanel.removeClass('tw:hidden');
+    if (enteringProgressPage && progressPanel[0]) {
+        progressPanel[0].scrollIntoView({behavior: 'smooth', block: 'start'});
+    }
+}
+
+function scheduleDarkBuilderReturn(status) {
+    if (darkReturnTimer
+            || !status.capture_restored
+            || !['success', 'cancelled'].includes(status.status)) {
+        return;
+    }
+    const returnMessage = status.status === 'success'
+        ? 'The refreshed library will return in a moment.'
+        : 'The builder will return in a moment.';
+    $('#dark-progress-message').text((status.message || '') + ' ' + returnMessage);
+    darkReturnTimer = window.setTimeout(function() {
+        history.replaceState(null, '', '#tab-tool');
+        window.location.reload();
+    }, 1200);
 }
 
 function selectDarkSection(target, updateHash) {
@@ -3232,8 +3294,7 @@ async function startDarkCalibration() {
             }),
         });
         activeDarkTaskId = status.task_id;
-        $('#dark-capture-controls').addClass('tw:hidden');
-        $('#dark-progress-panel').removeClass('tw:hidden');
+        showDarkProgressPage();
         renderDarkProgress(status);
         scheduleDarkPoll(300);
     } catch (error) {
@@ -3655,10 +3716,9 @@ async function removeDarkLibrarySelection() {
             }),
         });
         activeDarkTaskId = status.task_id;
-        $('#dark-capture-controls').addClass('tw:hidden');
         $('#dark-removal-confirmation').addClass('tw:hidden');
         $('#dark-library-maintenance').addClass('tw:hidden');
-        $('#dark-progress-panel').removeClass('tw:hidden');
+        showDarkProgressPage();
         renderDarkProgress(status);
         scheduleDarkPoll(300);
     } catch (error) {
@@ -3669,7 +3729,67 @@ async function removeDarkLibrarySelection() {
     }
 }
 
+function darkCompletedProfileLabel(profile) {
+    const labels = {
+        day: 'Day',
+        night: 'Night',
+        moonmode: 'Moon mode',
+        sqm_day: 'SQM day',
+        sqm_night: 'SQM night',
+    };
+    return labels[profile] || profile || '—';
+}
+
+function renderDarkCompletedMasterSets(details) {
+    const completedDetails = Array.isArray(details) ? details : [];
+    const completedList = $('#dark-progress-completed-list').empty();
+    $('#dark-progress-completed-count').text(completedDetails.length + ' complete');
+    $('#dark-progress-completed-empty').toggleClass('tw:hidden', completedDetails.length > 0);
+    $('#dark-progress-completed-table').toggleClass('tw:hidden', completedDetails.length === 0);
+
+    completedDetails.slice().reverse().forEach(function(detail, reverseIndex) {
+        const sequence = Number(detail.sequence)
+            || (completedDetails.length - reverseIndex);
+        const row = $('<tr>');
+        const setCell = $('<td>', {'class': 'tw:font-semibold tw:whitespace-nowrap'});
+        $('<i>', {'class': 'tw:icon-[lucide--circle-check] tw:w-4 tw:h-4 tw:text-success tw:inline-block tw:mr-1'}).appendTo(setCell);
+        $('<span>').text('#' + sequence).appendTo(setCell);
+        row.append(setCell);
+
+        let profile = darkCompletedProfileLabel(detail.capture_profile);
+        if (detail.temperature_set !== null && detail.temperature_set !== undefined) {
+            profile += ' · layer ' + detail.temperature_set;
+        }
+        row.append($('<td>').text(profile));
+        row.append($('<td>', {'class': 'tw:font-mono'}).text(
+            detail.gain === null || detail.gain === undefined ? '—' : Number(detail.gain).toString()
+        ));
+        row.append($('<td>', {'class': 'tw:font-mono'}).text(
+            detail.exposure === null || detail.exposure === undefined
+                ? '—'
+                : Number(detail.exposure).toString() + 's'
+        ));
+        row.append($('<td>', {'class': 'tw:font-mono'}).text(
+            detail.binning === null || detail.binning === undefined
+                ? '—'
+                : detail.binning + '×' + detail.binning
+        ));
+        row.append($('<td>', {'class': 'tw:font-mono tw:whitespace-nowrap'}).text(
+            detail.temperature === null || detail.temperature === undefined
+                ? 'Not reported'
+                : Number(detail.temperature).toFixed(1) + '°C'
+        ));
+        row.append($('<td>', {'class': 'tw:font-mono'}).text(
+            detail.frame_count === null || detail.frame_count === undefined
+                ? '—'
+                : detail.frame_count
+        ));
+        completedList.append(row);
+    });
+}
+
 function renderDarkProgress(status) {
+    showDarkProgressPage();
     const labels = {
         queued: 'Queued',
         preparing: 'Preparing',
@@ -3717,6 +3837,8 @@ function renderDarkProgress(status) {
             ? 'Until next set'
             : (status.remaining_time || '—')
     );
+    $('#dark-progress-completed-section').toggleClass('tw:hidden', status.operation === 'flush');
+    renderDarkCompletedMasterSets(status.completed_master_details);
 
     const terminal = ['success', 'failed', 'cancelled', 'review_required'].includes(status.status);
     if (status.error) {
@@ -3740,6 +3862,7 @@ function renderDarkProgress(status) {
     if (terminal && status.capture_restored) {
         if (darkPollTimer) clearTimeout(darkPollTimer);
         darkPollTimer = null;
+        scheduleDarkBuilderReturn(status);
     }
 }
 
@@ -3969,14 +4092,18 @@ $( document ).ready(function() {
         });
         $('#dark-refresh-plan').on('click', restoreDarkRecommendedCaptureGroups);
         $('#dark-start').on('click', startDarkCalibration);
-        $('#dark-cancel').on('click', cancelDarkCalibration);
-        $('#dark-review-library').on('click', function() { window.location.reload(); });
+    }
 
-        if (activeDarkTaskId) {
-            $('#dark-capture-controls').addClass('tw:hidden');
-            $('#dark-progress-panel').removeClass('tw:hidden');
-            scheduleDarkPoll(100);
-        }
+    $('#dark-cancel').on('click', cancelDarkCalibration);
+    $('#dark-review-library').on('click', function() {
+        history.replaceState(null, '', '#tab-tool');
+        window.location.reload();
+    });
+    if (activeDarkTaskId) {
+        showDarkProgressPage();
+        scheduleDarkPoll(100);
+    } else {
+        showDarkStandardPage();
     }
 
     if (darkLibraryCanManage) {

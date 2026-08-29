@@ -1345,6 +1345,9 @@ def _find_active_dark_task(owner=None, camera_id=None):
         TaskQueueState.MANUAL,
         TaskQueueState.QUEUED,
         TaskQueueState.RUNNING,
+        TaskQueueState.SUCCESS,
+        TaskQueueState.FAILED,
+        TaskQueueState.EXPIRED,
     )
     tasks = IndiAllSkyDbTaskQueueTable.query\
         .filter(IndiAllSkyDbTaskQueueTable.state.in_(state_list))\
@@ -1354,7 +1357,7 @@ def _find_active_dark_task(owner=None, camera_id=None):
         task_data = task.data or {}
         if task_data.get('action') != 'dark_automation':
             continue
-        if task_data.get('status') not in dark_automation.ACTIVE_STATUSES:
+        if not dark_automation.task_requires_progress(task_data):
             continue
         if owner is not None and task_data.get('owner') != owner:
             continue
