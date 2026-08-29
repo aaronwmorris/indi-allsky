@@ -22,7 +22,6 @@ import ephem
 
 from . import constants
 from . import asi676mc
-from . import sensors_mapping
 
 from . import stretch as stretch_classes
 from .overlay.orb import IndiAllskyOrbGenerator
@@ -3323,16 +3322,10 @@ class ImageProcessor(object):
         label_data['rain_status'] = rain_sensor_status
 
 
-        # cloudiness index - derived from any configured MLX90614/90615/90640 sky-temp sensor
-        cloud_percentage = sensors_mapping.calculate_cloud_percentage(
-            self.config,
-            lambda idx: self.sensors_user_av[idx],
-        )
-
-        if cloud_percentage is None:
-            label_data['cloud_percentage'] = 'N/A'
+        if i_ref.cloudiness_index is None:
+            label_data['cloudiness_index'] = 'N/A'
         else:
-            label_data['cloud_percentage'] = '{0:0.0f}'.format(cloud_percentage)
+            label_data['cloudiness_index'] = '{0:0.0f}'.format(i_ref.cloudiness_index)
 
 
         # dew heater
@@ -4641,6 +4634,7 @@ class ImageData(object):
 
         self._smoke_rating = constants.SMOKE_RATING_NODATA
 
+        self._cloudiness_index = None
         self._sqm_value = None
         self._lines = list()
         self._stars = list()
@@ -4861,6 +4855,14 @@ class ImageData(object):
     @smoke_rating.setter
     def smoke_rating(self, new_smoke_rating):
         self._smoke_rating = int(new_smoke_rating)
+
+    @property
+    def cloudiness_index(self):
+        return self._cloudiness_index
+
+    @cloudiness_index.setter
+    def cloudiness_index(self, new_cloudiness_index):
+        self._cloudiness_index = new_cloudiness_index
 
     @property
     def sqm_value(self):

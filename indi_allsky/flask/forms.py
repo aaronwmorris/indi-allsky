@@ -983,7 +983,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'fan_status' : '',
         'wind_dir' : '',
         'rain_status' : '',
-        'cloud_percentage' : '',
+        'cloudiness_index' : '',
         'custom_1' : '',
         'custom_2' : '',
         'custom_3' : '',
@@ -1091,7 +1091,7 @@ def WEB_STATUS_TEMPLATE_validator(form, field):
         'fan_status'        : '',
         'wind_dir'          : '',
         'rain_status'       : '',
-        'cloud_percentage'  : '',
+        'cloudiness_index'  : '',
     }
 
 
@@ -4304,7 +4304,7 @@ class IndiAllskyConfigForm(FlaskForm):
             ['camera_sqm_raw_mag', 'Camera SQM - Raw Magnitude'],
         ),
         'Cloud' : (
-            ['cloud_percentage', 'Cloudiness Index'],
+            ['cloudiness_index', 'Cloudiness Index'],
         ),
     }
 

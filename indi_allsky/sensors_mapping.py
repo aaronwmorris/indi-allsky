@@ -62,7 +62,7 @@ def _display_temperature_to_celsius(value: float, temp_display: str) -> float:
     return value
 
 
-def calculate_cloud_percentage(config: Dict[str, Any], get_sensor_value) -> Any:
+def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
     """
     Scans configured TEMP_SENSOR slots (A-F) for an MLX90614/90615/90640
     family sensor and derives a 0-100 local cloudiness index from its sky
@@ -167,9 +167,9 @@ def calculate_cloud_percentage(config: Dict[str, Any], get_sensor_value) -> Any:
         logger.error('Cloud calibration coefficient or offset is invalid')
         return None
 
-    percentage = ((sky_temp_c - clear_sky_temp) / span) * 100.0
-    percentage = (percentage * coefficient) + offset
-    return max(0.0, min(100.0, percentage))
+    cloudiness_index = ((sky_temp_c - clear_sky_temp) / span) * 100.0
+    cloudiness_index = (cloudiness_index * coefficient) + offset
+    return max(0.0, min(100.0, cloudiness_index))
 
 
 def build_slot_label_map(config: Dict[str, Any]) -> Dict[int, Dict[str, Any]]:

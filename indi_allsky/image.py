@@ -407,6 +407,10 @@ class ImageWorker(Process):
             #task.setFailed('Bad Image: {0:s}'.format(str(filename_p)))
             return
 
+        i_ref.cloudiness_index = sensors_mapping.calculate_cloudiness_index(
+            self.config,
+            lambda idx: self.sensors_user_av[idx],
+        )
 
         # Purple-frame handling deliberately precedes both pre-dark and
         # post-dark standard FITS saving. In active repair mode those outputs
@@ -907,14 +911,8 @@ class ImageWorker(Process):
                 image_add_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
 
 
-            # cloudiness index - raw numeric value for chart selection, distinct from the overlay string
-            cloud_percentage = sensors_mapping.calculate_cloud_percentage(
-                self.config,
-                lambda idx: self.sensors_user_av[idx],
-            )
-
-            if cloud_percentage is not None:
-                image_add_data['cloud_percentage'] = cloud_percentage
+            if i_ref.cloudiness_index is not None:
+                image_add_data['cloudiness_index'] = i_ref.cloudiness_index
 
 
             if self.adsb_aircraft_list:
@@ -1131,14 +1129,8 @@ class ImageWorker(Process):
                 mqtt_data[sensor_topic] = round(self.sensors_user_av[i], 3)
 
 
-            # cloudiness index - published under its existing topic rather than a sensor slot
-            cloud_percentage = sensors_mapping.calculate_cloud_percentage(
-                self.config,
-                lambda idx: self.sensors_user_av[idx],
-            )
-
-            if cloud_percentage is not None:
-                mqtt_data['cloud_percentage'] = round(cloud_percentage, 1)
+            if i_ref.cloudiness_index is not None:
+                mqtt_data['cloudiness_index'] = round(i_ref.cloudiness_index, 1)
 
 
             if new_filename:

@@ -832,19 +832,19 @@ class BaseView(View):
                 data['rain_status'] = 'Error'
 
 
-            cloud_percentage = image_metadata.get('cloud_percentage')
+            cloudiness_index = image_metadata.get('cloudiness_index')
 
-            if cloud_percentage is None:
-                data['cloud_percentage'] = 'N/A'
+            if cloudiness_index is None:
+                data['cloudiness_index'] = 'N/A'
             else:
-                data['cloud_percentage'] = '{0:0.0f}'.format(cloud_percentage)
+                data['cloudiness_index'] = '{0:0.0f}'.format(cloudiness_index)
 
         else:
             data['dew_heater_status'] = 'No data'
             data['fan_status'] = 'No data'
             data['wind_dir'] = 'No data'
             data['rain_status'] = 'No data'
-            data['cloud_percentage'] = 'No data'
+            data['cloudiness_index'] = 'No data'
 
 
         return data

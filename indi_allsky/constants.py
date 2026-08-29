@@ -222,7 +222,7 @@ RAIN_MAP_STR = {
 }
 
 
-# sky-temperature sensor family used to derive cloud_percentage
+# sky-temperature sensor family used to derive the cloudiness index
 CLOUD_SENSOR_CLASSNAMES = (
     'blinka_temp_sensor_mlx90614_i2c',
     'blinka_temp_sensor_mlx90615_i2c',
