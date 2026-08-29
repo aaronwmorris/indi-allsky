@@ -1587,6 +1587,7 @@ class IndiAllSkyDarks(object):
                     'Capturing gain {0:g}, exposure {1:g}s.'.format(gain, exposure),
                     current_frame=0,
                 )
+                master_started = time.monotonic()
                 activation = self._take_exposures(
                     exposure,
                     gain,
@@ -1597,6 +1598,10 @@ class IndiAllSkyDarks(object):
                 )
                 master_detail = activation.get('master_detail')
                 if master_detail:
+                    master_detail['duration_seconds'] = round(
+                        max(0.0, time.monotonic() - master_started),
+                        3,
+                    )
                     self._progress_completed_master_details.append(dict(master_detail))
                 self._progress_activated_master_files += int(activation['activated'])
                 self._progress_completed_master_sets += 1

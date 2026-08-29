@@ -46,6 +46,7 @@ CAPTURE_ORDERS = ('long_first', 'short_first')
 TEMPERATURE_POLICIES = ('recommended', 'ignore')
 COVER_CONFIRMATION_MAX_AGE_SECONDS = 30 * 60
 CONTROLLER_HEARTBEAT_MAX_AGE_SECONDS = 10 * 60
+ETA_OVERHEAD_PRIOR_SETS = 3.0
 MIN_TEMPERATURE_DELTA = 0.1
 MAX_TEMPERATURE_DELTA = 50.0
 MIN_TEMPERATURE_TARGET = -100.0
@@ -1358,9 +1359,104 @@ def _completed_master_details(value):
             'frame_count': raw_detail.get('frame_count'),
             'temperature_set': raw_detail.get('temperature_set'),
             'completed_utc': str(raw_detail.get('completed_utc') or ''),
+            'duration_seconds': raw_detail.get('duration_seconds'),
         }
         details.append(detail)
     return details
+
+
+def _planned_remaining_seconds(
+        task_data,
+        progress,
+        completed_details,
+        total,
+        completed,
+        frame_count,
+        fractional_cell,
+):
+    """Estimate remaining work without treating long and short masters equally."""
+    estimated_seconds = float(task_data.get('estimated_seconds') or 0.0)
+    if total <= 0 or frame_count <= 0 or estimated_seconds <= 0:
+        return None
+
+    per_cycle_sets = 0
+    per_cycle_capture_seconds = 0.0
+    for group in task_data.get('groups') or ():
+        if not isinstance(group, dict):
+            return None
+        gains = group.get('gains') or ()
+        try:
+            exposures = {float(exposure) for exposure in group.get('exposures') or ()}
+        except (AttributeError, TypeError, ValueError):
+            return None
+        if not gains or not exposures or any(
+                not math.isfinite(exposure) or exposure <= 0
+                for exposure in exposures
+        ):
+            return None
+        per_cycle_sets += len(gains) * len(exposures)
+        per_cycle_capture_seconds += len(gains) * sum(exposures) * frame_count
+    if per_cycle_sets <= 0 or total % per_cycle_sets != 0:
+        return None
+
+    planned_capture_seconds = (
+        per_cycle_capture_seconds * (total // per_cycle_sets)
+    )
+    nominal_overhead = max(
+        0.0,
+        (estimated_seconds - planned_capture_seconds) / total,
+    )
+    completed_count = min(max(0, int(completed)), total)
+    if len(completed_details) < completed_count:
+        return None
+
+    completed_capture_seconds = 0.0
+    observed_overheads = []
+    completed_detail_start = len(completed_details) - completed_count
+    for detail_index, detail in enumerate(completed_details):
+        try:
+            exposure = float(detail.get('exposure'))
+            detail_frame_count = int(detail.get('frame_count') or frame_count)
+        except (TypeError, ValueError):
+            return None
+        if (
+                not math.isfinite(exposure)
+                or exposure <= 0
+                or detail_frame_count <= 0
+        ):
+            return None
+        capture_seconds = exposure * detail_frame_count
+        if detail_index >= completed_detail_start:
+            completed_capture_seconds += capture_seconds
+        try:
+            duration = float(detail.get('duration_seconds'))
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(duration) and duration >= 0:
+            observed_overheads.append(max(0.0, duration - capture_seconds))
+
+    adjusted_overhead = (
+        (nominal_overhead * ETA_OVERHEAD_PRIOR_SETS) + sum(observed_overheads)
+    ) / (ETA_OVERHEAD_PRIOR_SETS + len(observed_overheads))
+    current_capture_seconds = 0.0
+    if completed_count < total and fractional_cell > 0:
+        try:
+            current_exposure = float(progress.get('current_exposure'))
+        except (TypeError, ValueError):
+            return None
+        if not math.isfinite(current_exposure) or current_exposure <= 0:
+            return None
+        current_capture_seconds = current_exposure * frame_count * fractional_cell
+
+    remaining_capture_seconds = max(
+        0.0,
+        planned_capture_seconds - completed_capture_seconds - current_capture_seconds,
+    )
+    remaining_master_sets = max(0.0, total - completed_count - fractional_cell)
+    remaining_seconds = (
+        remaining_capture_seconds + (remaining_master_sets * adjusted_overhead)
+    )
+    return max(0, int(round(remaining_seconds)))
 
 
 def task_requires_progress(task_data):
@@ -1378,6 +1474,9 @@ def task_requires_progress(task_data):
 def task_public_status(task):
     data = dict(task.data or {})
     progress = dict(data.get('progress') or {})
+    completed_master_details = _completed_master_details(
+        progress.get('completed_master_details')
+    )
     per_set_total = int(data.get('target_count') or progress.get('total_master_sets') or 0)
     raw_completed = int(progress.get('completed_master_sets') or 0)
     planned_temperature_sets = (
@@ -1416,7 +1515,20 @@ def task_public_status(task):
             and not planned_temperature_sets
     ):
         estimate_elapsed = _elapsed_seconds(progress.get('temperature_set_started_utc'))
-    if total > 0 and progress_units > 0 and estimate_elapsed > 0:
+    planned_remaining_seconds = _planned_remaining_seconds(
+        data,
+        progress,
+        completed_master_details,
+        total,
+        completed,
+        frame_count,
+        fractional_cell,
+    )
+    if data.get('status') == 'success':
+        remaining_seconds = 0
+    elif planned_remaining_seconds is not None:
+        remaining_seconds = planned_remaining_seconds
+    elif total > 0 and progress_units > 0 and estimate_elapsed > 0:
         remaining_seconds = max(
             0,
             int(round(estimate_elapsed * (total - progress_units) / progress_units)),
@@ -1440,9 +1552,7 @@ def task_public_status(task):
         'frame_count': data.get('frame_count'),
         'target_count': total,
         'completed_master_sets': completed,
-        'completed_master_details': _completed_master_details(
-            progress.get('completed_master_details')
-        ),
+        'completed_master_details': completed_master_details,
         'percent': round(percent, 1),
         'current_gain': progress.get('current_gain'),
         'current_exposure': progress.get('current_exposure'),

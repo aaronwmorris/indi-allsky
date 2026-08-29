@@ -1525,6 +1525,7 @@ def test_public_task_status_combines_child_and_overall_progress():
                     'temperature': 20.5,
                     'frame_count': 10,
                     'completed_utc': '2026-08-29T09:00:00+02:00',
+                    'duration_seconds': 132.5,
                 }],
             },
         },
@@ -1548,7 +1549,58 @@ def test_public_task_status_combines_child_and_overall_progress():
         'frame_count': 10,
         'temperature_set': None,
         'completed_utc': '2026-08-29T09:00:00+02:00',
+        'duration_seconds': 132.5,
     }]
+
+
+def test_remaining_time_weights_long_and_short_master_exposures():
+    task = SimpleNamespace(
+        id=45,
+        state=SimpleNamespace(value='RUNNING'),
+        data={
+            'status': 'running',
+            'capture_mode': 'single',
+            'capture_order': 'long_first',
+            'frame_count': 10,
+            'target_count': 21,
+            'estimated_seconds': 3810,
+            'groups': [{
+                'gains': [0, 100, 200],
+                'exposures': [1, 5, 10, 15, 20, 25, 30],
+            }],
+            'progress': {
+                'phase': 'capturing',
+                'completed_master_sets': 1,
+                'current_exposure': 25,
+                'current_frame': 0,
+                'current_frame_count': 10,
+                'completed_master_details': [{
+                    'capture_profile': 'night',
+                    'gain': 200,
+                    'exposure': 30,
+                    'binning': 1,
+                    'temperature': 20.0,
+                    'frame_count': 10,
+                    'completed_utc': '2026-08-29T09:00:00+02:00',
+                    'duration_seconds': 340,
+                }],
+            },
+        },
+    )
+
+    after_long_master = task_public_status(task)
+
+    assert after_long_master['remaining_seconds'] == 3530
+    assert after_long_master['remaining_seconds'] < 70 * 60
+
+    task.data['progress']['current_frame'] = 5
+    midway_through_next_master = task_public_status(task)
+
+    assert midway_through_next_master['remaining_seconds'] == 3389
+    assert (
+        midway_through_next_master['remaining_seconds']
+        < after_long_master['remaining_seconds']
+    )
 
 
 def test_overall_progress_keeps_completed_details_across_capture_groups():
