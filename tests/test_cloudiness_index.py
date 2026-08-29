@@ -9,17 +9,17 @@ def _config(**temp_sensor):
     settings = {
         'A_CLASSNAME': 'blinka_temp_sensor_mlx90614_i2c',
         'A_USER_VAR_SLOT': 'sensor_user_10',
-        'CLOUD_CALIBRATION_ENABLE': True,
-        'CLOUD_REF_TEMP_UNIT': 'c',
-        'CLOUD_REF_CLEAR_SKY_TEMP': -20.0,
-        'CLOUD_REF_CLOUDY_SKY_TEMP': 10.0,
+        'CLOUDINESS_INDEX_ENABLE': True,
+        'CLOUDINESS_INDEX_TEMP_UNIT': 'c',
+        'CLOUDINESS_INDEX_CLEAR_TEMP': -20.0,
+        'CLOUDINESS_INDEX_CLOUDY_TEMP': 10.0,
     }
     settings.update(temp_sensor)
     return {'TEMP_SENSOR': settings}
 
 
 def test_returns_none_until_calibration_is_enabled():
-    config = _config(CLOUD_CALIBRATION_ENABLE=False)
+    config = _config(CLOUDINESS_INDEX_ENABLE=False)
 
     assert sensors_mapping.calculate_cloudiness_index(config, _values({10: 10.0, 11: -20.0})) is None
 
@@ -43,7 +43,7 @@ def test_clamps_values_outside_calibrated_range():
 
 def test_coefficient_and_offset_tune_the_normalized_index():
     cloudiness_index = sensors_mapping.calculate_cloudiness_index(
-        _config(CLOUD_CALIBRATION_COEFFICIENT=0.5, CLOUD_CALIBRATION_OFFSET=10.0),
+        _config(CLOUDINESS_INDEX_COEFFICIENT=0.5, CLOUDINESS_INDEX_OFFSET=10.0),
         _values({10: 10.0, 11: -5.0}),
     )
 
@@ -55,9 +55,9 @@ def test_mlx90640_uses_its_sky_temperature_without_an_ambient_reference():
         'TEMP_SENSOR': {
             'A_CLASSNAME': 'blinka_temp_sensor_mlx90640_i2c',
             'A_USER_VAR_SLOT': 'sensor_user_10',
-            'CLOUD_CALIBRATION_ENABLE': True,
-            'CLOUD_REF_CLEAR_SKY_TEMP': -20.0,
-            'CLOUD_REF_CLOUDY_SKY_TEMP': 10.0,
+            'CLOUDINESS_INDEX_ENABLE': True,
+            'CLOUDINESS_INDEX_CLEAR_TEMP': -20.0,
+            'CLOUDINESS_INDEX_CLOUDY_TEMP': 10.0,
         },
     }
 
@@ -77,7 +77,7 @@ def test_selected_cloud_sensor_is_used_when_multiple_are_configured():
     config = _config(
         B_CLASSNAME='blinka_temp_sensor_mlx90615_i2c',
         B_USER_VAR_SLOT='sensor_user_20',
-        CLOUD_SENSOR_REF='sensor_user_20',
+        CLOUDINESS_INDEX_SENSOR='sensor_user_20',
     )
 
     cloudiness_index = sensors_mapping.calculate_cloudiness_index(

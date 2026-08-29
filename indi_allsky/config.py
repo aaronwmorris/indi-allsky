@@ -885,14 +885,13 @@ class IndiAllSkyConfigBase(object):
             "AS3935_SPIKE_REJECTION" : 2,
             "LUX_MAGNITUDE_OFFSET"   : 26.0,
             "FC37_ACTIVE_LOW"        : True,
-            # empirical, installation-specific IR sky-temperature cloudiness index
-            "CLOUD_CALIBRATION_ENABLE"      : False,
-            "CLOUD_SENSOR_REF"              : "",     # required when more than one supported MLX sensor is configured
-            "CLOUD_REF_CLEAR_SKY_TEMP"      : 0.0,
-            "CLOUD_REF_CLOUDY_SKY_TEMP"     : 0.0,
-            "CLOUD_REF_TEMP_UNIT"           : "c",
-            "CLOUD_CALIBRATION_COEFFICIENT" : 1.0,
-            "CLOUD_CALIBRATION_OFFSET"      : 0.0,
+            "CLOUDINESS_INDEX_ENABLE"       : False,
+            "CLOUDINESS_INDEX_SENSOR"       : "",
+            "CLOUDINESS_INDEX_CLEAR_TEMP"   : 0.0,
+            "CLOUDINESS_INDEX_CLOUDY_TEMP"  : 0.0,
+            "CLOUDINESS_INDEX_TEMP_UNIT"    : "c",
+            "CLOUDINESS_INDEX_COEFFICIENT"  : 1.0,
+            "CLOUDINESS_INDEX_OFFSET"       : 0.0,
         },
         "CHARTS" : {
             "CUSTOM_SLOT_1"          : "sensor_user_10",

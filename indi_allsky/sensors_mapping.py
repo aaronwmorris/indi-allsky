@@ -90,7 +90,7 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
 
     The two references are raw sky readings from this installation under known
     clear and overcast conditions. Their unit is declared explicitly via
-    CLOUD_REF_TEMP_UNIT rather than assumed to match TEMP_DISPLAY.
+    CLOUDINESS_INDEX_TEMP_UNIT rather than assumed to match TEMP_DISPLAY.
 
     ``get_sensor_value`` is a callable accepting a sensor_user index and
     returning its current float value, so this works against either the
@@ -124,7 +124,7 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
             'sky_index': base_index + sky_offset,
         })
 
-    selected_slot = temp_sensor_cfg.get('CLOUD_SENSOR_REF', '')
+    selected_slot = temp_sensor_cfg.get('CLOUDINESS_INDEX_SENSOR', '')
     if selected_slot:
         candidates = [candidate for candidate in candidates if candidate['slot'] == selected_slot]
 
@@ -139,17 +139,17 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
     if sky_temp is None:
         return None
 
-    if not temp_sensor_cfg.get('CLOUD_CALIBRATION_ENABLE', False):
+    if not temp_sensor_cfg.get('CLOUDINESS_INDEX_ENABLE', False):
         return None
 
     temp_display = config.get('TEMP_DISPLAY', 'c')
-    ref_unit = temp_sensor_cfg.get('CLOUD_REF_TEMP_UNIT', 'c')
+    ref_unit = temp_sensor_cfg.get('CLOUDINESS_INDEX_TEMP_UNIT', 'c')
 
     try:
         clear_sky_temp = _display_temperature_to_celsius(
-            float(temp_sensor_cfg['CLOUD_REF_CLEAR_SKY_TEMP']), ref_unit)
+            float(temp_sensor_cfg['CLOUDINESS_INDEX_CLEAR_TEMP']), ref_unit)
         cloudy_sky_temp = _display_temperature_to_celsius(
-            float(temp_sensor_cfg['CLOUD_REF_CLOUDY_SKY_TEMP']), ref_unit)
+            float(temp_sensor_cfg['CLOUDINESS_INDEX_CLOUDY_TEMP']), ref_unit)
         sky_temp_c = _display_temperature_to_celsius(float(sky_temp), temp_display)
     except (KeyError, TypeError, ValueError):
         logger.error('Cloud calibration or live sensor readings are invalid')
@@ -161,8 +161,8 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
         return None
 
     try:
-        coefficient = float(temp_sensor_cfg.get('CLOUD_CALIBRATION_COEFFICIENT', 1.0))
-        offset = float(temp_sensor_cfg.get('CLOUD_CALIBRATION_OFFSET', 0.0))
+        coefficient = float(temp_sensor_cfg.get('CLOUDINESS_INDEX_COEFFICIENT', 1.0))
+        offset = float(temp_sensor_cfg.get('CLOUDINESS_INDEX_OFFSET', 0.0))
     except (TypeError, ValueError):
         logger.error('Cloud calibration coefficient or offset is invalid')
         return None
