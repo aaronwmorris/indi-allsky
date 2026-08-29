@@ -3359,16 +3359,10 @@ def CLOUD_SKY_TEMP_CLEAR_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter a valid number')
 
-    if field.data >= 0:
-        raise ValidationError('Clear-sky threshold must be negative')
-
 
 def CLOUD_SKY_TEMP_CLOUDY_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter a whole number')
-
-    if field.data <= 0:
-        raise ValidationError('Cloudy threshold must be positive')
 
 
 def CLOUD_CALIBRATION_COEFFICIENT_validator(form, field):
@@ -5219,8 +5213,8 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__F_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
     TEMP_SENSOR__F_TITLE_TEMPLATE    = StringField('Chart Title Template', validators=[DataRequired(), TEMP_SENSOR__TITLE_TEMPLATE_validator])
     TEMP_SENSOR__FC37_ACTIVE_LOW     = BooleanField('Rain Sensor FC-37 - Invert logic')
-    TEMP_SENSOR__CLOUD_SKY_TEMP_CLEAR       = FloatField('Clear-Sky Threshold (C, max negative)', validators=[CLOUD_SKY_TEMP_CLEAR_validator], widget=NumberInput(step=0.1))
-    TEMP_SENSOR__CLOUD_SKY_TEMP_CLOUDY      = IntegerField('Cloudy Threshold (C, positive)', validators=[CLOUD_SKY_TEMP_CLOUDY_validator], widget=NumberInput(step=1, min=1))
+    TEMP_SENSOR__CLOUD_SKY_TEMP_CLEAR       = FloatField('Clear-Sky Threshold (C)', validators=[CLOUD_SKY_TEMP_CLEAR_validator], widget=NumberInput(step=0.1))
+    TEMP_SENSOR__CLOUD_SKY_TEMP_CLOUDY      = IntegerField('Cloudy Threshold (C)', validators=[CLOUD_SKY_TEMP_CLOUDY_validator], widget=NumberInput(step=1))
     TEMP_SENSOR__CLOUD_CALIBRATION_COEFFICIENT = FloatField('Cloud Calibration Coefficient', validators=[CLOUD_CALIBRATION_COEFFICIENT_validator], widget=NumberInput(step=0.05))
     TEMP_SENSOR__CLOUD_CALIBRATION_OFFSET   = FloatField('Cloud Calibration Offset (C, +/-)', validators=[CLOUD_CALIBRATION_OFFSET_validator], widget=NumberInput(step=0.1))
     TEMP_SENSOR__CLOUD_AMBIENT_SENSOR_REF   = SelectField('Ground Ambient Reference Sensor', choices=[], validators=[CLOUD_AMBIENT_SENSOR_REF_validator])
@@ -5597,6 +5591,14 @@ class IndiAllskyConfigForm(FlaskForm):
         if self.CCD_EXPOSURE_MIN.data > self.CCD_EXPOSURE_MAX.data:
             self.CCD_EXPOSURE_DEF.errors.append('Minimum exposure cannot be greater than max exposure')
             self.CCD_EXPOSURE_MAX.errors.append('Max exposure is less than minimum exposure')
+            result = False
+
+
+        # cloud threshold checking - sensor/ambient-source baselines vary too much per
+        # installation to assume a fixed sign, so only the relative ordering matters
+        if self.TEMP_SENSOR__CLOUD_SKY_TEMP_CLOUDY.data <= self.TEMP_SENSOR__CLOUD_SKY_TEMP_CLEAR.data:
+            self.TEMP_SENSOR__CLOUD_SKY_TEMP_CLEAR.errors.append('Clear-sky threshold must be less than the cloudy threshold')
+            self.TEMP_SENSOR__CLOUD_SKY_TEMP_CLOUDY.errors.append('Cloudy threshold must be greater than the clear-sky threshold')
             result = False
 
 
