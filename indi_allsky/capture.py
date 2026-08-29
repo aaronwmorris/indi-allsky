@@ -902,7 +902,7 @@ class CaptureWorker(Process):
 
 
         # add driver name to config
-        self.camera_name = self.indiclient.ccd_device.getDeviceName()
+        self.camera_name = self.indiclient.indi_allsky_camera_name
         self._miscDb.setState('CAMERA_NAME', self.camera_name)
 
         self.camera_server = self.indiclient.ccd_device.getDriverExec()

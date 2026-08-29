@@ -360,7 +360,7 @@ class IndiAllSkyDarks(object):
         self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())
 
         # add driver name to config
-        self.camera_name = self.indiclient.ccd_device.getDeviceName()
+        self.camera_name = self.indiclient.indi_allsky_camera_name
         self.camera_server = self.indiclient.ccd_device.getDriverExec()
 
 
