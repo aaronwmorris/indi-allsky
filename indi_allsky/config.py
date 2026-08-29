@@ -33,16 +33,6 @@ app = create_app()
 logger = logging.getLogger('indi_allsky')
 
 
-# top-level config keys removed/replaced by newer settings; stripped on load so
-# stale on-disk configs stop tripping _validateConfig() warnings on every start
-DEPRECATED_CONFIG_KEYS = (
-    'DENOISE_STAR_MASK_STRENGTH',
-)
-
-# (parent_key, child_key) pairs for deprecated keys nested one level deep
-DEPRECATED_CONFIG_KEYS_L2 = ()
-
-
 class IndiAllSkyConfigBase(object):
 
     _base_config = OrderedDict({
@@ -116,6 +106,10 @@ class IndiAllSkyConfigBase(object):
         "IMAGE_DENOISE_DAY"          : "",
         "IMAGE_DENOISE_STRENGTH"     : 3,
         "IMAGE_DENOISE_STRENGTH_DAY" : 3,
+        # Denoise tuning knobs (advanced): scale & exponent reshape the
+        # mapping from user-facing `strength` (1-5) to algorithm parameters.
+        # These defaults are autotuned for typical Pi all-sky images but can
+        # be adjusted for your camera. These are baked-in runtime defaults used by `indi_allsky.denoise`.
         "MEDIAN_SCALE_FACTOR" : 2.4,
         "MEDIAN_SCALE_EXP"    : 2.0,
         "GAUSSIAN_SCALE_FACTOR" : 0.2,
@@ -964,8 +958,6 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         self._createDate = config_entry.createDate
         self._config.update(config_entry.data)
 
-        self._pruneDeprecatedKeys()
-
         self._config = self._decrypt_passwords()
         self._image_folder = Path('/var/www/html/allsky/images')
 
@@ -1003,19 +995,6 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
     @image_folder.setter
     def image_folder(self, new_image_folder):
         self._image_folder = Path(str(new_image_folder))
-
-
-    def _pruneDeprecatedKeys(self):
-        for key in DEPRECATED_CONFIG_KEYS:
-            if key in self._config:
-                del self._config[key]
-                logger.warning('Removed deprecated config key: [%s]', str(key))
-
-        for parent_key, child_key in DEPRECATED_CONFIG_KEYS_L2:
-            parent = self._config.get(parent_key)
-            if isinstance(parent, dict) and child_key in parent:
-                del parent[child_key]
-                logger.warning('Removed deprecated config key: [%s][%s]', str(parent_key), str(child_key))
 
 
     def _getConfigEntry(self, config_id=None):
