@@ -419,10 +419,6 @@
     border-left-color: var(--dark-readable-warning);
 }
 
-.dark-recommendation-state-info {
-    border-left-color: var(--dark-readable-info);
-}
-
 .dark-recommendation-summary,
 .dark-recommendation-instructions,
 .dark-library-storage-summary {
@@ -990,10 +986,10 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     </div>
                 </header>
 
-            <div id="dark-recommendation-card" data-library-empty="{{ 'true' if dark_library_empty else 'false' }}" class="dark-recommendation-state {% if dark_analysis.suggested_action == 'none' %}dark-recommendation-state-success{% elif dark_analysis.suggested_action == 'complete' %}dark-recommendation-state-warning{% else %}dark-recommendation-state-info{% endif %}" aria-labelledby="dark-recommendation-title" aria-live="polite">
+            <div id="dark-recommendation-card" data-library-empty="{{ 'true' if dark_library_empty else 'false' }}" class="dark-recommendation-state {% if dark_analysis.suggested_action == 'none' %}dark-recommendation-state-success{% else %}dark-recommendation-state-warning{% endif %}" aria-labelledby="dark-recommendation-title" aria-live="polite">
                 <div class="tw:flex tw:flex-wrap tw:items-start tw:justify-between tw:gap-3">
                     <div class="tw:flex tw:items-start tw:gap-3 tw:min-w-0 tw:flex-1">
-                        <i id="dark-recommendation-icon" class="{% if dark_analysis.suggested_action == 'none' %}tw:icon-[lucide--circle-check-big] tw:text-success{% elif dark_analysis.suggested_action == 'temperature' %}tw:icon-[lucide--thermometer-sun] tw:text-info{% elif dark_analysis.suggested_action == 'complete' %}tw:icon-[lucide--wand-sparkles] tw:text-warning{% else %}tw:icon-[lucide--wand-sparkles] tw:text-info{% endif %} tw:w-6 tw:h-6 tw:mt-0.5 tw:shrink-0"></i>
+                        <i id="dark-recommendation-icon" class="{% if dark_analysis.suggested_action == 'none' %}tw:icon-[lucide--circle-check-big] tw:text-success{% elif dark_analysis.suggested_action == 'temperature' %}tw:icon-[lucide--thermometer-sun] tw:text-warning{% else %}tw:icon-[lucide--wand-sparkles] tw:text-warning{% endif %} tw:w-6 tw:h-6 tw:mt-0.5 tw:shrink-0"></i>
                         <div>
                             <div class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/50">Recommended library update</div>
                             <h5 id="dark-recommendation-title" class="tw:text-base tw:font-bold tw:mt-1">
@@ -1026,7 +1022,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                             </p>
                         </div>
                     </div>
-                    <span id="dark-recommendation-badge" class="tw:badge {% if dark_analysis.suggested_action == 'none' %}tw:badge-success{% elif dark_analysis.suggested_action == 'complete' %}tw:badge-warning{% else %}tw:badge-info{% endif %} tw:badge-lg tw:font-semibold tw:shrink-0">
+                    <span id="dark-recommendation-badge" class="tw:badge {% if dark_analysis.suggested_action == 'none' %}tw:badge-success{% else %}tw:badge-warning{% endif %} tw:badge-lg tw:font-semibold tw:shrink-0">
                         {% if dark_analysis.suggested_action == 'none' %}
                         No capture needed
                         {% elif dark_analysis.suggested_action == 'temperature' %}
@@ -2790,23 +2786,19 @@ function renderDarkRecommendation(plan) {
     const card = $('#dark-recommendation-card');
     const icon = $('#dark-recommendation-icon');
     const badge = $('#dark-recommendation-badge');
-    card.removeClass('dark-recommendation-state-success dark-recommendation-state-warning dark-recommendation-state-info');
+    card.removeClass('dark-recommendation-state-success dark-recommendation-state-warning');
     icon.removeClass('tw:icon-[lucide--circle-check-big] tw:icon-[lucide--thermometer-sun] tw:icon-[lucide--wand-sparkles] tw:text-success tw:text-warning tw:text-info');
     badge.removeClass('tw:badge-success tw:badge-warning tw:badge-info');
     if (action === 'none') {
         card.addClass('dark-recommendation-state-success');
         icon.addClass('tw:icon-[lucide--circle-check-big] tw:text-success');
         badge.addClass('tw:badge-success');
-    } else if (action === 'complete') {
-        card.addClass('dark-recommendation-state-warning');
-        icon.addClass('tw:icon-[lucide--wand-sparkles] tw:text-warning');
-        badge.addClass('tw:badge-warning');
     } else {
-        card.addClass('dark-recommendation-state-info');
+        card.addClass('dark-recommendation-state-warning');
         icon.addClass(action === 'temperature'
-            ? 'tw:icon-[lucide--thermometer-sun] tw:text-info'
-            : 'tw:icon-[lucide--wand-sparkles] tw:text-info');
-        badge.addClass('tw:badge-info');
+            ? 'tw:icon-[lucide--thermometer-sun] tw:text-warning'
+            : 'tw:icon-[lucide--wand-sparkles] tw:text-warning');
+        badge.addClass('tw:badge-warning');
     }
     $('#dark-recommendation-title').text(title);
     $('#dark-recommendation-description').text(description);

@@ -320,6 +320,12 @@ def test_recommended_library_update_uses_the_same_name_everywhere(
     )[0]
     strategy_options = html.split('id="dark-strategy"', 1)[1].split('</select>', 1)[0]
     assert title in title_markup
+    expected_state = 'dark-recommendation-state-success' \
+        if action == 'none' else 'dark-recommendation-state-warning'
+    assert expected_state in recommendation
+    assert 'dark-recommendation-state-info' not in recommendation
+    expected_badge = 'tw:badge-success' if action == 'none' else 'tw:badge-warning'
+    assert expected_badge in recommendation
     if recommended_option:
         assert f'id="{recommended_option}-badge"' in update_choices
         assert f'{title} · recommended</option>' in strategy_options
@@ -982,7 +988,7 @@ def test_guided_steps_and_maintenance_share_a_theme_aware_visual_system():
     assert 'color-mix(in oklab, var(--color-error)' in html
     assert 'dark-recommendation-state-success' in html
     assert 'dark-recommendation-state-warning' in html
-    assert 'dark-recommendation-state-info' in html
+    assert 'dark-recommendation-state-info' not in html
     assert 'dark-coverage-card--success' in html
     assert 'dark-coverage-card--info' in html
     assert 'dark-coverage-card--warning' in html
