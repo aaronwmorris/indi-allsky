@@ -8,6 +8,7 @@
 var camera_id = {{ camera_id }};
 var timestamp = {{ timestamp | int }};
 var panorama_data = {{ panorama | tojson }};
+var standard_video = {{ standard_video | tojson }};
 var source_type = {{ source_type | tojson }};
 var endDate_timestamp;  // set later
 var history_seconds;  // set later
@@ -672,6 +673,7 @@ function drawPanoramaEditor() {
 
     drawPanoramaOutputPreview();
     updatePanoramaFields();
+    updateBitrateHint();
 }
 
 function drawPanoramaOutputPreview() {
@@ -1154,15 +1156,99 @@ function generationFrameRange() {
     return start_datetime + ' – ' + end_datetime;
 }
 
+function selectedBitrateKbps() {
+    var bitrate_match = String($('#BITRATE_SELECT').val() || '').match(/^(\d+)([km])$/);
+    if(!bitrate_match) {
+        return null;
+    }
+
+    var bitrate_kbps = parseInt(bitrate_match[1]);
+    if(bitrate_match[2] === 'm') {
+        bitrate_kbps *= 1000;
+    }
+    return bitrate_kbps;
+}
+
+function formatGuideMbps(value) {
+    var decimal_places = value < 1 ? 2 : (value < 10 ? 1 : 0);
+    return parseFloat(value.toFixed(decimal_places)).toString();
+}
+
+function updateBitrateHint() {
+    var hint = $('#bitrate_hint');
+    var output_width;
+    var output_height;
+    if(source_type === 'panorama') {
+        output_width = panorama_selection['width'];
+        output_height = panorama_selection['height'];
+    } else {
+        output_width = standard_video['width'];
+        output_height = standard_video['height'];
+    }
+
+    var selected_bitrate_kbps = selectedBitrateKbps();
+    var output_framerate = parseFloat(framerate);
+    if(!output_width || !output_height || !selected_bitrate_kbps || !output_framerate) {
+        hint.hide();
+        return;
+    }
+
+    // Approximate H.264 guidance derived from common resolution/FPS targets.
+    // Higher frame rates benefit from temporal compression, so their per-frame
+    // range is slightly lower.
+    var lower_bits_per_pixel = output_framerate > 30 ? 0.09 : 0.12;
+    var upper_bits_per_pixel = output_framerate > 30 ? 0.18 : 0.24;
+    var pixel_rate = output_width * output_height * output_framerate;
+    var lower_mbps = pixel_rate * lower_bits_per_pixel / 1000000;
+    var upper_mbps = pixel_rate * upper_bits_per_pixel / 1000000;
+    var selected_mbps = selected_bitrate_kbps / 1000;
+    var assessment;
+    if(selected_mbps < lower_mbps) {
+        assessment = 'compact; fine detail may soften';
+    } else if(selected_mbps > upper_mbps) {
+        assessment = 'generous';
+    } else {
+        assessment = 'balanced';
+    }
+
+    var hint_text = (
+        output_width + '×' + output_height + ' at ' + output_framerate + ' FPS'
+        + ' · selected bitrate is ' + assessment
+        + ' · rough H.264 guide: ' + formatGuideMbps(lower_mbps)
+        + '–' + formatGuideMbps(upper_mbps) + ' Mbps'
+    );
+    if(
+        standard_video['codec'] !== 'libx264'
+        && String(standard_video['codec']).indexOf('h264_') !== 0
+    ) {
+        hint_text += ' · current codec may differ';
+    }
+    hint.text(hint_text).show();
+}
+
 function updateVideoLength() {
     var image_count = generationFrameCount();
-    var duration_seconds = Math.round((image_count / parseFloat(framerate)) * 10) / 10;
+    var exact_duration_seconds = image_count / parseFloat(framerate);
+    var duration_seconds = Math.round(exact_duration_seconds * 10) / 10;
     var frame_range = generationFrameRange();
     var length_text = image_count + ' frames';
     if(frame_range) {
         length_text += ' · ' + frame_range;
     }
-    $('#video_length').text(length_text + ' · about ' + duration_seconds + ' seconds');
+
+    var bitrate_kbps = selectedBitrateKbps();
+    var size_text = '';
+    if(bitrate_kbps) {
+        var estimated_megabytes = bitrate_kbps * exact_duration_seconds / 8000;
+        if(estimated_megabytes >= 1000) {
+            size_text = ' · estimated ' + (estimated_megabytes / 1000).toFixed(1) + ' GB';
+        } else {
+            size_text = ' · estimated ' + estimated_megabytes.toFixed(1) + ' MB';
+        }
+    }
+
+    $('#video_length').text(length_text + ' · about ' + duration_seconds + ' seconds' + size_text);
+    updateBitrateHint();
 }
 
 function setPreviewLoading(loading) {
@@ -1336,7 +1422,7 @@ $( document ).ready(function() {
                     </div>
                 </div>
 
-                <div id="timing-controls" class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-3 tw:gap-3 tw:items-end">
+                <div id="timing-controls" class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:lg:grid-cols-4 tw:gap-3 tw:items-end">
                     <div class="tw:form-control tw:w-full">
                         <label class="tw:label tw:pb-1">
                             <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
@@ -1363,9 +1449,19 @@ $( document ).ready(function() {
                         </label>
                         {{ form_mini_timelapse.FRAMERATE_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm tw:focus:outline-none tw:focus:border-primary') }}
                     </div>
+
+                    <div class="tw:form-control tw:w-full">
+                        <label class="tw:label tw:pb-1">
+                            <span class="tw:label-text tw:text-xs tw:font-bold tw:text-base-content/60 tw:uppercase tw:tracking-wider">
+                                {{ form_mini_timelapse.BITRATE_SELECT.label.text }}
+                            </span>
+                        </label>
+                        {{ form_mini_timelapse.BITRATE_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:h-10 tw:bg-base-100 tw:w-full tw:text-sm tw:focus:outline-none tw:focus:border-primary') }}
+                    </div>
                 </div>
                 <div class="tw:text-xs tw:text-base-content/60">
-                    Before and after set the time range around the selected image. Speed controls how quickly those images play.
+                    Before and after set the time range around the selected image. Speed controls playback; bitrate controls file size.
+                    <div id="bitrate_hint" class="tw:mt-1 tw:font-medium tw:text-base-content/70" style="display: none;"></div>
                 </div>
 
                 <div id="panorama-controls" class="tw:flex tw:flex-col tw:gap-3 tw:pt-2 tw:border-t tw:border-base-300" style="display: none;">
@@ -1615,6 +1711,10 @@ $("#FRAMERATE_SELECT").on("change", function() {
     updateVideoLength();
 });
 
+$("#BITRATE_SELECT").on("change", function() {
+    updateVideoLength();
+});
+
 
 $('#form_mini_timelapse').on('submit', function(event) {
     event.preventDefault();
@@ -1628,6 +1728,7 @@ $('#form_mini_timelapse').on('submit', function(event) {
         'PRE_SECONDS' : parseInt($('#PRE_SECONDS_SELECT').val()),
         'POST_SECONDS' : parseInt($('#POST_SECONDS_SELECT').val()),
         'FRAMERATE' : $('#FRAMERATE_SELECT').val(),
+        'BITRATE' : $('#BITRATE_SELECT').val(),
         'NOTE' : $('#NOTE').val(),
         'CROP_X' : panorama_start_selection['x'],
         'CROP_Y' : panorama_start_selection['y'],
