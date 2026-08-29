@@ -12,6 +12,10 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.dark-section-tabs--maintenance {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .dark-section-tab {
     width: 100%;
     min-width: 0;
@@ -828,7 +832,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
     <div id="dark-standard-page" class="tw:flex tw:flex-col tw:gap-4{% if dark_automation_task_id %} tw:hidden{% endif %}">
 
     <nav aria-label="Dark library sections">
-        <div class="dark-section-tabs tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm" role="tablist">
+        <div class="dark-section-tabs{% if dark_library_can_manage %} dark-section-tabs--maintenance{% endif %} tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm" role="tablist">
             <button id="dark-tab-darks" type="button" role="tab" aria-controls="tab-darks" aria-selected="true" class="dark-tab-btn dark-section-tab tw:btn tw:btn-sm tw:btn-primary tw:font-bold tw:uppercase tw:tracking-wider tw:gap-1.5" data-target="tab-darks">
                 <i class="tw:icon-[lucide--layers-3] tw:w-3.5 tw:h-3.5 tw:shrink-0"></i>
                 <span>Dark Library</span>
@@ -841,8 +845,16 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 <i class="tw:icon-[lucide--wand-sparkles] tw:w-3.5 tw:h-3.5 tw:shrink-0"></i>
                 <span>Library Builder</span>
             </button>
+            {% if dark_library_can_manage %}
+            <button id="dark-tab-maintenance" type="button" role="tab" aria-controls="tab-maintenance" aria-selected="false" class="dark-tab-btn dark-section-tab tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:hover:text-base-content tw:gap-1.5" data-target="tab-maintenance">
+                <i class="tw:icon-[lucide--library] tw:w-3.5 tw:h-3.5 tw:shrink-0"></i>
+                <span>Library Maintenance</span>
+            </button>
+            {% endif %}
         </div>
     </nav>
+
+    <div id="dark-action-error" class="tw:alert tw:alert-error tw:hidden"></div>
 
     <div id="tab-tool" class="dark-tab-pane tw:flex tw:flex-col tw:gap-4" role="tabpanel" aria-labelledby="dark-tab-tool" style="display: none;">
 
@@ -1362,7 +1374,6 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                         </button>
                     </div>
                 </div>
-                <div id="dark-action-error" class="tw:alert tw:alert-error tw:hidden"></div>
             </section>
 
             {% else %}
@@ -1391,8 +1402,10 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
             {% endif %}
         </div>
     </div>
+    </div>
 
     {% if dark_library_can_manage %}
+    <div id="tab-maintenance" class="dark-tab-pane tw:flex tw:flex-col tw:gap-4" role="tabpanel" aria-labelledby="dark-tab-maintenance" style="display: none;">
     <div class="dark-builder-maintenance-wrap">
     <details id="dark-library-maintenance" class="tw:collapse tw:collapse-arrow tw:border tw:rounded-[var(--radius-box)]">
         <summary class="tw:collapse-title">
@@ -1635,8 +1648,8 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
             </div>
         </div>
     </div>
-    {% endif %}
     </div>
+    {% endif %}
 
     <div class="tw:w-full">
         
@@ -1989,6 +2002,7 @@ let currentDarkPlan = initialDarkPlan;
 let activeDarkTaskId = initialDarkTaskId;
 let darkPollTimer = null;
 let darkReturnTimer = null;
+let darkReturnSection = 'tab-tool';
 let darkMethodTouched = false;
 let darkFramesDataTable = null;
 let badPixelDataTable = null;
@@ -2047,13 +2061,17 @@ function scheduleDarkBuilderReturn(status) {
         : 'The builder will return in a moment.';
     $('#dark-progress-message').text((status.message || '') + ' ' + returnMessage);
     darkReturnTimer = window.setTimeout(function() {
-        history.replaceState(null, '', '#tab-tool');
+        history.replaceState(null, '', '#' + darkReturnSection);
         window.location.reload();
     }, 1200);
 }
 
 function selectDarkSection(target, updateHash) {
-    if (!['tab-darks', 'tab-bpm', 'tab-tool'].includes(target)) target = 'tab-darks';
+    const sections = ['tab-darks', 'tab-bpm', 'tab-tool'];
+    if (darkLibraryCanManage) sections.push('tab-maintenance');
+    if (!sections.includes(target)) {
+        target = 'tab-darks';
+    }
 
     $('.dark-tab-btn')
         .removeClass('tw:btn-primary')
@@ -2065,7 +2083,7 @@ function selectDarkSection(target, updateHash) {
         .attr('aria-selected', 'true');
 
     $('.dark-tab-pane').hide();
-    if (target === 'tab-tool') {
+    if (['tab-tool', 'tab-maintenance'].includes(target)) {
         $('#' + target).css('display', 'flex');
     } else {
         $('#' + target).show();
@@ -2075,6 +2093,12 @@ function selectDarkSection(target, updateHash) {
     window.requestAnimationFrame(function() {
         if (target === 'tab-darks' && darkFramesDataTable) darkFramesDataTable.columns.adjust();
         if (target === 'tab-bpm' && badPixelDataTable) badPixelDataTable.columns.adjust();
+        if (target === 'tab-maintenance') {
+            scheduleDarkSelectionBarLayout();
+        } else {
+            document.getElementById('dark-page-content')
+                .style.removeProperty('--dark-library-selection-height');
+        }
     });
 }
 
@@ -3331,7 +3355,12 @@ function scheduleDarkSelectionBarLayout() {
         darkSelectionLayoutFrame = null;
         const page = document.getElementById('dark-page-content');
         const toolbar = document.getElementById('dark-library-selection-bar');
-        if (!page || !toolbar || toolbar.classList.contains('tw:hidden')) {
+        const maintenancePage = document.getElementById('tab-maintenance');
+        if (!page
+                || !toolbar
+                || !maintenancePage
+                || window.getComputedStyle(maintenancePage).display === 'none'
+                || toolbar.classList.contains('tw:hidden')) {
             if (page) page.style.removeProperty('--dark-library-selection-height');
             return;
         }
@@ -3790,6 +3819,7 @@ function renderDarkCompletedMasterSets(details) {
 
 function renderDarkProgress(status) {
     showDarkProgressPage();
+    darkReturnSection = status.operation === 'flush' ? 'tab-maintenance' : 'tab-tool';
     const labels = {
         queued: 'Queued',
         preparing: 'Preparing',
@@ -4096,7 +4126,7 @@ $( document ).ready(function() {
 
     $('#dark-cancel').on('click', cancelDarkCalibration);
     $('#dark-review-library').on('click', function() {
-        history.replaceState(null, '', '#tab-tool');
+        history.replaceState(null, '', '#' + darkReturnSection);
         window.location.reload();
     });
     if (activeDarkTaskId) {

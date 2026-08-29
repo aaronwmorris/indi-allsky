@@ -189,8 +189,46 @@ def test_progress_page_lists_committed_master_details_and_returns_when_restored(
     assert 'renderDarkCompletedMasterSets(status.completed_master_details);' in html
     assert 'function scheduleDarkBuilderReturn(status)' in html
     assert "!['success', 'cancelled'].includes(status.status)" in html
-    assert 'history.replaceState(null, \'\', \'#tab-tool\');' in html
+    assert "darkReturnSection = status.operation === 'flush' ? 'tab-maintenance' : 'tab-tool';" in html
+    assert "history.replaceState(null, '', '#' + darkReturnSection);" in html
     assert 'window.location.reload();' in html
+
+
+def test_builder_and_maintenance_are_separate_top_level_pages():
+    html = _render_builder(
+        'complete',
+        stored_dark_count=2,
+        stored_bpm_count=2,
+        ready_count=1,
+        suggested_count=4,
+        library_can_manage=True,
+    )
+
+    for tab_id in (
+            'dark-tab-darks',
+            'dark-tab-bpm',
+            'dark-tab-tool',
+            'dark-tab-maintenance',
+    ):
+        assert f'id="{tab_id}"' in html
+    assert 'dark-section-tabs dark-section-tabs--maintenance' in html
+
+    builder_page = html.split('<div id="tab-tool"', 1)[1].split(
+        '<div id="tab-maintenance"',
+        1,
+    )[0]
+    maintenance_page = html.split('<div id="tab-maintenance"', 1)[1].split(
+        '<!-- Dark Frames Tab Panel -->',
+        1,
+    )[0]
+    assert 'id="dark-advisor-body"' in builder_page
+    assert 'id="dark-library-maintenance"' not in builder_page
+    assert 'id="dark-library-maintenance"' in maintenance_page
+    assert 'id="dark-library-selection-bar"' in maintenance_page
+    assert html.count('id="dark-action-error"') == 1
+    assert html.index('id="dark-action-error"') < html.index('id="tab-tool"')
+    assert "if (darkLibraryCanManage) sections.push('tab-maintenance');" in html
+    assert "if (['tab-tool', 'tab-maintenance'].includes(target))" in html
 
 
 @pytest.mark.parametrize(
@@ -683,6 +721,8 @@ def test_non_config_admin_can_review_recommendation_but_not_capture_or_remove():
 
     assert 'An administrator can use guided capture for a local camera.' in html
     assert 'Library maintenance' not in html
+    assert 'id="dark-tab-maintenance"' not in html
+    assert 'id="tab-maintenance"' not in html
     assert 'const darkAutomationCanRun = false;' in html
     assert 'const darkLibraryCanManage = false;' in html
 
