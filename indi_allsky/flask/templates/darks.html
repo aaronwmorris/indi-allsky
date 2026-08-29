@@ -27,6 +27,7 @@
 }
 
 #dark-page-content {
+    --dark-tool-radius: 0.375rem;
     --dark-readable-muted: color-mix(in oklab, var(--color-base-content) 80%, transparent);
     --dark-readable-secondary: color-mix(in oklab, var(--color-base-content) 85%, transparent);
     --dark-readable-primary: color-mix(in oklab, var(--color-primary) 28%, var(--color-base-content));
@@ -189,11 +190,17 @@
     min-width: 0;
 }
 
+#dark-progress-panel.dark-progress-panel-removal {
+    border-color: var(--color-base-300);
+    border-left-color: var(--dark-readable-error);
+    border-left-width: 0.25rem;
+    box-shadow: none;
+}
+
 .dark-table-wrap {
     width: 100%;
     overflow-x: auto;
     background-color: var(--color-base-100);
-    background-color: color-mix(in oklab, var(--color-base-200) 50%, var(--color-base-100));
 }
 
 .dark-table-heading {
@@ -331,7 +338,7 @@
     max-width: 100%;
     padding: 1.25rem;
     border: 1px solid var(--color-base-300);
-    border-radius: var(--radius-box);
+    border-radius: var(--dark-tool-radius);
     background-color: var(--color-base-100);
 }
 
@@ -350,7 +357,7 @@
     align-items: center;
     justify-content: center;
     border: 1px solid var(--color-base-300);
-    border-radius: var(--radius-field);
+    border-radius: var(--dark-tool-radius);
     color: var(--color-base-content);
     background-color: var(--color-base-200);
     font-size: 0.875rem;
@@ -358,9 +365,9 @@
 }
 
 .dark-builder-step-marker--danger {
-    border-color: color-mix(in oklab, var(--color-error) 40%, var(--color-base-300));
-    color: var(--color-error);
-    background-color: color-mix(in oklab, var(--color-error) 10%, var(--color-base-100));
+    border-color: var(--dark-readable-error);
+    color: var(--dark-readable-error);
+    background-color: var(--color-base-100);
 }
 
 .dark-builder-step-heading {
@@ -399,63 +406,57 @@
     min-width: 0;
     padding: 1rem;
     border: 1px solid var(--color-base-300);
-    border-radius: var(--radius-box);
-    background-color: var(--color-base-100);
+    border-left-width: 0.25rem;
+    border-radius: var(--dark-tool-radius);
+    background-color: var(--color-base-200);
 }
 
 .dark-recommendation-state-success {
-    border-color: color-mix(in oklab, var(--color-success) 38%, var(--color-base-300));
-    background-color: color-mix(in oklab, var(--color-success) 6%, var(--color-base-100));
+    border-left-color: var(--dark-readable-success);
 }
 
 .dark-recommendation-state-warning {
-    border-color: color-mix(in oklab, var(--color-warning) 38%, var(--color-base-300));
-    background-color: color-mix(in oklab, var(--color-warning) 7%, var(--color-base-100));
+    border-left-color: var(--dark-readable-warning);
 }
 
 .dark-recommendation-state-info {
-    border-color: color-mix(in oklab, var(--color-info) 34%, var(--color-base-300));
-    background-color: color-mix(in oklab, var(--color-info) 6%, var(--color-base-100));
+    border-left-color: var(--dark-readable-info);
 }
 
 .dark-recommendation-summary,
 .dark-recommendation-instructions,
 .dark-library-storage-summary {
     border: 1px solid var(--color-base-300);
-    border-radius: var(--radius-box);
+    border-radius: var(--dark-tool-radius);
     background-color: var(--color-base-100);
-    background-color: color-mix(in oklab, var(--color-base-100) 82%, var(--color-base-200));
 }
 
 .dark-coverage-card {
     border: 1px solid var(--color-base-300);
-    border-radius: var(--radius-box);
+    border-left-width: 0.25rem;
+    border-radius: var(--dark-tool-radius);
     background-color: var(--color-base-100);
 }
 
 .dark-coverage-card--success {
-    border-color: color-mix(in oklab, var(--color-success) 28%, var(--color-base-300));
-    background-color: color-mix(in oklab, var(--color-success) 9%, var(--color-base-100));
+    border-left-color: var(--dark-readable-success);
 }
 
 .dark-coverage-card--info {
-    border-color: color-mix(in oklab, var(--color-info) 28%, var(--color-base-300));
-    background-color: color-mix(in oklab, var(--color-info) 9%, var(--color-base-100));
+    border-left-color: var(--dark-readable-info);
 }
 
 .dark-coverage-card--warning {
-    border-color: color-mix(in oklab, var(--color-warning) 30%, var(--color-base-300));
-    background-color: color-mix(in oklab, var(--color-warning) 10%, var(--color-base-100));
+    border-left-color: var(--dark-readable-warning);
 }
 
 .dark-coverage-card--error {
-    border-color: color-mix(in oklab, var(--color-error) 28%, var(--color-base-300));
-    background-color: color-mix(in oklab, var(--color-error) 9%, var(--color-base-100));
+    border-left-color: var(--dark-readable-error);
 }
 
 .dark-update-option {
     border: 1px solid var(--color-base-300);
-    border-radius: var(--radius-box);
+    border-radius: var(--dark-tool-radius);
     background-color: var(--color-base-100);
 }
 
@@ -503,16 +504,18 @@
 .dark-plan-groups-shell,
 .dark-library-profile {
     background-color: var(--color-base-100);
-    background-color: color-mix(in oklab, var(--color-base-200) 42%, var(--color-base-100));
 }
 
 .dark-recommendation-summary {
     display: grid;
     grid-template-columns: 1fr;
+    gap: 1px;
+    overflow: hidden;
+    background-color: var(--color-base-300);
 }
 
-.dark-recommendation-summary-cell + .dark-recommendation-summary-cell {
-    border-top: 1px solid var(--color-base-300);
+.dark-recommendation-summary-cell {
+    background-color: var(--color-base-100);
 }
 
 #dark-library-maintenance > .dark-library-maintenance-body {
@@ -526,24 +529,25 @@
 }
 
 #dark-library-maintenance {
-    border-color: color-mix(in oklab, var(--color-error) 38%, var(--color-base-300));
-    background-color: color-mix(in oklab, var(--color-error) 5%, var(--color-base-100));
+    border-color: var(--color-base-300);
+    border-left-color: var(--dark-readable-error);
+    border-left-width: 0.25rem;
+    border-radius: var(--dark-tool-radius);
+    background-color: var(--color-base-200);
 }
 
-#dark-library-maintenance > summary {
+#dark-library-maintenance > .dark-library-maintenance-header {
     min-width: 0;
-    padding: 1.25rem 3rem 1.25rem 1.25rem;
+    padding: 1.25rem;
     background-color: transparent;
 }
 
 #dark-removal-confirmation {
-    border-color: color-mix(in oklab, var(--color-error) 45%, var(--color-base-300));
-    background-color: color-mix(in oklab, var(--color-error) 6%, var(--color-base-100));
+    border-left-color: var(--dark-readable-error);
 }
 
 #dark-eligibility-confirmation {
-    border-color: color-mix(in oklab, var(--color-info) 40%, var(--color-base-300));
-    background-color: color-mix(in oklab, var(--color-info) 6%, var(--color-base-100));
+    border-left-color: var(--dark-readable-info);
 }
 
 #dark-removal-confirmation,
@@ -600,7 +604,7 @@
     container-type: inline-size;
     transform: translateX(-50%);
     border: 1px solid color-mix(in oklab, var(--color-error) 38%, var(--color-base-300));
-    border-radius: var(--radius-box);
+    border-radius: var(--dark-tool-radius);
     color: var(--color-base-content);
     background-color: color-mix(in oklab, var(--color-error) 8%, var(--color-base-100));
     box-shadow: 0 0.75rem 2rem color-mix(in oklab, var(--color-base-content) 24%, transparent);
@@ -616,7 +620,7 @@
 
 .dark-library-selection-actions {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: flex-end;
     gap: 0.5rem;
     min-width: 0;
@@ -642,7 +646,7 @@
     display: none;
 }
 
-@container (max-width: 60rem) {
+@container (max-width: 72rem) {
     .dark-library-selection-bar-inner {
         align-items: stretch;
         flex-direction: column;
@@ -651,7 +655,8 @@
 
     .dark-library-selection-actions {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+        grid-template-columns: minmax(0, 1fr);
+        width: 100%;
     }
 
     .dark-library-selection-actions .tw\:btn {
@@ -678,8 +683,69 @@
 }
 
 .dark-library-filter-status {
-    border-color: color-mix(in oklab, var(--color-info) 35%, var(--color-base-300));
-    background-color: color-mix(in oklab, var(--color-info) 8%, var(--color-base-100));
+    border-color: var(--color-base-300);
+    border-left-color: var(--dark-readable-info);
+    border-left-width: 0.25rem;
+    border-radius: var(--dark-tool-radius);
+    background-color: var(--color-base-200);
+}
+
+/* Match the ASI676 calibration tool's restrained visual language while the
+ * stronger dark-page color tokens above preserve contrast and readability. */
+#dark-page-content .tw\:alert {
+    color: var(--color-base-content);
+    background-color: var(--color-base-200);
+    border: 1px solid var(--color-base-300);
+    border-left-width: 0.25rem;
+    border-radius: var(--dark-tool-radius);
+}
+
+#dark-page-content .tw\:alert-info {
+    border-left-color: var(--dark-readable-info);
+}
+
+#dark-page-content .tw\:alert-success {
+    border-left-color: var(--dark-readable-success);
+}
+
+#dark-page-content .tw\:alert-warning {
+    border-left-color: var(--dark-readable-warning);
+}
+
+#dark-page-content .tw\:alert-error {
+    border-left-color: var(--dark-readable-error);
+}
+
+#dark-page-content .tw\:card,
+.dark-section-tabs,
+.dark-table-wrap,
+.dark-plan-groups-shell,
+.dark-library-profile,
+.dark-library-camera,
+#dark-progress-completed-section,
+#dark-progress-diagnostics {
+    border-radius: var(--dark-tool-radius);
+}
+
+#dark-capture-controls label.tw\:form-control,
+#dark-temperature-workflow label.tw\:form-control {
+    height: 100%;
+    padding: 1rem;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--dark-tool-radius);
+    background-color: var(--color-base-100);
+}
+
+.dark-progress-fact-grid {
+    gap: 1px;
+    overflow: hidden;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--dark-tool-radius);
+    background-color: var(--color-base-300);
+}
+
+.dark-progress-fact {
+    border-radius: 0;
 }
 
 @media (min-width: 640px) {
@@ -687,10 +753,6 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    .dark-recommendation-summary-cell + .dark-recommendation-summary-cell {
-        border-top: 0;
-        border-left: 1px solid var(--color-base-300);
-    }
 }
 
 @media (max-width: 639px) {
@@ -711,7 +773,7 @@
 
     .dark-library-selection-actions {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .dark-library-selection-actions .tw\:btn {
@@ -786,7 +848,7 @@
     #dark-advisor-body { padding: 0.75rem; }
     .dark-builder-step { padding: 0.75rem; }
     .dark-builder-maintenance-wrap { padding-right: 0.75rem; padding-left: 0.75rem; }
-    #dark-library-maintenance > summary { padding: 0.75rem 2.5rem 0.75rem 0.75rem; }
+    #dark-library-maintenance > .dark-library-maintenance-header { padding: 0.75rem; }
     #dark-library-maintenance > .dark-library-maintenance-body { padding: 0 0.75rem 0.75rem; }
     .dark-section-tabs { grid-template-columns: 1fr; }
     .dark-library-card .tw\:card-body { padding: 0.75rem; }
@@ -1407,8 +1469,8 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
     {% if dark_library_can_manage %}
     <div id="tab-maintenance" class="dark-tab-pane tw:flex tw:flex-col tw:gap-4" role="tabpanel" aria-labelledby="dark-tab-maintenance" style="display: none;">
     <div class="dark-builder-maintenance-wrap">
-    <details id="dark-library-maintenance" class="tw:collapse tw:collapse-arrow tw:border tw:rounded-[var(--radius-box)]">
-        <summary class="tw:collapse-title">
+    <section id="dark-library-maintenance" class="tw:border tw:rounded-[var(--radius-box)]">
+        <div class="dark-library-maintenance-header">
             <span class="dark-builder-step-header">
                 <span class="dark-builder-step-marker dark-builder-step-marker--danger" aria-hidden="true"><i class="tw:icon-[lucide--library] tw:w-4 tw:h-4"></i></span>
                 <span class="dark-builder-step-heading">
@@ -1420,8 +1482,8 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     <span class="dark-builder-step-copy tw:block">Manage stored master sets after reviewing the guided recommendation above. Deactivation is reversible; deletion is permanent.</span>
                 </span>
             </span>
-        </summary>
-        <div class="dark-library-maintenance-body tw:collapse-content tw:flex tw:flex-col tw:gap-4">
+        </div>
+        <div class="dark-library-maintenance-body tw:flex tw:flex-col tw:gap-4">
             <div class="tw:alert tw:alert-warning tw:items-start tw:text-sm">
                 <i class="tw:icon-[lucide--shield-alert] tw:w-5 tw:h-5 tw:mt-0.5 tw:shrink-0"></i>
                 <div>
@@ -1612,7 +1674,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 </div>
                 <div id="dark-removal-coverage-impact" class="tw:alert tw:items-start tw:text-sm"></div>
                 <label class="tw:form-control">
-                    <span class="tw:label-text tw:text-sm tw:font-semibold">Type <span id="dark-removal-camera-name" class="tw:font-mono"></span> to confirm permanent deletion</span>
+                    <span class="tw:label-text tw:text-sm tw:font-semibold">Type <span class="tw:font-mono">DELETE</span> to confirm permanent deletion</span>
                     <input id="dark-removal-confirmation-input" class="tw:input tw:input-bordered tw:input-error tw:input-sm tw:mt-1" type="text" autocomplete="off" spellcheck="false">
                 </label>
                 <div class="tw:flex tw:flex-wrap tw:justify-end tw:gap-2">
@@ -1621,7 +1683,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 </div>
             </div>
         </div>
-    </details>
+    </section>
     </div>
 
     <div id="dark-library-selection-bar" class="dark-library-selection-bar tw:hidden" role="region" aria-label="Selected master-set actions">
@@ -1935,7 +1997,8 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 <span id="dark-progress-status" class="tw:badge tw:badge-info">Queued</span>
             </div>
             <progress id="dark-progress-bar" class="tw:progress tw:progress-primary tw:w-full" value="0" max="100"></progress>
-            <div class="tw:grid tw:grid-cols-2 tw:sm:grid-cols-3 tw:xl:grid-cols-6 tw:gap-2 tw:text-sm">
+            <div id="dark-progress-capture-details" class="tw:flex tw:flex-col tw:gap-4">
+            <div class="dark-progress-fact-grid tw:grid tw:grid-cols-2 tw:sm:grid-cols-3 tw:xl:grid-cols-6 tw:gap-2 tw:text-sm">
                 <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Master sets</span><div id="dark-progress-masters" class="tw:font-semibold">0 / 0</div></div>
                 <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Gain</span><div id="dark-progress-gain" class="tw:font-mono">—</div></div>
                 <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Exposure</span><div id="dark-progress-exposure" class="tw:font-mono">—</div></div>
@@ -1943,7 +2006,7 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                 <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Captured image</span><div id="dark-progress-frame" class="tw:font-mono">—</div></div>
                 <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Temperature</span><div id="dark-progress-temperature" class="tw:font-mono">—</div></div>
             </div>
-            <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-4 tw:gap-2 tw:text-sm">
+            <div class="dark-progress-fact-grid tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:xl:grid-cols-4 tw:gap-2 tw:text-sm">
                 <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Completed temperature sets</span><div id="dark-progress-temperature-sets" class="tw:font-mono">—</div></div>
                 <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Next set at</span><div id="dark-progress-next-temperature" class="tw:font-mono">—</div></div>
                 <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Stop at</span><div id="dark-progress-target-temperature" class="tw:font-mono">—</div></div>
@@ -1981,6 +2044,23 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                     </table>
                 </div>
             </section>
+            </div>
+            <div id="dark-progress-removal-details" class="tw:hidden tw:flex tw:flex-col tw:gap-3">
+                <div class="tw:alert tw:alert-error tw:items-start tw:text-sm">
+                    <i class="tw:icon-[lucide--trash-2] tw:w-5 tw:h-5 tw:mt-0.5 tw:shrink-0"></i>
+                    <div>
+                        <div class="tw:font-semibold">Permanent library deletion</div>
+                        <div class="tw:text-xs tw:mt-1">Only the reviewed library records are removed. Normal image capture resumes automatically afterward.</div>
+                    </div>
+                </div>
+                <div class="dark-progress-fact-grid tw:grid tw:grid-cols-2 tw:xl:grid-cols-4 tw:gap-2 tw:text-sm">
+                    <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Records selected</span><div id="dark-progress-removal-records" class="tw:font-semibold">—</div></div>
+                    <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Storage selected</span><div id="dark-progress-removal-size" class="tw:font-mono">—</div></div>
+                    <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Deletion result</span><div id="dark-progress-removal-result" class="tw:font-mono">Pending</div></div>
+                    <div class="dark-progress-fact tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:p-3"><span class="tw:text-base-content/50">Elapsed</span><div id="dark-progress-removal-elapsed" class="tw:font-mono">0h 00m 00s</div></div>
+                </div>
+                <div id="dark-progress-removal-warnings" class="tw:alert tw:alert-warning tw:hidden tw:text-sm"></div>
+            </div>
             <div id="dark-progress-error" class="tw:alert tw:alert-error tw:hidden"></div>
             <details id="dark-progress-diagnostics" class="tw:collapse tw:collapse-arrow tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:bg-base-100 tw:hidden">
                 <summary class="tw:collapse-title tw:text-sm tw:font-semibold">Technical details</summary>
@@ -2006,6 +2086,7 @@ let darkReturnSection = 'tab-tool';
 let darkMethodTouched = false;
 let darkFramesDataTable = null;
 let badPixelDataTable = null;
+const darkRemovalConfirmationText = 'DELETE';
 let darkPlanRequestRevision = 0;
 let darkPlanRefreshTimer = null;
 let pendingDarkRemoval = null;
@@ -3330,8 +3411,7 @@ async function startDarkCalibration() {
 }
 
 function updateDarkRemovalConfirmation() {
-    const cameraName = pendingDarkRemoval ? pendingDarkRemoval.camera_name : '';
-    const matches = $('#dark-removal-confirmation-input').val() === cameraName;
+    const matches = $('#dark-removal-confirmation-input').val() === darkRemovalConfirmationText;
     $('#dark-removal-confirm').prop(
         'disabled',
         !pendingDarkRemoval || !matches || Boolean(activeDarkTaskId)
@@ -3699,7 +3779,6 @@ async function previewDarkRemoval(button) {
             + (preview.bad_pixel_maps === 1 ? '' : 's')
             + ' · ' + preview.size
         );
-        $('#dark-removal-camera-name').text(preview.camera_name);
         const impact = preview.coverage_impact || {};
         renderDarkCoverageImpact(
             '#dark-removal-coverage-impact',
@@ -3724,8 +3803,8 @@ async function previewDarkRemoval(button) {
 async function removeDarkLibrarySelection() {
     if (!darkLibraryCanManage || activeDarkTaskId || !pendingDarkRemoval) return;
     const confirmation = $('#dark-removal-confirmation-input').val();
-    if (confirmation !== pendingDarkRemoval.camera_name) {
-        showDarkActionError('Enter the camera name exactly to confirm permanent library deletion.');
+    if (confirmation !== darkRemovalConfirmationText) {
+        showDarkActionError('Enter DELETE exactly to confirm permanent library deletion.');
         updateDarkRemovalConfirmation();
         return;
     }
@@ -3819,7 +3898,9 @@ function renderDarkCompletedMasterSets(details) {
 
 function renderDarkProgress(status) {
     showDarkProgressPage();
-    darkReturnSection = status.operation === 'flush' ? 'tab-maintenance' : 'tab-tool';
+    const removal = status.operation === 'flush';
+    const terminal = ['success', 'failed', 'cancelled', 'review_required'].includes(status.status);
+    darkReturnSection = removal ? 'tab-maintenance' : 'tab-tool';
     const labels = {
         queued: 'Queued',
         preparing: 'Preparing',
@@ -3830,12 +3911,29 @@ function renderDarkProgress(status) {
         success: 'Complete',
         review_required: 'Review required',
     };
-    $('#dark-progress-title').text(status.operation === 'flush'
+    $('#dark-progress-title').text(removal
         ? 'Deleting ' + (status.removal_label || 'dark-library records')
         : (status.capture_mode === 'temperature_series' ? 'Temperature-series dark calibration' : 'Dark calibration'));
     $('#dark-progress-status').text(labels[status.status] || status.status || 'Working');
-    $('#dark-progress-message').text(status.message || 'Dark calibration is running.');
-    $('#dark-progress-bar').val(Number(status.percent) || 0);
+    $('#dark-progress-message').text(status.message || (removal
+        ? 'Library deletion is running.'
+        : 'Dark calibration is running.'));
+    $('#dark-progress-panel').toggleClass('dark-progress-panel-removal', removal);
+    const unsuccessfulTerminal = terminal && status.status !== 'success';
+    $('#dark-progress-status')
+        .toggleClass('tw:badge-error', (removal && status.status !== 'success') || unsuccessfulTerminal)
+        .toggleClass('tw:badge-info', !removal && !terminal)
+        .toggleClass('tw:badge-success', terminal && status.status === 'success');
+    $('#dark-progress-bar')
+        .toggleClass('tw:progress-error', removal)
+        .toggleClass('tw:progress-primary', !removal);
+    if (removal && !terminal) {
+        $('#dark-progress-bar').removeAttr('value');
+    } else {
+        $('#dark-progress-bar').attr('value', Number(status.percent) || 0);
+    }
+    $('#dark-progress-capture-details').toggleClass('tw:hidden', removal);
+    $('#dark-progress-removal-details').toggleClass('tw:hidden', !removal);
     $('#dark-progress-masters').text(
         (status.completed_master_sets || 0) + ' / ' + (status.target_count || 0)
     );
@@ -3867,10 +3965,29 @@ function renderDarkProgress(status) {
             ? 'Until next set'
             : (status.remaining_time || '—')
     );
-    $('#dark-progress-completed-section').toggleClass('tw:hidden', status.operation === 'flush');
+    $('#dark-progress-removal-records').text(
+        status.removal_entry_count === null || status.removal_entry_count === undefined
+            ? '—'
+            : status.removal_entry_count
+    );
+    $('#dark-progress-removal-size').text(
+        status.removal_size_bytes === null || status.removal_size_bytes === undefined
+            ? '—'
+            : darkFormatBytes(Number(status.removal_size_bytes))
+    );
+    const deletedDarks = Number(status.deleted_dark_frames) || 0;
+    const deletedMaps = Number(status.deleted_bad_pixel_maps) || 0;
+    $('#dark-progress-removal-result').text(status.status === 'success'
+        ? deletedDarks + ' dark' + (deletedDarks === 1 ? '' : 's')
+            + ' + ' + deletedMaps + ' map' + (deletedMaps === 1 ? '' : 's')
+        : 'Pending');
+    $('#dark-progress-removal-elapsed').text(status.elapsed_time || '0h 00m 00s');
+    const cleanupWarnings = Array.isArray(status.cleanup_warnings) ? status.cleanup_warnings : [];
+    $('#dark-progress-removal-warnings')
+        .toggleClass('tw:hidden', !removal || cleanupWarnings.length === 0)
+        .text(cleanupWarnings.join(' '));
     renderDarkCompletedMasterSets(status.completed_master_details);
 
-    const terminal = ['success', 'failed', 'cancelled', 'review_required'].includes(status.status);
     if (status.error) {
         $('#dark-progress-error').removeClass('tw:hidden').text(status.error);
     } else {
@@ -3883,8 +4000,16 @@ function renderDarkProgress(status) {
         $('#dark-progress-diagnostics').addClass('tw:hidden');
         $('#dark-progress-diagnostic-log').empty();
     }
-    $('#dark-cancel').toggleClass('tw:hidden', terminal);
+    const removalStarted = removal && status.phase === 'removing_library';
+    $('#dark-cancel')
+        .toggleClass('tw:hidden', terminal || removalStarted)
+        .text(removal ? 'Cancel deletion' : 'Cancel calibration');
     $('#dark-cancel-safety').toggleClass('tw:hidden', terminal);
+    $('#dark-cancel-safety').text(removal
+        ? (removalStarted
+            ? 'Permanent deletion has started and can no longer be cancelled.'
+            : 'You can cancel while capture is being paused. Once deletion starts, it cannot be stopped.')
+        : 'If stopped, completed dark + map sets remain active; the current partial set is discarded.');
     $('#dark-review-library').toggleClass('tw:hidden', !(terminal && status.capture_restored));
     $('#dark-review-library').text(status.status === 'review_required'
         ? (status.operation === 'flush' ? 'Preview deletion again' : 'Review revised plan')
@@ -4000,7 +4125,7 @@ function init() {
     darkFramesDataTable = new DataTable('#darks-table', {
         searching: true,
         autoWidth: false,
-        order: [[6, 'desc'], [7, 'desc'], [1, 'desc']],
+        order: [[1, 'desc']],
         layout: {
             topStart: ['pageLength', 'buttons'],
             topEnd: 'search',
@@ -4015,7 +4140,7 @@ function init() {
     badPixelDataTable = new DataTable('#bpm-table', {
         searching: true,
         autoWidth: false,
-        order: [[6, 'desc'], [7, 'desc'], [1, 'desc']],
+        order: [[1, 'desc']],
         layout: {
             topStart: ['pageLength', 'buttons'],
             topEnd: 'search',

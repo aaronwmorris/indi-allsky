@@ -187,9 +187,18 @@ def test_progress_page_lists_committed_master_details_and_returns_when_restored(
     assert 'Each row is a committed master dark and matching bad-pixel map.' in completed_table
     assert 'function renderDarkCompletedMasterSets(details)' in html
     assert 'renderDarkCompletedMasterSets(status.completed_master_details);' in html
+    assert 'id="dark-progress-capture-details"' in html
+    assert 'id="dark-progress-removal-details" class="tw:hidden' in html
+    assert 'Permanent library deletion' in html
+    assert 'Records selected' in html
+    assert 'Storage selected' in html
+    assert "const removal = status.operation === 'flush';" in html
+    assert ".toggleClass('tw:progress-error', removal)" in html
+    assert "$('#dark-progress-bar').removeAttr('value');" in html
+    assert ".text(removal ? 'Cancel deletion' : 'Cancel calibration');" in html
     assert 'function scheduleDarkBuilderReturn(status)' in html
     assert "!['success', 'cancelled'].includes(status.status)" in html
-    assert "darkReturnSection = status.operation === 'flush' ? 'tab-maintenance' : 'tab-tool';" in html
+    assert "darkReturnSection = removal ? 'tab-maintenance' : 'tab-tool';" in html
     assert "history.replaceState(null, '', '#' + darkReturnSection);" in html
     assert 'window.location.reload();' in html
 
@@ -458,7 +467,7 @@ def test_library_tables_drop_secondary_columns_before_calibration_identity():
     assert 'partner: 3' in html
     assert 'compatible: 4' in html
     assert 'file: 12' in html
-    assert "order: [[6, 'desc'], [7, 'desc'], [1, 'desc']]" in html
+    assert html.count("order: [[1, 'desc']]") == 2
     assert ".removeClass('tw:hidden')" in html
     assert ".text('Showing linked ' + entryLabel + ' #' + focusedId + '.')" in html
     assert "applyDarkLibraryFilter($(this).data('table-id'), 'all');" in html
@@ -628,6 +637,10 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert 'dark-builder-step-marker dark-builder-step-marker--danger' in maintenance
     assert 'Library tools' in maintenance
     assert 'dark-library-maintenance-body' in maintenance
+    assert '<section id="dark-library-maintenance"' in html
+    assert '<details id="dark-library-maintenance"' not in html
+    assert 'class="dark-library-maintenance-header"' in html
+    assert 'class="dark-library-maintenance-body tw:collapse-content' not in html
     assert 'Stored calibration files' in maintenance
     assert 'Storage used' in maintenance
     assert maintenance.count('dark-library-scope-row') >= 5
@@ -661,6 +674,10 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert '--dark-readable-success:' in html
     assert '--dark-readable-warning:' in html
     assert '--dark-readable-error:' in html
+    assert '--dark-tool-radius: 0.375rem;' in html
+    assert '#dark-page-content .tw\\:alert {' in html
+    assert 'border-left-width: 0.25rem;' in html
+    assert html.count('class="dark-progress-fact-grid') == 3
     assert '.dt-paging-button.current' in html
     assert 'color: var(--color-base-100) !important;' in html
     assert 'background-color: var(--dark-readable-primary) !important;' in html
@@ -679,10 +696,15 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert '.dark-library-scope-row {' in html
     assert 'grid-template-columns: minmax(0, 1fr) minmax(13rem, 16rem);' in html
     assert '#dark-library-maintenance > .dark-library-maintenance-body' in html
-    assert 'background-color: color-mix(in oklab, var(--color-error) 5%, var(--color-base-100));' in html
-    assert 'border-color: color-mix(in oklab, var(--color-error) 38%, var(--color-base-300));' in html
+    assert 'border-left-color: var(--dark-readable-error);' in html
+    assert 'background-color: var(--color-base-200);' in html
     assert 'background-color: color-mix(in oklab, var(--color-warning) 12%, var(--color-base-100));' in html
     assert 'id="dark-removal-confirmation-input" class="tw:input tw:input-bordered tw:input-error' in html
+    assert 'Type <span class="tw:font-mono">DELETE</span> to confirm permanent deletion' in html
+    assert "const darkRemovalConfirmationText = 'DELETE';" in html
+    assert "confirmation !== darkRemovalConfirmationText" in html
+    assert 'dark-removal-camera-name' not in html
+    assert 'Enter the camera name exactly' not in html
     assert '.dark-library-selection-bar {' in html
     assert 'position: fixed;' in html
     assert 'bottom: max(0.75rem, env(safe-area-inset-bottom));' in html
@@ -692,7 +714,20 @@ def test_library_removal_explains_temperature_groups_and_master_status():
     assert "'--dark-library-selection-center'" in html
     assert "'--dark-library-selection-height'" in html
     assert "document.getElementById('dark-library-maintenance') || page" in html
-    assert '@container (max-width: 60rem)' in html
+    selection_actions_css = html.split('.dark-library-selection-actions {', 1)[1].split(
+        '.dark-library-master-choice {',
+        1,
+    )[0]
+    assert 'flex-wrap: nowrap;' in selection_actions_css
+    assert '@container (max-width: 72rem)' in selection_actions_css
+    assert 'grid-template-columns: minmax(0, 1fr);' in selection_actions_css
+    assert 'repeat(auto-fit, minmax(min(100%, 14rem), 1fr))' not in selection_actions_css
+    mobile_selection_css = html.split('@media (max-width: 639px)', 1)[1].split(
+        '#dark-cover-confirmation',
+        1,
+    )[0]
+    assert 'grid-template-columns: minmax(0, 1fr);' in mobile_selection_css
+    assert 'repeat(2, minmax(0, 1fr))' not in mobile_selection_css
     assert 'function keepDarkSelectionRowVisible(checkbox)' in html
     assert 'initializeDarkSelectionBarLayout();' in html
     assert 'function updateDarkMarkedSelection(cameraId)' in html

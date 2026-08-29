@@ -1581,7 +1581,22 @@ class IndiAllSky(object):
                     task_data['capture_restore_state'] = restore_state
                     task_data['status'] = 'preparing'
                     progress = dict(task_data.get('progress') or {})
-                    if restore_state == dark_automation.CAPTURE_RESTORE_PAUSED:
+                    removal_task = task_data.get('operation') == 'flush'
+                    if removal_task and restore_state == dark_automation.CAPTURE_RESTORE_PAUSED:
+                        preparing_message = (
+                            'Normal image capture is paused; preparing library deletion.'
+                        )
+                    elif removal_task and restore_state == dark_automation.CAPTURE_RESTORE_SLEEPING:
+                        preparing_message = (
+                            'Normal image capture is sleeping; preparing library deletion.'
+                        )
+                    elif removal_task and restore_state == dark_automation.CAPTURE_RESTORE_RUNNING:
+                        preparing_message = (
+                            'Finishing the current exposure before deleting the selected files.'
+                        )
+                    elif removal_task:
+                        preparing_message = 'Preparing the selected library files for deletion.'
+                    elif restore_state == dark_automation.CAPTURE_RESTORE_PAUSED:
                         preparing_message = (
                             'Normal image capture is paused; preparing dark calibration.'
                         )

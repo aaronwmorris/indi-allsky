@@ -1443,9 +1443,8 @@ class DarkFramesView(TemplateView):
             .join(IndiAllSkyDbCameraTable)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
             .order_by(
-                IndiAllSkyDbCameraTable.id.desc(),
-                IndiAllSkyDbDarkFrameTable.gain.asc(),
-                IndiAllSkyDbDarkFrameTable.exposure.asc(),
+                IndiAllSkyDbDarkFrameTable.createDate.desc(),
+                IndiAllSkyDbDarkFrameTable.id.desc(),
             )\
             .all()
 
@@ -1453,9 +1452,8 @@ class DarkFramesView(TemplateView):
             .join(IndiAllSkyDbCameraTable)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
             .order_by(
-                IndiAllSkyDbCameraTable.id.desc(),
-                IndiAllSkyDbBadPixelMapTable.gain.asc(),
-                IndiAllSkyDbBadPixelMapTable.exposure.asc(),
+                IndiAllSkyDbBadPixelMapTable.createDate.desc(),
+                IndiAllSkyDbBadPixelMapTable.id.desc(),
             )\
             .all()
 
@@ -2129,9 +2127,9 @@ class AjaxDarkLibraryFlushView(BaseView):
                 ),
             }), 409
         confirmation = str(request_data.get('confirmation') or '')
-        if confirmation != str(self.camera.name):
+        if confirmation != 'DELETE':
             return jsonify({
-                'error': 'Enter the camera name exactly to confirm permanent library deletion.',
+                'error': 'Enter DELETE exactly to confirm permanent library deletion.',
             }), 400
 
         active_task = _find_active_dark_task()
