@@ -41,6 +41,12 @@ def test_clamps_values_outside_calibrated_range():
     assert sensors_mapping.calculate_cloudiness_index(config, _values({10: 10.0, 11: 15.0})) == 100.0
 
 
+def test_rejects_equal_calibration_references():
+    config = _config(CLOUDINESS_INDEX_CLOUDY_TEMP=-20.0)
+
+    assert sensors_mapping.calculate_cloudiness_index(config, _values({10: 10.0, 11: -5.0})) is None
+
+
 def test_coefficient_and_offset_tune_the_normalized_index():
     cloudiness_index = sensors_mapping.calculate_cloudiness_index(
         _config(CLOUDINESS_INDEX_COEFFICIENT=0.5, CLOUDINESS_INDEX_OFFSET=10.0),

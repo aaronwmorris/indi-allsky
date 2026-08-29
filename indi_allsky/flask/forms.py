@@ -3390,9 +3390,11 @@ def CLOUDINESS_INDEX_SENSOR_validator(form, field):
     if not field.data:
         return
 
-    slots = []
-    for values in form.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.choices.values():
-        slots.extend(list(zip(*values))[0])
+    slots = [
+        value
+        for choices in form.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.choices.values()
+        for value, label in choices
+    ]
 
     if field.data not in slots:
         raise ValidationError('Invalid selection')
