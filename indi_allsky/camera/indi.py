@@ -1144,6 +1144,7 @@ class IndiClient(PyIndi.BaseClient):
             'indi_rpicam',
             'indi_libcamera_ccd',
             'indi_dsi_ccd',
+            'indi_alpaca_ccd',
         ]:
             gain_ctl = self.get_control(self.ccd_device, 'CCD_GAIN', 'number')
             gain_index_dict = self.__map_indexes(gain_ctl, ['GAIN'])
@@ -1278,6 +1279,7 @@ class IndiClient(PyIndi.BaseClient):
             'indi_rpicam',
             'indi_libcamera_ccd',
             'indi_dsi_ccd',
+            'indi_alpaca_ccd',
         ]:
             gain_config = {
                 "PROPERTIES" : {
