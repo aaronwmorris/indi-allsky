@@ -84,8 +84,15 @@ def calculate_cloud_percentage(config: Dict[str, Any], get_sensor_value) -> Any:
 
     Equation (all temperatures in Celsius, T_clear < T_cloudy)::
 
-        delta   = (T_sky + offset - T_ambient) * coefficient
-        percent = clamp(0, 100, (delta - T_clear) / (T_cloudy - T_clear) * 100)
+        T_clear  = ref_clear_sky  - ref_clear_ambient   (a known clear-sky occasion)
+        T_cloudy = ref_cloudy_sky - ref_cloudy_ambient   (a known fully-overcast occasion)
+        delta    = (T_sky + offset - T_ambient) * coefficient
+        percent  = clamp(0, 100, (delta - T_clear) / (T_cloudy - T_clear) * 100)
+
+    The clear/cloudy reference readings are raw sky and ambient temperatures a
+    user captures directly off their own overlay/status display under two
+    known conditions - the sky-minus-ambient delta math happens here, never
+    exposed to the user as a value they would have to invent themselves.
 
     ``get_sensor_value`` is a callable accepting a sensor_user index and
     returning its current float value, so this works against either the
@@ -144,20 +151,33 @@ def calculate_cloud_percentage(config: Dict[str, Any], get_sensor_value) -> Any:
         # camera temperature is not a valid ambient-air proxy, so this is left unavailable
         return None
 
-    # Cloud thresholds are configured in Celsius regardless of display units.
-    sky_temp_c = _display_temperature_to_celsius(float(sky_temp), config.get('TEMP_DISPLAY', 'c'))
-    ambient_temp_c = _display_temperature_to_celsius(float(ambient_temp), config.get('TEMP_DISPLAY', 'c'))
+    # Cloud thresholds are derived from raw sky/ambient reference readings a
+    # user captured under known conditions (same units as the overlay), not
+    # an abstract delta value - the delta math stays behind the scenes here.
+    temp_display = config.get('TEMP_DISPLAY', 'c')
+
+    ref_clear_sky_c = _display_temperature_to_celsius(
+        float(temp_sensor_cfg.get('CLOUD_REF_CLEAR_SKY_TEMP', -10.0)), temp_display)
+    ref_clear_ambient_c = _display_temperature_to_celsius(
+        float(temp_sensor_cfg.get('CLOUD_REF_CLEAR_AMBIENT_TEMP', 0.0)), temp_display)
+    ref_cloudy_sky_c = _display_temperature_to_celsius(
+        float(temp_sensor_cfg.get('CLOUD_REF_CLOUDY_SKY_TEMP', 18.5)), temp_display)
+    ref_cloudy_ambient_c = _display_temperature_to_celsius(
+        float(temp_sensor_cfg.get('CLOUD_REF_CLOUDY_AMBIENT_TEMP', 0.0)), temp_display)
+
+    clear_temp = ref_clear_sky_c - ref_clear_ambient_c
+    cloudy_temp = ref_cloudy_sky_c - ref_cloudy_ambient_c
+    span = cloudy_temp - clear_temp
+    if span <= 0:
+        logger.error('Cloudy reference (sky-ambient) must be greater than clear-sky reference (sky-ambient)')
+        return None
+
+    sky_temp_c = _display_temperature_to_celsius(float(sky_temp), temp_display)
+    ambient_temp_c = _display_temperature_to_celsius(float(ambient_temp), temp_display)
 
     # fixed offset corrects a sensor known to read a set amount high/low, before scaling
     offset = float(temp_sensor_cfg.get('CLOUD_CALIBRATION_OFFSET', 0.0))
     sky_temp_c += offset
-
-    clear_temp = float(temp_sensor_cfg.get('CLOUD_SKY_TEMP_CLEAR', -10.0))
-    cloudy_temp = float(temp_sensor_cfg.get('CLOUD_SKY_TEMP_CLOUDY', 15.0))
-    span = cloudy_temp - clear_temp
-    if span <= 0:
-        logger.error('CLOUD_SKY_TEMP_CLOUDY must be greater than CLOUD_SKY_TEMP_CLEAR')
-        return None
 
     coefficient = float(temp_sensor_cfg.get('CLOUD_CALIBRATION_COEFFICIENT', 1.0))
     corrected_delta = (sky_temp_c - ambient_temp_c) * coefficient

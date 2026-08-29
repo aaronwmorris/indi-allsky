@@ -3133,8 +3133,10 @@ class ConfigView(FormView):
             'TEMP_SENSOR__F_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('F_USER_VAR_SLOT', 'sensor_user_55'),
             'TEMP_SENSOR__F_TITLE_TEMPLATE'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('F_TITLE_TEMPLATE', '{name:s} - {label:s} - {probe:s}'),
             'TEMP_SENSOR__FC37_ACTIVE_LOW'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('FC37_ACTIVE_LOW', True),
-            'TEMP_SENSOR__CLOUD_SKY_TEMP_CLEAR'      : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUD_SKY_TEMP_CLEAR', -10.0),
-            'TEMP_SENSOR__CLOUD_SKY_TEMP_CLOUDY'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUD_SKY_TEMP_CLOUDY', 15),
+            'TEMP_SENSOR__CLOUD_REF_CLEAR_SKY_TEMP'      : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUD_REF_CLEAR_SKY_TEMP', -10.0),
+            'TEMP_SENSOR__CLOUD_REF_CLEAR_AMBIENT_TEMP'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUD_REF_CLEAR_AMBIENT_TEMP', 0.0),
+            'TEMP_SENSOR__CLOUD_REF_CLOUDY_SKY_TEMP'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUD_REF_CLOUDY_SKY_TEMP', 18.5),
+            'TEMP_SENSOR__CLOUD_REF_CLOUDY_AMBIENT_TEMP' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUD_REF_CLOUDY_AMBIENT_TEMP', 0.0),
             'TEMP_SENSOR__CLOUD_CALIBRATION_COEFFICIENT' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUD_CALIBRATION_COEFFICIENT', 1.0),
             'TEMP_SENSOR__CLOUD_CALIBRATION_OFFSET'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUD_CALIBRATION_OFFSET', 0.0),
             'TEMP_SENSOR__CLOUD_AMBIENT_SENSOR_REF'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUD_AMBIENT_SENSOR_REF', ''),
@@ -4224,8 +4226,10 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['F_I2C_ADDRESS']         = str(request.json['TEMP_SENSOR__F_I2C_ADDRESS'])
         self.indi_allsky_config['TEMP_SENSOR']['F_TITLE_TEMPLATE']      = str(request.json['TEMP_SENSOR__F_TITLE_TEMPLATE'])
         self.indi_allsky_config['TEMP_SENSOR']['FC37_ACTIVE_LOW']       = bool(request.json['TEMP_SENSOR__FC37_ACTIVE_LOW'])
-        self.indi_allsky_config['TEMP_SENSOR']['CLOUD_SKY_TEMP_CLEAR']      = float(request.json['TEMP_SENSOR__CLOUD_SKY_TEMP_CLEAR'])
-        self.indi_allsky_config['TEMP_SENSOR']['CLOUD_SKY_TEMP_CLOUDY']     = int(request.json['TEMP_SENSOR__CLOUD_SKY_TEMP_CLOUDY'])
+        self.indi_allsky_config['TEMP_SENSOR']['CLOUD_REF_CLEAR_SKY_TEMP']      = float(request.json['TEMP_SENSOR__CLOUD_REF_CLEAR_SKY_TEMP'])
+        self.indi_allsky_config['TEMP_SENSOR']['CLOUD_REF_CLEAR_AMBIENT_TEMP']  = float(request.json['TEMP_SENSOR__CLOUD_REF_CLEAR_AMBIENT_TEMP'])
+        self.indi_allsky_config['TEMP_SENSOR']['CLOUD_REF_CLOUDY_SKY_TEMP']     = float(request.json['TEMP_SENSOR__CLOUD_REF_CLOUDY_SKY_TEMP'])
+        self.indi_allsky_config['TEMP_SENSOR']['CLOUD_REF_CLOUDY_AMBIENT_TEMP'] = float(request.json['TEMP_SENSOR__CLOUD_REF_CLOUDY_AMBIENT_TEMP'])
         self.indi_allsky_config['TEMP_SENSOR']['CLOUD_CALIBRATION_COEFFICIENT'] = float(request.json['TEMP_SENSOR__CLOUD_CALIBRATION_COEFFICIENT'])
         self.indi_allsky_config['TEMP_SENSOR']['CLOUD_CALIBRATION_OFFSET']  = float(request.json['TEMP_SENSOR__CLOUD_CALIBRATION_OFFSET'])
         self.indi_allsky_config['TEMP_SENSOR']['CLOUD_AMBIENT_SENSOR_REF']  = str(request.json['TEMP_SENSOR__CLOUD_AMBIENT_SENSOR_REF'])

@@ -3355,14 +3355,25 @@ def SENSOR_USER_VAR_SLOT_validator(form, field):
         raise ValidationError('Invalid selection')
 
 
-def CLOUD_SKY_TEMP_CLEAR_validator(form, field):
+def CLOUD_REF_CLEAR_SKY_TEMP_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter a valid number')
 
+    if field.data >= 0:
+        raise ValidationError('Clear-sky reference reading must be negative')
 
-def CLOUD_SKY_TEMP_CLOUDY_validator(form, field):
-    if not isinstance(field.data, int):
-        raise ValidationError('Please enter a whole number')
+
+def CLOUD_REF_CLOUDY_SKY_TEMP_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter a valid number')
+
+    if field.data <= 0:
+        raise ValidationError('Cloudy reference reading must be positive')
+
+
+def CLOUD_REFERENCE_TEMP_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter a valid number')
 
 
 def CLOUD_CALIBRATION_COEFFICIENT_validator(form, field):
@@ -5213,8 +5224,10 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__F_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
     TEMP_SENSOR__F_TITLE_TEMPLATE    = StringField('Chart Title Template', validators=[DataRequired(), TEMP_SENSOR__TITLE_TEMPLATE_validator])
     TEMP_SENSOR__FC37_ACTIVE_LOW     = BooleanField('Rain Sensor FC-37 - Invert logic')
-    TEMP_SENSOR__CLOUD_SKY_TEMP_CLEAR       = FloatField('Clear-Sky Threshold (C)', validators=[CLOUD_SKY_TEMP_CLEAR_validator], widget=NumberInput(step=0.1))
-    TEMP_SENSOR__CLOUD_SKY_TEMP_CLOUDY      = IntegerField('Cloudy Threshold (C)', validators=[CLOUD_SKY_TEMP_CLOUDY_validator], widget=NumberInput(step=1))
+    TEMP_SENSOR__CLOUD_REF_CLEAR_SKY_TEMP       = FloatField('Clear-Sky Reference: Sky Reading (C)', validators=[CLOUD_REF_CLEAR_SKY_TEMP_validator], widget=NumberInput(step=0.1))
+    TEMP_SENSOR__CLOUD_REF_CLEAR_AMBIENT_TEMP    = FloatField('Clear-Sky Reference: Ambient Reading (C)', validators=[CLOUD_REFERENCE_TEMP_validator], widget=NumberInput(step=0.1))
+    TEMP_SENSOR__CLOUD_REF_CLOUDY_SKY_TEMP       = FloatField('Cloudy Reference: Sky Reading (C)', validators=[CLOUD_REF_CLOUDY_SKY_TEMP_validator], widget=NumberInput(step=0.1))
+    TEMP_SENSOR__CLOUD_REF_CLOUDY_AMBIENT_TEMP   = FloatField('Cloudy Reference: Ambient Reading (C)', validators=[CLOUD_REFERENCE_TEMP_validator], widget=NumberInput(step=0.1))
     TEMP_SENSOR__CLOUD_CALIBRATION_COEFFICIENT = FloatField('Cloud Calibration Coefficient', validators=[CLOUD_CALIBRATION_COEFFICIENT_validator], widget=NumberInput(step=0.05))
     TEMP_SENSOR__CLOUD_CALIBRATION_OFFSET   = FloatField('Cloud Calibration Offset (C, +/-)', validators=[CLOUD_CALIBRATION_OFFSET_validator], widget=NumberInput(step=0.1))
     TEMP_SENSOR__CLOUD_AMBIENT_SENSOR_REF   = SelectField('Ground Ambient Reference Sensor', choices=[], validators=[CLOUD_AMBIENT_SENSOR_REF_validator])
@@ -5594,11 +5607,13 @@ class IndiAllskyConfigForm(FlaskForm):
             result = False
 
 
-        # cloud threshold checking - sensor/ambient-source baselines vary too much per
-        # installation to assume a fixed sign, so only the relative ordering matters
-        if self.TEMP_SENSOR__CLOUD_SKY_TEMP_CLOUDY.data <= self.TEMP_SENSOR__CLOUD_SKY_TEMP_CLEAR.data:
-            self.TEMP_SENSOR__CLOUD_SKY_TEMP_CLEAR.errors.append('Clear-sky threshold must be less than the cloudy threshold')
-            self.TEMP_SENSOR__CLOUD_SKY_TEMP_CLOUDY.errors.append('Cloudy threshold must be greater than the clear-sky threshold')
+        # cloud reference checking - users only ever enter raw sky/ambient readings;
+        # the derived cloudy delta must still exceed the derived clear-sky delta
+        clear_delta = self.TEMP_SENSOR__CLOUD_REF_CLEAR_SKY_TEMP.data - self.TEMP_SENSOR__CLOUD_REF_CLEAR_AMBIENT_TEMP.data
+        cloudy_delta = self.TEMP_SENSOR__CLOUD_REF_CLOUDY_SKY_TEMP.data - self.TEMP_SENSOR__CLOUD_REF_CLOUDY_AMBIENT_TEMP.data
+        if cloudy_delta <= clear_delta:
+            self.TEMP_SENSOR__CLOUD_REF_CLEAR_SKY_TEMP.errors.append('Clear-sky reference (sky minus ambient) must be less than the cloudy reference')
+            self.TEMP_SENSOR__CLOUD_REF_CLOUDY_SKY_TEMP.errors.append('Cloudy reference (sky minus ambient) must be greater than the clear-sky reference')
             result = False
 
 
