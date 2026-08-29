@@ -21,6 +21,7 @@ var camera_id = {{ camera_id }};
                     <tr class="tw:border-b tw:border-base-300 tw:bg-base-300/60 tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">
                         <th class="tw:py-3.5 tw:px-4">ID</th>
                         <th class="tw:py-3.5">Device Node</th>
+                        <th class="tw:py-3.5">Serial Number</th>
                         <th class="tw:py-3.5">Driver Initialization</th>
                         <th class="tw:py-3.5">Sensor Bound (WxH)</th>
                         <th class="tw:py-3.5">Pixel Size (µm)</th>
@@ -36,6 +37,7 @@ var camera_id = {{ camera_id }};
                         <td class="tw:py-3 tw:px-4 tw:font-mono tw:font-bold tw:text-primary">{{ camera.id }}</td>
                         
                         <td class="tw:py-3 tw:font-semibold tw:text-base-content/80">{{ camera.name }}</td>
+                        <td class="tw:py-3 tw:font-mono tw:text-base-content/80">{{ camera.serialNumber}}</td>
                         
                         <td class="tw:py-3 tw:font-mono tw:text-base-content/60">
                             {{ camera.connectDate.strftime('%Y-%m-%d %H:%M:%S') }}
