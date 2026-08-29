@@ -50,7 +50,6 @@ TYPE_DEVICE_CLASS_MAP = {
 
 # labels used by the MLX90614/90615/90640 family to identify sky vs ambient readings
 CLOUD_SKY_TEMP_LABEL = 'Sky Temperature'
-CLOUD_AMBIENT_TEMP_LABEL = 'Temperature'
 
 
 def _display_temperature_to_celsius(value: float, temp_display: str) -> float:
@@ -66,7 +65,7 @@ def _display_temperature_to_celsius(value: float, temp_display: str) -> float:
 def calculate_cloud_percentage(config: Dict[str, Any], get_sensor_value) -> Any:
     """
     Scans configured TEMP_SENSOR slots (A-F) for an MLX90614/90615/90640
-    family sensor and derives a 0-100 cloud percentage from its sky
+    family sensor and derives a 0-100 local cloudiness index from its sky
     temperature relative to an ambient reference.
 
     Physical basis: under a clear sky the 8-14 micron atmospheric window lets
@@ -77,22 +76,21 @@ def calculate_cloud_percentage(config: Dict[str, Any], get_sensor_value) -> Any:
     Cloud closes that window; clouds radiate close to a blackbody near
     ambient temperature (emissivity approaching 1 - Mendoza et al., 2017,
     Atmos. Environ., 155, 174-188), so the sky reading converges toward
-    ambient as cloud cover increases. That is why cloud percentage here is a
-    linear scaling of the sky-minus-ambient delta between a clear-sky
-    (large negative) and cloudy (near-zero/positive) threshold, rather than
-    the raw sky temperature alone.
+    ambient as cloud cover increases. That is why the cloudiness index here is a
+    linear scaling between local raw clear-sky and overcast sky-temperature
+    references. This is an empirical, installation-specific cloudiness index,
+    not a measured sky fraction. A narrow-field IR thermometer cannot
+    distinguish all cloud types or measure coverage outside its field of view.
 
     Equation (all temperatures in Celsius, T_clear < T_cloudy)::
 
-        T_clear  = ref_clear_sky  - ref_clear_ambient   (a known clear-sky occasion)
-        T_cloudy = ref_cloudy_sky - ref_cloudy_ambient   (a known fully-overcast occasion)
-        delta    = (T_sky + offset - T_ambient) * coefficient
-        percent  = clamp(0, 100, (delta - T_clear) / (T_cloudy - T_clear) * 100)
+        index = clamp(0, 100,
+                      ((T_sky_live - T_clear) / (T_cloudy - T_clear) * 100)
+                      * coefficient + offset)
 
-    The clear/cloudy reference readings are raw sky and ambient temperatures a
-    user captures directly off their own overlay/status display under two
-    known conditions - the sky-minus-ambient delta math happens here, never
-    exposed to the user as a value they would have to invent themselves.
+    The two references are raw sky readings from this installation under known
+    clear and overcast conditions. Their unit is declared explicitly via
+    CLOUD_REF_TEMP_UNIT rather than assumed to match TEMP_DISPLAY.
 
     ``get_sensor_value`` is a callable accepting a sensor_user index and
     returning its current float value, so this works against either the
@@ -104,8 +102,7 @@ def calculate_cloud_percentage(config: Dict[str, Any], get_sensor_value) -> Any:
 
     temp_sensor_cfg = config.get('TEMP_SENSOR', {})
 
-    sky_temp = None
-    ambient_temp = None
+    candidates = list()
 
     for letter in ('A', 'B', 'C', 'D', 'E', 'F'):
         classname = temp_sensor_cfg.get('{0:s}_CLASSNAME'.format(letter))
@@ -122,67 +119,56 @@ def calculate_cloud_percentage(config: Dict[str, Any], get_sensor_value) -> Any:
         except (AttributeError, ValueError):
             continue
 
-        sky_temp = get_sensor_value(base_index + sky_offset)
+        candidates.append({
+            'slot': str(user_var_slot),
+            'sky_index': base_index + sky_offset,
+        })
 
-        try:
-            ambient_offset = labels.index(CLOUD_AMBIENT_TEMP_LABEL)
-            ambient_temp = get_sensor_value(base_index + ambient_offset)
-        except ValueError:
-            ambient_temp = None
+    selected_slot = temp_sensor_cfg.get('CLOUD_SENSOR_REF', '')
+    if selected_slot:
+        candidates = [candidate for candidate in candidates if candidate['slot'] == selected_slot]
 
-        break
+    if len(candidates) != 1:
+        if candidates:
+            logger.error('Select one MLX cloud sensor when multiple supported sensors are configured')
+        return None
+
+    candidate = candidates[0]
+    sky_temp = get_sensor_value(candidate['sky_index'])
 
     if sky_temp is None:
-        # no configured sensor from the supported family
         return None
 
-    ambient_ref = temp_sensor_cfg.get('CLOUD_AMBIENT_SENSOR_REF', '')
-    if ambient_ref:
-        if ambient_ref == 'sensor_user_0':
-            logger.error('Camera temperature cannot be used as a cloud ambient reference')
-            return None
-
-        ambient_index = constants.SENSOR_INDEX_MAP.get(str(ambient_ref))
-        if ambient_index is not None:
-            ambient_temp = get_sensor_value(ambient_index)
-
-    if ambient_temp is None:
-        # sensor has no ambient reading of its own (e.g. MLX90640) and no reference configured -
-        # camera temperature is not a valid ambient-air proxy, so this is left unavailable
+    if not temp_sensor_cfg.get('CLOUD_CALIBRATION_ENABLE', False):
         return None
 
-    # Cloud thresholds are derived from raw sky/ambient reference readings a
-    # user captured under known conditions (same units as the overlay), not
-    # an abstract delta value - the delta math stays behind the scenes here.
     temp_display = config.get('TEMP_DISPLAY', 'c')
+    ref_unit = temp_sensor_cfg.get('CLOUD_REF_TEMP_UNIT', 'c')
 
-    ref_clear_sky_c = _display_temperature_to_celsius(
-        float(temp_sensor_cfg.get('CLOUD_REF_CLEAR_SKY_TEMP', -10.0)), temp_display)
-    ref_clear_ambient_c = _display_temperature_to_celsius(
-        float(temp_sensor_cfg.get('CLOUD_REF_CLEAR_AMBIENT_TEMP', 0.0)), temp_display)
-    ref_cloudy_sky_c = _display_temperature_to_celsius(
-        float(temp_sensor_cfg.get('CLOUD_REF_CLOUDY_SKY_TEMP', 18.5)), temp_display)
-    ref_cloudy_ambient_c = _display_temperature_to_celsius(
-        float(temp_sensor_cfg.get('CLOUD_REF_CLOUDY_AMBIENT_TEMP', 0.0)), temp_display)
-
-    clear_temp = ref_clear_sky_c - ref_clear_ambient_c
-    cloudy_temp = ref_cloudy_sky_c - ref_cloudy_ambient_c
-    span = cloudy_temp - clear_temp
-    if span <= 0:
-        logger.error('Cloudy reference (sky-ambient) must be greater than clear-sky reference (sky-ambient)')
+    try:
+        clear_sky_temp = _display_temperature_to_celsius(
+            float(temp_sensor_cfg['CLOUD_REF_CLEAR_SKY_TEMP']), ref_unit)
+        cloudy_sky_temp = _display_temperature_to_celsius(
+            float(temp_sensor_cfg['CLOUD_REF_CLOUDY_SKY_TEMP']), ref_unit)
+        sky_temp_c = _display_temperature_to_celsius(float(sky_temp), temp_display)
+    except (KeyError, TypeError, ValueError):
+        logger.error('Cloud calibration or live sensor readings are invalid')
         return None
 
-    sky_temp_c = _display_temperature_to_celsius(float(sky_temp), temp_display)
-    ambient_temp_c = _display_temperature_to_celsius(float(ambient_temp), temp_display)
+    span = cloudy_sky_temp - clear_sky_temp
+    if span <= 0:
+        logger.error('Cloudy sky reference must be warmer than clear-sky reference')
+        return None
 
-    # fixed offset corrects a sensor known to read a set amount high/low, before scaling
-    offset = float(temp_sensor_cfg.get('CLOUD_CALIBRATION_OFFSET', 0.0))
-    sky_temp_c += offset
+    try:
+        coefficient = float(temp_sensor_cfg.get('CLOUD_CALIBRATION_COEFFICIENT', 1.0))
+        offset = float(temp_sensor_cfg.get('CLOUD_CALIBRATION_OFFSET', 0.0))
+    except (TypeError, ValueError):
+        logger.error('Cloud calibration coefficient or offset is invalid')
+        return None
 
-    coefficient = float(temp_sensor_cfg.get('CLOUD_CALIBRATION_COEFFICIENT', 1.0))
-    corrected_delta = (sky_temp_c - ambient_temp_c) * coefficient
-
-    percentage = ((corrected_delta - clear_temp) / span) * 100.0
+    percentage = ((sky_temp_c - clear_sky_temp) / span) * 100.0
+    percentage = (percentage * coefficient) + offset
     return max(0.0, min(100.0, percentage))
 
 

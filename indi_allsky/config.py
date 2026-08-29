@@ -40,10 +40,7 @@ DEPRECATED_CONFIG_KEYS = (
 )
 
 # (parent_key, child_key) pairs for deprecated keys nested one level deep
-DEPRECATED_CONFIG_KEYS_L2 = (
-    ('TEMP_SENSOR', 'CLOUD_SKY_TEMP_CLEAR'),
-    ('TEMP_SENSOR', 'CLOUD_SKY_TEMP_CLOUDY'),
-)
+DEPRECATED_CONFIG_KEYS_L2 = ()
 
 
 class IndiAllSkyConfigBase(object):
@@ -894,14 +891,14 @@ class IndiAllSkyConfigBase(object):
             "AS3935_SPIKE_REJECTION" : 2,
             "LUX_MAGNITUDE_OFFSET"   : 26.0,
             "FC37_ACTIVE_LOW"        : True,
-            # cloud detection derived from any configured MLX90614/90615/90640 sky-temp sensor
-            "CLOUD_REF_CLEAR_SKY_TEMP"      : -10.0,  # raw sky reading captured on a known-clear reference occasion
-            "CLOUD_REF_CLEAR_AMBIENT_TEMP"  : 0.0,    # raw ambient reading captured at that same moment
-            "CLOUD_REF_CLOUDY_SKY_TEMP"     : 18.5,   # raw sky reading captured on a known fully-overcast occasion
-            "CLOUD_REF_CLOUDY_AMBIENT_TEMP" : 0.0,    # raw ambient reading captured at that same moment
+            # empirical, installation-specific IR sky-temperature cloudiness index
+            "CLOUD_CALIBRATION_ENABLE"      : False,
+            "CLOUD_SENSOR_REF"              : "",     # required when more than one supported MLX sensor is configured
+            "CLOUD_REF_CLEAR_SKY_TEMP"      : 0.0,
+            "CLOUD_REF_CLOUDY_SKY_TEMP"     : 0.0,
+            "CLOUD_REF_TEMP_UNIT"           : "c",
             "CLOUD_CALIBRATION_COEFFICIENT" : 1.0,
-            "CLOUD_CALIBRATION_OFFSET"      : 0.0,    # fixed +/- degrees added to the sky reading to correct a known sensor bias
-            "CLOUD_AMBIENT_SENSOR_REF"      : "",     # blank = use sensor's own ambient reading (required for sensors with no ambient output, e.g. MLX90640)
+            "CLOUD_CALIBRATION_OFFSET"      : 0.0,
         },
         "CHARTS" : {
             "CUSTOM_SLOT_1"          : "sensor_user_10",

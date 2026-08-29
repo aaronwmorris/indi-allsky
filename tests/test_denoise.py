@@ -80,6 +80,7 @@ def test_star_percentile_increases_full_mask_detection_threshold(monkeypatch):
             captured['threshold'] = threshold
 
         def __call__(self, data):
+            captured['data'] = data
             return None
 
     monkeypatch.setattr(protection_masks, '_estimate_background_stats',
@@ -92,4 +93,5 @@ def test_star_percentile_increases_full_mask_detection_threshold(monkeypatch):
                                          threshold_sigma=2.0, fwhm=5.0,
                                          expand_radius=0)
 
-    assert captured['threshold'] == numpy.percentile(data, 90.0) - 10.0
+    assert captured['threshold'] == numpy.percentile(data - 10.0, 90.0)
+    assert numpy.array_equal(captured['data'], data - 10.0)

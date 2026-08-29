@@ -3323,7 +3323,7 @@ class ImageProcessor(object):
         label_data['rain_status'] = rain_sensor_status
 
 
-        # cloud percentage - derived from any configured MLX90614/90615/90640 sky-temp sensor
+        # cloudiness index - derived from any configured MLX90614/90615/90640 sky-temp sensor
         cloud_percentage = sensors_mapping.calculate_cloud_percentage(
             self.config,
             lambda idx: self.sensors_user_av[idx],

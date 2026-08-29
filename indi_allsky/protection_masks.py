@@ -146,10 +146,11 @@ def _generate_star_mask(data: np.ndarray, percentile: float,
 
     # Detect stars using DAOStarFinder
     t0 = time.perf_counter()
-    percentile_threshold = max(0.0, float(np.percentile(data, percentile)) - bkg_median)
+    background_subtracted = data - bkg_median
+    percentile_threshold = max(0.0, float(np.percentile(background_subtracted, percentile)))
     threshold = max(threshold_sigma * bkg_std, percentile_threshold)
     daofind = DAOStarFinder(fwhm=fwhm, threshold=threshold)
-    tbl = daofind(data)
+    tbl = daofind(background_subtracted)
     prof_dao = time.perf_counter() - t0
 
     # Paint detected stars as convolved impulses
