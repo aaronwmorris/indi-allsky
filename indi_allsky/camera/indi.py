@@ -281,6 +281,12 @@ class IndiClient(PyIndi.BaseClient):
         self._ccd_temp = float(new_ccd_temp)
 
 
+    @property
+    def indi_allsky_camera_name(self):
+        # generated in getIndiAllskyCameraName()
+        return self._indi_allsky_camera_name
+
+
     def updateConfig(self, new_config):
         self.config = new_config
 
@@ -411,7 +417,7 @@ class IndiClient(PyIndi.BaseClient):
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,
             # Preserve the capture-time device identity for model-specific gates.
-            'camera_name' : self.getIndiAllskyCameraName(),  # use derived value
+            'camera_name' : self.indi_allsky_camera_name,  # use derived value
             'filename_t'  : self._filename_t,
         }
 
@@ -1580,7 +1586,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
         # Generate name
-        self._indi_allsky_camera_name = self.generateIndiAllskyCameraName()
+        self._indi_allsky_camera_name = str(self.generateIndiAllskyCameraName())
 
         return self._indi_allsky_camera_name
 
