@@ -902,7 +902,7 @@ class CaptureWorker(Process):
 
 
         # add driver name to config
-        self.camera_name = self.indiclient.indi_allsky_camera_name
+        self.camera_name = self.indiclient.ccd_device.getDeviceName()
         self._miscDb.setState('CAMERA_NAME', self.camera_name)
 
         self.camera_server = self.indiclient.ccd_device.getDriverExec()
@@ -1019,7 +1019,7 @@ class CaptureWorker(Process):
         # need to get camera info before adding to DB
         camera_metadata = {
             'type'        : constants.CAMERA,
-            'name'        : self.camera_name,
+            'name'        : self.indiclient.getIndiAllskyCameraName(),  # allow camera to have derived name
             'driver'      : self.camera_server,
             'serialNumber': ccd_info.get('SERIALNUMBER_INFO', {}).get('current'),
 

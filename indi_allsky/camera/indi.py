@@ -281,41 +281,6 @@ class IndiClient(PyIndi.BaseClient):
         self._ccd_temp = float(new_ccd_temp)
 
 
-    @property
-    def indi_allsky_camera_name(self):
-        if isinstance(self._indi_allsky_camera_name, str):
-            return self._indi_allsky_camera_name
-
-
-        # Generate name
-        indi_exec = self.ccd_device.getDriverExec()
-
-        if indi_exec in [
-            'indi_alpaca_ccd',
-        ]:
-            # Add Alpaca device name to indi-allsky name
-
-            try:
-                device_info_ctl = self.get_control(self.ccd_device, 'DEVICE_INFO', 'text')
-                device_info_index_dict = self.__map_indexes(device_info_ctl, ['NAME'])
-                index = device_info_index_dict['NAME']
-
-                self._indi_allsky_camera_name = 'Alpaca {0:s}'.format(device_info_ctl[index].getText())
-            except TimeOutException:
-                logger.warning('Timeout: %s did not report device name', indi_exec)
-                self._indi_allsky_camera_name = self.ccd_device.getDeviceName()
-            except KeyError:
-                logger.warning('KeyError: %s did not report device name', indi_exec)
-                self._indi_allsky_camera_name = self.ccd_device.getDeviceName()
-
-        else:
-            # all other cameras just return device name
-            self._indi_allsky_camera_name = self.ccd_device.getDeviceName()
-
-
-        return self._indi_allsky_camera_name
-
-
     def updateConfig(self, new_config):
         self.config = new_config
 
@@ -446,7 +411,7 @@ class IndiClient(PyIndi.BaseClient):
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,
             # Preserve the capture-time device identity for model-specific gates.
-            'camera_name' : self.indi_allsky_camera_name,
+            'camera_name' : self.getIndiAllskyCameraName(),  # use derived value
             'filename_t'  : self._filename_t,
         }
 
@@ -1607,6 +1572,47 @@ class IndiClient(PyIndi.BaseClient):
 
 
         return sn_info
+
+
+    def getIndiAllskyCameraName(self):
+        if isinstance(self._indi_allsky_camera_name, str):
+            return self._indi_allsky_camera_name
+
+
+        # Generate name
+        self._indi_allsky_camera_name = self.generateIndiAllskyCameraName()
+
+        return self._indi_allsky_camera_name
+
+
+    def generateIndiAllskyCameraName(self):
+        indi_exec = self.ccd_device.getDriverExec()
+
+        if indi_exec in [
+            'indi_alpaca_ccd',
+        ]:
+            # Add Alpaca device name to INDI name
+
+            try:
+                device_info_ctl = self.get_control(self.ccd_device, 'DEVICE_INFO', 'text')
+                device_info_index_dict = self.__map_indexes(device_info_ctl, ['NAME'])
+                index = device_info_index_dict['NAME']
+
+                # Add alpaca camera name to indi camera name
+                camera_name = 'Alpaca Camera {0:s}'.format(device_info_ctl[index].getText())
+            except TimeOutException:
+                logger.warning('Timeout: %s did not report device name', indi_exec)
+                camera_name = self.ccd_device.getDeviceName()
+            except KeyError:
+                logger.warning('KeyError: %s did not report device name', indi_exec)
+                camera_name = self.ccd_device.getDeviceName()
+
+        else:
+            # all other cameras just return device name
+            camera_name = self.ccd_device.getDeviceName()
+
+
+        return camera_name
 
 
     ### Most of below was borrowed from https://github.com/GuLinux/indi-lite-tools/blob/master/pyindi_sequence/device.py
