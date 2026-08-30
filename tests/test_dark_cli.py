@@ -186,3 +186,11 @@ def test_builder_temperature_storage_opt_in_does_not_change_legacy_default():
     assert database_temperature(0, preserve_zero=True) == 0.0
     assert database_temperature(-5) == -5.0
     assert database_temperature(None, preserve_zero=True) is None
+
+
+def test_temperature_wait_progress_is_refreshed_every_five_seconds():
+    source = REPOSITORY_ROOT.joinpath('indi_allsky', 'darks.py').read_text(encoding='utf-8')
+
+    assert 'TEMPERATURE_WAIT_REFRESH_SECONDS = 5.0' in source
+    assert 'self._sleep_interruptibly(TEMPERATURE_WAIT_REFRESH_SECONDS)' in source
+    assert "'Waiting for {0:0.1f}°C; camera is {1:0.1f}°C.'" in source

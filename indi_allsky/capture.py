@@ -18,7 +18,6 @@ import ephem
 
 from multiprocessing import Process
 #from threading import Thread
-import queue
 
 from . import constants
 from . import camera as camera_module
@@ -27,6 +26,7 @@ from .utils import IndiAllSkyDateCalcs
 from .utils import IndiAllSkyExposureUtils
 from .capture_state import CameraCapabilities
 from .capture_state import build_effective_capture_state
+from .capture_control import drain_worker_control_queue
 
 from .flask.models import TaskQueueQueue
 from .flask.models import TaskQueueState
@@ -325,6 +325,18 @@ class CaptureWorker(Process):
         raise TimeOutException()
 
 
+    def _processCaptureControlQueue(self):
+        stop_requested, time_offset, unknown_actions = drain_worker_control_queue(
+            self.capture_q,
+        )
+        if stop_requested:
+            self._shutdown = True
+        if time_offset is not None:
+            self.update_time_offset = time_offset
+        for action in unknown_actions:
+            logger.error('Unknown action: %s', str(action))
+
+
     def run(self):
         # setup signal handling after detaching from the main process
         signal.signal(signal.SIGHUP, self.sighup_handler_worker)
@@ -406,18 +418,7 @@ class CaptureWorker(Process):
                 return
 
 
-            try:
-                c_dict = self.capture_q.get(False)
-
-                if c_dict.get('stop'):
-                    self._shutdown = True
-                elif c_dict.get('settime'):
-                    self.update_time_offset = int(c_dict['settime'])
-                else:
-                    logger.error('Unknown action: %s', str(c_dict))
-
-            except queue.Empty:
-                pass
+            self._processCaptureControlQueue()
 
 
             self.detectNight()
@@ -598,6 +599,11 @@ class CaptureWorker(Process):
                 while True:
                     time.sleep(0.05)
 
+                    # A maintenance handoff may be accepted while the current
+                    # exposure is still running.  Latch that request now and
+                    # drain only after the camera reports ready.
+                    self._processCaptureControlQueue()
+
                     now_time = time.time()
                     if now_time >= loop_end:
                         break
@@ -712,6 +718,13 @@ class CaptureWorker(Process):
 
 
                         self.capture_pre_hook()
+
+                        # The pre-hook may take long enough for maintenance to
+                        # be accepted.  Never start another exposure after the
+                        # stop request has reached this worker.
+                        self._processCaptureControlQueue()
+                        if self._shutdown:
+                            continue
 
 
                         frame_start_time = now_time
@@ -2562,4 +2575,3 @@ class CaptureWorker(Process):
 
         for x, label in enumerate(temp_label_list[:50]):  # limit to 50
             self.SENSOR_SLOTS[x + 80][1] = '{0:s}'.format(label)
-

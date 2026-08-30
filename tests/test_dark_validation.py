@@ -2,7 +2,27 @@ import numpy
 import pytest
 
 from indi_allsky.dark_validation import InvalidDarkMasterError
+from indi_allsky.dark_validation import dark_adu_maximum
 from indi_allsky.dark_validation import validate_dark_master_data
+
+
+@pytest.mark.parametrize(
+    'bitmax,image_bitpix,expected',
+    (
+        (0, 8, 255),
+        (0, 16, 65535),
+        (0, -32, 65535),
+        (0, 32, 65535),
+        (12, 16, 4095),
+        (12, -32, 4095),
+    ),
+)
+def test_dark_adu_maximum_uses_explicit_or_sensor_container_depth(
+        bitmax,
+        image_bitpix,
+        expected,
+):
+    assert dark_adu_maximum(bitmax, image_bitpix) == expected
 
 
 @pytest.mark.parametrize(

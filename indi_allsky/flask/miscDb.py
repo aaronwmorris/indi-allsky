@@ -150,6 +150,18 @@ class miscDb(object):
 
         # update entries
         for k, v in metadata.get('data', {}).items():
+            if k == 'camera_capabilities':
+                # Live reconnects replace the capability snapshot. Preserve
+                # dimensions learned from actual FITS output until the same
+                # source ROI is observed again.
+                existing_capabilities = dict(camera_data.get(k) or {})
+                existing_frame = dict(existing_capabilities.get('frame') or {})
+                learned_dimensions = existing_frame.get('binning_dimensions')
+                if learned_dimensions:
+                    v = dict(v or {})
+                    frame_data = dict(v.get('frame') or {})
+                    frame_data['binning_dimensions'] = learned_dimensions
+                    v['frame'] = frame_data
             camera_data[k] = v
 
         camera.data = camera_data
@@ -1570,4 +1582,3 @@ class miscDb(object):
         db.session.commit()
 
         return keogram_entry
-

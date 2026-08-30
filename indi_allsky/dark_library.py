@@ -16,7 +16,6 @@ from .capture_state import GAIN_KIND_NONE
 from .capture_state import CALIBRATION_MODE_ALL_EXPOSURES
 from .capture_state import CALIBRATION_MODE_EXPOSURE_PRIORITY
 from .capture_state import CALIBRATION_MODE_FIXED_EXPOSURES
-from .capture_state import binned_dimension
 
 
 COVERAGE_EXACT = 'exact'
@@ -294,8 +293,8 @@ def build_dark_plan(
     for profile in capture_state.profiles:
         gains = _profile_gains(profile, capabilities, quality_policy, warnings)
         pairs = _profile_gain_exposure_pairs(profile, gains, exposures, capabilities, warnings)
-        width = binned_dimension(capabilities.width, profile.binning)
-        height = binned_dimension(capabilities.height, profile.binning)
+        width = capabilities.binned_width(profile.binning)
+        height = capabilities.binned_height(profile.binning)
 
         for gain, exposure in pairs:
             target = DarkTarget(

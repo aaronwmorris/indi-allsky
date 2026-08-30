@@ -23,9 +23,11 @@ from indi_allsky.dark_library import frame_matches_plan_profile
 from indi_allsky.dark_library import update_camera_temperature_preferences
 from indi_allsky.dark_library import validate_temperature_range
 from indi_allsky.dark_automation import DarkAutomationError
+from indi_allsky.dark_automation import CANCEL_REQUESTED_MESSAGE
 from indi_allsky.dark_automation import _log_error_summary
 from indi_allsky.dark_automation import _mark_task_capture_restored
 from indi_allsky.dark_automation import _overall_progress
+from indi_allsky.dark_automation import _protect_cancel_requested_progress
 from indi_allsky.dark_automation import _activate_generation
 from indi_allsky.dark_automation import activation_changes
 from indi_allsky.dark_automation import automation_master_filename
@@ -40,6 +42,8 @@ from indi_allsky.dark_automation import determine_capture_restore_state
 from indi_allsky.dark_automation import execution_preview
 from indi_allsky.dark_automation import estimate_execution_storage
 from indi_allsky.dark_automation import flush_camera_library
+from indi_allsky.dark_automation import flush_library_batches
+from indi_allsky.dark_automation import library_selection_batches_signature
 from indi_allsky.dark_automation import normalize_execution_request
 from indi_allsky.dark_automation import recommended_stacking_method
 from indi_allsky.dark_automation import reject_task_for_config_drift
@@ -64,6 +68,9 @@ from indi_allsky.capture_state import GAIN_KIND_CONTINUOUS
 from indi_allsky.capture_state import GAIN_KIND_DISCRETE
 from indi_allsky.capture_state import GAIN_KIND_NONE
 from indi_allsky.capture_state import build_effective_capture_state
+from indi_allsky.capture_state import camera_geometry_from_ccd_info
+from indi_allsky.capture_state import record_binning_dimensions
+from indi_allsky.capture_state import validate_captured_geometry
 
 
 def _config(exposure_mode=EXPOSURE_MODE_BASIC, exposure_max=30.0):
@@ -152,9 +159,20 @@ def test_gain_db_mappings_round_trip(exposure_mode, gain):
 def test_camera_capabilities_round_trip_ccd_info_and_database_snapshot():
     ccd_info = {
         'GAIN_INFO': {'min': 0, 'max': 300, 'step': 1, 'format': '%0.0f', 'values': [0, 100, 200, 300]},
-        'BINNING_INFO': {'min': 1, 'max': 4},
+        'BINNING_INFO': {
+            'current': 1,
+            'horizontal': 1,
+            'vertical': 1,
+            'min': 1,
+            'max': 4,
+        },
         'CCD_EXPOSURE': {'CCD_EXPOSURE_VALUE': {'min': 0.0001, 'max': 60}},
-        'CCD_FRAME': {'WIDTH': {'max': 3840}, 'HEIGHT': {'max': 2160}},
+        'CCD_FRAME': {
+            'X': {'current': 8},
+            'Y': {'current': 4},
+            'WIDTH': {'current': 3824, 'max': 3840, 'step': 8},
+            'HEIGHT': {'current': 2152, 'max': 2160, 'step': 2},
+        },
         'CCD_INFO': {'CCD_BITSPERPIXEL': {'current': 16}},
     }
 
@@ -173,6 +191,130 @@ def test_camera_capabilities_round_trip_ccd_info_and_database_snapshot():
     )
 
     assert CameraCapabilities.from_camera(camera) == capabilities
+    assert capabilities.capture_width == 3824
+    assert capabilities.capture_height == 2152
+
+
+def test_binned_dimensions_respect_the_camera_roi_alignment():
+    capabilities = replace(
+        _capabilities(),
+        frame_width=3856,
+        frame_height=2180,
+        frame_width_step=8,
+        frame_height_step=2,
+    )
+
+    assert capabilities.binned_width(3) == 1280
+    assert capabilities.binned_height(3) == 726
+    assert capabilities.binned_width(4) == 964
+    assert capabilities.binned_height(4) == 545
+
+
+def test_observed_binned_dimensions_are_reused_for_the_same_source_frame():
+    capabilities = replace(
+        _capabilities(),
+        frame_x=0,
+        frame_y=0,
+        frame_width=3856,
+        frame_height=2180,
+    )
+    capability_data = record_binning_dimensions(
+        capabilities.to_dict(),
+        {'x': 0, 'y': 0, 'width': 3856, 'height': 2180},
+        4,
+        964,
+        544,
+    )
+    learned = CameraCapabilities.from_camera(SimpleNamespace(data={
+        'camera_capabilities': capability_data,
+    }))
+
+    assert learned.binned_width(4) == 964
+    assert learned.binned_height(4) == 544
+    stored_without_observation = CameraCapabilities.from_camera(SimpleNamespace(data={
+        'camera_capabilities': capabilities.to_dict(),
+    }))
+    assert learned.signature == stored_without_observation.signature
+    assert CameraCapabilities.from_camera(SimpleNamespace(data={
+        'camera_capabilities': learned.to_dict(),
+    })) == learned
+
+    other_roi = replace(learned, frame_width=3840, frame_height=2176)
+    assert other_roi.binned_width(4) == 960
+    assert other_roi.binned_height(4) == 544
+
+
+def test_dark_plan_uses_the_active_camera_frame_instead_of_sensor_maximum():
+    capabilities = replace(
+        _capabilities(),
+        frame_x=8,
+        frame_y=4,
+        frame_width=3824,
+        frame_height=2152,
+    )
+    state = build_effective_capture_state(_config(), capabilities)
+    plan = build_dark_plan(state, capabilities, camera_id=1)
+
+    dimensions_by_binning = {
+        target.binning: (target.width, target.height)
+        for target in plan.targets
+    }
+    assert dimensions_by_binning[1] == (3824, 2152)
+    assert dimensions_by_binning[2] == (1912, 1076)
+
+
+def test_camera_geometry_snapshot_and_live_capture_validation():
+    ccd_info = {
+        'CCD_FRAME': {
+            'X': {'current': 0},
+            'Y': {'current': 0},
+            'WIDTH': {'current': 3840},
+            'HEIGHT': {'current': 2176},
+        },
+        'BINNING_INFO': {'current': 3, 'horizontal': 3, 'vertical': 3},
+    }
+
+    assert camera_geometry_from_ccd_info(ccd_info) == {
+        'x': 0,
+        'y': 0,
+        'width': 3840,
+        'height': 2176,
+        'binning': (3, 3),
+    }
+    assert validate_captured_geometry(
+        1280,
+        725,
+        3,
+        ccd_info['CCD_FRAME'],
+        ccd_info['BINNING_INFO'],
+    ) == (1280, 725)
+
+    with pytest.raises(RuntimeError, match='horizontal binning'):
+        validate_captured_geometry(
+            1280,
+            725,
+            2,
+            ccd_info['CCD_FRAME'],
+            ccd_info['BINNING_INFO'],
+        )
+    with pytest.raises(RuntimeError, match='Captured height'):
+        validate_captured_geometry(
+            1280,
+            724,
+            3,
+            ccd_info['CCD_FRAME'],
+            ccd_info['BINNING_INFO'],
+        )
+
+
+def test_incomplete_camera_geometry_is_not_treated_as_restorable():
+    assert camera_geometry_from_ccd_info({
+        'CCD_FRAME': {
+            'WIDTH': {'current': 3840},
+            'HEIGHT': {'current': 2160},
+        },
+        'BINNING_INFO': {'current': 1},
+    }) is None
 
 
 def test_camera_temperature_preferences_use_legacy_fallback_then_persist_override():
@@ -1359,7 +1501,7 @@ def test_supervised_dark_command_uses_only_private_launcher_and_manifest():
         ('success', 'Dark library complete; normal capture has resumed.'),
         (
             'cancelled',
-            'Dark calibration cancelled; completed master sets remain active '
+            'Dark capture cancelled; completed master sets remain active '
             'and normal capture has resumed.',
         ),
         (
@@ -1369,7 +1511,7 @@ def test_supervised_dark_command_uses_only_private_launcher_and_manifest():
         (
             'failed',
             'Completed master sets remain active; normal capture has resumed '
-            'after the calibration error.',
+            'after the capture error.',
         ),
     ),
 )
@@ -1458,7 +1600,7 @@ def test_config_drift_expires_capture_task_before_workers_are_touched():
     assert stale.data['capture_restored'] is True
     assert stale.data['progress']['phase'] == 'review_required'
     assert 'no dark frames were taken' in stale.data['error']
-    assert stale.result == 'Reload indi-allsky before dark calibration'
+    assert stale.result == 'Reload indi-allsky before dark acquisition'
 
 
 @pytest.mark.parametrize(
@@ -1553,6 +1695,38 @@ def test_public_task_status_combines_child_and_overall_progress():
     }]
 
 
+def test_cancel_requested_status_keeps_cancellation_authoritative_over_child_progress():
+    task = SimpleNamespace(
+        id=43,
+        state=SimpleNamespace(value='RUNNING'),
+        data={
+            'status': 'cancel_requested',
+            'target_count': 1,
+            'progress': {
+                'phase': 'capturing',
+                'message': 'Capturing source frame 1 of 3 at gain 0, exposure 10s.',
+                'current_gain': 0,
+                'current_exposure': 10,
+                'current_frame': 1,
+                'current_frame_count': 3,
+            },
+        },
+    )
+
+    protected = _protect_cancel_requested_progress(task.data, task.data['progress'])
+    status = task_public_status(task)
+
+    assert protected['phase'] == 'cancel_requested'
+    assert protected['message'] == CANCEL_REQUESTED_MESSAGE
+    assert protected['current_frame'] == 1
+    assert status['status'] == 'cancel_requested'
+    assert status['phase'] == 'cancel_requested'
+    assert status['message'] == CANCEL_REQUESTED_MESSAGE
+    assert status['current_gain'] == 0
+    assert status['current_exposure'] == 10
+    assert status['current_frame'] == 1
+
+
 def test_remaining_time_weights_long_and_short_master_exposures():
     task = SimpleNamespace(
         id=45,
@@ -1616,6 +1790,8 @@ def test_overall_progress_keeps_completed_details_across_capture_groups():
     child_progress = {
         'phase': 'capturing',
         'completed_master_sets': 1,
+        'resolved_width': 1280,
+        'resolved_height': 725,
         'completed_master_details': [{
             'capture_profile': 'night',
             'gain': 30,
@@ -1636,6 +1812,8 @@ def test_overall_progress_keeps_completed_details_across_capture_groups():
         detail['capture_profile'] for detail in progress['completed_master_details']
     ] == ['day', 'night']
     assert progress['completed_master_details'][1]['temperature_set'] == 2
+    assert progress['resolved_width'] == 1280
+    assert progress['resolved_height'] == 725
 
 
 def test_temperature_series_status_exposes_completed_sets_and_next_threshold():
@@ -1695,6 +1873,27 @@ def test_finite_temperature_series_status_counts_across_temperature_sets():
     assert status['percent'] == 45.0
     assert status['planned_temperature_sets'] == 5
     assert status['target_temperature'] == 0
+
+
+def test_finite_temperature_series_status_keeps_plan_during_child_handoff():
+    task = SimpleNamespace(
+        id=45,
+        state=SimpleNamespace(value='RUNNING'),
+        data={
+            'status': 'running',
+            'capture_mode': 'temperature_series',
+            'temperature_target': 5,
+            'temperature_set_count': 4,
+            'target_count': 3,
+            'progress': _overall_progress({}, 0, 3, 1, 1),
+        },
+    )
+
+    status = task_public_status(task)
+
+    assert status['target_temperature'] == 5
+    assert status['planned_temperature_sets'] == 4
+    assert status['target_count'] == 12
 
 
 def test_temperature_series_restore_message_preserves_completed_sets():
@@ -1947,7 +2146,9 @@ def test_library_catalog_groups_cameras_profiles_layers_and_pairs():
     assert [camera['id'] for camera in catalog['cameras']] == [1, 2]
     current = catalog['cameras'][0]
     assert current['current'] is True
+    assert current['active_selection'] == {'dark_ids': [1], 'bpm_ids': [2]}
     assert current['inactive_selection'] == {'dark_ids': [3], 'bpm_ids': [4]}
+    assert current['activatable_selection'] == {'dark_ids': [3], 'bpm_ids': [4]}
     assert len(current['profiles']) == 1
     assert len(current['profiles'][0]['layers']) == 2
     assert all(
@@ -1956,6 +2157,15 @@ def test_library_catalog_groups_cameras_profiles_layers_and_pairs():
     )
     assert current['active_master_set_count'] == 1
     assert current['inactive_master_set_count'] == 1
+    assert catalog['selection_batches'][0]['camera_id'] == 1
+    assert catalog['active_selection_batches'][0]['selection'] == {
+        'dark_ids': [1],
+        'bpm_ids': [2],
+    }
+    assert catalog['inactive_selection_batches'][0]['selection'] == {
+        'dark_ids': [3],
+        'bpm_ids': [4],
+    }
 
 
 def test_library_catalog_groups_nearby_legacy_temperatures_across_old_bucket_boundary():
@@ -2169,7 +2379,7 @@ def test_capture_staging_cannot_be_manually_activated():
         },
     })
 
-    with pytest.raises(DarkAutomationError, match='staging files'):
+    with pytest.raises(DarkAutomationError, match='Files being captured'):
         update_library_entries_eligibility([frame], True)
 
     assert frame.active is False
@@ -2213,6 +2423,82 @@ def test_flush_removes_only_explicitly_selected_records():
         assert retained_path.read_bytes() == b'retained'
         assert result['dark_frames'] == 1
         assert result['bad_pixel_maps'] == 0
+
+
+def test_flush_library_batches_preflights_and_deletes_across_cameras():
+    with tempfile.TemporaryDirectory(dir=Path(__file__).parent) as temporary_dir:
+        temporary_path = Path(temporary_dir)
+        first_path = temporary_path.joinpath('camera-1.fit')
+        second_path = temporary_path.joinpath('camera-2.fit')
+        first_path.write_bytes(b'first')
+        second_path.write_bytes(b'second')
+        first_entry = SimpleNamespace(
+            id=1,
+            camera_id=1,
+            fileSize=5,
+            filename='camera-1.fit',
+            createDate=datetime(2026, 8, 21, 12, 0, 0),
+            getFilesystemPath=lambda: first_path,
+        )
+        second_entry = SimpleNamespace(
+            id=2,
+            camera_id=2,
+            fileSize=6,
+            filename='camera-2.fit',
+            createDate=datetime(2026, 8, 21, 12, 1, 0),
+            getFilesystemPath=lambda: second_path,
+        )
+        dark_model = _flush_model(
+            'IndiAllSkyDbDarkFrameTable',
+            [first_entry, second_entry],
+        )
+        bpm_model = _flush_model('IndiAllSkyDbBadPixelMapTable', [])
+        models = (dark_model, bpm_model)
+        first_preview = select_camera_library_entries(
+            models,
+            camera_id=1,
+            selection={'dark_ids': [1], 'bpm_ids': []},
+        )
+        second_preview = select_camera_library_entries(
+            models,
+            camera_id=2,
+            selection={'dark_ids': [2], 'bpm_ids': []},
+        )
+        batches = [{
+            'camera_id': 1,
+            'selection': first_preview['selection'],
+            'selection_signature': first_preview['signature'],
+        }, {
+            'camera_id': 2,
+            'selection': second_preview['selection'],
+            'selection_signature': second_preview['signature'],
+        }]
+        signature = library_selection_batches_signature([
+            {'camera_id': 2, 'signature': second_preview['signature']},
+            {'camera_id': 1, 'signature': first_preview['signature']},
+        ])
+        assert signature == library_selection_batches_signature([
+            {'camera_id': 1, 'signature': first_preview['signature']},
+            {'camera_id': 2, 'signature': second_preview['signature']},
+        ])
+
+        session = _FakeSession()
+        result = flush_library_batches(
+            SimpleNamespace(session=session),
+            models,
+            batches,
+        )
+
+        assert session.deleted == [first_entry, second_entry]
+        assert session.committed is True
+        assert not first_path.exists()
+        assert not second_path.exists()
+        assert result == {
+            'dark_frames': 2,
+            'bad_pixel_maps': 0,
+            'files': 2,
+            'warnings': [],
+        }
 
 
 def test_flush_requires_a_fresh_selection_signature():
@@ -2587,8 +2873,8 @@ def test_successful_refresh_records_activation_and_retirement_reasons():
     assert session.committed is True
     assert library_entry_eligibility(new_dark)['reason_label'] == 'Activated after capture'
     assert library_entry_eligibility(new_map)['reason_label'] == 'Activated after capture'
-    assert library_entry_eligibility(old_dark)['reason_label'] == 'Retired by a refresh run'
-    assert library_entry_eligibility(old_map)['reason_label'] == 'Retired by a refresh run'
+    assert library_entry_eligibility(old_dark)['reason_label'] == 'Replaced by a recommended-set update'
+    assert library_entry_eligibility(old_map)['reason_label'] == 'Replaced by a recommended-set update'
 
 
 def test_refresh_uses_selected_temperature_distance_for_equivalent_layers():
@@ -2657,9 +2943,11 @@ def test_rebuild_uses_symmetric_matching_around_cooled_target():
 def test_capability_signature_detects_material_live_camera_change():
     capabilities = _capabilities()
     changed = _capabilities(gain_step=5)
+    changed_frame = replace(capabilities, frame_height=2152)
 
     assert capabilities.signature == CameraCapabilities(**capabilities.__dict__).signature
     assert capabilities.signature != changed.signature
+    assert capabilities.signature != changed_frame.signature
 
 
 def test_exposure_overrides_are_part_of_the_plan_signature():

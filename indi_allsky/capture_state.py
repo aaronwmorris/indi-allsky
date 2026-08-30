@@ -39,6 +39,50 @@ class CameraCapabilities:
     height: Optional[int] = None
     bit_depth: Optional[int] = None
     gain_step_is_quantum: bool = False
+    frame_x: Optional[int] = None
+    frame_y: Optional[int] = None
+    frame_width: Optional[int] = None
+    frame_height: Optional[int] = None
+    frame_width_step: Optional[int] = None
+    frame_height_step: Optional[int] = None
+    binning_dimensions: Tuple[Tuple[int, int, int, int, int, int, int], ...] = ()
+
+    @property
+    def capture_width(self):
+        """Width of the active camera frame, falling back to the sensor maximum."""
+        return self.frame_width if self.frame_width is not None else self.width
+
+    @property
+    def capture_height(self):
+        """Height of the active camera frame, falling back to the sensor maximum."""
+        return self.frame_height if self.frame_height is not None else self.height
+
+    def binned_width(self, binning):
+        learned = self._learned_binning_dimensions(binning)
+        if learned is not None:
+            return learned[0]
+        return aligned_binned_dimension(self.capture_width, binning, self.frame_width_step)
+
+    def binned_height(self, binning):
+        learned = self._learned_binning_dimensions(binning)
+        if learned is not None:
+            return learned[1]
+        return aligned_binned_dimension(self.capture_height, binning, self.frame_height_step)
+
+    def _learned_binning_dimensions(self, binning):
+        """Use a measured FITS size only for the exact ROI that produced it."""
+        source_geometry = (
+            self.frame_x,
+            self.frame_y,
+            self.capture_width,
+            self.capture_height,
+        )
+        if any(value is None for value in source_geometry):
+            return None
+        for entry in self.binning_dimensions:
+            if entry[:5] == (int(binning),) + source_geometry:
+                return entry[5], entry[6]
+        return None
 
     @property
     def gain_supported(self):
@@ -70,6 +114,12 @@ class CameraCapabilities:
             width=_optional_int((ccd_frame.get('WIDTH') or {}).get('max')),
             height=_optional_int((ccd_frame.get('HEIGHT') or {}).get('max')),
             bit_depth=_optional_int((ccd_sensor_info.get('CCD_BITSPERPIXEL') or {}).get('current')),
+            frame_x=_optional_int((ccd_frame.get('X') or {}).get('current')),
+            frame_y=_optional_int((ccd_frame.get('Y') or {}).get('current')),
+            frame_width=_optional_int((ccd_frame.get('WIDTH') or {}).get('current')),
+            frame_height=_optional_int((ccd_frame.get('HEIGHT') or {}).get('current')),
+            frame_width_step=_positive_optional_int((ccd_frame.get('WIDTH') or {}).get('step')),
+            frame_height_step=_positive_optional_int((ccd_frame.get('HEIGHT') or {}).get('step')),
         )
 
     @classmethod
@@ -98,6 +148,15 @@ class CameraCapabilities:
                 width=_optional_int(frame_data.get('width')),
                 height=_optional_int(frame_data.get('height')),
                 bit_depth=_optional_int(frame_data.get('bit_depth')),
+                frame_x=_optional_int(frame_data.get('x')),
+                frame_y=_optional_int(frame_data.get('y')),
+                frame_width=_optional_int(frame_data.get('active_width')),
+                frame_height=_optional_int(frame_data.get('active_height')),
+                frame_width_step=_positive_optional_int(frame_data.get('width_step')),
+                frame_height_step=_positive_optional_int(frame_data.get('height_step')),
+                binning_dimensions=_normalise_binning_dimensions(
+                    frame_data.get('binning_dimensions', ()),
+                ),
             )
 
         return cls(
@@ -136,13 +195,39 @@ class CameraCapabilities:
                 'width': self.width,
                 'height': self.height,
                 'bit_depth': self.bit_depth,
+                'x': self.frame_x,
+                'y': self.frame_y,
+                'active_width': self.frame_width,
+                'active_height': self.frame_height,
+                'width_step': self.frame_width_step,
+                'height_step': self.frame_height_step,
+                'binning_dimensions': [
+                    {
+                        'binning': entry[0],
+                        'x': entry[1],
+                        'y': entry[2],
+                        'source_width': entry[3],
+                        'source_height': entry[4],
+                        'width': entry[5],
+                        'height': entry[6],
+                    }
+                    for entry in self.binning_dimensions
+                ],
             },
         }
+
+    def configuration_dict(self):
+        """Capability data that can invalidate an approved capture plan."""
+        data = self.to_dict()
+        # Measurements refine planning but do not describe a camera/config
+        # change, so learning a size must not invalidate an accepted plan.
+        data['frame'].pop('binning_dimensions', None)
+        return data
 
     @property
     def signature(self):
         return hashlib.sha256(
-            json.dumps(self.to_dict(), sort_keys=True, separators=(',', ':')).encode('utf-8')
+            json.dumps(self.configuration_dict(), sort_keys=True, separators=(',', ':')).encode('utf-8')
         ).hexdigest()
 
     def clamp_gain(self, gain):
@@ -392,7 +477,7 @@ def build_effective_capture_state(
         'exposure_max': exposure_max,
         'exposure_step': float(exposure_step),
         'profiles': [profile.to_dict() for profile in profiles],
-        'capabilities': capabilities.to_dict(),
+        'capabilities': capabilities.configuration_dict(),
     }
     config_signature = hashlib.sha256(
         json.dumps(signature_data, sort_keys=True, separators=(',', ':')).encode('utf-8')
@@ -413,6 +498,111 @@ def binned_dimension(dimension, binning):
     if dimension is None:
         return None
     return max(1, int(int(dimension) / int(binning)))
+
+
+def aligned_binned_dimension(dimension, binning, frame_step=None):
+    """Predict a driver's binned size after respecting its unbinned ROI step."""
+    if dimension is None:
+        return None
+    dimension = int(dimension)
+    binning = int(binning)
+    frame_step = max(1, int(frame_step or 1))
+    alignment = math.lcm(frame_step, binning)
+    aligned_dimension = dimension - (dimension % alignment)
+    return max(1, int(aligned_dimension / binning))
+
+
+def _current_int(property_data):
+    if not isinstance(property_data, dict) or property_data.get('current') is None:
+        return None
+    return int(round(float(property_data['current'])))
+
+
+def camera_geometry_from_ccd_info(ccd_info):
+    """Return restorable INDI frame/binning state, or None when unavailable."""
+    frame_info = (ccd_info or {}).get('CCD_FRAME', {}) or {}
+    frame = {
+        'x': _current_int(frame_info.get('X')),
+        'y': _current_int(frame_info.get('Y')),
+        'width': _current_int(frame_info.get('WIDTH')),
+        'height': _current_int(frame_info.get('HEIGHT')),
+    }
+    if any(value is None for value in frame.values()):
+        return None
+    if frame['width'] <= 0 or frame['height'] <= 0:
+        return None
+
+    binning_info = (ccd_info or {}).get('BINNING_INFO', {}) or {}
+    horizontal = binning_info.get('horizontal', binning_info.get('current', 1))
+    vertical = binning_info.get('vertical', horizontal)
+    try:
+        frame['binning'] = (int(round(float(horizontal))), int(round(float(vertical))))
+    except (TypeError, ValueError):
+        return None
+    if min(frame['binning']) < 1:
+        return None
+    return frame
+
+
+def validate_captured_geometry(image_width, image_height, requested_binning, frame_info, binning_info):
+    """Verify live INDI geometry while treating the received FITS shape as authoritative."""
+    requested_binning = int(requested_binning)
+    horizontal = (binning_info or {}).get('horizontal', (binning_info or {}).get('current'))
+    vertical = (binning_info or {}).get('vertical', horizontal)
+    if horizontal is not None and int(round(float(horizontal))) != requested_binning:
+        raise RuntimeError('The camera did not apply the requested horizontal binning')
+    if vertical is not None and int(round(float(vertical))) != requested_binning:
+        raise RuntimeError('The camera did not apply the requested vertical binning')
+
+    frame_width = _current_int((frame_info or {}).get('WIDTH'))
+    frame_height = _current_int((frame_info or {}).get('HEIGHT'))
+    if frame_width is not None and horizontal is not None:
+        expected_width = binned_dimension(frame_width, int(round(float(horizontal))))
+        if int(image_width) != expected_width:
+            raise RuntimeError(
+                'Captured width {0:d} does not match the camera frame readback {1:d}'.format(
+                    int(image_width), expected_width,
+                )
+            )
+    if frame_height is not None and vertical is not None:
+        expected_height = binned_dimension(frame_height, int(round(float(vertical))))
+        if int(image_height) != expected_height:
+            raise RuntimeError(
+                'Captured height {0:d} does not match the camera frame readback {1:d}'.format(
+                    int(image_height), expected_height,
+                )
+            )
+    return int(image_width), int(image_height)
+
+
+def record_binning_dimensions(capability_data, geometry, binning, width, height):
+    """Return camera capability data with one observed binned output recorded."""
+    capability_data = dict(capability_data or {})
+    frame_data = dict(capability_data.get('frame') or {})
+    entries = list(frame_data.get('binning_dimensions') or ())
+    key = (
+        int(binning),
+        int(geometry['x']),
+        int(geometry['y']),
+        int(geometry['width']),
+        int(geometry['height']),
+    )
+    entries = [
+        entry for entry in entries
+        if _binning_dimension_key(entry) != key
+    ]
+    entries.append({
+        'binning': key[0],
+        'x': key[1],
+        'y': key[2],
+        'source_width': key[3],
+        'source_height': key[4],
+        'width': int(width),
+        'height': int(height),
+    })
+    frame_data['binning_dimensions'] = entries
+    capability_data['frame'] = frame_data
+    return capability_data
 
 
 def _fixed_profile(
@@ -550,10 +740,49 @@ def _optional_int(value):
     return int(value)
 
 
+def _positive_optional_int(value):
+    value = _optional_int(value)
+    if value is None or value <= 0:
+        return None
+    return value
+
+
 def _normalise_float_values(values: Sequence[float]):
     if not values:
         return ()
     return tuple(sorted(set(float(value) for value in values)))
+
+
+def _binning_dimension_key(entry):
+    if not isinstance(entry, dict):
+        return None
+    try:
+        return (
+            int(entry['binning']),
+            int(entry['x']),
+            int(entry['y']),
+            int(entry['source_width']),
+            int(entry['source_height']),
+        )
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+def _normalise_binning_dimensions(entries):
+    normalised = []
+    for entry in entries or ():
+        key = _binning_dimension_key(entry)
+        if key is None:
+            continue
+        try:
+            width = int(entry['width'])
+            height = int(entry['height'])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if key[0] < 1 or key[3] < 1 or key[4] < 1 or width < 1 or height < 1:
+            continue
+        normalised.append(key + (width, height))
+    return tuple(sorted(set(normalised)))
 
 
 def _optional_string(value):
