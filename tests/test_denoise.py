@@ -38,6 +38,17 @@ def test_bilateral_uses_night_settings_at_night():
     assert denoiser._get_bilateral_sigma() == (11, 12)
 
 
+def test_bilateral_uses_legacy_strength_mapping_without_sigma_override():
+    denoiser = _denoiser({
+        'IMAGE_DENOISE_STRENGTH': 5,
+        'BILATERAL_SCALE_FACTOR': 0.4,
+        'BILATERAL_SCALE_EXP': 1.0,
+        'BILATERAL_SIGMA_SPACE': 12,
+    })
+
+    assert denoiser._get_bilateral_sigma() == (7, 12)
+
+
 def test_wavelet_blend_is_limited_by_configured_maximum(monkeypatch):
     denoiser = _denoiser({
         'IMAGE_DENOISE_STRENGTH': 5,

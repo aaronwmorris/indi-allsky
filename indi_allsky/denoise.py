@@ -33,6 +33,7 @@ GAUSSIAN_BLEND_ADJUST = GAUSSIAN_SIGMA_ADJUST
 MEDIAN_KSIZE_ADJUST = 0.851
 MEDIAN_BLEND_ADJUST = MEDIAN_KSIZE_ADJUST
 BILATERAL_BLEND_BUMP = 1.20
+BILATERAL_SIGMA_BUMP = 1.20
 
 
 logger = logging.getLogger('indi_allsky')
@@ -323,8 +324,26 @@ class IndiAllskyDenoise(object):
         use_night_settings = (self.config.get('USE_NIGHT_COLOR', True) or
                               self.night_av[constants.NIGHT_NIGHT])
         suffix = '' if use_night_settings else '_DAY'
-        sigma_color = int(self.config.get('BILATERAL_SIGMA_COLOR' + suffix, 10))
         sigma_space = int(self.config.get('BILATERAL_SIGMA_SPACE' + suffix, 15))
+        sigma_color_key = 'BILATERAL_SIGMA_COLOR' + suffix
+
+        if sigma_color_key in self.config:
+            sigma_color = int(self.config[sigma_color_key])
+        else:
+            strength = max(1, min(self._get_strength(), 5))
+            tuned_sigma = {1: 8, 2: 8, 3: 8, 4: 12, 5: 16}
+            base_sigma = float(tuned_sigma[strength])
+            scale_factor = float(self.config.get('BILATERAL_SCALE_FACTOR', 0.4))
+            scale_exponent = float(self.config.get('BILATERAL_SCALE_EXP', 1.0))
+            normalized_strength = (float(strength) - 1.0) / 4.0
+            sigma_min = base_sigma * scale_factor
+            sigma_max = sigma_min * (5.0 ** (scale_exponent - 1.0))
+            sigma_color = int(max(
+                1.0,
+                (sigma_min + (sigma_max - sigma_min) *
+                 (normalized_strength ** scale_exponent)) * BILATERAL_SIGMA_BUMP,
+            ))
+
         return max(1, sigma_color), max(1, sigma_space)
 
     def _uses_high_bit_depth_camera(self, img):
