@@ -1510,7 +1510,7 @@ class IndiClient(PyIndi.BaseClient):
 
         # for cameras that do not support a serial number
         fake_sn_info = {
-            'current' : None,
+            'text' : None,
         }
 
 
@@ -1573,7 +1573,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
         sn_info = {
-            'current' : sn_ctl[index].getText() or None  # blank strings should be None
+            'text' : sn_ctl[index].getText() or None  # blank strings should be None
         }
 
 

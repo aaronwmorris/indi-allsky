@@ -1021,7 +1021,7 @@ class CaptureWorker(Process):
             'type'        : constants.CAMERA,
             'name'        : self.camera_name,
             'driver'      : self.camera_server,
-            'serialNumber': ccd_info.get('SERIALNUMBER_INFO', {}).get('current'),
+            'serialNumber': ccd_info.get('SERIALNUMBER_INFO', {}).get('text'),
 
             'hidden'      : False,  # unhide camera
 
