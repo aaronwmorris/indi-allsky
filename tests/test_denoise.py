@@ -55,6 +55,41 @@ def test_wavelet_blend_is_limited_by_configured_maximum(monkeypatch):
     assert captured['blend'] == 0.25
 
 
+def test_wavelet_blend_can_be_disabled(monkeypatch):
+    denoiser = _denoiser({
+        'IMAGE_DENOISE_STRENGTH': 5,
+        'WAVELET_MAX_BLEND': 0,
+    })
+    captured = {}
+
+    def finalize(original, processed, blend, dtype_max):
+        captured['blend'] = blend
+        return processed
+
+    monkeypatch.setattr(denoiser, '_finalize_denoise', finalize)
+    denoiser.wavelet(numpy.arange(256, dtype=numpy.uint8).reshape(16, 16))
+
+    assert captured['blend'] == 0.0
+
+
+def test_wavelet_blend_is_capped_at_one(monkeypatch):
+    denoiser = _denoiser({
+        'IMAGE_DENOISE_STRENGTH': 5,
+        'WAVELET_BLEND': 2.0,
+        'WAVELET_MAX_BLEND': 2.0,
+    })
+    captured = {}
+
+    def finalize(original, processed, blend, dtype_max):
+        captured['blend'] = blend
+        return processed
+
+    monkeypatch.setattr(denoiser, '_finalize_denoise', finalize)
+    denoiser.wavelet(numpy.arange(256, dtype=numpy.uint8).reshape(16, 16))
+
+    assert captured['blend'] == 1.0
+
+
 def test_high_bit_depth_median_preserves_native_values():
     denoiser = _denoiser({'CCD_BIT_DEPTH': 12})
     image = numpy.array([
@@ -70,6 +105,15 @@ def test_high_bit_depth_median_preserves_native_values():
     assert result.dtype == numpy.uint16
     assert numpy.array_equal(result, cv2.medianBlur(image, 5))
     assert result[2, 2] % 257 != 0
+
+
+def test_configured_bit_depth_takes_precedence_over_image_dtype():
+    uint16_image = numpy.zeros((5, 5), dtype=numpy.uint16)
+    uint8_image = numpy.zeros((5, 5), dtype=numpy.uint8)
+
+    assert not _denoiser({'CCD_BIT_DEPTH': 8})._uses_high_bit_depth_camera(uint16_image)
+    assert _denoiser({'CCD_BIT_DEPTH': 12})._uses_high_bit_depth_camera(uint8_image)
+    assert _denoiser({})._uses_high_bit_depth_camera(uint16_image)
 
 
 def test_star_percentile_increases_full_mask_detection_threshold(monkeypatch):
@@ -93,3 +137,26 @@ def test_star_percentile_increases_full_mask_detection_threshold(monkeypatch):
                                          expand_radius=0)
 
     assert captured['threshold'] == numpy.percentile(data, 90.0) - 10.0
+
+
+def test_star_sigma_threshold_remains_authoritative_when_percentile_is_lower(monkeypatch):
+    captured = {}
+
+    class FakeDAOStarFinder:
+        def __init__(self, fwhm, threshold):
+            captured['threshold'] = threshold
+
+        def __call__(self, data):
+            return None
+
+    monkeypatch.setattr(protection_masks, '_estimate_background_stats',
+                        lambda data: (10.0, 5.0))
+    monkeypatch.setitem(sys.modules, 'photutils.detection',
+                        types.SimpleNamespace(DAOStarFinder=FakeDAOStarFinder))
+    data = numpy.array([[10.0, 10.0, 10.0], [10.0, 10.0, 12.0]], dtype=numpy.float32)
+
+    protection_masks._generate_star_mask(data, percentile=90.0,
+                                         threshold_sigma=2.0, fwhm=5.0,
+                                         expand_radius=0)
+
+    assert captured['threshold'] == 10.0

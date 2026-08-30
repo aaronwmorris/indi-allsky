@@ -53,7 +53,13 @@ __all__ = [
     "star_mask",
     "fast_star_mask",
     "async_star_mask",
+    "set_cache_size",
 ]
+
+
+def set_cache_size(size):
+    """Deprecated: star-mask caching is no longer used."""
+    return
 
 
 def _estimate_background_stats(data: np.ndarray) -> tuple[float, float]:

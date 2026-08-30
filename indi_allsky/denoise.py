@@ -24,10 +24,12 @@ _wavelet_level_cache: dict[int, int] = {}
 # typical Raspberry Pi.
 _thread_pool = concurrent.futures.ThreadPoolExecutor(max_workers=4)
 
-# Algorithm tuning constants.
+# Tuned multiplier for wavelet denoise strength.
 WAVELET_SCALE_ADJUST = 1.10
+# Tuned multiplier for Gaussian sigma and blend.
 GAUSSIAN_SIGMA_ADJUST = 0.707625
 GAUSSIAN_BLEND_ADJUST = GAUSSIAN_SIGMA_ADJUST
+# Tuned multiplier for median kernel size and blend.
 MEDIAN_KSIZE_ADJUST = 0.851
 MEDIAN_BLEND_ADJUST = MEDIAN_KSIZE_ADJUST
 BILATERAL_BLEND_BUMP = 1.20
@@ -326,7 +328,10 @@ class IndiAllskyDenoise(object):
         return max(1, sigma_color), max(1, sigma_space)
 
     def _uses_high_bit_depth_camera(self, img):
-        """Return whether this frame comes from a camera with more than 8 bits."""
+        """Return whether this frame comes from a camera with more than 8 bits.
+
+        A configured camera bit depth takes precedence over the image dtype.
+        """
         configured_bit_depth = int(self.config.get('CCD_BIT_DEPTH', 0))
         if configured_bit_depth:
             return configured_bit_depth > 8
