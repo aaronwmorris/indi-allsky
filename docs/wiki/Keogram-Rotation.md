@@ -1,0 +1,1 @@
+See https://github.com/aaronwmorris/indi-allsky/wiki/Keogram
