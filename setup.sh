@@ -2287,11 +2287,11 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
     echo
     echo "**** Setting up indiserver service ****"
 
-
-    # timer
-    cp -f "${ALLSKY_DIRECTORY}/service/${INDISERVER_SERVICE_NAME}.timer" "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
-    chmod 644 "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
-
+    # remove legacy timer if present
+    if [[ -f "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer" ]]; then
+        systemctl --user disable "${INDISERVER_SERVICE_NAME}.timer" 2>/dev/null || true
+        rm -f "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
+    fi
 
     TMP1=$(mktemp)
     sed \
@@ -2316,9 +2316,11 @@ fi
 
 
 echo "**** Setting up indi-allsky service ****"
-# timer
-cp -f "${ALLSKY_DIRECTORY}/service/${ALLSKY_SERVICE_NAME}.timer" "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.timer"
-chmod 644 "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.timer"
+# remove legacy timer if present
+if [[ -f "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.timer" ]]; then
+    systemctl --user disable "${ALLSKY_SERVICE_NAME}.timer" 2>/dev/null || true
+    rm -f "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.timer"
+fi
 
 
 TMP2=$(mktemp)
@@ -2372,8 +2374,8 @@ echo "**** Enabling services ****"
 sudo loginctl enable-linger "$USER"
 systemctl --user daemon-reload
 
-# indi-allsky service is started by the timer (2 minutes after boot)
-systemctl --user disable "${ALLSKY_SERVICE_NAME}.service"
+# enable indi-allsky service directly at boot (ordered after indiserver and gunicorn)
+systemctl --user enable "${ALLSKY_SERVICE_NAME}.service"
 
 # gunicorn service is started by the socket
 systemctl --user disable "${GUNICORN_SERVICE_NAME}.service"
@@ -3549,9 +3551,7 @@ fi
 
 
 if [ "$INSTALL_INDISERVER" == "true" ]; then
-    systemctl --user enable "${INDISERVER_SERVICE_NAME}.timer"
-    # indiserver service is started by the timer (30 seconds after boot)
-    systemctl --user disable "${INDISERVER_SERVICE_NAME}.service"
+    systemctl --user enable "${INDISERVER_SERVICE_NAME}.service"
 
 
     while [ -z "${RESTART_INDISERVER:-}" ]; do
