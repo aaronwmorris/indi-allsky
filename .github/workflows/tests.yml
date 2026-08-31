@@ -1,0 +1,58 @@
+name: Unit & Integration Tests
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - 'feature/**'
+      - 'deb-packaging'
+  pull_request:
+    branches:
+      - master
+      - main
+      - 'deb-packaging'
+
+jobs:
+  pytest:
+    name: Pytest (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12', '3.13']
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libindi-dev \
+            swig \
+            libnova-dev \
+            libcfitsio-dev \
+            libcurl4-openssl-dev \
+            ffmpeg \
+            gifsicle
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          # Install requirements
+          if [ -f requirements/requirements_latest.txt ]; then
+            pip install -r requirements/requirements_latest.txt
+          fi
+          pip install pytest pytest-flask pytest-mock pytest-cov argon2-cffi
+
+      - name: Run Test Suite
+        run: |
+          pytest tests/ --cov=indi_allsky/ --cov-report=term
