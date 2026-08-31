@@ -2769,6 +2769,12 @@
   .tw\:left-0 {
     left: 0px;
   }
+  .tw\:left-2 {
+    left: calc(var(--tw-spacing) * 2);
+  }
+  .tw\:left-2 {
+    left: calc(var(--tw-spacing) * 2);
+  }
   .tw\:left-3\.5 {
     left: calc(var(--tw-spacing) * 3.5);
   }
@@ -5711,6 +5717,16 @@
   }
   .tw\:gap-8 {
     gap: calc(var(--tw-spacing) * 8);
+  }
+  :where(.tw\:space-y-1 > :not(:last-child)) {
+    --tw-space-y-reverse: 0;
+    margin-block-start: calc(var(--tw-spacing) * var(--tw-space-y-reverse));
+    margin-block-end: calc(var(--tw-spacing) * calc(1 - var(--tw-space-y-reverse)));
+  }
+  :where(.tw\:space-y-1 > :not(:last-child)) {
+    --tw-space-y-reverse: 0;
+    margin-block-start: calc(var(--tw-spacing) * var(--tw-space-y-reverse));
+    margin-block-end: calc(var(--tw-spacing) * calc(1 - var(--tw-space-y-reverse)));
   }
   :where(.tw\:space-y-1\.5 > :not(:last-child)) {
     --tw-space-y-reverse: 0;
