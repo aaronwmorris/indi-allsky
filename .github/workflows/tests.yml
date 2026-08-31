@@ -1,17 +1,9 @@
 name: Unit & Integration Tests
 
 on:
-  push:
-    branches:
-      - master
-      - main
-      - 'feature/**'
-      - 'deb-packaging'
   pull_request:
     branches:
-      - master
       - main
-      - 'deb-packaging'
 
 jobs:
   pytest:
