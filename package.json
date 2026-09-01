@@ -6,7 +6,7 @@
     "build": "cp node_modules/cally/dist/cally.js ./indi_allsky/flask/static/js/cally.js && chmod 644 ./indi_allsky/flask/static/js/cally.js && tailwindcss -i ./indi_allsky/flask/static/css/app.css -o ./indi_allsky/flask/static/css/dist.css",
     "build:min": "cp node_modules/cally/dist/cally.js ./indi_allsky/flask/static/js/cally.js && chmod 644 ./indi_allsky/flask/static/js/cally.js && tailwindcss -i ./indi_allsky/flask/static/css/app.css -o ./indi_allsky/flask/static/css/dist.css --minify",
     "prepare": "git config core.hooksPath githooks && git config merge.build_css.driver \"npm run build -- && cp indi_allsky/flask/static/css/dist.css %A\" && git config merge.build_css.name \"Rebuild Tailwind dist.css on merge conflict\" || true",
-    "setup:venv": "python3 -m venv .venv --system-site-packages && .venv/bin/pip install --upgrade pip && .venv/bin/pip install -r requirements/requirements_latest.txt pytest pytest-cov pytest-mock pytest-sugar pytest-asyncio pytest-xdist",
+    "setup:venv": "python3 -m venv .venv --system-site-packages && .venv/bin/pip install --upgrade pip && (.venv/bin/pip install -r requirements/requirements_latest.txt || (grep -v '^pyindi-client' requirements/requirements_latest.txt | .venv/bin/pip install -r /dev/stdin && echo 'Warning: pyindi-client source build skipped')) && .venv/bin/pip install pytest pytest-cov pytest-mock pytest-sugar pytest-asyncio pytest-xdist",
     "postinstall": "npm run setup:venv",
     "test": ".venv/bin/python -m pytest tests/ --cov=indi_allsky/ --cov-report=term",
     "tests": "npm run test"
