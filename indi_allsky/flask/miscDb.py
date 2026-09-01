@@ -57,31 +57,62 @@ class miscDb(object):
     def addCamera(self, metadata):
         now = datetime.now()
 
-        try:
-            # not catching MultipleResultsFound
-            camera = IndiAllSkyDbCameraTable.query\
-                .filter(
-                    or_(
-                        IndiAllSkyDbCameraTable.name == metadata['name'],
-                        IndiAllSkyDbCameraTable.name_alt1 == metadata['name'],
-                        IndiAllSkyDbCameraTable.name_alt2 == metadata['name'],
-                    )
-                )\
-                .one()
-            camera.connectDate = now
 
-            if not camera.uuid:
-                camera.uuid = str(uuid.uuid4())
-        except NoResultFound:
-            camera = IndiAllSkyDbCameraTable(
-                name=metadata['name'],
-                connectDate=now,
-                local=True,
-                uuid=str(uuid.uuid4()),
-            )
+        camera = None
 
-            db.session.add(camera)
-            db.session.commit()
+        if metadata['serialNumber']:
+            # match serial number first
+            try:
+                # not catching MultipleResultsFound
+                camera = IndiAllSkyDbCameraTable.query\
+                    .filter(IndiAllSkyDbCameraTable.serialNumber == metadata['serialNumber'])\
+                    .one()
+
+
+                logger.info('Matched camera serial number: %s', metadata['serialNumber'])
+
+                camera.connectDate = now
+
+                if not camera.uuid:
+                    camera.uuid = str(uuid.uuid4())
+            except NoResultFound:
+                pass
+
+
+        if isinstance(camera, type(None)):
+            # if no serial matched, match camera name
+            try:
+                # not catching MultipleResultsFound
+                camera = IndiAllSkyDbCameraTable.query\
+                    .filter(
+                        or_(
+                            IndiAllSkyDbCameraTable.name == metadata['name'],
+                            IndiAllSkyDbCameraTable.name_alt1 == metadata['name'],
+                            IndiAllSkyDbCameraTable.name_alt2 == metadata['name'],
+                        )
+                    )\
+                    .one()
+
+
+                logger.info('Matched camera name: %s', metadata['name'])
+
+                camera.connectDate = now
+
+                if not camera.uuid:
+                    camera.uuid = str(uuid.uuid4())
+
+            except NoResultFound:
+                logger.info('Creating new camera entry: %s', metadata['name'])
+
+                camera = IndiAllSkyDbCameraTable(
+                    name=metadata['name'],
+                    connectDate=now,
+                    local=True,
+                    uuid=str(uuid.uuid4()),
+                )
+
+                db.session.add(camera)
+                db.session.commit()
 
 
         keys_exclude = [
@@ -96,6 +127,7 @@ class miscDb(object):
             's3_key',
             'remote_url',
             'file_size',
+            'serialNumber',  # manually handle serialNumber
             'data',  # manually handle data
             #'sync_id',
             #'friendlyName',
@@ -120,6 +152,11 @@ class miscDb(object):
             camera_data[k] = v
 
         camera.data = camera_data
+
+
+        # do not overwrite an existing serial number
+        if not camera.serialNumber and metadata.get('serialNumber'):
+            camera.serialNumber = metadata['serialNumber']
 
 
         db.session.commit()
@@ -174,6 +211,7 @@ class miscDb(object):
             'file_size',
             'web_nonlocal_images',
             'web_local_images_admin',
+            'serialNumber',  # manually handle serialNumber
             'data',  # manually handle data
         ]
 
@@ -196,6 +234,11 @@ class miscDb(object):
             camera_data[k] = v
 
         camera.data = camera_data
+
+
+        # do not overwrite an existing serial number
+        if not camera.serialNumber and metadata.get('serialNumber'):
+            camera.serialNumber = metadata['serialNumber']
 
 
         db.session.commit()

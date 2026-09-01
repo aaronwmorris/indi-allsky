@@ -476,6 +476,7 @@ INDISERVER_CAMERA_MAP = {
     'indi_pentax_ccd'       : 'Pentax DSLR',
     'indi_v4l2_ccd'         : 'Linux V4L2',
     'indi_webcam_ccd'       : 'Web Camera',
+    'indi_alpaca_ccd'       : 'Remote Alpaca Camera',
 }
 
 
