@@ -428,6 +428,9 @@ class IndiClientPycurl(IndiClient):
             'format'  : None,
         }
 
+        ccdinfo['SERIALNUMBER_INFO'] = {
+            'text'    : None,
+        }
 
         return ccdinfo
 

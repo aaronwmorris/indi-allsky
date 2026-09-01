@@ -149,9 +149,9 @@ function closeFullscreen() {
     </div>
 
     <!-- Action Bar (Download & FITS Processing buttons) -->
-    <div class="fits-actions tw:flex tw:justify-center tw:items-center tw:gap-3 tw:my-2">
-        <span id="fits_download" class="tw:flex tw:gap-2"></span>
-        <span id="fits_processing" class="tw:flex tw:gap-2"></span>
+    <div class="fits-actions tw:flex tw:flex-wrap tw:justify-center tw:items-center tw:gap-3 tw:my-2" id="action-links-wrapper">
+        <span id="fits_download"></span>
+        <span id="fits_processing"></span>
     </div>
 
 </div>
@@ -195,6 +195,54 @@ fields['form_global'] = {
 };
 
 
+function updateActionButtons() {
+    var current_url = fields['IMG_SELECT'] && fields['IMG_SELECT'].input ? fields['IMG_SELECT'].input.val() : '';
+    if (!current_url && img && img.src) {
+        current_url = img.src;
+    }
+
+    if (typeof image_data !== 'undefined' && image_data.length) {
+        var match = image_data.find(item => item.url === current_url);
+        if (!match) {
+            $('#IMG_SELECT option').each(function(index, element) {
+                if (element.value === $("#IMG_SELECT").val()) {
+                    image_index = index;
+                    return false;
+                }
+            });
+            if (image_index > -1 && image_data[image_index]) {
+                match = image_data[image_index];
+            }
+        }
+
+        if (match && match.fits) {
+            $('#fits_download').html(
+                $('<a />', {
+                    'href'     : match.fits,
+                    'rel'      : 'noopener noreferrer',
+                    'class'    : "tw:btn tw:btn-sm tw:btn-neutral tw:gap-2 tw:no-underline tw:shadow-sm",
+                    'download' : '',
+                }).html('<i class="tw:icon-[lucide--download] tw:w-4 tw:h-4"></i> Download FITS')
+            );
+            $('#fits_processing').html(
+                $('<a />', {
+                    'href'   : "{{ url_for('indi_allsky.image_processing_view') }}?type=light&id=" + match.id,
+                    'target' : '_blank',
+                    'rel'    : 'noopener noreferrer',
+                    'class'  : "tw:btn tw:btn-sm tw:btn-ghost tw:border tw:border-base-300 tw:gap-2 tw:no-underline",
+                }).html('<i class="tw:icon-[lucide--sliders] tw:w-4 tw:h-4"></i> FITS Processing')
+            );
+        } else {
+            $('#fits_download').empty();
+            $('#fits_processing').empty();
+        }
+    } else {
+        $('#fits_download').empty();
+        $('#fits_processing').empty();
+    }
+}
+
+
 $("#IMG_SELECT").on("change", function() {
     // hide all errors
     successMessage.hide();
@@ -211,30 +259,7 @@ $("#IMG_SELECT").on("change", function() {
     var current_url = fields['IMG_SELECT'].input.val();
     img.src = current_url;
 
-    if (typeof image_data !== 'undefined' && image_data.length) {
-        var match = image_data.find(item => item.url === current_url);
-        if (match && match.fits) {
-            $('#fits_download').html(
-                $('<a />', {
-                    'href'   : match.fits,
-                    'rel'    : 'noopener noreferrer',
-                    'class'  : "tw:btn tw:btn-sm tw:btn-error tw:font-bold tw:no-underline",
-                    'download' : '',
-                }).text('Download FITS')
-            );
-            $('#fits_processing').html(
-                $('<a />', {
-                    'href'   : "{{ url_for('indi_allsky.image_processing_view') }}?type=light&id=" + match.id,
-                    'target' : '_blank',
-                    'rel'    : 'noopener noreferrer',
-                    'class'  : "tw:btn tw:btn-sm tw:btn-success tw:font-bold tw:no-underline",
-                }).text('FITS Processing')
-            );
-        } else {
-            $('#fits_download').empty();
-            $('#fits_processing').empty();
-        }
-    }
+    updateActionButtons();
 
     return false;
 });
@@ -247,23 +272,28 @@ function hour_change(json_data) {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            image_data = rdata['IMAGE_DATA']
+            image_data = rdata['IMAGE_DATA'];
 
-            $("#IMG_SELECT").empty()
+            $("#IMG_SELECT").empty();
             rdata['IMAGE_DATA'].forEach(item => {
                 $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
 
             if (newest_image_default) {
                 // newest image is first index
-                $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[0].value).change();
+                if ($("#IMG_SELECT option").length > 0) {
+                    $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[0].value).change();
+                }
             } else {
-                // oldst image is last index
-                img_options_count = $('#IMG_SELECT option').length
-                $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[img_options_count - 1].value).change();
+                // oldest image is last index
+                var img_options_count = $('#IMG_SELECT option').length;
+                if (img_options_count > 0) {
+                    $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[img_options_count - 1].value).change();
+                }
             }
 
             img.src = fields['IMG_SELECT'].input.val();
+            updateActionButtons();
 
             $("#loader_filter").hide();
         },
@@ -366,14 +396,14 @@ function day_change(json_data, targetSelect) {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            image_data = rdata['IMAGE_DATA']
+            image_data = rdata['IMAGE_DATA'];
 
-            $("#HOUR_SELECT").empty()
+            $("#HOUR_SELECT").empty();
             rdata['HOUR_SELECT'].forEach(item => {
                 $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
-            $("#IMG_SELECT").empty()
+            $("#IMG_SELECT").empty();
             rdata['IMAGE_DATA'].forEach(item => {
                 $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
@@ -382,7 +412,25 @@ function day_change(json_data, targetSelect) {
                 $("#HOUR_SELECT").val(targetSelect.hour);
             }
 
-            img.src = fields['IMG_SELECT'].input.val();
+            if (newest_image_default) {
+                if ($("#IMG_SELECT option").length > 0) {
+                    $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[0].value).change();
+                } else {
+                    img.src = '';
+                    $('#fits-image').hide();
+                    updateActionButtons();
+                }
+            } else {
+                var img_options_count = $('#IMG_SELECT option').length;
+                if (img_options_count > 0) {
+                    $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[img_options_count - 1].value).change();
+                } else {
+                    img.src = '';
+                    $('#fits-image').hide();
+                    updateActionButtons();
+                }
+            }
+
             syncCalendarFromSelects();
             $("#loader_filter").hide();
         },
@@ -424,19 +472,19 @@ function month_change(json_data, targetSelect) {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            image_data = rdata['IMAGE_DATA']
+            image_data = rdata['IMAGE_DATA'];
 
-            $("#DAY_SELECT").empty()
+            $("#DAY_SELECT").empty();
             rdata['DAY_SELECT'].forEach(item => {
                 $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
-            $("#HOUR_SELECT").empty()
+            $("#HOUR_SELECT").empty();
             rdata['HOUR_SELECT'].forEach(item => {
                 $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
-            $("#IMG_SELECT").empty()
+            $("#IMG_SELECT").empty();
             rdata['IMAGE_DATA'].forEach(item => {
                 $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
@@ -451,7 +499,24 @@ function month_change(json_data, targetSelect) {
                 };
                 day_change(next_json, targetSelect);
             } else {
-                img.src = fields['IMG_SELECT'].input.val();
+                if (newest_image_default) {
+                    if ($("#IMG_SELECT option").length > 0) {
+                        $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[0].value).change();
+                    } else {
+                        img.src = '';
+                        $('#fits-image').hide();
+                        updateActionButtons();
+                    }
+                } else {
+                    var img_options_count = $('#IMG_SELECT option').length;
+                    if (img_options_count > 0) {
+                        $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[img_options_count - 1].value).change();
+                    } else {
+                        img.src = '';
+                        $('#fits-image').hide();
+                        updateActionButtons();
+                    }
+                }
                 syncCalendarFromSelects();
                 $("#loader_filter").hide();
             }
@@ -493,24 +558,24 @@ function year_change(json_data, targetSelect) {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            image_data = rdata['IMAGE_DATA']
+            image_data = rdata['IMAGE_DATA'];
 
-            $("#MONTH_SELECT").empty()
+            $("#MONTH_SELECT").empty();
             rdata['MONTH_SELECT'].forEach(item => {
                 $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
-            $("#DAY_SELECT").empty()
+            $("#DAY_SELECT").empty();
             rdata['DAY_SELECT'].forEach(item => {
                 $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
-            $("#HOUR_SELECT").empty()
+            $("#HOUR_SELECT").empty();
             rdata['HOUR_SELECT'].forEach(item => {
                 $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
-            $("#IMG_SELECT").empty()
+            $("#IMG_SELECT").empty();
             rdata['IMAGE_DATA'].forEach(item => {
                 $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
@@ -524,19 +589,23 @@ function year_change(json_data, targetSelect) {
                 };
                 month_change(next_json, targetSelect);
             } else {
-                month_options_count = $('#MONTH_SELECT option').length;
-                day_options_count = $('#DAY_SELECT option').length;
-                hour_options_count = $('#HOUR_SELECT option').length;
-                img_options_count = $('#IMG_SELECT option').length;
+                var month_options_count = $('#MONTH_SELECT option').length;
+                var day_options_count = $('#DAY_SELECT option').length;
+                var hour_options_count = $('#HOUR_SELECT option').length;
+                var img_options_count = $('#IMG_SELECT option').length;
                 if (! newest_image_default && month_options_count > 0 && day_options_count > 0 && hour_options_count > 0 && img_options_count > 0) {
                     $("#MONTH_SELECT").val($("#MONTH_SELECT")[0].options[month_options_count - 1].value);
                     $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[day_options_count - 1].value);
                     $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value);
                     $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[img_options_count - 1].value).change();
+                } else if (img_options_count > 0) {
+                    $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[0].value).change();
                 } else {
-                    img.src = fields['IMG_SELECT'].input.val();
-                    syncCalendarFromSelects();
+                    img.src = '';
+                    $('#fits-image').hide();
+                    updateActionButtons();
                 }
+                syncCalendarFromSelects();
                 $("#loader_filter").hide();
             }
         },
@@ -575,6 +644,7 @@ function init() {
         $('#fits-image').attr({
             'src': this.src,
         });
+        updateActionButtons();
     };
 
     // Attach listener for Cally calendar picker

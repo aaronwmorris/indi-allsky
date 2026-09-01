@@ -2602,6 +2602,9 @@ class ConfigView(FormView):
             'SQM_FOV_DIV'                    : str(self.indi_allsky_config.get('SQM_FOV_DIV', 4)),  # string in form, int in config
             'DETECT_STARS'                   : self.indi_allsky_config.get('DETECT_STARS', True),
             'DETECT_STARS_THOLD'             : self.indi_allsky_config.get('DETECT_STARS_THOLD', 0.6),
+            'DETECT_STARS_METHOD'            : self.indi_allsky_config.get('DETECT_STARS_METHOD', 'template'),
+            'DETECT_STARS_SEP_THOLD'         : self.indi_allsky_config.get('DETECT_STARS_SEP_THOLD', 5.0),
+            'DETECT_STARS_SEP_MAX_RADIUS'    : self.indi_allsky_config.get('DETECT_STARS_SEP_MAX_RADIUS', 20),
             'DETECT_METEORS'                 : self.indi_allsky_config.get('DETECT_METEORS', False),
             'DETECT_METEORS_THOLD'           : self.indi_allsky_config.get('DETECT_METEORS_THOLD', 125),
             'DETECT_MASK'                    : self.indi_allsky_config.get('DETECT_MASK', ''),
@@ -3667,6 +3670,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['SQM_FOV_DIV']                          = int(request.json['SQM_FOV_DIV'])
         self.indi_allsky_config['DETECT_STARS']                         = bool(request.json['DETECT_STARS'])
         self.indi_allsky_config['DETECT_STARS_THOLD']                   = float(request.json['DETECT_STARS_THOLD'])
+        self.indi_allsky_config['DETECT_STARS_METHOD']                  = str(request.json['DETECT_STARS_METHOD'])
+        self.indi_allsky_config['DETECT_STARS_SEP_THOLD']               = float(request.json['DETECT_STARS_SEP_THOLD'])
+        self.indi_allsky_config['DETECT_STARS_SEP_MAX_RADIUS']          = int(request.json['DETECT_STARS_SEP_MAX_RADIUS'])
         self.indi_allsky_config['DETECT_METEORS']                       = bool(request.json['DETECT_METEORS'])
         self.indi_allsky_config['DETECT_METEORS_THOLD']                 = int(request.json['DETECT_METEORS_THOLD'])
         self.indi_allsky_config['DETECT_MASK']                          = str(request.json['DETECT_MASK'])
@@ -9231,6 +9237,12 @@ class ImageProcessingView(TemplateView):
             'IMAGE_BORDER__LEFT'             : self.indi_allsky_config.get('IMAGE_BORDER', {}).get('LEFT', 0),
             'IMAGE_BORDER__RIGHT'            : self.indi_allsky_config.get('IMAGE_BORDER', {}).get('RIGHT', 0),
             'IMAGE_BORDER__BOTTOM'           : self.indi_allsky_config.get('IMAGE_BORDER', {}).get('BOTTOM', 0),
+            'RUN_DETECTION'                  : False,
+            'DETECT_STARS_METHOD'            : self.indi_allsky_config.get('DETECT_STARS_METHOD', 'template'),
+            'DETECT_STARS_THOLD'             : self.indi_allsky_config.get('DETECT_STARS_THOLD', 0.6),
+            'DETECT_STARS_SEP_THOLD'         : self.indi_allsky_config.get('DETECT_STARS_SEP_THOLD', 5.0),
+            'DETECT_STARS_SEP_MAX_RADIUS'    : self.indi_allsky_config.get('DETECT_STARS_SEP_MAX_RADIUS', 20),
+            'DETECT_METEORS_THOLD'           : self.indi_allsky_config.get('DETECT_METEORS_THOLD', 125),
         }
 
 
@@ -9591,6 +9603,53 @@ class JsonImageProcessingView(JsonView):
         processing_start = time.time()
 
 
+        # Interactive detection: draw stars/meteors on the preview image
+        run_detection = bool(request.json.get('RUN_DETECTION', False))
+        stars_count = 0
+        detections_count = 0
+        detect_method = p_config.get('DETECT_STARS_METHOD', 'template')
+
+        def runDetection():
+            nonlocal stars_count, detections_count, detect_method
+
+            if not run_detection:
+                return
+
+            from ..stars import IndiAllSkyStars
+            from ..detectLines import IndiAllskyDetectLines
+
+            # tuned per-run, the saved config is not modified
+            detect_method = str(request.json.get('DETECT_STARS_METHOD', detect_method))
+            p_config['DETECT_STARS_METHOD']         = detect_method
+            p_config['DETECT_STARS_THOLD']          = float(request.json['DETECT_STARS_THOLD'])
+            p_config['DETECT_STARS_SEP_THOLD']      = float(request.json['DETECT_STARS_SEP_THOLD'])
+            p_config['DETECT_STARS_SEP_MAX_RADIUS'] = int(request.json['DETECT_STARS_SEP_MAX_RADIUS'])
+            p_config['DETECT_METEORS_THOLD']        = int(request.json['DETECT_METEORS_THOLD'])
+            p_config['DETECT_DRAW']                 = True
+
+            detect_mask_path = Path(p_config.get('DETECT_MASK', ''))
+            if detect_mask_path.is_file():
+                indi_mask = cv2.imread(str(detect_mask_path), cv2.IMREAD_GRAYSCALE)
+            else:
+                indi_mask = None
+
+            mask_dict = {binning: indi_mask}
+
+            # lines before stars, as in the capture pipeline - star markers would
+            # otherwise be detected as lines
+            lines_detect_o = IndiAllskyDetectLines(p_config, mask=mask_dict)
+            detections_count = len(lines_detect_o.detectLines(image_processor.image, binning))
+
+            if detect_method == 'sep':
+                # imported on demand: sep is unavailable on some legacy platforms
+                from ..starsSep import IndiAllSkyStarsSEP
+                stars_detect_o = IndiAllSkyStarsSEP(p_config, mask=mask_dict)
+            else:
+                stars_detect_o = IndiAllSkyStars(p_config, mask=mask_dict)
+
+            stars_count = len(stars_detect_o.detectObjects(image_processor.image, binning))
+
+
         message_list = list()
 
         if disable_processing:
@@ -9614,6 +9673,8 @@ class JsonImageProcessingView(JsonView):
             image_processor.stack()  # populates self.image
 
             image_processor.convert_16bit_to_8bit()
+
+            runDetection()
 
 
             # rotation
@@ -9710,6 +9771,8 @@ class JsonImageProcessingView(JsonView):
 
             image_processor.convert_16bit_to_8bit()
 
+            runDetection()
+
 
             if p_config.get('IMAGE_ROTATE'):
                 image_processor.rotate_90()
@@ -9796,7 +9859,6 @@ class JsonImageProcessingView(JsonView):
 
                 image_processor.image = pano_data
 
-
         processing_elapsed_s = time.time() - processing_start
         app.logger.info('Image processed in %0.4f s', processing_elapsed_s)
 
@@ -9836,6 +9898,9 @@ class JsonImageProcessingView(JsonView):
         json_data['processing_elapsed_s'] = round(processing_elapsed_s, 3)
         #json_data['message'] = ', '.join(message_list)
         json_data['message'] = ''  # Blank until I can get messages from all processing actions
+        json_data['stars_count'] = stars_count
+        json_data['detections_count'] = detections_count
+        json_data['DETECT_STARS_METHOD'] = detect_method
 
         return jsonify(json_data)
 
@@ -10908,7 +10973,9 @@ class CameraLensView(TemplateView):
 
 
         context['camera_cfa'] = constants.CFA_MAP_STR[camera.cfa]
-        context['lensAperture'] = camera.lensFocalLength / camera.lensFocalRatio
+
+        lens_aperature_mm = camera.lensFocalLength / camera.lensFocalRatio
+        context['lensAperture'] = lens_aperature_mm
 
 
         camera_width_mm = camera.width * camera.pixelSize / 1000.0
@@ -10930,6 +10997,25 @@ class CameraLensView(TemplateView):
         image_circle_diameter = int(camera.lensImageCircle)  # might be null
         context['image_circle_diameter'] = image_circle_diameter
         context['image_circle_diameter_mm'] = image_circle_diameter * camera.pixelSize / 1000.0
+
+
+        #circle_of_confusion = camera_diagonal_mm / 1730
+        circle_of_confusion = 2 * (camera.pixelSize * (10 ** -3))
+
+        context['hyperfocal_distance_mm'] = ((camera.lensFocalLength ** 2) / (camera.lensFocalRatio * circle_of_confusion)) + camera.lensFocalLength
+
+        # thin lens equation
+        #context['hyperfocal_distance_mm'] = (camera.lensFocalLength ** 2) / (camera.lensFocalRatio * circle_of_confusion)
+
+        # Geometric limit
+        #context['geometric_distance_mm'] = (camera.lensFocalLength ** 2) / ((camera.pixelSize * (10 ** -3)) / camera.lenFocalRatio)
+
+
+        # Fresnel Distance - 450nm (blue) - Near-Field
+        #context['fresnel_distance_mm'] = (lens_aperature_mm ** 2) / (450 * (10 ** -6))
+
+        # Fraunhofer Infinity Threshold - 450nm (blue) - Strict Far-Field Zone
+        context['fraunhofer_distance_mm'] = (2 * (lens_aperature_mm ** 2)) / (450 * (10 ** -6))
 
 
         # since the arcsec/px increases near the edges of the image, this factor tries to account for that
@@ -11353,6 +11439,42 @@ class MiniTimelapseGeneratorView(TemplateView):
     image_loop_view = 'indi_allsky.js_image_loop_view'
 
 
+    @staticmethod
+    def _getStandardVideoDimensions(image_entry, vf_scale):
+        try:
+            source_width = int(image_entry.width)
+            source_height = int(image_entry.height)
+        except (TypeError, ValueError):
+            return None, None
+        if source_width < 1 or source_height < 1:
+            return None, None
+
+        if not vf_scale:
+            return source_width, source_height
+
+        height_match = re.fullmatch(r'-[12]:(\d+)', vf_scale)
+        if height_match:
+            output_height = int(height_match.group(1))
+            if output_height < 1:
+                return None, None
+            output_width = round(source_width * output_height / source_height)
+            return max(2, round(output_width / 2) * 2), output_height
+
+        percentage_match = re.fullmatch(r'iw\*(\.\d+):(ih\*\.\d+|-2)', vf_scale)
+        if not percentage_match:
+            return None, None
+
+        width_factor = float(percentage_match.group(1))
+        output_width = max(2, round((source_width * width_factor) / 2) * 2)
+        if percentage_match.group(2) == '-2':
+            output_height = round(source_height * output_width / source_width)
+        else:
+            height_factor = float(percentage_match.group(2).split('*')[1])
+            output_height = round(source_height * height_factor)
+
+        return output_width, max(2, round(output_height / 2) * 2)
+
+
     def _getPanoramaContext(self, image_entry):
         panorama_enabled = bool(
             self.indi_allsky_config.get('FISH2PANO', {}).get('ENABLE', False)
@@ -11514,15 +11636,58 @@ class MiniTimelapseGeneratorView(TemplateView):
             context['source_type'] = 'standard'
 
 
+        use_night_config = self.indi_allsky_config.get('TIMELAPSE', {}).get('USE_NIGHT_CONFIG', True)
+        if use_night_config or image_entry.night:
+            bitrate = str(self.indi_allsky_config.get('FFMPEG_BITRATE', '5000k'))
+            vf_scale = self.indi_allsky_config.get('FFMPEG_VFSCALE', '')
+        else:
+            bitrate = str(self.indi_allsky_config.get('FFMPEG_BITRATE_DAY', '5000k'))
+            vf_scale = self.indi_allsky_config.get('FFMPEG_VFSCALE_DAY', '')
+
+        standard_width, standard_height = self._getStandardVideoDimensions(image_entry, vf_scale)
+        context['standard_video'] = {
+            'width'  : standard_width,
+            'height' : standard_height,
+            'codec'  : self.indi_allsky_config.get('FFMPEG_CODEC', 'libx264'),
+        }
+
+
+        bitrate_choices = dict(IndiAllskyMiniTimelapseForm.BITRATE_SELECT_choices)
+
+        def bitrate_kbps(value):
+            bitrate_match = re.fullmatch(r'(\d+)([km])', value)
+            if not bitrate_match:
+                return None
+
+            multiplier = 1000 if bitrate_match.group(2) == 'm' else 1
+            return int(bitrate_match.group(1)) * multiplier
+
+        preset_bitrates = {
+            bitrate_kbps(value): value
+            for choices in bitrate_choices.values()
+            for value, label in choices
+        }
+        bitrate = preset_bitrates.get(bitrate_kbps(bitrate), bitrate)
+
         form_data = {
             'CAMERA_ID'             : self.camera.id,
             'IMAGE_ID'              : image_entry.id,
             'PRE_SECONDS_SELECT'    : '240',
             'POST_SECONDS_SELECT'   : '120',
             'FRAMERATE_SELECT'      : '10',
+            'BITRATE_SELECT'        : bitrate,
         }
 
-        context['form_mini_timelapse'] = IndiAllskyMiniTimelapseForm(data=form_data)
+        form_mini_timelapse = IndiAllskyMiniTimelapseForm(data=form_data)
+        if bitrate not in preset_bitrates.values():
+            bitrate_choices = {
+                'Configured default': (
+                    (bitrate, '{0:s} — configured default'.format(bitrate)),
+                ),
+                **bitrate_choices,
+            }
+        form_mini_timelapse.BITRATE_SELECT.choices = bitrate_choices
+        context['form_mini_timelapse'] = form_mini_timelapse
 
         return context
 
@@ -11544,6 +11709,7 @@ class AjaxMiniTimelapseGeneratorView(BaseView):
                 'pre_seconds' : int(request_data['PRE_SECONDS']),
                 'post_seconds': int(request_data['POST_SECONDS']),
                 'framerate'   : float(request_data['FRAMERATE']),
+                'bitrate'     : request_data.get('BITRATE'),
                 'note'        : str(request_data.get('NOTE') or ''),
             }
         except (KeyError, TypeError, ValueError):
@@ -11553,6 +11719,13 @@ class AjaxMiniTimelapseGeneratorView(BaseView):
             return None, 'Enter a description for this video.'
         if len(request_values['note']) > 255:
             return None, 'Keep the description to 255 characters or fewer.'
+        if request_values['bitrate'] is not None:
+            request_values['bitrate'] = str(request_values['bitrate'])
+        if (
+            request_values['bitrate'] is not None
+            and not re.fullmatch(r'\d+[km]', request_values['bitrate'])
+        ):
+            return None, 'Choose a valid bitrate/file size, then try again.'
         if (
             request_values['pre_seconds'] < 1
             or request_values['pre_seconds'] > 43200
@@ -14239,7 +14412,7 @@ class WsControlView(BaseView):
                             }, default=str))
                     elif msg_type in ('pause', 'unpause', 'reload_config', 'reload', 'generate_keogram', 'generate_timelapse', 'generate_startrail', 'trigger_darks'):
                         from .models import IndiAllSkyDbTaskQueueTable, TaskQueueQueue, TaskQueueState
-                        
+
                         task_name_map = {
                             'pause': 'pause',
                             'unpause': 'unpause',
@@ -14250,7 +14423,7 @@ class WsControlView(BaseView):
                             'generate_startrail': 'startrail',
                             'trigger_darks': 'darks',
                         }
-                        
+
                         target_action = task_name_map.get(msg_type, msg_type)
                         task = IndiAllSkyDbTaskQueueTable(
                             queue=TaskQueueQueue.MAIN,
