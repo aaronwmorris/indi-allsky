@@ -171,6 +171,7 @@ class CameraLinearityTest(object):
         self._exposure_max = None
         self._exposure_min = None
         self._exposure_increase = None
+        self._gain = None
 
         self.session = self._getDbConn()
 
@@ -237,6 +238,15 @@ class CameraLinearityTest(object):
     @exposure_increase.setter
     def exposure_increase(self, new_exposure_increase):
         self._exposure_increase = int(new_exposure_increase)
+
+
+    @property
+    def gain(self):
+        return self._gain
+
+    @gain.setter
+    def gain(self, new_gain):
+        self._gain = float(new_gain)
 
 
     def sigint_handler_main(self, signum, frame):
@@ -347,6 +357,8 @@ class CameraLinearityTest(object):
         logger.info('ADU: %0.1f', adu)
         adu_entry = LinearityTable(
             exposure=exposure,
+            gain=gain,
+            binning=binning,
             adu=adu,
         )
         self.session.add(adu_entry)
@@ -357,6 +369,7 @@ class CameraLinearityTest(object):
         table_report = PrettyTable()
         table_report.field_names = [
             'Exposure',
+            'Gain',
             'Count',
             'ADU Average',
             'ADU Range',
@@ -373,6 +386,7 @@ class CameraLinearityTest(object):
 
         q = self.session.query(
             LinearityTable.exposure,
+            LinearityTable.gain,
             func.count(LinearityTable.exposure).label('exposure_count'),
             adu_avg.label('adu_avg_current'),
             (func.max(LinearityTable.adu) - func.min(LinearityTable.adu)).label('adu_range'),
@@ -406,6 +420,7 @@ class CameraLinearityTest(object):
 
             table_report.add_row([
                 '{0:0.6f}'.format(entry.exposure),
+                '{0:0.3f}'.format(entry.gain),
                 '{0:d}'.format(entry.exposure_count),
                 '{0:0.4f}'.format(entry.adu_avg_current),
                 '{0:0.1f}'.format(entry.adu_range),
@@ -462,6 +477,7 @@ class CameraLinearityTest(object):
             exposure_max=self.exposure_max,
             exposure_min=self.exposure_min,
             exposure_increase=self.exposure_increase,
+            gain=self.gain,
         )
 
         self.capture_worker.start()
@@ -525,6 +541,7 @@ class CaptureWorker(Process):
         exposure_max=1.0,
         exposure_min=0.0,
         exposure_increase=75,
+        gain=0.0,
     ):
 
         super(CaptureWorker, self).__init__()
@@ -553,11 +570,13 @@ class CaptureWorker(Process):
         self._exposure_max = None
         self._exposure_min = None
         self._exposure_increase = None
+        self._gain = None
 
         self.exposure_count = exposure_count
         self.exposure_max = exposure_max
         self.exposure_min = exposure_min
         self.exposure_increase = exposure_increase
+        self.gain = gain
 
         self._shutdown = False
 
@@ -592,6 +611,18 @@ class CaptureWorker(Process):
 
         if self.exposure_min:
             logger.warning('Starting exposure: %0.6f', self.exposure_min)
+
+
+    @property
+    def gain(self):
+        return self._gain
+
+    @gain.setter
+    def gain(self, new_gain):
+        self._gain = float(new_gain)
+
+        if self.gain:
+            logger.warning('Camera gain: %0.3f', self.gain)
 
 
     @property
@@ -631,7 +662,7 @@ class CaptureWorker(Process):
 
 
         camera_min_exposure = self._expUtils.EXPOSURE_MIN_DAY
-        camera_gain = self._expUtils.GAIN_MIN_DAY
+        camera_min_gain = self._expUtils.GAIN_MIN_DAY
         camera_binning = self._expUtils.BINNING_DAY
 
 
@@ -641,12 +672,18 @@ class CaptureWorker(Process):
             exposure = camera_min_exposure
 
 
+        if self.gain:
+            gain = self.gain
+        else:
+            gain = camera_min_gain
+
+
         exposures_list = list()
         while exposure < 1:  # keep exposures under 1s
             for _ in range(self.exposure_count):
                 exposures_list.append({
                     'exposure' : exposure,
-                    'gain'     : camera_gain,
+                    'gain'     : gain,
                     'binning'  : camera_binning
                 })
 
@@ -985,6 +1022,8 @@ class LinearityTable(Base):
     id          = Column(Integer, primary_key=True)
     createDate  = Column(DateTime, nullable=False, server_default=func.now(), index=True)
     exposure    = Column(Float, nullable=False, index=True)
+    gain        = Column(Float, nullable=False, index=True)
+    binning     = Column(Integer, nullable=False, index=True)
     adu         = Column(Float, nullable=False)
 
 
@@ -1016,6 +1055,13 @@ if __name__ == "__main__":
         '--min_exposure',
         '-m',
         help='minimum exposure [default: camera minimum]',
+        type=float,
+        default=0.0,
+    )
+    argparser.add_argument(
+        '--gain',
+        '-g',
+        help='camera gain [default: camera minimum]',
         type=float,
         default=0.0,
     )
@@ -1054,4 +1100,5 @@ if __name__ == "__main__":
     clt.exposure_count = args.Count
     clt.exposure_max = args.Max_exposure
     clt.exposure_min = args.min_exposure
+    clt.gain = args.gain
     clt.main()
