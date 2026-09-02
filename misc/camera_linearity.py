@@ -181,7 +181,8 @@ class CameraLinearityTest(object):
             4 : None,
         }
 
-        self._offset = 0
+        self._offset = None
+        self._exposure_count = None
 
         self.session = self._getDbConn()
 
@@ -197,6 +198,16 @@ class CameraLinearityTest(object):
     @offset.setter
     def offset(self, new_offset):
         self._offset = int(new_offset)
+        logger.warning('Using offset: %d', self.offset)
+
+
+    @property
+    def exposure_count(self):
+        return self._exposure_count
+
+    @exposure_count.setter
+    def exposure_count(self, new_exposure_count):
+        self._exposure_count  = int(new_exposure_count)
 
 
     def sigint_handler_main(self, signum, frame):
@@ -315,6 +326,7 @@ class CameraLinearityTest(object):
         table_report = PrettyTable()
         table_report.field_names = [
             'Exposure',
+            'Count',
             'ADU Average',
             #'Prev Exposure',
             'Exposure Diff',
@@ -330,6 +342,7 @@ class CameraLinearityTest(object):
         q = self.session.query(
             LinearityTable.exposure,
             adu_avg.label('adu_avg_current'),
+            func.count(LinearityTable.exposure).label('exposure_count'),
             func.lag(LinearityTable.exposure, 1).over(
                 order_by=LinearityTable.createDate,
             ).label('exposure_previous'),
@@ -360,6 +373,7 @@ class CameraLinearityTest(object):
 
             table_report.add_row([
                 '{0:0.6f}'.format(entry.exposure),
+                '{0:d}'.format(entry.exposure_count),
                 '{0:0.4f}'.format(entry.adu_avg_current),
                 #'{0:0.6f}'.format(entry.exposure_previous),
                 '{0:+0.6f}'.format(entry.exposure_diff),
@@ -410,7 +424,9 @@ class CameraLinearityTest(object):
             self.binning_av,
             self.night_av,
             self.astro_av,
+            exposure_count=self.exposure_count,
         )
+
         self.capture_worker.start()
 
 
@@ -468,6 +484,7 @@ class CaptureWorker(Process):
         binning_av,
         night_av,
         astro_av,
+        exposure_count=3
     ):
 
         super(CaptureWorker, self).__init__()
@@ -492,8 +509,20 @@ class CaptureWorker(Process):
         self.indiclient = None
         self.camera = None
 
+        self._exposure_count = None
+        self.exposure_count = exposure_count
 
         self._shutdown = False
+
+
+    @property
+    def exposure_count(self):
+        return self._exposure_count
+
+    @exposure_count.setter
+    def exposure_count(self, new_exposure_count):
+        self._exposure_count  = int(new_exposure_count)
+        logger.warning('Taking %d exposures per level', self.exposure_count)
 
 
     def sigint_handler_worker(self, signum, frame):
@@ -535,7 +564,7 @@ class CaptureWorker(Process):
         exposures_list = list()
         for exp in EXPOSURE_SCHEDULE:
             # take 3 of each exposure for an average
-            for _ in range(3):
+            for _ in range(self.exposure_count):
                 exposures_list.append({
                     'exposure' : exp,
                     'gain'     : gain,
@@ -875,6 +904,13 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
 
     argparser.add_argument(
+        '--Count',
+        '-C',
+        help='exposure count [default: 3]',
+        type=int,
+        default=3,
+    )
+    argparser.add_argument(
         '--offset',
         '-o',
         help='camera offset [default: 0]',
@@ -882,9 +918,11 @@ if __name__ == "__main__":
         default=0,
     )
 
+
     args = argparser.parse_args()
 
 
     clt = CameraLinearityTest()
+    clt.exposure_count = args.Count
     clt.offset = args.offset
     clt.main()
