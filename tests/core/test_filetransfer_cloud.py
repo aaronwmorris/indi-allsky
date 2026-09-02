@@ -19,11 +19,18 @@ def test_boto3_generic_connect_and_put(tmp_path):
     mock_boto3_exc = MagicMock()
     mock_boto3.exceptions = mock_boto3_exc
 
+    mock_botocore = MagicMock()
+    mock_botocore_client = MagicMock()
+    mock_botocore_exceptions = MagicMock()
+    mock_botocore.client = mock_botocore_client
+    mock_botocore.exceptions = mock_botocore_exceptions
+
     with patch.dict(sys.modules, {
         'boto3': mock_boto3,
         'boto3.exceptions': mock_boto3_exc,
-        'botocore.client': MagicMock(),
-        'botocore.exceptions': MagicMock(),
+        'botocore': mock_botocore,
+        'botocore.client': mock_botocore_client,
+        'botocore.exceptions': mock_botocore_exceptions,
     }):
         transfer = boto3_generic({})
         transfer.connect(
