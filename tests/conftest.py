@@ -51,9 +51,16 @@ def flask_app():
 
 
 @pytest.fixture
+def app(flask_app):
+    """Alias for pytest-flask plugin compatibility."""
+    return flask_app
+
+
+@pytest.fixture
 def db(flask_app):
     """Provide a clean database session for each test."""
     with flask_app.app_context():
         _db.create_all()
         yield _db
         _db.session.rollback()
+
