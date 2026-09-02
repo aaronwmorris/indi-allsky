@@ -172,8 +172,10 @@ class CameraLinearityTest(object):
         }
 
         self._offset = None
-        self._exposure_count = None
         self._calibrate = None
+        self._exposure_count = None
+        self._exposure_max = None
+        self._exposure_min = None
 
         self.session = self._getDbConn()
 
@@ -193,15 +195,6 @@ class CameraLinearityTest(object):
 
 
     @property
-    def exposure_count(self):
-        return self._exposure_count
-
-    @exposure_count.setter
-    def exposure_count(self, new_exposure_count):
-        self._exposure_count  = int(new_exposure_count)
-
-
-    @property
     def calibrate(self):
         return self._calibrate
 
@@ -213,6 +206,33 @@ class CameraLinearityTest(object):
             logger.warning('Image Calibration Enabled')
         else:
             logger.warning('Image Calibration Disabled')
+
+
+    @property
+    def exposure_count(self):
+        return self._exposure_count
+
+    @exposure_count.setter
+    def exposure_count(self, new_exposure_count):
+        self._exposure_count  = int(new_exposure_count)
+
+
+    @property
+    def exposure_max(self):
+        return self._exposure_max
+
+    @exposure_max.setter
+    def exposure_max(self, new_exposure):
+        self._exposure_max = float(new_exposure)
+
+
+    @property
+    def exposure_min(self):
+        return self._exposure_min
+
+    @exposure_min.setter
+    def exposure_min(self, new_exposure):
+        self._exposure_min = float(new_exposure)
 
 
     def sigint_handler_main(self, signum, frame):
@@ -432,6 +452,8 @@ class CameraLinearityTest(object):
             self.night_av,
             self.astro_av,
             exposure_count=self.exposure_count,
+            exposure_max=self.exposure_max,
+            exposure_min=self.exposure_min,
         )
 
         self.capture_worker.start()
@@ -491,7 +513,9 @@ class CaptureWorker(Process):
         binning_av,
         night_av,
         astro_av,
-        exposure_count=3
+        exposure_count=3,
+        exposure_max=1.0,
+        exposure_min=0.0,
     ):
 
         super(CaptureWorker, self).__init__()
@@ -517,7 +541,12 @@ class CaptureWorker(Process):
         self.camera = None
 
         self._exposure_count = None
+        self._exposure_max = None
+        self._exposure_min = None
+
         self.exposure_count = exposure_count
+        self.exposure_max = exposure_max
+        self.exposure_min = exposure_min
 
         self._shutdown = False
 
@@ -530,6 +559,28 @@ class CaptureWorker(Process):
     def exposure_count(self, new_exposure_count):
         self._exposure_count  = int(new_exposure_count)
         logger.warning('Taking %d exposures per level', self.exposure_count)
+
+
+    @property
+    def exposure_max(self):
+        return self._exposure_max
+
+    @exposure_max.setter
+    def exposure_max(self, new_exposure):
+        self._exposure_max = float(new_exposure)
+        logger.warning('Max exposure: %0.6f', self.exposure_max)
+
+
+    @property
+    def exposure_min(self):
+        return self._exposure_min
+
+    @exposure_min.setter
+    def exposure_min(self, new_exposure):
+        self._exposure_min = math.ceil(float(new_exposure) * 1000000) / 1000000
+
+        if self.exposure_min:
+            logger.warning('Starting exposure: %0.6f', self.exposure_min)
 
 
     def sigint_handler_worker(self, signum, frame):
@@ -558,15 +609,15 @@ class CaptureWorker(Process):
             self._initialize()
 
 
-        min_exposure = self._expUtils.EXPOSURE_MIN_DAY
-        gain = self._expUtils.GAIN_MIN_DAY
-        binning = self._expUtils.BINNING_DAY
+        camera_min_exposure = self._expUtils.EXPOSURE_MIN_DAY
+        camera_gain = self._expUtils.GAIN_MIN_DAY
+        camera_binning = self._expUtils.BINNING_DAY
 
 
-        if isinstance(EXPOSURE_START, type(None)):
-            exposure = min_exposure
+        if self.exposure_min:
+            exposure = self.exposure_min
         else:
-            exposure = EXPOSURE_START
+            exposure = camera_min_exposure
 
 
         exposures_list = list()
@@ -574,8 +625,8 @@ class CaptureWorker(Process):
             for _ in range(self.exposure_count):
                 exposures_list.append({
                     'exposure' : exposure,
-                    'gain'     : gain,
-                    'binning'  : binning
+                    'gain'     : camera_gain,
+                    'binning'  : camera_binning
                 })
 
             exposure *= 1.75
@@ -935,6 +986,20 @@ if __name__ == "__main__":
         type=int,
         default=0,
     )
+    argparser.add_argument(
+        '--Max_exposure',
+        '-M',
+        help='maximum exposure [default: 1.0]',
+        type=float,
+        default=1.0,
+    )
+    argparser.add_argument(
+        '--min_exposure',
+        '-m',
+        help='minimum exposure [default: camera minimum]',
+        type=float,
+        default=0.0,
+    )
 
     calibrate_group = argparser.add_mutually_exclusive_group(required=False)
     calibrate_group.add_argument(
@@ -956,7 +1021,9 @@ if __name__ == "__main__":
 
 
     clt = CameraLinearityTest()
-    clt.exposure_count = args.Count
     clt.offset = args.offset
     clt.calibrate = args.calibrate
+    clt.exposure_count = args.Count
+    clt.exposure_max = args.Max_exposure
+    clt.exposure_min = args.min_exposure
     clt.main()
