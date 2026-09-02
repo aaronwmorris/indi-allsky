@@ -313,7 +313,16 @@ class CameraLinearityTest(object):
 
     def generateReport(self):
         table_report = PrettyTable()
-        table_report.field_names = ['Exposure', 'ADU', 'Prev Exposure', 'Exposure Diff', 'Prev ADU', 'ADU Diff', 'Exposure Percent Diff', 'ADU Percent Diff']
+        table_report.field_names = [
+            'Exposure',
+            'ADU',
+            #'Prev Exposure',
+            'Exposure Diff',
+            #'Prev ADU',
+            'ADU Diff',
+            'Exposure Diff %',
+            'ADU Diff %',
+        ]
 
         q = self.session.query(
             LinearityTable.exposure,
@@ -349,9 +358,9 @@ class CameraLinearityTest(object):
             table_report.add_row([
                 '{0:0.6f}'.format(entry.exposure),
                 '{0:0.4f}'.format(entry.adu_avg_current),
-                '{0:0.6f}'.format(entry.exposure_previous),
+                #'{0:0.6f}'.format(entry.exposure_previous),
                 '{0:+0.6f}'.format(entry.exposure_diff),
-                '{0:0.4f}'.format(entry.adu_avg_previous),
+                #'{0:0.4f}'.format(entry.adu_avg_previous),
                 '{0:+0.4f}'.format(entry.adu_avg_diff),
                 '{0:+0.1f}'.format(entry.exposure_percent_diff),
                 '{0:+0.1f}'.format(entry.adu_percent_diff),
