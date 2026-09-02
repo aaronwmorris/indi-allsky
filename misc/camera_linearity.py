@@ -496,7 +496,7 @@ class CaptureWorker(Process):
 
 
 
-        min_exposure = 0.1
+        min_exposure = 0.05
         gain = self._expUtils.GAIN_MIN_DAY
         binning = self._expUtils.BINNING_DAY
 
