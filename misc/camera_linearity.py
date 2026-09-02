@@ -325,25 +325,27 @@ class CameraLinearityTest(object):
         ]
 
 
+        adu_avg = func.avg(LinearityTable.adu)
+
         q = self.session.query(
             LinearityTable.exposure,
-            func.avg(LinearityTable.adu).label('adu_avg_current'),
+            adu_avg.label('adu_avg_current'),
             func.lag(LinearityTable.exposure, 1).over(
                 order_by=LinearityTable.createDate,
             ).label('exposure_previous'),
             (LinearityTable.exposure - func.lag(LinearityTable.exposure, 1).over(
                 order_by=LinearityTable.createDate,
             )).label('exposure_diff'),
-            func.lag(func.avg(LinearityTable.adu), 1).over(
+            func.lag(adu_avg, 1).over(
                 order_by=LinearityTable.createDate,
             ).label('adu_avg_previous'),
             (100 * LinearityTable.exposure / func.lag(LinearityTable.exposure, 1).over(
                 order_by=LinearityTable.createDate,
             ) - 100).label('exposure_percent_diff'),
-            (func.avg(LinearityTable.adu) - func.lag(func.avg(LinearityTable.adu), 1).over(
+            (adu_avg - func.lag(adu_avg, 1).over(
                 order_by=LinearityTable.createDate,
             )).label('adu_avg_diff'),
-            (100 * (func.avg(LinearityTable.adu) / func.lag(func.avg(LinearityTable.adu), 1).over(
+            (100 * (adu_avg / func.lag(adu_avg, 1).over(
                 order_by=LinearityTable.createDate,
             )) - 100).label('adu_percent_diff'),
         )\
