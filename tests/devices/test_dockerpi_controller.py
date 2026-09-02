@@ -12,6 +12,10 @@ if 'adafruit_bus_device' not in sys.modules:
     sys.modules['adafruit_bus_device'] = mock_abd
     sys.modules['adafruit_bus_device.i2c_device'] = mock_abd.i2c_device
 
+if 'busio' not in sys.modules:
+    mock_busio = MagicMock()
+    sys.modules['busio'] = mock_busio
+
 import pytest
 from indi_allsky.devices.controllers.dockerpi import DockerPi4ChannelRelay
 
