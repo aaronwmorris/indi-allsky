@@ -35,13 +35,15 @@ from indi_allsky.flask.models import *  # noqa: F401, F403
 
 @pytest.fixture(scope="session")
 def flask_app():
-    """Create a test Flask application configured with in-memory SQLite database."""
+    """Create a test Flask application configured with SQLite database."""
     app = create_app()
 
     with app.app_context():
         _db.create_all()
         yield app
+        _db.session.remove()
         _db.drop_all()
+        _db.engine.dispose()
 
     try:
         os.remove(_tmp_config.name)
@@ -63,4 +65,4 @@ def db(flask_app):
         _db.create_all()
         yield _db
         _db.session.rollback()
-
+        _db.session.remove()
