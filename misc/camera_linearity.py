@@ -176,6 +176,7 @@ class CameraLinearityTest(object):
         self._exposure_count = None
         self._exposure_max = None
         self._exposure_min = None
+        self._exposure_increase = None
 
         self.session = self._getDbConn()
 
@@ -233,6 +234,15 @@ class CameraLinearityTest(object):
     @exposure_min.setter
     def exposure_min(self, new_exposure):
         self._exposure_min = float(new_exposure)
+
+
+    @property
+    def exposure_increase(self):
+        return self._exposure_increase
+
+    @exposure_increase.setter
+    def exposure_increase(self, new_exposure_increase):
+        self._exposure_increase = int(new_exposure_increase)
 
 
     def sigint_handler_main(self, signum, frame):
@@ -454,6 +464,7 @@ class CameraLinearityTest(object):
             exposure_count=self.exposure_count,
             exposure_max=self.exposure_max,
             exposure_min=self.exposure_min,
+            exposure_increase=self.exposure_increase,
         )
 
         self.capture_worker.start()
@@ -516,6 +527,7 @@ class CaptureWorker(Process):
         exposure_count=3,
         exposure_max=1.0,
         exposure_min=0.0,
+        exposure_increase=75,
     ):
 
         super(CaptureWorker, self).__init__()
@@ -543,10 +555,12 @@ class CaptureWorker(Process):
         self._exposure_count = None
         self._exposure_max = None
         self._exposure_min = None
+        self._exposure_increase = None
 
         self.exposure_count = exposure_count
         self.exposure_max = exposure_max
         self.exposure_min = exposure_min
+        self.exposure_increase = exposure_increase
 
         self._shutdown = False
 
@@ -581,6 +595,16 @@ class CaptureWorker(Process):
 
         if self.exposure_min:
             logger.warning('Starting exposure: %0.6f', self.exposure_min)
+
+
+    @property
+    def exposure_increase(self):
+        return self._exposure_increase
+
+    @exposure_increase.setter
+    def exposure_increase(self, new_exposure_increase):
+        self._exposure_increase = int(new_exposure_increase)
+        logger.warning('Exposure Increase: %d%%', self.exposure_increase)
 
 
     def sigint_handler_worker(self, signum, frame):
@@ -629,7 +653,7 @@ class CaptureWorker(Process):
                     'binning'  : camera_binning
                 })
 
-            exposure *= 1.75
+            exposure *= (self.exposure_increase + 100) / 100
 
 
         #logger.info('Exposures: %s', pformat(exposures_list))
@@ -1000,6 +1024,14 @@ if __name__ == "__main__":
         type=float,
         default=0.0,
     )
+    argparser.add_argument(
+        '--level',
+        '-l',
+        help='exposure level increase percent [default: 75%%]',  # format
+        type=int,
+        default=75,
+    )
+
 
     calibrate_group = argparser.add_mutually_exclusive_group(required=False)
     calibrate_group.add_argument(
@@ -1022,6 +1054,7 @@ if __name__ == "__main__":
 
     clt = CameraLinearityTest()
     clt.offset = args.offset
+    clt.exposure_increase = args.level
     clt.calibrate = args.calibrate
     clt.exposure_count = args.Count
     clt.exposure_max = args.Max_exposure
