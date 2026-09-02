@@ -63,6 +63,21 @@ logger.addHandler(LOG_HANDLER_STREAM)
 
 
 
+EXPOSURE_SCHEDULE = [
+    None,  # initial exposure will be the camera minimum
+    0.050000,
+    0.075000,
+    0.112500,
+    0.168750,
+    0.253125,
+    0.379687,
+    0.569531,
+    0.854296,
+    1.281445,
+    1.922167,
+]
+
+
 class CameraLinearityTest(object):
 
     def __init__(self):
@@ -496,33 +511,24 @@ class CaptureWorker(Process):
 
 
 
-        min_exposure = 0.05
+        min_exposure = self._expUtils.EXPOSURE_MIN_DAY
         gain = self._expUtils.GAIN_MIN_DAY
         binning = self._expUtils.BINNING_DAY
 
+
+        # update minimum value
+        EXPOSURE_SCHEDULE[0] = min_exposure
+
+
         exposures_list = list()
-
-        # add min exposures
-        for _ in range(3):
-            exposures_list.append({
-                'exposure' : min_exposure,
-                'gain'     : gain,
-                'binning'  : binning
-            })
-
-
-        last_exposure = min_exposure
-        for exp in range(10):
-            next_exposure = last_exposure * 1.5
-
+        for exp in EXPOSURE_SCHEDULE:
+            # take 3 of each exposure for an average
             for _ in range(3):
                 exposures_list.append({
-                    'exposure' : next_exposure,
+                    'exposure' : exp,
                     'gain'     : gain,
-                    'binning'  : binning,
+                    'binning'  : binning
                 })
-
-            last_exposure = next_exposure
 
 
         #logger.info('Exposures: %s', pformat(exposures_list))
