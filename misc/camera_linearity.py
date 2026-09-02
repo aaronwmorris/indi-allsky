@@ -375,7 +375,7 @@ class CameraLinearityTest(object):
             LinearityTable.exposure,
             func.count(LinearityTable.exposure).label('exposure_count'),
             adu_avg.label('adu_avg_current'),
-            (func.max(LinearityTable.adu) - func.min(LinearityTable.adu)).label('adu_avg_range'),
+            (func.max(LinearityTable.adu) - func.min(LinearityTable.adu)).label('adu_range'),
             func.lag(LinearityTable.exposure, 1).over(
                 order_by=LinearityTable.createDate,
             ).label('exposure_previous'),
@@ -408,7 +408,7 @@ class CameraLinearityTest(object):
                 '{0:0.6f}'.format(entry.exposure),
                 '{0:d}'.format(entry.exposure_count),
                 '{0:0.4f}'.format(entry.adu_avg_current),
-                '{0:0.1f}'.format(entry.adu_avg_range),
+                '{0:0.1f}'.format(entry.adu_range),
                 #'{0:0.6f}'.format(entry.exposure_previous),
                 '{0:+0.6f}'.format(entry.exposure_diff),
                 #'{0:0.4f}'.format(entry.adu_avg_previous),
