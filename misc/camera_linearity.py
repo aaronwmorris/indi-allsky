@@ -551,7 +551,6 @@ class CaptureWorker(Process):
             self._initialize()
 
 
-
         min_exposure = self._expUtils.EXPOSURE_MIN_DAY
         gain = self._expUtils.GAIN_MIN_DAY
         binning = self._expUtils.BINNING_DAY
@@ -737,6 +736,15 @@ class CaptureWorker(Process):
 
         logger.warning('Connecting to CCD device %s', self.indiclient.ccd_device.getDeviceName())
         self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())
+
+
+        # use day config by default
+        if self.config.get('INDI_CONFIG_DAY', {}):
+            indi_config = self.config['INDI_CONFIG_DAY']
+        else:
+            indi_config = self.config['INDI_CONFIG_DEFAULTS']
+
+        self.indiclient.configureCcdDevice(indi_config)
 
 
         # get CCD information
