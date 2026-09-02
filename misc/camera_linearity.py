@@ -252,10 +252,10 @@ class CameraLinearityTest(object):
 
         # use original value if not defined
         if i_ref.libcamera_black_level:
-            libcamera_black_level = i_ref.libcamera_black_level
+            libcamera_black_level = i_ref.libcamera_black_level  # noqa: F841
 
 
-        self.image_processor.calibrate(libcamera_black_level=libcamera_black_level)
+        #self.image_processor.calibrate(libcamera_black_level=libcamera_black_level)
         self.image_processor.debayer()  # populates self.opencv_data
 
         image = i_ref.opencv_data
@@ -284,27 +284,48 @@ class CameraLinearityTest(object):
 
     def generateReport(self):
         table_report = PrettyTable()
-        table_report.field_names = ['Exposure', 'ADU', 'Diff']
+        table_report.field_names = ['Exposure', 'ADU', 'Prev Exposure', 'Exposure Diff', 'Prev ADU', 'ADU Diff', 'Exposure Percent Diff', 'ADU Percent Diff']
 
         q = self.session.query(
             LinearityTable.exposure,
-            func.avg(LinearityTable.adu).label('adu_avg'),
+            func.avg(LinearityTable.adu).label('adu_avg_current'),
+            func.lag(LinearityTable.exposure, 1).over(
+                order_by=LinearityTable.createDate,
+            ).label('exposure_previous'),
+            (LinearityTable.exposure - func.lag(LinearityTable.exposure, 1).over(
+                order_by=LinearityTable.createDate,
+            )).label('exposure_diff'),
+            func.lag(func.avg(LinearityTable.adu), 1).over(
+                order_by=LinearityTable.createDate,
+            ).label('adu_avg_previous'),
+            (100 * LinearityTable.exposure / func.lag(LinearityTable.exposure, 1).over(
+                order_by=LinearityTable.createDate,
+            ) - 100).label('exposure_percent_diff'),
             (func.avg(LinearityTable.adu) - func.lag(func.avg(LinearityTable.adu), 1).over(
                 order_by=LinearityTable.createDate,
-            )).label('lag_diff'),
+            )).label('adu_avg_diff'),
+            (100 * (func.avg(LinearityTable.adu) / func.lag(func.avg(LinearityTable.adu), 1).over(
+                order_by=LinearityTable.createDate,
+            )) - 100).label('adu_percent_diff'),
         )\
             .group_by(LinearityTable.exposure)\
             .order_by(LinearityTable.exposure)
 
 
         for entry in q:
-            if isinstance(entry.lag_diff, type(None)):
+            if isinstance(entry.adu_avg_diff, type(None)):
+                # skip first entry
                 continue
 
             table_report.add_row([
                 '{0:0.6f}'.format(entry.exposure),
-                '{0:0.4f}'.format(entry.adu_avg),
-                '{0:0.4f}'.format(entry.lag_diff),
+                '{0:0.4f}'.format(entry.adu_avg_current),
+                '{0:0.6f}'.format(entry.exposure_previous),
+                '{0:+0.6f}'.format(entry.exposure_diff),
+                '{0:0.4f}'.format(entry.adu_avg_previous),
+                '{0:+0.4f}'.format(entry.adu_avg_diff),
+                '{0:+0.1f}'.format(entry.exposure_percent_diff),
+                '{0:+0.1f}'.format(entry.adu_percent_diff),
             ])
 
 
