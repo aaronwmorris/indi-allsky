@@ -65,17 +65,21 @@ logger.addHandler(LOG_HANDLER_STREAM)
 
 EXPOSURE_SCHEDULE = [
     None,  # initial exposure will be the camera minimum
-    0.050000,
-    0.075000,
-    0.112500,
-    0.168750,
-    0.253125,
-    0.379687,
-    0.569531,
-    0.854296,
-    1.281445,
-    1.922167,
+    0.010000,
+    0.015000,
+    0.025500,
+    0.033750,
+    0.050625,
+    0.075937,
+    0.113906,
+    0.170859,
+    0.256289,
+    0.384433,
+    0.576650,
+    0.864975,
+    1.297463,
 ]
+
 
 
 class CameraLinearityTest(object):
