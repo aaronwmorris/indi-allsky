@@ -183,6 +183,7 @@ class CameraLinearityTest(object):
 
         self._offset = None
         self._exposure_count = None
+        self._calibrate = None
 
         self.session = self._getDbConn()
 
@@ -208,6 +209,20 @@ class CameraLinearityTest(object):
     @exposure_count.setter
     def exposure_count(self, new_exposure_count):
         self._exposure_count  = int(new_exposure_count)
+
+
+    @property
+    def calibrate(self):
+        return self._calibrate
+
+    @calibrate.setter
+    def calibrate(self, new_calibrate):
+        self._calibrate = bool(new_calibrate)
+
+        if self.calibrate:
+            logger.warning('Image Calibration Enabled')
+        else:
+            logger.warning('Image Calibration Disabled')
 
 
     def sigint_handler_main(self, signum, frame):
@@ -291,7 +306,9 @@ class CameraLinearityTest(object):
             libcamera_black_level = i_ref.libcamera_black_level  # noqa: F841
 
 
-        #self.image_processor.calibrate(libcamera_black_level=libcamera_black_level)
+        if self.calibrate:
+            self.image_processor.calibrate(libcamera_black_level=libcamera_black_level)
+
         self.image_processor.debayer()  # populates self.opencv_data
 
         image = i_ref.opencv_data
@@ -926,6 +943,21 @@ if __name__ == "__main__":
         default=0,
     )
 
+    calibrate_group = argparser.add_mutually_exclusive_group(required=False)
+    calibrate_group.add_argument(
+        '--no-calibrate',
+        help='disable image calibration (default)',
+        dest='calibrate',
+        action='store_false',
+    )
+    calibrate_group.add_argument(
+        '--calibrate',
+        help='enable image calibration',
+        dest='calibrate',
+        action='store_true',
+    )
+    calibrate_group.set_defaults(calibrate=False)
+
 
     args = argparser.parse_args()
 
@@ -933,4 +965,5 @@ if __name__ == "__main__":
     clt = CameraLinearityTest()
     clt.exposure_count = args.Count
     clt.offset = args.offset
+    clt.calibrate = args.calibrate
     clt.main()
