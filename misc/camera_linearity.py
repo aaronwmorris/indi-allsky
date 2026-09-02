@@ -24,6 +24,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy import Float
+from sqlalchemy import DateTime
 from sqlalchemy.sql import func
 from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
@@ -178,26 +179,28 @@ class CameraLinearityTest(object):
 
 
     def main(self):
+        self._startCaptureWorker()
+        time.sleep(20)
+
         while True:
             if self._shutdown:
                 logger.warning('Shutting down')
-                self._stopCaptureWorker()  # stop this first so image queue is cleared out
+                break
 
-                self.generateResults()
-
-                sys.exit()
-
-
-            self._startCaptureWorker()
 
             try:
-                i_dict = self.image_q.get(timeout=23)  # prime number
+                i_dict = self.image_q.get(timeout=5)
             except queue.Empty:
-                continue
+                break
 
 
             with app.app_context():
                 self.processImage(i_dict)
+
+
+        self._stopCaptureWorker()  # stop this first so image queue is cleared out
+
+        self.generateResults()
 
 
     def processImage(self, i_dict):
@@ -277,15 +280,22 @@ class CameraLinearityTest(object):
 
 
     def generateResults(self):
+        adu_avg = func.avg(LinearityTable.adu).label('adu_avg')
+
         q = self.session.query(
-            func.avg(LinearityTable.adu).label('adu_avg'),
+            LinearityTable.exposure,
+            adu_avg,
+            (adu_avg - func.lag(adu_avg).over(
+                partition_by=LinearityTable.exposure,
+                order_by=LinearityTable.createDate,
+            )).label('lag_diff'),
         )\
             .group_by(LinearityTable.exposure)\
             .order_by(LinearityTable.exposure)
 
 
         for entry in q:
-            logger.info('Avg: %0.3f', entry.adu_avg)
+            logger.info('Exp: %0.6f, Avg: %0.3f, Diff: %0.3f', entry.exposure, entry.adu_avg, entry.lag_diff)
 
 
     def _getDbConn(self):
@@ -437,6 +447,36 @@ class CaptureWorker(Process):
             self._initialize()
 
 
+
+        min_exposure = self._expUtils.EXPOSURE_MIN_DAY
+        gain = self._expUtils.GAIN_MIN_DAY
+        binning = self._expUtils.BINNING_DAY
+
+        exposures_list = list()
+
+        # add min exposures
+        for _ in range(3):
+            exposures_list.append({
+                'exposure' : min_exposure,
+                'gain'     : gain,
+                'binning'  : binning
+            })
+
+
+        last_exposure = min_exposure
+        for exp in range(5):
+            next_exposure = last_exposure * 1.1
+
+            for _ in range(3):
+                exposures_list.append({
+                    'exposure' : next_exposure,
+                    'gain'     : gain,
+                    'binning'  : binning,
+                })
+
+            last_exposure = next_exposure
+
+
         frame_start_time = time.time()
         waiting_for_frame = False
 
@@ -527,10 +567,22 @@ class CaptureWorker(Process):
                 frame_start_time = now_time
 
 
+                try:
+                    e = exposures_list.pop(0)
+
+                    self._expUtils.EXPOSURE_NEXT = e['exposure']
+                    self._expUtils.GAIN_NEXT = e['gain']
+                    self._expUtils.BINNING_NEXT = e['binning']
+
+                except IndexError:
+                    logger.warning('REACHED END OF LIST')
+                    return
+
+
                 self.shoot(
-                    self._expUtils.EXPOSURE_MIN_DAY,
-                    self._expUtils.GAIN_MIN_DAY,
-                    self._expUtils.BINNING_DAY,
+                    self._expUtils.EXPOSURE_NEXT,
+                    self._expUtils.GAIN_NEXT,
+                    self._expUtils.BINNING_NEXT,
                     sync=False,
                 )
 
@@ -740,6 +792,7 @@ class LinearityTable(Base):
     __tablename__ = 'linearity'
 
     id          = Column(Integer, primary_key=True)
+    createDate  = Column(DateTime, nullable=False, server_default=func.now(), index=True)
     exposure    = Column(Float, nullable=False, index=True)
     adu         = Column(Float, nullable=False)
 
