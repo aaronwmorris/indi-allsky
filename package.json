@@ -9,7 +9,12 @@
     "setup:venv": "python3 -m venv .venv --system-site-packages && .venv/bin/pip install --upgrade pip setuptools wheel && .venv/bin/pip install -r requirements/requirements_testing.txt",
     "postinstall": "npm run setup:venv",
     "test": ".venv/bin/python -m pytest tests/ --cov=indi_allsky/ --cov-report=term",
-    "tests": "npm run test"
+    "tests": "npm run test",
+    "test:core": ".venv/bin/python -m pytest tests/core/",
+    "test:devices": ".venv/bin/python -m pytest tests/devices/",
+    "test:flask": ".venv/bin/python -m pytest tests/flask/",
+    "test:image": ".venv/bin/python -m pytest tests/image/",
+    "test:lens_solver": ".venv/bin/python -m pytest tests/lens_solver/"
   },
   "devDependencies": {
     "@iconify-json/lucide": "^1.2.5",
