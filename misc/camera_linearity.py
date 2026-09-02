@@ -512,7 +512,7 @@ class CaptureWorker(Process):
 
 
         last_exposure = min_exposure
-        for exp in range(5):
+        for exp in range(10):
             next_exposure = last_exposure * 1.5
 
             for _ in range(3):
