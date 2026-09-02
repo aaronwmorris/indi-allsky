@@ -62,24 +62,10 @@ LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
 logger.addHandler(LOG_HANDLER_STREAM)
 
 
-
-EXPOSURE_SCHEDULE = [
-    None,  # initial exposure will be the camera minimum
-    0.010000,
-    0.015000,
-    0.025500,
-    0.033750,
-    0.050625,
-    0.075937,
-    0.113906,
-    0.170859,
-    0.256289,
-    0.384433,
-    0.576650,
-    0.864975,
-    1.297463,
-]
-
+### Staring exposure
+### Exposures levels will increase by 50% until at least 1s
+### None == camera minimum
+EXPOSURE_START = None
 
 
 class CameraLinearityTest(object):
@@ -577,22 +563,25 @@ class CaptureWorker(Process):
         binning = self._expUtils.BINNING_DAY
 
 
-        # update minimum value
-        EXPOSURE_SCHEDULE[0] = min_exposure
+        if isinstance(EXPOSURE_START, type(None)):
+            exposure = min_exposure
+        else:
+            exposure = EXPOSURE_START
 
 
         exposures_list = list()
-        for exp in EXPOSURE_SCHEDULE:
-            # take 3 of each exposure for an average
+        while exposure < 1:  # keep exposures under 1s
             for _ in range(self.exposure_count):
                 exposures_list.append({
-                    'exposure' : exp,
+                    'exposure' : exposure,
                     'gain'     : gain,
                     'binning'  : binning
                 })
 
+            exposure *= 1.75
 
-        #logger.info('Exposures: %s', pformat(exposures_list))
+
+        logger.info('Exposures: %s', pformat(exposures_list))
 
 
         frame_start_time = time.time()
