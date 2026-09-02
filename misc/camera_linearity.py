@@ -2,6 +2,7 @@
 
 import sys
 from pathlib import Path
+import argparse
 import math
 import time
 from datetime import datetime
@@ -74,7 +75,6 @@ class CameraLinearityTest(object):
                 sys.exit(1)
 
         self.config = self._config_obj.config
-
 
         self.sensors_temp_av = Array('f', [0.0 for x in range(60)])
         self.sensors_user_av = Array('f', [0.0 for x in range(110)])
@@ -166,12 +166,22 @@ class CameraLinearityTest(object):
             4 : None,
         }
 
+        self._offset = 0
 
         self.session = self._getDbConn()
 
         self._shutdown = False
 
         signal.signal(signal.SIGINT, self.sigint_handler_main)
+
+
+    @property
+    def offset(self):
+        return self._offset
+
+    @offset.setter
+    def offset(self, new_offset):
+        self._offset = int(new_offset)
 
 
     def sigint_handler_main(self, signum, frame):
@@ -271,6 +281,10 @@ class CameraLinearityTest(object):
         else:
             data_mono = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             adu = cv2.mean(src=data_mono, mask=self._adu_mask_dict[i_ref.binning])[0]
+
+
+        # subtract the manual offset
+        adu -= self.offset
 
 
         logger.info('ADU: %0.1f', adu)
@@ -482,7 +496,7 @@ class CaptureWorker(Process):
 
 
 
-        min_exposure = self._expUtils.EXPOSURE_MIN_DAY
+        min_exposure = 0.1
         gain = self._expUtils.GAIN_MIN_DAY
         binning = self._expUtils.BINNING_DAY
 
@@ -499,7 +513,7 @@ class CaptureWorker(Process):
 
         last_exposure = min_exposure
         for exp in range(5):
-            next_exposure = last_exposure + 0.2
+            next_exposure = last_exposure * 1.5
 
             for _ in range(3):
                 exposures_list.append({
@@ -840,5 +854,19 @@ class LinearityTable(Base):
 
 
 if __name__ == "__main__":
+    argparser = argparse.ArgumentParser()
+
+    argparser.add_argument(
+        '--offset',
+        '-o',
+        help='camera offset [default: 0]',
+        type=int,
+        default=0,
+    )
+
+    args = argparser.parse_args()
+
+
     clt = CameraLinearityTest()
+    clt.offset = args.offset
     clt.main()
