@@ -9,6 +9,8 @@ import signal
 import ctypes
 import logging
 import traceback
+
+from prettytable import PrettyTable
 from pprint import pformat  # noqa: F401
 
 import numpy
@@ -201,7 +203,7 @@ class CameraLinearityTest(object):
 
         self._stopCaptureWorker()
 
-        self.generateResults()
+        self.generateReport()
 
 
     def processImage(self, i_dict):
@@ -280,7 +282,10 @@ class CameraLinearityTest(object):
         self.session.commit()
 
 
-    def generateResults(self):
+    def generateReport(self):
+        table_report = PrettyTable()
+        table_report.field_names = ['Exposure', 'ADU', 'Diff']
+
         q = self.session.query(
             LinearityTable.exposure,
             func.avg(LinearityTable.adu).label('adu_avg'),
@@ -296,7 +301,14 @@ class CameraLinearityTest(object):
             if isinstance(entry.lag_diff, type(None)):
                 continue
 
-            logger.info('Exp: %0.6f, Avg: %0.3f, Diff: %0.3f', entry.exposure, entry.adu_avg, entry.lag_diff)
+            table_report.add_row([
+                '{0:0.6f}'.format(entry.exposure),
+                '{0:0.4f}'.format(entry.adu_avg),
+                '{0:0.4f}'.format(entry.lag_diff),
+            ])
+
+
+        print(table_report)
 
 
     def _getDbConn(self):
