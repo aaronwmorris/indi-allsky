@@ -9,6 +9,7 @@ import signal
 import ctypes
 import logging
 import traceback
+from pprint import pformat  # noqa: F401
 
 import numpy
 import cv2
@@ -180,7 +181,6 @@ class CameraLinearityTest(object):
 
     def main(self):
         self._startCaptureWorker()
-        time.sleep(20)
 
         while True:
             if self._shutdown:
@@ -188,9 +188,10 @@ class CameraLinearityTest(object):
                 break
 
 
-            try:
-                i_dict = self.image_q.get(timeout=5)
-            except queue.Empty:
+            i_dict = self.image_q.get()  # blocking
+
+
+            if not i_dict.get('exposure'):
                 break
 
 
@@ -198,7 +199,7 @@ class CameraLinearityTest(object):
                 self.processImage(i_dict)
 
 
-        self._stopCaptureWorker()  # stop this first so image queue is cleared out
+        self._stopCaptureWorker()
 
         self.generateResults()
 
@@ -280,13 +281,10 @@ class CameraLinearityTest(object):
 
 
     def generateResults(self):
-        adu_avg = func.avg(LinearityTable.adu).label('adu_avg')
-
         q = self.session.query(
             LinearityTable.exposure,
-            adu_avg,
-            (adu_avg - func.lag(adu_avg).over(
-                partition_by=LinearityTable.exposure,
+            func.avg(LinearityTable.adu).label('adu_avg'),
+            (func.avg(LinearityTable.adu) - func.lag(func.avg(LinearityTable.adu), 1).over(
                 order_by=LinearityTable.createDate,
             )).label('lag_diff'),
         )\
@@ -295,6 +293,9 @@ class CameraLinearityTest(object):
 
 
         for entry in q:
+            if isinstance(entry.lag_diff, type(None)):
+                continue
+
             logger.info('Exp: %0.6f, Avg: %0.3f, Diff: %0.3f', entry.exposure, entry.adu_avg, entry.lag_diff)
 
 
@@ -465,7 +466,7 @@ class CaptureWorker(Process):
 
         last_exposure = min_exposure
         for exp in range(5):
-            next_exposure = last_exposure * 1.1
+            next_exposure = last_exposure + 0.2
 
             for _ in range(3):
                 exposures_list.append({
@@ -475,6 +476,9 @@ class CaptureWorker(Process):
                 })
 
             last_exposure = next_exposure
+
+
+        #logger.info('Exposures: %s', pformat(exposures_list))
 
 
         frame_start_time = time.time()
@@ -576,6 +580,11 @@ class CaptureWorker(Process):
 
                 except IndexError:
                     logger.warning('REACHED END OF LIST')
+
+                    self.image_q.put({
+                        'exposure' : None,
+                    })
+
                     return
 
 
