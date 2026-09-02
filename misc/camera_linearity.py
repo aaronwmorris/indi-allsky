@@ -581,7 +581,7 @@ class CaptureWorker(Process):
             exposure *= 1.75
 
 
-        logger.info('Exposures: %s', pformat(exposures_list))
+        #logger.info('Exposures: %s', pformat(exposures_list))
 
 
         frame_start_time = time.time()
