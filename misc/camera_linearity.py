@@ -18,6 +18,13 @@ from multiprocessing import Process
 from multiprocessing import Queue
 from multiprocessing import Array
 
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import Column
+from sqlalchemy import Integer
+from sqlalchemy import Float
+from sqlalchemy.sql import func
 from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -156,6 +163,8 @@ class CameraLinearityTest(object):
         }
 
 
+        self.session = self._getDbConn()
+
         self._shutdown = False
 
         signal.signal(signal.SIGINT, self.sigint_handler_main)
@@ -173,6 +182,8 @@ class CameraLinearityTest(object):
             if self._shutdown:
                 logger.warning('Shutting down')
                 self._stopCaptureWorker()  # stop this first so image queue is cleared out
+
+                self.generateResults()
 
                 sys.exit()
 
@@ -257,6 +268,33 @@ class CameraLinearityTest(object):
 
 
         logger.info('ADU: %0.1f', adu)
+        adu_entry = LinearityTable(
+            exposure=exposure,
+            adu=adu,
+        )
+        self.session.add(adu_entry)
+        self.session.commit()
+
+
+    def generateResults(self):
+        q = self.session.query(
+            func.avg(LinearityTable.adu).label('adu_avg'),
+        )\
+            .group_by(LinearityTable.exposure)\
+            .order_by(LinearityTable.exposure)
+
+
+        for entry in q:
+            logger.info('Avg: %0.3f', entry.adu_avg)
+
+
+    def _getDbConn(self):
+        engine = create_engine('sqlite://', echo=False)  # In memory db
+        #engine = create_engine('sqlite:///{0:s}'.format(str(Path(__file__).parent.joinpath('year.sqlite'))), echo=False)
+        Base.metadata.create_all(bind=engine)
+        Session = sessionmaker(bind=engine)
+
+        return Session()
 
 
     def _startCaptureWorker(self):
@@ -692,6 +730,18 @@ class CaptureWorker(Process):
         logger.info('Taking %0.6fs exposure (gain %0.3f / bin %d)', exposure, gain, binning)
 
         self.indiclient.setCcdExposure(exposure, gain, binning, sync=sync, timeout=timeout, sqm_exposure=False)
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class LinearityTable(Base):
+    __tablename__ = 'linearity'
+
+    id          = Column(Integer, primary_key=True)
+    exposure    = Column(Float, nullable=False, index=True)
+    adu         = Column(Float, nullable=False)
 
 
 if __name__ == "__main__":
