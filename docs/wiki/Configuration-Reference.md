@@ -47,6 +47,9 @@ You may use the config.py utility to manipulate the configuration from the comma
 | ADU_ROI             | []          | (array) Region of interest to calculate ADU (x1, y1, x2, y2) - Note: ROI calculated using bin 1 coordinates, scaled for bin value |
 | DETECT_STARS        | true        | (bool) Enable star detection |
 | DETECT_STARS_THOLD  | 0.6         | (float) Star detection threshold |
+| DETECT_STARS_METHOD | template    | (str) Star detection method: template or sep |
+| DETECT_STARS_SEP_THOLD | 5.0      | (float) SEP detection threshold, in sigma above the local background noise |
+| DETECT_STARS_SEP_MAX_RADIUS | 20  | (int) SEP maximum source semi-major axis in pixels, rejects blooming and artifacts |
 | DETECT_METEORS      | false       | (bool) Enable meteor detection |
 | DETECT_MASK         |             | (str) Image file to use for detection mask |
 | DETECT_DRAW         | false       | (bool) Draw detected objects on original image |

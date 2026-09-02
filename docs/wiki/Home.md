@@ -14,6 +14,7 @@ Welcome to the indi-allsky wiki!
 * [Dark Calibration Frames](Dark-Calibration-Frames)
 * [Keogram Rotation](Keogram-Rotation)
 * [Detection Masks](Detection-Masks)
+* [Star Detection](Star-Detection)
 * [Docker](Docker)
 * [YouTube Uploads](Youtube-Uploads)
 
