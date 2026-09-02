@@ -2288,11 +2288,11 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
     echo
     echo "**** Setting up indiserver service ****"
 
-
-    # timer
-    cp -f "${ALLSKY_DIRECTORY}/service/${INDISERVER_SERVICE_NAME}.timer" "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
-    chmod 644 "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
-
+    # remove legacy timer if present
+    if [[ -f "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer" ]]; then
+        systemctl --user disable "${INDISERVER_SERVICE_NAME}.timer" 2>/dev/null || true
+        rm -f "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
+    fi
 
     TMP1=$(mktemp)
     sed \
@@ -2317,9 +2317,11 @@ fi
 
 
 echo "**** Setting up indi-allsky service ****"
-# timer
-cp -f "${ALLSKY_DIRECTORY}/service/${ALLSKY_SERVICE_NAME}.timer" "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.timer"
-chmod 644 "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.timer"
+# remove legacy timer if present
+if [[ -f "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.timer" ]]; then
+    systemctl --user disable "${ALLSKY_SERVICE_NAME}.timer" 2>/dev/null || true
+    rm -f "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.timer"
+fi
 
 
 TMP2=$(mktemp)
@@ -2373,8 +2375,8 @@ echo "**** Enabling services ****"
 sudo loginctl enable-linger "$USER"
 systemctl --user daemon-reload
 
-# indi-allsky service is started by the timer (2 minutes after boot)
-systemctl --user disable "${ALLSKY_SERVICE_NAME}.service"
+# enable indi-allsky service directly at boot (ordered after indiserver and gunicorn)
+systemctl --user enable "${ALLSKY_SERVICE_NAME}.service"
 
 # gunicorn service is started by the socket
 systemctl --user disable "${GUNICORN_SERVICE_NAME}.service"
@@ -2501,11 +2503,9 @@ jq \
  --arg indi_allsky_docroot "$HTDOCS_FOLDER" \
  --arg migration_folder "$MIGRATION_FOLDER" \
  --arg allsky_service_name "${ALLSKY_SERVICE_NAME}.service" \
- --arg allsky_timer_name "${ALLSKY_SERVICE_NAME}.timer" \
  --arg indiserver_service_name "${INDISERVER_SERVICE_NAME}.service" \
- --arg indiserver_timer_name "${INDISERVER_SERVICE_NAME}.timer" \
  --arg gunicorn_service_name "${GUNICORN_SERVICE_NAME}.service" \
- '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri | .INDI_ALLSKY_DOCROOT = $indi_allsky_docroot | .MIGRATION_FOLDER = $migration_folder | .ALLSKY_SERVICE_NAME = $allsky_service_name | .ALLSKY_TIMER_NAME = $allsky_timer_name | .INDISERVER_SERVICE_NAME = $indiserver_service_name | .INDISERVER_TIMER_NAME = $indiserver_timer_name | .GUNICORN_SERVICE_NAME = $gunicorn_service_name' \
+ '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri | .INDI_ALLSKY_DOCROOT = $indi_allsky_docroot | .MIGRATION_FOLDER = $migration_folder | .ALLSKY_SERVICE_NAME = $allsky_service_name | .INDISERVER_SERVICE_NAME = $indiserver_service_name | .GUNICORN_SERVICE_NAME = $gunicorn_service_name' \
  "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP_FLASK"
 
 
@@ -3550,9 +3550,7 @@ fi
 
 
 if [ "$INSTALL_INDISERVER" == "true" ]; then
-    systemctl --user enable "${INDISERVER_SERVICE_NAME}.timer"
-    # indiserver service is started by the timer (30 seconds after boot)
-    systemctl --user disable "${INDISERVER_SERVICE_NAME}.service"
+    systemctl --user enable "${INDISERVER_SERVICE_NAME}.service"
 
 
     while [ -z "${RESTART_INDISERVER:-}" ]; do
