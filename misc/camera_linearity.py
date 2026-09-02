@@ -62,12 +62,6 @@ LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
 logger.addHandler(LOG_HANDLER_STREAM)
 
 
-### Staring exposure
-### Exposures levels will increase by 50% until at least 1s
-### None == camera minimum
-EXPOSURE_START = None
-
-
 class CameraLinearityTest(object):
 
     def __init__(self):
@@ -365,6 +359,7 @@ class CameraLinearityTest(object):
             'Exposure',
             'Count',
             'ADU Average',
+            'ADU Range',
             #'Prev Exposure',
             'Exposure Diff',
             #'Prev ADU',
@@ -378,8 +373,9 @@ class CameraLinearityTest(object):
 
         q = self.session.query(
             LinearityTable.exposure,
-            adu_avg.label('adu_avg_current'),
             func.count(LinearityTable.exposure).label('exposure_count'),
+            adu_avg.label('adu_avg_current'),
+            (func.max(LinearityTable.adu) - func.min(LinearityTable.adu)).label('adu_avg_range'),
             func.lag(LinearityTable.exposure, 1).over(
                 order_by=LinearityTable.createDate,
             ).label('exposure_previous'),
@@ -412,6 +408,7 @@ class CameraLinearityTest(object):
                 '{0:0.6f}'.format(entry.exposure),
                 '{0:d}'.format(entry.exposure_count),
                 '{0:0.4f}'.format(entry.adu_avg_current),
+                '{0:0.1f}'.format(entry.adu_avg_range),
                 #'{0:0.6f}'.format(entry.exposure_previous),
                 '{0:+0.6f}'.format(entry.exposure_diff),
                 #'{0:0.4f}'.format(entry.adu_avg_previous),
@@ -757,8 +754,6 @@ class CaptureWorker(Process):
                     self._expUtils.BINNING_NEXT = e['binning']
 
                 except IndexError:
-                    logger.warning('REACHED END OF LIST')
-
                     self.image_q.put({
                         'exposure' : None,
                     })
