@@ -10,20 +10,48 @@ _The indi-allsky web interface requires the use of a Virtual Private Server [VPS
 * `remote` - The server receiving the uploaded files
 
 ## Distributions
-* Debian 13
-    * Raspberry Pi OS 13
-* Debian 12
-    * Raspberry Pi OS 12
-* Debian 11
-    * Raspberry Pi OS 11
+* Ubuntu 26.04
 * Ubuntu 24.04
 * Ubuntu 22.04
+* Debian 13 (Raspberry Pi OS 13)
+* Debian 12 (Raspberry Pi OS 12)
+* Debian 11 (Raspberry Pi OS 11)
 
 
-## Install remote server
-Install the indi-allsky web application on the remote server.  The server needs the ability to run a gunicorn service via systemd and a reverse proxy using Apache.  It is also possible to use Nginx as a reverse proxy (manual setup).
+## Install Remote Server
 
+### Method 1: APT Package Installation (Recommended)
+On your remote VPS or cloud server running Debian or Ubuntu, install the standalone web dashboard package via the official APT repository:
+
+```bash
+# 1. Add GPG Keyring
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://apt.indi-allsky.org/key.gpg | \
+  sudo gpg --dearmor -o /etc/apt/keyrings/indi-allsky.gpg
+sudo chmod a+r /etc/apt/keyrings/indi-allsky.gpg
+
+# 2. Add APT Repository Source
+sudo tee /etc/apt/sources.list.d/indi-allsky.sources <<EOF
+Types: deb
+URIs: https://apt.indi-allsky.org
+Suites: $(lsb_release -cs)
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/indi-allsky.gpg
+EOF
+
+# 3. Install Web-Only Package
+sudo apt update
+sudo apt install -y indi-allsky-web
 ```
+
+> [!TIP]
+> `indi-allsky-web` provides the Flask dashboard, Gunicorn application server, and web server configuration for remote sync portals without requiring camera hardware or local INDI drivers.
+
+---
+
+### Method 2: Manual Source Installation (`web_only_setup.sh`)
+```bash
 ./misc/web_only_setup.sh
 ```
 

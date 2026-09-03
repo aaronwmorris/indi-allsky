@@ -5,6 +5,7 @@
 #############################################################
 
 import sys
+import os
 from pathlib import Path
 import argparse
 import re
@@ -74,15 +75,17 @@ class UserManager(object):
         name = kwargs.get('name')
         email = kwargs.get('email')
 
+        interactive_user = kwargs.get('username') is None
         while True:
             if not username:
                 username = input('Username: ')
 
             if re.search(self.username_regex, username):
                 logger.error('Username contains illegal characters')
+                if not interactive_user:
+                    sys.exit(1)
                 username = None
                 continue
-
 
             existing_user = IndiAllSkyDbUserTable.query\
                 .filter(IndiAllSkyDbUserTable.username == username)\
@@ -90,12 +93,14 @@ class UserManager(object):
 
             if existing_user:
                 logger.warning('User already exists: %s', username)
+                if not interactive_user:
+                    return
                 username = None
                 continue
 
             break
 
-
+        interactive_password = kwargs.get('password') is None or kwargs.get('password') == ''
         while True:
             if not password:
                 password = getpass.getpass('Password (not echoed):')
@@ -103,16 +108,19 @@ class UserManager(object):
 
             if password != password2:
                 logger.error('Password does not match')
+                if not interactive_password:
+                    sys.exit(1)
                 password = None
                 continue
 
             if len(password) < 8:
                 logger.error('Password must be 8 characters or longer')
+                if not interactive_password:
+                    sys.exit(1)
                 password = None
                 continue
 
             break
-
 
         while True:
             if not name:
@@ -124,18 +132,19 @@ class UserManager(object):
 
             break
 
-
+        interactive_email = kwargs.get('email') is None or kwargs.get('email') == ''
         while True:
             if not email:
                 email = input('Email: ')
 
-            if not re.search(self.email_regex, email):
+            if email and not re.search(self.email_regex, email):
                 logger.error('Email not valid')
+                if not interactive_email:
+                    sys.exit(1)
                 email = None
                 continue
 
             break
-
 
         hashed_password = argon2.hash(password)
         #logger.info('Hash: %s', hashed_password)
@@ -361,9 +370,9 @@ if __name__ == "__main__":
     argparser.add_argument(
         '--password',
         '-p',
-        help='password',
+        help='password (or set USERTOOL_PASSWORD env var)',
         type=str,
-        default='',
+        default=os.environ.get('USERTOOL_PASSWORD', ''),
     )
     argparser.add_argument(
         '--fullname',

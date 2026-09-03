@@ -1,6 +1,29 @@
-If you wish to remove or disable indi-allsky
+If you wish to remove or disable indi-allsky:
 
-# Disable services
+---
+
+## Option 1: APT Package Removal (Debian / Ubuntu / Raspberry Pi OS)
+
+If you installed indi-allsky from the official APT repository:
+
+### Remove Application (Preserve Data & Config)
+```bash
+sudo apt remove indi-allsky indi-allsky-web
+```
+
+### Complete Purge (Delete All Configuration & Data)
+> [!CAUTION]
+> Running `apt purge` permanently removes all configuration files in `/etc/indi-allsky/`, SQLite databases in `/var/lib/indi-allsky/`, and system user accounts.
+
+```bash
+sudo apt purge indi-allsky indi-allsky-web
+```
+
+---
+
+## Option 2: Manual Source Uninstall (`setup.sh` Installs)
+
+### Disable Services
 Running the following commands is sufficient to stop the program from running, but it will remain installed.
 ```
 systemctl --user disable indiserver.service

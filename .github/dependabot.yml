@@ -1,0 +1,56 @@
+version: 2
+updates:
+  # Python Dependencies (requirements/*.txt)
+  - package-ecosystem: "pip"
+    directory: "/requirements"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 10
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
+
+  # NPM Frontend Dependencies (Tailwind CSS, DaisyUI, Cally, Iconify)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 10
+    groups:
+      npm-dependencies:
+        patterns:
+          - "*"
+
+  # GitHub Actions CI/CD Workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 10
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  # Docker Container Images
+  - package-ecosystem: "docker"
+    directory: "/docker"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 10
+    groups:
+      docker-images:
+        patterns:
+          - "*"
+
+  # Docker Compose Services
+  - package-ecosystem: "docker-compose"
+    directory: "/docker"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 10
+    groups:
+      docker-compose:
+        patterns:
+          - "*"

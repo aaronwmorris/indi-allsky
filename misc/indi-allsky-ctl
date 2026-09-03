@@ -1,0 +1,339 @@
+#!/bin/bash
+###############################################################################
+# indi-allsky-ctl: Command-line control & maintenance utility for indi-allsky
+###############################################################################
+set -e
+
+APP_DIR="/usr/share/indi-allsky"
+PYTHON_BIN="/var/lib/indi-allsky/venv/bin/python3"
+export PYTHONPATH="${APP_DIR}:${PYTHONPATH:-}"
+
+show_help() {
+    cat <<EOF
+INDI Allsky Command-Line Control & Maintenance Utility
+
+Usage:
+  indi-allsky-ctl <command> [options/arguments...]
+
+User & Authentication Management:
+  passwd / reset-pass      Reset or change password for a web user
+  user-add                 Create a new web user account
+  user-list                List all configured web users
+  user-del                 Delete a web user account
+
+Database & Storage:
+  backup-db                Create an immediate database backup
+  fix-perms                Restore standard ownership & permissions (as in setup.sh)
+  expire-images            Run image retention expiration and storage purge
+  rebuild-thumbnails       Regenerate missing image thumbnails
+  convert-db               Convert database between SQLite and MySQL
+  validate-db              Audit database schema and repair broken records
+
+Hardware & Diagnostics:
+  test-camera              Run diagnostic camera capture test
+  list-cameras             List detected INDI cameras
+  test-sensors             Probe and read connected hardware sensors
+  support-info             Generate diagnostic report bundle for troubleshooting
+
+Peripheral Configuration:
+  setup-gps                Configure GPS / GPSD service
+  setup-hotspot            Configure WiFi hotspot failover
+  setup-rtc                Configure I2C hardware Real-Time Clock
+  setup-usb-mount          Configure automatic USB flash drive automount
+
+Package & Driver Management:
+  hold-indi                Pin installed INDI packages so 'apt upgrade' won't touch them
+  unhold-indi              Unpin INDI packages to allow upgrades with 'apt upgrade'
+  protect-source-indi      Register source-built INDI with APT (prevents repo overwrites)
+  status-indi-hold         Show current APT hold status for INDI packages
+
+Service Control:
+  status                   Show status of indi-allsky and gunicorn services
+  restart                  Restart indi-allsky and gunicorn services
+  logs                     Follow recent logs from systemd journal
+
+EOF
+}
+
+fix_permissions() {
+    if [ "$(id -u)" -ne 0 ]; then
+        echo "Error: fix-perms requires root privileges. Please run with sudo:"
+        echo "  sudo indi-allsky-ctl fix-perms"
+        exit 1
+    fi
+
+    ALLSKY_USER="indi-allsky"
+    ALLSKY_GROUP="indi-allsky"
+    WWW_GROUP="www-data"
+    ALLSKY_ETC="/etc/indi-allsky"
+    DB_FOLDER="/var/lib/indi-allsky"
+    DB_FILE="${DB_FOLDER}/indi-allsky.sqlite"
+    VARLIB_FOLDER="/var/lib/indi-allsky"
+    LOG_FOLDER="/var/log/indi-allsky"
+    HTDOCS_FOLDER="/var/www/html/allsky"
+
+    # Resolve IMAGE_FOLDER dynamically from SQLite database or flask.json if present
+    IMAGE_FOLDER="${HTDOCS_FOLDER}/images"
+    if [ -f "$DB_FILE" ] && command -v sqlite3 >/dev/null 2>&1; then
+        CFG_JSON=$(sqlite3 "$DB_FILE" "SELECT data FROM config ORDER BY id DESC LIMIT 1;" 2>/dev/null || true)
+        if [ -n "$CFG_JSON" ] && command -v jq >/dev/null 2>&1; then
+            DETECTED_IMG=$(echo "$CFG_JSON" | jq -r '.IMAGE_FOLDER // empty' 2>/dev/null || true)
+            [ -n "$DETECTED_IMG" ] && IMAGE_FOLDER="$DETECTED_IMG"
+        fi
+    fi
+    if [ -f "${ALLSKY_ETC}/flask.json" ] && command -v jq >/dev/null 2>&1; then
+        CFG_IMAGE_FOLDER=$(jq -r '.INDI_ALLSKY_IMAGE_FOLDER // .IMAGE_FOLDER // empty' "${ALLSKY_ETC}/flask.json" 2>/dev/null || true)
+        if [ -n "$CFG_IMAGE_FOLDER" ]; then
+            IMAGE_FOLDER="$CFG_IMAGE_FOLDER"
+        fi
+    fi
+
+    echo "indi-allsky: Setting up and repairing directory permissions..."
+
+    # 1. Log folder (/var/log/indi-allsky)
+    [ ! -d "$LOG_FOLDER" ] && mkdir -p "$LOG_FOLDER"
+    chmod 755 "$LOG_FOLDER"
+    chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" "$LOG_FOLDER" 2>/dev/null || true
+
+    # 2. Config folder (/etc/indi-allsky)
+    [ ! -d "$ALLSKY_ETC" ] && mkdir -p "$ALLSKY_ETC"
+    chmod 775 "$ALLSKY_ETC"
+    chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" "$ALLSKY_ETC" 2>/dev/null || true
+    if [ -f "${ALLSKY_ETC}/flask.json" ]; then
+        chown "${ALLSKY_USER}:${WWW_GROUP}" "${ALLSKY_ETC}/flask.json" 2>/dev/null || true
+        chmod 660 "${ALLSKY_ETC}/flask.json" 2>/dev/null || true
+    fi
+    if [ -f "${ALLSKY_ETC}/indi-allsky.env" ]; then
+        chmod 600 "${ALLSKY_ETC}/indi-allsky.env" 2>/dev/null || true
+    fi
+
+    # 3. Database folder (/var/lib/indi-allsky)
+    [ ! -d "$DB_FOLDER" ] && mkdir -p "$DB_FOLDER"
+    chmod 775 "$DB_FOLDER"
+    chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" "$DB_FOLDER" 2>/dev/null || true
+    [ ! -d "${DB_FOLDER}/backup" ] && mkdir -p "${DB_FOLDER}/backup"
+    chmod 775 "${DB_FOLDER}/backup"
+    chown "${ALLSKY_USER}:${ALLSKY_GROUP}" "${DB_FOLDER}/backup" 2>/dev/null || true
+    if [ -f "${DB_FILE}" ]; then
+        chmod 664 "${DB_FILE}"
+        chown "${ALLSKY_USER}:${ALLSKY_GROUP}" "${DB_FILE}" 2>/dev/null || true
+    fi
+
+    # 4. HTDOCS Web folder (/var/www/html/allsky)
+    if [ -d "$HTDOCS_FOLDER" ]; then
+        chmod 755 "$HTDOCS_FOLDER"
+        chown -R "${ALLSKY_USER}:${WWW_GROUP}" "$HTDOCS_FOLDER" 2>/dev/null || true
+        [ -d "$HTDOCS_FOLDER/js" ] && chmod 775 "$HTDOCS_FOLDER/js" 2>/dev/null || true
+    fi
+
+    # 5. Image storage folder (Recursive matching setup.sh)
+    if [ -d "$IMAGE_FOLDER" ]; then
+        chmod 775 "$IMAGE_FOLDER"
+        chown -R "${ALLSKY_USER}:${WWW_GROUP}" "$IMAGE_FOLDER" 2>/dev/null || true
+        [ -d "${IMAGE_FOLDER}/darks" ] && chmod 775 "${IMAGE_FOLDER}/darks" 2>/dev/null || true
+        [ -d "${IMAGE_FOLDER}/export" ] && chmod 775 "${IMAGE_FOLDER}/export" 2>/dev/null || true
+    fi
+
+    # 6. Varlib folder
+    if [ -d "$VARLIB_FOLDER" ]; then
+        chmod 775 "$VARLIB_FOLDER"
+        chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" "$VARLIB_FOLDER" 2>/dev/null || true
+    fi
+
+    echo "indi-allsky: Directory permissions and ownership successfully restored."
+}
+
+protect_source_indi() {
+    if [ "$(id -u)" -ne 0 ]; then
+        echo "Error: protect-source-indi requires root privileges. Please run with sudo:"
+        echo "  sudo indi-allsky-ctl protect-source-indi"
+        exit 1
+    fi
+
+    echo "indi-allsky: Protecting local source-built INDI installation..."
+    
+    if ! command -v equivs-build >/dev/null 2>&1; then
+        echo "Installing 'equivs' package builder..."
+        apt-get update -qq && apt-get install -y equivs -qq
+    fi
+
+    TMP_DIR=$(mktemp -d)
+    cd "$TMP_DIR"
+
+    cat <<EOF > indi-local-source.control
+Section: misc
+Priority: optional
+Standards-Version: 3.9.2
+Package: indi-local-source
+Provides: libindi1, libindiclient1, libindidriver1, libindi-data, libindi-dev, indi-bin, indi-3rdparty
+Version: 99.0.0
+Architecture: all
+Maintainer: Local System Administrator <root@localhost>
+Description: Local source build of INDI Framework
+ Registers locally compiled INDI server and drivers in the dpkg database
+ so that APT dependencies are satisfied without overwriting source files.
+EOF
+
+    equivs-build indi-local-source.control >/dev/null
+    dpkg -i indi-local-source_99.0.0_all.deb
+
+    cd /
+    rm -rf "$TMP_DIR"
+
+    echo "indi-allsky: Local source INDI successfully registered with APT (dummy package version 99.0.0)."
+    echo "APT will now recognize your source build and will not overwrite it with repo packages."
+}
+
+hold_indi() {
+    if [ "$(id -u)" -ne 0 ]; then
+        echo "Error: hold-indi requires root privileges. Please run with sudo:"
+        echo "  sudo indi-allsky-ctl hold-indi"
+        exit 1
+    fi
+
+    INDI_PKGS="indi-bin indi-3rdparty libindi1 libindiclient1 libindi-data libindi-dev indi-dbg"
+    INSTALLED_PKGS=""
+    for pkg in $INDI_PKGS; do
+        if dpkg -l "$pkg" 2>/dev/null | grep -q "^ii"; then
+            INSTALLED_PKGS="$INSTALLED_PKGS $pkg"
+        fi
+    done
+
+    if [ -z "$INSTALLED_PKGS" ]; then
+        echo "No standard INDI APT packages are currently installed."
+        echo "If you installed INDI from source, use: sudo indi-allsky-ctl protect-source-indi"
+        return 0
+    fi
+
+    echo "indi-allsky: Pinning (holding) INDI packages from automatic upgrades:"
+    apt-mark hold $INSTALLED_PKGS
+    echo "INDI packages are now pinned. System 'apt upgrade' will not modify them."
+}
+
+unhold_indi() {
+    if [ "$(id -u)" -ne 0 ]; then
+        echo "Error: unhold-indi requires root privileges. Please run with sudo:"
+        echo "  sudo indi-allsky-ctl unhold-indi"
+        exit 1
+    fi
+
+    INDI_PKGS="indi-bin indi-3rdparty libindi1 libindiclient1 libindi-data libindi-dev indi-dbg"
+    echo "indi-allsky: Releasing hold on INDI packages:"
+    apt-mark unhold $INDI_PKGS
+    echo "INDI packages will now upgrade normally with system updates."
+}
+
+status_indi_hold() {
+    echo "Current APT holds on INDI packages:"
+    SHOW_HOLDS=$(apt-mark showhold | grep -E "indi" || true)
+    if [ -n "$SHOW_HOLDS" ]; then
+        echo "$SHOW_HOLDS"
+    else
+        echo "No INDI packages are currently on hold."
+    fi
+}
+
+COMMAND="${1:-}"
+# Normalize --command or -command to command
+COMMAND="${COMMAND#--}"
+COMMAND="${COMMAND#-}"
+shift 2>/dev/null || true
+
+case "$COMMAND" in
+    # User & Authentication
+    passwd|reset-pass)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/usertool.py" resetpass "$@"
+        ;;
+    user-add)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/usertool.py" adduser "$@"
+        ;;
+    user-list)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/usertool.py" list "$@"
+        ;;
+    user-del)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/usertool.py" deleteuser "$@"
+        ;;
+
+    # Database & Storage
+    backup-db)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/backup_database.py" "$@"
+        ;;
+    fix-perms|repair-perms)
+        fix_permissions
+        ;;
+    expire-images)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/expire_images.py" "$@"
+        ;;
+    rebuild-thumbnails)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/create_thumbnails.py" "$@"
+        ;;
+    convert-db)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/convert_db.py" "$@"
+        ;;
+    validate-db)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/validate_db_entries.py" "$@"
+        ;;
+
+    # Hardware & Diagnostics
+    test-camera)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/camera_test.py" "$@"
+        ;;
+    list-cameras)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/indi_list_cameras.py" "$@"
+        ;;
+    test-sensors)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/sensor_test.py" "$@"
+        ;;
+    support-info)
+        exec bash "${APP_DIR}/misc/support_info.sh" "$@"
+        ;;
+
+    # Peripheral Helpers
+    setup-gps)
+        exec bash "${APP_DIR}/misc/setup_gpsd.sh" "$@"
+        ;;
+    setup-hotspot)
+        exec bash "${APP_DIR}/misc/setup_hotspot.sh" "$@"
+        ;;
+    setup-rtc)
+        exec bash "${APP_DIR}/misc/setup_rtc_i2c.sh" "$@"
+        ;;
+    setup-usb-mount)
+        exec bash "${APP_DIR}/misc/setup_usb_automount.sh" "$@"
+        ;;
+
+    # Package & Driver Management
+    protect-source-indi)
+        protect_source_indi
+        ;;
+    hold-indi|pin-indi)
+        hold_indi
+        ;;
+    unhold-indi|unpin-indi)
+        unhold_indi
+        ;;
+    status-indi-hold|show-indi-hold)
+        status_indi_hold
+        ;;
+
+    # Service Control
+    status)
+        systemctl status indi-allsky.service gunicorn-indi-allsky.service --no-pager
+        ;;
+    restart)
+        sudo systemctl restart indi-allsky.service gunicorn-indi-allsky.service
+        echo "indi-allsky: Services restarted."
+        ;;
+    logs)
+        journalctl -u indi-allsky.service -u gunicorn-indi-allsky.service -f
+        ;;
+
+    help|--help|-h|"")
+        show_help
+        ;;
+    *)
+        echo "Unknown command: $COMMAND"
+        echo "Run 'indi-allsky-ctl --help' for available commands."
+        exit 1
+        ;;
+esac
