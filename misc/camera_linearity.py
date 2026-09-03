@@ -341,7 +341,12 @@ class CameraLinearityTest(object):
 
         self.image_processor.debayer()  # populates self.opencv_data
 
+
         image = i_ref.opencv_data
+
+        if not self.calibrate:
+            image = cv2.subtract(image, self.offset)
+
 
         if isinstance(self._adu_mask_dict[i_ref.binning], type(None)):
             # This only needs to be done once if a mask is not provided
@@ -362,8 +367,8 @@ class CameraLinearityTest(object):
             logger.info('Min: %d - Max: %d', min_val, max_val)
 
 
-        # subtract the manual offset
-        adu -= self.offset
+        if min_val == 0:
+            logger.warning('Minimum is 0, offset may be too high')
 
 
         logger.info('ADU: %0.1f', adu)
