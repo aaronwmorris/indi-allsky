@@ -2788,9 +2788,6 @@
   .tw\:left-2 {
     left: calc(var(--tw-spacing) * 2);
   }
-  .tw\:left-2 {
-    left: calc(var(--tw-spacing) * 2);
-  }
   .tw\:left-3\.5 {
     left: calc(var(--tw-spacing) * 3.5);
   }
@@ -5799,11 +5796,6 @@
     margin-block-start: calc(var(--tw-spacing) * var(--tw-space-y-reverse));
     margin-block-end: calc(var(--tw-spacing) * calc(1 - var(--tw-space-y-reverse)));
   }
-  :where(.tw\:space-y-1 > :not(:last-child)) {
-    --tw-space-y-reverse: 0;
-    margin-block-start: calc(var(--tw-spacing) * var(--tw-space-y-reverse));
-    margin-block-end: calc(var(--tw-spacing) * calc(1 - var(--tw-space-y-reverse)));
-  }
   :where(.tw\:space-y-1\.5 > :not(:last-child)) {
     --tw-space-y-reverse: 0;
     margin-block-start: calc(calc(var(--tw-spacing) * 1.5) * var(--tw-space-y-reverse));
@@ -7351,9 +7343,6 @@
     }
     .tw\:sm\:grid-cols-2 {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .tw\:sm\:grid-cols-3 {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
     .tw\:sm\:grid-cols-\[10rem_1fr\] {
       grid-template-columns: 10rem 1fr;

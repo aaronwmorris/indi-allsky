@@ -3,8 +3,8 @@
 This module contains routines for detecting and masking bright stars. The
 star mask is produced using photutils' DAOStarFinder and returned as a
 float32 array in the range [0, 1] where 1.0 = sky (unprotected) and 0.0 =
-protected (star core). A small LRU cache and async helpers are provided to
-avoid recomputing masks for identical frames.
+protected (star core). Async helpers are provided for callers that can defer
+mask generation.
 
 Example usage::
 
@@ -19,8 +19,8 @@ Example usage::
 import cv2
 import numpy as np
 #import os
-import functools
 import time
+import logging
 from concurrent.futures import ThreadPoolExecutor
 
 # photutils imports; this package must be installed.
@@ -52,21 +52,30 @@ DISTANCE_TRANSFORM_KSIZE: int = 5           # Kernel size for distance transform
 __all__ = [
     "star_mask",
     "fast_star_mask",
-    "set_cache_size",
     "async_star_mask",
+    "set_cache_size",
 ]
 
-_cache_max_entries = 8
+
+def set_cache_size(size):
+    """Deprecated: star-mask caching is no longer used."""
+    return
+
+
+def _estimate_background_stats(data: np.ndarray) -> tuple[float, float]:
+    """Estimate the background median and std with a NumPy fallback."""
+    try:
+        from astropy.stats import sigma_clipped_stats
+        _, median, bkg_std = sigma_clipped_stats(data, sigma=SIGMA_CLIP_SIGMA)
+        return float(median), float(bkg_std)
+    except Exception:
+        logger.warning('Unable to sigma-clip star-mask background', exc_info=True)
+        return float(np.median(data)), float(np.std(data))
 
 
 def _estimate_background_std(data: np.ndarray) -> float:
     """Estimate background std using sigma clipping, with fallback to np.std."""
-    try:
-        from astropy.stats import sigma_clipped_stats
-        _, _, bkg_std = sigma_clipped_stats(data, sigma=SIGMA_CLIP_SIGMA)
-        return float(bkg_std)
-    except Exception:
-        return float(np.std(data))
+    return _estimate_background_stats(data)[1]
 
 
 def _apply_star_dilation(mask: np.ndarray, expand_radius: int | None) -> np.ndarray:
@@ -95,7 +104,7 @@ def _apply_star_dilation(mask: np.ndarray, expand_radius: int | None) -> np.ndar
         dil = (dt <= float(r)).astype(np.uint8)
         mask[dil.astype(bool)] = 0.0
     except Exception:
-        pass
+        logger.warning('Unable to expand star protection mask', exc_info=True)
 
     return mask
 
@@ -126,25 +135,26 @@ def _paint_stars_from_table(tbl, shape: tuple, fwhm: float) -> np.ndarray:
     return mask
 
 
-# LRU cache of star masks keyed by image bytes plus parameters
-@functools.lru_cache(maxsize=_cache_max_entries)
-def _cached_star(key: bytes, percentile: float, threshold_sigma: float, fwhm: float, expand_radius: int | None, shape):
+def _generate_star_mask(data: np.ndarray, percentile: float,
+                        threshold_sigma: float, fwhm: float,
+                        expand_radius: int | None) -> np.ndarray:
     from photutils.detection import DAOStarFinder
 
-    # key is raw bytes; shape is needed to reshape back
-    data = np.frombuffer(key, dtype=np.float32).reshape(shape)
+    shape = data.shape
     # profiling timers
     t_start = time.perf_counter()
     prof_sigma = prof_dao = prof_stamp = 0.0
 
     # Estimate background std (robust against bright sources)
     t0 = time.perf_counter()
-    bkg_std = _estimate_background_std(data)
+    bkg_median, bkg_std = _estimate_background_stats(data)
     prof_sigma = time.perf_counter() - t0
 
     # Detect stars using DAOStarFinder
     t0 = time.perf_counter()
-    daofind = DAOStarFinder(fwhm=fwhm, threshold=threshold_sigma * bkg_std)
+    percentile_threshold = max(0.0, float(np.percentile(data, percentile)) - bkg_median)
+    threshold = max(threshold_sigma * bkg_std, percentile_threshold)
+    daofind = DAOStarFinder(fwhm=fwhm, threshold=threshold)
     tbl = daofind(data)
     prof_dao = time.perf_counter() - t0
 
@@ -153,7 +163,7 @@ def _cached_star(key: bytes, percentile: float, threshold_sigma: float, fwhm: fl
     mask = _paint_stars_from_table(tbl, shape, fwhm)
     prof_stamp = time.perf_counter() - t0
 
-    # Record profiling diagnostics (cached result of this call)
+    # Record profiling diagnostics.
     t_end = time.perf_counter()
     try:
         _last_profile['sigma_time'] = prof_sigma
@@ -179,25 +189,15 @@ _executor = ThreadPoolExecutor(max_workers=2)
 # Cache Gaussian stamp kernels by FWHM to avoid rebuilding per-star
 _kernel_cache: dict[float, np.ndarray] = {}
 _last_profile: dict = {}
+logger = logging.getLogger('indi_allsky')
 
 
 def get_last_star_profile() -> dict:
-    """Return profiling info from the last `_cached_star` invocation.
+    """Return profiling info from the last `_generate_star_mask` invocation.
 
     Keys: `sigma_time`, `dao_time`, `stamp_time`, `total_time`, `n_stars`.
     """
     return dict(_last_profile)
-
-
-def set_cache_size(size: int):
-    """Adjust the LRU star‑mask cache capacity.
-
-    Clearing the cache when the size changes.
-    """
-    global _cache_max_entries, _cached_star
-    _cache_max_entries = size
-    _cached_star.cache_clear()
-    _cached_star = functools.lru_cache(maxsize=size)(_cached_star)
 
 
 # Async helper to compute star mask without blocking caller; returns a Future. FWHM and other parameters can be passed via kwargs. See `star_mask` for details.
@@ -224,13 +224,10 @@ def star_mask(img: np.ndarray, percentile: float = DEFAULT_PERCENTILE, expand_ra
     if expand_radius is None:
         expand_radius = DEFAULT_EXPAND_RADIUS
 
-    # encode image bytes plus parameters to lookup
-    key_bytes = img.astype(np.float32).tobytes()
-    shape = img.shape
+    data = img.astype(np.float32, copy=False)
     sig = pu_kwargs.get('threshold_sigma', DEFAULT_THRESHOLD_SIGMA)
     fwhm = pu_kwargs.get('fwhm', DEFAULT_FWHM)
-    # LRU cache call (include expand_radius in cache key)
-    return _cached_star(key_bytes, percentile, sig, fwhm, int(expand_radius), shape)
+    return _generate_star_mask(data, percentile, sig, fwhm, int(expand_radius))
 
 
 def _make_stamp(fwhm: float) -> np.ndarray:

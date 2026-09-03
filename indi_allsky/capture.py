@@ -917,7 +917,7 @@ class CaptureWorker(Process):
 
 
         # add driver name to config
-        self.camera_name = self.indiclient.ccd_device.getDeviceName()
+        self.camera_name = self.indiclient.getIndiAllskyCameraName()  # allow camera to have derived name
         self._miscDb.setState('CAMERA_NAME', self.camera_name)
 
         self.camera_server = self.indiclient.ccd_device.getDriverExec()
@@ -1036,7 +1036,7 @@ class CaptureWorker(Process):
             'type'        : constants.CAMERA,
             'name'        : self.camera_name,
             'driver'      : self.camera_server,
-            'serialNumber': ccd_info.get('SERIALNUMBER_INFO', {}).get('current'),
+            'serialNumber': ccd_info.get('SERIALNUMBER_INFO', {}).get('text'),
 
             'hidden'      : False,  # unhide camera
 

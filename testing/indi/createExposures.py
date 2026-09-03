@@ -422,6 +422,7 @@ class IndiClient(PyIndi.BaseClient):
             'indi_rpicam',
             'indi_libcamera_ccd',
             'indi_dsi_ccd',
+            'indi_alpaca_ccd',
         ]:
             gain_config = {
                 "PROPERTIES" : {
