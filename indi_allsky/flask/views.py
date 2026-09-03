@@ -1906,7 +1906,7 @@ class JsonChartView(JsonView):
             try:
                 custom_1_y = i.data[custom_chart_1_key]
             except KeyError:
-                custom_1_y = 0
+                custom_1_y = None if custom_chart_1_key == 'cloudiness_index' else 0
 
             custom_1_data = {
                 'x' : x,
@@ -1919,7 +1919,7 @@ class JsonChartView(JsonView):
             try:
                 custom_2_y = i.data[custom_chart_2_key]
             except KeyError:
-                custom_2_y = 0
+                custom_2_y = None if custom_chart_2_key == 'cloudiness_index' else 0
 
             custom_2_data = {
                 'x' : x,
@@ -1932,7 +1932,7 @@ class JsonChartView(JsonView):
             try:
                 custom_3_y = i.data[custom_chart_3_key]
             except KeyError:
-                custom_3_y = 0
+                custom_3_y = None if custom_chart_3_key == 'cloudiness_index' else 0
 
             custom_3_data = {
                 'x' : x,
@@ -1945,7 +1945,7 @@ class JsonChartView(JsonView):
             try:
                 custom_4_y = i.data[custom_chart_4_key]
             except KeyError:
-                custom_4_y = 0
+                custom_4_y = None if custom_chart_4_key == 'cloudiness_index' else 0
 
             custom_4_data = {
                 'x' : x,
@@ -1958,7 +1958,7 @@ class JsonChartView(JsonView):
             try:
                 custom_5_y = i.data[custom_chart_5_key]
             except KeyError:
-                custom_5_y = 0
+                custom_5_y = None if custom_chart_5_key == 'cloudiness_index' else 0
 
             custom_5_data = {
                 'x' : x,
@@ -1971,7 +1971,7 @@ class JsonChartView(JsonView):
             try:
                 custom_6_y = i.data[custom_chart_6_key]
             except KeyError:
-                custom_6_y = 0
+                custom_6_y = None if custom_chart_6_key == 'cloudiness_index' else 0
 
             custom_6_data = {
                 'x' : x,
@@ -1984,7 +1984,7 @@ class JsonChartView(JsonView):
             try:
                 custom_7_y = i.data[custom_chart_7_key]
             except KeyError:
-                custom_7_y = 0
+                custom_7_y = None if custom_chart_7_key == 'cloudiness_index' else 0
 
             custom_7_data = {
                 'x' : x,
@@ -1997,7 +1997,7 @@ class JsonChartView(JsonView):
             try:
                 custom_8_y = i.data[custom_chart_8_key]
             except KeyError:
-                custom_8_y = 0
+                custom_8_y = None if custom_chart_8_key == 'cloudiness_index' else 0
 
             custom_8_data = {
                 'x' : x,
@@ -2010,7 +2010,7 @@ class JsonChartView(JsonView):
             try:
                 custom_9_y = i.data[custom_chart_9_key]
             except KeyError:
-                custom_9_y = 0
+                custom_9_y = None if custom_chart_9_key == 'cloudiness_index' else 0
 
             custom_9_data = {
                 'x' : x,
@@ -3133,6 +3133,13 @@ class ConfigView(FormView):
             'TEMP_SENSOR__F_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('F_USER_VAR_SLOT', 'sensor_user_55'),
             'TEMP_SENSOR__F_TITLE_TEMPLATE'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('F_TITLE_TEMPLATE', '{name:s} - {label:s} - {probe:s}'),
             'TEMP_SENSOR__FC37_ACTIVE_LOW'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('FC37_ACTIVE_LOW', True),
+            'TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUDINESS_INDEX_ENABLE', False),
+            'TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUDINESS_INDEX_SENSOR', ''),
+            'TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUDINESS_INDEX_TEMP_UNIT', 'c'),
+            'TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUDINESS_INDEX_CLEAR_TEMP', 0.0),
+            'TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_TEMP'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUDINESS_INDEX_CLOUDY_TEMP', 0.0),
+            'TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUDINESS_INDEX_COEFFICIENT', 1.0),
+            'TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUDINESS_INDEX_OFFSET', 0.0),
             'TEMP_SENSOR__OPENWEATHERMAP_APIKEY' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', ''),
             'TEMP_SENSOR__WUNDERGROUND_APIKEY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY', ''),
             'TEMP_SENSOR__ASTROSPHERIC_APIKEY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('ASTROSPHERIC_APIKEY', ''),
@@ -4219,6 +4226,13 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['F_I2C_ADDRESS']         = str(request.json['TEMP_SENSOR__F_I2C_ADDRESS'])
         self.indi_allsky_config['TEMP_SENSOR']['F_TITLE_TEMPLATE']      = str(request.json['TEMP_SENSOR__F_TITLE_TEMPLATE'])
         self.indi_allsky_config['TEMP_SENSOR']['FC37_ACTIVE_LOW']       = bool(request.json['TEMP_SENSOR__FC37_ACTIVE_LOW'])
+        self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_ENABLE']       = bool(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE'])
+        self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_SENSOR']       = str(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR'])
+        self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_TEMP_UNIT']    = str(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT'])
+        self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_CLEAR_TEMP']   = float(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP'])
+        self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_CLOUDY_TEMP']  = float(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_TEMP'])
+        self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_COEFFICIENT']  = float(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT'])
+        self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_OFFSET']       = float(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET'])
         self.indi_allsky_config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'] = str(request.json['TEMP_SENSOR__OPENWEATHERMAP_APIKEY'])
         self.indi_allsky_config['TEMP_SENSOR']['WUNDERGROUND_APIKEY']   = str(request.json['TEMP_SENSOR__WUNDERGROUND_APIKEY'])
         self.indi_allsky_config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY']   = str(request.json['TEMP_SENSOR__ASTROSPHERIC_APIKEY'])

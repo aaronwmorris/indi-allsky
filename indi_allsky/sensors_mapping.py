@@ -48,6 +48,130 @@ TYPE_DEVICE_CLASS_MAP = {
 }
 
 
+# labels used by the MLX90614/90615/90640 family to identify sky vs ambient readings
+CLOUD_SKY_TEMP_LABEL = 'Sky Temperature'
+
+
+def _display_temperature_to_celsius(value: float, temp_display: str) -> float:
+    if temp_display == 'f':
+        return (value - 32.0) * 5.0 / 9.0
+
+    if temp_display == 'k':
+        return value - 273.15
+
+    return value
+
+
+def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
+    """
+    Scans configured TEMP_SENSOR slots (A-F) for an MLX90614/90615/90640
+    family sensor and derives a 0-100 local cloudiness index from its sky
+    temperature relative to an ambient reference.
+
+    Physical basis: under a clear sky the 8-14 micron atmospheric window lets
+    a zenith-pointed IR sensor see through to the cold effective sky
+    temperature, so its reading falls well below the ambient air temperature
+    (low atmospheric emissivity - Staley & Jurica, 1972, J. Appl. Meteorol.,
+    11(2), 349-356, "Effective atmospheric emissivity under clear skies").
+    Cloud closes that window; clouds radiate close to a blackbody near
+    ambient temperature (emissivity approaching 1 - Mendoza et al., 2017,
+    Atmos. Environ., 155, 174-188), so the sky reading converges toward
+    ambient as cloud cover increases. That is why the cloudiness index here is a
+    linear scaling between local raw clear-sky and overcast sky-temperature
+    references. This is an empirical, installation-specific cloudiness index,
+    not a measured sky fraction. A narrow-field IR thermometer cannot
+    distinguish all cloud types or measure coverage outside its field of view.
+
+    Equation (all temperatures in Celsius, T_clear < T_cloudy)::
+
+        index = clamp(0, 100,
+                      ((T_sky_live - T_clear) / (T_cloudy - T_clear) * 100)
+                      * coefficient + offset)
+
+    The two references are raw sky readings from this installation under known
+    clear and overcast conditions. Their unit is declared explicitly via
+    CLOUDINESS_INDEX_TEMP_UNIT rather than assumed to match TEMP_DISPLAY.
+
+    ``get_sensor_value`` is a callable accepting a sensor_user index and
+    returning its current float value, so this works against either the
+    live shared sensor array or persisted image metadata.
+
+    Returns ``None`` when no matching sensor is configured.
+    """
+    from .devices import sensors as indi_allsky_sensors
+
+    temp_sensor_cfg = config.get('TEMP_SENSOR', {})
+
+    candidates = list()
+
+    for letter in ('A', 'B', 'C', 'D', 'E', 'F'):
+        classname = temp_sensor_cfg.get('{0:s}_CLASSNAME'.format(letter))
+        if classname not in constants.CLOUD_SENSOR_CLASSNAMES:
+            continue
+
+        user_var_slot = temp_sensor_cfg.get('{0:s}_USER_VAR_SLOT'.format(letter), 'sensor_user_10')
+        base_index = constants.SENSOR_INDEX_MAP.get(str(user_var_slot), 10)
+
+        try:
+            sensor_cls = getattr(indi_allsky_sensors, classname)
+            labels = sensor_cls.METADATA.get('labels', ())
+            sky_offset = labels.index(CLOUD_SKY_TEMP_LABEL)
+        except (AttributeError, ValueError):
+            continue
+
+        candidates.append({
+            'slot': str(user_var_slot),
+            'sky_index': base_index + sky_offset,
+        })
+
+    selected_slot = temp_sensor_cfg.get('CLOUDINESS_INDEX_SENSOR', '')
+    if selected_slot:
+        candidates = [candidate for candidate in candidates if candidate['slot'] == selected_slot]
+
+    if len(candidates) != 1:
+        if candidates:
+            logger.error('Select one MLX cloud sensor when multiple supported sensors are configured')
+        return None
+
+    candidate = candidates[0]
+    sky_temp = get_sensor_value(candidate['sky_index'])
+
+    if sky_temp is None:
+        return None
+
+    if not temp_sensor_cfg.get('CLOUDINESS_INDEX_ENABLE', False):
+        return None
+
+    temp_display = config.get('TEMP_DISPLAY', 'c')
+    ref_unit = temp_sensor_cfg.get('CLOUDINESS_INDEX_TEMP_UNIT', 'c')
+
+    try:
+        clear_sky_temp = _display_temperature_to_celsius(
+            float(temp_sensor_cfg['CLOUDINESS_INDEX_CLEAR_TEMP']), ref_unit)
+        cloudy_sky_temp = _display_temperature_to_celsius(
+            float(temp_sensor_cfg['CLOUDINESS_INDEX_CLOUDY_TEMP']), ref_unit)
+        sky_temp_c = _display_temperature_to_celsius(float(sky_temp), temp_display)
+    except (KeyError, TypeError, ValueError):
+        logger.error('Cloud calibration or live sensor readings are invalid')
+        return None
+
+    span = cloudy_sky_temp - clear_sky_temp
+    if span <= 0:
+        logger.error('Cloudy sky reference must be warmer than clear-sky reference')
+        return None
+
+    try:
+        coefficient = float(temp_sensor_cfg.get('CLOUDINESS_INDEX_COEFFICIENT', 1.0))
+        offset = float(temp_sensor_cfg.get('CLOUDINESS_INDEX_OFFSET', 0.0))
+    except (TypeError, ValueError):
+        logger.error('Cloud calibration coefficient or offset is invalid')
+        return None
+
+    cloudiness_index = ((sky_temp_c - clear_sky_temp) / span) * 100.0
+    cloudiness_index = (cloudiness_index * coefficient) + offset
+    return max(0.0, min(100.0, cloudiness_index))
+
+
 def build_slot_label_map(config: Dict[str, Any]) -> Dict[int, Dict[str, Any]]:
     """
     Builds a map of slot_index -> {name, unit, device_class, key} by inspecting TEMP_SENSOR configuration.

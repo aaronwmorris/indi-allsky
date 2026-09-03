@@ -106,6 +106,10 @@ class IndiAllSkyConfigBase(object):
         "IMAGE_DENOISE_DAY"          : "",
         "IMAGE_DENOISE_STRENGTH"     : 3,
         "IMAGE_DENOISE_STRENGTH_DAY" : 3,
+        # Denoise tuning knobs (advanced): scale & exponent reshape the
+        # mapping from user-facing `strength` (1-5) to algorithm parameters.
+        # These defaults are autotuned for typical Pi all-sky images but can
+        # be adjusted for your camera. These are baked-in runtime defaults used by `indi_allsky.denoise`.
         "MEDIAN_SCALE_FACTOR" : 2.4,
         "MEDIAN_SCALE_EXP"    : 2.0,
         "GAUSSIAN_SCALE_FACTOR" : 0.2,
@@ -881,6 +885,13 @@ class IndiAllSkyConfigBase(object):
             "AS3935_SPIKE_REJECTION" : 2,
             "LUX_MAGNITUDE_OFFSET"   : 26.0,
             "FC37_ACTIVE_LOW"        : True,
+            "CLOUDINESS_INDEX_ENABLE"       : False,
+            "CLOUDINESS_INDEX_SENSOR"       : "",
+            "CLOUDINESS_INDEX_CLEAR_TEMP"   : 0.0,
+            "CLOUDINESS_INDEX_CLOUDY_TEMP"  : 0.0,
+            "CLOUDINESS_INDEX_TEMP_UNIT"    : "c",
+            "CLOUDINESS_INDEX_COEFFICIENT"  : 1.0,
+            "CLOUDINESS_INDEX_OFFSET"       : 0.0,
         },
         "CHARTS" : {
             "CUSTOM_SLOT_1"          : "sensor_user_10",
