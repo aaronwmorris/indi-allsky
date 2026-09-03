@@ -1,10 +1,12 @@
 {
   "name": "indi-allsky-ui",
-  "version": "1.0.0",
+  "version": "2026.08.2",
   "description": "Frontend assets for indi-allsky",
   "scripts": {
     "build": "cp node_modules/cally/dist/cally.js ./indi_allsky/flask/static/js/cally.js && chmod 644 ./indi_allsky/flask/static/js/cally.js && tailwindcss -i ./indi_allsky/flask/static/css/app.css -o ./indi_allsky/flask/static/css/dist.css",
     "build:min": "cp node_modules/cally/dist/cally.js ./indi_allsky/flask/static/js/cally.js && chmod 644 ./indi_allsky/flask/static/js/cally.js && tailwindcss -i ./indi_allsky/flask/static/css/app.css -o ./indi_allsky/flask/static/css/dist.css --minify",
+    "version:show": "python3 misc/bump_version.py --show",
+    "version:bump": "python3 misc/bump_version.py",
     "prepare": "git config core.hooksPath githooks && git config merge.build_css.driver \"npm run build -- && cp indi_allsky/flask/static/css/dist.css %A\" && git config merge.build_css.name \"Rebuild Tailwind dist.css on merge conflict\" || true"
   },
   "devDependencies": {
