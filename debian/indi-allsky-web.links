@@ -1,0 +1,2 @@
+var/lib/indi-allsky/venv/bin/python3 usr/bin/indi-allsky-python
+usr/bin/indi-allsky-ctl usr/bin/indi-allsky

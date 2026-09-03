@@ -1,0 +1,25 @@
+# indi-allsky Debian Package Notes
+
+## Build Environment & Bundled Virtualenv Policy
+
+This package is designed to be built in an automated CI/CD environment (e.g. GitHub Actions) with active internet connectivity.
+
+During the package build step (`override_dh_auto_build` in `debian/rules`), a complete, self-contained Python virtual environment is constructed at build time including all core, cloud storage, and hardware/GPIO sensor requirements. This venv is packaged directly inside `indi-allsky.deb` and installed to `/var/lib/indi-allsky/venv`.
+
+We intentionally do NOT target hermetic or offline Debian build environments (such as `sbuild` or `pbuilder` without network access). This packaging design prioritizes:
+- Fast, deterministic, zero-compilation installation on target hardware
+- Offline installation capability on target nodes with zero runtime pip execution
+- Seamless, atomic package upgrades tracked entirely by `dpkg`
+- "Batteries included" support for camera control, cloud storage sync, and hardware environmental telemetry out of the box
+
+## Configuration File Policy
+
+This package generates certain configuration files dynamically during `postinst`:
+
+  - `/etc/indi-allsky/flask.json`     - Generated from `flask.json_template` via `jq`
+  - `/etc/indi-allsky/indiserver.env` - Generated from debconf responses
+
+On upgrade, `flask.json` is automatically merged (new template keys added, existing user values preserved).
+On purge, all files under `/etc/indi-allsky/` are removed by `postrm`.
+
+This dynamic approach is intentional: the configuration contains unique cryptographic secrets (`SECRET_KEY`, `PASSWORD_KEY`, `OIDC_CLIENT_SECRET`) that must be generated at install time, along with hardware- and site-specific values (camera driver, location coordinates) collected via debconf.

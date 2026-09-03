@@ -8,7 +8,7 @@ polkit.addRule(function(action, subject) {
     ];
 
     if (shutdown_reboot_actions.indexOf(action.id) > -1) {
-        if (subject.user == "%ALLSKY_USER%") {
+        if (subject.user == "indi-allsky") {
             return polkit.Result.YES;
         }
     }
@@ -25,7 +25,7 @@ polkit.addRule(function(action, subject) {
     ];
 
     if (network_actions.indexOf(action.id) > -1) {
-        if (subject.user == "%ALLSKY_USER%") {
+        if (subject.user == "indi-allsky") {
             return polkit.Result.YES;
         }
     }
@@ -44,7 +44,7 @@ polkit.addRule(function(action, subject) {
     ];
 
     if (mount_usb_actions.indexOf(action.id) > -1) {
-        if (subject.user == "%ALLSKY_USER%") {
+        if (subject.user == "indi-allsky") {
             return polkit.Result.YES;
         }
     }
@@ -58,7 +58,7 @@ polkit.addRule(function(action, subject) {
     ];
 
     if (set_time_actions.indexOf(action.id) > -1) {
-        if (subject.user == "%ALLSKY_USER%") {
+        if (subject.user == "indi-allsky") {
             return polkit.Result.YES;
         }
     }
@@ -72,7 +72,7 @@ polkit.addRule(function(action, subject) {
     ];
 
     if (systemd_actions.indexOf(action.id) > -1) {
-        if (subject.user == "%ALLSKY_USER%") {
+        if (subject.user == "indi-allsky") {
             return polkit.Result.YES;
         }
     }

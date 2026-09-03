@@ -1,0 +1,587 @@
+#!/bin/sh
+set -e
+
+. /usr/share/debconf/confmodule
+
+safe_port() {
+    echo "$1" | awk -v d="$2" '$1 ~ /^[0-9]+$/ && $1 >= 1 && $1 <= 65535 { print $1; found=1 } END { if (!found) print d }'
+}
+
+fetch_debconf() {
+    db_get "indi-allsky/$1" 2>/dev/null && echo "$RET" || echo "$2"
+}
+
+generate_self_signed_cert() {
+    _KEY="$1"
+    _CRT="$2"
+    _GROUP="${3:-root}"
+    _KEY_PERMS="${4:-600}"
+
+    if [ ! -f "$_CRT" ] || [ ! -f "$_KEY" ]; then
+        mkdir -p "$(dirname "$_KEY")" "$(dirname "$_CRT")"
+        _HOSTNAME=$(hostname -s 2>/dev/null || echo "indi-allsky")
+        openssl req \
+            -new -newkey rsa:4096 -sha512 -days 3650 -nodes -x509 \
+            -subj "/CN=${_HOSTNAME}.local" \
+            -keyout "$_KEY" \
+            -out "$_CRT" \
+            -addext "subjectAltName=DNS:${_HOSTNAME}.local,DNS:${_HOSTNAME},DNS:localhost" \
+            2>/dev/null || true
+    fi
+    chown "root:${_GROUP}" "$_KEY" "$_CRT" 2>/dev/null || true
+    chmod "$_KEY_PERMS" "$_KEY" 2>/dev/null || true
+    chmod 644 "$_CRT" 2>/dev/null || true
+}
+
+configure_nginx() {
+    [ -f "/usr/share/indi-allsky/service/nginx_indi-allsky.conf" ] || return 0
+    mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
+    sed \
+        -e "s|%ALLSKY_DIRECTORY%|/usr/share/indi-allsky|g" \
+        -e "s|%DOCROOT_FOLDER%|/var/www/html/allsky|g" \
+        -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+        -e "s|%HTTP_PORT%|${HTTP_PORT:-80}|g" \
+        -e "s|%HTTPS_PORT%|${HTTPS_PORT:-443}|g" \
+        -e "s|%UPSTREAM_SERVER%|unix:/run/indi-allsky/gunicorn-indi-allsky.sock|g" \
+        /usr/share/indi-allsky/service/nginx_indi-allsky.conf > /etc/nginx/sites-available/indi-allsky.conf
+    chmod 644 /etc/nginx/sites-available/indi-allsky.conf
+    ln -sf /etc/nginx/sites-available/indi-allsky.conf /etc/nginx/sites-enabled/indi-allsky.conf
+    rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
+
+    generate_self_signed_cert /etc/nginx/ssl/indi-allsky_nginx.key /etc/nginx/ssl/indi-allsky_nginx.pem
+
+    systemctl stop apache2 2>/dev/null || true
+    systemctl disable apache2 2>/dev/null || true
+    systemctl restart nginx 2>/dev/null || systemctl start nginx 2>/dev/null || true
+}
+
+configure_apache() {
+    [ -f "/usr/share/indi-allsky/service/apache_indi-allsky.conf" ] || return 0
+    sed \
+        -e "s|%ALLSKY_DIRECTORY%|/usr/share/indi-allsky|g" \
+        -e "s|%ALLSKY_ETC%|/etc/indi-allsky|g" \
+        -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+        -e "s|%HTTP_PORT%|${HTTP_PORT:-80}|g" \
+        -e "s|%HTTPS_PORT%|${HTTPS_PORT:-443}|g" \
+        -e "s|%APACHE_ETC%|/etc/apache2|g" \
+        -e "s|%UPSTREAM_SERVER%|unix:/run/indi-allsky/gunicorn-indi-allsky.sock\|http://localhost/indi-allsky|g" \
+        -e "s|%UPSTREAM_SERVER_WS%|unix:/run/indi-allsky/gunicorn-indi-allsky.sock\|ws://localhost/indi-allsky/ws|g" \
+        /usr/share/indi-allsky/service/apache_indi-allsky.conf > /etc/apache2/sites-available/indi-allsky.conf
+    chmod 644 /etc/apache2/sites-available/indi-allsky.conf
+
+    generate_self_signed_cert /etc/apache2/ssl/indi-allsky_apache.key /etc/apache2/ssl/indi-allsky_apache.pem
+
+    PORTS_CONF="/etc/apache2/ports.conf"
+    HTTP_P="${HTTP_PORT:-80}"
+    HTTPS_P="${HTTPS_PORT:-443}"
+    if [ -f "$PORTS_CONF" ]; then
+        grep -q "^Listen ${HTTP_P}" "$PORTS_CONF" 2>/dev/null || sed -i "1i Listen ${HTTP_P}" "$PORTS_CONF"
+        grep -q "^[[:space:]]*Listen ${HTTPS_P}" "$PORTS_CONF" 2>/dev/null || printf '<IfModule ssl_module>\n    Listen %s\n</IfModule>\n' "${HTTPS_P}" >> "$PORTS_CONF"
+    fi
+
+    a2dissite 000-default.conf default-ssl.conf >/dev/null 2>&1 || true
+    a2enmod rewrite proxy proxy_http proxy_wstunnel headers ssl socache_shmcb expires http2 proxy_http2 >/dev/null 2>&1 || true
+    a2ensite indi-allsky.conf >/dev/null 2>&1 || true
+    systemctl stop nginx 2>/dev/null || true
+    systemctl disable nginx 2>/dev/null || true
+    systemctl restart apache2 2>/dev/null || systemctl start apache2 2>/dev/null || true
+}
+
+configure_mosquitto() {
+    command -v mosquitto >/dev/null 2>&1 || {
+        echo "indi-allsky: Mosquitto is not installed. Install it with 'sudo apt install mosquitto' and run 'sudo dpkg-reconfigure indi-allsky'." >&2
+        return 0
+    }
+    echo "indi-allsky: Configuring Mosquitto MQTT broker..."
+    MOSQUITTO_GROUP="mosquitto"
+
+    # Setup SSL certificate for MQTT TLS
+    generate_self_signed_cert \
+        /etc/mosquitto/certs/indi-allsky_mosquitto.key \
+        /etc/mosquitto/certs/indi-allsky_mosquitto.crt \
+        "${MOSQUITTO_GROUP}" \
+        640
+
+    # Add certificate to system trust store
+    if [ -d "/usr/local/share/ca-certificates" ] && [ -f "/etc/mosquitto/certs/indi-allsky_mosquitto.crt" ]; then
+        cp -f /etc/mosquitto/certs/indi-allsky_mosquitto.crt /usr/local/share/ca-certificates/indi-allsky_mosquitto.crt 2>/dev/null || true
+        chown root:root /usr/local/share/ca-certificates/indi-allsky_mosquitto.crt 2>/dev/null || true
+        chmod 644 /usr/local/share/ca-certificates/indi-allsky_mosquitto.crt 2>/dev/null || true
+        update-ca-certificates 2>/dev/null || true
+    fi
+
+    # Install indi-allsky mosquitto configuration
+    if [ -f "/usr/share/indi-allsky/service/mosquitto_indi-allsky.conf" ]; then
+        mkdir -p /etc/mosquitto/conf.d
+        cp -f /usr/share/indi-allsky/service/mosquitto_indi-allsky.conf /etc/mosquitto/conf.d/mosquitto_indi-allsky.conf
+        chown root:root /etc/mosquitto/conf.d/mosquitto_indi-allsky.conf 2>/dev/null || true
+        chmod 644 /etc/mosquitto/conf.d/mosquitto_indi-allsky.conf 2>/dev/null || true
+    fi
+
+    # Generate MQTT credentials (random password for non-interactive installs)
+    if [ ! -f "/etc/mosquitto/passwd" ] && command -v mosquitto_passwd >/dev/null 2>&1; then
+        MQTT_USER="indi-allsky"
+        MQTT_PASS=$(openssl rand -base64 16 2>/dev/null || head -c 16 /dev/urandom | base64)
+        mosquitto_passwd -b -c /etc/mosquitto/passwd "$MQTT_USER" "$MQTT_PASS" 2>/dev/null || true
+        chown "root:${MOSQUITTO_GROUP}" /etc/mosquitto/passwd 2>/dev/null || true
+        chmod 640 /etc/mosquitto/passwd 2>/dev/null || true
+        GENERATED_MQTT_USER="$MQTT_USER"
+        GENERATED_MQTT_PASS="$MQTT_PASS"
+        echo "indi-allsky: Generated MQTT user '${MQTT_USER}' with random password." >&2
+    fi
+
+    systemctl enable mosquitto 2>/dev/null || true
+    systemctl restart mosquitto 2>/dev/null || true
+    echo "indi-allsky: Mosquitto MQTT broker configured and started."
+}
+
+case "$1" in
+    configure)
+        ALLSKY_USER="indi-allsky"
+        ALLSKY_GROUP="indi-allsky"
+        GENERATED_ADMIN_PASS=""
+        GENERATED_MQTT_PASS=""
+        GENERATED_MQTT_USER=""
+        # Create system user & group
+        adduser --system --group --home /var/lib/indi-allsky --no-create-home --shell /bin/false "$ALLSKY_USER" 2>/dev/null || true
+
+        # Bootstrap web directory assets
+        if [ -d "/usr/share/indi-allsky/html" ]; then
+            cp -rf /usr/share/indi-allsky/html/* /var/www/html/allsky/ 2>/dev/null || true
+            cp -f /usr/share/indi-allsky/html/.htaccess /var/www/html/allsky/.htaccess 2>/dev/null || true
+            if [ -f "/usr/share/indi-allsky/html/images/.htaccess" ]; then
+                cp -f /usr/share/indi-allsky/html/images/.htaccess /var/www/html/allsky/images/.htaccess 2>/dev/null || true
+            fi
+        fi
+
+        # Migrate from setup.sh user-level services to system-level services
+        rm -f /home/*/.config/systemd/user/indi-allsky.* \
+              /home/*/.config/systemd/user/indiserver.* \
+              /home/*/.config/systemd/user/gunicorn-indi-allsky.* \
+              /home/*/.config/systemd/user/upgrade-indi-allsky.* \
+              /home/*/.config/systemd/user/*.target.wants/indi-allsky.* \
+              /home/*/.config/systemd/user/*.target.wants/indiserver.* \
+              /home/*/.config/systemd/user/*.target.wants/gunicorn-indi-allsky.* \
+              /home/*/.config/systemd/user/*.target.wants/upgrade-indi-allsky.* 2>/dev/null || true
+
+        # Detect if a custom source-built INDI is managed via skeleton dummy package (indi-local-source)
+        if dpkg-query -W -f='${Status}' indi-local-source 2>/dev/null | grep -q "ok installed"; then
+            echo "indi-allsky: Protected custom source-built INDI installation (indi-local-source package active)."
+        fi
+
+        # Fetch debconf responses safely
+        REUSE_CONFIG=$(fetch_debconf reuse_existing_config true)
+        CAMERA_INTERFACE=$(fetch_debconf camera_interface indi)
+        LIBCAMERA_SENSOR=$(fetch_debconf libcamera_sensor)
+        CCD_DRIVER=$(fetch_debconf ccd_driver indi_simulator_ccd)
+        GPS_DRIVER=$(fetch_debconf gps_driver)
+        HTTP_PORT=$(fetch_debconf http_port 80)
+        HTTPS_PORT=$(fetch_debconf https_port 443)
+        INDI_PORT=$(fetch_debconf indi_port 7624)
+        WEB_AUTH_ALL_VIEWS=$(fetch_debconf web_auth_all_views false)
+        WEB_USER=$(fetch_debconf web_user admin)
+        WEB_NAME=$(fetch_debconf web_name "Admin User")
+        WEB_PASS=$(fetch_debconf web_pass)
+        WEB_EMAIL=$(fetch_debconf web_email admin@example.org)
+        LOCATION_LATITUDE=$(fetch_debconf latitude)
+        LOCATION_LONGITUDE=$(fetch_debconf longitude)
+        LOCATION_ELEVATION=$(fetch_debconf elevation 0)
+        OIDC_ENABLE=$(fetch_debconf oidc_enable false)
+        OIDC_CLIENT_ID=$(fetch_debconf oidc_client_id)
+        OIDC_CLIENT_SECRET=$(fetch_debconf oidc_client_secret)
+        OIDC_DISCOVERY_URL=$(fetch_debconf oidc_discovery_url)
+        INSTALL_MOSQUITTO=$(fetch_debconf install_mosquitto false)
+        DISABLE_LEDS=$(fetch_debconf disable_leds false)
+        ENABLE_WATCHDOG=$(fetch_debconf enable_watchdog false)
+        SYSTEM_OPTIMIZE=$(fetch_debconf system_optimize false)
+        REPAIR_PERMISSIONS=$(fetch_debconf repair_permissions false)
+
+        # Security: Clear sensitive credentials from debconf database immediately
+        db_set indi-allsky/web_pass "" 2>/dev/null || true
+        db_set indi-allsky/oidc_client_secret "" 2>/dev/null || true
+        db_reset indi-allsky/web_pass 2>/dev/null || true
+        db_reset indi-allsky/oidc_client_secret 2>/dev/null || true
+
+        # Reset reuse_existing_config seen flag so subsequent upgrades will prompt anew
+        db_fset indi-allsky/reuse_existing_config seen false 2>/dev/null || true
+        db_reset indi-allsky/reuse_existing_config 2>/dev/null || true
+
+        # Close debconf communications before starting long setup operations and services
+        db_stop
+
+        if [ "$CAMERA_INTERFACE" = "libcamera" ] && [ -n "$LIBCAMERA_SENSOR" ]; then
+            CAMERA_INTERFACE="$LIBCAMERA_SENSOR"
+        fi
+
+        # Generate /etc/indi-allsky/flask.json if not present (from shipped template)
+        FLASK_JSON="/etc/indi-allsky/flask.json"
+        FLASK_TEMPLATE="/usr/share/indi-allsky/flask.json_template"
+        SAFE_HTTP_PORT=$(safe_port "$HTTP_PORT" 80)
+        SAFE_HTTPS_PORT=$(safe_port "$HTTPS_PORT" 443)
+        SAFE_INDI_PORT=$(safe_port "$INDI_PORT" 7624)
+
+        if [ ! -f "$FLASK_JSON" ]; then
+            SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(24))")
+            PASSWORD_KEY=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())" 2>/dev/null || python3 -c "import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())")
+
+            jq \
+                --arg secret_key "$SECRET_KEY" \
+                --arg password_key "$PASSWORD_KEY" \
+                --arg camera_interface "${CAMERA_INTERFACE}" \
+                --arg ccd_driver "${CCD_DRIVER}" \
+                --argjson http_port "$SAFE_HTTP_PORT" \
+                --argjson https_port "$SAFE_HTTPS_PORT" \
+                --argjson indi_port "$SAFE_INDI_PORT" \
+                --argjson auth_all_views "${WEB_AUTH_ALL_VIEWS:-false}" \
+                --argjson oidc_enable "${OIDC_ENABLE:-false}" \
+                --arg oidc_client_id "${OIDC_CLIENT_ID}" \
+                --arg oidc_client_secret "${OIDC_CLIENT_SECRET}" \
+                --arg oidc_discovery "${OIDC_DISCOVERY_URL}" \
+                '
+                .SECRET_KEY = $secret_key |
+                .PASSWORD_KEY = $password_key |
+                .CAMERA_INTERFACE = $camera_interface |
+                .CCD_DRIVER = $ccd_driver |
+                .HTTP_PORT = $http_port |
+                .HTTPS_PORT = $https_port |
+                .INDI_PORT = $indi_port |
+                .INDI_ALLSKY_AUTH_ALL_VIEWS = $auth_all_views |
+                .LOCAL_AUTH_ENABLE = true |
+                .OIDC_ENABLE = $oidc_enable |
+                .OIDC_CLIENT_ID = $oidc_client_id |
+                .OIDC_CLIENT_SECRET = $oidc_client_secret |
+                .OIDC_DISCOVERY_ENDPOINT = $oidc_discovery
+                ' "$FLASK_TEMPLATE" > "${FLASK_JSON}.tmp" && \
+                [ -s "${FLASK_JSON}.tmp" ] && mv -f "${FLASK_JSON}.tmp" "$FLASK_JSON"
+        else
+            # Upgrade: merge new template keys into existing config, preserving user values
+            if [ -f "$FLASK_TEMPLATE" ]; then
+                cp -f "$FLASK_JSON" "${FLASK_JSON}.bak"
+                jq -s '.[0] * .[1]' "$FLASK_TEMPLATE" "$FLASK_JSON" > "${FLASK_JSON}.merged" && \
+                    [ -s "${FLASK_JSON}.merged" ] && mv -f "${FLASK_JSON}.merged" "$FLASK_JSON"
+            fi
+        fi
+
+        # Generate /etc/indi-allsky/indiserver.env
+        INDISERVER_ENV="/etc/indi-allsky/indiserver.env"
+        if [ "$GPS_DRIVER" = "None" ] || [ -z "$GPS_DRIVER" ]; then
+            GPS_DRIVER_VAL=""
+        else
+            GPS_DRIVER_VAL="$GPS_DRIVER"
+        fi
+        cat <<EOF > "$INDISERVER_ENV"
+INDI_PORT="${SAFE_INDI_PORT}"
+CCD_DRIVER="${CCD_DRIVER:-indi_simulator_ccd}"
+GPS_DRIVER="${GPS_DRIVER_VAL}"
+EOF
+        chmod 644 "$INDISERVER_ENV"
+
+        # Unpack bundled virtual environment if shipped in package
+        VENV="/var/lib/indi-allsky/venv"
+        VENV_TAR="/usr/share/indi-allsky/venv.tar.zst"
+        HASH_FILE="${VENV}/.installed_hash"
+        if [ -f "$VENV_TAR" ]; then
+            CURRENT_HASH=$(sha256sum "$VENV_TAR" | awk '{print $1}')
+            if [ -f "$HASH_FILE" ] && [ "$(cat "$HASH_FILE" 2>/dev/null)" = "$CURRENT_HASH" ] && "$VENV/bin/python3" -c 'import flask, sqlalchemy' 2>/dev/null; then
+                echo "indi-allsky: Production virtual environment is already up-to-date."
+            else
+                echo "indi-allsky: Synchronizing production virtual environment..."
+                mkdir -p "$VENV"
+                zstd -dc "$VENV_TAR" | /usr/bin/python3 /usr/share/indi-allsky/misc/diff_unpack.py "$VENV"
+                echo "$CURRENT_HASH" > "$HASH_FILE"
+                chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" "$VENV"
+            fi
+            rm -f "$VENV_TAR"
+        fi
+
+        # Validate virtualenv
+        if ! "$VENV/bin/python3" -c 'import flask, sqlalchemy' 2>/dev/null; then
+            echo "indi-allsky: ERROR: Virtual environment is missing or incomplete." >&2
+            exit 1
+        fi
+
+        # Initialize SQLite Database (Backup, Vacuum, Migration) & Admin User
+        # Ensure services are stopped so SQLite has 0 write locks during backup/vacuum
+        systemctl stop indi-allsky.service 2>/dev/null || true
+        systemctl stop indiserver.service 2>/dev/null || true
+        systemctl stop gunicorn-indi-allsky.service 2>/dev/null || true
+
+        DB_DIR="/var/lib/indi-allsky"
+        DB_FILE="${DB_DIR}/indi-allsky.sqlite"
+        DB_BACKUP_DIR="${DB_DIR}/backup"
+
+        FRESH_DB=0
+        if [ ! -f "$DB_FILE" ]; then
+            FRESH_DB=1
+        fi
+
+        if [ -f "$DB_FILE" ]; then
+            echo "indi-allsky: Performing pre-migration database backup..."
+            BACKUP_TARGET="${DB_BACKUP_DIR}/backup_indi-allsky_$(date +%Y%m%d_%H%M%S).sqlite.gz"
+            pigz -1 -c "$DB_FILE" > "$BACKUP_TARGET" 2>/dev/null || true
+            chmod 640 "$BACKUP_TARGET" 2>/dev/null || true
+
+            # Monthly database vacuuming throttle (at most once every 30 days)
+            VACUUM_STAMP="${DB_FOLDER}/.last_vacuum"
+            DO_VACUUM=false
+            if [ ! -f "$VACUUM_STAMP" ]; then
+                DO_VACUUM=true
+            elif [ -n "$(find "$VACUUM_STAMP" -mtime +30 2>/dev/null)" ]; then
+                DO_VACUUM=true
+            fi
+
+            if [ "$DO_VACUUM" = "true" ]; then
+                echo "indi-allsky: Performing periodic database maintenance (VACUUM)..."
+                sqlite3 "$DB_FILE" "VACUUM;" 2>/dev/null || true
+                touch "$VACUUM_STAMP" 2>/dev/null || true
+                chown "${ALLSKY_USER}:${ALLSKY_GROUP}" "$VACUUM_STAMP" 2>/dev/null || true
+            else
+                echo "indi-allsky: Database VACUUM performed within the last 30 days, skipping."
+            fi
+        fi
+
+        echo "indi-allsky: Initializing database schema & migrations..."
+        "$VENV/bin/python3" -c '
+from indi_allsky.flask import create_app, db
+app = create_app()
+with app.app_context():
+    db.create_all()
+' 2>/dev/null || true
+
+        MIGRATION_FOLDER="/var/lib/indi-allsky/migrations"
+        if [ ! -d "$MIGRATION_FOLDER" ]; then
+            FLASK_APP=indi_allsky.flask:app "$VENV/bin/flask" db init -d "$MIGRATION_FOLDER" 2>/dev/null || true
+        fi
+
+        # Autogenerate schema diffs and apply upgrades matching setup.sh behavior
+        FLASK_APP=indi_allsky.flask:app "$VENV/bin/flask" db revision --autogenerate -d "$MIGRATION_FOLDER" -m "package_upgrade" 2>/dev/null || true
+        FLASK_APP=indi_allsky.flask:app "$VENV/bin/flask" db upgrade head -d "$MIGRATION_FOLDER" 2>/dev/null || true
+        "$VENV/bin/python3" /usr/share/indi-allsky/misc/populate_data.py || true
+        "$VENV/bin/python3" /usr/share/indi-allsky/config.py update_level 2>/dev/null || true
+        chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" "$MIGRATION_FOLDER" 2>/dev/null || true
+
+        # Detect and configure IMAGE_FOLDER (supporting custom/non-standard paths)
+        IMAGE_FOLDER="/var/www/html/allsky/images"
+        if [ -f "$DB_FILE" ] && command -v sqlite3 >/dev/null 2>&1; then
+            CFG_JSON=$(sqlite3 "$DB_FILE" "SELECT data FROM config ORDER BY id DESC LIMIT 1;" 2>/dev/null || true)
+            if [ -n "$CFG_JSON" ]; then
+                DETECTED_IMG=$(echo "$CFG_JSON" | jq -r '.IMAGE_FOLDER // empty' 2>/dev/null || true)
+                [ -n "$DETECTED_IMG" ] && IMAGE_FOLDER="$DETECTED_IMG"
+            fi
+        fi
+        if [ -f "$FLASK_JSON" ]; then
+            FLASK_IMG=$(jq -r '.INDI_ALLSKY_IMAGE_FOLDER // empty' "$FLASK_JSON" 2>/dev/null || true)
+            [ -n "$FLASK_IMG" ] && IMAGE_FOLDER="$FLASK_IMG"
+        fi
+
+        mkdir -p "$IMAGE_FOLDER" "$IMAGE_FOLDER/darks" "$IMAGE_FOLDER/export"
+        chown -R "${ALLSKY_USER}:www-data" "$IMAGE_FOLDER" 2>/dev/null || true
+        chmod 775 "$IMAGE_FOLDER" "$IMAGE_FOLDER/darks" "$IMAGE_FOLDER/export" 2>/dev/null || true
+
+        if [ -f "$FLASK_JSON" ]; then
+            jq --arg img "$IMAGE_FOLDER" '.INDI_ALLSKY_IMAGE_FOLDER = $img' "$FLASK_JSON" > "${FLASK_JSON}.tmp" && \
+                [ -s "${FLASK_JSON}.tmp" ] && mv -f "${FLASK_JSON}.tmp" "$FLASK_JSON"
+        fi
+
+        echo "indi-allsky: Bootstrapping configuration..."
+        "$VENV/bin/python3" /usr/share/indi-allsky/config.py bootstrap --image_folder "$IMAGE_FOLDER" || true
+
+        # Apply debconf camera, driver, port & location parameters on fresh install OR if user chose not to reuse existing config
+        if [ "$FRESH_DB" = "1" ] || [ "$REUSE_CONFIG" != "true" ]; then
+            TMP_CFG=$(mktemp)
+            "$VENV/bin/python3" /usr/share/indi-allsky/config.py dumpfile --outfile "$TMP_CFG" 2>/dev/null || true
+            if [ -s "$TMP_CFG" ]; then
+                jq \
+                    --arg camera_interface "${CAMERA_INTERFACE:-indi}" \
+                    --argjson indi_port "${SAFE_INDI_PORT:-7624}" \
+                    --arg lat "${LOCATION_LATITUDE:-}" \
+                    --arg lon "${LOCATION_LONGITUDE:-}" \
+                    --arg elev "${LOCATION_ELEVATION:-0}" \
+                    '
+                    .CAMERA_INTERFACE = $camera_interface |
+                    .INDI_PORT = $indi_port |
+                    (if $lat != "" then .LOCATION_LATITUDE = ($lat | tonumber) else . end) |
+                    (if $lon != "" then .LOCATION_LONGITUDE = ($lon | tonumber) else . end) |
+                    (if $elev != "" then .LOCATION_ELEVATION = ($elev | tonumber | floor) else . end)
+                    ' "$TMP_CFG" > "${TMP_CFG}.json" 2>/dev/null && \
+                "$VENV/bin/python3" /usr/share/indi-allsky/config.py load -c "${TMP_CFG}.json" --force 2>/dev/null || true
+                rm -f "${TMP_CFG}.json"
+            fi
+            rm -f "$TMP_CFG"
+        fi
+
+        # Only provision a default admin account on fresh installs (check if active admin user already exists)
+        DB_ADMIN_COUNT=0
+        if [ -f "$DB_FILE" ] && command -v sqlite3 >/dev/null 2>&1; then
+            DB_ADMIN_COUNT=$(sqlite3 "$DB_FILE" "SELECT count(*) FROM user WHERE admin = 1 AND username != 'system';" 2>/dev/null || echo "0")
+        fi
+
+        if [ "${DB_ADMIN_COUNT:-0}" -eq 0 ] && [ -f "/usr/share/indi-allsky/misc/usertool.py" ]; then
+            ADMIN_USER="${WEB_USER:-admin}"
+            ADMIN_NAME="${WEB_NAME:-Admin User}"
+            ADMIN_EMAIL="${WEB_EMAIL:-admin@example.org}"
+
+            if [ -z "$WEB_PASS" ] || [ "${#WEB_PASS}" -lt 8 ]; then
+                ADMIN_PASS="$(openssl rand -base64 12)"
+                GENERATED_ADMIN_PASS="$ADMIN_PASS"
+                echo "indi-allsky: Generated random admin password for user '$ADMIN_USER'." >&2
+            else
+                ADMIN_PASS="$WEB_PASS"
+            fi
+
+            USERTOOL_PASSWORD="$ADMIN_PASS" "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py adduser -u "$ADMIN_USER" -f "$ADMIN_NAME" -e "$ADMIN_EMAIL" || true
+            "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py setadmin -u "$ADMIN_USER" || true
+        fi
+
+        # Configure Web Server (Apache2 or Nginx)
+        USE_NGINX=0
+        if [ -x "$(command -v nginx 2>/dev/null)" ]; then
+            if systemctl is-active --quiet nginx 2>/dev/null || [ ! -x "$(command -v a2ensite 2>/dev/null)" ]; then
+                USE_NGINX=1
+            fi
+        fi
+
+        if [ "$USE_NGINX" = "1" ]; then
+            configure_nginx
+        elif [ -x "$(command -v a2ensite 2>/dev/null)" ]; then
+            configure_apache
+        fi
+
+        if [ "$INSTALL_MOSQUITTO" = "true" ]; then
+            configure_mosquitto
+        fi
+
+        # Alter legacy NetworkManager policy kit local authority if present
+        if [ -f "/var/lib/polkit-1/localauthority/10-vendor.d/org.freedesktop.NetworkManager.pkla" ]; then
+            sed -i -e 's|^ResultAny=no$|ResultAny=yes|i' \
+                /var/lib/polkit-1/localauthority/10-vendor.d/org.freedesktop.NetworkManager.pkla 2>/dev/null || true
+        fi
+
+        # Disable ModemManager if present (prevents hijacking/locking serial GPS and INDI devices)
+        if systemctl is-enabled --quiet ModemManager.service 2>/dev/null; then
+            echo "indi-allsky: Disabling ModemManager to prevent serial port conflicts with GPS and cameras..."
+            systemctl stop ModemManager.service 2>/dev/null || true
+            systemctl disable ModemManager.service 2>/dev/null || true
+        fi
+
+        # Disable conflicting legacy/third-party allsky service if present
+        if systemctl list-unit-files "allsky.service" 2>/dev/null | grep -q "allsky.service"; then
+            systemctl stop allsky.service 2>/dev/null || true
+            systemctl disable allsky.service 2>/dev/null || true
+        fi
+
+        # Add indi-allsky user to hardware, web, and journal groups
+        for GRP in dialout video plugdev gpio i2c spi adm systemd-journal www-data; do
+            getent group "$GRP" >/dev/null 2>&1 && usermod -a -G "$GRP" "$ALLSKY_USER" 2>/dev/null || true
+        done
+        getent passwd www-data >/dev/null 2>&1 && usermod -a -G "$ALLSKY_GROUP" www-data 2>/dev/null || true
+
+        # Ensure data, database, and log directories have proper ownership and write permissions
+        chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" /var/lib/indi-allsky /var/log/indi-allsky 2>/dev/null || true
+        chmod 775 /var/lib/indi-allsky /var/lib/indi-allsky/backup 2>/dev/null || true
+        chmod 755 /var/log/indi-allsky 2>/dev/null || true
+        [ -f "$DB_FILE" ] && chmod 664 "$DB_FILE" 2>/dev/null || true
+
+        # Custom image directory permissions (if non-standard path)
+        if [ "$IMAGE_FOLDER" != "/var/www/html/allsky/images" ] && [ -d "$IMAGE_FOLDER" ]; then
+            chown -R "${ALLSKY_USER}:www-data" "$IMAGE_FOLDER" 2>/dev/null || true
+            chmod 775 "$IMAGE_FOLDER" 2>/dev/null || true
+        fi
+
+        # Web application and service configuration permissions
+        [ -f "$FLASK_JSON" ] && chown "${ALLSKY_USER}:www-data" "$FLASK_JSON" 2>/dev/null && chmod 660 "$FLASK_JSON" 2>/dev/null || true
+        [ -f "$INDISERVER_ENV" ] && chown "${ALLSKY_USER}:${ALLSKY_GROUP}" "$INDISERVER_ENV" 2>/dev/null && chmod 644 "$INDISERVER_ENV" 2>/dev/null || true
+
+        # Always enable and start indiserver service (matches setup.sh behavior)
+        # Even libcamera and test configurations connect to localhost indiserver for core subsystem operations
+        systemctl enable indiserver.service 2>/dev/null || true
+        systemctl restart indiserver.service 2>/dev/null || systemctl start indiserver.service 2>/dev/null || true
+
+        # Optional System Performance & Hardware Optimizations
+        if [ "$SYSTEM_OPTIMIZE" = "true" ]; then
+            echo "indi-allsky: Applying system performance optimizations (sysctl & journald)..."
+            cp -f /usr/share/indi-allsky/conf/90-indi-allsky-sysctl.conf /etc/sysctl.d/90-indi-allsky.conf 2>/dev/null || true
+            sysctl --system 2>/dev/null || true
+
+            mkdir -p /etc/systemd/journald.conf.d
+            cp -f /usr/share/indi-allsky/conf/90-indi-allsky-journald.conf /etc/systemd/journald.conf.d/90-indi-allsky.conf 2>/dev/null || true
+            systemctl restart systemd-journald 2>/dev/null || true
+        fi
+
+        if [ "$ENABLE_WATCHDOG" = "true" ]; then
+            echo "indi-allsky: Enabling systemd watchdog daemon..."
+            mkdir -p /etc/systemd/system.conf.d
+            cp -f /usr/share/indi-allsky/conf/indi-allsky-watchdog.conf /etc/systemd/system.conf.d/indi-allsky-watchdog.conf 2>/dev/null || true
+        fi
+
+        if [ "$DISABLE_LEDS" = "true" ]; then
+            echo "indi-allsky: Disabling hardware activity LEDs..."
+            BOOT_CONFIG="/boot/firmware/config.txt"
+            if [ -f "$BOOT_CONFIG" ] && [ -f "/proc/device-tree/model" ]; then
+                SYSTEM_MODEL=$(tr -c '[:print:]' ' ' </proc/device-tree/model 2>/dev/null || true)
+                PWR_PREFIX=""
+                PWR_ACTIVE=""
+                if echo "$SYSTEM_MODEL" | grep -qi "raspberry pi 5"; then
+                    PWR_PREFIX="power_led"
+                    PWR_ACTIVE="off"
+                elif echo "$SYSTEM_MODEL" | grep -qi "raspberry pi [34]"; then
+                    PWR_PREFIX="pwr_led"
+                    PWR_ACTIVE="on"
+                fi
+
+                if [ -n "$PWR_PREFIX" ]; then
+                    TMP_CONFIG=$(mktemp)
+                    sed \
+                        -e "/^dtparam=\(pwr\|power\)_led_.*$/Id" \
+                        -e "/^dtparam=act_led_.*$/Id" \
+                        -e "/^dtparam=eth_led[01]=.*$/Id" \
+                        "$BOOT_CONFIG" > "$TMP_CONFIG"
+                    cat <<EOF >> "$TMP_CONFIG"
+dtparam=${PWR_PREFIX}_trigger=none
+dtparam=${PWR_PREFIX}_activelow=${PWR_ACTIVE}
+dtparam=act_led_trigger=none
+dtparam=act_led_activelow=off
+dtparam=eth_led0=4
+dtparam=eth_led1=4
+EOF
+                    cp -f "$TMP_CONFIG" "$BOOT_CONFIG"
+                    chown root:root "$BOOT_CONFIG" 2>/dev/null || true
+                    chmod 644 "$BOOT_CONFIG" 2>/dev/null || true
+                    rm -f "$TMP_CONFIG"
+                    echo "indi-allsky: LEDs will be disabled at next boot."
+                else
+                    echo "indi-allsky: LED disable not supported on this hardware, skipping."
+                fi
+            else
+                echo "indi-allsky: No /boot/firmware/config.txt found, skipping LED disable."
+            fi
+        fi
+
+        if [ "$REPAIR_PERMISSIONS" = "true" ] && [ -x "/usr/bin/indi-allsky-ctl" ]; then
+            echo "indi-allsky: Running recursive image archive permissions repair as requested..."
+            /usr/bin/indi-allsky-ctl fix-perms || true
+        fi
+    ;;
+esac
+
+#DEBHELPER#
+
+if [ "$1" = "configure" ]; then
+    if [ -z "$2" ]; then
+        # Fresh install: display full initial setup summary & access URLs
+        if [ -x "/usr/share/indi-allsky/misc/postinst_summary.sh" ]; then
+            HTTP_PORT="$HTTP_PORT" \
+            HTTPS_PORT="$HTTPS_PORT" \
+            ADMIN_USER="$ADMIN_USER" \
+            GENERATED_ADMIN_PASS="$GENERATED_ADMIN_PASS" \
+            GENERATED_MQTT_USER="$GENERATED_MQTT_USER" \
+            GENERATED_MQTT_PASS="$GENERATED_MQTT_PASS" \
+            /usr/share/indi-allsky/misc/postinst_summary.sh || true
+        fi
+    else
+        # Upgrade: brief, clean confirmation
+        echo "indi-allsky: Upgrade complete."
+    fi
+fi
+
+exit 0
