@@ -564,7 +564,7 @@ class CaptureWorker(Process):
         exposure_count=3,
         exposure_max=1.0,
         exposure_min=0.0,
-        exposure_increase=75,
+        exposure_increase=25,
         gain=0.0,
     ):
 
@@ -1094,9 +1094,9 @@ if __name__ == "__main__":
     argparser.add_argument(
         '--level',
         '-l',
-        help='exposure level increase percent [default: 75%%]',  # format
+        help='exposure level increase percent [default: 25%%]',  # format
         type=int,
-        default=75,
+        default=25,
     )
 
 
