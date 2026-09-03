@@ -9,6 +9,7 @@ from types import SimpleNamespace
 import pytest
 
 from indi_allsky import constants
+from indi_allsky import exposure as exposure_module
 from indi_allsky.dark_library import COVERAGE_ACCEPTABLE
 from indi_allsky.dark_library import COVERAGE_EXACT
 from indi_allsky.dark_library import COVERAGE_INCOMPATIBLE
@@ -57,14 +58,6 @@ from indi_allsky.dark_automation import validate_execution_profiles
 from indi_allsky.dark_automation import library_entry_eligibility
 from indi_allsky.dark_automation import update_library_entries_eligibility
 from indi_allsky.dark_automation import utc_now_naive
-from indi_allsky.gain import EXPOSURE_MODE_BASIC
-from indi_allsky.gain import EXPOSURE_MODE_DB
-from indi_allsky.gain import EXPOSURE_MODE_DB_1_10
-from indi_allsky.gain import EXPOSURE_MODE_ISO
-from indi_allsky.gain import EXPOSURE_MODE_ISO_1_100
-from indi_allsky.gain import EXPOSURE_MODE_LEGACY
-from indi_allsky.gain import db_to_gain
-from indi_allsky.gain import gain_to_db
 from indi_allsky.capture_state import CameraCapabilities
 from indi_allsky.capture_state import GAIN_KIND_CONTINUOUS
 from indi_allsky.capture_state import GAIN_KIND_DISCRETE
@@ -73,6 +66,14 @@ from indi_allsky.capture_state import build_effective_capture_state
 from indi_allsky.capture_state import camera_geometry_from_ccd_info
 from indi_allsky.capture_state import record_binning_dimensions
 from indi_allsky.capture_state import validate_captured_geometry
+
+
+EXPOSURE_MODE_BASIC = 'exposure_basic'
+EXPOSURE_MODE_DB = 'exposure_autogain_exp_prio_db'
+EXPOSURE_MODE_DB_1_10 = 'exposure_autogain_exp_prio_db_1_10'
+EXPOSURE_MODE_ISO = 'exposure_autogain_exp_prio_iso'
+EXPOSURE_MODE_ISO_1_100 = 'exposure_autogain_exp_prio_iso_1_100'
+EXPOSURE_MODE_LEGACY = 'exposure_legacy_autogain'
 
 
 def test_utc_now_naive_uses_the_utc_database_clock():
@@ -155,16 +156,16 @@ def _inventory_pair(target, gain=None, exposure=None, temperature=20.0, active=T
 
 
 @pytest.mark.parametrize(
-    'exposure_mode,gain',
+    'exposure_class,gain',
     (
-        (EXPOSURE_MODE_DB_1_10, 237.0),
-        (EXPOSURE_MODE_DB, 23.7),
-        (EXPOSURE_MODE_ISO, 1534.0),
-        (EXPOSURE_MODE_ISO_1_100, 15.34),
+        (exposure_module.exposure_autogain_exp_prio_db_1_10, 237.0),
+        (exposure_module.exposure_autogain_exp_prio_db, 23.7),
+        (exposure_module.exposure_autogain_exp_prio_iso, 1534.0),
+        (exposure_module.exposure_autogain_exp_prio_iso_1_100, 15.34),
     ),
 )
-def test_gain_db_mappings_round_trip(exposure_mode, gain):
-    assert db_to_gain(exposure_mode, gain_to_db(exposure_mode, gain)) == pytest.approx(gain)
+def test_gain_db_mappings_round_trip(exposure_class, gain):
+    assert exposure_class.dB2gain(exposure_class.gain2dB(gain)) == pytest.approx(gain)
 
 
 def test_camera_capabilities_round_trip_ccd_info_and_database_snapshot():
@@ -776,12 +777,13 @@ def test_all_continuous_auto_gain_modes_build_meaningful_ladders(exposure_mode, 
     plan = build_dark_plan(state, capabilities, camera_id=1)
     gains = sorted(set(target.gain for target in plan.targets))
     effective_gain_max = math.floor(gain_max * 1000) / 1000
+    exposure_class = getattr(exposure_module, exposure_mode)
 
     assert len(gains) >= 11
     assert gains[0] == pytest.approx(gain_min)
     assert gains[-1] == pytest.approx(effective_gain_max)
     assert all(
-        gain_to_db(exposure_mode, next_gain) - gain_to_db(exposure_mode, gain) <= 3.001
+        exposure_class.gain2dB(next_gain) - exposure_class.gain2dB(gain) <= 3.001
         for gain, next_gain in zip(gains, gains[1:])
     )
 

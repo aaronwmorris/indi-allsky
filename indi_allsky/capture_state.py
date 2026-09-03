@@ -7,10 +7,17 @@ from typing import Optional
 from typing import Sequence
 from typing import Tuple
 
-from .gain import CONTINUOUS_AUTO_GAIN_MODES
-from .gain import EXPOSURE_MODE_BASIC
-from .gain import EXPOSURE_MODE_LABELS
-from .gain import EXPOSURE_MODE_LEGACY
+from . import exposure as exposure_module
+
+
+_EXPOSURE_MODE_LABELS = {
+    'exposure_basic': 'Fixed gains',
+    'exposure_legacy_autogain': 'Legacy auto-gain',
+    'exposure_autogain_exp_prio_db_1_10': 'Exposure priority (1/10 dB)',
+    'exposure_autogain_exp_prio_db': 'Exposure priority (native dB)',
+    'exposure_autogain_exp_prio_iso': 'Exposure priority (native ISO)',
+    'exposure_autogain_exp_prio_iso_1_100': 'Exposure priority (1/100 ISO)',
+}
 
 
 GAIN_KIND_FIXED = 'fixed'
@@ -321,11 +328,13 @@ def build_effective_capture_state(
 ):
     warnings = []
     ccd_config = config.get('CCD_CONFIG', {}) or {}
-    exposure_mode = ccd_config.get('EXPOSURE_CLASSNAME', EXPOSURE_MODE_BASIC)
+    exposure_mode = ccd_config.get('EXPOSURE_CLASSNAME', 'exposure_basic')
 
-    if exposure_mode not in EXPOSURE_MODE_LABELS:
+    if exposure_mode not in _EXPOSURE_MODE_LABELS:
         warnings.append('Unknown exposure mode; fixed-gain planning was used')
-        exposure_mode = EXPOSURE_MODE_BASIC
+        exposure_mode = 'exposure_basic'
+
+    exposure_class = getattr(exposure_module, exposure_mode)
 
     if capabilities.gain_supported and not capabilities.gain_values_known:
         warnings.append('Detailed gain capabilities are not stored yet; reconnect the camera to refresh them')
@@ -377,7 +386,7 @@ def build_effective_capture_state(
     if not capabilities.gain_supported:
         gain_night = gain_moon = gain_day = gain_sqm = -1.0
 
-    if exposure_mode == EXPOSURE_MODE_BASIC:
+    if exposure_class is exposure_module.exposure_basic:
         profiles.append(_fixed_profile(
             'night', 'Night', bin_night, gain_night, exposure_mode, bit_depth_night, temperature_night,
         ))
@@ -398,13 +407,14 @@ def build_effective_capture_state(
         if not capabilities.gain_supported:
             gain_kind = GAIN_KIND_NONE
             gain_values = (-1.0,)
-        elif exposure_mode == EXPOSURE_MODE_LEGACY:
+        elif exposure_class is exposure_module.exposure_legacy_autogain:
             gain_kind = GAIN_KIND_DISCRETE
-            requested_gain_values = _legacy_gain_values(
+            _, requested_gain_values = exposure_class.calculate_gain_steps(
                 auto_gain_min,
                 auto_gain_max,
                 ccd_config.get('AUTO_GAIN_LEVELS', 8),
             )
+            requested_gain_values = tuple(requested_gain_values)
             gain_values = tuple(sorted(set(
                 capabilities.snap_gain(gain)
                 for gain in requested_gain_values
@@ -420,12 +430,9 @@ def build_effective_capture_state(
             if not gain_values:
                 gain_values = (auto_gain_min, auto_gain_max)
                 warnings.append('No reported discrete camera gains fall inside the configured auto-gain range')
-        elif exposure_mode in CONTINUOUS_AUTO_GAIN_MODES:
+        else:
             gain_kind = GAIN_KIND_CONTINUOUS
             gain_values = ()
-        else:
-            gain_kind = GAIN_KIND_DISCRETE
-            gain_values = (auto_gain_min, auto_gain_max)
 
         auto_profiles = (
             ('night', 'Night auto-gain', bin_night, bit_depth_night, temperature_night),
@@ -485,7 +492,7 @@ def build_effective_capture_state(
 
     return EffectiveCaptureState(
         exposure_mode=exposure_mode,
-        exposure_mode_label=EXPOSURE_MODE_LABELS[exposure_mode],
+        exposure_mode_label=_EXPOSURE_MODE_LABELS[exposure_mode],
         exposure_max=float(exposure_max),
         exposure_step=float(exposure_step),
         profiles=tuple(profiles),
@@ -703,14 +710,6 @@ def _configured_temperature(config, daytime):
         return None
 
     return float(config.get(temperature_key, default_temperature))
-
-
-def _legacy_gain_values(gain_min, gain_max, level_count):
-    level_count = max(2, int(level_count))
-    gain_step = (gain_max - gain_min) / (level_count - 1)
-    gain_values = [float(round((gain_step * index) + gain_min, 3)) for index in range(level_count)]
-    gain_values[-1] = float(round(gain_max, 3))
-    return tuple(gain_values)
 
 
 def _floor_precision(value, factor):

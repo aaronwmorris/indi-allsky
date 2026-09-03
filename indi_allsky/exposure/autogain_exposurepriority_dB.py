@@ -3,12 +3,6 @@ import logging
 
 from .. import constants
 from .exposureBase import IndiAllSky_Exposure_Base
-from ..gain import EXPOSURE_MODE_DB
-from ..gain import EXPOSURE_MODE_DB_1_10
-from ..gain import EXPOSURE_MODE_ISO
-from ..gain import EXPOSURE_MODE_ISO_1_100
-from ..gain import db_to_gain
-from ..gain import gain_to_db
 
 logger = logging.getLogger('indi_allsky')
 
@@ -244,11 +238,13 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_1_10(IndiAllSky_Exposure_
     ### ZWO, PlayerOne
 
 
-    def gain2dB(self, gain) -> float:
-        return gain_to_db(EXPOSURE_MODE_DB_1_10, gain)
+    @staticmethod
+    def gain2dB(gain) -> float:
+        return gain / 10.0
 
-    def dB2gain(self, dB) -> float:
-        return db_to_gain(EXPOSURE_MODE_DB_1_10, dB)
+    @staticmethod
+    def dB2gain(dB) -> float:
+        return dB * 10.0
 
 
 class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
@@ -256,11 +252,13 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB(IndiAllSky_Exposure_AutoG
     ### QHY
 
 
-    def gain2dB(self, gain) -> float:
-        return gain_to_db(EXPOSURE_MODE_DB, gain)
+    @staticmethod
+    def gain2dB(gain) -> float:
+        return gain
 
-    def dB2gain(self, dB) -> float:
-        return db_to_gain(EXPOSURE_MODE_DB, dB)
+    @staticmethod
+    def dB2gain(dB) -> float:
+        return dB
 
 
 class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
@@ -268,11 +266,13 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO(IndiAllSky_Exposure_Auto
     ### ToupTek, Altair, QHY, etc
 
 
-    def gain2dB(self, gain) -> float:
-        return gain_to_db(EXPOSURE_MODE_ISO, gain)
+    @staticmethod
+    def gain2dB(gain) -> float:
+        return 20 * math.log10(gain / 100)
 
-    def dB2gain(self, dB) -> float:
-        return db_to_gain(EXPOSURE_MODE_ISO, dB)
+    @staticmethod
+    def dB2gain(dB) -> float:
+        return 100 * (10 ** (dB / 20))
 
 
 class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO_1_100(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
@@ -280,8 +280,10 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO_1_100(IndiAllSky_Exposur
     ### libcamera
 
 
-    def gain2dB(self, gain) -> float:
-        return gain_to_db(EXPOSURE_MODE_ISO_1_100, gain)
+    @staticmethod
+    def gain2dB(gain) -> float:
+        return 20 * math.log10(gain)
 
-    def dB2gain(self, dB) -> float:
-        return db_to_gain(EXPOSURE_MODE_ISO_1_100, dB)
+    @staticmethod
+    def dB2gain(dB) -> float:
+        return 10 ** (dB / 20)

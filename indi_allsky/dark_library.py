@@ -6,10 +6,7 @@ from datetime import datetime
 from typing import Optional
 from typing import Tuple
 
-from .gain import CONTINUOUS_AUTO_GAIN_MODES
-from .gain import EXPOSURE_MODE_LEGACY
-from .gain import db_to_gain
-from .gain import gain_to_db
+from . import exposure as exposure_module
 from .capture_state import GAIN_KIND_CONTINUOUS
 from .capture_state import GAIN_KIND_DISCRETE
 from .capture_state import GAIN_KIND_NONE
@@ -42,6 +39,14 @@ MAX_TEMPERATURE_RANGE = 50.0
 DARK_LIBRARY_CAMERA_DATA_KEY = 'dark_library'
 TEMPERATURE_RANGE_CAMERA_DATA_KEY = 'temperature_matching_distance'
 TEMPERATURE_STEP_CAMERA_DATA_KEY = 'temperature_series_step'
+
+
+def _gain_to_db(exposure_mode, gain):
+    return getattr(exposure_module, exposure_mode).gain2dB(gain)
+
+
+def _db_to_gain(exposure_mode, gain_db):
+    return getattr(exposure_module, exposure_mode).dB2gain(gain_db)
 
 
 @dataclass(frozen=True)
@@ -549,7 +554,7 @@ def _camera_strategy_description(capture_state):
                 'lowest gain and a spaced gain ladder at maximum exposure.'
             )
         elif GAIN_KIND_DISCRETE in gain_kinds:
-            if capture_state.exposure_mode == EXPOSURE_MODE_LEGACY:
+            if getattr(exposure_module, capture_state.exposure_mode) is exposure_module.exposure_legacy_autogain:
                 descriptions.append(
                     'indi-allsky first lengthens exposure at the lowest configured auto-gain. '
                     'At the maximum exposure it holds exposure steady and moves through the '
@@ -598,16 +603,16 @@ def _profile_gains(profile, capabilities, quality_policy, warnings):
     if profile.gain_values:
         return tuple(sorted(set(float(gain) for gain in profile.gain_values)))
 
-    if profile.exposure_mode not in CONTINUOUS_AUTO_GAIN_MODES:
+    if profile.gain_kind != GAIN_KIND_CONTINUOUS:
         return (profile.gain_min, profile.gain_max)
 
-    gain_min_db = gain_to_db(profile.exposure_mode, profile.gain_min)
-    gain_max_db = gain_to_db(profile.exposure_mode, profile.gain_max)
+    gain_min_db = _gain_to_db(profile.exposure_mode, profile.gain_min)
+    gain_max_db = _gain_to_db(profile.exposure_mode, profile.gain_max)
     gain_values = []
     gain_db = gain_min_db
 
     while gain_db < gain_max_db:
-        gain = db_to_gain(profile.exposure_mode, gain_db)
+        gain = _db_to_gain(profile.exposure_mode, gain_db)
         gain_values.append(_snap_continuous_gain(gain, capabilities))
         gain_db += quality_policy.gain_step_db
 
@@ -621,14 +626,14 @@ def _profile_gains(profile, capabilities, quality_policy, warnings):
         expanded_values = [gain_values[0]]
         expanded = False
         for previous_gain, next_gain in zip(gain_values, gain_values[1:]):
-            db_gap = gain_to_db(profile.exposure_mode, next_gain) - gain_to_db(
+            db_gap = _gain_to_db(profile.exposure_mode, next_gain) - _gain_to_db(
                 profile.exposure_mode,
                 previous_gain,
             )
             if db_gap > quality_policy.gain_step_db + 0.001:
-                midpoint_db = gain_to_db(profile.exposure_mode, previous_gain) + (db_gap / 2.0)
+                midpoint_db = _gain_to_db(profile.exposure_mode, previous_gain) + (db_gap / 2.0)
                 midpoint_gain = _snap_continuous_gain(
-                    db_to_gain(profile.exposure_mode, midpoint_db),
+                    _db_to_gain(profile.exposure_mode, midpoint_db),
                     capabilities,
                 )
                 if midpoint_gain not in (previous_gain, next_gain):
@@ -642,7 +647,7 @@ def _profile_gains(profile, capabilities, quality_policy, warnings):
     gain_values = tuple(gain_values)
 
     for previous_gain, next_gain in zip(gain_values, gain_values[1:]):
-        db_gap = gain_to_db(profile.exposure_mode, next_gain) - gain_to_db(profile.exposure_mode, previous_gain)
+        db_gap = _gain_to_db(profile.exposure_mode, next_gain) - _gain_to_db(profile.exposure_mode, previous_gain)
         if db_gap > quality_policy.gain_step_db + 0.001:
             warnings.append(
                 'The camera gain step creates a {0:0.2f} dB gap, larger than the {1:s} policy'.format(
@@ -759,7 +764,7 @@ def _coverage_for_frame_type(plan, target, inventory, frame_type, temperature):
     if abs(gain_delta) <= 0.000001 and abs(exposure_delta) <= 0.000001:
         status = COVERAGE_EXACT
     elif target.continuous_gain and abs(exposure_delta) <= 0.000001:
-        gain_delta_db = gain_to_db(target.exposure_mode, selected_frame.gain) - gain_to_db(
+        gain_delta_db = _gain_to_db(target.exposure_mode, selected_frame.gain) - _gain_to_db(
             target.exposure_mode,
             target.gain,
         )
@@ -886,10 +891,10 @@ def _paired_existing_gains(plan, target, inventory, temperature, gain_min, gain_
 
 
 def _continuous_missing_gains(exposure_mode, gain_min, gain_max, existing_gains, maximum_gap_db):
-    gain_min_db = gain_to_db(exposure_mode, gain_min)
-    gain_max_db = gain_to_db(exposure_mode, gain_max)
+    gain_min_db = _gain_to_db(exposure_mode, gain_min)
+    gain_max_db = _gain_to_db(exposure_mode, gain_max)
     existing_db = sorted(
-        gain_to_db(exposure_mode, gain)
+        _gain_to_db(exposure_mode, gain)
         for gain in existing_gains
         if gain >= gain_min and gain <= gain_max
     )
@@ -913,7 +918,7 @@ def _continuous_missing_gains(exposure_mode, gain_min, gain_max, existing_gains,
         current_db = next_db
 
     missing_gains = tuple(sorted(set(
-        float(round(db_to_gain(exposure_mode, gain_db), 6))
+        float(round(_db_to_gain(exposure_mode, gain_db), 6))
         for gain_db in missing_db
     )))
     return missing_gains
