@@ -411,7 +411,7 @@ var camera_id = {{ camera_id }};
                             <span class="tw:text-xs tw:font-bold tw:text-base-content/85">Timer Unit</span>
                             <div class="tw:flex tw:items-center tw:gap-1.5 tw:mt-0.5">
                                 <span class="tw:text-[0.5625rem] tw:font-mono tw:opacity-50">STATE:</span>
-                                <span class="tw:badge {% if indiserver_timer_unitstate == 'enabled' %}tw:badge-success tw:badge-outline{% elif indiserver_timer_unitstate == 'disabled' %}tw:badge-neutral tw:badge-outline{% elif indiserver_timer_unitstate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.5rem] tw:h-4 tw:px-1.5 tw:rounded-[var(--radius-box)]">{{indiserver_timer_unitstate}}</span>
+                                <span class="tw:badge {% if indiserver_timer_unitstate == 'enabled' %}tw:badge-success tw:badge-outline{% elif indiserver_timer_unitstate == 'disabled' %}tw:badge-neutral tw:badge-outline{% elif indiserver_timer_unitstate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.5rem] tw:h-4 tw:px-1.5 tw:rounded-[var(--radius-box)]">{{indiserver_timer_unitstate or 'disabled'}}</span>
                             </div>
                         </div>
                         <div class="lg:tw:col-span-9 tw:flex tw:gap-2">
@@ -440,7 +440,7 @@ var camera_id = {{ camera_id }};
                             <span class="tw:text-xs tw:font-bold tw:text-base-content/85">Timer Unit</span>
                             <div class="tw:flex tw:items-center tw:gap-1.5 tw:mt-0.5">
                                 <span class="tw:text-[0.5625rem] tw:font-mono tw:opacity-50">STATE:</span>
-                                <span class="tw:badge {% if indi_allsky_timer_unitstate == 'enabled' %}tw:badge-success tw:badge-outline{% elif indi_allsky_timer_unitstate == 'disabled' %}tw:badge-neutral tw:badge-outline{% elif indi_allsky_timer_unitstate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.5rem] tw:h-4 tw:px-1.5 tw:rounded-[var(--radius-box)]">{{indi_allsky_timer_unitstate}}</span>
+                                <span class="tw:badge {% if indi_allsky_timer_unitstate == 'enabled' %}tw:badge-success tw:badge-outline{% elif indi_allsky_timer_unitstate == 'disabled' %}tw:badge-neutral tw:badge-outline{% elif indi_allsky_timer_unitstate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.5rem] tw:h-4 tw:px-1.5 tw:rounded-[var(--radius-box)]">{{indi_allsky_timer_unitstate or 'disabled'}}</span>
                             </div>
                         </div>
                         <div class="lg:tw:col-span-9 tw:flex tw:gap-2">
