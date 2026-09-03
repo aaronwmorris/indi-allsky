@@ -511,20 +511,19 @@ class CameraLinearityTest(object):
         mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
 
         logger.warning('Using central ROI for ADU calculations')
-        adu_fov_div = self.config.get('ADU_FOV_DIV', 4)
-        x1 = int((image_width / 2) - (image_width / adu_fov_div))
-        y1 = int((image_height / 2) - (image_height / adu_fov_div))
-        x2 = int((image_width / 2) + (image_width / adu_fov_div))
-        y2 = int((image_height / 2) + (image_height / adu_fov_div))
+        center = (int(image_width / 2), int(image_height / 2))
+        radius = int(image_height / 4)
+
 
         # The white area is what we keep
-        cv2.rectangle(
+        cv2.circle(
             img=mask,
-            pt1=(x1, y1),
-            pt2=(x2, y2),
+            center=center,
+            radius=radius,
             color=255,  # mono
             thickness=cv2.FILLED,
         )
+
 
         self._adu_mask_dict[binning] = mask
 
