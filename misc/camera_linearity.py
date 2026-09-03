@@ -351,9 +351,15 @@ class CameraLinearityTest(object):
         if len(image.shape) == 2:
             # mono
             adu = cv2.mean(src=image, mask=self._adu_mask_dict[i_ref.binning])[0]
+
+            min_val, max_val, _, _ = cv2.minMaxLoc(image, mask=self._adu_mask_dict[i_ref.binning])
+            logger.info('Min: %d - Max: %d', min_val, max_val)
         else:
-            data_mono = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            adu = cv2.mean(src=data_mono, mask=self._adu_mask_dict[i_ref.binning])[0]
+            image_mono = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            adu = cv2.mean(src=image_mono, mask=self._adu_mask_dict[i_ref.binning])[0]
+
+            min_val, max_val, _, _ = cv2.minMaxLoc(image_mono, mask=self._adu_mask_dict[i_ref.binning])
+            logger.info('Min: %d - Max: %d', min_val, max_val)
 
 
         # subtract the manual offset
@@ -366,6 +372,8 @@ class CameraLinearityTest(object):
             gain=gain,
             binning=binning,
             adu=adu,
+            minimum=min_val,
+            maximum=max_val,
         )
         self.session.add(adu_entry)
         self.session.commit()
@@ -377,6 +385,8 @@ class CameraLinearityTest(object):
             'Exposure',
             'Gain',
             'Count',
+            'ADU Min',
+            'ADU Max',
             'ADU Average',
             'ADU Range',
             #'Prev Exposure',
@@ -394,6 +404,8 @@ class CameraLinearityTest(object):
             LinearityTable.exposure,
             LinearityTable.gain,
             func.count(LinearityTable.exposure).label('exposure_count'),
+            LinearityTable.minimum,
+            LinearityTable.maximum,
             adu_avg.label('adu_avg_current'),
             (func.max(LinearityTable.adu) - func.min(LinearityTable.adu)).label('adu_range'),
             func.lag(LinearityTable.exposure, 1).over(
@@ -428,6 +440,8 @@ class CameraLinearityTest(object):
                 '{0:0.6f}'.format(entry.exposure),
                 '{0:0.3f}'.format(entry.gain),
                 '{0:d}'.format(entry.exposure_count),
+                '{0:d}'.format(entry.minimum),
+                '{0:d}'.format(entry.maximum),
                 '{0:0.4f}'.format(entry.adu_avg_current),
                 '{0:0.1f}'.format(entry.adu_range),
                 #'{0:0.6f}'.format(entry.exposure_previous),
@@ -1030,6 +1044,8 @@ class LinearityTable(Base):
     gain        = Column(Float, nullable=False, index=True)
     binning     = Column(Integer, nullable=False, index=True)
     adu         = Column(Float, nullable=False)
+    minimum     = Column(Integer, nullable=False)
+    maximum     = Column(Integer, nullable=False)
 
 
 if __name__ == "__main__":
