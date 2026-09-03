@@ -18,13 +18,15 @@ import ephem
 
 from multiprocessing import Process
 #from threading import Thread
-import queue
 
 from . import constants
 from . import camera as camera_module
 
 from .utils import IndiAllSkyDateCalcs
 from .utils import IndiAllSkyExposureUtils
+from .capture_state import CameraCapabilities
+from .capture_state import build_effective_capture_state
+from .capture_control import drain_worker_control_queue
 
 from .flask.models import TaskQueueQueue
 from .flask.models import TaskQueueState
@@ -323,6 +325,18 @@ class CaptureWorker(Process):
         raise TimeOutException()
 
 
+    def _processCaptureControlQueue(self):
+        stop_requested, time_offset, unknown_actions = drain_worker_control_queue(
+            self.capture_q,
+        )
+        if stop_requested:
+            self._shutdown = True
+        if time_offset is not None:
+            self.update_time_offset = time_offset
+        for action in unknown_actions:
+            logger.error('Unknown action: %s', str(action))
+
+
     def run(self):
         # setup signal handling after detaching from the main process
         signal.signal(signal.SIGHUP, self.sighup_handler_worker)
@@ -404,18 +418,7 @@ class CaptureWorker(Process):
                 return
 
 
-            try:
-                c_dict = self.capture_q.get(False)
-
-                if c_dict.get('stop'):
-                    self._shutdown = True
-                elif c_dict.get('settime'):
-                    self.update_time_offset = int(c_dict['settime'])
-                else:
-                    logger.error('Unknown action: %s', str(c_dict))
-
-            except queue.Empty:
-                pass
+            self._processCaptureControlQueue()
 
 
             self.detectNight()
@@ -596,6 +599,11 @@ class CaptureWorker(Process):
                 while True:
                     time.sleep(0.05)
 
+                    # A maintenance handoff may be accepted while the current
+                    # exposure is still running.  Latch that request now and
+                    # drain only after the camera reports ready.
+                    self._processCaptureControlQueue()
+
                     now_time = time.time()
                     if now_time >= loop_end:
                         break
@@ -710,6 +718,13 @@ class CaptureWorker(Process):
 
 
                         self.capture_pre_hook()
+
+                        # The pre-hook may take long enough for maintenance to
+                        # be accepted.  Never start another exposure after the
+                        # stop request has reached this worker.
+                        self._processCaptureControlQueue()
+                        if self._shutdown:
+                            continue
 
 
                         frame_start_time = now_time
@@ -1076,6 +1091,12 @@ class CaptureWorker(Process):
         }
 
 
+        camera_capabilities = CameraCapabilities.from_ccd_info(ccd_info)
+        effective_capture_state = build_effective_capture_state(self.config, camera_capabilities)
+        camera_metadata['data']['camera_capabilities'] = camera_capabilities.to_dict()
+        camera_metadata['data']['effective_capture_state'] = effective_capture_state.to_dict()
+
+
         # virtualsky
         camera_metadata['data']['vs_magnitude'] = self.config.get('VIRTUALSKY', {}).get('MAGNITUDE', 6.0)
         camera_metadata['data']['vs_constellations'] = self.config.get('VIRTUALSKY', {}).get('CONSTELLATIONS', True)
@@ -1428,7 +1449,11 @@ class CaptureWorker(Process):
                 last_camera_sqm_adu = last_image.data.get('sensor_user_9', 0.0)
 
 
-                if not isinstance(last_image.temp, type(None)):
+                if (
+                        last_image.temp is not None
+                        and math.isfinite(float(last_image.temp))
+                        and -100.0 <= float(last_image.temp) <= 100.0
+                ):
                     # some cameras only report temperature after taking an exposure
                     # seed the temperature before an exposure is taken
                     self.indiclient.ccd_temp = last_image.temp
@@ -1566,7 +1591,10 @@ class CaptureWorker(Process):
     def _pre_run_tasks(self):
         # Tasks that need to be run before the main program loop
 
-        # Update status
+        # Publish a fresh heartbeat with the running state.  A restarted capture
+        # worker may otherwise inherit a watchdog timestamp that expired while a
+        # supervised maintenance task had the camera stopped.
+        self._miscDb.setState('WATCHDOG', int(time.time()))
         self._miscDb.setState('STATUS', constants.STATUS_RUNNING)
 
         if self.camera_server in ['indi_rpicam']:
@@ -1604,8 +1632,9 @@ class CaptureWorker(Process):
         temp_c = self.indiclient.getCcdTemperature()
 
 
-        # query external temperature if defined
-        if self.config.get('CCD_TEMP_SCRIPT'):
+        # Preserve a real camera reading. The external script is a fallback for
+        # cameras and interfaces that do not report a usable temperature.
+        if temp_c < -100.0 and self.config.get('CCD_TEMP_SCRIPT'):
             try:
                 ext_temp_c = self.getExternalTemperature(self.config.get('CCD_TEMP_SCRIPT'))
                 temp_c = ext_temp_c
@@ -2546,4 +2575,3 @@ class CaptureWorker(Process):
 
         for x, label in enumerate(temp_label_list[:50]):  # limit to 50
             self.SENSOR_SLOTS[x + 80][1] = '{0:s}'.format(label)
-

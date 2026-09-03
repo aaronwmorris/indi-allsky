@@ -27,6 +27,8 @@ from .version import __config_level__
 from .config import IndiAllSkyConfig
 
 from . import constants
+from . import dark_automation
+from .capture_control import request_worker_stop
 
 from .exceptions import TimeOutException
 from .exceptions import ConfigSaveException
@@ -40,6 +42,8 @@ from .flask.models import TaskQueueState
 from .flask.models import NotificationCategory
 
 from .flask.models import IndiAllSkyDbCameraTable
+from .flask.models import IndiAllSkyDbDarkFrameTable
+from .flask.models import IndiAllSkyDbBadPixelMapTable
 from .flask.models import IndiAllSkyDbImageTable
 from .flask.models import IndiAllSkyDbVideoTable
 from .flask.models import IndiAllSkyDbKeogramTable
@@ -217,20 +221,24 @@ class IndiAllSky(object):
         self.image_error_q = Queue()
         self.image_worker = None
         self.image_worker_idx = 0
+        self.image_worker_restart_count = 0
 
         self.video_q = Queue()
         self.video_error_q = Queue()
         self.video_worker = None
         self.video_worker_idx = 0
+        self.video_worker_restart_count = 0
 
         self.sensor_q = Queue()
         self.sensor_error_q = Queue()
         self.sensor_worker = None
         self.sensor_worker_idx = 0
+        self.sensor_worker_restart_count = 0
 
         self.upload_q = Queue()
         self.upload_worker_list = []
         self.upload_worker_idx = 0
+        self.upload_worker_restart_count = 0
 
         for x in range(self.config.get('UPLOAD_WORKERS', 1)):
             self.upload_worker_list.append({
@@ -258,6 +266,9 @@ class IndiAllSky(object):
         self._reload = False
         self._shutdown = False
         self._terminate = False
+        self._dark_automation_task_id = None
+        self._dark_restore_audit_complete = False
+        self._capture_worker_stop_requested = False
 
         signal.signal(signal.SIGALRM, self.sigalarm_handler_main)
         signal.signal(signal.SIGHUP, self.sighup_handler_main)
@@ -426,6 +437,7 @@ class IndiAllSky(object):
 
 
         self.capture_worker_idx += 1
+        self._capture_worker_stop_requested = False
 
         logger.info('Starting Capture-%d worker', self.capture_worker_idx)
         self.capture_worker = CaptureWorker(
@@ -448,11 +460,26 @@ class IndiAllSky(object):
         self.capture_worker.start()
 
 
+    def _requestCaptureWorkerStop(self):
+        """Queue at most one graceful stop while the capture worker drains."""
+        stop_requested, queued = request_worker_stop(
+            self.capture_worker,
+            self.capture_q,
+            self._capture_worker_stop_requested,
+        )
+        if queued:
+            logger.info('Requesting Capture worker drain')
+        self._capture_worker_stop_requested = stop_requested
+        return stop_requested
+
+
     def _stopCaptureWorker(self):
         if not self.capture_worker:
+            self._capture_worker_stop_requested = False
             return
 
         if not self.capture_worker.is_alive():
+            self._capture_worker_stop_requested = False
             return
 
         if self._terminate:
@@ -461,13 +488,45 @@ class IndiAllSky(object):
 
         logger.info('Stopping Capture worker')
 
-        self.capture_q.put({'stop' : True})
+        self._requestCaptureWorkerStop()
         self.capture_worker.join()
+        self._capture_worker_stop_requested = False
 
 
-    def _startImageWorker(self):
+    def _recordWorkerRestart(
+            self,
+            restarting,
+            planned_restart,
+            counter_attribute,
+            notification_interval,
+            notification_item,
+            worker_label,
+    ):
+        """Count unexpected restarts without treating maintenance handoffs as faults."""
+        if not restarting or planned_restart:
+            return
+
+        restart_count = getattr(self, counter_attribute) + 1
+        setattr(self, counter_attribute, restart_count)
+        if restart_count % notification_interval:
+            return
+
+        with app.app_context():
+            self._miscDb.addNotification(
+                NotificationCategory.WORKER,
+                notification_item,
+                'WARNING: {0:s} was restarted {1:d} times'.format(
+                    worker_label,
+                    restart_count,
+                ),
+                expire=timedelta(hours=2),
+            )
+
+
+    def _startImageWorker(self, planned_restart=False):
         from .image import ImageWorker
 
+        restarting = self.image_worker is not None
         if self.image_worker:
             if self.image_worker.is_alive():
                 return
@@ -499,17 +558,14 @@ class IndiAllSky(object):
             self.astro_av,
         )
         self.image_worker.start()
-
-
-        if self.image_worker_idx % 10 == 0:
-            # notify if worker is restarted more than 10 times
-            with app.app_context():
-                self._miscDb.addNotification(
-                    NotificationCategory.WORKER,
-                    'ImageWorker',
-                    'WARNING: Image worker was restarted more than 10 times',
-                    expire=timedelta(hours=2),
-                )
+        self._recordWorkerRestart(
+            restarting,
+            planned_restart,
+            'image_worker_restart_count',
+            10,
+            'ImageWorker',
+            'Image worker',
+        )
 
 
     def _stopImageWorker(self):
@@ -529,9 +585,10 @@ class IndiAllSky(object):
         self.image_worker.join()
 
 
-    def _startVideoWorker(self):
+    def _startVideoWorker(self, planned_restart=False):
         from .video import VideoWorker
 
+        restarting = self.video_worker is not None
         if self.video_worker:
             if self.video_worker.is_alive():
                 return
@@ -558,17 +615,14 @@ class IndiAllSky(object):
             self.binning_av,
         )
         self.video_worker.start()
-
-
-        if self.video_worker_idx % 10 == 0:
-            # notify if worker is restarted more than 10 times
-            with app.app_context():
-                self._miscDb.addNotification(
-                    NotificationCategory.WORKER,
-                    'VideoWorker',
-                    'WARNING: VideoWorker was restarted more than 10 times',
-                    expire=timedelta(hours=2),
-                )
+        self._recordWorkerRestart(
+            restarting,
+            planned_restart,
+            'video_worker_restart_count',
+            10,
+            'VideoWorker',
+            'Video worker',
+        )
 
 
     def _stopVideoWorker(self):
@@ -588,9 +642,10 @@ class IndiAllSky(object):
         self.video_worker.join()
 
 
-    def _startSensorWorker(self):
+    def _startSensorWorker(self, planned_restart=False):
         from .sensor import SensorWorker
 
+        restarting = self.sensor_worker is not None
         if self.sensor_worker:
             if self.sensor_worker.is_alive():
                 return
@@ -618,17 +673,14 @@ class IndiAllSky(object):
             self.astro_av,
         )
         self.sensor_worker.start()
-
-
-        if self.sensor_worker_idx % 10 == 0:
-            # notify if worker is restarted more than 10 times
-            with app.app_context():
-                self._miscDb.addNotification(
-                    NotificationCategory.WORKER,
-                    'SensorWorker',
-                    'WARNING: SensorWorker was restarted more than 10 times',
-                    expire=timedelta(hours=2),
-                )
+        self._recordWorkerRestart(
+            restarting,
+            planned_restart,
+            'sensor_worker_restart_count',
+            10,
+            'SensorWorker',
+            'Sensor worker',
+        )
 
 
     def _stopSensorWorker(self):
@@ -644,14 +696,15 @@ class IndiAllSky(object):
         self.sensor_worker.join()
 
 
-    def _startFileUploadWorkers(self):
+    def _startFileUploadWorkers(self, planned_restart=False):
         for upload_worker_dict in self.upload_worker_list:
-            self._fileUploadWorkerStart(upload_worker_dict)
+            self._fileUploadWorkerStart(upload_worker_dict, planned_restart=planned_restart)
 
 
-    def _fileUploadWorkerStart(self, uw_dict):
+    def _fileUploadWorkerStart(self, uw_dict, planned_restart=False):
         from .uploader import FileUploader
 
+        restarting = uw_dict['worker'] is not None
         if uw_dict['worker']:
             if uw_dict['worker'].is_alive():
                 return
@@ -676,17 +729,14 @@ class IndiAllSky(object):
         )
 
         uw_dict['worker'].start()
-
-
-        if self.upload_worker_idx % 20 == 0:
-            # notify if worker is restarted more than 20 times
-            with app.app_context():
-                self._miscDb.addNotification(
-                    NotificationCategory.WORKER,
-                    'FileUploader',
-                    'WARNING: Upload worker was restarted more than 20 times',
-                    expire=timedelta(hours=2),
-                )
+        self._recordWorkerRestart(
+            restarting,
+            planned_restart,
+            'upload_worker_restart_count',
+            20,
+            'FileUploader',
+            'Upload worker',
+        )
 
 
     def _stopFileUploadWorkers(self):
@@ -724,6 +774,30 @@ class IndiAllSky(object):
             self.write_pid()
 
             self._expireOrphanedTasks()
+
+            try:
+                dark_cleanup = dark_automation.cleanup_interrupted_capture_artifacts(
+                    db,
+                    (IndiAllSkyDbDarkFrameTable, IndiAllSkyDbBadPixelMapTable),
+                    self._miscDb.image_dir.joinpath('darks'),
+                )
+            except Exception:
+                db.session.rollback()
+                logger.exception('Unable to clean interrupted dark-capture artifacts')
+            else:
+                if any(
+                        dark_cleanup[key]
+                        for key in ('database_rows', 'files', 'temporary_directories')
+                ):
+                    logger.warning(
+                        'Discarded interrupted dark-capture artifacts: '
+                        '%d database rows, %d files, %d temporary directories',
+                        dark_cleanup['database_rows'],
+                        dark_cleanup['files'],
+                        dark_cleanup['temporary_directories'],
+                    )
+                for cleanup_warning in dark_cleanup['warnings']:
+                    logger.warning('Dark-capture cleanup warning: %s', cleanup_warning)
 
             self._startup()
 
@@ -766,6 +840,11 @@ class IndiAllSky(object):
                     self.reload_handler()
 
 
+            if self._dark_automation_task_id is not None:
+                self._runDarkAutomationTask()
+                continue
+
+
             # do *NOT* start workers inside of a flask context
             # doing so will cause TLS/SSL problems connecting to databases
 
@@ -776,6 +855,19 @@ class IndiAllSky(object):
             self._startSensorWorker()
             self._startFileUploadWorkers()
 
+            if not self._dark_restore_audit_complete:
+                try:
+                    restored_count = dark_automation.mark_pending_capture_restored(app)
+                except Exception as error:
+                    logger.error('Unable to update recovered dark acquisition tasks: %s', str(error))
+                else:
+                    if restored_count:
+                        logger.warning(
+                            'Marked %d interrupted dark acquisition task(s) as capture restored',
+                            restored_count,
+                        )
+                    self._dark_restore_audit_complete = True
+
 
             # Queue externally defined tasks
             with app.app_context():
@@ -784,6 +876,39 @@ class IndiAllSky(object):
 
 
             time.sleep(13)
+
+
+    def _runDarkAutomationTask(self):
+        task_id = self._dark_automation_task_id
+        logger.warning('Entering dark-library maintenance mode for task %d', task_id)
+
+        self._stopCaptureWorker()
+        self._stopImageWorker()
+        self._stopVideoWorker()
+        self._stopSensorWorker()
+        self._stopFileUploadWorkers()
+
+        try:
+            dark_automation.run_task(
+                app,
+                task_id,
+                Path(__file__).parent.parent,
+                stop_requested=lambda: self._shutdown,
+            )
+        finally:
+            self._dark_automation_task_id = None
+
+        if self._shutdown:
+            return
+
+        # Restore the complete worker set before reporting capture as resumed.
+        self._startCaptureWorker()
+        self._startImageWorker(planned_restart=True)
+        self._startVideoWorker(planned_restart=True)
+        self._startSensorWorker(planned_restart=True)
+        self._startFileUploadWorkers(planned_restart=True)
+        dark_automation.mark_capture_restored(app, task_id)
+        logger.warning('Normal capture restored after dark-library task %d', task_id)
 
 
     def reload_handler(self):
@@ -1315,6 +1440,39 @@ class IndiAllSky(object):
             .filter(IndiAllSkyDbTaskQueueTable.state.in_(orphaned_statuses))
 
         for task in old_task_list:
+            task_data = dict(task.data or {})
+            if task_data.get('action') == 'dark_automation':
+                if (
+                        task.state == TaskQueueState.MANUAL
+                        and task.createDate > (
+                            dark_automation.utc_now_naive() - timedelta(minutes=30)
+                        )
+                ):
+                    # A dark job may have been submitted while a native
+                    # service was stopped.  Preserve it so startup can accept
+                    # it without requiring a second click.  Never retain the
+                    # covered-camera confirmation beyond this short window.
+                    continue
+
+                task_data['status'] = (
+                    'cancelled' if task_data.get('cancel_requested') else 'failed'
+                )
+                task_data['completed_utc'] = datetime.now(timezone.utc).isoformat()
+                task_data['error'] = (
+                    None
+                    if task_data.get('cancel_requested')
+                    else 'The capture service restarted during dark capture.'
+                )
+                progress = dict(task_data.get('progress') or {})
+                progress['phase'] = task_data['status']
+                progress['message'] = (
+                    'Dark capture was cancelled.'
+                    if task_data['status'] == 'cancelled'
+                    else 'Dark capture stopped when the capture service restarted.'
+                )
+                task_data['progress'] = progress
+                task.data = task_data
+
             logger.warning('Expiring orphaned task %d', task.id)
             task.state = TaskQueueState.EXPIRED
 
@@ -1419,6 +1577,95 @@ class IndiAllSky(object):
                     self._reload = True
 
                     task.setSuccess('Updated paused status')
+
+                elif action == 'dark_automation':
+                    if self._dark_automation_task_id is not None:
+                        logger.warning('Skipping duplicate dark automation task')
+                        task_data = dict(task.data or {})
+                        task_data['status'] = 'failed'
+                        task_data['completed_utc'] = datetime.now(timezone.utc).isoformat()
+                        task_data['capture_restored'] = True
+                        task_data['error'] = 'Another dark capture was already accepted.'
+                        progress = dict(task_data.get('progress') or {})
+                        progress.update({
+                            'phase': 'failed',
+                            'message': 'Another dark capture was already accepted.',
+                        })
+                        task_data['progress'] = progress
+                        task.data = task_data
+                        task.setExpired()
+                        continue
+
+                    task_data = dict(task.data or {})
+                    if task_data.get('cancel_requested'):
+                        task_data['status'] = 'cancelled'
+                        task_data['completed_utc'] = datetime.now(timezone.utc).isoformat()
+                        task.data = task_data
+                        task.setExpired()
+                        continue
+
+                    if dark_automation.reject_task_for_config_drift(
+                            task,
+                            self._config_obj.config_id,
+                    ):
+                        logger.warning(
+                            'Dark-library task requires a service reload before capture'
+                        )
+                        continue
+
+                    logger.warning('Dark-library maintenance requested')
+                    try:
+                        capture_status = int(self._miscDb.getState('STATUS'))
+                    except (NoResultFound, TypeError, ValueError):
+                        capture_status = None
+                    night_value = int(self.night_av[0])
+                    night = bool(night_value) if night_value in (0, 1) else None
+                    restore_state = dark_automation.determine_capture_restore_state(
+                        self.config,
+                        status=capture_status,
+                        night=night,
+                    )
+                    task_data['capture_restore_state'] = restore_state
+                    task_data['status'] = 'preparing'
+                    progress = dict(task_data.get('progress') or {})
+                    removal_task = task_data.get('operation') == 'flush'
+                    if removal_task and restore_state == dark_automation.CAPTURE_RESTORE_PAUSED:
+                        preparing_message = (
+                            'Normal image capture is paused; preparing library deletion.'
+                        )
+                    elif removal_task and restore_state == dark_automation.CAPTURE_RESTORE_SLEEPING:
+                        preparing_message = (
+                            'Normal image capture is sleeping; preparing library deletion.'
+                        )
+                    elif removal_task and restore_state == dark_automation.CAPTURE_RESTORE_RUNNING:
+                        preparing_message = (
+                            'Finishing the current exposure before deleting the selected files.'
+                        )
+                    elif removal_task:
+                        preparing_message = 'Preparing the selected library files for deletion.'
+                    elif restore_state == dark_automation.CAPTURE_RESTORE_PAUSED:
+                        preparing_message = (
+                            'Normal image capture is paused; preparing dark capture.'
+                        )
+                    elif restore_state == dark_automation.CAPTURE_RESTORE_SLEEPING:
+                        preparing_message = (
+                            'Normal image capture is sleeping; preparing dark capture.'
+                        )
+                    elif restore_state == dark_automation.CAPTURE_RESTORE_RUNNING:
+                        preparing_message = (
+                            'Finishing the current exposure before dark capture.'
+                        )
+                    else:
+                        preparing_message = 'Preparing the camera for dark capture.'
+                    progress.update({
+                        'phase': 'waiting_for_current_exposure',
+                        'message': preparing_message,
+                    })
+                    task_data['progress'] = progress
+                    task.data = task_data
+                    task.setRunning()
+                    self._dark_automation_task_id = task.id
+                    self._requestCaptureWorkerStop()
 
                 else:
                     logger.error('Unknown action: %s', action)
@@ -1655,4 +1902,3 @@ class IndiAllSky(object):
         db.session.commit()
 
         self.video_q.put({'task_id' : task.id})
-

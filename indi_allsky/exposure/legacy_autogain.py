@@ -136,16 +136,28 @@ class IndiAllSky_Exposure_Legacy_AutoGain(IndiAllSky_Exposure_Base):
         return next_exposure, next_gain, exposure_delta, gain_delta
 
 
+    @staticmethod
+    def calculate_gain_steps(gain_min, gain_max, auto_gain_levels):
+        gain_range = gain_max - gain_min
+        gain_step = gain_range / (auto_gain_levels - 1)
+        gain_values = [
+            float(round((gain_step * x) + gain_min, 3))
+            for x in range(auto_gain_levels)
+        ]
+        gain_values[-1] = float(round(gain_max, 3))
+        return gain_step, gain_values
+
+
     def post_init(self):
         # the gain steps cannot be calculated until the gain_av variable is populated
-        gain_range = self._expUtils.GAIN_MAX_NIGHT - self._expUtils.GAIN_MIN_NIGHT
         auto_gain_levels = self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_LEVELS', 8)
 
 
-        self._gain_step = gain_range / (auto_gain_levels - 1)  # need divisions
-
-        self.auto_gain_step_list = [float(round((self.gain_step * x) + self._expUtils.GAIN_MIN_NIGHT, 3)) for x in range(auto_gain_levels)]
-        self.auto_gain_step_list[-1] = float(round(self._expUtils.GAIN_MAX_NIGHT, 3))  # replace last value, round is necessary
+        self._gain_step, self.auto_gain_step_list = self.calculate_gain_steps(
+            self._expUtils.GAIN_MIN_NIGHT,
+            self._expUtils.GAIN_MAX_NIGHT,
+            auto_gain_levels,
+        )
 
 
         self.auto_gain_exposure_cutoff_high = self._expUtils.EXPOSURE_MAX - 0.5
