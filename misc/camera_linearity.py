@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+##################################################################
+# Measures the relative linearity of a camera sensor by taking   #
+# multiple exposures at regular intervals and measuring the      #
+# difference in detected illumination                            #
+##################################################################
+
 
 import sys
 from pathlib import Path
@@ -437,7 +443,7 @@ class CameraLinearityTest(object):
 
 
     def _getDbConn(self):
-        engine = create_engine('sqlite://', echo=False)  # In memory db
+        engine = create_engine('sqlite:///:memory:', echo=False)  # In memory db
         #engine = create_engine('sqlite:///{0:s}'.format(str(Path(__file__).parent.joinpath('year.sqlite'))), echo=False)
         Base.metadata.create_all(bind=engine)
         Session = sessionmaker(bind=engine)
