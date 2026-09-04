@@ -858,6 +858,7 @@ class IndiAllSky(object):
                 'elevation'   : 0,
                 'alt'         : 0,
                 'az'          : 0,
+                'nightSunAlt' : -6.0,
             }
             camera = self._miscDb.addCamera(camera_metadata)
             camera_id = camera.id
