@@ -8,7 +8,7 @@ import pytest
 
 from indi_allsky import constants
 from indi_allsky.capture import CaptureWorker
-from indi_allsky.flask.models import IndiAllSkyDbCameraTable
+from indi_allsky.flask.models import IndiAllSkyDbCameraTable, IndiAllSkyDbTaskQueueTable
 from indi_allsky.flask import db
 
 
@@ -24,11 +24,22 @@ def capture_worker_setup(app, base_config):
                 longitude=138.6007,
                 elevation=50,
                 nightSunAlt=-6.0,
+                lensFocalLength=2.5,
+                lensFocalRatio=1.4,
+                lensImageCircle=1000,
+                width=1920,
+                height=1080,
+                pixelSize=2.9,
+                cfa=constants.CFA_RGGB,
+                owner='Admin',
             )
             db.session.add(cam)
             db.session.commit()
 
-        config = base_config
+        config = dict(base_config)
+        config['LOCATION_LATITUDE'] = -34.9285
+        config['LOCATION_LONGITUDE'] = 138.6007
+        config['LOCATION_ELEVATION'] = 50
 
         error_q = Queue()
         capture_q = Queue()
@@ -103,3 +114,78 @@ def test_capture_worker_update_sensor_slot_labels(capture_worker_setup):
     # verify slots initialized
     assert len(worker.SENSOR_SLOTS) > 0
 
+
+def test_capture_worker_get_ccd_temperature(capture_worker_setup):
+    worker = capture_worker_setup
+    worker.indiclient = MagicMock()
+    worker.indiclient.getCcdTemperature.return_value = 18.5
+
+    temp = worker.getCcdTemperature()
+    assert temp == 18.5
+    assert worker.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] == 18.5
+
+
+def test_capture_worker_update_config_location(capture_worker_setup, app):
+    worker = capture_worker_setup
+    with app.app_context():
+        cam = IndiAllSkyDbCameraTable.query.first()
+        worker.camera_id = cam.id
+
+        worker.updateConfigLocation(-34.95, 138.62, 75)
+        assert worker.config['LOCATION_LATITUDE'] == -34.95
+        assert worker.config['LOCATION_LONGITUDE'] == 138.62
+        assert worker.config['LOCATION_ELEVATION'] == 75
+
+        # Verify task was added
+        task = IndiAllSkyDbTaskQueueTable.query.order_by(IndiAllSkyDbTaskQueueTable.id.desc()).first()
+        assert task is not None
+        assert task.data['action'] == 'setlocation'
+        assert task.data['latitude'] == -34.95
+
+
+
+def test_capture_worker_get_gps_position(capture_worker_setup, app):
+    worker = capture_worker_setup
+    with app.app_context():
+        cam = IndiAllSkyDbCameraTable.query.first()
+        worker.camera_id = cam.id
+        worker.config['GPS_ENABLE'] = True
+
+        worker.indiclient = MagicMock()
+        worker.indiclient.gps_device = True
+        worker.indiclient.getGpsPosition.return_value = (-34.9285, 138.6007, 50.0)
+
+        lat, lon, elev = worker.getGpsPosition()
+        assert lat == -34.9285
+        assert lon == 138.6007
+        assert elev == 50.0
+
+
+def test_capture_worker_get_telescope_ra_dec(capture_worker_setup):
+    worker = capture_worker_setup
+    worker.indiclient = MagicMock()
+    worker.indiclient.telescope_device = True
+    worker.indiclient.getTelescopeRaDec.return_value = (180.5, 45.2)
+
+    ra, dec = worker.getTelescopeRaDec()
+    assert ra == 180.5
+    assert dec == 45.2
+    assert worker.position_av[constants.POSITION_RA] == 180.5
+    assert worker.position_av[constants.POSITION_DEC] == 45.2
+
+
+def test_capture_worker_task_queue_generators(capture_worker_setup, app):
+    worker = capture_worker_setup
+    with app.app_context():
+        cam = IndiAllSkyDbCameraTable.query.first()
+
+        worker._generateDayTimelapse('20260906', cam.id)
+        worker._generateNightTimelapse('20260906', cam.id)
+        worker._generateNightKeogram('20260906', cam.id)
+        worker._generateDayKeogram('20260906', cam.id)
+        worker._uploadAllskyEndOfNight(cam.id)
+        worker._expireData(cam.id)
+
+        # Check tasks queued
+        tasks = IndiAllSkyDbTaskQueueTable.query.all()
+        assert len(tasks) >= 6
