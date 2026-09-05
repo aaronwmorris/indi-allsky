@@ -50,59 +50,61 @@ def libcamera_client(flask_app):
         }
     }
     image_q = Queue()
+    position_av = Array('d', [0.0] * 5)
     exposure_av = Array('f', [-1.0] * 7)
     gain_av = Array('f', [-1.0] * 10)
     binning_av = Array('i', [1] * 6)
     night_av = Array('i', [1, 0])
-    indi_status_av = Array('i', [0] * 5)
-    sqm_av = Array('f', [-1.0] * 5)
 
     with patch('shutil.which', return_value='/usr/bin/rpicam-still'):
         client = IndiClientLibCameraGeneric(
             config,
             image_q,
+            position_av,
             exposure_av,
             gain_av,
             binning_av,
             night_av,
-            indi_status_av,
-            sqm_av,
         )
+        client.findCcd()
     return client
 
 
 def test_libcamera_init(libcamera_client):
     assert libcamera_client.ccd_driver_exec in ['rpicam-still', 'libcamera-still']
     assert libcamera_client.camera_info['width'] == 0
+    assert libcamera_client.ccd_device is not None
 
 
 def test_libcamera_subclasses_camera_info(flask_app):
     config = {}
     image_q = Queue()
+    position_av = Array('d', [0.0] * 5)
     exposure_av = Array('f', [-1.0] * 7)
     gain_av = Array('f', [-1.0] * 10)
     binning_av = Array('i', [1] * 6)
     night_av = Array('i', [1, 0])
-    indi_status_av = Array('i', [0] * 5)
-    sqm_av = Array('f', [-1.0] * 5)
 
     with patch('shutil.which', return_value='/usr/bin/rpicam-still'):
         imx477 = IndiClientLibCameraImx477(
-            config, image_q, exposure_av, gain_av, binning_av, night_av, indi_status_av, sqm_av
+            config, image_q, position_av, exposure_av, gain_av, binning_av, night_av
         )
+        imx477.findCcd()
         assert imx477.camera_info['width'] == 4056
         assert imx477.camera_info['height'] == 3040
-        assert imx477.camera_info['cfa'] == 'RGGB'
+        assert imx477.camera_info['cfa'] == 'BGGR'
 
         imx708 = IndiClientLibCameraImx708(
-            config, image_q, exposure_av, gain_av, binning_av, night_av, indi_status_av, sqm_av
+            config, image_q, position_av, exposure_av, gain_av, binning_av, night_av
         )
+        imx708.findCcd()
         assert imx708.camera_info['width'] == 4608
         assert imx708.camera_info['height'] == 2592
 
         ov5647 = IndiClientLibCameraOv5647(
-            config, image_q, exposure_av, gain_av, binning_av, night_av, indi_status_av, sqm_av
+            config, image_q, position_av, exposure_av, gain_av, binning_av, night_av
         )
+        ov5647.findCcd()
         assert ov5647.camera_info['width'] == 2592
         assert ov5647.camera_info['height'] == 1944
 
