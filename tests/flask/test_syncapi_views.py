@@ -15,6 +15,31 @@ from indi_allsky.flask.models import IndiAllSkyDbUserTable, IndiAllSkyDbCameraTa
 def sync_user(flask_app, db):
     """Create a user with encrypted apikey for testing HMAC auth."""
     with flask_app.app_context():
+        # Ensure config and camera exist for BaseView initialization
+        from indi_allsky.flask.models import IndiAllSkyDbConfigTable
+        cfg = IndiAllSkyDbConfigTable.query.first()
+        if not cfg:
+            cfg = IndiAllSkyDbConfigTable(
+                data={'SYNCAPI': {'BASEURL': 'http://localhost'}},
+                level="1.0",
+                note='test',
+            )
+            db.session.add(cfg)
+
+        cam = IndiAllSkyDbCameraTable.query.first()
+        if not cam:
+            cam = IndiAllSkyDbCameraTable(
+                name="main_camera",
+                driver="indi_simulator_ccd",
+                friendlyName="Main Camera",
+                latitude=-34.9285,
+                longitude=138.6007,
+                elevation=50,
+                nightSunAlt=-6.0,
+                local=True,
+            )
+            db.session.add(cam)
+
         password_key = flask_app.config['PASSWORD_KEY']
         f = Fernet(password_key.encode())
         raw_api_key = "test_sync_secret_api_key"
@@ -32,11 +57,11 @@ def sync_user(flask_app, db):
                 apikey=encrypted_apikey,
             )
             db.session.add(user)
-            db.session.commit()
+        db.session.commit()
     return "syncuser", raw_api_key
 
 
-def test_syncapi_missing_auth_header(flask_app):
+def test_syncapi_missing_auth_header(flask_app, sync_user):
     client = flask_app.test_client()
     data = {
         'metadata': (io.BytesIO(b'{"test": 1}'), 'metadata.json')

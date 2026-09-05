@@ -6,26 +6,6 @@ from multiprocessing import Array, Queue
 from unittest.mock import MagicMock, patch
 import pytest
 
-# Mock PyIndi if not installed
-if 'PyIndi' not in sys.modules:
-    mock_pyindi = MagicMock()
-    mock_pyindi.BaseClient = object
-    mock_pyindi.IPS_IDLE = 0
-    mock_pyindi.IPS_OK = 1
-    mock_pyindi.IPS_BUSY = 2
-    mock_pyindi.IPS_ALERT = 3
-    mock_pyindi.ISS_OFF = 0
-    mock_pyindi.ISS_ON = 1
-    mock_pyindi.ISR_1OFMANY = 0
-    mock_pyindi.ISR_ATMOST1 = 1
-    mock_pyindi.ISR_NOFMANY = 2
-    mock_pyindi.INDI_NUMBER = 0
-    mock_pyindi.INDI_SWITCH = 1
-    mock_pyindi.INDI_TEXT = 2
-    mock_pyindi.INDI_LIGHT = 3
-    mock_pyindi.INDI_BLOB = 4
-    sys.modules['PyIndi'] = mock_pyindi
-
 from indi_allsky.camera.libcamera import (
     IndiClientLibCameraGeneric,
     IndiClientLibCameraImx477,

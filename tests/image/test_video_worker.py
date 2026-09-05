@@ -61,3 +61,58 @@ def test_video_worker_init(app, tmp_path):
         worker._shutdown = False
         worker.sigterm_handler_worker(signal.SIGTERM, None)
         assert worker._shutdown is True
+
+
+def test_video_worker_process_task_missing(app, base_config):
+    with app.app_context():
+        error_q = Queue()
+        video_q = Queue()
+        upload_q = Queue()
+        night_av = Array('i', [-1, -1])
+        binning_av = Array('i', [-1] * 6)
+
+        worker = VideoWorker(
+            idx=0,
+            config=base_config,
+            error_q=error_q,
+            video_q=video_q,
+            upload_q=upload_q,
+            night_av=night_av,
+            binning_av=binning_av,
+        )
+
+        # Missing task should log and return cleanly without uncaught exception
+        worker.processTask({'task_id': 999999})
+
+
+def test_video_worker_get_folder_files_by_ext(base_config, tmp_path):
+    error_q = Queue()
+    video_q = Queue()
+    upload_q = Queue()
+    night_av = Array('i', [-1, -1])
+    binning_av = Array('i', [-1] * 6)
+
+    worker = VideoWorker(
+        idx=0,
+        config=base_config,
+        error_q=error_q,
+        video_q=video_q,
+        upload_q=upload_q,
+        night_av=night_av,
+        binning_av=binning_av,
+    )
+
+    f1 = tmp_path / "img1.jpg"
+    f2 = tmp_path / "img2.png"
+    f3 = tmp_path / "video.mp4"
+    f1.touch()
+    f2.touch()
+    f3.touch()
+
+    file_list = []
+    worker._getFolderFilesByExt(str(tmp_path), file_list, extension_list=['jpg', 'png'])
+    filenames = [Path(f).name for f in file_list]
+    assert 'img1.jpg' in filenames
+    assert 'img2.png' in filenames
+    assert 'video.mp4' not in filenames
+

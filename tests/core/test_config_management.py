@@ -22,6 +22,21 @@ def test_config_bootstrap_and_level_update(flask_app, db):
 def test_config_update_level_execution(flask_app, db):
     iacu = IndiAllSkyConfigUtil()
     with flask_app.app_context():
+        from indi_allsky.flask.models import IndiAllSkyDbUserTable
+        from passlib.hash import argon2
+
+        system_user = IndiAllSkyDbUserTable.query.filter_by(username="system").first()
+        if not system_user:
+            system_user = IndiAllSkyDbUserTable(
+                username="system",
+                password=argon2.hash("SystemPassword123!"),
+                email="system@example.org",
+                name="System",
+                active=True,
+                admin=True,
+            )
+            db.session.add(system_user)
+
         # Insert older config level
         old_config = IndiAllSkyDbConfigTable(
             level="19990101.0",

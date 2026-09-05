@@ -3,7 +3,28 @@ import sys
 import tempfile
 import json
 from pathlib import Path
+from unittest.mock import MagicMock
 import pytest
+
+# Global PyIndi mock for environments without native INDI libraries
+if 'PyIndi' not in sys.modules:
+    mock_pyindi = MagicMock()
+    mock_pyindi.BaseClient = object
+    mock_pyindi.IPS_IDLE = 0
+    mock_pyindi.IPS_OK = 1
+    mock_pyindi.IPS_BUSY = 2
+    mock_pyindi.IPS_ALERT = 3
+    mock_pyindi.ISS_OFF = 0
+    mock_pyindi.ISS_ON = 1
+    mock_pyindi.ISR_1OFMANY = 0
+    mock_pyindi.ISR_ATMOST1 = 1
+    mock_pyindi.ISR_NOFMANY = 2
+    mock_pyindi.INDI_NUMBER = 0
+    mock_pyindi.INDI_SWITCH = 1
+    mock_pyindi.INDI_TEXT = 2
+    mock_pyindi.INDI_LIGHT = 3
+    mock_pyindi.INDI_BLOB = 4
+    sys.modules['PyIndi'] = mock_pyindi
 
 REPO_ROOT = Path(__file__).parent.parent
 if str(REPO_ROOT) not in sys.path:
@@ -62,7 +83,40 @@ def app(flask_app):
 def db(flask_app):
     """Provide a clean database session for each test."""
     with flask_app.app_context():
-        _db.create_all()
         yield _db
         _db.session.rollback()
         _db.session.remove()
+
+
+@pytest.fixture(autouse=True)
+def clean_database_tables(flask_app):
+    """Ensure a clean, isolated database state across tests."""
+    with flask_app.app_context():
+        yield
+        _db.session.rollback()
+        for table in reversed(_db.metadata.sorted_tables):
+            try:
+                _db.session.execute(table.delete())
+            except Exception:
+                pass
+        _db.session.commit()
+        _db.session.remove()
+
+
+@pytest.fixture
+def base_config(tmp_path):
+    """Return a standard full configuration dictionary for workers and processors."""
+    import copy
+    from indi_allsky.config import IndiAllSkyConfigBase
+
+    cfg = copy.deepcopy(dict(IndiAllSkyConfigBase._base_config))
+    cfg['IMAGE_FOLDER'] = str(tmp_path)
+    cfg['VARLIB_FOLDER'] = str(tmp_path)
+    cfg['LOCATION_LATITUDE'] = -34.9285
+    cfg['LOCATION_LONGITUDE'] = 138.6007
+    cfg['LOCATION_ELEVATION'] = 50
+    cfg['NIGHT_SUN_ALT_DEG'] = -6.0
+    cfg['CAMERA_INTERFACE'] = 'indi_simulator_ccd'
+    return cfg
+
+

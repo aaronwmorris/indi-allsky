@@ -8,7 +8,7 @@
     "prepare": "git config core.hooksPath githooks && git config merge.build_css.driver \"npm run build -- && cp indi_allsky/flask/static/css/dist.css %A\" && git config merge.build_css.name \"Rebuild Tailwind dist.css on merge conflict\" || true",
     "setup:venv": "python3 -m venv .venv --system-site-packages && .venv/bin/pip install --upgrade pip setuptools wheel && .venv/bin/pip install -r requirements/requirements_testing.txt",
     "postinstall": "npm run setup:venv",
-    "test": ".venv/bin/python -m pytest tests/ --cov=indi_allsky/ --cov-report=term",
+    "test": ".venv/bin/python -m pytest tests/ --cov=indi_allsky/ --cov-report=term -n auto",
     "tests": "npm run test",
     "test:core": ".venv/bin/python -m pytest tests/core/",
     "test:devices": ".venv/bin/python -m pytest tests/devices/",
