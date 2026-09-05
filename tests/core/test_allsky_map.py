@@ -65,7 +65,14 @@ def test_send_allsky_map_ping_success(tmp_path):
     fake_response.__enter__.return_value = fake_response
     fake_response.__exit__.return_value = None
 
-    with patch('urllib.request.urlopen', return_value=fake_response):
+    with patch('urllib.request.urlopen', return_value=fake_response) as mock_urlopen:
         ok, msg = send_allsky_map_ping(config, None)
         assert ok is True
         assert "Success" in msg
+        mock_urlopen.assert_called_once()
+        req = mock_urlopen.call_args[0][0]
+        assert req.get_header('X-api-key') == 'secret-key-123'
+        body = json.loads(req.data.decode('utf-8'))
+        assert body['lat'] == -34.9285
+        assert body['lng'] == 138.6007
+        assert 'imageBase64' in body

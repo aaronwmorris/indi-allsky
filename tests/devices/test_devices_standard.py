@@ -39,7 +39,9 @@ def test_dew_heater_standard():
         assert heater.state == 0
         assert heater.pin.value == 0
 
+        heater.pin.deinit = MagicMock()
         heater.deinit()
+        heater.pin.deinit.assert_called_once()
 
 
 def test_fan_standard():
@@ -60,7 +62,9 @@ def test_fan_standard():
         assert fan.state == 0
         assert fan.pin.value == 1
 
+        fan.pin.deinit = MagicMock()
         fan.deinit()
+        fan.pin.deinit.assert_called_once()
 
 
 def test_gpio_standard():
@@ -79,4 +83,6 @@ def test_gpio_standard():
         assert gpio.state == 0
         assert gpio.pin.value == 0
 
+        gpio.pin.deinit = MagicMock()
         gpio.deinit()
+        gpio.pin.deinit.assert_called_once()

@@ -27,6 +27,7 @@ def test_bme280_update():
     assert data['data'][0] == 22.5
     assert data['data'][1] == 45.0
     assert data['data'][2] == 1013.25
+    assert data['data'][3] == pytest.approx(10.0, abs=0.5)
     assert 'dew_point' in data
     assert 'heat_index' in data
 
@@ -39,7 +40,7 @@ def test_bme680_update():
     sensor = TempSensorBme680(config, "TestBme680", Array('i', [0]*10), Array('f', [0.0]*10))
     sensor.bme680 = MagicMock(
         temperature=20.0,
-        relative_humidity=50.0,
+        humidity=50.0,
         pressure=1000.0,
         gas=15000,
     )
@@ -49,6 +50,10 @@ def test_bme680_update():
     assert len(data['data']) == 5
     # Fahrenheit check (20C = 68F)
     assert data['data'][0] == 68.0
+    assert data['data'][1] == 50.0
+    assert data['data'][2] == pytest.approx(29.53, abs=0.01)
+    assert data['data'][3] == 15000
+    assert data['data'][4] == pytest.approx(48.7, abs=0.5)
 
 
 def test_tsl2561_update():
@@ -87,3 +92,4 @@ def test_dht_update():
     assert len(data['data']) == 3
     assert data['data'][0] == 18.0
     assert data['data'][1] == 60.0
+    assert data['data'][2] == pytest.approx(10.1, abs=0.5)

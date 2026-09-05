@@ -7,6 +7,9 @@ from indi_allsky.flask.models import (
     IndiAllSkyDbUserTable,
     IndiAllSkyDbCameraTable,
     IndiAllSkyDbConfigTable,
+    IndiAllSkyDbTaskQueueTable,
+    TaskQueueQueue,
+    TaskQueueState,
 )
 
 
@@ -43,21 +46,25 @@ def setup_camera_and_config_for_actionapi(flask_app, db):
 
 
 def test_login_optional_decorators(flask_app):
-    with flask_app.test_request_context():
-        # Test with LOGIN_DISABLED
-        flask_app.config['LOGIN_DISABLED'] = True
+    orig_login_disabled = flask_app.config.get('LOGIN_DISABLED', False)
+    try:
+        with flask_app.test_request_context():
+            # Test with LOGIN_DISABLED
+            flask_app.config['LOGIN_DISABLED'] = True
 
-        @login_optional
-        def dummy_view():
-            return "ok"
+            @login_optional
+            def dummy_view():
+                return "ok"
 
-        assert dummy_view() == "ok"
+            assert dummy_view() == "ok"
 
-        @login_optional_media
-        def dummy_media_view():
-            return "media_ok"
+            @login_optional_media
+            def dummy_media_view():
+                return "media_ok"
 
-        assert dummy_media_view() == "media_ok"
+            assert dummy_media_view() == "media_ok"
+    finally:
+        flask_app.config['LOGIN_DISABLED'] = orig_login_disabled
 
 
 def test_actionapi_pause_unpause(flask_app, db):
@@ -82,21 +89,34 @@ def test_actionapi_pause_unpause(flask_app, db):
     client = flask_app.test_client()
 
     with patch('time.sleep', return_value=None):
-        # Test pause action
+        # 1. Test pause action (creates task queue entry and returns 201)
         res_pause = client.post(
             '/indi-allsky/action/pause',
             json={'username': 'admin', 'password': 'testpass'},
         )
-        assert res_pause.status_code in (200, 201)
+        assert res_pause.status_code == 201
+        data_pause = res_pause.get_json()
+        assert 'message' in data_pause
 
-        # Test unpause action
-        res_unpause = client.post(
+        # Verify task was written to DB
+        with flask_app.app_context():
+            task = IndiAllSkyDbTaskQueueTable.query.filter_by(
+                queue=TaskQueueQueue.MAIN,
+                state=TaskQueueState.MANUAL,
+            ).first()
+            assert task is not None
+            assert task.data.get('action') == 'setpaused'
+            assert task.data.get('pause') is True
+
+        # 2. Test unpause when already unpaused (CAPTURE_PAUSE is False) -> 200
+        res_unpause_already = client.post(
             '/indi-allsky/action/unpause',
             json={'username': 'admin', 'password': 'testpass'},
         )
-        assert res_unpause.status_code in (200, 201)
+        assert res_unpause_already.status_code == 200
+        assert 'already unpaused' in res_unpause_already.get_json().get('message', '').lower()
 
-        # Test auth failure with bad password
+        # 3. Test auth failure with bad password -> 400
         res_bad = client.post(
             '/indi-allsky/action/pause',
             json={'username': 'admin', 'password': 'wrongpassword'},

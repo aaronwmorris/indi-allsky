@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
-import uuid
 import pytest
+from sqlalchemy.orm.exc import NoResultFound
 
 from indi_allsky.flask.miscDb import miscDb
-from indi_allsky.flask.models import NotificationCategory, IndiAllSkyDbCameraTable
+from indi_allsky.flask.models import NotificationCategory, IndiAllSkyDbNotificationTable
 
 
 def test_misc_db_camera(app):
@@ -39,7 +39,7 @@ def test_misc_db_state(app):
 
         # Remove state
         misc_db.removeState('TEST_KEY')
-        with pytest.raises(Exception):
+        with pytest.raises(NoResultFound):
             misc_db.getState('TEST_KEY')
 
 
@@ -65,6 +65,12 @@ def test_misc_db_notification(app):
 
         # Clear notification
         misc_db.clearNotification(NotificationCategory.GENERAL, 'system')
+        active_notice = IndiAllSkyDbNotificationTable.query.filter(
+            IndiAllSkyDbNotificationTable.item == 'system',
+            IndiAllSkyDbNotificationTable.category == NotificationCategory.GENERAL,
+            IndiAllSkyDbNotificationTable.expireDate > datetime.now(),
+        ).first()
+        assert active_notice is None
 
 
 def test_misc_db_long_term_keogram_data(app):

@@ -124,15 +124,6 @@ def test_pure_noise_never_succeeds(n_detections, seed):
     assert result['reason'] in ('too_few_matches', 'no_convergence')
 
 
-def test_no_convergence_reachable():
-    # pins the specific reason so a regression to always 'too_few_matches' is caught
-    rng = numpy.random.RandomState(1)
-    noise = numpy.column_stack([
-        rng.uniform(0, W, 6000), rng.uniform(0, H, 6000), rng.uniform(100, 5000, 6000)])
-    initial = numpy.array([30.0, 0.0, 0.0, 1600.0, 0.0, 0.0])
-    result = run_fit(noise, initial)
-    assert not result['success']
-    assert result['reason'] in ('too_few_matches', 'no_convergence')
 
 
 @pytest.mark.parametrize('n_detections', [500, 2000, 6000])

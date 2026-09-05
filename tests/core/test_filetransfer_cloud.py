@@ -53,7 +53,17 @@ def test_boto3_generic_connect_and_put(tmp_path):
             acl='public-read',
         )
 
-        mock_client.upload_file.assert_called_once()
+        mock_client.upload_file.assert_called_once_with(
+            str(test_file),
+            'mybucket',
+            'images/test.jpg',
+            ExtraArgs={
+                'ACL': 'public-read',
+                'StorageClass': 'STANDARD',
+                'ContentType': 'image/jpeg',
+                'CacheControl': 'max-age=7776000',
+            },
+        )
         transfer.close()
         mock_client.close.assert_called_once()
 
@@ -79,11 +89,13 @@ def test_requests_syncapi_v1(tmp_path):
     test_file.write_bytes(b"fake jpeg content")
 
     mock_resp = MagicMock(status_code=200, text='{"success": true}')
-    with patch('requests.put', return_value=mock_resp):
+    with patch('requests.put', return_value=mock_resp) as mock_put:
         transfer.put(
             local_file=str(test_file),
             empty_file=False,
             metadata={'camera_uuid': 'cam-123', 'name': 'test'},
         )
+        mock_put.assert_called_once()
+        assert mock_put.call_args[1]['verify'] is False
 
     transfer.close()

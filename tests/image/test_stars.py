@@ -30,13 +30,12 @@ def test_indi_allsky_stars_detection(test_image_with_stars):
     star_detector = IndiAllSkyStars(config, mask=mask)
 
     blobs = star_detector.detectObjects(test_image_with_stars.copy(), binning=1)
-    assert isinstance(blobs, list)
     assert len(blobs) >= 1
 
     # Test grayscale input
     gray_img = cv2.cvtColor(test_image_with_stars, cv2.COLOR_BGR2GRAY)
     blobs_gray = star_detector.detectObjects(gray_img.copy(), binning=1)
-    assert isinstance(blobs_gray, list)
+    assert len(blobs_gray) >= 1
 
 
 def test_indi_allsky_stars_sep_detection(test_image_with_stars):
@@ -52,10 +51,9 @@ def test_indi_allsky_stars_sep_detection(test_image_with_stars):
     sep_detector = IndiAllSkyStarsSEP(config, mask=mask)
 
     blobs = sep_detector.detectObjects(test_image_with_stars.copy(), binning=1)
-    assert isinstance(blobs, list)
     assert len(blobs) >= 1
 
     # Test grayscale
     gray_img = cv2.cvtColor(test_image_with_stars, cv2.COLOR_BGR2GRAY)
     blobs_gray = sep_detector.detectObjects(gray_img.copy(), binning=1)
-    assert isinstance(blobs_gray, list)
+    assert len(blobs_gray) >= 1

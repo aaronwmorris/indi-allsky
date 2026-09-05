@@ -55,5 +55,7 @@ def test_pycurl_syncapi_v1_connect_and_put(tmp_path):
             metadata={'camera_uuid': 'cam-1', 'time': 'now'},
         )
 
+        assert mock_curl.setopt.call_count >= 1
+        assert mock_curl.perform.call_count >= 1
         transfer.close()
         mock_curl.close.assert_called_once()

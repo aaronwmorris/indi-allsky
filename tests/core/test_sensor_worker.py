@@ -16,6 +16,7 @@ def sensor_worker_setup():
         },
         'DEW_HEATER': {
             'CLASSNAME': 'dew_heater_simulator',
+            'THOLD_ENABLE': True,
             'LEVEL_DEF': 25,
             'HOLD_SECONDS': 0,
             'TEMP_USER_VAR_SLOT': 'sensor_user_10',
@@ -26,6 +27,7 @@ def sensor_worker_setup():
         },
         'FAN': {
             'CLASSNAME': 'fan_simulator',
+            'THOLD_ENABLE': True,
             'ENABLE_NIGHT': True,
             'LEVEL_DEF': 30,
             'HOLD_SECONDS': 0,
@@ -78,17 +80,19 @@ def test_sensor_worker_initialization_and_control(sensor_worker_setup):
     worker.night_day_change()
     assert worker.gpio.state == 0
 
-    # Test update sensors
-    worker.update_sensors()
-
-    # Test dew heater thresholds
+    # Test dew heater thresholds (active at night)
+    worker.night = True
     worker.sensors_user_av[10] = 12.0  # temp
     worker.sensors_user_av[2] = 10.0   # dew point (diff = 2.0 <= THOLD_DIFF_HIGH)
-    worker.check_dew_heater_thresholds()
+    with patch.object(worker, 'set_dew_heater') as mock_set_dh:
+        worker.check_dew_heater_thresholds()
+        mock_set_dh.assert_called_with(worker.dh_level_high)
 
     # Test fan thresholds
     worker.sensors_user_av[10] = 35.0  # temp > target (25.0)
-    worker.check_fan_thresholds()
+    with patch.object(worker, 'set_fan') as mock_set_fan:
+        worker.check_fan_thresholds()
+        mock_set_fan.assert_called_with(100)
 
     # Test signal handlers
     worker.sigterm_handler_worker(15, None)

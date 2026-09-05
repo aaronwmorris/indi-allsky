@@ -42,4 +42,4 @@ def test_detect_lines_mono_and_split_stack():
     cv2.line(mono_img, (30, 150), (270, 150), 255, thickness=4)
 
     lines = detector.detectLines(mono_img.copy(), binning=1)
-    assert isinstance(lines, (list, np.ndarray))
+    assert len(lines) > 0

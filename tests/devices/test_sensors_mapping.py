@@ -43,8 +43,61 @@ def test_format_named_sensors():
 
 
 def test_get_latest_sensors_payload(flask_app, db):
+    from indi_allsky.flask.models import IndiAllSkyDbImageTable
+    db.session.query(IndiAllSkyDbImageTable).delete()
+    db.session.commit()
+
     payload = get_latest_sensors_payload({})
     assert isinstance(payload, dict)
     assert 'sensors' in payload
     assert 'sensor_user' in payload
     assert 'sensor_temp' in payload
+    assert payload['last_update'] is None
+    assert payload['last_update_age_s'] is None
+
+
+def test_get_latest_sensors_payload_with_image_record(flask_app, db):
+    from datetime import datetime, date
+    from indi_allsky.flask.models import IndiAllSkyDbCameraTable, IndiAllSkyDbImageTable
+
+    cam = IndiAllSkyDbCameraTable(name="TestCam", uuid="test-cam-uuid")
+    db.session.add(cam)
+    db.session.commit()
+
+    now = datetime.now()
+    img = IndiAllSkyDbImageTable(
+        camera_id=cam.id,
+        filename="/tmp/test.jpg",
+        createDate=now,
+        dayDate=date.today(),
+        night=True,
+        exposure=5.0,
+        gain=100.0,
+        binmode=1,
+        adu=50.0,
+        data={
+            'sensor_user_0': 21.5,
+            'sensor_user_1': 55.0,
+            'sensor_temp_0': 21.5,
+        },
+    )
+    db.session.add(img)
+    db.session.commit()
+
+    config = {
+        'TEMP_SENSOR': {
+            'A_CLASSNAME': 'sensor_data_generator',
+            'A_LABEL': 'Ambient Sensor',
+            'A_USER_VAR_SLOT': 'sensor_user_0',
+        }
+    }
+
+    payload = get_latest_sensors_payload(config)
+    assert payload['last_update'] == str(now)
+    assert payload['last_update_age_s'] is not None
+    assert payload['last_update_age_s'] >= 0
+    assert payload['sensor_user'][0] == 21.5
+    assert payload['sensor_user'][1] == 55.0
+    assert payload['sensor_temp'][0] == 21.5
+    assert 'sensor_a_add' in payload['sensors']
+    assert payload['sensors']['sensor_a_add']['value'] == 21.5

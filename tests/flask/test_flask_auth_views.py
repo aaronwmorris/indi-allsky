@@ -38,7 +38,9 @@ def setup_camera_and_config(flask_app, db):
         config_entry = IndiAllSkyDbConfigTable.query.first()
         if not config_entry:
             config_entry = IndiAllSkyDbConfigTable(
-                config={'WEBSITE': {'TITLE': 'indi-allsky'}},
+                data={'WEBSITE': {'TITLE': 'indi-allsky'}},
+                level=1,
+                note='test',
             )
             db.session.add(config_entry)
 
@@ -95,3 +97,10 @@ def test_auth_login_post_success(flask_app, db):
     data = response.get_json()
     assert "redirect" in data
     assert "/indi-allsky" in data["redirect"]
+
+
+def test_auth_logout(flask_app):
+    client = flask_app.test_client()
+    response = client.get('/indi-allsky/logout')
+    # Logout redirects to login page
+    assert response.status_code in (200, 302)

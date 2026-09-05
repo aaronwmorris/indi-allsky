@@ -63,8 +63,11 @@ def test_moon_overlay_apply():
     # Apply waxing crescent (cycle 15%, illumination phase 20%) - modifies target_img in place
     moon_overlay.apply(target_img, moon_cycle_percent=15.0, moon_phase=20.0)
     assert target_img.shape == (300, 300, 3)
+    assert np.any(target_img > 0)
 
     # Apply full moon (cycle 50%, illumination phase 100%)
     target_img_full = np.zeros((300, 300, 3), dtype=np.uint8)
     moon_overlay.apply(target_img_full, moon_cycle_percent=50.0, moon_phase=100.0)
     assert target_img_full.shape == (300, 300, 3)
+    assert np.any(target_img_full > 0)
+    assert target_img_full.sum() > target_img.sum()

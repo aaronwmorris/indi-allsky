@@ -10,21 +10,6 @@ from indi_allsky.filetransfer.exceptions import (
 )
 
 
-def test_filetransfer_exceptions():
-    with pytest.raises(AuthenticationFailure):
-        raise AuthenticationFailure("Auth failed")
-
-    with pytest.raises(ConnectionFailure):
-        raise ConnectionFailure("Connect failed")
-
-    with pytest.raises(TransferFailure):
-        raise TransferFailure("Transfer failed")
-
-    with pytest.raises(PermissionFailure):
-        raise PermissionFailure("Perm failed")
-
-    with pytest.raises(CertificateValidationFailure):
-        raise CertificateValidationFailure("Cert failed")
 
 
 def test_generic_file_transfer():

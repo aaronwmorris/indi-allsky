@@ -30,6 +30,8 @@ def test_draw_main_color(draw_config):
 
     assert res.shape == (100, 100, 3)
     assert res.dtype == np.uint8
+    # Drawing modified pixels with non-zero color
+    assert np.any(res > 0)
 
 
 def test_draw_main_mono_and_disabled():
@@ -55,3 +57,4 @@ def test_draw_main_mono_and_disabled():
     mono_img = np.full((60, 60), 100, dtype=np.uint8)
     res = drawer.main(mono_img, binning=1)
     assert res.shape == (60, 60)
+    assert not np.array_equal(res, mono_img)

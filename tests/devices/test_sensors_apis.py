@@ -25,7 +25,6 @@ from indi_allsky.devices.sensors.adafruit_mlx90615 import MLX90615
 def test_temp_api_deepskydad_update():
     config = {}
     sensor = TempApiDeepSkyDad(config, "TestDSD", Array('i', [0]*10), Array('f', [0.0]*10))
-    sensor.url = "http://localhost:8080/ace_api/overlays"
 
     mock_resp = MagicMock()
     mock_resp.status_code = 200
@@ -43,9 +42,7 @@ def test_temp_api_deepskydad_update():
     with patch('requests.get', return_value=mock_resp):
         data = sensor.update()
         assert 'data' in data
-        assert len(data['data']) == 8
-        assert data['data'][0] == 1
-        assert data['data'][1] == 30.5
+        assert data['data'] == (1, 30.5, 0, 18.2, 1, 240.0, 35.0, 28.0)
 
         # Calling update again before next_run returns cached data without calling requests.get
         data_cached = sensor.update()

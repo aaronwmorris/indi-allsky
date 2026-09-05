@@ -100,26 +100,3 @@ def test_startrails_generator_process(tmp_path):
     # The max pixel composite should contain the bright stars
     assert np.all(trail_gen.trail_image[20, 20] >= 200)
     assert np.all(trail_gen.trail_image[21, 21] >= 220)
-
-
-# ==============================================================================
-# Line / Meteor Detection Tests
-# ==============================================================================
-
-def test_detect_lines_basic():
-    config = {
-        'DETECT_METEORS_THOLD': 30,
-    }
-    mask = {1: np.full((120, 120), 255, dtype=np.uint8)}
-    detector = IndiAllskyDetectLines(config=config, mask=mask)
-
-    # Blank frame - no lines
-    blank = np.zeros((120, 120, 3), dtype=np.uint8)
-    detected_none = detector.detectLines(blank, binning=1)
-    assert detected_none == []
-
-    # Frame with drawn bright line
-    line_frame = np.zeros((120, 120, 3), dtype=np.uint8)
-    cv2.line(line_frame, (20, 20), (100, 100), (255, 255, 255), 2)
-    detected = detector.detectLines(line_frame, binning=1)
-    assert isinstance(detected, (list, np.ndarray))
