@@ -16,8 +16,15 @@ if 'digitalio' not in sys.modules:
     mock_dio.Direction.OUTPUT = 'OUTPUT'
     mock_dio.DigitalInOut.side_effect = lambda *a, **kw: MagicMock()
     sys.modules['digitalio'] = mock_dio
-else:
-    sys.modules['digitalio'].DigitalInOut.side_effect = lambda *a, **kw: MagicMock()
+
+if 'serial' not in sys.modules:
+    try:
+        import serial  # noqa: F401
+    except ImportError:
+        mock_serial = MagicMock()
+        mock_serial.SerialException = type('SerialException', (Exception,), {})
+        mock_serial.Serial = MagicMock()
+        sys.modules['serial'] = mock_serial
 
 from indi_allsky.devices.focusers.focuser_28byj import focuser_28byj_64, focuser_28byj_16
 from indi_allsky.devices.focusers.focuser_a4988 import focuser_a4988_nema17_full, focuser_a4988_nema17_half
@@ -25,7 +32,10 @@ from indi_allsky.devices.focusers.focuserSerial28byj import FocuserSerial28byj_6
 
 
 def test_focuser_28byj_64_move():
-    with patch('time.sleep', return_value=None):
+    mock_pins = [MagicMock(name=f'pin_{i}') for i in range(4)]
+    pin_iter = iter(mock_pins)
+    with patch('time.sleep', return_value=None), \
+         patch('digitalio.DigitalInOut', side_effect=lambda *a, **kw: next(pin_iter)):
         focuser = focuser_28byj_64(
             {},
             pin_names=['D1', 'D2', 'D3', 'D4'],
@@ -55,7 +65,10 @@ def test_focuser_28byj_64_move():
 
 
 def test_focuser_28byj_16_move():
-    with patch('time.sleep', return_value=None):
+    mock_pins = [MagicMock(name=f'pin_{i}') for i in range(4)]
+    pin_iter = iter(mock_pins)
+    with patch('time.sleep', return_value=None), \
+         patch('digitalio.DigitalInOut', side_effect=lambda *a, **kw: next(pin_iter)):
         focuser = focuser_28byj_16(
             {},
             pin_names=['D1', 'D2', 'D3', 'D4'],
@@ -71,7 +84,8 @@ def test_focuser_28byj_16_move():
 
 
 def test_focuser_a4988_move():
-    with patch('time.sleep', return_value=None):
+    with patch('time.sleep', return_value=None), \
+         patch('digitalio.DigitalInOut', side_effect=lambda *a, **kw: MagicMock()):
         focuser_full = focuser_a4988_nema17_full(
             {},
             pin_names=['D1', 'D2', 'D3'],
@@ -95,12 +109,16 @@ def test_focuser_serial_28byj_move(tmp_path):
     fake_port = tmp_path / "ttyUSB0"
     fake_port.touch()
 
+    mock_serial_inst = MagicMock()
+    mock_serial_cls = MagicMock()
+    mock_serial_cls.return_value.__enter__.return_value = mock_serial_inst
+    mock_serial_mod = MagicMock()
+    mock_serial_mod.Serial = mock_serial_cls
+    mock_serial_mod.SerialException = Exception
+
     with patch('pathlib.Path.exists', return_value=True), \
          patch('time.sleep', return_value=None), \
-         patch('serial.Serial') as mock_serial_cls:
-
-        mock_serial_inst = MagicMock()
-        mock_serial_cls.return_value.__enter__.return_value = mock_serial_inst
+         patch.dict(sys.modules, {'serial': mock_serial_mod}):
 
         focuser = FocuserSerial28byj_64(
             {},

@@ -1,6 +1,16 @@
+import sys
+from unittest.mock import MagicMock
 from datetime import datetime, timedelta, timezone
 import pytest
 from passlib.hash import argon2
+
+if 'gunicorn' not in sys.modules:
+    try:
+        import gunicorn  # noqa: F401
+    except ImportError:
+        mock_gunicorn = MagicMock()
+        mock_gunicorn.__version__ = '21.2.0'
+        sys.modules['gunicorn'] = mock_gunicorn
 
 from indi_allsky import constants
 from indi_allsky.flask.models import (

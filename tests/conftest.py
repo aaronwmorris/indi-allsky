@@ -6,7 +6,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 import pytest
 
-# Global PyIndi mock for environments without native INDI libraries
+# Global mocks for environments without native/optional libraries (e.g. CI)
 if 'PyIndi' not in sys.modules:
     mock_pyindi = MagicMock()
     mock_pyindi.BaseClient = object
@@ -25,6 +25,23 @@ if 'PyIndi' not in sys.modules:
     mock_pyindi.INDI_LIGHT = 3
     mock_pyindi.INDI_BLOB = 4
     sys.modules['PyIndi'] = mock_pyindi
+
+if 'gunicorn' not in sys.modules:
+    try:
+        import gunicorn  # noqa: F401
+    except ImportError:
+        mock_gunicorn = MagicMock()
+        mock_gunicorn.__version__ = '21.2.0'
+        sys.modules['gunicorn'] = mock_gunicorn
+
+if 'serial' not in sys.modules:
+    try:
+        import serial  # noqa: F401
+    except ImportError:
+        mock_serial = MagicMock()
+        mock_serial.SerialException = type('SerialException', (Exception,), {})
+        mock_serial.Serial = MagicMock()
+        sys.modules['serial'] = mock_serial
 
 REPO_ROOT = Path(__file__).parent.parent
 if str(REPO_ROOT) not in sys.path:
