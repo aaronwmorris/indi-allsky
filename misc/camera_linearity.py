@@ -351,8 +351,19 @@ class CameraLinearityTest(object):
 
 
         if len(i_ref.hdulist[0].data.shape) == 2:
-            # mono (or bayered)
+            # mono or bayered
             image = i_ref.hdulist[0].data
+
+            if i_ref.image_bayerpat in ['RGGB', 'BGGR']:
+                # bayered
+                image = image[0::2, 1::2]  # extract first set of green pixels for calculations (reduces resolution by half)
+            elif i_ref.image_bayerpat in ['GRBG', 'GRBG']:
+                # bayered
+                image = image[0::2, 0::2]  # extract first set of green pixels for calculations (reduces resolution by half)
+            else:
+                # mono
+                pass
+
         else:
             # color
             image = i_ref.hdulist[0].data[1]  # use green channel for calculations
