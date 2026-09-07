@@ -301,6 +301,8 @@ function VirtualSky(input){
 	this.base = "";
 	this.az_step = 0;
 	this.az_off = 0;
+	this.fisheye_altitude = 90;
+	this.fisheye_azimuth = 0;
 	this.ra_off = 0;
 	this.dc_off = 0;
 	this.fov = 30;
@@ -339,10 +341,19 @@ function VirtualSky(input){
 		},
 		'fisheye':{
 			title: 'Fisheye polar projection',
-			azel2xy: function(az,el,w,h){
+			azel2xy: function(az,el,w,h,unclipped){
+				// Visibility uses the real horizon; lens coordinates only govern projection/clipping.
+				var horizonEl = el;
+				if(this.fisheye_altitude !== 90){
+					// Undo image roll before tilting in the geographic frame, then reapply it.
+					var camera = this.fisheyeAltAz(az + this.az_off*this.d2r,el);
+					az = camera[0] - this.az_off*this.d2r;
+					el = camera[1];
+					if(el < 0 && !unclipped) return {x:NaN,y:NaN,el:horizonEl};
+				}
 				var radius = h/2;
 				var r = radius*Math.sin(((Math.PI/2)-el)/2)/0.70710678;	// the field of view is bigger than 180 degrees
-				return {x:(w/2-r*Math.sin(az)),y:(radius-r*Math.cos(az)),el:el};
+				return {x:(w/2-r*Math.sin(az)),y:(radius-r*Math.cos(az)),el:horizonEl};
 			},
 			xy2azel: function(x, y, w, h) {
 				var radius = h/2;
@@ -1066,6 +1077,8 @@ VirtualSky.prototype.init = function(d){
 	if(is(d.latitude,n)) this.setLatitude(d.latitude);
 	if(is(d.clock,s)) this.updateClock(new Date(d.clock.replace(/%20/g,' ')));
 	if(is(d.az,n)) this.az_off = (d.az%360)-180;
+	if(is(d.fisheye_altitude,n) && d.fisheye_altitude >= 0 && d.fisheye_altitude <= 90) this.fisheye_altitude = d.fisheye_altitude;
+	if(is(d.fisheye_azimuth,n) && isFinite(d.fisheye_azimuth)) this.fisheye_azimuth = d.fisheye_azimuth;
 	if(is(d.ra,n)) this.setRA(d.ra);
 	if(is(d.dec,n)) this.setDec(d.dec);
 	if(is(d.planets,s)) this.file.planets = d.planets;
@@ -2150,6 +2163,23 @@ VirtualSky.prototype.ecliptic2xy = function(l,b,LST){
 	return 0;
 };
 
+// Geographic az/el -> lens az/el (radians); pointing options are in degrees.
+// Rotate the along/up plane about the axis across the pointing heading.
+// Adding heading back retains the existing north reference for image roll.
+// inverse=true reverses the rotation for pixel -> sky coordinates.
+// Keep this in sync with lens_solver.projection.cameraAltAz.
+VirtualSky.prototype.fisheyeAltAz = function(az,el,inverse){
+	if(this.fisheye_altitude === 90) return [az,el];
+	var tilt = (90-this.fisheye_altitude)*this.d2r*(inverse ? -1 : 1);
+	var heading = this.fisheye_azimuth*this.d2r;
+	var across = Math.cos(el)*Math.sin(az-heading);
+	var along = Math.cos(el)*Math.cos(az-heading);
+	var up = Math.sin(el);
+	var forward = Math.cos(tilt)*along-Math.sin(tilt)*up;
+	var axis = Math.sin(tilt)*along+Math.cos(tilt)*up;
+	return [heading+Math.atan2(across,forward),Math.atan2(axis,Math.sqrt(across*across+forward*forward))];
+};
+
 // Convert RA,Dec -> X,Y
 // Inputs: RA (rad), Dec (rad)
 // Returns [x, y (,elevation)]
@@ -2176,6 +2206,10 @@ VirtualSky.prototype.xy2radec = function(x, y){
 		}
 
 		var coords = [azel[1], azel[0] + (this.az_off*this.d2r)];
+		if(this.projection.id === 'fisheye' && this.fisheye_altitude !== 90){
+			var horizon = this.fisheyeAltAz(coords[1],coords[0],true);
+			coords = [horizon[1],horizon[0]];
+		}
 
 		return this.horizon2coord(coords);
 	} else {
@@ -3164,7 +3198,17 @@ VirtualSky.prototype.drawCardinalPoints = function(){
 			r = (m.width > fontsize) ? m.width/2 : fontsize/2;
 		}else r = fontsize/2;
 		ang = (azs[i]-this.az_off)*this.d2r;
-		if(this.polartype){
+		if(this.projection.id === 'fisheye' && this.fisheye_altitude !== 90){
+			// Keep off-camera horizon labels as rim direction cues. Stars still
+			// use the clipped projection; their positions must not move.
+			pos = this.azel2xy(ang,0,this.wide,this.tall,true);
+			if(!isFinite(pos.x) || !isFinite(pos.y)) continue;
+			f = Math.min(1,(this.tall/2-r*2)/Math.hypot(pos.x-this.wide/2,pos.y-this.tall/2));
+			pos.x = this.wide/2 + (pos.x-this.wide/2)*f;
+			pos.y = this.tall/2 + (pos.y-this.tall/2)*f;
+			x = Math.max(r,Math.min(this.wide-r*2,pos.x-r));
+			y = Math.max(fontsize,Math.min(this.tall-r,pos.y));
+		}else if(this.polartype){
 			f = (this.tall/2) - r*1.5;
 			x = -f*Math.sin(ang);
 			y = -f*Math.cos(ang);

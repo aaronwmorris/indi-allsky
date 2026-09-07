@@ -3102,12 +3102,12 @@ def VIRTUALSKY__IMAGE_CIRCLE_DIAMETER_validator(form, field):
 
 
 def VIRTUALSKY__LATITUDE_OFFSET_validator(form, field):
-    if not isinstance(field.data, (int, float)):
+    if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
         raise ValidationError('Please enter a valid number')
 
 
 def VIRTUALSKY__LONGITUDE_OFFSET_validator(form, field):
-    if not isinstance(field.data, (int, float)):
+    if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
         raise ValidationError('Please enter a valid number')
 
 
@@ -5049,6 +5049,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TEST_CAMERA__ROTATING_STAR_FACTOR   = FloatField('Test Camera - Rotating Star Rotation Factor', validators=[DataRequired(), TEST_CAMERA__ROTATING_STAR_FACTOR_validator])
     TEST_CAMERA__BUBBLE_COUNT           = IntegerField('Test Camera - Bubble Count', validators=[DataRequired(), TEST_CAMERA__BUBBLE_COUNT_validator])
     VIRTUALSKY__MAGNITUDE               = FloatField('VirtualSky Limiting Magnitude', validators=[VIRTUALSKY__MAGNITUDE_validator], widget=NumberInput(step=0.25))
+    VIRTUALSKY__POINTING_AZIMUTH        = FloatField('Pointing Azimuth', default=0.0, validators=[NumberRange(min=0.0, max=360.0)], widget=NumberInput(min=0, max=360, step=0.1))
     VIRTUALSKY__CONSTELLATIONS          = BooleanField('Show Constellations')
     VIRTUALSKY__CONSTELLATIONLABELS     = BooleanField('Constellation Labels')
     VIRTUALSKY__SHOWSTARS               = BooleanField('Show Stars')
@@ -10456,6 +10457,7 @@ class IndiAllskyImageCircleHelperForm(FlaskForm):
 
 
 class IndiAllskyVirtualSkyHelperForm(FlaskForm):
+    POINTING_AZIMUTH        = FloatField('Pointing Azimuth', default=0.0, validators=[NumberRange(min=0.0, max=360.0)], widget=NumberInput(min=0, max=360, step=0.1))
     AZIMUTH_ANGLE           = FloatField('Azimuth Angle', widget=NumberInput(min=0.0, max=359.9, step=0.1))
     LATITUDE_OFFSET         = FloatField('Latitude Offset', widget=NumberInput(step=0.25))
     LONGITUDE_OFFSET        = FloatField('Longitude Offset', widget=NumberInput(step=0.25))

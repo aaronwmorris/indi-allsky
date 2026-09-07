@@ -242,6 +242,12 @@
                     <a href="https://github.com/aaronwmorris/indi-allsky/wiki/VirtualSky" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Wiki Reference</a>
                 </div>
 
+                <div class="tw:flex tw:flex-col tw:gap-1">
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__POINTING_AZIMUTH.label.text }}</span>
+                    {{ form_config.VIRTUALSKY__POINTING_AZIMUTH(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                    <span class="tw:text-[0.625rem] tw:text-base-content/40">For tilted cameras: lens pointing direction (0° north, 90° east), using Lens Altitude above. Ignored at 90° altitude. Azimuth still controls image rotation.</span>
+                    <div id="VIRTUALSKY__POINTING_AZIMUTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                </div>
                 <!-- Offsets Latitude & Longitude -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">

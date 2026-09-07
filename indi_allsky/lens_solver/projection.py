@@ -51,12 +51,36 @@ def predictAltAz(catalog, latitude, longitude, obstime_unix):
     return alt, numpy.mod(az, 2.0 * numpy.pi)
 
 
-def projectToPixels(alt_rad, az_rad, params, image_width, image_height, mirror=False):
+def cameraAltAz(alt_rad, az_rad, lens_altitude=90.0, pointing_azimuth=0.0):
+    """Rotate geographic alt/az (radians) into lens coordinates (radians).
+
+    Lens altitude is degrees above the horizon; pointing azimuth is degrees
+    east of north. Image roll is applied separately by projectToPixels.
+    Keep this rotation in sync with VirtualSky.fisheyeAltAz in virtualsky.js.
+    """
+    # Preserve the exact legacy projection, including cameras without metadata.
+    if lens_altitude is None or lens_altitude == 90.0:
+        return alt_rad, az_rad
+    tilt = numpy.radians(90.0 - lens_altitude)
+    heading = numpy.radians(pointing_azimuth)
+    across = numpy.cos(alt_rad) * numpy.sin(az_rad - heading)
+    along = numpy.cos(alt_rad) * numpy.cos(az_rad - heading)
+    up = numpy.sin(alt_rad)
+    # Tilt in the along/up plane; the component across the heading is unchanged.
+    forward = numpy.cos(tilt) * along - numpy.sin(tilt) * up
+    axis = numpy.sin(tilt) * along + numpy.cos(tilt) * up
+    return (numpy.arctan2(axis, numpy.hypot(across, forward)),
+            heading + numpy.arctan2(across, forward))
+
+
+def projectToPixels(alt_rad, az_rad, params, image_width, image_height, mirror=False,
+                    lens_altitude=90.0, pointing_azimuth=0.0):
     """Project alt/az to pixels via VirtualSky's equisolid fisheye.
     params: [azimuth_deg, lat_off_deg, long_off_deg, diameter_px,
     offset_x_px, offset_y_px]; the lat/long offsets (1, 2) are applied by
     the caller before predictAltAz, not here.
     """
+    alt_rad, az_rad = cameraAltAz(alt_rad, az_rad, lens_altitude, pointing_azimuth)
     azimuth_deg = params[0]
     diameter = params[3]
     offset_x = params[4]

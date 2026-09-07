@@ -512,6 +512,7 @@ class VirtualSkyView(TemplateView):
 
         data = {
             'AZIMUTH_ANGLE'         : self.camera.az,
+            'POINTING_AZIMUTH'      : self.camera.data.get('vs_pointing_azimuth', 0.0),
             'IMAGE_CIRCLE_DIAMETER' : self.camera.data.get('vs_image_circle_diameter', 3500),
             'LATITUDE_OFFSET'       : self.camera.data.get('vs_latitude_offset', 0.0),
             'LONGITUDE_OFFSET'      : self.camera.data.get('vs_longitude_offset', 0.0),
@@ -529,6 +530,7 @@ class VirtualSkyView(TemplateView):
         }
 
         context['form_virtualsky'] = IndiAllskyVirtualSkyHelperForm(data=data)
+        context['camera_altitude'] = self.camera.alt if self.camera.alt is not None else 90.0
 
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
@@ -3016,6 +3018,7 @@ class ConfigView(FormView):
             'TEST_CAMERA__ROTATING_STAR_FACTOR' : self.indi_allsky_config.get('TEST_CAMERA', {}).get('ROTATING_STAR_FACTOR', 1.0),
             'TEST_CAMERA__BUBBLE_COUNT'      : self.indi_allsky_config.get('TEST_CAMERA', {}).get('BUBBLE_COUNT', 1000),
             'VIRTUALSKY__MAGNITUDE'          : self.indi_allsky_config.get('VIRTUALSKY', {}).get('MAGNITUDE', 6.0),
+            'VIRTUALSKY__POINTING_AZIMUTH'   : self.indi_allsky_config.get('VIRTUALSKY', {}).get('POINTING_AZIMUTH', 0.0),
             'VIRTUALSKY__CONSTELLATIONS'     : self.indi_allsky_config.get('VIRTUALSKY', {}).get('CONSTELLATIONS', True),
             'VIRTUALSKY__CONSTELLATIONLABELS': self.indi_allsky_config.get('VIRTUALSKY', {}).get('CONSTELLATIONLABELS', False),
             'VIRTUALSKY__SHOWSTARS'          : self.indi_allsky_config.get('VIRTUALSKY', {}).get('SHOWSTARS', True),
@@ -4102,6 +4105,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEST_CAMERA']['ROTATING_STAR_FACTOR']  = float(request.json['TEST_CAMERA__ROTATING_STAR_FACTOR'])
         self.indi_allsky_config['TEST_CAMERA']['BUBBLE_COUNT']          = int(request.json['TEST_CAMERA__BUBBLE_COUNT'])
         self.indi_allsky_config['VIRTUALSKY']['MAGNITUDE']              = float(request.json['VIRTUALSKY__MAGNITUDE'])
+        self.indi_allsky_config['VIRTUALSKY']['POINTING_AZIMUTH']       = float(request.json.get('VIRTUALSKY__POINTING_AZIMUTH', self.indi_allsky_config['VIRTUALSKY'].get('POINTING_AZIMUTH', 0.0)))
         self.indi_allsky_config['VIRTUALSKY']['CONSTELLATIONS']         = bool(request.json['VIRTUALSKY__CONSTELLATIONS'])
         self.indi_allsky_config['VIRTUALSKY']['CONSTELLATIONLABELS']    = bool(request.json['VIRTUALSKY__CONSTELLATIONLABELS'])
         self.indi_allsky_config['VIRTUALSKY']['SHOWSTARS']              = bool(request.json['VIRTUALSKY__SHOWSTARS'])
@@ -8030,6 +8034,8 @@ class AjaxLensSolverView(BaseView):
 
 
     def dispatch_request(self):
+        if not isinstance(request.json, dict):
+            return jsonify({'success': False, 'message': 'Expected a JSON object'}), 400
         action = str(request.json.get('action', ''))
 
         if action == 'solve':
@@ -8046,9 +8052,13 @@ class AjaxLensSolverView(BaseView):
             return jsonify({'success': False, 'message': error}), 400
 
         try:
+            if isinstance(request.json['camera_id'], bool) or isinstance(request.json['timestamp'], bool):
+                raise ValueError
             camera_id = int(request.json['camera_id'])
             timestamp = int(request.json['timestamp'])
-        except (KeyError, TypeError, ValueError):
+            if not 0 < camera_id < 2**63:
+                raise ValueError  # prevent integer overflow in the database driver
+        except (KeyError, TypeError, ValueError, OverflowError):
             return jsonify({'success': False, 'message': 'camera_id and timestamp required'}), 400
 
         # explicit check: an unknown camera_id would otherwise fall through to a FakeCamera (lat/long 0.0) and solve silently wrong
@@ -8065,9 +8075,9 @@ class AjaxLensSolverView(BaseView):
         # resolve by exact camera + timestamp (NEVER "latest"); a huge int can raise OverflowError/OSError, not just ValueError
         try:
             ts_dt = datetime.fromtimestamp(timestamp)
+            ts_dt_end = ts_dt + timedelta(seconds=1)
         except (OverflowError, OSError, ValueError):
             return jsonify({'success': False, 'message': 'Invalid timestamp'}), 400
-        ts_dt_end = ts_dt + timedelta(seconds=1)
 
         image_entry = IndiAllSkyDbImageTable.query\
             .filter(IndiAllSkyDbImageTable.camera_id == camera_id)\
@@ -8097,7 +8107,10 @@ class AjaxLensSolverView(BaseView):
             }), 429, {'Retry-After': str(self.LOCK_RETRY_AFTER_S)}
 
         try:
-            result = solver.solve(image_file, latitude, longitude, obstime_unix, values)
+            result = solver.solve(
+                image_file, latitude, longitude, obstime_unix, values,
+                lens_altitude=values.get('LENS_ALTITUDE', self.camera.alt),
+                pointing_azimuth=values.get('POINTING_AZIMUTH', self.camera.data.get('vs_pointing_azimuth', 0.0)))
         except Exception:  # noqa: BLE001
             # never return a raw exception string to the client
             app.logger.exception('Lens solver failed')
@@ -8113,11 +8126,13 @@ class AjaxLensSolverView(BaseView):
             if not current_user.is_admin:
                 return jsonify({'success': False, 'message': 'You do not have permission to make configuration changes'}), 403
 
-        values, error = parseSolverRequestValues(request.json)
+        values, error = parseSolverRequestValues(request.json, for_save=True)
         if error:
             return jsonify({'success': False, 'message': error}), 400
 
-        reload_on_save = bool(request.json.get('RELOAD_ON_SAVE', False))
+        reload_on_save = request.json.get('RELOAD_ON_SAVE', False)
+        if not isinstance(reload_on_save, bool):
+            return jsonify({'success': False, 'message': 'RELOAD_ON_SAVE must be a boolean'}), 400
 
         applySolvedValuesToConfig(self.indi_allsky_config, values)
 

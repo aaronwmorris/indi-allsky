@@ -1077,6 +1077,7 @@ class CaptureWorker(Process):
 
 
         # virtualsky
+        camera_metadata['data']['vs_pointing_azimuth'] = self.config.get('VIRTUALSKY', {}).get('POINTING_AZIMUTH', 0.0)
         camera_metadata['data']['vs_magnitude'] = self.config.get('VIRTUALSKY', {}).get('MAGNITUDE', 6.0)
         camera_metadata['data']['vs_constellations'] = self.config.get('VIRTUALSKY', {}).get('CONSTELLATIONS', True)
         camera_metadata['data']['vs_constellationlabels'] = self.config.get('VIRTUALSKY', {}).get('CONSTELLATIONLABELS', False)

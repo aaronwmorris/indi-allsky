@@ -676,6 +676,7 @@ class IndiAllSkyConfigBase(object):
             "BUBBLE_COUNT"           : 1000,
         },
         "VIRTUALSKY" : {
+            "POINTING_AZIMUTH"       : 0.0,
             "MAGNITUDE"              : 6.0,
             "CONSTELLATIONS"         : True,
             "CONSTELLATIONLABELS"    : False,
