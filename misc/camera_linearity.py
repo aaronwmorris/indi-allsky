@@ -357,7 +357,7 @@ class CameraLinearityTest(object):
             if i_ref.image_bayerpat in ['RGGB', 'BGGR']:
                 # bayered
                 image = image[0::2, 1::2]  # extract first set of green pixels for calculations (reduces resolution by half)
-            elif i_ref.image_bayerpat in ['GRBG', 'GRBG']:
+            elif i_ref.image_bayerpat in ['GRBG', 'GBRG']:
                 # bayered
                 image = image[0::2, 0::2]  # extract first set of green pixels for calculations (reduces resolution by half)
             else:
