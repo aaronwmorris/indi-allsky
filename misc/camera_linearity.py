@@ -380,13 +380,13 @@ class CameraLinearityTest(object):
 
         if len(image.shape) == 2:
             # mono
-            adu = cv2.mean(src=image, mask=self._adu_mask_dict[i_ref.binning])[0]
+            adu_mean = cv2.mean(src=image, mask=self._adu_mask_dict[i_ref.binning])[0]
 
             min_val, max_val, _, _ = cv2.minMaxLoc(image, mask=self._adu_mask_dict[i_ref.binning])
             logger.info('Min: %d - Max: %d', min_val, max_val)
         else:
             image_mono = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            adu = cv2.mean(src=image_mono, mask=self._adu_mask_dict[i_ref.binning])[0]
+            adu_mean = cv2.mean(src=image_mono, mask=self._adu_mask_dict[i_ref.binning])[0]
 
             min_val, max_val, _, _ = cv2.minMaxLoc(image_mono, mask=self._adu_mask_dict[i_ref.binning])
             logger.info('Min: %d - Max: %d', min_val, max_val)
@@ -396,12 +396,12 @@ class CameraLinearityTest(object):
             logger.warning('Minimum is 0, offset may be too high')
 
 
-        logger.info('ADU: %0.1f', adu)
+        logger.info('ADU Mean: %0.1f', adu_mean)
         adu_entry = LinearityTable(
             exposure=exposure,
             gain=gain,
             binning=binning,
-            adu=adu,
+            adu=adu_mean,
             minimum=min_val,
             maximum=max_val,
         )
