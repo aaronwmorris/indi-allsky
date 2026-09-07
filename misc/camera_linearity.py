@@ -178,6 +178,7 @@ class CameraLinearityTest(object):
         self._exposure_min = None
         self._exposure_increase = None
         self._gain = None
+        self._reverse = None
 
         self.session = self._getDbConn()
 
@@ -194,20 +195,6 @@ class CameraLinearityTest(object):
     def offset(self, new_offset):
         self._offset = int(new_offset)
         logger.warning('Using offset: %d', self.offset)
-
-
-    @property
-    def calibrate(self):
-        return self._calibrate
-
-    @calibrate.setter
-    def calibrate(self, new_calibrate):
-        self._calibrate = bool(new_calibrate)
-
-        if self.calibrate:
-            logger.warning('Image Calibration Enabled')
-        else:
-            logger.warning('Image Calibration Disabled')
 
 
     @property
@@ -253,6 +240,29 @@ class CameraLinearityTest(object):
     @gain.setter
     def gain(self, new_gain):
         self._gain = float(new_gain)
+
+
+    @property
+    def calibrate(self):
+        return self._calibrate
+
+    @calibrate.setter
+    def calibrate(self, new_calibrate):
+        self._calibrate = bool(new_calibrate)
+
+        if self.calibrate:
+            logger.warning('Image Calibration Enabled')
+        else:
+            logger.warning('Image Calibration Disabled')
+
+
+    @property
+    def reverse(self):
+        return self._reverse
+
+    @reverse.setter
+    def reverse(self, new_reverse):
+        self._reverse = bool(new_reverse)
 
 
     def sigint_handler_main(self, signum, frame):
@@ -503,6 +513,7 @@ class CameraLinearityTest(object):
             exposure_min=self.exposure_min,
             exposure_increase=self.exposure_increase,
             gain=self.gain,
+            reverse=self.reverse,
         )
 
         self.capture_worker.start()
@@ -566,6 +577,7 @@ class CaptureWorker(Process):
         exposure_min=0.0,
         exposure_increase=25,
         gain=0.0,
+        reverse=False,
     ):
 
         super(CaptureWorker, self).__init__()
@@ -595,12 +607,14 @@ class CaptureWorker(Process):
         self._exposure_min = None
         self._exposure_increase = None
         self._gain = None
+        self._reverse = False
 
         self.exposure_count = exposure_count
         self.exposure_max = exposure_max
         self.exposure_min = exposure_min
         self.exposure_increase = exposure_increase
         self.gain = gain
+        self.reverse = reverse
 
         self._shutdown = False
 
@@ -659,6 +673,20 @@ class CaptureWorker(Process):
         logger.warning('Exposure Increase: %d%%', self.exposure_increase)
 
 
+    @property
+    def reverse(self):
+        return self._reverse
+
+    @reverse.setter
+    def reverse(self, new_reverse):
+        self._reverse = bool(new_reverse)
+
+        if self.reverse:
+            logger.warning('Taking exposures from max to min')
+        else:
+            logger.warning('Taking exposures from min to max')
+
+
     def sigint_handler_worker(self, signum, frame):
         logger.warning('Caught INT signal')
 
@@ -712,6 +740,10 @@ class CaptureWorker(Process):
                 })
 
             exposure *= (self.exposure_increase + 100) / 100
+
+
+        if self.reverse:
+            exposures_list.reverse()
 
 
         #logger.info('Exposures: %s', pformat(exposures_list))
@@ -1099,11 +1131,10 @@ if __name__ == "__main__":
         default=25,
     )
 
-
     calibrate_group = argparser.add_mutually_exclusive_group(required=False)
     calibrate_group.add_argument(
         '--no-calibrate',
-        help='disable image calibration (default)',
+        help='disable image calibration [default]',
         dest='calibrate',
         action='store_false',
     )
@@ -1114,6 +1145,21 @@ if __name__ == "__main__":
         action='store_true',
     )
     calibrate_group.set_defaults(calibrate=False)
+
+    reverse_group = argparser.add_mutually_exclusive_group(required=False)
+    reverse_group.add_argument(
+        '--no-reverse',
+        help='Take exposures min to max [default]',
+        dest='reverse',
+        action='store_false',
+    )
+    reverse_group.add_argument(
+        '--reverse',
+        help='Take exposures max to min',
+        dest='reverse',
+        action='store_true',
+    )
+    reverse_group.set_defaults(reverse=False)
 
 
     args = argparser.parse_args()
@@ -1127,4 +1173,5 @@ if __name__ == "__main__":
     clt.exposure_max = args.Max_exposure
     clt.exposure_min = args.min_exposure
     clt.gain = args.gain
+    clt.reverse = args.reverse
     clt.main()
