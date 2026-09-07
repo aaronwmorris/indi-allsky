@@ -349,10 +349,14 @@ class CameraLinearityTest(object):
         if self.calibrate:
             self.image_processor.calibrate(libcamera_black_level=libcamera_black_level)
 
-        self.image_processor.debayer()  # populates self.opencv_data
 
+        if len(i_ref.hdulist[0].data.shape) == 2:
+            # mono (or bayered)
+            image = i_ref.hdulist[0].data
+        else:
+            # color
+            image = i_ref.hdulist[0].data[1]  # use green channel for calculations
 
-        image = i_ref.opencv_data
 
         if not self.calibrate:
             image = cv2.subtract(image, self.offset)
@@ -402,8 +406,8 @@ class CameraLinearityTest(object):
             'Count',
             'ADU Min',
             'ADU Max',
-            'ADU Average',
-            'ADU Range',
+            'ADU Mean',
+            'ADU Mean Range',
             #'Prev Exposure',
             'Exposure Diff',
             #'Prev ADU',
