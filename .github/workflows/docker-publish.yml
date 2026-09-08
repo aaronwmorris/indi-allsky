@@ -70,15 +70,15 @@ jobs:
           echo "apt_channel=${APT_CHANNEL}" >> "$GITHUB_OUTPUT"
           echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
 
-#      - name: Build and Push Multi-Arch Docker Image
-#        uses: docker/build-push-action@v6
-#        with:
-#          context: .
-#          file: ./docker/Dockerfile
-#          platforms: linux/amd64,linux/arm64
-#          push: ${{ github.event_name != 'pull_request' }}
-#          tags: ${{ steps.docker_meta.outputs.tags }}
-#          build-args: |
-#            APT_CHANNEL=${{ steps.docker_meta.outputs.apt_channel }}
-#          cache-from: type=gha
-#          cache-to: type=gha,mode=max
+      - name: Build and Push Multi-Arch Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          build-args: |
+            APT_CHANNEL=${{ steps.docker_meta.outputs.apt_channel }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
