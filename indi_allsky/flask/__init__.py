@@ -58,6 +58,8 @@ dictConfig({
             'formatter' : 'syslog',
             'address'   : '/dev/log',
             'facility'  : 'local7',
+        } if os.path.exists('/dev/log') else {
+            'class'     : 'logging.NullHandler',
         },
     },
     'loggers' : {
@@ -68,7 +70,7 @@ dictConfig({
         },
         'gunicorn.error' : {
             'level'      : 'INFO',
-            'handlers'   : [os.getenv('GUNICORN_ERROR_LOG_HANDLER', 'syslog_local7')],
+            'handlers'   : [os.getenv('GUNICORN_ERROR_LOG_HANDLER', 'syslog_local7' if os.path.exists('/dev/log') else 'wsgi')],
             'propagate'  : False,
         },
         'indi_allsky' : {
