@@ -25,51 +25,7 @@ git push origin main --tags
 
 ---
 
-## 2. Automated CI/CD & APT Repository Architecture
-
-Pushing an official git tag (`v*` or `indi_v*`) triggers `.github/workflows/package-deb.yml`:
-
-```mermaid
-flowchart TD
-    subgraph Trigger["1. Release Trigger"]
-        A1["Git Tag Push (v2026.09.1)"] -->|Stable Release| B
-        A2["Daily Cron (02:00 UTC)"] -->|Nightly Build| B
-        A3["workflow_dispatch"] -->|Manual Build| B
-    end
-
-    subgraph CI["2. GitHub Actions Multi-Arch Pipeline"]
-        B["Resolve Version (misc/bump_version.py)"]
-        B --> C1["Runner: linux/amd64 (x86_64)"]
-        B --> C2["Runner: linux/arm64 (Raspberry Pi 3/4/5)"]
-        
-        C1 --> D1["Docker Container (debian:bookworm / trixie / noble)"]
-        C2 --> D2["Docker Container (debian:bookworm / trixie / noble + QEMU)"]
-        
-        D1 --> E1["Build Production Virtualenv & Compile pyindi-client"]
-        D2 --> E2["Build Production Virtualenv & Compile pyindi-client"]
-        
-        E1 --> F1["dpkg-buildpackage with fast zstd compression"]
-        E2 --> F2["dpkg-buildpackage with fast zstd compression"]
-    end
-
-    subgraph Publishing["3. APT Repository & Release Deployment"]
-        F1 & F2 --> G["Index & Sign Packages into reprepro (stable / nightly)"]
-        G --> H["Sync to Cloudflare R2 / apt.indi-allsky.org"]
-        G --> I["Attach .deb Binaries to GitHub Releases"]
-    end
-
-    subgraph Target["4. Target System Deployment"]
-        H --> J["Raspberry Pi / PC (apt update && apt upgrade)"]
-    end
-```
-
-### Channels:
-- **`stable`**: Indexed when an official version tag (`v*` or `indi_v*`) is pushed.
-- **`nightly`**: Built continuously from the latest `main` branch commits and nightly scheduled runs.
-
----
-
-## 3. End-User Installation via APT Repository
+## 2. End-User Installation via APT Repository
 
 Users can install and maintain `indi-allsky` on Raspberry Pi OS, Debian, and Ubuntu directly via `apt.indi-allsky.org`.
 
@@ -115,7 +71,7 @@ sudo apt install -y indi-allsky
 
 ---
 
-## 4. Headless / Automated Zero-Touch Deployment
+## 3. Headless / Automated Zero-Touch Deployment
 
 For automated provisioning (Ansible, cloud-init, unattended scripts), Debconf prompts can be pre-seeded before running `apt install`:
 
@@ -141,7 +97,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt install -y indi-allsky
 
 ---
 
-## 5. Service Lifecycle & Management
+## 4. Service Lifecycle & Management
 
 The Debian package installs and manages native systemd user/system services:
 
@@ -163,7 +119,7 @@ journalctl -u gunicorn-indi-allsky.service -f
 
 ---
 
-## 6. Upgrades & Uninstallation
+## 5. Upgrades & Uninstallation
 
 * **Upgrades**:
   ```bash
@@ -178,4 +134,8 @@ journalctl -u gunicorn-indi-allsky.service -f
   sudo apt purge indi-allsky indi-allsky-web
   ```
   * Removes all configuration files, databases, logs, and system users.
+  * See [Uninstall indi-allsky](Uninstall-indi-allsky) for complete details.
+
+* **Migration**:
+  * If upgrading an existing installation that was installed with `setup.sh`, see the [Migration Guide](Setup-to-Deb-Migration).
 

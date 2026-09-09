@@ -314,31 +314,14 @@ Visit the [APT Repository Web Portal](https://apt.indi-allsky.org/) to view repo
 
 ---
 
-### Option 2: Direct `.deb` Package Download
-Pre-compiled `.deb` packages bundle all 100+ dependencies, pre-compiled wheels, and camera drivers for a 10-second installation without compilation.
-
-1. **Download Packages**:
-   Download the `.deb` release matching your distribution (Bookworm, Noble, Resolute, or Trixie) and architecture (`arm64` or `amd64`) from the [GitHub Releases](https://github.com/aaronwmorris/indi-allsky/releases).
-2. **Install**:
-   ```bash
-   sudo apt update
-   sudo apt install -y ./*.deb
-   ```
-3. **Interactive Configuration**:
-   Follow the interactive setup wizard to select your camera driver, admin credentials, and observatory coordinates.
-4. **Access Web Dashboard**:
-   Open `https://<device-ip>/indi-allsky/` in your browser.
-
----
-
-### Option 3: Docker Containerization
+### Option 2: Docker Containerization
 indi-allsky has full support for running in a unified containerized environment. Check out the `docker/` folder for Docker assets and documentation:
 
 https://github.com/aaronwmorris/indi-allsky/wiki/Docker
 
 ---
 
-### Option 4: Manual Source Installation (`setup.sh`)
+### Option 3: Manual Source Installation (`setup.sh`)
 For rolling development or unsupported distributions, the traditional installation script remains available:
 
 https://github.com/aaronwmorris/indi-allsky/wiki/Getting-Started
@@ -357,10 +340,13 @@ https://github.com/aaronwmorris/indi-allsky/wiki/Getting-Started
 
 ### Updating `.deb` Package Installations
 ```bash
-sudo apt update
-sudo apt install -y ./indi-allsky_*.deb
+sudo apt update && sudo apt upgrade -y
 ```
 Package upgrades automatically backup and preserve existing configurations (`/etc/indi-allsky/flask.json`), retain database data, and run schema migrations seamlessly.
+
+### Migrating from `setup.sh` to `.deb` Architecture
+If you have an existing source installation and want to switch to native `.deb` packages:
+https://github.com/aaronwmorris/indi-allsky/wiki/Setup-to-Deb-Migration
 
 ### Updating Source / `setup.sh` Installations
 Pull updates from GitHub and re-run `setup.sh`:

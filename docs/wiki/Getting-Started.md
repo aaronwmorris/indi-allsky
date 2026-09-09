@@ -65,6 +65,9 @@ For development environments or unsupported platforms, you can clone the git rep
 > [!CAUTION]
 > Installing via `setup.sh` requires compiling INDI and Python wheels from source, which can take from 20 minutes to several hours depending on your hardware.
 
+> [!NOTE]
+> Existing systems previously installed using `setup.sh` can migrate cleanly to official `.deb` packages with all configuration and database history preserved. See the [Migration Guide](Setup-to-Deb-Migration).
+
 1. (Optional) Setup locales:
    ```bash
    sudo dpkg-reconfigure locales

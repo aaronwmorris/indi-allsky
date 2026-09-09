@@ -6,6 +6,7 @@ Welcome to the indi-allsky wiki!
 * [General Recommended Settings](General-Recommended-Settings)
 * [Known Camera Problems](Known-Camera-Problems)
 * [Upgrading indi-allsky](Updating-indi-allsky)
+* [Migration Guide: setup.sh to .deb](Setup-to-Deb-Migration)
 * [Password Management](Web-Interface-Password)
 * [INDI Configuration](INDI-custom-config)
 * [libcamera setup](libcamera-enablement)

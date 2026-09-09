@@ -18,6 +18,10 @@ sudo apt update && sudo apt upgrade -y
 > [!NOTE]
 > All user configuration in `/etc/indi-allsky/flask.json` and databases in `/var/lib/indi-allsky/` are preserved across upgrades.
 
+> [!TIP]
+> **Migrating from `setup.sh`**:
+> If your system was originally installed via `setup.sh` and you wish to switch to the official APT repository and `.deb` architecture, follow the [Migration Guide](Setup-to-Deb-Migration).
+
 ---
 
 ## Option 2: Unattended Upgrade (Source / Git Installs)

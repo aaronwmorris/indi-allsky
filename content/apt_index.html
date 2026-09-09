@@ -63,14 +63,13 @@
 
       <!-- Channel Toggle Pill -->
       <div class="flex items-center gap-1.5 bg-slate-950/80 p-1 rounded-xl border border-slate-800 self-start sm:self-auto">
-        <button id="tab-nightly" onclick="selectChannel('nightly')" class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 bg-amber-600 text-white shadow-sm">
-          <span class="w-1.5 h-1.5 rounded-full bg-amber-200 animate-pulse"></span>
-          Nightly <span class="text-[10px] bg-amber-500/30 text-amber-100 px-1 py-0.2 rounded ml-0.5">Recommended</span>
+        <button id="tab-stable" onclick="selectChannel('stable')" class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 bg-emerald-600 text-white shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-200"></span>
+          Stable <span class="text-[10px] bg-emerald-500/30 text-emerald-100 px-1 py-0.2 rounded ml-0.5">Recommended</span>
         </button>
-        <button id="tab-stable" onclick="selectChannel('stable')" class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 text-slate-400 hover:text-slate-200">
-          <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-          <span class="line-through decoration-rose-500/80">Stable</span>
-          <span class="text-[9px] bg-rose-500/20 text-rose-300 px-1 py-0.2 rounded ml-0.5 font-normal">Not Ready</span>
+        <button id="tab-nightly" onclick="selectChannel('nightly')" class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 text-slate-400 hover:text-slate-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+          Nightly
         </button>
       </div>
     </div>
@@ -79,17 +78,6 @@
     <p class="text-slate-300 text-xs sm:text-sm mb-3.5 leading-relaxed">
       Install and maintain <strong class="text-white font-semibold">INDI Allsky</strong> and pre-compiled 3rd-party camera drivers natively using standard <code class="bg-slate-800 text-sky-300 px-1.5 py-0.5 rounded text-xs font-mono border border-slate-700/50">apt</code>.
     </p>
-
-    <!-- Warning Banner for Stable or Channel Notice -->
-    <div id="channel-warning-banner" class="hidden mb-3.5 p-3 rounded-xl bg-rose-950/40 border border-rose-800/60 text-xs text-rose-200 flex items-start gap-2.5">
-      <svg class="w-4 h-4 text-rose-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-      </svg>
-      <div>
-        <strong class="font-semibold text-rose-100">Notice: Stable channel is currently under development.</strong>
-        <p class="mt-0.5 text-rose-300">The Debian packaging pipeline is actively being stabilized. Please use the <strong class="text-amber-300">Nightly</strong> channel for current testing and deployments.</p>
-      </div>
-    </div>
 
     <!-- Installation Steps -->
     <div class="space-y-3 sm:space-y-3.5">
@@ -108,7 +96,7 @@
         </div>
         <div class="bg-slate-950 border border-slate-800/90 rounded-xl p-2.5 sm:p-3 font-mono text-xs text-sky-300 overflow-x-auto">
           <pre id="cmd-key" class="whitespace-pre">sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://aaronwmorris.github.io/indi-allsky/key.gpg | \
+curl -fsSL https://apt.indi-allsky.org/key.gpg | \
   sudo gpg --dearmor -o /etc/apt/keyrings/indi-allsky.gpg
 sudo chmod a+r /etc/apt/keyrings/indi-allsky.gpg</pre>
         </div>
@@ -119,7 +107,7 @@ sudo chmod a+r /etc/apt/keyrings/indi-allsky.gpg</pre>
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span class="flex items-center justify-center w-4 h-4 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 text-xs font-bold">2</span>
-            <h2 class="text-xs sm:text-sm font-semibold text-slate-200">Add Repository Source (<span id="channel-name-label" class="text-sky-400">Stable</span>)</h2>
+            <h2 class="text-xs sm:text-sm font-semibold text-slate-200">Add Repository Source (<span id="channel-name-label" class="text-emerald-400">Stable</span>)</h2>
           </div>
           <button onclick="copyCode('cmd-repo', this)" class="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white transition-colors bg-slate-800/60 hover:bg-slate-800 px-2 py-0.5 rounded border border-slate-700/50">
             <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
@@ -129,14 +117,15 @@ sudo chmod a+r /etc/apt/keyrings/indi-allsky.gpg</pre>
         <div class="bg-slate-950 border border-slate-800/90 rounded-xl p-2.5 sm:p-3 font-mono text-xs text-sky-300 overflow-x-auto">
           <pre id="cmd-repo" class="whitespace-pre">sudo tee /etc/apt/sources.list.d/indi-allsky.sources &lt;&lt;EOF
 Types: deb
-URIs: https://aaronwmorris.github.io/indi-allsky
+URIs: https://apt.indi-allsky.org
 Suites: $(lsb_release -cs)
 Components: stable
+Architectures: $(dpkg --print-architecture)
 Signed-By: /etc/apt/keyrings/indi-allsky.gpg
 EOF</pre>
         </div>
         <p id="channel-description" class="text-[11px] sm:text-xs text-slate-400">
-          <span class="text-sky-400 font-medium">Stable channel:</span> Recommended for all production systems. Receives tested, tagged releases.
+          <span class="text-emerald-400 font-medium">Stable channel:</span> Recommended for all production systems. Receives tested, tagged releases.
         </p>
       </div>
 
@@ -183,8 +172,8 @@ EOF</pre>
       origin = window.location.origin + path;
     }
 
-    let currentChannel = 'nightly';
-    selectChannel('nightly');
+    let currentChannel = 'stable';
+    selectChannel('stable');
 
     function updateCommands() {
       // Step 1 command
@@ -203,24 +192,16 @@ EOF</pre>
       // Label and description
       const label = document.getElementById('channel-name-label');
       const desc = document.getElementById('channel-description');
-      const banner = document.getElementById('channel-warning-banner');
 
       if (label) {
         label.textContent = currentChannel === 'stable' ? 'Stable' : 'Nightly';
-        label.className = currentChannel === 'stable' ? 'text-rose-400' : 'text-amber-400';
+        label.className = currentChannel === 'stable' ? 'text-emerald-400' : 'text-amber-400';
       }
       if (desc) {
         if (currentChannel === 'stable') {
-          desc.innerHTML = '<span class="text-rose-400 font-medium">Stable channel:</span> <span class="text-rose-300">Under construction. Tagged releases will appear here once packaging is fully stabilized.</span>';
+          desc.innerHTML = '<span class="text-emerald-400 font-medium">Stable channel (Recommended):</span> Recommended for all production systems. Receives tested, tagged releases.';
         } else {
-          desc.innerHTML = '<span class="text-amber-400 font-medium">Nightly channel (Recommended):</span> Built from latest git commits with continuous bug fixes.';
-        }
-      }
-      if (banner) {
-        if (currentChannel === 'stable') {
-          banner.classList.remove('hidden');
-        } else {
-          banner.classList.add('hidden');
+          desc.innerHTML = '<span class="text-amber-400 font-medium">Nightly channel:</span> Built continuously from latest git commits with continuous bug fixes.';
         }
       }
     }
@@ -231,7 +212,7 @@ EOF</pre>
       const btnNightly = document.getElementById('tab-nightly');
       
       if (channel === 'stable') {
-        btnStable.className = 'flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 bg-rose-900/80 text-rose-100 border border-rose-700 shadow-sm';
+        btnStable.className = 'flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 bg-emerald-600 text-white shadow-sm';
         btnNightly.className = 'flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 text-slate-400 hover:text-slate-200';
       } else {
         btnNightly.className = 'flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 bg-amber-600 text-white shadow-sm';

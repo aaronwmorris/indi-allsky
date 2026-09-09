@@ -39,6 +39,15 @@ systemctl --user stop indiserver.service
 ```
 
 ### Step 2: Install the `.deb` Package
+
+#### Option A: Via Official APT Repository (Recommended)
+Add the APT repository as described in [Getting Started](Getting-Started) (or visit [apt.indi-allsky.org](https://apt.indi-allsky.org)):
+```bash
+sudo apt update
+sudo apt install -y indi-allsky
+```
+
+#### Option B: Via Downloaded `.deb`
 ```bash
 sudo apt update
 sudo apt install ./indi-allsky_*.deb
