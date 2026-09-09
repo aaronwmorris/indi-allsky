@@ -13,18 +13,21 @@ function page() {
     const $ = selector => {
         if (!controls.has(selector)) controls.set(selector, {
             value: 0, checked: false, styles: {}, attributes: {}, handlers: {},
-            val() { return this.value; }, prop() { return this.checked; },
+            val(value) { if (value === undefined) return this.value; this.value = value; return this; },
+            prop(name, value) { if (value === undefined) return this[name]; this[name] = value; return this; },
             width() { return this.renderWidth; }, height() { return this.renderHeight; },
             css(value) { Object.assign(this.styles, value); return this; },
             attr(value) { Object.assign(this.attributes, value); return this; },
             html() {}, on(event, fn) { this.handlers[event] = fn; },
+            text(value) { this.message = value; return this; },
+            addClass() { return this; }, removeClass() { return this; }, show() {}, hide() {},
         });
         return controls.get(selector);
     };
     $.ajax = options => requests.push(options);
     const document = {hidden: false};
     const context = vm.createContext({$, document, Date, console: {log() {}}, setTimeout() {},
-        VirtualSkyCalibration: {install() {}},
+        VirtualSkyCalibration: {install() {}, maskImage() {}},
         Image: class {
             constructor() { this.naturalWidth = 2408; this.naturalHeight = 2348; images.push(this); }
         },
@@ -39,6 +42,9 @@ function page() {
     vm.runInContext(html.match(/<script type="text\/javascript">([\s\S]*?)<\/script>/)[1]
         .replace(/{{[\s\S]*?}}/g, '0'), context);
     vm.runInContext(html.match(/function forceRedrawPlanetarium\(\) {[\s\S]*?\n}/)[0], context);
+    vm.runInContext(html.slice(html.indexOf('const SOLVE_FIELDS'), html.lastIndexOf('</script>'))
+        .replace(/{{[\s\S]*?}}/g, '0'), context);
+    $('#lens_solve').disabled = /\bdisabled\b/.test(html.match(/<button id="lens_solve"[^>]*>/)[0]);
     vm.runInContext(html.match(/\$\(document\)\.on\('visibilitychange'[\s\S]*?\n}\);/)[0], context);
     Object.assign(context, {camera_latitude: 53, camera_longitude: 11, camera_altitude: 87.42});
     for (const [key, value] of Object.entries({MAGNITUDE: 6, AZIMUTH_ANGLE: 359.6,
@@ -51,6 +57,55 @@ function page() {
     const entry = {url: '/sky.jpg', timestamp: 1788731972, width: 2408, height: 2348};
     context.json_data.image_list = [entry];
     return {$, context, instances, images, requests, entry, document};
+}
+
+test('Solve waits for the image, then uses its timestamp even before the overlay can draw', async () => {
+    const {$, context: c, requests, entry, instances} = page();
+    assert.equal($('#lens_solve').disabled, true);
+    await c.loop();
+    assert.equal($('#lens_solve').disabled, true); // image request is still in flight
+    $('#latest-image').renderWidth = 0; // first layout/visibility is not ready
+    c.img.onload();
+    assert.equal(c.last_image_timestamp, entry.timestamp);
+    assert.equal($('#lens_solve').disabled, false);
+    assert.equal(c.redraw_planetarium, true);
+    c.json_data.image_list = [{...entry, timestamp: entry.timestamp+30, url:'/next.jpg'}];
+    $('#lens_solve').handlers.click();
+    assert.equal(JSON.parse(requests.at(-1).data).timestamp, entry.timestamp);
+    assert.equal($('#lens_solve').disabled, true);
+    // Retrying the same loaded frame must still create the deferred overlay.
+    $('#latest-image').renderWidth = 1204;
+    c.img.onload();
+    assert.equal(instances.length, 1);
+    assert.equal(c.redraw_planetarium, false);
+    assert.equal($('#lens_solve').disabled, true); // redraw cannot unlock a busy solve
+    requests.at(-1).complete();
+    assert.equal($('#lens_solve').disabled, false);
+});
+
+test('an overlay error cannot make a displayed photo unavailable to Solve', async () => {
+    const {$, context: c, requests, entry} = page();
+    c.VirtualSkyCalibration.maskImage = () => { throw new Error('overlay unavailable'); };
+    await c.loop();
+    assert.throws(() => c.img.onload(), /overlay unavailable/);
+    assert.equal($('#latest-image').attributes.src, entry.url);
+    assert.equal($('#lens_solve').disabled, false);
+    $('#lens_solve').handlers.click();
+    assert.equal(JSON.parse(requests.at(-1).data).timestamp, entry.timestamp);
+});
+
+for (const loadDuringSave of [false, true]) {
+    test(`manual save before the first image preserves Solve readiness (load during save: ${loadDuringSave})`, async () => {
+        const {$, context: c, requests} = page();
+        await c.loop();
+        $('#lens_save').handlers.click();
+        if (loadDuringSave) c.img.onload();
+        assert.equal($('#lens_solve').disabled, true);
+        requests.at(-1).complete();
+        assert.equal($('#lens_solve').disabled, !loadDuringSave);
+        c.img.onload();
+        assert.equal($('#lens_solve').disabled, false);
+    });
 }
 
 test('hundreds of unchanged gallery polls retain the same sky and canvas owner', async () => {
@@ -70,17 +125,22 @@ test('new frames and edited controls update the existing projection, clock and d
     const {$, context: c, instances, entry} = page();
     await c.loop(); c.img.onload();
     const before = c.planetarium.times.LST;
+    c.precession = true;
+    $('#RADIAL_DISTORTION').value = 0.08;
     entry.timestamp += 3600;
     // Actual pixels, rather than potentially stale server dimensions, set the scale.
     entry.width = 2500;
     await c.loop(); c.img.onload();
     assert.notEqual(c.planetarium.times.LST, before);
+    assert.equal(c.planetarium.precession, true);
+    assert.equal(c.planetarium.fisheye_radial, 0.08);
     assert.equal(c.planetarium.clock.getTime(), entry.timestamp*1000);
     $('#AZIMUTH_ANGLE').value = -3;
     $('#latest-image').renderWidth = 602;
     $('#latest-image').renderHeight = 587;
     c.forceRedrawPlanetarium(); c.img.onload();
     assert.equal(instances.length, 1);
+    assert.equal(c.planetarium.precession, true);
     assert.equal(c.planetarium.az_off, -3);
     assert.equal(c.planetarium.wide, 2211/4);
     assert.equal(parseFloat($('#starmap').styles.left), (602-2211/4)/2-7/4);

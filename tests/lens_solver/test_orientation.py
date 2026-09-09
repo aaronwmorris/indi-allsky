@@ -106,6 +106,31 @@ def test_successful_zenith_fit_keeps_existing_fast_path(tmp_path, monkeypatch, a
     assert result['values']['LATITUDE_OFFSET'] == result['values']['LONGITUDE_OFFSET'] == 0
 
 
+@pytest.mark.parametrize('hour', [0, 2, 4, 6, 12, 18])
+def test_near_zenith_pointing_is_independent_of_image_time(tmp_path, hour):
+    timestamp = 1788731972 + hour*3600
+    catalog, detections, _, _ = star_field(87.4, 176, 53, timestamp)
+    initial = PARAMS.copy()
+    initial[0] = 190
+    solver = IndiAllSkyLensSolver({})
+    fit = solver.fitParameters(detections, catalog, 53, 8, timestamp, initial, 2028, 1520)
+    assert fit['success'] and not fit['partial']
+    pose = pointingFromFit(fit['params'], 53, 8, timestamp, 90, 0)
+    numpy.testing.assert_allclose(pose, [87.4, 176, 200], atol=1e-5, rtol=0)
+
+    # Also exercise image detection: pixel rounding and blended stars introduce
+    # real measurement uncertainty, amplified in azimuth close to the zenith.
+    image_file = tmp_path / 'near-zenith.png'
+    render_stars(image_file, detections)
+    result = solver.solve(image_file, 53, 8, timestamp,
+                          dict(zip(KEYS, initial), LENS_ALTITUDE=90))
+    assert result['success'] and not result['partial']
+    values = result['values']
+    assert abs(values['LENS_ALTITUDE']-87.4) < 0.05
+    assert abs(values['POINTING_AZIMUTH']-176) < 0.5
+    assert result['quality']['rms_px'] < 1
+
+
 @pytest.mark.parametrize('latitude,offsets', [(53, (-2.61, 0.01)), (-33.9, (7, -15)),
                                             (90, (0, 20)), (-90, (0, -20))])
 @pytest.mark.parametrize('altitude,heading', [(None, 213), (90, 0), (87.4, 177), (54, 123), (0, 350)])

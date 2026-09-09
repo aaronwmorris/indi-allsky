@@ -216,7 +216,7 @@ def test_page_uses_camera_altitude_with_legacy_fallback(altitude, expected):
                      IndiAllskyVirtualSkyHelperForm=lambda data: data)
     exec(compile(ast.Module(body=[node], type_ignores=[]), str(path), 'exec'), namespace)
     view = namespace['VirtualSkyView']()
-    view.camera = SimpleNamespace(alt=altitude, az=200, data={}, utc_offset=0)
+    view.camera = SimpleNamespace(alt=altitude, az=200, data={}, utc_offset=0, local=True)
     view.indi_allsky_config = {}
     view.getCameraPrivacyLatLong = lambda camera: (46.51, 8)
     with flask.Flask(__name__).test_request_context():

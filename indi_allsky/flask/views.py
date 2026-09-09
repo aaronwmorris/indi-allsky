@@ -513,6 +513,7 @@ class VirtualSkyView(TemplateView):
         data = {
             'AZIMUTH_ANGLE'         : self.camera.az,
             'POINTING_AZIMUTH'      : self.camera.data.get('vs_pointing_azimuth', 0.0),
+            'RADIAL_DISTORTION'     : self.camera.data.get('vs_radial_distortion', 0.0),
             'IMAGE_CIRCLE_DIAMETER' : self.camera.data.get('vs_image_circle_diameter', 3500),
             'LATITUDE_OFFSET'       : self.camera.data.get('vs_latitude_offset', 0.0),
             'LONGITUDE_OFFSET'      : self.camera.data.get('vs_longitude_offset', 0.0),
@@ -531,6 +532,22 @@ class VirtualSkyView(TemplateView):
 
         context['form_virtualsky'] = IndiAllskyVirtualSkyHelperForm(data=data)
         context['camera_altitude'] = self.camera.alt if self.camera.alt is not None else 90.0
+        context['lens_calibration'] = self.camera.data.get('vs_calibration')
+        context['lens_calibration_enabled'] = self.camera.data.get('vs_calibration_enabled', False)
+        context['calibration_camera_uuid'] = getattr(self.camera, 'uuid', '')
+        mask = self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {})
+        context['overlay_image_mask'] = None
+        if self.camera.local and mask.get('ENABLE') and mask.get('OPACITY', 100) == 100 and not mask.get('OUTLINE'):
+            # The image mask is applied after rotation/flipping/cropping, before
+            # scaling and borders. Detection masks/ROIs are not display masks.
+            focus_mode = self.indi_allsky_config.get('FOCUS_MODE', False)
+            context['overlay_image_mask'] = [mask.get('DIAMETER', 3000),
+                self.indi_allsky_config.get('LENS_OFFSET_X', 0),
+                self.indi_allsky_config.get('LENS_OFFSET_Y', 0),
+                100 if focus_mode else self.indi_allsky_config.get('IMAGE_SCALE', 100),
+                *[0 if focus_mode else self.indi_allsky_config.get('IMAGE_BORDER', {}).get(k, 0)
+                  for k in ('TOP', 'RIGHT', 'BOTTOM', 'LEFT')]]
+        context['precession'] = self.camera.data.get('vs_precession', False)
 
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
@@ -1333,6 +1350,8 @@ class JsonImageLoopView(JsonView):
             }
             if self.include_id:
                 data['id'] = i.id
+            if request.args.get('virtualsky') == '1':
+                data['binmode'] = getattr(i, 'binmode', None)
 
 
             try:
@@ -8107,10 +8126,20 @@ class AjaxLensSolverView(BaseView):
             }), 429, {'Retry-After': str(self.LOCK_RETRY_AFTER_S)}
 
         try:
+            hints = {}
+            if values.get('CALIBRATION_ENABLED'):
+                binning = image_entry.binmode or 1
+                hints['binning'] = binning
+                if self.camera.width and self.camera.height:
+                    hints['sensor_shape'] = (self.camera.height // binning, self.camera.width // binning)
             result = solver.solve(
                 image_file, latitude, longitude, obstime_unix, values,
                 lens_altitude=values.get('LENS_ALTITUDE', self.camera.alt),
-                pointing_azimuth=values.get('POINTING_AZIMUTH', self.camera.data.get('vs_pointing_azimuth', 0.0)))
+                pointing_azimuth=values.get('POINTING_AZIMUTH', self.camera.data.get('vs_pointing_azimuth', 0.0)),
+                **hints)
+            if result.get('calibration'):
+                result['calibration']['camera_uuid'] = self.camera.uuid
+                result['calibration']['context'][2] = self.camera_time_offset
         except Exception:  # noqa: BLE001
             # never return a raw exception string to the client
             app.logger.exception('Lens solver failed')
