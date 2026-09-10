@@ -5,8 +5,8 @@
 {% block head %}
 <meta charset="UTF-8">
 <script src="{{ url_for('indi_allsky.static', filename='virtualsky/stuquery.min.js') }}"></script>
-<script src="{{ url_for('indi_allsky.static', filename='virtualsky/virtualsky.min.js') }}" type="text/javascript"></script>
-<script src="{{ url_for('indi_allsky.static', filename='js/virtualsky-calibration.js') }}"></script>
+<script src="{{ url_for('indi_allsky.static', filename='virtualsky/virtualsky.min.js', v=virtualsky_scripts['virtualsky/virtualsky.min.js']) }}" type="text/javascript"></script>
+<script src="{{ url_for('indi_allsky.static', filename='js/virtualsky-calibration.js', v=virtualsky_scripts['js/virtualsky-calibration.js']) }}"></script>
 
 <style>
 /* Size groups by available space, including when the navigation sidebar is open. */

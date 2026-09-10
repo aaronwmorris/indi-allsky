@@ -1,6 +1,7 @@
 import ast
 from copy import deepcopy
 from datetime import datetime, timedelta
+import hashlib
 from pathlib import Path
 from types import SimpleNamespace
 import threading
@@ -213,13 +214,14 @@ def test_page_uses_camera_altitude_with_legacy_fallback(altitude, expected):
             return {}
 
     namespace = dict(TemplateView=TemplateView, math=math, datetime=datetime, request=flask.request,
+                     hashlib=hashlib, Path=Path, app=flask.current_app,
                      IndiAllskyVirtualSkyHelperForm=lambda data: data)
     exec(compile(ast.Module(body=[node], type_ignores=[]), str(path), 'exec'), namespace)
     view = namespace['VirtualSkyView']()
     view.camera = SimpleNamespace(alt=altitude, az=200, data={}, utc_offset=0, local=True)
     view.indi_allsky_config = {}
     view.getCameraPrivacyLatLong = lambda camera: (46.51, 8)
-    with flask.Flask(__name__).test_request_context():
+    with flask.Flask(__name__, static_folder=str(path.parent / 'static')).test_request_context():
         context = view.get_context()
     assert context['camera_altitude'] == expected
     assert context['form_virtualsky']['POINTING_AZIMUTH'] == 0

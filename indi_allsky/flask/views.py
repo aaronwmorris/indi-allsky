@@ -5,6 +5,7 @@ from datetime import timezone
 import io
 import tempfile
 import json
+import hashlib
 from collections import OrderedDict
 from functools import wraps
 import time
@@ -502,6 +503,13 @@ class VirtualSkyView(TemplateView):
 
     def get_context(self):
         context = super(VirtualSkyView, self).get_context()
+
+        # The service worker serves cached scripts first; content versions keep
+        # new page settings paired with the matching renderer after updates.
+        context['virtualsky_scripts'] = {
+            name: hashlib.sha256((Path(app.static_folder) / name).read_bytes()).hexdigest()
+            for name in ('virtualsky/virtualsky.min.js', 'js/virtualsky-calibration.js')
+        }
 
         context['image_loop_view'] = self.image_loop_view
 
