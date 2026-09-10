@@ -58,6 +58,8 @@ dictConfig({
             'formatter' : 'syslog',
             'address'   : '/dev/log',
             'facility'  : 'local7',
+        } if os.path.exists('/dev/log') else {
+            'class'     : 'logging.NullHandler',
         },
     },
     'loggers' : {
@@ -68,7 +70,7 @@ dictConfig({
         },
         'gunicorn.error' : {
             'level'      : 'INFO',
-            'handlers'   : [os.getenv('GUNICORN_ERROR_LOG_HANDLER', 'syslog_local7')],
+            'handlers'   : [os.getenv('GUNICORN_ERROR_LOG_HANDLER', 'syslog_local7' if os.path.exists('/dev/log') else 'wsgi')],
             'propagate'  : False,
         },
         'indi_allsky' : {
@@ -119,7 +121,10 @@ def create_app():
     csrf.exempt(bp_actionapi_allsky)  # disable CSRF for actionapi views
 
     db.init_app(app)
-    migrate.init_app(app, db, directory=app.config['MIGRATION_FOLDER'])
+    migration_dir = app.config.get('MIGRATION_FOLDER', '/usr/share/indi-allsky/migrations')
+    if not os.path.exists(migration_dir) and os.path.exists('/usr/share/indi-allsky/migrations'):
+        migration_dir = '/usr/share/indi-allsky/migrations'
+    migrate.init_app(app, db, directory=migration_dir)
 
 
     login_manager = LoginManager()

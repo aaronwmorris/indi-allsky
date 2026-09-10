@@ -1,0 +1,8 @@
+etc/indi-allsky
+var/lib/indi-allsky
+var/lib/indi-allsky/backup
+var/log/indi-allsky
+var/www/html/allsky
+var/www/html/allsky/images
+var/www/html/allsky/images/darks
+var/www/html/allsky/images/export

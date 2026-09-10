@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>INDI Allsky APT Repository</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    code, pre, .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+    @keyframes aurora-1 {
+      0%, 100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 0.65; }
+      33% { transform: translate(35px, -25px) scale(1.15) rotate(6deg); opacity: 0.9; }
+      66% { transform: translate(-30px, 20px) scale(0.92) rotate(-4deg); opacity: 0.6; }
+    }
+    @keyframes aurora-2 {
+      0%, 100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 0.6; }
+      33% { transform: translate(-40px, 30px) scale(0.95) rotate(-5deg); opacity: 0.85; }
+      66% { transform: translate(30px, -20px) scale(1.12) rotate(7deg); opacity: 0.7; }
+    }
+    @keyframes aurora-3 {
+      0%, 100% { transform: translate(0px, 0px) scale(1); opacity: 0.5; }
+      50% { transform: translate(25px, -35px) scale(1.2); opacity: 0.8; }
+    }
+    .aurora-layer-1 { animation: aurora-1 16s ease-in-out infinite alternate; }
+    .aurora-layer-2 { animation: aurora-2 20s ease-in-out infinite alternate; }
+    .aurora-layer-3 { animation: aurora-3 13s ease-in-out infinite alternate; }
+  </style>
+</head>
+<body class="bg-[#030712] text-slate-100 min-h-screen lg:h-screen flex items-center justify-center p-3 sm:p-4 md:p-6 antialiased selection:bg-emerald-500 selection:text-white relative overflow-hidden">
+  
+  <!-- Aurora Borealis (Northern Lights) Animated Background -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none -z-10 flex items-center justify-center">
+    <!-- Starfield Texture Overlay -->
+    <div class="absolute inset-0 opacity-40 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px]"></div>
+
+    <!-- Emerald Green Ribbon Wave -->
+    <div class="aurora-layer-1 absolute w-[750px] h-[450px] -top-20 -left-10 bg-gradient-to-r from-emerald-500/40 via-teal-400/45 to-cyan-500/35 blur-[110px] rounded-full mix-blend-screen"></div>
+
+    <!-- Violet & Magenta Atmospheric Curtain -->
+    <div class="aurora-layer-2 absolute w-[650px] h-[400px] top-10 right-0 bg-gradient-to-tr from-indigo-600/35 via-purple-500/30 to-pink-500/30 blur-[125px] rounded-full mix-blend-screen"></div>
+
+    <!-- Electric Cyan & Mint Central Wave -->
+    <div class="aurora-layer-3 absolute w-[800px] h-[350px] bottom-0 bg-gradient-to-r from-cyan-400/30 via-emerald-400/35 to-teal-500/30 blur-[120px] rounded-full mix-blend-screen"></div>
+
+    <!-- Deep Ambient Glow -->
+    <div class="absolute w-[900px] h-[600px] bg-emerald-950/30 blur-[160px] rounded-full"></div>
+  </div>
+
+  <div class="max-w-4xl w-full bg-slate-950/80 rounded-2xl p-5 sm:p-7 md:p-8 border border-slate-700/50 shadow-2xl backdrop-blur-2xl shadow-emerald-950/30">
+    
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b border-slate-800/80 mb-3.5">
+      <div class="flex items-center gap-3">
+        <img src="logo.png" onerror="this.src='../indi_allsky/flask/static/images/logo_outline_full.png'" alt="INDI Allsky" class="h-9 sm:h-10 w-auto object-contain shrink-0 drop-shadow-md">
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">INDI Allsky APT Repository</h1>
+          <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Official Debian, Raspberry Pi OS & Ubuntu Package Repository</p>
+        </div>
+      </div>
+
+      <!-- Channel Toggle Pill -->
+      <div class="flex items-center gap-1.5 bg-slate-950/80 p-1 rounded-xl border border-slate-800 self-start sm:self-auto">
+        <button id="tab-nightly" onclick="selectChannel('nightly')" class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 bg-amber-600 text-white shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-200 animate-pulse"></span>
+          Nightly <span class="text-[10px] bg-amber-500/30 text-amber-100 px-1 py-0.2 rounded ml-0.5">Recommended</span>
+        </button>
+        <button id="tab-stable" onclick="selectChannel('stable')" class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 text-slate-400 hover:text-slate-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+          <span class="line-through decoration-rose-500/80">Stable</span>
+          <span class="text-[9px] bg-rose-500/20 text-rose-300 px-1 py-0.2 rounded ml-0.5 font-normal">Not Ready</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Overview -->
+    <p class="text-slate-300 text-xs sm:text-sm mb-3.5 leading-relaxed">
+      Install and maintain <strong class="text-white font-semibold">INDI Allsky</strong> and pre-compiled 3rd-party camera drivers natively using standard <code class="bg-slate-800 text-sky-300 px-1.5 py-0.5 rounded text-xs font-mono border border-slate-700/50">apt</code>.
+    </p>
+
+    <!-- Warning Banner for Stable or Channel Notice -->
+    <div id="channel-warning-banner" class="hidden mb-3.5 p-3 rounded-xl bg-rose-950/40 border border-rose-800/60 text-xs text-rose-200 flex items-start gap-2.5">
+      <svg class="w-4 h-4 text-rose-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <div>
+        <strong class="font-semibold text-rose-100">Notice: Stable channel is currently under development.</strong>
+        <p class="mt-0.5 text-rose-300">The Debian packaging pipeline is actively being stabilized. Please use the <strong class="text-amber-300">Nightly</strong> channel for current testing and deployments.</p>
+      </div>
+    </div>
+
+    <!-- Installation Steps -->
+    <div class="space-y-3 sm:space-y-3.5">
+
+      <!-- Step 1: GPG Key -->
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="flex items-center justify-center w-4 h-4 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[10px] font-bold">1</span>
+            <h2 class="text-xs sm:text-sm font-semibold text-slate-200">Add GPG Keyring</h2>
+          </div>
+          <button onclick="copyCode('cmd-key', this)" class="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white transition-colors bg-slate-800/60 hover:bg-slate-800 px-2 py-0.5 rounded border border-slate-700/50">
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+            <span>Copy</span>
+          </button>
+        </div>
+        <div class="bg-slate-950 border border-slate-800/90 rounded-xl p-2.5 sm:p-3 font-mono text-xs text-sky-300 overflow-x-auto">
+          <pre id="cmd-key" class="whitespace-pre">sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://aaronwmorris.github.io/indi-allsky/key.gpg | \
+  sudo gpg --dearmor -o /etc/apt/keyrings/indi-allsky.gpg
+sudo chmod a+r /etc/apt/keyrings/indi-allsky.gpg</pre>
+        </div>
+      </div>
+
+      <!-- Step 2: Add Repository Source -->
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="flex items-center justify-center w-4 h-4 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 text-xs font-bold">2</span>
+            <h2 class="text-xs sm:text-sm font-semibold text-slate-200">Add Repository Source (<span id="channel-name-label" class="text-sky-400">Stable</span>)</h2>
+          </div>
+          <button onclick="copyCode('cmd-repo', this)" class="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white transition-colors bg-slate-800/60 hover:bg-slate-800 px-2 py-0.5 rounded border border-slate-700/50">
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+            <span>Copy</span>
+          </button>
+        </div>
+        <div class="bg-slate-950 border border-slate-800/90 rounded-xl p-2.5 sm:p-3 font-mono text-xs text-sky-300 overflow-x-auto">
+          <pre id="cmd-repo" class="whitespace-pre">sudo tee /etc/apt/sources.list.d/indi-allsky.sources &lt;&lt;EOF
+Types: deb
+URIs: https://aaronwmorris.github.io/indi-allsky
+Suites: $(lsb_release -cs)
+Components: stable
+Signed-By: /etc/apt/keyrings/indi-allsky.gpg
+EOF</pre>
+        </div>
+        <p id="channel-description" class="text-[11px] sm:text-xs text-slate-400">
+          <span class="text-sky-400 font-medium">Stable channel:</span> Recommended for all production systems. Receives tested, tagged releases.
+        </p>
+      </div>
+
+      <!-- Step 3: Install -->
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="flex items-center justify-center w-4 h-4 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 text-xs font-bold">3</span>
+            <h2 class="text-xs sm:text-sm font-semibold text-slate-200">Install Package</h2>
+          </div>
+          <button onclick="copyCode('cmd-install', this)" class="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white transition-colors bg-slate-800/60 hover:bg-slate-800 px-2 py-0.5 rounded border border-slate-700/50">
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+            <span>Copy</span>
+          </button>
+        </div>
+        <div class="bg-slate-950 border border-slate-800/90 rounded-xl p-2.5 sm:p-3 font-mono text-xs text-sky-300 overflow-x-auto">
+          <pre id="cmd-install" class="whitespace-pre">sudo apt update && sudo apt install -y indi-allsky</pre>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Supported Platforms Footer -->
+    <div class="border-t border-slate-800/80 pt-3 mt-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs text-slate-400">
+        <div class="bg-slate-950/60 border border-slate-800/80 rounded-lg px-3 py-1.5 flex items-center gap-2">
+          <span class="text-slate-200 font-semibold shrink-0">Architectures:</span>
+          <span>arm64 (Pi 4/5), amd64 (x86_64)</span>
+        </div>
+        <div class="bg-slate-950/60 border border-slate-800/80 rounded-lg px-3 py-1.5 flex items-center gap-2">
+          <span class="text-slate-200 font-semibold shrink-0">Distributions:</span>
+          <span>Bookworm (12), Trixie (13), Noble (24.04), Resolute (26.04)</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Robust origin resolution (handles local file preview vs GitHub Pages vs custom domain)
+    let origin = 'https://apt.indi-allsky.org';
+    if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+      const path = window.location.pathname.replace(/\/index\.html$/, '').replace(/\/+$/, '');
+      origin = window.location.origin + path;
+    }
+
+    let currentChannel = 'nightly';
+    selectChannel('nightly');
+
+    function updateCommands() {
+      // Step 1 command
+      const cmdKey = document.getElementById('cmd-key');
+      if (cmdKey) {
+        cmdKey.textContent = `sudo mkdir -p /etc/apt/keyrings\ncurl -fsSL ${origin}/key.gpg | \\\n  sudo gpg --dearmor -o /etc/apt/keyrings/indi-allsky.gpg\nsudo chmod a+r /etc/apt/keyrings/indi-allsky.gpg`;
+      }
+
+      // Step 2 command (DEB822 format)
+      const cmdRepo = document.getElementById('cmd-repo');
+      const sourcesFile = currentChannel === 'stable' ? 'indi-allsky.sources' : 'indi-allsky-nightly.sources';
+      if (cmdRepo) {
+        cmdRepo.textContent = `sudo tee /etc/apt/sources.list.d/${sourcesFile} <<EOF\nTypes: deb\nURIs: ${origin}\nSuites: $(lsb_release -cs)\nComponents: ${currentChannel}\nArchitectures: $(dpkg --print-architecture)\nSigned-By: /etc/apt/keyrings/indi-allsky.gpg\nEOF`;
+      }
+
+      // Label and description
+      const label = document.getElementById('channel-name-label');
+      const desc = document.getElementById('channel-description');
+      const banner = document.getElementById('channel-warning-banner');
+
+      if (label) {
+        label.textContent = currentChannel === 'stable' ? 'Stable' : 'Nightly';
+        label.className = currentChannel === 'stable' ? 'text-rose-400' : 'text-amber-400';
+      }
+      if (desc) {
+        if (currentChannel === 'stable') {
+          desc.innerHTML = '<span class="text-rose-400 font-medium">Stable channel:</span> <span class="text-rose-300">Under construction. Tagged releases will appear here once packaging is fully stabilized.</span>';
+        } else {
+          desc.innerHTML = '<span class="text-amber-400 font-medium">Nightly channel (Recommended):</span> Built from latest git commits with continuous bug fixes.';
+        }
+      }
+      if (banner) {
+        if (currentChannel === 'stable') {
+          banner.classList.remove('hidden');
+        } else {
+          banner.classList.add('hidden');
+        }
+      }
+    }
+
+    function selectChannel(channel) {
+      currentChannel = channel;
+      const btnStable = document.getElementById('tab-stable');
+      const btnNightly = document.getElementById('tab-nightly');
+      
+      if (channel === 'stable') {
+        btnStable.className = 'flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 bg-rose-900/80 text-rose-100 border border-rose-700 shadow-sm';
+        btnNightly.className = 'flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 text-slate-400 hover:text-slate-200';
+      } else {
+        btnNightly.className = 'flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 bg-amber-600 text-white shadow-sm';
+        btnStable.className = 'flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 text-slate-400 hover:text-slate-200';
+      }
+      updateCommands();
+    }
+
+    function copyCode(elementId, btn) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      navigator.clipboard.writeText(el.textContent).then(() => {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = `<svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg><span class="text-emerald-400">Copied!</span>`;
+        setTimeout(() => {
+          btn.innerHTML = originalHtml;
+        }, 2000);
+      });
+    }
+
+    // Initialize
+    updateCommands();
+  </script>
+</body>
+</html>

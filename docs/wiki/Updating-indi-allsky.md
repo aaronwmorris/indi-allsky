@@ -1,9 +1,26 @@
 # General
-indi-allsky upgrades are rolling releases.  You should be able to upgrade to the latest release of indi-allsky from any previous release.
+indi-allsky upgrades are rolling releases. You should be able to upgrade to the latest release of indi-allsky from any previous release.
 
-*Note: Upgrading INDI is not necessary (and not recommended) when upgrading indi-allsky*
+---
 
-## Unattended Upgrade
+## Option 1: APT Package Upgrade (Recommended)
+
+If you installed indi-allsky via the official APT repository (`apt.indi-allsky.org`), upgrading is as simple as updating your system packages:
+
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+> [!TIP]
+> **Automatic Service Reload & Migrations**:
+> Package upgrades automatically update pre-compiled wheels, execute database schema migrations, and reload systemd services without requiring manual intervention.
+
+> [!NOTE]
+> All user configuration in `/etc/indi-allsky/flask.json` and databases in `/var/lib/indi-allsky/` are preserved across upgrades.
+
+---
+
+## Option 2: Unattended Upgrade (Source / Git Installs)
 indi-allsky now has an unattended upgrade option that can perform a code upgrade with no interaction from the user.
 
 Navigate to `System` -> `Utilities` [tab] and select `Upgrade indi-allsky`.  The upgrade may require up to 5 minutes to complete.  During the upgrade, the indi-allsky capture process will be shutdown and restarted (if it was running) once the upgrade is complete.  A notification will be shown in the web interface once the upgrade has completed.

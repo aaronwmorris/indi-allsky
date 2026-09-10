@@ -1,0 +1,73 @@
+name: Check & Bump Upstream INDI Versions
+
+on:
+  schedule:
+    # Run weekly on Monday at 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  check-indi-updates:
+    name: Check for Upstream INDI Releases
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Fetch Latest Upstream INDI Tags
+        id: check_tags
+        run: |
+          # Fetch latest release tags from upstream repositories
+          LATEST_CORE=$(curl -s https://api.github.com/repos/indilib/indi/releases/latest | jq -r '.tag_name // empty')
+          LATEST_3RD=$(curl -s https://api.github.com/repos/indilib/indi-3rdparty/releases/latest | jq -r '.tag_name // empty')
+
+          WORKFLOW_FILE=".github/workflows/package-deb.yml"
+
+          CURRENT_CORE=$(grep -E 'INDI_CORE_TAG:' "$WORKFLOW_FILE" | head -n 1 | awk '{print $2}' | tr -d "'\"")
+          CURRENT_3RD=$(grep -E 'INDI_3RDPARTY_TAG:' "$WORKFLOW_FILE" | head -n 1 | awk '{print $2}' | tr -d "'\"")
+
+          echo "Current Core: $CURRENT_CORE | Latest Upstream Core: $LATEST_CORE"
+          echo "Current 3rdParty: $CURRENT_3RD | Latest Upstream 3rdParty: $LATEST_3RD"
+
+          UPDATED=0
+
+          if [ -n "$LATEST_CORE" ] && [ "$LATEST_CORE" != "$CURRENT_CORE" ]; then
+            echo "New INDI Core release found: $LATEST_CORE"
+            sed -i "s/INDI_CORE_TAG: '$CURRENT_CORE'/INDI_CORE_TAG: '$LATEST_CORE'/g" "$WORKFLOW_FILE"
+            sed -i "s/default: '$CURRENT_CORE'/default: '$LATEST_CORE'/g" "$WORKFLOW_FILE"
+            UPDATED=1
+          fi
+
+          if [ -n "$LATEST_3RD" ] && [ "$LATEST_3RD" != "$CURRENT_3RD" ]; then
+            echo "New INDI 3rd-Party release found: $LATEST_3RD"
+            sed -i "s/INDI_3RDPARTY_TAG: '$CURRENT_3RD'/INDI_3RDPARTY_TAG: '$LATEST_3RD'/g" "$WORKFLOW_FILE"
+            sed -i "s/default: '$CURRENT_3RD'/default: '$LATEST_3RD'/g" "$WORKFLOW_FILE"
+            UPDATED=1
+          fi
+
+          echo "updated=$UPDATED" >> $GITHUB_OUTPUT
+          echo "latest_core=${LATEST_CORE:-$CURRENT_CORE}" >> $GITHUB_OUTPUT
+          echo "latest_3rd=${LATEST_3RD:-$CURRENT_3RD}" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request for Updated INDI Versions
+        if: steps.check_tags.outputs.updated == '1'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "ci(deps): bump INDI Core to ${{ steps.check_tags.outputs.latest_core }} and 3rdparty to ${{ steps.check_tags.outputs.latest_3rd }}"
+          title: "ci(deps): update INDI Core to ${{ steps.check_tags.outputs.latest_core }} & 3rdparty to ${{ steps.check_tags.outputs.latest_3rd }}"
+          body: |
+            ### Automated INDI Dependency Bump
+            A new upstream release of INDI has been detected:
+            * **INDI Core**: `${{ steps.check_tags.outputs.latest_core }}` ([Release Notes](https://github.com/indilib/indi/releases/tag/${{ steps.check_tags.outputs.latest_core }}))
+            * **INDI 3rd-Party Drivers**: `${{ steps.check_tags.outputs.latest_3rd }}` ([Release Notes](https://github.com/indilib/indi-3rdparty/releases/tag/${{ steps.check_tags.outputs.latest_3rd }}))
+
+            Merging this PR will update the default pinned versions used for all Debian packages and CI builds.
+          branch: "ci/bump-indi-${{ steps.check_tags.outputs.latest_core }}"
+          delete-branch: true
+          labels: |
+            dependencies
+            automated-pr

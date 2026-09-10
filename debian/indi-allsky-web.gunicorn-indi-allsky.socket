@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn Socket for indi-allsky Flask Web UI
+
+[Socket]
+ListenStream=/run/indi-allsky/gunicorn-indi-allsky.sock
+RuntimeDirectory=indi-allsky
+RuntimeDirectoryMode=0755
+SocketUser=indi-allsky
+SocketGroup=www-data
+SocketMode=0660
+
+[Install]
+WantedBy=sockets.target

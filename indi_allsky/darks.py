@@ -350,7 +350,7 @@ class IndiAllSkyDarks(object):
             sys.exit(1)
 
 
-        if not self.indiclient.ccd_device:
+        if self.indiclient.ccd_device is None:
             logger.error('No CCDs detected')
             time.sleep(1)
             sys.exit(1)
@@ -377,7 +377,7 @@ class IndiAllSkyDarks(object):
         if self.config.get('CFA_PATTERN'):
             cfa_pattern = self.config['CFA_PATTERN']
         else:
-            cfa_pattern = ccd_info['CCD_CFA']['CFA_TYPE'].get('text')
+            cfa_pattern = ccd_info.get('CCD_CFA', {}).get('CFA_TYPE', {}).get('text')
 
 
         ccd_min_exp = math.ceil(float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']) * 1000000) / 1000000
@@ -786,7 +786,7 @@ class IndiAllSkyDarks(object):
                 hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
-            elif self.ccd_info['CCD_CFA']['CFA_TYPE'].get('text'):
+            elif self.ccd_info.get('CCD_CFA', {}).get('CFA_TYPE', {}).get('text'):
                 hdulist[0].header['BAYERPAT'] = self.ccd_info['CCD_CFA']['CFA_TYPE']['text']
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0

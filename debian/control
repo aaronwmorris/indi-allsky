@@ -1,0 +1,66 @@
+Source: indi-allsky
+Section: science
+Priority: optional
+Maintainer: INDI Allsky Maintainers <aaronwmorris@users.noreply.github.com>
+Build-Depends: debhelper-compat (= 13),
+ dh-python,
+ python3-all,
+ python3-setuptools,
+ python3-venv,
+ python3-dev,
+ python3-pip,
+ python3-wheel,
+ zstd,
+ git
+Standards-Version: 4.6.2
+Homepage: https://github.com/aaronwmorris/indi-allsky
+
+Package: indi-allsky-web
+Architecture: any
+Depends: ${misc:Depends},
+ python3 (>= 3.9),
+ apache2 | nginx,
+ sqlite3,
+ pigz,
+ zstd,
+ jq,
+ debconf,
+ adduser,
+ openssl,
+ bc,
+ procps,
+ rsyslog,
+ logrotate,
+ cron,
+ tzdata,
+ locales,
+ ca-certificates
+Breaks: indi-allsky (<< 2026.08.2~)
+Replaces: indi-allsky (<< 2026.08.2~)
+Suggests: udiskie
+Description: INDI Allsky web dashboard and remote sync portal
+ indi-allsky-web provides the standalone Flask web interface, Gunicorn
+ application server, and web server configuration for INDI Allsky.
+ It can be deployed on a remote server, VPS, or central dashboard to view
+ images and sync data without requiring local camera hardware or INDI drivers.
+
+Package: indi-allsky
+Architecture: any
+Depends: ${misc:Depends},
+ indi-allsky-web (= ${binary:Version}),
+ libindi1 | libindiclient1 | libindi2,
+ ffmpeg,
+ network-manager,
+ udisks2
+Recommends: indiserver | indi-bin,
+ libindi-data,
+ indi-3rdparty | indi-asi | indi-qhy | indi-playerone | indi-svbony | indi-toupbase | indi-toupcam | indi-sx | indi-gphoto | indi-webcam,
+ rpicam-apps | libcamera-apps | libcamera-tools
+Suggests: mosquitto,
+ gpsd,
+ udiskie,
+ gsc
+Description: Allsky camera software using INDI framework and Flask web UI
+ indi-allsky is a complete solution for operating an allsky camera using the
+ INDI library framework for camera control, keogram generation, startrail
+ generation, and web-based monitoring.

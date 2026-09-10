@@ -1,0 +1,21 @@
+#!/bin/sh
+set -e
+
+. /usr/share/debconf/confmodule
+
+case "$1" in
+    configure)
+        # Enable and restart indiserver and indi-allsky services if running under an active init system
+        systemctl daemon-reload 2>/dev/null || true
+        systemctl enable indiserver.service 2>/dev/null || true
+        systemctl enable indi-allsky.service 2>/dev/null || true
+        if [ -d /run/systemd/system ]; then
+            systemctl restart indiserver.service 2>/dev/null || true
+            systemctl restart indi-allsky.service 2>/dev/null || true
+        fi
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0
