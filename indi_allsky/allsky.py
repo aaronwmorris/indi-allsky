@@ -48,6 +48,9 @@ from .flask.models import IndiAllSkyDbStarTrailsVideoTable
 from .flask.models import IndiAllSkyDbPanoramaImageTable
 from .flask.models import IndiAllSkyDbPanoramaVideoTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
+from .flask.models import IndiAllSkyDbTleDataTable
+
+from . import constants
 
 from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
@@ -113,7 +116,35 @@ class IndiAllSky(object):
         self.cleanup_tasks_time = now_time   # run asap
         self.aurora_tasks_time = now_time    # run asap
         self.smoke_tasks_time = now_time     # run asap
-        self.sat_data_tasks_time = now_time  # run asap
+        # satellite tle task time based on persistent state and cache freshness
+        try:
+            sat_next_attempt = int(self._miscDb.getState('SATELLITE_TLE_NEXT_ATTEMPT_TS'))
+        except (NoResultFound, ValueError, TypeError):
+            sat_next_attempt = 0
+
+        if sat_next_attempt > now_time:
+            self.sat_data_tasks_time = sat_next_attempt
+        else:
+            try:
+                sat_last_ts = int(self._miscDb.getState('SATELLITE_TLE_TS'))
+            except (NoResultFound, ValueError, TypeError):
+                sat_last_ts = 0
+
+            if not sat_last_ts:
+                with app.app_context():
+                    latest_sat = IndiAllSkyDbTleDataTable.query\
+                        .filter(IndiAllSkyDbTleDataTable.group == constants.SATELLITE_VISUAL)\
+                        .order_by(IndiAllSkyDbTleDataTable.createDate.desc())\
+                        .first()
+                    if latest_sat and latest_sat.createDate:
+                        sat_last_ts = int(latest_sat.createDate.timestamp())
+                        self._miscDb.setState('SATELLITE_TLE_TS', sat_last_ts)
+
+            if sat_last_ts and (sat_last_ts + self.sat_data_tasks_offset > now_time):
+                self.sat_data_tasks_time = sat_last_ts + self.sat_data_tasks_offset
+            else:
+                self.sat_data_tasks_time = now_time  # run asap
+
         self.backup_tasks_time = now_time    # run asap
         self.allskymap_tasks_time = now_time  # run asap
 
@@ -1469,10 +1500,19 @@ class IndiAllSky(object):
 
         # satellite tle data update
         if self.sat_data_tasks_time < now_time:
-            self.sat_data_tasks_time = now_time + self.smoke_tasks_offset
+            self.sat_data_tasks_time = now_time + self.sat_data_tasks_offset
 
-            logger.info('Creating satellite tle data update task')
-            self._updateSatelliteTleData()
+            # check if backoff cooldown is active
+            try:
+                sat_next_attempt = int(self._miscDb.getState('SATELLITE_TLE_NEXT_ATTEMPT_TS'))
+            except (NoResultFound, ValueError, TypeError):
+                sat_next_attempt = 0
+
+            if sat_next_attempt > now_time:
+                self.sat_data_tasks_time = sat_next_attempt
+            else:
+                logger.info('Creating satellite tle data update task')
+                self._updateSatelliteTleData()
 
 
         # check if we need to backup database
