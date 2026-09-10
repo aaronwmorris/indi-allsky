@@ -44,6 +44,8 @@ requests-toolbelt
 psutil
 dbus-python
 paho-mqtt >= 2.0.0
+boto3
+pycurl
 
 # Pytest & Test Suite Tooling
 pytest
