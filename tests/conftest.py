@@ -9,7 +9,11 @@ import pytest
 # Global mocks for environments without native/optional libraries (e.g. CI)
 if 'PyIndi' not in sys.modules:
     mock_pyindi = MagicMock()
-    mock_pyindi.BaseClient = object
+    class MockBaseClient:
+        def disconnectServer(self, *args, **kwargs):
+            pass
+
+    mock_pyindi.BaseClient = MockBaseClient
     mock_pyindi.IPS_IDLE = 0
     mock_pyindi.IPS_OK = 1
     mock_pyindi.IPS_BUSY = 2
