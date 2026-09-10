@@ -7387,7 +7387,9 @@ class IndiAllskyFitsImageViewer(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(IndiAllskyFitsImageViewer, self).__init__(*args, **kwargs)
 
+        self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
+        self.local = kwargs.get('local', True)
 
 
     def getYears(self):
@@ -7395,6 +7397,17 @@ class IndiAllskyFitsImageViewer(FlaskForm):
             self.model.createDate_year,
         )\
             .filter(self.model.camera_id == self.camera_id)
+
+
+        if not self.local:
+            # Do not serve local assets
+            years_query = years_query\
+                .filter(
+                    or_(
+                        self.model.remote_url != sa_null(),
+                        self.model.s3_key != sa_null(),
+                    )
+                )
 
 
         years_query = years_query\
@@ -7423,7 +7436,18 @@ class IndiAllskyFitsImageViewer(FlaskForm):
                     self.model.camera_id == self.camera_id,
                     self.model.createDate_year == year,
                 )
-        )
+            )
+
+
+        if not self.local:
+            # Do not serve local assets
+            months_query = months_query\
+                .filter(
+                    or_(
+                        self.model.remote_url != sa_null(),
+                        self.model.s3_key != sa_null(),
+                    )
+                )
 
 
         months_query = months_query\
@@ -7454,7 +7478,18 @@ class IndiAllskyFitsImageViewer(FlaskForm):
                     self.model.createDate_year == year,
                     self.model.createDate_month == month,
                 )
-        )
+            )
+
+
+        if not self.local:
+            # Do not serve local assets
+            days_query = days_query\
+                .filter(
+                    or_(
+                        self.model.remote_url != sa_null(),
+                        self.model.s3_key != sa_null(),
+                    )
+                )
 
 
         days_query = days_query\
@@ -7485,7 +7520,18 @@ class IndiAllskyFitsImageViewer(FlaskForm):
                     self.model.createDate_month == month,
                     self.model.createDate_day == day,
                 )
-        )
+            )
+
+
+        if not self.local:
+            # Do not serve local assets
+            hours_query = hours_query\
+                .filter(
+                    or_(
+                        self.model.remote_url != sa_null(),
+                        self.model.s3_key != sa_null(),
+                    )
+                )
 
 
         hours_query = hours_query\
@@ -7514,7 +7560,18 @@ class IndiAllskyFitsImageViewer(FlaskForm):
                     self.model.createDate_day == day,
                     self.model.createDate_hour == hour,
                 )
-        )
+            )
+
+
+        if not self.local:
+            # Do not serve local assets
+            images_query = images_query\
+                .filter(
+                    or_(
+                        self.model.remote_url != sa_null(),
+                        self.model.s3_key != sa_null(),
+                    )
+                )
 
 
         images_query = images_query\
@@ -7540,7 +7597,11 @@ class IndiAllskyFitsImageViewer(FlaskForm):
                     role_names,
                 )
 
-            fits_url = img.getUrl(local=True)
+            try:
+                fits_url = img.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+            except ValueError as e:
+                app.logger.error('Error determining relative file name: %s', str(e))
+                continue
 
             image_dict = dict()
             image_dict['id'] = img.id
@@ -7566,7 +7627,18 @@ class IndiAllskyFitsImageViewerPreload(IndiAllskyFitsImageViewer):
         last_fits_image = db.session.query(
             self.model,
         )\
-            .filter(self.model.camera_id == self.camera_id)\
+            .filter(self.model.camera_id == self.camera_id)
+
+        if not self.local:
+            last_fits_image = last_fits_image\
+                .filter(
+                    or_(
+                        self.model.remote_url != sa_null(),
+                        self.model.s3_key != sa_null(),
+                    )
+                )
+
+        last_fits_image = last_fits_image\
             .order_by(self.model.createDate.desc())\
             .first()
 
