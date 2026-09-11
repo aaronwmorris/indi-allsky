@@ -270,11 +270,39 @@ status_indi_hold() {
     fi
 }
 
+check_flask_config() {
+    local flask_config="${INDI_ALLSKY_FLASK_CONFIG:-/etc/indi-allsky/flask.json}"
+    local flask_dir
+    flask_dir="$(dirname "$flask_config")"
+    if { [ -d "$flask_dir" ] && [ ! -x "$flask_dir" ]; } || { [ -f "$flask_config" ] && [ ! -r "$flask_config" ]; }; then
+        echo "Error: Permission denied accessing $flask_config." >&2
+        echo "Please run with sudo:" >&2
+        if [ $# -gt 0 ]; then
+            echo "  sudo indi-allsky-ctl $COMMAND $*" >&2
+        else
+            echo "  sudo indi-allsky-ctl $COMMAND" >&2
+        fi
+        exit 1
+    fi
+}
+
 COMMAND="${1:-}"
 # Normalize --command or -command to command
 COMMAND="${COMMAND#--}"
 COMMAND="${COMMAND#-}"
 shift 2>/dev/null || true
+
+case "$COMMAND" in
+    passwd|reset-pass|user-add|user-list|user-del|\
+    backup-db|expire-images|rebuild-thumbnails|convert-db|validate-db|\
+    flush-images|purge-images|flush-16min-images|flush-recent-images|\
+    merge-cameras|import-darks|retry-uploads|upload-sync|sync-uploads|\
+    notify|add-notification|test-camera|test-linearity|camera-linearity|\
+    test-sensors|test-devices|test-hardware|test-fans|test-upload|test-transfers|\
+    test-adsb|test-oci|test-websocket|test-ws|ha-discovery|setup-ha-discovery)
+        check_flask_config "$@"
+        ;;
+esac
 
 case "$COMMAND" in
     # User & Authentication
