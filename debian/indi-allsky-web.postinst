@@ -353,9 +353,10 @@ with app.app_context():
         FLASK_APP="indi_allsky.flask:create_app()" "$VENV/bin/python3" -m flask db revision --autogenerate -d "$MIGRATION_FOLDER" -m "package_upgrade"
         FLASK_APP="indi_allsky.flask:create_app()" "$VENV/bin/python3" -m flask db upgrade head -d "$MIGRATION_FOLDER"
         "$VENV/bin/python3" /usr/share/indi-allsky/misc/populate_data.py
-        "$VENV/bin/python3" /usr/share/indi-allsky/config.py update_level
+        if [ "$FRESH_DB" = "0" ]; then
+            "$VENV/bin/python3" /usr/share/indi-allsky/config.py update_level
+        fi
         chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" "$MIGRATION_FOLDER"
-        rm -rf /usr/share/indi-allsky/migrations
 
         # Detect and configure IMAGE_FOLDER (supporting custom/non-standard paths)
         IMAGE_FOLDER="/var/www/html/allsky/images"
