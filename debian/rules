@@ -7,23 +7,12 @@ override_dh_auto_build:
 	# Build self-contained production virtualenv directly at package build time
 	mkdir -p debian/venv debian/bundle
 	python3 -m venv debian/venv
-	debian/venv/bin/pip install --no-cache-dir --upgrade pip wheel setuptools
-	@echo "=== [1/5] Installing web production virtualenv packages (indi-allsky-web) ==="
-	debian/venv/bin/pip install --no-cache-dir \
+	debian/venv/bin/python3 -m pip install --no-cache-dir --upgrade pip wheel setuptools
+
+	@echo "=== [1/4] Installing web production virtualenv packages (indi-allsky-web) ==="
+	debian/venv/bin/python3 -m pip install --no-cache-dir \
 		-r requirements/requirements_latest_web.txt \
 		-r requirements/requirements_optional.txt
-	# Clone web virtualenv state to debian/venv-hw before pruning build tools
-	cp -a debian/venv debian/venv-hw
-	# Record inventory of base web files (in debian/venv-hw)
-	(cd debian/venv-hw && find . -type f -o -type l) | sort > debian/bundle/web-files.txt
-	@echo "=== [2/5] Packaging base web virtualenv (indi-allsky-web) ==="
-	debian/venv/bin/pip uninstall -y pip setuptools wheel cython Cython setuptools-rust 2>/dev/null || true
-	find debian/venv -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-	find debian/venv -type f -name "*.pyc" -delete 2>/dev/null || true
-	find debian/venv -type f -name "*.a" -delete 2>/dev/null || true
-	find debian/venv -type f -name "RECORD" -delete 2>/dev/null || true
-	find debian/venv -type f -name "INSTALLER" -delete 2>/dev/null || true
-	find debian/venv/bin -type f -exec sed -i '1s|^#!.*python.*|#!/var/lib/indi-allsky/venv/bin/python3|' {} +
 	ln -sf python3 debian/venv/bin/python
 	for sp in debian/venv/lib/python*/site-packages; do \
 		if [ -d "$$sp" ]; then \
@@ -31,31 +20,35 @@ override_dh_auto_build:
 			echo "/usr/lib/python3/dist-packages" > "$$sp/dist-packages.pth"; \
 		fi; \
 	done
-	tar -cf - -C debian/venv . | zstd -12 -T0 > debian/bundle/venv.tar.zst
-	rm -rf debian/venv
+	# Record inventory of base web files before installing hardware packages
+	(cd debian/venv && find . -type f -o -type l) | sort > debian/bundle/web-files.txt
 
-	@echo "=== [3/5] Installing hardware, camera & sensor packages (indi-allsky) ==="
-	debian/venv-hw/bin/pip install --no-cache-dir \
+	@echo "=== [2/4] Installing hardware, camera & sensor packages (indi-allsky) ==="
+	debian/venv/bin/python3 -m pip install --no-cache-dir \
 		-r requirements/requirements_latest.txt \
 		-r requirements/requirements_gpio.txt
-	debian/venv-hw/bin/pip install --no-cache-dir pyindi-client || true
+	debian/venv/bin/python3 -m pip install --no-cache-dir pyindi-client || true
 	# Fix SWIG __nonzero__ compatibility for Python 3.13 in PyIndi wrapper
-	for pyindi_py in $$(find debian/venv-hw -name "PyIndi.py"); do \
+	for pyindi_py in $$(find debian/venv -name "PyIndi.py"); do \
 		sed -i 's/return _PyIndi\..*___nonzero__(self)/return True/g' "$$pyindi_py" 2>/dev/null || true; \
 	done
-	debian/venv-hw/bin/pip uninstall -y pip setuptools wheel cython Cython setuptools-rust 2>/dev/null || true
-	find debian/venv-hw -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-	find debian/venv-hw -type f -name "*.pyc" -delete 2>/dev/null || true
-	find debian/venv-hw -type f -name "*.a" -delete 2>/dev/null || true
-	find debian/venv-hw -type f -name "RECORD" -delete 2>/dev/null || true
-	find debian/venv-hw -type f -name "INSTALLER" -delete 2>/dev/null || true
-	find debian/venv-hw/bin -type f -exec sed -i '1s|^#!.*python.*|#!/var/lib/indi-allsky/venv/bin/python3|' {} +
 
-	@echo "=== [4/5] Isolating and packaging hardware extensions overlay (indi-allsky) ==="
-	(cd debian/venv-hw && find . -type f -o -type l) | sort > debian/bundle/all-files.txt
+	@echo "=== [3/4] Pruning build tools and caches from unified virtualenv ==="
+	debian/venv/bin/python3 -m pip uninstall -y pip setuptools wheel cython Cython setuptools-rust 2>/dev/null || true
+	find debian/venv -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find debian/venv -type f -name "*.pyc" -delete 2>/dev/null || true
+	find debian/venv -type f -name "*.a" -delete 2>/dev/null || true
+	find debian/venv -type f -name "RECORD" -delete 2>/dev/null || true
+	find debian/venv -type f -name "INSTALLER" -delete 2>/dev/null || true
+	find debian/venv/bin -type f -exec sed -i '1s|^#!.*python.*|#!/var/lib/indi-allsky/venv/bin/python3|' {} +
+
+	@echo "=== [4/4] Partitioning and packaging web base and hardware overlay archives ==="
+	(cd debian/venv && find . -type f -o -type l) | sort > debian/bundle/all-files.txt
+	comm -12 debian/bundle/web-files.txt debian/bundle/all-files.txt > debian/bundle/clean-web-files.txt
 	comm -13 debian/bundle/web-files.txt debian/bundle/all-files.txt > debian/bundle/hw-files.txt
-	tar -cf - -C debian/venv-hw -T debian/bundle/hw-files.txt | zstd -12 -T0 > debian/bundle/venv-hw.tar.zst
-	rm -rf debian/venv-hw debian/bundle/*.txt
+	tar -cf - -C debian/venv -T debian/bundle/clean-web-files.txt | zstd -12 -T0 > debian/bundle/venv.tar.zst
+	tar -cf - -C debian/venv -T debian/bundle/hw-files.txt | zstd -12 -T0 > debian/bundle/venv-hw.tar.zst
+	rm -rf debian/venv debian/bundle/*.txt
 
 # Pre-compiled third-party binary wheels inside venv lack DWARF debuginfo symbols
 override_dh_dwz:
