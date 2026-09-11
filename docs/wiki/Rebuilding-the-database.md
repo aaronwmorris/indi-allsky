@@ -25,11 +25,13 @@ sqlite3 indi-allsky.sqlite "PRAGMA integrity_check;"
 
 
 
-## MySQL/MariaDB Integrity Check
-```
+## MySQL/MariaDB Integrity Check & Table Optimization
+```bash
 sudo mysqlcheck -u root indi_allsky --analyze
-
 sudo mysqlcheck -u root indi_allsky --repair
+
+# Reclaim unused table space via indi-allsky-ctl:
+sudo indi-allsky-ctl optimize-mysql
 ```
 
 
@@ -83,11 +85,13 @@ _If you are using a libcamera type camera, the name should be something like `li
 
 1. Recreate thumbnails
 
-        ./misc/create_thumbnails.py
+        sudo indi-allsky-ctl rebuild-thumbnails
+        # Or from git checkout: ./misc/create_thumbnails.py
 
 1. Import dark frames
 
-        ./misc/import_darks_frames.py
+        sudo indi-allsky-ctl import-darks
+        # Or from git checkout: ./misc/import_darks_frames.py
 
 1. Restart web services
 

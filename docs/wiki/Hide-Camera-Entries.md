@@ -24,10 +24,12 @@ sqlite> UPDATE camera SET hidden=1 WHERE id=1;
 ```
 
 ## Merge Cameras
-Sometimes the camera name will change if you upgrade the indilib library.  This will result in 2 camera entries in the camera dropdown.
+Sometimes the camera name will change if you upgrade the indilib library. This will result in 2 camera entries in the camera dropdown.
 
-indi-allsky includes a script that will merge the old camera data with the new camera leaving a single entry.
+indi-allsky provides a command to merge the old camera data with the new camera, consolidating into a single active camera:
 
+```bash
+sudo indi-allsky-ctl merge-cameras -orig <old_camera_id> -n <new_camera_id>
 ```
-./misc/merge_cameras.py
-```
+
+*(Or from a git checkout: `./misc/merge_cameras.py -orig <old_camera_id> -n <new_camera_id>`).*

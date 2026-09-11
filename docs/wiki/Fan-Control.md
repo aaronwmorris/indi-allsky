@@ -15,13 +15,13 @@ https://github.com/aaronwmorris/indi-allsky/wiki/GPIO-Permissions
 **The pins from a SBC cannot be used to directly drive a fan.  Trying to do so WILL damage your system.**
 
 ## Testing Fans
-The following test script can be used to test your fan for proper wiring and operation:
+The following test command can be used to test your fan for proper wiring and operation:
 
+```bash
+indi-allsky-ctl test-devices fan
 ```
-source virtualenv/indi-allsky/bin/activate
 
-./misc/device_test.py fan
-```
+*(Or from a git checkout: `source virtualenv/indi-allsky/bin/activate && ./misc/device_test.py fan`).*
 
 ## Fan - Standard
 This type of fan only supports two modes:  ON and OFF.  Any duty cycle applied to the fan will set it to FULL power.  This type may use either a relay or MOSFET driver.

@@ -4,8 +4,27 @@
 ###############################################################################
 set -e
 
-APP_DIR="/usr/share/indi-allsky"
-PYTHON_BIN="/var/lib/indi-allsky/venv/bin/python3"
+# Resolve APP_DIR dynamically (supports installed package and git source tree)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ "$SCRIPT_DIR" = "/usr/bin" ] || [ "$SCRIPT_DIR" = "/usr/local/bin" ]; then
+    APP_DIR="/usr/share/indi-allsky"
+elif [ -d "${SCRIPT_DIR}/../indi_allsky" ]; then
+    APP_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+elif [ -d "/usr/share/indi-allsky" ]; then
+    APP_DIR="/usr/share/indi-allsky"
+else
+    APP_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+fi
+
+if [ -x "/var/lib/indi-allsky/venv/bin/python3" ]; then
+    PYTHON_BIN="/var/lib/indi-allsky/venv/bin/python3"
+elif [ -x "${APP_DIR}/virtualenv/indi-allsky/bin/python3" ]; then
+    PYTHON_BIN="${APP_DIR}/virtualenv/indi-allsky/bin/python3"
+elif [ -x "${APP_DIR}/.venv/bin/python3" ]; then
+    PYTHON_BIN="${APP_DIR}/.venv/bin/python3"
+else
+    PYTHON_BIN="python3"
+fi
 export PYTHONPATH="${APP_DIR}:${PYTHONPATH:-}"
 
 show_help() {
@@ -28,14 +47,32 @@ Database & Storage:
   rebuild-thumbnails       Regenerate missing image thumbnails
   convert-db               Convert database between SQLite and MySQL
   validate-db              Audit database schema and repair broken records
+  flush-images             Purge historical images/videos for a camera from DB
+  flush-16min-images       Purge images taken within last 16 minutes from DB
+  merge-cameras            Migrate records and images from one camera ID to another
+  optimize-mysql           Optimize MySQL / MariaDB database tables
+  import-darks             Interactively import dark frames and bad pixel maps
+  retry-uploads            Manually sync / retry pending uploads (images/videos/API)
+  notify                   Inject an alert notification into the database
 
 Hardware & Diagnostics:
   test-camera              Run diagnostic camera capture test
   list-cameras             List detected INDI cameras
+  camera-info              Display detailed sensor and capability info for cameras
+  camera-props             List all INDI driver properties exposed by camera
+  test-linearity           Perform camera sensor exposure linearity test
   test-sensors             Probe and read connected hardware sensors
+  test-devices             Test fans, dew heaters, and GPIO output devices
+  test-upload              Test file transfer protocols (SFTP/FTP/S3/Sync API)
+  test-adsb                Test ADS-B aircraft tracking receiver connection
+  test-oci                 Validate Oracle Cloud Infrastructure (OCI) credentials
+  test-websocket           Test WebSocket real-time events and send control commands
   support-info             Generate diagnostic report bundle for troubleshooting
 
-Peripheral Configuration:
+Peripheral Configuration & Integrations:
+  disable-leds             Disable Raspberry Pi onboard LEDs (Pi 3, 4, 5)
+  setup-mqtt               Install and configure Mosquitto MQTT broker
+  ha-discovery             Send Home Assistant MQTT auto-discovery configurations
   setup-gps                Configure GPS / GPSD service
   setup-hotspot            Configure WiFi hotspot failover
   setup-rtc                Configure I2C hardware Real-Time Clock
@@ -273,6 +310,27 @@ case "$COMMAND" in
     validate-db)
         exec "$PYTHON_BIN" "${APP_DIR}/misc/validate_db_entries.py" "$@"
         ;;
+    flush-images|purge-images)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/flush_images.py" "$@"
+        ;;
+    flush-16min-images|flush-recent-images)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/flush_16min_images.py" "$@"
+        ;;
+    merge-cameras)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/merge_cameras.py" "$@"
+        ;;
+    optimize-mysql|mysql-optimize)
+        exec bash "${APP_DIR}/misc/mysql_optimize.sh" "$@"
+        ;;
+    import-darks)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/import_darks_frames.py" "$@"
+        ;;
+    retry-uploads|upload-sync|sync-uploads)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/upload_sync.py" "$@"
+        ;;
+    notify|add-notification)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/add_notification.py" "$@"
+        ;;
 
     # Hardware & Diagnostics
     test-camera)
@@ -281,14 +339,47 @@ case "$COMMAND" in
     list-cameras)
         exec "$PYTHON_BIN" "${APP_DIR}/misc/indi_list_cameras.py" "$@"
         ;;
+    camera-info)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/camera_info.py" "$@"
+        ;;
+    camera-props|camera-properties)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/camera_properties.py" "$@"
+        ;;
+    test-linearity|camera-linearity)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/camera_linearity.py" "$@"
+        ;;
     test-sensors)
         exec "$PYTHON_BIN" "${APP_DIR}/misc/sensor_test.py" "$@"
+        ;;
+    test-devices|test-hardware|test-fans)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/device_test.py" "$@"
+        ;;
+    test-upload|test-transfers)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/upload_test.py" "$@"
+        ;;
+    test-adsb)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/adsb_test.py" "$@"
+        ;;
+    test-oci)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/oci_config_test.py" "$@"
+        ;;
+    test-websocket|test-ws)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/test_websocket_events.py" "$@"
         ;;
     support-info)
         exec bash "${APP_DIR}/misc/support_info.sh" "$@"
         ;;
 
-    # Peripheral Helpers
+    # Peripheral Helpers & Integrations
+    disable-leds|setup-leds)
+        exec bash "${APP_DIR}/misc/setup_disable_leds.sh" "$@"
+        ;;
+    setup-mqtt|setup-mosquitto)
+        exec bash "${APP_DIR}/misc/setup_mosquitto_mqtt.sh" "$@"
+        ;;
+    ha-discovery|setup-ha-discovery)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/home_assistant_auto_discovery.py" "$@"
+        ;;
     setup-gps)
         exec bash "${APP_DIR}/misc/setup_gpsd.sh" "$@"
         ;;
