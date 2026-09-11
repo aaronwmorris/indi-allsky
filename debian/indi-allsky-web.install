@@ -2,7 +2,6 @@ app.py usr/share/indi-allsky/
 config.py usr/share/indi-allsky/
 flask.json_template usr/share/indi-allsky/
 indi_allsky usr/share/indi-allsky/
-migrations usr/share/indi-allsky/
 misc usr/share/indi-allsky/
 html usr/share/indi-allsky/
 requirements usr/share/indi-allsky/

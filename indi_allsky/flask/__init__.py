@@ -119,10 +119,7 @@ def create_app():
     csrf.exempt(bp_actionapi_allsky)  # disable CSRF for actionapi views
 
     db.init_app(app)
-    migration_dir = app.config.get('MIGRATION_FOLDER', '/usr/share/indi-allsky/migrations')
-    if not os.path.exists(migration_dir) and os.path.exists('/usr/share/indi-allsky/migrations'):
-        migration_dir = '/usr/share/indi-allsky/migrations'
-    migrate.init_app(app, db, directory=migration_dir)
+    migrate.init_app(app, db, directory=app.config['MIGRATION_FOLDER'])
 
 
     login_manager = LoginManager()
