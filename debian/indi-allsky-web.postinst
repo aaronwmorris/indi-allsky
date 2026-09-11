@@ -342,20 +342,20 @@ from indi_allsky.flask import create_app, db
 app = create_app()
 with app.app_context():
     db.create_all()
-' 2>/dev/null || true
+'
 
         MIGRATION_FOLDER="/var/lib/indi-allsky/migrations"
         if [ ! -d "$MIGRATION_FOLDER/versions" ]; then
-            FLASK_APP="indi_allsky.flask:create_app()" "$VENV/bin/python3" -m flask db init -d "$MIGRATION_FOLDER" 2>/dev/null || true
+            FLASK_APP="indi_allsky.flask:create_app()" "$VENV/bin/python3" -m flask db init -d "$MIGRATION_FOLDER"
         fi
 
         # Autogenerate schema diffs and apply upgrades matching setup.sh behavior
-        FLASK_APP="indi_allsky.flask:create_app()" "$VENV/bin/python3" -m flask db revision --autogenerate -d "$MIGRATION_FOLDER" -m "package_upgrade" 2>/dev/null || true
-        FLASK_APP="indi_allsky.flask:create_app()" "$VENV/bin/python3" -m flask db upgrade head -d "$MIGRATION_FOLDER" 2>/dev/null || true
-        "$VENV/bin/python3" /usr/share/indi-allsky/misc/populate_data.py || true
-        "$VENV/bin/python3" /usr/share/indi-allsky/config.py update_level 2>/dev/null || true
-        chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" "$MIGRATION_FOLDER" 2>/dev/null || true
-        rm -rf /usr/share/indi-allsky/migrations 2>/dev/null || true
+        FLASK_APP="indi_allsky.flask:create_app()" "$VENV/bin/python3" -m flask db revision --autogenerate -d "$MIGRATION_FOLDER" -m "package_upgrade"
+        FLASK_APP="indi_allsky.flask:create_app()" "$VENV/bin/python3" -m flask db upgrade head -d "$MIGRATION_FOLDER"
+        "$VENV/bin/python3" /usr/share/indi-allsky/misc/populate_data.py
+        "$VENV/bin/python3" /usr/share/indi-allsky/config.py update_level
+        chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" "$MIGRATION_FOLDER"
+        rm -rf /usr/share/indi-allsky/migrations
 
         # Detect and configure IMAGE_FOLDER (supporting custom/non-standard paths)
         IMAGE_FOLDER="/var/www/html/allsky/images"
@@ -381,12 +381,12 @@ with app.app_context():
         fi
 
         echo "indi-allsky: Bootstrapping configuration..."
-        "$VENV/bin/python3" /usr/share/indi-allsky/config.py bootstrap --image_folder "$IMAGE_FOLDER" || true
+        "$VENV/bin/python3" /usr/share/indi-allsky/config.py bootstrap --image_folder "$IMAGE_FOLDER"
 
         # Apply debconf camera, driver, port & location parameters on fresh install OR if user chose not to reuse existing config
         if [ "$FRESH_DB" = "1" ] || [ "$REUSE_CONFIG" != "true" ]; then
             TMP_CFG=$(mktemp)
-            "$VENV/bin/python3" /usr/share/indi-allsky/config.py dumpfile --outfile "$TMP_CFG" 2>/dev/null || true
+            "$VENV/bin/python3" /usr/share/indi-allsky/config.py dumpfile --outfile "$TMP_CFG"
             if [ -s "$TMP_CFG" ]; then
                 jq \
                     --arg camera_interface "${CAMERA_INTERFACE:-indi}" \
@@ -400,8 +400,8 @@ with app.app_context():
                     (if $lat != "" then .LOCATION_LATITUDE = ($lat | tonumber) else . end) |
                     (if $lon != "" then .LOCATION_LONGITUDE = ($lon | tonumber) else . end) |
                     (if $elev != "" then .LOCATION_ELEVATION = ($elev | tonumber | floor) else . end)
-                    ' "$TMP_CFG" > "${TMP_CFG}.json" 2>/dev/null && \
-                "$VENV/bin/python3" /usr/share/indi-allsky/config.py load -c "${TMP_CFG}.json" --force 2>/dev/null || true
+                    ' "$TMP_CFG" > "${TMP_CFG}.json" && \
+                "$VENV/bin/python3" /usr/share/indi-allsky/config.py load -c "${TMP_CFG}.json" --force
                 rm -f "${TMP_CFG}.json"
             fi
             rm -f "$TMP_CFG"
@@ -426,8 +426,8 @@ with app.app_context():
                 ADMIN_PASS="$WEB_PASS"
             fi
 
-            USERTOOL_PASSWORD="$ADMIN_PASS" "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py adduser -u "$ADMIN_USER" -f "$ADMIN_NAME" -e "$ADMIN_EMAIL" || true
-            "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py setadmin -u "$ADMIN_USER" || true
+            USERTOOL_PASSWORD="$ADMIN_PASS" "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py adduser -u "$ADMIN_USER" -f "$ADMIN_NAME" -e "$ADMIN_EMAIL"
+            "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py setadmin -u "$ADMIN_USER"
         fi
 
         # Configure Web Server (Apache2 or Nginx)
@@ -469,29 +469,39 @@ with app.app_context():
 
         # Add indi-allsky user to hardware, web, and journal groups
         for GRP in dialout video plugdev gpio i2c spi adm systemd-journal www-data; do
-            getent group "$GRP" >/dev/null 2>&1 && usermod -a -G "$GRP" "$ALLSKY_USER" 2>/dev/null || true
+            if getent group "$GRP" >/dev/null 2>&1; then
+                usermod -a -G "$GRP" "$ALLSKY_USER"
+            fi
         done
-        getent passwd www-data >/dev/null 2>&1 && usermod -a -G "$ALLSKY_GROUP" www-data 2>/dev/null || true
+        if getent passwd www-data >/dev/null 2>&1; then
+            usermod -a -G "$ALLSKY_GROUP" www-data
+        fi
 
         # Ensure data, database, and log directories have proper ownership and write permissions
-        chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" /var/log/indi-allsky 2>/dev/null || true
-        chown "${ALLSKY_USER}:${ALLSKY_GROUP}" /var/lib/indi-allsky /var/lib/indi-allsky/backup 2>/dev/null || true
-        chmod 775 /var/lib/indi-allsky /var/lib/indi-allsky/backup 2>/dev/null || true
-        chmod 755 /var/log/indi-allsky 2>/dev/null || true
+        chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" /var/log/indi-allsky
+        chown "${ALLSKY_USER}:${ALLSKY_GROUP}" /var/lib/indi-allsky /var/lib/indi-allsky/backup
+        chmod 775 /var/lib/indi-allsky /var/lib/indi-allsky/backup
+        chmod 755 /var/log/indi-allsky
         if [ -f "$DB_FILE" ]; then
-            chown "${ALLSKY_USER}:${ALLSKY_GROUP}" "$DB_FILE" 2>/dev/null || true
-            chmod 664 "$DB_FILE" 2>/dev/null || true
+            chown "${ALLSKY_USER}:${ALLSKY_GROUP}" "$DB_FILE"
+            chmod 664 "$DB_FILE"
         fi
 
         # Custom image directory permissions (if non-standard path)
         if [ "$IMAGE_FOLDER" != "/var/www/html/allsky/images" ] && [ -d "$IMAGE_FOLDER" ]; then
-            chown "${ALLSKY_USER}:www-data" "$IMAGE_FOLDER" 2>/dev/null || true
-            chmod 775 "$IMAGE_FOLDER" 2>/dev/null || true
+            chown "${ALLSKY_USER}:www-data" "$IMAGE_FOLDER"
+            chmod 775 "$IMAGE_FOLDER"
         fi
 
         # Web application and service configuration permissions
-        [ -f "$FLASK_JSON" ] && chown "${ALLSKY_USER}:www-data" "$FLASK_JSON" 2>/dev/null && chmod 660 "$FLASK_JSON" 2>/dev/null || true
-        [ -f "$INDISERVER_ENV" ] && chown "${ALLSKY_USER}:${ALLSKY_GROUP}" "$INDISERVER_ENV" 2>/dev/null && chmod 644 "$INDISERVER_ENV" 2>/dev/null || true
+        if [ -f "$FLASK_JSON" ]; then
+            chown "${ALLSKY_USER}:www-data" "$FLASK_JSON"
+            chmod 660 "$FLASK_JSON"
+        fi
+        if [ -f "$INDISERVER_ENV" ]; then
+            chown "${ALLSKY_USER}:${ALLSKY_GROUP}" "$INDISERVER_ENV"
+            chmod 644 "$INDISERVER_ENV"
+        fi
 
         # Always enable and start indiserver service (matches setup.sh behavior)
         # Even libcamera and test configurations connect to localhost indiserver for core subsystem operations
