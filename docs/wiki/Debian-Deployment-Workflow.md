@@ -6,18 +6,20 @@ This document outlines the complete release lifecycle for maintainers, the **CI/
 
 ## 1. How to Cut a New Release (Maintainer Guide)
 
-To cut a new official release (e.g. `2026.09.1`), run the following commands from the repository root:
+Official releases follow the version pattern `indi_vyyyy.mm.xx` (e.g. `indi_v2026.09.01`). The `indi_v*` tag prefix is required to trigger the automated GitHub Actions packaging workflow.
+
+To cut a new official release, run the following commands from the repository root:
 
 ```bash
 # 1. Bump the version across all codebase manifests (indi_allsky/version.py, package.json, base.html, debian/changelog)
-npm run version:bump -- 2026.09.1
+npm run version:bump -- indi_v2026.09.01
 
 # 2. Stage and commit the bumped version
 git add -u
-git commit -m "Release v2026.09.1"
+git commit -m "Release indi_v2026.09.01"
 
-# 3. Create an annotated git tag
-git tag -a v2026.09.1 -m "Release v2026.09.1"
+# 3. Create an annotated git tag (must match indi_v* to trigger CI/CD packaging)
+git tag -a indi_v2026.09.01 -m "Release indi_v2026.09.01"
 
 # 4. Push branch and tag to trigger the automated CI/CD release workflow
 git push origin main --tags

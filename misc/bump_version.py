@@ -3,7 +3,7 @@
 Single-Source-of-Truth Version Bumper for indi-allsky.
 
 Usage:
-  python3 misc/bump_version.py 2026.08.2
+  python3 misc/bump_version.py indi_v2026.09.12
   python3 misc/bump_version.py --show
 """
 
@@ -53,7 +53,7 @@ def set_version(new_version, suite="stable"):
     if BASE_HTML.exists():
         html_content = BASE_HTML.read_text()
         html_content, count = re.subn(
-            r"((?:else\s+|\?v=)')v\d{4}\.\d{2}\.\d+[^']*",
+            r"((?:else\s+|\?v=)')v\d{4}\.\d{1,2}\.\d+[^']*",
             rf"\g<1>v{clean_ver}",
             html_content,
         )
