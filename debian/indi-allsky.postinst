@@ -1,0 +1,41 @@
+#!/bin/sh
+set -e
+
+. /usr/share/debconf/confmodule
+
+case "$1" in
+    configure)
+        ALLSKY_USER="indi-allsky"
+        ALLSKY_GROUP="indi-allsky"
+        VENV="/var/lib/indi-allsky/venv"
+        HW_TAR="/usr/share/indi-allsky/venv-hw.tar.zst"
+        HASH_FILE="${VENV}/.installed_hw_hash"
+
+        # Unpack bundled hardware virtualenv extensions into shared virtualenv
+        if [ -f "$HW_TAR" ]; then
+            CURRENT_HASH=$(sha256sum "$HW_TAR" | awk '{print $1}')
+            if [ -f "$HASH_FILE" ] && [ "$(cat "$HASH_FILE" 2>/dev/null)" = "$CURRENT_HASH" ] && "$VENV/bin/python3" -c 'import PyIndi' 2>/dev/null; then
+                echo "indi-allsky: Virtual environment is already up-to-date."
+            else
+                echo "indi-allsky: Synchronizing virtual environment..."
+                zstd -dc "$HW_TAR" | /usr/bin/python3 /usr/share/indi-allsky/misc/diff_unpack.py "$VENV"
+                echo "$CURRENT_HASH" > "$HASH_FILE"
+                chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" "$VENV"
+            fi
+            rm -f "$HW_TAR"
+        fi
+
+        # Enable and restart indiserver and indi-allsky services if running under an active init system
+        systemctl daemon-reload 2>/dev/null || true
+        systemctl enable indiserver.service 2>/dev/null || true
+        systemctl enable indi-allsky.service 2>/dev/null || true
+        if [ -d /run/systemd/system ]; then
+            systemctl restart indiserver.service 2>/dev/null || true
+            systemctl restart indi-allsky.service 2>/dev/null || true
+        fi
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

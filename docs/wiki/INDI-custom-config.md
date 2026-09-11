@@ -519,7 +519,7 @@ For example:
     }
 }
 ```
-The capture format should set the camera to RAW mode.  See `./misc/camera_properties.py` to determine the correct FORMAT for your model.
+The capture format should set the camera to RAW mode. Run `indi-allsky-ctl camera-props` (or `./misc/camera_properties.py`) to determine the correct FORMAT for your model.
 * Canon 1300D: `FORMAT_9`
 * Canon 450D: `FORMAT_7`
 * Canon 5D: `FORMAT_7`
@@ -527,7 +527,7 @@ The capture format should set the camera to RAW mode.  See `./misc/camera_proper
 * Canon 60D: `FORMAT_8`
 * Canon 6D: `FORMAT_8`
 
-The aperture settings specific to your lens are discoverable via the `./misc/camera_properties.py` script.  The f-stop will likely need to be reduced for daytime operation.  `aperture0` should be wide open.
+The aperture settings specific to your lens are discoverable via the `indi-allsky-ctl camera-props` command (or `./misc/camera_properties.py`). The f-stop will likely need to be reduced for daytime operation. `aperture0` should be wide open.
 
 
 ## CCD cooling

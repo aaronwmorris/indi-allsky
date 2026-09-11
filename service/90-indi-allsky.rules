@@ -4,7 +4,7 @@ polkit.addRule(function(action, subject) {
         "org.freedesktop.login1.power-off",
         "org.freedesktop.login1.power-off-multiple-sessions",
         "org.freedesktop.login1.reboot",
-        "org.freedesktop.login1.reboot-multiple-sessionsaction.id",
+        "org.freedesktop.login1.reboot-multiple-sessions",
     ];
 
     if (shutdown_reboot_actions.indexOf(action.id) > -1) {
@@ -58,6 +58,20 @@ polkit.addRule(function(action, subject) {
     ];
 
     if (set_time_actions.indexOf(action.id) > -1) {
+        if (subject.user == "%ALLSKY_USER%") {
+            return polkit.Result.YES;
+        }
+    }
+
+
+    // Allow indi-allsky user to manage systemd services and timers
+    const systemd_actions = [
+        "org.freedesktop.systemd1.manage-units",
+        "org.freedesktop.systemd1.manage-unit-files",
+        "org.freedesktop.systemd1.reload-daemon",
+    ];
+
+    if (systemd_actions.indexOf(action.id) > -1) {
         if (subject.user == "%ALLSKY_USER%") {
             return polkit.Result.YES;
         }

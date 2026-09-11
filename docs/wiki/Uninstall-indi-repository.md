@@ -18,3 +18,12 @@ sudo rm -i /etc/apt/sources.list.d/astroberry.list
 # indi PPA
 sudo rm -i /etc/apt/sources.list.d/mutlaqja*.list
 ```
+
+## Protecting Source-Built INDI from APT Overwrites
+After compiling and installing INDI from source, register your custom build with APT so package dependencies are satisfied and repository updates will not overwrite your compiled drivers:
+
+```bash
+sudo indi-allsky-ctl protect-source-indi
+```
+
+See [`indi-allsky-ctl`](indi-allsky-ctl) for more driver and package management details.

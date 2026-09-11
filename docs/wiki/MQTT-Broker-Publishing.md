@@ -3,19 +3,27 @@ indi-allsky has the built-in capability to publish data from your all sky camera
 
 You can find the settings related to the MQTT service in the configuration form.
 
+## MQTT Broker Setup
+If you need a local MQTT broker installed on your machine, you can configure Mosquitto automatically using [`indi-allsky-ctl`](indi-allsky-ctl):
+```bash
+indi-allsky-ctl setup-mqtt
+```
+
 ## Home Assistant Auto-Discovery
-Included is a script to publish the auto-discovery topics for Home Assistant.  The script only requires a few seconds to run and only needs to be run once.  Images and other sensors related to your allsky camera will automatically populate on your dashboard.
+Included is a utility to publish auto-discovery topics for Home Assistant. The discovery process only requires a few seconds to run and only needs to be executed once. Images and other sensors related to your allsky camera will automatically populate on your Home Assistant dashboard.
 
-First, setup the MQTT integration in Home Assistant.  After the integration is enabled, run the script below.  **If you run the script before the integration is setup, no entities will be displayed.** Just re-run the script again.
+First, setup the MQTT integration in Home Assistant. After the integration is enabled, run the discovery command:
 
+```bash
+indi-allsky-ctl ha-discovery
 ```
-source virtualenv/indi-allsky/bin/activate
 
-./misc/home_assistant_auto_discovery.py
-```
+*(Or from a git checkout: `source virtualenv/indi-allsky/bin/activate && ./misc/home_assistant_auto_discovery.py`).*
+
+**If you run the script before the Home Assistant MQTT integration is setup, no entities will be displayed.** Simply run `indi-allsky-ctl ha-discovery` again once the integration is active.
 
 ## Topics
-The default base topic is `indi-allsky/`.  This can be overridden in the config section.
+The default base topic is `indi-allsky/`. This can be overridden in the config section.
 | Topic                  | Type      | Data |
 | ---------------------- | --------- | ---- |
 | indi-allsky/latest     | bytearray | Latest binary image |

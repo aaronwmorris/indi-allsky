@@ -1,0 +1,632 @@
+name: Build & Package Debian Release (.deb)
+
+on:
+  push:
+    tags:
+      - 'indi_v*'
+  schedule:
+    # Nightly build every night at 02:00 UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      indi_core_tag:
+        description: 'Pinned INDI Core Git Tag'
+        required: false
+        default: 'v2.2.4.2'
+      indi_3rdparty_tag:
+        description: 'Pinned INDI 3rd-Party Git Tag'
+        required: false
+        default: 'v2.2.4.1'
+
+env:
+  INDI_CORE_TAG: 'v2.2.4.2'
+  INDI_3RDPARTY_TAG: 'v2.2.4.1'
+
+jobs:
+  check-changes:
+    name: Check for new commits
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check for changes since last nightly
+        id: check
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "Tag pushed, forcing build."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+          else
+            LATEST_COMMIT=$(git rev-parse HEAD)
+            NIGHTLY_COMMIT=$(git rev-list -n 1 nightly 2>/dev/null || echo "none")
+            
+            if [ "$NIGHTLY_COMMIT" == "none" ]; then
+              echo "No nightly tag found, building."
+              echo "should_build=true" >> $GITHUB_OUTPUT
+            elif [ "$LATEST_COMMIT" == "$NIGHTLY_COMMIT" ]; then
+              echo "No new commits since last nightly build. Skipping."
+              echo "should_build=false" >> $GITHUB_OUTPUT
+            else
+              echo "New commits found, building."
+              echo "should_build=true" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+  build-deb:
+    name: Build .deb (${{ matrix.distro }} / ${{ matrix.arch }})
+    needs: [check-changes]
+    if: needs.check-changes.outputs.should_build == 'true'
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        distro: [bookworm, noble, resolute, trixie]
+        arch: [amd64, arm64]
+        include:
+          - distro: bookworm
+            image: debian:bookworm
+          - distro: noble
+            image: ubuntu:noble
+          - distro: resolute
+            image: ubuntu:resolute
+          - distro: trixie
+            image: debian:trixie
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Resolve Version & Distribution Suite (Stable vs Nightly)
+        id: get_version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]] || [[ "${{ github.ref }}" == refs/tags/indi_v* ]]; then
+            # Tagged Release -> Stable
+            RAW_TAG="${GITHUB_REF_NAME}"
+            VERSION="${RAW_TAG#indi_v}"
+            VERSION="${VERSION#v}"
+            SUITE="stable"
+            IS_RELEASE="true"
+          else
+            # Nightly / Dev Build -> Nightly
+            DATE_STAMP=$(date +'%Y%m%d.%H%M')
+            BASE_VER=$(python3 misc/bump_version.py --show | awk '{print $NF}')
+            VERSION="${BASE_VER}~nightly.${DATE_STAMP}"
+            SUITE="nightly"
+            IS_RELEASE="false"
+          fi
+
+          # Use pinned stable INDI releases (with workflow_dispatch input fallback)
+          INDI_CORE_TAG="${{ inputs.indi_core_tag || env.INDI_CORE_TAG }}"
+          INDI_3RDPARTY_TAG="${{ inputs.indi_3rdparty_tag || env.INDI_3RDPARTY_TAG }}"
+          INDI_3RDPARTY_VER="${INDI_3RDPARTY_TAG#v}"
+
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "SUITE=$SUITE" >> $GITHUB_ENV
+          echo "IS_RELEASE=$IS_RELEASE" >> $GITHUB_ENV
+          echo "INDI_CORE_TAG=$INDI_CORE_TAG" >> $GITHUB_ENV
+          echo "INDI_3RDPARTY_TAG=$INDI_3RDPARTY_TAG" >> $GITHUB_ENV
+          echo "INDI_3RDPARTY_VER=$INDI_3RDPARTY_VER" >> $GITHUB_ENV
+          echo "Building Version: $VERSION | Suite: $SUITE | Pinned INDI Core: $INDI_CORE_TAG | Pinned INDI 3rdParty: $INDI_3RDPARTY_TAG"
+
+      - name: Generate Dynamic Version & debian/changelog
+        run: |
+          python3 misc/bump_version.py "${{ env.VERSION }}" "${{ env.SUITE }}"
+
+      - name: Generate Release Notes Summary & Git Changelog
+        run: |
+          {
+            echo "### Bundled INDI & Driver Versions"
+            echo "* **INDI Core / Server**: \`${{ env.INDI_CORE_TAG }}\`"
+            echo "* **INDI 3rd-Party Drivers**: \`${{ env.INDI_3RDPARTY_TAG }}\` (ZWO ASI, QHY, Player One, ToupTek, SVBONY, Starlight Xpress, etc.)"
+            echo "* **Supported Architectures**: \`arm64\` (Raspberry Pi 4/5, aarch64), \`amd64\` (x86_64)"
+            echo "* **Distributions**: Debian 12 (Bookworm), Debian 13 (Trixie), Ubuntu 24.04 (Noble), Ubuntu 26.04 (Resolute)"
+            echo ""
+            echo "### What's Changed"
+            # Ensure all git tags are fetched locally
+            git fetch --tags --force 2>/dev/null || true
+            PREV_TAG=$(git tag -l "indi_v*" | sort -V | grep -vx "${GITHUB_REF_NAME}" | tail -n 1)
+            echo "Commits since **${PREV_TAG}**:"
+            echo ""
+            git log --no-merges "${PREV_TAG}..HEAD" --pretty=format:"* %s ([%h](https://github.com/${{ github.repository }}/commit/%H)) - %an"
+            echo ""
+            echo "---"
+          } > release_notes.md
+
+      - name: Cache Pre-built INDI Packages
+        id: cache-indi
+        uses: actions/cache@v4
+        with:
+          path: /tmp/indi-cached-debs
+          key: v2-indi-debs-${{ matrix.distro }}-${{ matrix.arch }}-${{ env.INDI_CORE_TAG }}-${{ env.INDI_3RDPARTY_TAG }}
+
+      - name: Start Native Multi-Arch Build Container
+        run: |
+          mkdir -p /tmp/indi-cached-debs
+          docker run -d --name builder \
+            --platform linux/${{ matrix.arch }} \
+            -v "$PWD:/work:z" \
+            -v /tmp/indi-cached-debs:/tmp/indi-cached-debs:z \
+            -w /work \
+            -e DEBIAN_FRONTEND=noninteractive \
+            -e DISTRO="${{ matrix.distro }}" \
+            -e VERSION="${{ env.VERSION }}" \
+            -e SUITE="${{ env.SUITE }}" \
+            -e INDI_CORE_TAG="${{ env.INDI_CORE_TAG }}" \
+            -e INDI_3RDPARTY_TAG="${{ env.INDI_3RDPARTY_TAG }}" \
+            -e INDI_3RDPARTY_VER="${{ env.INDI_3RDPARTY_VER }}" \
+            -e DEB_BUILD_OPTIONS="noautodbgsym noddebs" \
+            ${{ matrix.image }} tail -f /dev/null
+          docker exec builder chmod -R a+rX /work 2>/dev/null || true
+
+      - name: Install Build Toolchain & System Dependencies
+        run: |
+          docker exec builder bash -c '
+            set -e
+            apt-get update
+            apt-get install -y --no-install-recommends \
+              build-essential \
+              dpkg-dev \
+              debhelper \
+              dh-python \
+              python3-all \
+              python3-setuptools \
+              python3-venv \
+              python3-dev \
+              python3-pip \
+              python3-wheel \
+              cmake \
+              pkgconf \
+              libimath-dev \
+              libopenexr-dev \
+              libcfitsio-dev \
+              libnova-dev \
+              libopencv-dev \
+              libopenblas-dev \
+              libraw-dev \
+              libtiff-dev \
+              libpng-dev \
+              zlib1g-dev \
+              libcurl4-gnutls-dev \
+              libssl-dev \
+              libusb-1.0-0-dev \
+              libgphoto2-dev \
+              libgps-dev \
+              libjpeg-dev \
+              libftdi1-dev \
+              libgsl-dev \
+              libboost-dev \
+              libboost-regex-dev \
+              libboost-program-options-dev \
+              libzmq3-dev \
+              liblimesuite-dev \
+              libdc1394-dev \
+              libnutclient-dev \
+              libavcodec-dev \
+              libavformat-dev \
+              libavutil-dev \
+              libswscale-dev \
+              cdbs \
+              liberfa-dev \
+              libtheora-dev \
+              libogg-dev \
+              libfftw3-dev \
+              libev-dev \
+              librtlsdr-dev \
+              libudev-dev \
+              libavdevice-dev \
+              libdbus-1-dev \
+              libglib2.0-dev \
+              libsystemd-dev \
+              fxload \
+              swig \
+              zstd \
+              git \
+              curl \
+              jq \
+              ca-certificates
+          '
+
+      - name: Build INDI Core Packages (.deb)
+        run: |
+          docker exec builder bash -c '
+            set -e
+            if [ -d "/tmp/indi-cached-debs" ] && ls /tmp/indi-cached-debs/libindi*.deb >/dev/null 2>&1; then
+              echo "=== Restoring INDI Core packages from cache ==="
+              cp -f /tmp/indi-cached-debs/libindi*.deb /tmp/indi-cached-debs/indi-bin*.deb /tmp/indi-cached-debs/indi-data*.deb /tmp/ 2>/dev/null || true
+              cd /tmp
+              dpkg -i *.deb || apt-get install -f -y
+              ldconfig
+            else
+              echo "=== Building INDI Core (${INDI_CORE_TAG}) from source ==="
+              git clone --depth 1 --branch "${INDI_CORE_TAG}" https://github.com/indilib/indi.git /tmp/indi-core
+              cd /tmp/indi-core
+              sed -i "1s/(\([0-9.]*\))/(\1+${DISTRO})/" debian/changelog 2>/dev/null || true
+              dpkg-buildpackage -b -us -uc -d -j$(nproc)
+              
+              echo "=== Installing freshly built INDI Core packages into builder ==="
+              cd /tmp
+              dpkg -i *.deb || apt-get install -f -y
+              ldconfig
+              mkdir -p /tmp/indi-cached-debs
+              cp -f /tmp/*.deb /tmp/indi-cached-debs/ 2>/dev/null || true
+            fi
+          '
+
+      - name: Build INDI 3rd-Party Drivers (.deb)
+        run: |
+          docker exec builder bash -c '
+            set -e
+            if [ -d "/tmp/indi-cached-debs" ] && ls /tmp/indi-cached-debs/indi-3rdparty*.deb >/dev/null 2>&1; then
+              echo "=== Restoring INDI 3rd-Party Drivers from cache ==="
+              cp -f /tmp/indi-cached-debs/indi-3rdparty*.deb /tmp/
+              cd /tmp
+              dpkg -i indi-3rdparty*.deb || apt-get install -f -y
+              ldconfig
+            else
+              echo "=== Building Consolidated INDI 3rd-Party Drivers (${INDI_3RDPARTY_TAG}) from source ==="
+              git clone --depth 1 --branch "${INDI_3RDPARTY_TAG}" https://github.com/indilib/indi-3rdparty.git /tmp/indi-3rdparty
+              
+              INDI_LIBS="libasi libplayerone libsvbony libqhy libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam libsvbonycam"
+              INDI_DRIVERS="indi-asi indi-playerone indi-svbony indi-qhy indi-sx indi-dsi indi-toupbase indi-gphoto indi-webcam indi-gpsd indi-gpsnmea"
+
+              # Pass 1: Build vendor SDK shared libraries
+              LIB_COUNT=$(echo $INDI_LIBS | wc -w)
+              CURR_LIB=1
+              for lib in $INDI_LIBS; do
+                if [ -d "/tmp/indi-3rdparty/$lib" ]; then
+                  echo "::group::[$CURR_LIB/$LIB_COUNT] Building library SDK: $lib"
+                  mkdir -p "/tmp/indi-3rdparty/build-$lib"
+                  cd "/tmp/indi-3rdparty/build-$lib"
+                  if cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release "/tmp/indi-3rdparty/$lib"; then
+                    make -j$(nproc) || true
+                    make install || true
+                    DESTDIR=/tmp/pkg-3rdparty make install || true
+                  fi
+                  echo "::endgroup::"
+                fi
+                CURR_LIB=$((CURR_LIB + 1))
+              done
+              ldconfig
+
+              # Pass 2: Build camera driver binaries
+              DRV_COUNT=$(echo $INDI_DRIVERS | wc -w)
+              CURR_DRV=1
+              for drv in $INDI_DRIVERS; do
+                if [ -d "/tmp/indi-3rdparty/$drv" ]; then
+                  echo "::group::[$CURR_DRV/$DRV_COUNT] Building camera driver: $drv"
+                  mkdir -p "/tmp/indi-3rdparty/build-$drv"
+                  cd "/tmp/indi-3rdparty/build-$drv"
+                  if cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release "/tmp/indi-3rdparty/$drv"; then
+                    make -j$(nproc) || true
+                    DESTDIR=/tmp/pkg-3rdparty make install || true
+                  fi
+                  echo "::endgroup::"
+                fi
+                CURR_DRV=$((CURR_DRV + 1))
+              done
+
+              # Construct single consolidated debian package for 3rdparty drivers
+              mkdir -p /tmp/pkg-3rdparty/DEBIAN
+              ARCH=$(dpkg --print-architecture)
+              {
+                echo "Package: indi-3rdparty"
+                echo "Version: ${INDI_3RDPARTY_VER}+${DISTRO}"
+                echo "Section: science"
+                echo "Priority: optional"
+                echo "Architecture: ${ARCH}"
+                echo "Maintainer: INDI Allsky Maintainers <aaronwmorris@users.noreply.github.com>"
+                echo "Depends: libusb-1.0-0, libcfitsio10 | libcfitsio9 | libcfitsio-dev, libnova-0.16-0 | libnova-dev"
+                echo "Description: Consolidated 3rd-party INDI camera drivers (ZWO ASI, QHY, PlayerOne, ToupTek, SVBony, SX, etc.)"
+              } > /tmp/pkg-3rdparty/DEBIAN/control
+              dpkg-deb --build /tmp/pkg-3rdparty /indi-3rdparty_${INDI_3RDPARTY_VER}+${DISTRO}_${ARCH}.deb
+              mkdir -p /tmp/indi-cached-debs
+              cp -f /indi-3rdparty_${INDI_3RDPARTY_VER}+${DISTRO}_${ARCH}.deb /tmp/indi-cached-debs/ 2>/dev/null || true
+            fi
+          '
+
+      - name: Build indi-allsky (.deb)
+        run: |
+          docker exec builder bash -c '
+            set -e
+            echo "=== Building indi-allsky ==="
+            cd /work
+            python3 misc/bump_version.py "${VERSION}+${DISTRO}" "${SUITE}"
+            dpkg-buildpackage -b -us -uc -j$(nproc)
+          '
+
+      - name: Collect & Tag .deb Package Artifacts
+        run: |
+          docker exec builder bash -c '
+            set -e
+            # Clean up any debug symbol and development header packages before packaging
+            rm -f /*-dbgsym*.deb /tmp/*-dbgsym*.deb /*-dbg*.deb /tmp/*-dbg*.deb /work/*-dbgsym*.deb /work/*-dbg*.deb 2>/dev/null || true
+            rm -f /*-dev*.deb /tmp/*-dev*.deb /work/*-dev*.deb 2>/dev/null || true
+
+            # Move all built packages to workspace
+            cp -f /*.deb /tmp/*.deb /work/ 2>/dev/null || true
+            cp -f /tmp/indi-cached-debs/*.deb /work/ 2>/dev/null || true
+            chown -R '$(id -u):$(id -g)' /work || true
+          '
+
+      - name: Stop Build Container
+        if: always()
+        run: |
+          docker rm -f builder 2>/dev/null || true
+
+      - name: Run Automated QA on Generated .deb
+        run: |
+          docker run --rm --platform linux/${{ matrix.arch }} \
+            -v "$PWD:/work:z" \
+            -w /work \
+            -e DEBIAN_FRONTEND=noninteractive \
+            ${{ matrix.image }} bash /work/debian/tests/qa_test.sh
+
+      - name: Upload .deb Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: debs-${{ matrix.distro }}-${{ matrix.arch }}
+          path: "*.deb"
+
+      - name: Upload Release Notes
+        if: matrix.distro == 'bookworm' && matrix.arch == 'amd64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release_notes.md
+
+  publish:
+    name: Publish Releases
+    needs: [check-changes, build-deb]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/indi_v') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download all built .deb artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: downloaded-debs
+          merge-multiple: true
+
+      - name: Attach .deb to Stable GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/tags/indi_v')
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: downloaded-debs/release_notes.md
+          generate_release_notes: false
+          files: downloaded-debs/*.deb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prune Stale Nightly Assets & Publish Release
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/v') && !startsWith(github.ref, 'refs/tags/indi_v'))
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "=== Resetting nightly pre-release ==="
+          # Delete existing nightly release and its tag in 1 call to wipe old assets instantly
+          gh release delete nightly -y --cleanup-tag 2>/dev/null || true
+
+          # Create fresh nightly release with target commit SHA
+          NOTES_FLAG="--notes 'Automated INDI Allsky Nightly Build'"
+          if [ -f "downloaded-debs/release_notes.md" ]; then
+            NOTES_FLAG="--notes-file downloaded-debs/release_notes.md"
+          fi
+
+          gh release create nightly downloaded-debs/*.deb \
+            --title "Nightly Build" \
+            --prerelease \
+            --target "${{ github.sha }}" \
+            $NOTES_FLAG
+
+  deploy-apt-repo:
+    name: Build & Deploy APT Repo (Cloudflare R2)
+    needs: [check-changes, build-deb, publish]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/indi_v') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download all built .deb packages
+        uses: actions/download-artifact@v4
+        with:
+          path: debs
+          merge-multiple: true
+
+      - name: Setup Reprepro APT Repository
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET || 'indi-allsky-apt' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y reprepro gnupg jq
+
+          # Setup repository directory structure
+          mkdir -p apt-repo/conf debs-stable debs-nightly
+
+          # Sync existing database and package pool from Cloudflare R2
+          if [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$R2_ACCOUNT_ID" ]; then
+            echo "=== Syncing existing repository state from Cloudflare R2 ==="
+            aws s3 sync "s3://${R2_BUCKET}/" apt-repo/ \
+              --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" || true
+            mkdir -p apt-repo/conf
+          fi
+
+          # If GPG private key is available, import it for signing
+          SIGNING_DIRECTIVE=""
+          if [ -n "${{ secrets.GPG_PRIVATE_KEY }}" ]; then
+            mkdir -p ~/.gnupg
+            chmod 700 ~/.gnupg
+            echo "allow-loopback-pinentry" > ~/.gnupg/gpg-agent.conf
+            echo "pinentry-mode loopback" > ~/.gnupg/gpg.conf
+            gpgconf --kill gpg-agent 2>/dev/null || true
+
+            echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import 2>/dev/null || true
+            GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG 2>/dev/null | awk '/sec/{print $2}' | cut -d/ -f2 | head -n 1)
+            if [ -n "$GPG_KEY_ID" ]; then
+              SIGNING_DIRECTIVE="SignWith: $GPG_KEY_ID"
+              gpg --armor --export "$GPG_KEY_ID" > apt-repo/key.gpg
+            fi
+          fi
+
+          # Create reprepro distributions configuration with stable and nightly components
+          cat <<EOF | sed -e 's/^[[:space:]]*//' > apt-repo/conf/distributions
+          Origin: INDI Allsky
+          Label: indi-allsky
+          Suite: bookworm
+          Codename: bookworm
+          Architectures: amd64 arm64
+          Components: stable nightly
+          Description: INDI Allsky APT Repository for Debian 12 (Bookworm)
+          ${SIGNING_DIRECTIVE}
+
+          Origin: INDI Allsky
+          Label: indi-allsky
+          Suite: trixie
+          Codename: trixie
+          Architectures: amd64 arm64
+          Components: stable nightly
+          Description: INDI Allsky APT Repository for Debian 13 (Trixie)
+          ${SIGNING_DIRECTIVE}
+
+          Origin: INDI Allsky
+          Label: indi-allsky
+          Suite: noble
+          Codename: noble
+          Architectures: amd64 arm64
+          Components: stable nightly
+          Description: INDI Allsky APT Repository for Ubuntu 24.04 (Noble)
+          ${SIGNING_DIRECTIVE}
+
+          Origin: INDI Allsky
+          Label: indi-allsky
+          Suite: resolute
+          Codename: resolute
+          Architectures: amd64 arm64
+          Components: stable nightly
+          Description: INDI Allsky APT Repository for Ubuntu 26.04 (Resolute)
+          ${SIGNING_DIRECTIVE}
+          EOF
+
+          # Determine whether current build is stable or nightly and organize packages
+          if [[ "${{ github.ref }}" == refs/tags/indi_v* ]] || [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "Processing tagged release -> indexing to 'stable' component"
+            cp debs/*.deb debs-stable/ 2>/dev/null || true
+            CURRENT_TAG="${GITHUB_REF_NAME}"
+          else
+            echo "Processing dev/nightly build -> indexing to 'nightly' component"
+            cp debs/*.deb debs-nightly/ 2>/dev/null || true
+            CURRENT_TAG="nightly"
+          fi
+
+          # Index all historical tagged releases into 'stable' component
+          echo "=== Fetching all tagged stable release packages from GitHub Releases ==="
+          mkdir -p debs-tags
+          for tag in $(gh release list --exclude-drafts --limit 10 --json tagName --jq '.[].tagName' 2>/dev/null | grep -v '^nightly$' || true); do
+            mkdir -p "debs-tags/$tag"
+            gh release download "$tag" --pattern '*.deb' --dir "debs-tags/$tag" 2>/dev/null || true
+            for deb in debs-tags/"$tag"/*.deb; do
+              if [ -f "$deb" ]; then
+                case "$deb" in
+                  *+bookworm*) reprepro -C stable -b apt-repo --ignore=ignore includedeb bookworm "$deb" || true ;;
+                  *+trixie*)   reprepro -C stable -b apt-repo --ignore=ignore includedeb trixie "$deb" || true ;;
+                  *+noble*)    reprepro -C stable -b apt-repo --ignore=ignore includedeb noble "$deb" || true ;;
+                  *+resolute*) reprepro -C stable -b apt-repo --ignore=ignore includedeb resolute "$deb" || true ;;
+                esac
+              fi
+            done
+          done
+
+          # Index current stable packages if tagged
+          for deb in debs-stable/*.deb; do
+            if [ -f "$deb" ]; then
+              case "$deb" in
+                *+bookworm*) reprepro -C stable -b apt-repo --ignore=ignore includedeb bookworm "$deb" || true ;;
+                *+trixie*)   reprepro -C stable -b apt-repo --ignore=ignore includedeb trixie "$deb" || true ;;
+                *+noble*)    reprepro -C stable -b apt-repo --ignore=ignore includedeb noble "$deb" || true ;;
+                *+resolute*) reprepro -C stable -b apt-repo --ignore=ignore includedeb resolute "$deb" || true ;;
+              esac
+            fi
+          done
+
+          # If building a stable release, also fetch existing nightly packages so nightly component remains populated
+          if [ "${CURRENT_TAG}" != "nightly" ]; then
+            echo "=== Fetching existing nightly release packages from GitHub Releases ==="
+            mkdir -p debs-nightly
+            gh release download nightly --pattern '*.deb' --dir debs-nightly 2>/dev/null || true
+          fi
+
+          # Index nightly packages into 'nightly' component
+          echo "=== Indexing nightly packages into reprepro ==="
+          for deb in debs-nightly/*.deb; do
+            if [ -f "$deb" ]; then
+              case "$deb" in
+                *+bookworm*) reprepro -C nightly -b apt-repo --ignore=ignore includedeb bookworm "$deb" || true ;;
+                *+trixie*)   reprepro -C nightly -b apt-repo --ignore=ignore includedeb trixie "$deb" || true ;;
+                *+noble*)    reprepro -C nightly -b apt-repo --ignore=ignore includedeb noble "$deb" || true ;;
+                *+resolute*) reprepro -C nightly -b apt-repo --ignore=ignore includedeb resolute "$deb" || true ;;
+              esac
+            fi
+          done
+
+          # Export all distributions Release & InRelease indices
+          reprepro -b apt-repo export
+
+          # Install landing page index.html and assets
+          if [ -f "content/apt_index.html" ]; then
+            cp content/apt_index.html apt-repo/index.html
+          fi
+          if [ -f "indi_allsky/flask/static/images/logo_outline_full.png" ]; then
+            cp indi_allsky/flask/static/images/logo_outline_full.png apt-repo/logo.png
+          fi
+
+          # Disable Jekyll on static hosts
+          touch apt-repo/.nojekyll
+
+      - name: Deploy to Cloudflare R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET || 'indi-allsky-apt' }}
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          echo "=== Deploying APT Repository to Cloudflare R2 ==="
+          # 1. Sync immutable binary artifacts (.deb, .gpg) with long cache
+          aws s3 sync apt-repo/ "s3://${R2_BUCKET}/" \
+            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
+            --exclude "dists/*" \
+            --exclude "*.html" \
+            --cache-control "public, max-age=31536000, immutable" \
+            --delete
+
+          # 2. Sync index metadata (InRelease, Release, Packages*) with no-cache to prevent hash mismatch
+          aws s3 sync apt-repo/dists/ "s3://${R2_BUCKET}/dists/" \
+            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
+            --cache-control "no-cache, no-store, must-revalidate" \
+            --delete
+
+          # 3. Sync web landing page
+          aws s3 cp apt-repo/index.html "s3://${R2_BUCKET}/index.html" \
+            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
+            --cache-control "public, max-age=3600, must-revalidate" || true

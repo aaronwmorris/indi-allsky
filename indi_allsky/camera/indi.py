@@ -456,7 +456,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def parkTelescope(self):
-        if not self.telescope_device:
+        if self.telescope_device is None:
             return
 
         logger.info('Parking telescope')
@@ -474,7 +474,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def unparkTelescope(self):
-        if not self.telescope_device:
+        if self.telescope_device is None:
             return
 
         logger.info('Unparking telescope')
@@ -492,7 +492,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def setTelescopeParkPosition(self, ra, dec):
-        if not self.telescope_device:
+        if self.telescope_device is None:
             return
 
         logger.info('Setting telescope park position to RA %0.2f, Dec %0.2f', ra, dec)
@@ -856,7 +856,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def configureTelescopeDevice(self, *args, **kwargs):
-        if not self.telescope_device:
+        if self.telescope_device is None:
             logger.warning('No telescope to configure')
             return
 
@@ -876,7 +876,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def configureGpsDevice(self, *args, **kwargs):
-        if not self.gps_device:
+        if self.gps_device is None:
             logger.warning('No GPS to configure')
             return
 
@@ -884,7 +884,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def refreshGps(self):
-        if not self.gps_device:
+        if self.gps_device is None:
             return
 
         refresh_config = {
@@ -899,7 +899,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def getGpsPosition(self):
-        if not self.gps_device:
+        if self.gps_device is None:
             return self.position_av[0:3]
 
         try:
@@ -925,7 +925,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def getGpsTime(self):
-        if not self.gps_device:
+        if self.gps_device is None:
             return None, None
 
         try:
@@ -965,7 +965,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def getTelescopeRaDec(self):
-        if not self.telescope_device:
+        if self.telescope_device is None:
             return self.ra_v.value, self.dec_v.value
 
         try:

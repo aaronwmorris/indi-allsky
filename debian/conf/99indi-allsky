@@ -1,0 +1,1 @@
+DPkg::Post-Invoke { "if [ -f /var/lib/indi-allsky/.pending_summary ]; then cat /var/lib/indi-allsky/.pending_summary; rm -f /var/lib/indi-allsky/.pending_summary; fi"; };
