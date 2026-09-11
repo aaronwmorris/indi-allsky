@@ -127,7 +127,9 @@ journalctl -u gunicorn-indi-allsky.service -f
   ```
   * Upgrades virtualenv packages and binaries in seconds.
   * Preserves user customizations in `/etc/indi-allsky/flask.json`.
+  * Automatically reuses existing configuration without holding or prompting for input.
   * Runs database migrations and reloads services automatically.
+  * Run `sudo dpkg-reconfigure indi-allsky` at any time to modify settings interactively.
 
 * **Purge / Clean Removal**:
   ```bash

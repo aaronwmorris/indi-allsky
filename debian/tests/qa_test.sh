@@ -69,13 +69,21 @@ test -f /etc/indi-allsky/flask.json
 echo "Configuration file /etc/indi-allsky/flask.json is present!"
 
 echo "============================================================"
-echo "=== 5. Testing Debconf Reconfiguration ==="
+echo "=== 5. Testing Non-Interactive Package Upgrade / Reinstall ==="
+echo "============================================================"
+# Verify that upgrading/reinstalling packages with -y automatically reuses configuration without prompting
+apt-get install --reinstall -y /work/*.deb
+test -f /etc/indi-allsky/flask.json
+echo "Non-interactive package reinstall/upgrade passed without prompts!"
+
+echo "============================================================"
+echo "=== 6. Testing Debconf Reconfiguration ==="
 echo "============================================================"
 dpkg-reconfigure -f noninteractive indi-allsky
 echo "Debconf reconfiguration passed!"
 
 echo "============================================================"
-echo "=== 6. Testing Package Purge ==="
+echo "=== 7. Testing Package Purge ==="
 echo "============================================================"
 apt-get purge -y indi-allsky
 echo "============================================================"

@@ -14,9 +14,14 @@ sudo apt update && sudo apt upgrade -y
 > [!TIP]
 > **Automatic Service Reload & Migrations**:
 > Package upgrades automatically update pre-compiled wheels, execute database schema migrations, and reload systemd services without requiring manual intervention.
+> Running `apt upgrade -y` automatically reuses your existing configuration without interactive prompts or holds.
 
 > [!NOTE]
 > All user configuration in `/etc/indi-allsky/flask.json` and databases in `/var/lib/indi-allsky/` are preserved across upgrades.
+> If you ever wish to re-run the interactive configuration wizard to adjust ports, camera drivers, or observatory coordinates, you can run:
+> ```bash
+> sudo dpkg-reconfigure indi-allsky
+> ```
 
 > [!TIP]
 > **Migrating from `setup.sh`**:

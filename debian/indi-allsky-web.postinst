@@ -202,10 +202,6 @@ case "$1" in
         db_reset indi-allsky/web_pass 2>/dev/null || true
         db_reset indi-allsky/oidc_client_secret 2>/dev/null || true
 
-        # Reset reuse_existing_config seen flag so subsequent upgrades will prompt anew
-        db_fset indi-allsky/reuse_existing_config seen false 2>/dev/null || true
-        db_reset indi-allsky/reuse_existing_config 2>/dev/null || true
-
         # Close debconf communications before starting long setup operations and services
         db_stop
 
@@ -359,6 +355,7 @@ with app.app_context():
         "$VENV/bin/python3" /usr/share/indi-allsky/misc/populate_data.py || true
         "$VENV/bin/python3" /usr/share/indi-allsky/config.py update_level 2>/dev/null || true
         chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" "$MIGRATION_FOLDER" 2>/dev/null || true
+        rm -rf /usr/share/indi-allsky/migrations 2>/dev/null || true
 
         # Detect and configure IMAGE_FOLDER (supporting custom/non-standard paths)
         IMAGE_FOLDER="/var/www/html/allsky/images"

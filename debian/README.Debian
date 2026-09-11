@@ -19,7 +19,7 @@ This package generates certain configuration files dynamically during `postinst`
   - `/etc/indi-allsky/flask.json`     - Generated from `flask.json_template` via `jq`
   - `/etc/indi-allsky/indiserver.env` - Generated from debconf responses
 
-On upgrade, `flask.json` is automatically merged (new template keys added, existing user values preserved).
+On upgrade, `flask.json` is automatically merged (new template keys added, existing user values preserved), and existing settings are reused without interactive prompts. Administrators can re-run the configuration wizard at any time via `sudo dpkg-reconfigure indi-allsky`.
 On purge, all files under `/etc/indi-allsky/` are removed by `postrm`.
 
 This dynamic approach is intentional: the configuration contains unique cryptographic secrets (`SECRET_KEY`, `PASSWORD_KEY`, `OIDC_CLIENT_SECRET`) that must be generated at install time, along with hardware- and site-specific values (camera driver, location coordinates) collected via debconf.
