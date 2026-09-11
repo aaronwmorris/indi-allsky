@@ -345,13 +345,13 @@ with app.app_context():
 ' 2>/dev/null || true
 
         MIGRATION_FOLDER="/var/lib/indi-allsky/migrations"
-        if [ ! -d "$MIGRATION_FOLDER" ]; then
-            FLASK_APP=indi_allsky.flask:app "$VENV/bin/flask" db init -d "$MIGRATION_FOLDER" 2>/dev/null || true
+        if [ ! -d "$MIGRATION_FOLDER/versions" ]; then
+            FLASK_APP="indi_allsky.flask:create_app()" "$VENV/bin/python3" -m flask db init -d "$MIGRATION_FOLDER" 2>/dev/null || true
         fi
 
         # Autogenerate schema diffs and apply upgrades matching setup.sh behavior
-        FLASK_APP=indi_allsky.flask:app "$VENV/bin/flask" db revision --autogenerate -d "$MIGRATION_FOLDER" -m "package_upgrade" 2>/dev/null || true
-        FLASK_APP=indi_allsky.flask:app "$VENV/bin/flask" db upgrade head -d "$MIGRATION_FOLDER" 2>/dev/null || true
+        FLASK_APP="indi_allsky.flask:create_app()" "$VENV/bin/python3" -m flask db revision --autogenerate -d "$MIGRATION_FOLDER" -m "package_upgrade" 2>/dev/null || true
+        FLASK_APP="indi_allsky.flask:create_app()" "$VENV/bin/python3" -m flask db upgrade head -d "$MIGRATION_FOLDER" 2>/dev/null || true
         "$VENV/bin/python3" /usr/share/indi-allsky/misc/populate_data.py || true
         "$VENV/bin/python3" /usr/share/indi-allsky/config.py update_level 2>/dev/null || true
         chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" "$MIGRATION_FOLDER" 2>/dev/null || true

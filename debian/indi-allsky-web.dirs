@@ -1,6 +1,7 @@
 etc/indi-allsky
 var/lib/indi-allsky
 var/lib/indi-allsky/backup
+var/lib/indi-allsky/migrations
 var/log/indi-allsky
 var/www/html/allsky
 var/www/html/allsky/images
