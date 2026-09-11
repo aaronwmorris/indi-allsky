@@ -372,7 +372,7 @@ with app.app_context():
         fi
 
         mkdir -p "$IMAGE_FOLDER" "$IMAGE_FOLDER/darks" "$IMAGE_FOLDER/export"
-        chown -R "${ALLSKY_USER}:www-data" "$IMAGE_FOLDER" 2>/dev/null || true
+        chown "${ALLSKY_USER}:www-data" "$IMAGE_FOLDER" "$IMAGE_FOLDER/darks" "$IMAGE_FOLDER/export" 2>/dev/null || true
         chmod 775 "$IMAGE_FOLDER" "$IMAGE_FOLDER/darks" "$IMAGE_FOLDER/export" 2>/dev/null || true
 
         if [ -f "$FLASK_JSON" ]; then
@@ -474,14 +474,18 @@ with app.app_context():
         getent passwd www-data >/dev/null 2>&1 && usermod -a -G "$ALLSKY_GROUP" www-data 2>/dev/null || true
 
         # Ensure data, database, and log directories have proper ownership and write permissions
-        chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" /var/lib/indi-allsky /var/log/indi-allsky 2>/dev/null || true
+        chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" /var/log/indi-allsky 2>/dev/null || true
+        chown "${ALLSKY_USER}:${ALLSKY_GROUP}" /var/lib/indi-allsky /var/lib/indi-allsky/backup 2>/dev/null || true
         chmod 775 /var/lib/indi-allsky /var/lib/indi-allsky/backup 2>/dev/null || true
         chmod 755 /var/log/indi-allsky 2>/dev/null || true
-        [ -f "$DB_FILE" ] && chmod 664 "$DB_FILE" 2>/dev/null || true
+        if [ -f "$DB_FILE" ]; then
+            chown "${ALLSKY_USER}:${ALLSKY_GROUP}" "$DB_FILE" 2>/dev/null || true
+            chmod 664 "$DB_FILE" 2>/dev/null || true
+        fi
 
         # Custom image directory permissions (if non-standard path)
         if [ "$IMAGE_FOLDER" != "/var/www/html/allsky/images" ] && [ -d "$IMAGE_FOLDER" ]; then
-            chown -R "${ALLSKY_USER}:www-data" "$IMAGE_FOLDER" 2>/dev/null || true
+            chown "${ALLSKY_USER}:www-data" "$IMAGE_FOLDER" 2>/dev/null || true
             chmod 775 "$IMAGE_FOLDER" 2>/dev/null || true
         fi
 
