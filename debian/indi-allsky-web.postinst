@@ -346,7 +346,7 @@ with app.app_context():
 
         MIGRATION_FOLDER="/var/lib/indi-allsky/migrations"
         if [ ! -d "$MIGRATION_FOLDER/versions" ]; then
-            FLASK_APP="indi_allsky.flask:create_app()" "$VENV/bin/python3" -m flask db init -d "$MIGRATION_FOLDER"
+            FLASK_APP="indi_allsky.flask:create_app()" "$VENV/bin/python3" -m flask db init -d "$MIGRATION_FOLDER" >/dev/null
         fi
 
         # Autogenerate schema diffs and apply upgrades matching setup.sh behavior
