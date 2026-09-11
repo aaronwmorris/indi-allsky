@@ -1,3 +1,4 @@
 allsky.py usr/share/indi-allsky/
 darks.py usr/share/indi-allsky/
+debian/bundle/venv-hw.tar.zst usr/share/indi-allsky/
 

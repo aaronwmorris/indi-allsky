@@ -279,9 +279,9 @@ EOF
         if [ -f "$VENV_TAR" ]; then
             CURRENT_HASH=$(sha256sum "$VENV_TAR" | awk '{print $1}')
             if [ -f "$HASH_FILE" ] && [ "$(cat "$HASH_FILE" 2>/dev/null)" = "$CURRENT_HASH" ] && "$VENV/bin/python3" -c 'import flask, sqlalchemy' 2>/dev/null; then
-                echo "indi-allsky: Production virtual environment is already up-to-date."
+                echo "indi-allsky: Virtual environment is already up-to-date."
             else
-                echo "indi-allsky: Synchronizing production virtual environment..."
+                echo "indi-allsky: Synchronizing virtual environment..."
                 mkdir -p "$VENV"
                 zstd -dc "$VENV_TAR" | /usr/bin/python3 /usr/share/indi-allsky/misc/diff_unpack.py "$VENV"
                 echo "$CURRENT_HASH" > "$HASH_FILE"

@@ -51,7 +51,8 @@ Depends: ${misc:Depends},
  libindi1 | libindiclient1 | libindi2,
  ffmpeg,
  network-manager,
- udisks2
+ udisks2,
+ zstd
 Recommends: indiserver | indi-bin,
  libindi-data,
  indi-3rdparty | indi-asi | indi-qhy | indi-playerone | indi-svbony | indi-toupbase | indi-toupcam | indi-sx | indi-gphoto | indi-webcam,
