@@ -8,6 +8,7 @@ Welcome to the indi-allsky wiki!
 * [Upgrading indi-allsky](Updating-indi-allsky)
 * [Migration Guide: setup.sh to .deb](Setup-to-Deb-Migration)
 * [Password Management](Web-Interface-Password)
+* [Command-Line Control Utility (`indi-allsky-ctl`)](indi-allsky-ctl)
 * [INDI Configuration](INDI-custom-config)
 * [libcamera setup](libcamera-enablement)
 * [Web Status Configuration](Web-Status-Configuration)

@@ -24,6 +24,13 @@ sudo apt update && sudo apt upgrade -y
 > ```
 
 > [!TIP]
+> **Pinning Working Camera Drivers**:
+> If you have a stable camera setup and want to prevent system `apt upgrade` from upgrading your INDI drivers, you can pin them using [`indi-allsky-ctl`](indi-allsky-ctl):
+> ```bash
+> sudo indi-allsky-ctl hold-indi
+> ```
+
+> [!TIP]
 > **Migrating from `setup.sh`**:
 > If your system was originally installed via `setup.sh` and you wish to switch to the official APT repository and `.deb` architecture, follow the [Migration Guide](Setup-to-Deb-Migration).
 

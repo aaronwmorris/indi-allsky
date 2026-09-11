@@ -107,15 +107,13 @@ The Debian package installs and manages native systemd user/system services:
 
 ### Useful Service Commands:
 ```bash
-# Control services via indi-allsky-ctl utility
+# Control services and view logs via indi-allsky-ctl utility
 indi-allsky-ctl status
 indi-allsky-ctl restart
-indi-allsky-ctl stop
-
-# View system logs
-journalctl -u indi-allsky.service -f
-journalctl -u gunicorn-indi-allsky.service -f
+indi-allsky-ctl logs
 ```
+See the [`indi-allsky-ctl` documentation](indi-allsky-ctl) for complete command reference (user management, database backups, driver pinning, permissions repair).
+
 
 ---
 

@@ -1,6 +1,9 @@
 # General
 
-Contents of the misc/ folder in indi-allsky
+Contents of the `misc/` folder in indi-allsky.
+
+> [!TIP]
+> On Debian package installations, many of these maintenance, setup, and diagnostic scripts are exposed directly via the unified [`indi-allsky-ctl`](indi-allsky-ctl) command-line utility without needing to manually activate virtual environments.
 
 | Script                   | Description |
 | ------------------------ | ----------- |
