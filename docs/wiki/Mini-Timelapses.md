@@ -41,7 +41,7 @@ These settings apply only to this video and leave the saved source images unchan
 **Speed** controls playback without changing the camera's capture rate or adding intermediate images.
 
 * Lower FPS gives a longer, slower video.
-* Higher FPS gives a shorter, faster video. Options include 30 and 60 FPS.
+* Higher FPS gives a shorter, faster video.
 * At 0.25 FPS, each image remains visible for four seconds.
 
 Video length depends on the usable image count: 120 images produce 12 seconds at 10 FPS, or 24 seconds at 5 FPS.
@@ -56,13 +56,13 @@ The generator provides bitrate guidance based on resolution and FPS, plus an est
 
 The generator checks the full selected period and shows the usable frame count, time range, and approximate video length. Changing the source or time range reloads the preview.
 
-**For periods longer than four hours, the animated preview shows only the last four hours. The finished video still uses the full selected period.** Panorama panning is also calculated over the full period, so a shortened preview may show only the later part of the movement.
+**For periods longer than four hours, the animated preview shows only the last four hours. The finished video uses the full selected period.** Panorama panning is calculated over the full period, so a shortened preview may show only the later part of the movement.
 
 The preview shows content and framing, not final compression quality; browser image loading can affect playback. Click it for fullscreen where supported.
 
 ## Panorama Mini-Timelapses
 
-**Panorama images** appears when **Enable Fisheye to Panoramic** is enabled. It uses saved panoramas and does not create them for older images.
+**Panorama images** appears when **Enable Fisheye to Panoramic** is enabled. It uses panoramas already saved for the selected period.
 
 The selected image must have its own saved panorama. Otherwise, **No panorama was saved for this image** appears with **Previous panorama** or **Next panorama** links when alternatives are available.
 
