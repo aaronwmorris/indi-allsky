@@ -197,7 +197,9 @@ class FileUploader(Thread):
 
         elif s3_key:
             # This is for removing s3 entries
-            pass
+            local_file_p = None
+            entry = None
+
 
         elif local_file:
             # use given file name
@@ -604,8 +606,9 @@ class FileUploader(Thread):
 
 
     def cleanup(self, local_file_p, remove_local=False):
-        if remove_local:
+        if remove_local and local_file_p:
             try:
+
                 local_file_p.unlink()
             except PermissionError as e:
                 logger.error('Cannot remove local file: %s', str(e))

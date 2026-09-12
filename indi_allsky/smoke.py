@@ -101,6 +101,12 @@ class IndiAllskySmokeUpdate(object):
             except requests.exceptions.ConnectTimeout as e:
                 logger.error('Connection timeout: %s', str(e))
                 self.hms_kml_data = None
+            except ssl.SSLCertVerificationError as e:
+                logger.error('Certificate error: %s', str(e))
+                self.hms_kml_data = None
+            except requests.exceptions.SSLError as e:
+                logger.error('Certificate error: %s', str(e))
+                self.hms_kml_data = None
             except requests.exceptions.ConnectionError as e:
                 logger.error('Connection error: %s', str(e))
                 self.hms_kml_data = None
@@ -110,12 +116,7 @@ class IndiAllskySmokeUpdate(object):
             except urllib3.exceptions.ReadTimeoutError as e:
                 logger.error('Connection error: %s', str(e))
                 self.hms_kml_data = None
-            except ssl.SSLCertVerificationError as e:
-                logger.error('Certificate error: %s', str(e))
-                self.hms_kml_data = None
-            except requests.exceptions.SSLError as e:
-                logger.error('Certificate error: %s', str(e))
-                self.hms_kml_data = None
+
 
 
         if isinstance(self.hms_kml_data, type(None)):

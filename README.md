@@ -707,21 +707,29 @@ Please let me know if you want to make an addition or correction.
 * [Optimal configuration for indi-allsky](https://allsky-rodgau.com/optimal-configuration-for-indi-allsky-stable-day-night-transition-and-reliable-moon-mode-1541/)
 
 
-## Frontend Development
+## Developer Setup & Testing
 
-When modifying frontend templates, CSS, or JS assets, keep the following development setup in mind:
-
-### Environment Setup & Git Hooks
-Run `npm install` once in the repository root to install dependencies and configure Git hooks:
+### 1-Step Environment Setup
+Run `npm install` once in the repository root to configure both the Node.js tools and Python virtual environment:
 ```bash
 npm install
 ```
-This automatically configures the Git pre-commit hook (`githooks/pre-commit`), which runs `npm run build` and stages updated assets before every commit.
+This automatically:
+* Installs frontend tools (Tailwind CSS, daisyUI 5, Lucide icons, Cally date-picker)
+* Provisions the Python virtual environment (`.venv`) with `--system-site-packages` and installs all dependencies from `requirements/requirements_latest.txt` + testing tools (`pytest`, `pytest-cov`, `pytest-sugar`)
+* Configures Git pre-commit hooks (`githooks/pre-commit`) to ensure CSS builds before commit
 
-### Building & Testing Assets
-When testing template or CSS changes locally, compile the assets manually:
+### Building Frontend Assets
+When editing HTML templates, DaisyUI components, or CSS classes, build the CSS bundle:
 ```bash
-npm run build
+npm run build         # Normal build
+npm run build:min     # Minified build for production
+```
+
+### Running Automated Tests
+Run the comprehensive test suite and code coverage report:
+```bash
+npm test              # (or npm run tests)
 ```
 
 

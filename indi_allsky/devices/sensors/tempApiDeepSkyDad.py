@@ -64,6 +64,7 @@ class TempApiDeepSkyDad(SensorBase):
         logger.warning('Initializing [%s] DeepSkyDad API Sensor', self.name)
 
 
+        self.url = self.URL
         self.data = {
             'data' : tuple(),
         }
