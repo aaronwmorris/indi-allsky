@@ -8,10 +8,12 @@ Some cameras have known problems.  This page is to consolidate this information.
 [Raspberry PI HQ Camera](Raspberry-PI-HQ-Camera)
 
 ## ASI676MC
-[ASI676MC Known Issues](ASI676MC-Known-Issues)
+
+* [Purple-frame repair guide (RAW16)](ASI676MC-Known-Issues)
+* [Older RGB24 workaround](ASI676MC-Known-Issues#older-rgb24-workaround)
 
 ### ASI224MC
-See the ASI676MC known issues.  The ASI224MC appears to have a similar behavior to the ASI676MC where there are occasional purple images.
+The ASI224MC appears to have similar occasional purple images. See the [older RGB24 workaround](ASI676MC-Known-Issues#older-rgb24-workaround). The ASI676MC purple-frame repair tool does not support the ASI224MC.
 
 
 ## Touptek/Altair
