@@ -11,7 +11,7 @@ Some cameras have known problems.  This page is to consolidate this information.
 [ASI676MC Known Issues](ASI676MC-Known-Issues)
 
 ### ASI224MC
-See the ASI676MC known issues.  The ASI224MC appears to have a similar behavior to the ASI676MC where there are occasional purple images.
+The ASI224MC appears to have similar occasional purple images. See the [historical ASI676MC workaround](ASI676MC-Known-Issues#older-rgb24-workaround). The ASI676MC purple-frame repair tool does not support the ASI224MC.
 
 
 ## Touptek/Altair

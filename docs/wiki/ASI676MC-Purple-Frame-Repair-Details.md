@@ -1,4 +1,15 @@
-# ASI676MC purple-frame handling and calibration
+# ASI676MC Purple Frame Repair Details
+
+For setup and everyday use, start with [ASI676MC Known Issues](ASI676MC-Known-Issues).
+This reference explains the detection and repair process, calibration evidence,
+advanced settings, and implementation details.
+
+- [Runtime behavior](#runtime-behavior)
+- [Settings reference](#settings-reference)
+- [Collecting calibration FITS](#collecting-calibration-fits)
+- [Calibration tool](#calibration-tool)
+- [Troubleshooting](#troubleshooting)
+- [Maintainer map](#maintainer-map)
 
 ## Overview
 
@@ -28,28 +39,8 @@ image metadata and written to the log. Other camera models stay outside this
 feature and are mentioned only at debug log level; they do not receive
 ASI676MC repair metadata.
 
-### Recommended workflow
-
-1. In Image Settings, turn on **Enable ASI676MC purple-frame handling** and
-   leave **Detect and exclude only** enabled.
-2. Enable **Save purple and following normal FITS for calibration**. Leave
-   standard FITS saving off unless diagnostic saving fails to catch the purple
-   frame or the standard files are needed for another purpose.
-3. Collect at least seven purple events across at least two exposure settings.
-   **Also save the preceding normal FITS** can improve the evidence, but costs
-   about one FITS frame of memory and up to one additional saved FITS per event.
-4. Open **Tools > Fix ASI676MC purple frames** and choose **Use saved FITS**.
-   **Upload a FITS collection** is available when the evidence was collected
-   elsewhere.
-5. Follow the outcome shown by the tool:
-   - for a full calibration, review and save the calibration values;
-   - for a detection-threshold suggestion, confirm the likely purple frames,
-     save only the recommended detection settings, start over, and rerun; or
-   - for a failed analysis, follow the retained explanation and collect more
-     suitable evidence.
-6. After a credible full calibration, turn off **Detect and exclude only** to
-   begin repair. Monitor the gallery and logs for validation failures, then
-   return FITS-saving options to the desired long-term disk-use policy.
+The [step-by-step guide](ASI676MC-Known-Issues#collect-calibration-frames)
+covers collecting frames, running calibration, and enabling repair.
 
 ## Runtime behavior
 
@@ -67,7 +58,9 @@ The image worker follows this sequence:
    it excluded.
 5. In repair mode, repair a temporary copy of a purple frame.
 6. Recalculate the signature on the temporary copy.
-7. Commit the copy only if it no longer matches the failure signature.
+7. Commit the copy only if it no longer matches the failure signature and
+   passes the signal sanity check, which rejects collapsed, blank, or wildly
+   rescaled output.
 
 The last step is atomic from the rest of the image pipeline's perspective. If
 validation fails, the original mosaic is retained and the image is marked
@@ -82,7 +75,7 @@ The status stored under `asi676mc_repair_status` is one of:
 | `normal` | The frame did not match the purple-frame signature. |
 | `excluded` | A purple frame was detected in **Detect and exclude only** mode; its pixels were retained and it was excluded from standard timelapses. |
 | `repaired` | A purple frame was repaired and passed post-repair validation. |
-| `validation_failed` | The repair still matched the failure; the original frame was retained and excluded from standard timelapses. |
+| `validation_failed` | The repair did not pass validation; the original frame was retained and excluded from standard timelapses. |
 | `skipped` | The camera or RAW layout did not meet the safety boundary, or the configuration was invalid. |
 
 Frames with `excluded` or `validation_failed` status are also omitted from
@@ -615,13 +608,14 @@ warning.
 | `testing/image/test_asi676mc_calibration_engine.py` | FITS inspection, matching, fitting, evidence policy, and shared-runtime coverage. |
 | `testing/image/test_asi676mc_web_calibration.py` | Sessions, cleanup, discovery, guidance, reports, and web workflow coverage. |
 
-Run the focused tests from the repository root:
+Activate the project's Python environment, then run the focused tests from
+the repository root:
 
 ```text
-python -m unittest \
-    testing.image.test_asi676mc_repair \
-    testing.image.test_asi676mc_calibration_engine \
-    testing.image.test_asi676mc_web_calibration
+python -m pytest \
+    testing/image/test_asi676mc_repair.py \
+    testing/image/test_asi676mc_calibration_engine.py \
+    testing/image/test_asi676mc_web_calibration.py
 ```
 
 When changing correction math, update `indi_allsky/asi676mc.py` first. The
