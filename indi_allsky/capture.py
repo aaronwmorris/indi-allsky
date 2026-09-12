@@ -1077,6 +1077,17 @@ class CaptureWorker(Process):
 
 
         # virtualsky
+        camera_metadata['data']['vs_pointing_azimuth'] = self.config.get('VIRTUALSKY', {}).get('POINTING_AZIMUTH', 0.0)
+        calibration = self.config.get('VIRTUALSKY', {}).get('CALIBRATION')
+        calibration_enabled = self.config.get('VIRTUALSKY', {}).get('CALIBRATION_ENABLED', False)
+        if calibration and calibration_enabled:
+            # A changed crop/rotation/scale invalidates the learned pixel mapping.
+            from .lens_solver.calibration import pipelineSignature
+            calibration_enabled = calibration.get('pipeline') == pipelineSignature(self.config)
+        camera_metadata['data']['vs_calibration'] = calibration
+        camera_metadata['data']['vs_calibration_enabled'] = calibration_enabled
+        camera_metadata['data']['vs_precession'] = self.config.get('VIRTUALSKY', {}).get('PRECESSION', False)
+        camera_metadata['data']['vs_radial_distortion'] = self.config.get('VIRTUALSKY', {}).get('RADIAL_DISTORTION', 0.0)
         camera_metadata['data']['vs_magnitude'] = self.config.get('VIRTUALSKY', {}).get('MAGNITUDE', 6.0)
         camera_metadata['data']['vs_constellations'] = self.config.get('VIRTUALSKY', {}).get('CONSTELLATIONS', True)
         camera_metadata['data']['vs_constellationlabels'] = self.config.get('VIRTUALSKY', {}).get('CONSTELLATIONLABELS', False)

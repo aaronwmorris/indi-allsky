@@ -301,6 +301,10 @@ function VirtualSky(input){
 	this.base = "";
 	this.az_step = 0;
 	this.az_off = 0;
+	this.fisheye_altitude = 90;
+	this.fisheye_radial = 0;
+	this.precession = false;
+	this.fisheye_azimuth = 0;
 	this.ra_off = 0;
 	this.dc_off = 0;
 	this.fov = 30;
@@ -339,10 +343,21 @@ function VirtualSky(input){
 		},
 		'fisheye':{
 			title: 'Fisheye polar projection',
-			azel2xy: function(az,el,w,h){
+			azel2xy: function(az,el,w,h,unclipped){
+				// Visibility uses the real horizon; lens coordinates only govern projection/clipping.
+				var horizonEl = el;
+				if(this.fisheye_altitude !== 90){
+					// Undo image roll before tilting in the geographic frame, then reapply it.
+					var camera = this.fisheyeAltAz(az + this.az_off*this.d2r,el);
+					az = camera[0] - this.az_off*this.d2r;
+					el = camera[1];
+					if(el < 0 && !unclipped) return {x:NaN,y:NaN,el:horizonEl};
+				}
 				var radius = h/2;
+				if(this.fisheye_radial && unclipped) el = Math.max(0,el); // off-camera direction labels stay at the rim
 				var r = radius*Math.sin(((Math.PI/2)-el)/2)/0.70710678;	// the field of view is bigger than 180 degrees
-				return {x:(w/2-r*Math.sin(az)),y:(radius-r*Math.cos(az)),el:el};
+				if(this.fisheye_radial) r *= Math.pow(Math.max(2-Math.pow(r/radius,2),1e-12),-this.fisheye_radial);
+				return {x:(w/2-r*Math.sin(az)),y:(radius-r*Math.cos(az)),el:horizonEl};
 			},
 			xy2azel: function(x, y, w, h) {
 				var radius = h/2;
@@ -352,6 +367,16 @@ function VirtualSky(input){
 				r = Math.sqrt(X*X + Y*Y);
 				if (r > radius) {
 					return undefined;
+				}
+				if(this.fisheye_radial){
+					// Invert the monotonic radial model on the front hemisphere.
+					var lo = 0, hi = 1, target = r/radius;
+					for(var j = 0; j < 40; j++){
+						var mid = (lo+hi)/2;
+						if(mid*Math.pow(2-mid*mid,-this.fisheye_radial) < target) lo = mid;
+						else hi = mid;
+					}
+					r = radius*(lo+hi)/2;
 				}
 				var el = Math.PI/2 - 2 * Math.asin(r * 0.70710678 / radius);
 				var az = Math.atan2(X, Y);
@@ -1018,6 +1043,7 @@ VirtualSky.prototype.init = function(d){
 		negative: b,
 		meteorshowers: b,
 		showstars: b,
+		precession: b,
 		scalestars: n,
 		showstarlabels: b,
 		starnames: o,
@@ -1066,6 +1092,9 @@ VirtualSky.prototype.init = function(d){
 	if(is(d.latitude,n)) this.setLatitude(d.latitude);
 	if(is(d.clock,s)) this.updateClock(new Date(d.clock.replace(/%20/g,' ')));
 	if(is(d.az,n)) this.az_off = (d.az%360)-180;
+	if(is(d.fisheye_altitude,n) && d.fisheye_altitude >= 0 && d.fisheye_altitude <= 90) this.fisheye_altitude = d.fisheye_altitude;
+	if(is(d.fisheye_radial,n) && d.fisheye_radial >= -0.5 && d.fisheye_radial <= 1) this.fisheye_radial = d.fisheye_radial;
+	if(is(d.fisheye_azimuth,n) && isFinite(d.fisheye_azimuth)) this.fisheye_azimuth = d.fisheye_azimuth;
 	if(is(d.ra,n)) this.setRA(d.ra);
 	if(is(d.dec,n)) this.setDec(d.dec);
 	if(is(d.planets,s)) this.file.planets = d.planets;
@@ -1730,6 +1759,7 @@ VirtualSky.prototype.nearestObject = function(x,y){
 	e = {};
 	e.matched = this.whichPointer(x,y);
 	var skyPos = this.xy2radec(x,y);
+	var ofdate = skyPos && this.precession ? this.precessEquatorial(skyPos.ra,skyPos.dec) : skyPos;
 	if(skyPos){
 		e.ra = skyPos.ra / this.d2r;
 		e.dec = skyPos.dec / this.d2r;
@@ -1739,7 +1769,8 @@ VirtualSky.prototype.nearestObject = function(x,y){
 	for(t in this.lookup){
 		if(this.lookup[t]){
 			for(i = 0; i < this.lookup[t].length; i++){
-				ang = this.greatCircle(skyPos.ra,skyPos.dec,this.lookup[t][i].ra,this.lookup[t][i].dec);
+				var position = (t === 'planet' || t === 'sun' || t === 'moon') ? ofdate : skyPos;
+				ang = this.greatCircle(position.ra,position.dec,this.lookup[t][i].ra,this.lookup[t][i].dec);
 				if(ang < d){
 					nearest = {'distance':ang,'label':this.lookup[t][i].label+'','type':t,'data':this.lookup[t][i]};
 					d = ang;
@@ -2138,7 +2169,7 @@ VirtualSky.prototype.ecliptic2xy = function(l,b,LST){
 	else{
 		if(this.fullsky){
 			pos = this.ecliptic2radec(l,b);
-			return this.radec2xy(pos.ra,pos.dec);
+			return this.radec2xy(pos.ra,pos.dec,true);
 		}else{
 			pos = this.ecliptic2azel(l,b,LST);
 			var el = pos.el*this.r2d;
@@ -2150,10 +2181,54 @@ VirtualSky.prototype.ecliptic2xy = function(l,b,LST){
 	return 0;
 };
 
+// J2000 catalogue <-> mean equator/equinox of the image date, IAU 1976.
+// Keep the angles in sync with lens_solver.projection.precessCatalog.
+VirtualSky.prototype.precessEquatorial = function(ra,dec,inverse){
+	if(this._precessionJD !== this.times.JD){
+		var t = (this.times.JD-2451545.0)/36525;
+		var scale = this.d2r/3600;
+		this._precessionAngles = [
+			(2306.2181*t+0.30188*t*t+0.017998*t*t*t)*scale,
+			(2306.2181*t+1.09468*t*t+0.018203*t*t*t)*scale,
+			(2004.3109*t-0.42665*t*t-0.041833*t*t*t)*scale];
+		this._precessionJD = this.times.JD;
+	}
+	var p = this._precessionAngles;
+	var zeta = inverse ? -p[1] : p[0];
+	var z = inverse ? -p[0] : p[1];
+	var theta = inverse ? -p[2] : p[2];
+	var a = Math.cos(dec)*Math.sin(ra+zeta);
+	var b = Math.cos(theta)*Math.cos(dec)*Math.cos(ra+zeta)-Math.sin(theta)*Math.sin(dec);
+	var c = Math.sin(theta)*Math.cos(dec)*Math.cos(ra+zeta)+Math.cos(theta)*Math.sin(dec);
+	return {ra:(Math.atan2(a,b)+z+2*Math.PI)%(2*Math.PI),dec:Math.atan2(c,Math.hypot(a,b))};
+};
+
+// Geographic az/el -> lens az/el (radians); pointing options are in degrees.
+// Rotate the along/up plane about the axis across the pointing heading.
+// Adding heading back retains the existing north reference for image roll.
+// inverse=true reverses the rotation for pixel -> sky coordinates.
+// Keep this in sync with lens_solver.projection.cameraAltAz.
+VirtualSky.prototype.fisheyeAltAz = function(az,el,inverse){
+	if(this.fisheye_altitude === 90) return [az,el];
+	var tilt = (90-this.fisheye_altitude)*this.d2r*(inverse ? -1 : 1);
+	var heading = this.fisheye_azimuth*this.d2r;
+	var across = Math.cos(el)*Math.sin(az-heading);
+	var along = Math.cos(el)*Math.cos(az-heading);
+	var up = Math.sin(el);
+	var forward = Math.cos(tilt)*along-Math.sin(tilt)*up;
+	var axis = Math.sin(tilt)*along+Math.cos(tilt)*up;
+	return [heading+Math.atan2(across,forward),Math.atan2(axis,Math.sqrt(across*across+forward*forward))];
+};
+
 // Convert RA,Dec -> X,Y
 // Inputs: RA (rad), Dec (rad)
 // Returns [x, y (,elevation)]
-VirtualSky.prototype.radec2xy = function(ra,dec){
+VirtualSky.prototype.radec2xy = function(ra,dec,ofdate){
+	if(this.precession && !ofdate){
+		var equatorial = this.precessEquatorial(ra,dec);
+		ra = equatorial.ra;
+		dec = equatorial.dec;
+	}
 	if(typeof this.projection.radec2xy==="function") return this.projection.radec2xy.call(this,ra,dec);
 	else{
 		var coords = this.coord2horizon(ra, dec);
@@ -2170,14 +2245,19 @@ VirtualSky.prototype.radec2xy = function(ra,dec){
 VirtualSky.prototype.xy2radec = function(x, y){
 	if (typeof this.projection.xy2radec==="function") return this.projection.xy2radec.call(this,x,y);
 	else if (typeof this.projection.xy2azel === "function") {
-		var azel = this.projection.xy2azel(x, y,this.wide,this.tall);
+		var azel = this.projection.xy2azel.call(this,x,y,this.wide,this.tall);
 		if (azel === undefined) {
 			return undefined;
 		}
 
 		var coords = [azel[1], azel[0] + (this.az_off*this.d2r)];
+		if(this.projection.id === 'fisheye' && this.fisheye_altitude !== 90){
+			var horizon = this.fisheyeAltAz(coords[1],coords[0],true);
+			coords = [horizon[1],horizon[0]];
+		}
 
-		return this.horizon2coord(coords);
+		var equatorial = this.horizon2coord(coords);
+		return this.precession ? this.precessEquatorial(equatorial.ra,equatorial.dec,true) : equatorial;
 	} else {
 		return undefined;
 	}
@@ -2705,7 +2785,8 @@ VirtualSky.prototype.drawPlanets = function(){
 			dec = this.planets[p][3];
 		}
 		this.lookup.planet.push({'ra':ra*this.d2r,'dec':dec*this.d2r,'label':(this.lang.planets ? this.lang.planets[this.planets[p][0]] : "?")});
-		pos = this.radec2xy(ra*this.d2r,dec*this.d2r);
+		// Planet ephemerides already refer to the equinox of date.
+		pos = this.radec2xy(ra*this.d2r,dec*this.d2r,true);
 
 		if(!this.negative) colour = this.planets[p][1];
 		if(typeof colour==="string") c.strokeStyle = colour;
@@ -2727,7 +2808,7 @@ VirtualSky.prototype.drawPlanets = function(){
 			c.lineWidth = 1;
 			var previous = {x:-1,y:-1,el:-1};
 			for(i = 0 ; i < this.planets[p][2].length-4 ; i+=4){
-				var point = this.radec2xy(this.planets[p][2][i+1]*this.d2r, this.planets[p][2][i+2]*this.d2r);
+				var point = this.radec2xy(this.planets[p][2][i+1]*this.d2r, this.planets[p][2][i+2]*this.d2r,true);
 				if(previous.x > 0 && previous.y > 0 && this.isVisible(point.el)){
 					c.moveTo(previous.x,previous.y);
 					// Basic error checking: points behind us often have very long lines so we'll zap them
@@ -3164,7 +3245,17 @@ VirtualSky.prototype.drawCardinalPoints = function(){
 			r = (m.width > fontsize) ? m.width/2 : fontsize/2;
 		}else r = fontsize/2;
 		ang = (azs[i]-this.az_off)*this.d2r;
-		if(this.polartype){
+		if(this.projection.id === 'fisheye' && this.fisheye_altitude !== 90){
+			// Keep off-camera horizon labels as rim direction cues. Stars still
+			// use the clipped projection; their positions must not move.
+			pos = this.azel2xy(ang,0,this.wide,this.tall,true);
+			if(!isFinite(pos.x) || !isFinite(pos.y)) continue;
+			f = Math.min(1,(this.tall/2-r*2)/Math.hypot(pos.x-this.wide/2,pos.y-this.tall/2));
+			pos.x = this.wide/2 + (pos.x-this.wide/2)*f;
+			pos.y = this.tall/2 + (pos.y-this.tall/2)*f;
+			x = Math.max(r,Math.min(this.wide-r*2,pos.x-r));
+			y = Math.max(fontsize,Math.min(this.tall-r,pos.y));
+		}else if(this.polartype){
 			f = (this.tall/2) - r*1.5;
 			x = -f*Math.sin(ang);
 			y = -f*Math.cos(ang);
@@ -3175,6 +3266,11 @@ VirtualSky.prototype.drawCardinalPoints = function(){
 			x = isFinite(pos.x) ? pos.x - r : 0;
 			y = isFinite(pos.y) ? pos.y - pt/2 : 0;
 			if(x < 0 || x > this.wide-pt) x = -r;
+		}
+		if(this.positionCardinalLabel){
+			pos = this.positionCardinalLabel(x,y,m ? m.width : r*2,fontsize);
+			if(!pos) continue;
+			x = pos[0]; y = pos[1];
 		}
 		if(x > 0) c.fillText(d[i],x,y);
 	}
