@@ -238,10 +238,12 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_1_10(IndiAllSky_Exposure_
     ### ZWO, PlayerOne
 
 
-    def gain2dB(self, gain) -> float:
+    @staticmethod
+    def gain2dB(gain) -> float:
         return gain / 10.0
 
-    def dB2gain(self, dB) -> float:
+    @staticmethod
+    def dB2gain(dB) -> float:
         return dB * 10.0
 
 
@@ -250,10 +252,12 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB(IndiAllSky_Exposure_AutoG
     ### QHY
 
 
-    def gain2dB(self, gain) -> float:
+    @staticmethod
+    def gain2dB(gain) -> float:
         return gain
 
-    def dB2gain(self, dB) -> float:
+    @staticmethod
+    def dB2gain(dB) -> float:
         return dB
 
 
@@ -262,10 +266,12 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO(IndiAllSky_Exposure_Auto
     ### ToupTek, Altair, QHY, etc
 
 
-    def gain2dB(self, gain) -> float:
+    @staticmethod
+    def gain2dB(gain) -> float:
         return 20 * math.log10(gain / 100)
 
-    def dB2gain(self, dB) -> float:
+    @staticmethod
+    def dB2gain(dB) -> float:
         return 100 * (10 ** (dB / 20))
 
 
@@ -274,8 +280,10 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO_1_100(IndiAllSky_Exposur
     ### libcamera
 
 
-    def gain2dB(self, gain) -> float:
+    @staticmethod
+    def gain2dB(gain) -> float:
         return 20 * math.log10(gain)
 
-    def dB2gain(self, dB) -> float:
+    @staticmethod
+    def dB2gain(dB) -> float:
         return 10 ** (dB / 20)
