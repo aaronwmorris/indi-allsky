@@ -96,3 +96,47 @@ def test_timelapse_generate_failure_cleans_up(tmp_path):
 
     # Broken video file must be deleted on failure
     assert not out_video.exists()
+
+
+@pytest.mark.parametrize('codec', ['h264_qsv', 'h264_nvenc', 'h264_vaapi'])
+def test_timelapse_codecs_and_filters(tmp_path, monkeypatch, codec):
+    monkeypatch.setenv('HOME', str(tmp_path))
+    config = {
+        'IMAGE_FILE_TYPE': 'jpg',
+        'TIMELAPSE': {'FFMPEG_REPORT': True},
+    }
+    generator = TimelapseGenerator(config, skip_frames=1, pre_processor_class='standard')
+    generator.codec = codec
+    generator.video_filter = 'hqdn3d'
+    generator.ffmpeg_extra_options = '-profile:v high'
+
+    f0 = tmp_path / "img0.jpg"
+    f1 = tmp_path / "img1.jpg"
+    f_empty = tmp_path / "img_empty.jpg"
+    f0.write_bytes(b"content0")
+    f1.write_bytes(b"content1")
+    f_empty.write_bytes(b"")
+
+    out_video = tmp_path / "output.mp4"
+    out_video.write_bytes(b"mock video")
+    mock_res = subprocess.CompletedProcess(args=['ffmpeg'], returncode=0, stdout=b"ok")
+
+    with patch('subprocess.run', return_value=mock_res) as mock_run:
+        with patch.object(generator.pre_processor, 'main') as mock_pre:
+            generator.pre_processor._seqfolder = tmp_path
+            generator.generate(str(out_video), [f0, f_empty, f1], preserve_order=False)
+
+            mock_pre.assert_called_once()
+            passed_files = mock_pre.call_args[0][0]
+            assert f_empty not in passed_files
+            assert len(passed_files) == 1  # 2 non-empty minus skip_frames=1
+            mock_run.assert_called_once()
+            cmd = mock_run.call_args[0][0]
+            env = mock_run.call_args[1]['env']
+            assert 'FFREPORT' in env
+            assert '-vf' in cmd
+            assert 'hqdn3d' in cmd
+            assert '-profile:v' in cmd
+            if codec == 'h264_qsv':
+                assert '-init_hw_device' in cmd
+

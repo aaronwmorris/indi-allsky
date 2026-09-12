@@ -39,6 +39,16 @@ def test_checkAvailableSpace_pass(flask_app, db, mocker):
     # Should not raise
     backup.checkAvailableSpace()
 
+def test_checkAvailableSpace_permission_error(flask_app, db, mocker):
+    backup = IndiAllskyDatabaseBackup({})
+    mock_partition = mocker.MagicMock()
+    mock_partition.mountpoint = '/'
+    mocker.patch('psutil.disk_partitions', return_value=[mock_partition])
+    mocker.patch('psutil.disk_usage', side_effect=PermissionError("Denied"))
+    # Should catch PermissionError and continue without raising
+    backup.checkAvailableSpace()
+
+
 def test_checkAvailableSpace_fail(flask_app, db, mocker):
     backup = IndiAllskyDatabaseBackup({})
     

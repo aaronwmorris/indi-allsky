@@ -56,3 +56,14 @@ def test_dockerpi_4channel_relay():
 
         with pytest.raises(ValueError):
             relay.get_relay(0x99)
+
+
+def test_dockerpi_busio_import_error():
+    import importlib
+    with patch.dict(sys.modules, {'busio': None}):
+        import indi_allsky.devices.controllers.dockerpi as dpi
+        importlib.reload(dpi)
+        assert dpi.I2C is None
+    # restore
+    import indi_allsky.devices.controllers.dockerpi as dpi
+    importlib.reload(dpi)

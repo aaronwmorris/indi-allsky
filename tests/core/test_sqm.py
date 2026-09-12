@@ -87,3 +87,18 @@ def test_sqm_mask_generation_fallback():
     avg = sqm.averageAdu(i_ref)
     assert avg == pytest.approx(50.0)
     assert sqm._sqm_mask_dict[1] is not None
+
+
+def test_sqm_magnitude_zero_adu(sqm_fixture):
+    mono_data = np.zeros((100, 100), dtype=np.uint8)
+    i_ref = MagicMock()
+    i_ref.hdulist = [MagicMock(data=mono_data)]
+    i_ref.binning = 1
+    i_ref.exposure = 20.0
+    i_ref.gain = 200.0
+
+    mag_sqm, raw_mag, sqm_avg = sqm_fixture.magnitudeSqm(i_ref)
+    assert sqm_avg == 0.0
+    assert raw_mag == 0.0
+    assert mag_sqm == 25.0
+

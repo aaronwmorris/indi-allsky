@@ -1730,7 +1730,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def number_values(self, device, name, ctl=None):
-        return self.__control2dict(device, name, 'text', lambda c: {'value': c.getValue(), 'min': c.min, 'max': c.max, 'step': c.step, 'format': c.format}, ctl)
+        return self.__control2dict(device, name, 'number', lambda c: {'value': c.getValue(), 'min': c.min, 'max': c.max, 'step': c.step, 'format': c.format}, ctl)
 
 
     def light_values(self, device, name, ctl=None):

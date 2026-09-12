@@ -1,8 +1,15 @@
 import io
 import sys
+import socket
+import ssl
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 import pytest
+
+import botocore.exceptions
+import boto3.exceptions
+import urllib3.exceptions
+import requests.exceptions
 
 from indi_allsky.filetransfer.boto3_generic import boto3_generic
 from indi_allsky.filetransfer.boto3_s3 import boto3_s3
@@ -15,31 +22,32 @@ from indi_allsky.filetransfer.exceptions import (
     ConnectionFailure,
     CertificateValidationFailure,
     AuthenticationFailure,
+    TransferFailure,
 )
 
 
-def test_boto3_generic_connect_and_put(tmp_path):
+def test_boto3_generic_lifecycle_and_content_types(tmp_path):
     mock_boto3 = MagicMock()
     mock_client = MagicMock()
     mock_boto3.client.return_value = mock_client
 
-    mock_boto3_exc = MagicMock()
-    mock_boto3.exceptions = mock_boto3_exc
-
-    mock_botocore = MagicMock()
-    mock_botocore_client = MagicMock()
-    mock_botocore_exceptions = MagicMock()
-    mock_botocore.client = mock_botocore_client
-    mock_botocore.exceptions = mock_botocore_exceptions
-
-    with patch.dict(sys.modules, {
-        'boto3': mock_boto3,
-        'boto3.exceptions': mock_boto3_exc,
-        'botocore': mock_botocore,
-        'botocore.client': mock_botocore_client,
-        'botocore.exceptions': mock_botocore_exceptions,
-    }):
+    with patch.dict(sys.modules, {'boto3': mock_boto3}):
         transfer = boto3_generic({})
+        assert transfer._port == 443
+
+        # Connect with cert_bypass=True
+        transfer.connect(
+            access_key='key_bypass',
+            secret_key='sec_bypass',
+            region='us-west-2',
+            endpoint_url='https://custom.endpoint',
+            tls=False,
+            cert_bypass=True,
+        )
+        assert mock_boto3.client.call_args[1]['verify'] is False
+        assert mock_boto3.client.call_args[1]['use_ssl'] is False
+
+        # Connect with cert_bypass=False
         transfer.connect(
             access_key='AKIAIOSFODNN7EXAMPLE',
             secret_key='wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
@@ -48,39 +56,93 @@ def test_boto3_generic_connect_and_put(tmp_path):
             tls=True,
             cert_bypass=False,
         )
+        assert mock_boto3.client.call_args[1]['verify'] is True
+        assert mock_boto3.client.call_args[1]['use_ssl'] is True
 
-        test_file = tmp_path / "test.jpg"
-        test_file.write_bytes(b"dummy image data")
+        # Test content types in put()
+        extensions_map = [
+            ('img.jpg', 'image/jpeg'),
+            ('img.jpeg', 'image/jpeg'),
+            ('video.mp4', 'video/mp4'),
+            ('img.png', 'image/png'),
+            ('video.webm', 'video/webm'),
+            ('img.webp', 'image/webp'),
+            ('data.bin', None),
+        ]
+        for filename, expected_content_type in extensions_map:
+            f = tmp_path / filename
+            f.write_bytes(b'dummy data')
+            transfer.put(
+                local_file=str(f),
+                bucket='mybucket',
+                key=f'uploads/{filename}',
+                storage_class='STANDARD',
+                acl='public-read',
+            )
+            extra_args = mock_client.upload_file.call_args[1]['ExtraArgs']
+            assert extra_args['CacheControl'] == 'max-age=7776000'
+            assert extra_args['ACL'] == 'public-read'
+            assert extra_args['StorageClass'] == 'STANDARD'
+            if expected_content_type:
+                assert extra_args['ContentType'] == expected_content_type
+            else:
+                assert 'ContentType' not in extra_args
 
-        transfer.put(
-            local_file=str(test_file),
-            bucket='mybucket',
-            key='images/test.jpg',
-            storage_class='STANDARD',
-            acl='public-read',
-        )
+        # Test delete
+        transfer.delete(bucket='mybucket', key='uploads/img.jpg')
+        mock_client.delete_object.assert_called_with(Bucket='mybucket', Key='uploads/img.jpg')
 
-        mock_client.upload_file.assert_called_once_with(
-            str(test_file),
-            'mybucket',
-            'images/test.jpg',
-            ExtraArgs={
-                'ACL': 'public-read',
-                'StorageClass': 'STANDARD',
-                'ContentType': 'image/jpeg',
-                'CacheControl': 'max-age=7776000',
-            },
-        )
+        # Test close
         transfer.close()
-        mock_client.close.assert_called_once()
+        mock_client.close.assert_called()
 
 
-import socket
-import ssl
-import botocore.exceptions
-import boto3.exceptions
-import urllib3.exceptions
-from indi_allsky.filetransfer.exceptions import TransferFailure
+@pytest.mark.parametrize('raised_exc, expected_wrapped', [
+    (socket.gaierror('dns fail'), ConnectionFailure),
+    (socket.timeout('timed out'), ConnectionFailure),
+    (ConnectionRefusedError('refused'), ConnectionFailure),
+    (ssl.SSLEOFError('ssl eof'), CertificateValidationFailure),
+    (botocore.exceptions.ConnectTimeoutError(endpoint_url='http://x'), ConnectionFailure),
+    (urllib3.exceptions.ReadTimeoutError(None, 'http://x', 'timeout'), ConnectionFailure),
+    (urllib3.exceptions.NewConnectionError(None, 'failed'), ConnectionFailure),
+    (urllib3.exceptions.ProtocolError('proto'), ConnectionFailure),
+    (urllib3.exceptions.SSLError('ssl'), CertificateValidationFailure),
+    (botocore.exceptions.ReadTimeoutError(endpoint_url='http://x'), ConnectionFailure),
+    (botocore.exceptions.EndpointConnectionError(endpoint_url='http://x'), ConnectionFailure),
+    (botocore.exceptions.ConnectionClosedError(endpoint_url='http://x'), ConnectionFailure),
+    (boto3.exceptions.S3UploadFailedError('failed'), TransferFailure),
+    (botocore.exceptions.SSLError(endpoint_url='http://x', error='ssl error'), CertificateValidationFailure),
+])
+def test_boto3_generic_exceptions(tmp_path, raised_exc, expected_wrapped):
+    mock_boto3 = MagicMock()
+    mock_boto3.exceptions = boto3.exceptions
+    mock_client = MagicMock()
+    mock_boto3.client.return_value = mock_client
+
+    with patch.dict(sys.modules, {'boto3': mock_boto3}):
+        transfer = boto3_generic({})
+        transfer.connect(
+            access_key='k', secret_key='s', region='r', endpoint_url='https://s3.local',
+            tls=True, cert_bypass=False
+        )
+        f = tmp_path / "test.jpg"
+        f.write_bytes(b'x')
+
+        # put() error
+        mock_client.upload_file.side_effect = raised_exc
+        with pytest.raises(expected_wrapped):
+            transfer.put(
+                local_file=str(f),
+                bucket='b',
+                key='k',
+                storage_class=None,
+                acl=None,
+            )
+
+        # delete() error
+        mock_client.delete_object.side_effect = raised_exc
+        with pytest.raises(expected_wrapped):
+            transfer.delete(bucket='b', key='k')
 
 
 def test_boto3_s3_lifecycle_and_content_types(tmp_path):
@@ -328,7 +390,66 @@ def test_boto3_minio_exceptions(tmp_path, raised_exc, expected_wrapped):
             transfer.delete(bucket='b', key='k')
 
 
-def test_requests_syncapi_v1(tmp_path):
+def test_requests_syncapi_v1_modes(tmp_path):
+    transfer = requests_syncapi_v1({})
+    # Test cert_bypass=False
+    transfer.connect(
+        hostname='https://sync.example.com/api/v1',
+        username='node1',
+        apikey='supersecretkey12345678901234567890',
+        cert_bypass=False,
+    )
+    assert transfer.verify is True
+
+    # Test cert_bypass=True
+    transfer.connect(
+        hostname='https://sync.example.com/api/v1',
+        username='node1',
+        apikey='supersecretkey12345678901234567890',
+        cert_bypass=True,
+    )
+    assert transfer.verify is False
+
+    test_file = tmp_path / "sync_image.jpg"
+    test_file.write_bytes(b"fake jpeg content")
+
+    mock_resp = MagicMock(status_code=200, text='{"success": true}')
+    with patch('requests.put', return_value=mock_resp) as mock_put:
+        # Standard put
+        meta = {'camera_uuid': 'cam-123', 'name': 'test'}
+        res = transfer.put(
+            local_file=str(test_file),
+            empty_file=False,
+            metadata=meta,
+        )
+        assert res == {"success": True}
+        assert meta['file_size'] == len(b"fake jpeg content")
+        assert mock_put.call_args[1]['verify'] is False
+
+        # Camera put
+        meta_cam = {'camera_uuid': 'cam-123'}
+        res_cam = transfer.put(
+            local_file='camera',
+            empty_file=False,
+            metadata=meta_cam,
+        )
+        assert res_cam == {"success": True}
+        assert meta_cam['file_size'] == 0
+
+        # Empty file put
+        meta_empty = {'camera_uuid': 'cam-123'}
+        res_empty = transfer.put(
+            local_file=str(test_file),
+            empty_file=True,
+            metadata=meta_empty,
+        )
+        assert res_empty == {"success": True}
+        assert meta_empty['file_size'] == 0
+
+    transfer.close()
+
+
+def test_requests_syncapi_v1_status_error(tmp_path):
     transfer = requests_syncapi_v1({})
     transfer.connect(
         hostname='https://sync.example.com/api/v1',
@@ -340,20 +461,44 @@ def test_requests_syncapi_v1(tmp_path):
     test_file = tmp_path / "sync_image.jpg"
     test_file.write_bytes(b"fake jpeg content")
 
-    mock_resp = MagicMock(status_code=200, text='{"success": true}')
-    with patch('requests.put', return_value=mock_resp) as mock_put:
-        transfer.put(
-            local_file=str(test_file),
-            empty_file=False,
-            metadata={'camera_uuid': 'cam-123', 'name': 'test'},
-        )
-        mock_put.assert_called_once()
-        assert mock_put.call_args[1]['verify'] is False
-
-    transfer.close()
+    mock_resp = MagicMock(status_code=400, text='{"error": "bad request"}')
+    with patch('requests.put', return_value=mock_resp):
+        with pytest.raises(TransferFailure, match='Sync error: 400'):
+            transfer.put(
+                local_file=str(test_file),
+                empty_file=False,
+                metadata={},
+            )
 
 
-import requests.exceptions
+@pytest.mark.parametrize('raised_exc, expected_wrapped', [
+    (socket.gaierror('dns error'), ConnectionFailure),
+    (socket.timeout('timed out'), ConnectionFailure),
+    (requests.exceptions.ConnectTimeout('connect timeout'), ConnectionFailure),
+    (requests.exceptions.ConnectionError('connection error'), ConnectionFailure),
+    (requests.exceptions.ReadTimeout('read timeout'), ConnectionFailure),
+    (ssl.SSLCertVerificationError('ssl verification failed'), CertificateValidationFailure),
+    (requests.exceptions.SSLError('ssl error'), CertificateValidationFailure),
+])
+def test_requests_syncapi_v1_exceptions(tmp_path, raised_exc, expected_wrapped):
+    transfer = requests_syncapi_v1({})
+    transfer.connect(
+        hostname='https://sync.example.com/api/v1',
+        username='node1',
+        apikey='supersecretkey12345678901234567890',
+        cert_bypass=True,
+    )
+
+    test_file = tmp_path / "sync_image.jpg"
+    test_file.write_bytes(b"fake jpeg content")
+
+    with patch('requests.put', side_effect=raised_exc):
+        with pytest.raises(expected_wrapped):
+            transfer.put(
+                local_file=str(test_file),
+                empty_file=False,
+                metadata={},
+            )
 
 
 class MockGcpNotFound(Exception):

@@ -8,27 +8,49 @@ import pytest
 
 # Global mocks for environments without native/optional libraries (e.g. CI)
 if 'PyIndi' not in sys.modules:
-    mock_pyindi = MagicMock()
-    class MockBaseClient:
-        def disconnectServer(self, *args, **kwargs):
-            pass
+    try:
+        import PyIndi  # noqa: F401
+    except ImportError:
+        mock_pyindi = MagicMock()
+        class MockBaseClient:
+            def disconnectServer(self, *args, **kwargs):
+                pass
+            def connectServer(self, *args, **kwargs):
+                return True
+            def getHost(self, *args, **kwargs):
+                return 'localhost'
+            def getPort(self, *args, **kwargs):
+                return 7624
+            def sendNewNumber(self, *args, **kwargs):
+                pass
+            def sendNewSwitch(self, *args, **kwargs):
+                pass
+            def sendNewText(self, *args, **kwargs):
+                pass
+            def setBLOBMode(self, *args, **kwargs):
+                pass
+            def getDevices(self, *args, **kwargs):
+                return []
 
-    mock_pyindi.BaseClient = MockBaseClient
-    mock_pyindi.IPS_IDLE = 0
-    mock_pyindi.IPS_OK = 1
-    mock_pyindi.IPS_BUSY = 2
-    mock_pyindi.IPS_ALERT = 3
-    mock_pyindi.ISS_OFF = 0
-    mock_pyindi.ISS_ON = 1
-    mock_pyindi.ISR_1OFMANY = 0
-    mock_pyindi.ISR_ATMOST1 = 1
-    mock_pyindi.ISR_NOFMANY = 2
-    mock_pyindi.INDI_NUMBER = 0
-    mock_pyindi.INDI_SWITCH = 1
-    mock_pyindi.INDI_TEXT = 2
-    mock_pyindi.INDI_LIGHT = 3
-    mock_pyindi.INDI_BLOB = 4
-    sys.modules['PyIndi'] = mock_pyindi
+        mock_pyindi.BaseClient = MockBaseClient
+        mock_pyindi.IPS_IDLE = 0
+        mock_pyindi.IPS_OK = 1
+        mock_pyindi.IPS_BUSY = 2
+        mock_pyindi.IPS_ALERT = 3
+        mock_pyindi.ISS_OFF = 0
+        mock_pyindi.ISS_ON = 1
+        mock_pyindi.ISR_1OFMANY = 0
+        mock_pyindi.ISR_ATMOST1 = 1
+        mock_pyindi.ISR_NOFMANY = 2
+        mock_pyindi.IP_RO = 0
+        mock_pyindi.IP_WO = 1
+        mock_pyindi.IP_RW = 2
+        mock_pyindi.INDI_NUMBER = 0
+        mock_pyindi.INDI_SWITCH = 1
+        mock_pyindi.INDI_TEXT = 2
+        mock_pyindi.INDI_LIGHT = 3
+        mock_pyindi.INDI_BLOB = 4
+        sys.modules['PyIndi'] = mock_pyindi
 
 if 'gunicorn' not in sys.modules:
     try:

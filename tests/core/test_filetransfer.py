@@ -1,3 +1,4 @@
+from unittest.mock import patch
 import pytest
 
 from indi_allsky.filetransfer.generic import GenericFileTransfer
@@ -37,3 +38,11 @@ def test_generic_file_transfer():
     ft.connect()
     ft.put(local_file="test.jpg")
     ft.close()
+
+    # Test delete mode in put
+    ft_del = GenericFileTransfer(config, delete=True)
+    with patch.object(ft_del, 'delete', return_value=True) as mock_delete:
+        ft_del.put(local_file="test.jpg")
+        mock_delete.assert_called_once_with(local_file="test.jpg")
+
+    ft.delete()

@@ -1478,7 +1478,7 @@ class CaptureWorker(Process):
         if ccd_gain_default > gain_night:
             ccd_gain_default = gain_night
         if ccd_gain_default < gain_day:
-            ccd_exposure_default = gain_day
+            ccd_gain_default = gain_day
 
 
         if self._expUtils.EXPOSURE_CURRENT < 0:
@@ -1573,7 +1573,7 @@ class CaptureWorker(Process):
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
             # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
-            self.shoot(7.0, self._expUtils.GAIN_MIN, sync=True, timeout=20.0)
+            self.shoot(7.0, self._expUtils.GAIN_MIN_DAY, self._expUtils.BINNING_DAY, sync=True, timeout=20.0)
 
 
     def _periodic_tasks(self):

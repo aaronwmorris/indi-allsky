@@ -853,6 +853,7 @@ class IndiAllSky(object):
                 'type'        : constants.CAMERA,
                 'name'        : camera_name.rstrip(),
                 'driver'      : 'import',
+                'serialNumber': None,
                 'latitude'    : 0.0,
                 'longitude'   : 0.0,
                 'elevation'   : 0,
@@ -1422,11 +1423,11 @@ class IndiAllSky(object):
 
                 else:
                     logger.error('Unknown action: %s', action)
-                    task.setFailed()
+                    task.setFailed('Unknown action: {0:s}'.format(action))
 
             else:
                 logger.error('Unmanaged queue %s', task.queue.name)
-                task.setFailed()
+                task.setFailed('Unmanaged queue {0:s}'.format(task.queue.name))
 
 
     def _periodic_tasks(self):

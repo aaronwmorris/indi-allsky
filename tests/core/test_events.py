@@ -162,3 +162,75 @@ def test_start_ipc_server_idempotent(manager, mocker):
     # Second call should return early and not spawn another thread
     manager.start_ipc_server()
     assert mock_thread.call_count == 1
+
+
+def test_broadcast_no_local_clients_udp_exception(manager, mocker):
+    """Test broadcast catches UDP sendto exceptions gracefully."""
+    mocker.patch.object(manager, 'broadcast_raw', return_value=0)
+    mock_socket_cls = mocker.patch('socket.socket')
+    mock_sock = Mock()
+    mock_sock.sendto.side_effect = Exception("UDP Send error")
+    mock_socket_cls.return_value = mock_sock
+
+    count = manager.broadcast("test_event", {"data": "test"})
+    assert count == 0
+    mock_sock.sendto.assert_called_once()
+
+
+def test_ipc_listener_bind_failure(manager, mocker):
+    """Test ipc_listener handles bind exceptions gracefully."""
+    mock_sock = Mock()
+    mock_sock.bind.side_effect = Exception("Address already in use")
+    mocker.patch('socket.socket', return_value=mock_sock)
+
+    captured_targets = []
+    def fake_thread(target, daemon):
+        captured_targets.append(target)
+        t = Mock()
+        t.start = Mock()
+        return t
+
+    mocker.patch('threading.Thread', side_effect=fake_thread)
+
+    manager.start_ipc_server()
+    assert len(captured_targets) == 1
+
+    # Run the listener function directly
+    captured_targets[0]()
+    mock_sock.bind.assert_called_once_with((UDP_IPC_HOST, UDP_IPC_PORT))
+
+
+def test_ipc_listener_recv_loop_and_reuseport(manager, mocker):
+    """Test ipc_listener receives messages, broadcasts them, and handles SO_REUSEPORT."""
+    mock_sock = Mock()
+    # First setsockopt call succeeds, second (SO_REUSEPORT) raises exception
+    mock_sock.setsockopt.side_effect = [None, Exception("setsockopt failed")]
+    
+    # recvfrom returns payload once, then raises an exception caught by inner loop, then SystemExit to terminate loop
+    mock_sock.recvfrom.side_effect = [
+        (b'{"hello": "world"}', ('127.0.0.1', 1234)),
+        Exception("temporary socket error"),
+        SystemExit("exit thread loop"),
+    ]
+    mocker.patch('socket.socket', return_value=mock_sock)
+    mocker.patch('socket.SO_REUSEPORT', 15, create=True)
+
+    mock_broadcast = mocker.patch.object(manager, 'broadcast_raw')
+
+    captured_targets = []
+    def fake_thread(target, daemon):
+        captured_targets.append(target)
+        t = Mock()
+        t.start = Mock()
+        return t
+
+    mocker.patch('threading.Thread', side_effect=fake_thread)
+
+    manager.start_ipc_server()
+    assert len(captured_targets) == 1
+
+    with pytest.raises(SystemExit):
+        captured_targets[0]()
+
+    mock_broadcast.assert_called_once_with('{"hello": "world"}')
+

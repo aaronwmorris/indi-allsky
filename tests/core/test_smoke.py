@@ -1,8 +1,13 @@
 import pytest
+import socket
+import ssl
+import urllib3.exceptions
+import requests
 from unittest.mock import MagicMock
 
 from indi_allsky.smoke import IndiAllskySmokeUpdate, NoSmokeData
 from indi_allsky import constants
+
 
 
 class MockCamera:
@@ -182,3 +187,92 @@ def test_update_na_hms_no_folders_found(mocker, flask_app):
     
     with pytest.raises(NoSmokeData, match='No folders in KML'):
         smoke.update_na_hms(camera)
+
+
+def test_update_falsy_smoke_rating(mocker, flask_app):
+    smoke = IndiAllskySmokeUpdate({})
+    camera = MockCamera(45.0, -95.0, data={})
+
+    mocker.patch.object(smoke, 'update_na_hms', return_value=0)
+    mock_commit = mocker.patch('indi_allsky.smoke.db.session.commit')
+
+    smoke.update(camera)
+
+    assert 'SMOKE_RATING' not in camera.data
+    mock_commit.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "exception_to_raise",
+    [
+        socket.gaierror("Name resolution error"),
+        socket.timeout("Timeout error"),
+        requests.exceptions.ConnectTimeout("Connect timeout"),
+        ssl.SSLCertVerificationError("SSL cert error"),
+        requests.exceptions.SSLError("SSL error"),
+        requests.exceptions.ConnectionError("Connection error"),
+        requests.exceptions.ReadTimeout("Read timeout"),
+        urllib3.exceptions.ReadTimeoutError(None, "url", "Read timeout error"),
+    ],
+)
+def test_update_na_hms_download_exceptions(mocker, exception_to_raise, flask_app):
+    smoke = IndiAllskySmokeUpdate({})
+    camera = MockCamera(45.0, -95.0)
+
+    mocker.patch.object(smoke, 'download_kml', side_effect=exception_to_raise)
+
+    with pytest.raises(NoSmokeData, match='No KML data'):
+        smoke.update_na_hms(camera)
+
+    assert smoke.hms_kml_data is None
+
+
+def test_update_na_hms_xml_value_error(mocker, flask_app):
+    smoke = IndiAllskySmokeUpdate({})
+    smoke.hms_kml_data = b"<kml>data</kml>"
+    camera = MockCamera(45.0, -95.0)
+
+    from lxml import etree
+    mocker.patch.object(etree, 'fromstring', side_effect=ValueError("Invalid XML encoding"))
+
+    with pytest.raises(NoSmokeData, match='Unable to parse XML'):
+        smoke.update_na_hms(camera)
+
+    assert smoke.hms_kml_data is None
+
+
+def test_update_na_hms_partial_folders_and_empty_coord_lines(mocker, flask_app):
+    # KML with only Smoke (Light) folder and empty lines in coordinates
+    kml_data = """<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <Folder>
+      <name>Smoke (Light)</name>
+      <Placemark>
+        <Polygon>
+          <outerBoundaryIs>
+            <LinearRing>
+              <coordinates>
+
+                -100.0,40.0,0
+
+                -90.0,40.0,0
+                -90.0,50.0,0
+                -100.0,50.0,0
+                -100.0,40.0,0
+
+              </coordinates>
+            </LinearRing>
+          </outerBoundaryIs>
+        </Polygon>
+      </Placemark>
+    </Folder>
+  </Document>
+</kml>"""
+    smoke = IndiAllskySmokeUpdate({})
+    smoke.hms_kml_data = kml_data.encode('utf-8')
+    camera = MockCamera(45.0, -95.0)
+
+    rating = smoke.update_na_hms(camera)
+    assert rating == constants.SMOKE_RATING_LIGHT
+

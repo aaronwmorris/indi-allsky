@@ -1,5 +1,6 @@
 import json
 import socket
+import ssl
 import sys
 from multiprocessing import Array
 from unittest.mock import MagicMock, patch
@@ -31,6 +32,17 @@ from indi_allsky.devices.sensors.tempApiEcowitt import TempApiEcowitt
 from indi_allsky.devices.sensors.tempApiAstrospheric import TempApiAstrospheric
 
 
+ALL_NETWORK_EXCEPTIONS = [
+    socket.gaierror("lookup fail"),
+    socket.timeout("timed out"),
+    requests.exceptions.ConnectTimeout("timeout"),
+    requests.exceptions.ConnectionError("offline"),
+    requests.exceptions.ReadTimeout("read timeout"),
+    ssl.SSLCertVerificationError("cert fail"),
+    requests.exceptions.SSLError("ssl err"),
+]
+
+
 @pytest.fixture(autouse=True)
 def fast_sleep():
     with patch('time.sleep', return_value=None):
@@ -56,6 +68,16 @@ def test_mlx90615_driver():
         mlx = MLX90615(fake_i2c, address=0x5B)
         assert pytest.approx(mlx.ambient_temperature, 0.1) == 26.85
         assert pytest.approx(mlx.object_temperature, 0.1) == 26.85
+
+
+def test_mlx90615_busio_import_error():
+    import importlib
+    with patch.dict(sys.modules, {'busio': None}):
+        import indi_allsky.devices.sensors.adafruit_mlx90615 as mlx_mod
+        importlib.reload(mlx_mod)
+        assert mlx_mod.I2C is None
+    import indi_allsky.devices.sensors.adafruit_mlx90615 as mlx_mod
+    importlib.reload(mlx_mod)
 
 
 # --- DeepSkyDad ---
@@ -99,14 +121,7 @@ def test_temp_api_deepskydad_errors():
             sensor.update()
 
     # Network exceptions
-    for exc in [
-        socket.gaierror("lookup fail"),
-        socket.timeout("timed out"),
-        requests.exceptions.ConnectTimeout("timeout"),
-        requests.exceptions.ConnectionError("offline"),
-        requests.exceptions.ReadTimeout("read timeout"),
-        requests.exceptions.SSLError("ssl err"),
-    ]:
+    for exc in ALL_NETWORK_EXCEPTIONS:
         with patch('requests.get', side_effect=exc):
             sensor.next_run = 0
             with pytest.raises(SensorReadException):
@@ -158,7 +173,8 @@ def test_temp_api_ambient_weather_update():
             "baromrelin": 29.92,
             "windspeedmph": 5.0,
             "windgustmph": 10.0,
-            "hourlyrainin": 0.0,
+            "winddir": 180.0,
+            "hourlyrainin": 0.5,
             "solarradiation": 100.0,
             "uv": 3.0,
         }
@@ -248,10 +264,11 @@ def test_temp_api_ambient_weather_errors():
         with pytest.raises(SensorReadException, match='Ambient Weather API returned 403'):
             sensor.update()
 
-    with patch('requests.get', side_effect=requests.exceptions.ConnectTimeout("err")):
-        sensor.next_run = 0
-        with pytest.raises(SensorReadException):
-            sensor.update()
+    for exc in ALL_NETWORK_EXCEPTIONS:
+        with patch('requests.get', side_effect=exc):
+            sensor.next_run = 0
+            with pytest.raises(SensorReadException):
+                sensor.update()
 
     mock_resp_json = MagicMock(status_code=200)
     mock_resp_json.json.side_effect = json.JSONDecodeError("msg", "doc", 0)
@@ -382,10 +399,11 @@ def test_temp_api_openweathermap_errors():
         with pytest.raises(SensorReadException, match='OpenWeatherMap API returned 401'):
             sensor.update()
 
-    with patch('requests.get', side_effect=requests.exceptions.ReadTimeout("err")):
-        sensor.next_run = 0
-        with pytest.raises(SensorReadException):
-            sensor.update()
+    for exc in ALL_NETWORK_EXCEPTIONS:
+        with patch('requests.get', side_effect=exc):
+            sensor.next_run = 0
+            with pytest.raises(SensorReadException):
+                sensor.update()
 
     mock_resp_json = MagicMock(status_code=200)
     mock_resp_json.json.side_effect = json.JSONDecodeError("msg", "doc", 0)
@@ -436,6 +454,8 @@ def test_temp_api_weather_underground_update():
                 },
                 "humidity": 65.0,
                 "winddir": 90,
+                "solarRadiation": 50.0,
+                "uv": 1.0,
             }
         ]
     }
@@ -518,10 +538,11 @@ def test_temp_api_weather_underground_errors():
         with pytest.raises(SensorReadException, match='Weather Underground API returned 404'):
             sensor.update()
 
-    with patch('requests.get', side_effect=socket.gaierror("lookup fail")):
-        sensor.next_run = 0
-        with pytest.raises(SensorReadException):
-            sensor.update()
+    for exc in ALL_NETWORK_EXCEPTIONS:
+        with patch('requests.get', side_effect=exc):
+            sensor.next_run = 0
+            with pytest.raises(SensorReadException):
+                sensor.update()
 
     mock_resp_json = MagicMock(status_code=200)
     mock_resp_json.json.side_effect = json.JSONDecodeError("msg", "doc", 0)
@@ -577,6 +598,7 @@ def test_temp_api_ecowitt_update():
                 "wind_direction": {"value": "180"},
             },
             "rainfall": {
+                "rain_rate": {"value": "0.5"},
                 "hourly": {"value": "0.0"},
             },
             "solar_and_uvi": {
@@ -676,6 +698,11 @@ def test_temp_api_ecowitt_update():
         assert sparse['data'][0] == pytest.approx(-17.77, abs=0.1)  # 0.0 F in C
         assert sparse['data'][6] == 1.2
 
+        sensor.next_run = 0
+        mock_resp.json.return_value["data"]["rainfall_piezo"] = {}
+        no_rain = sensor.update()
+        assert no_rain['data'][6] == 0.0
+
 
 def test_temp_api_ecowitt_errors():
     config = {
@@ -703,10 +730,11 @@ def test_temp_api_ecowitt_errors():
             sensor.update()
 
     # Network error
-    with patch('requests.get', side_effect=requests.exceptions.SSLError("ssl fail")):
-        sensor.next_run = 0
-        with pytest.raises(SensorReadException):
-            sensor.update()
+    for exc in ALL_NETWORK_EXCEPTIONS:
+        with patch('requests.get', side_effect=exc):
+            sensor.next_run = 0
+            with pytest.raises(SensorReadException):
+                sensor.update()
 
     # JSON error
     mock_resp_json = MagicMock(status_code=200)
@@ -806,10 +834,11 @@ def test_temp_api_astrospheric_errors():
         with pytest.raises(SensorReadException, match='Astrospheric API returned 403'):
             sensor.update()
 
-    with patch('requests.post', side_effect=requests.exceptions.ConnectionError("err")):
-        sensor.next_run = 0
-        with pytest.raises(SensorReadException):
-            sensor.update()
+    for exc in ALL_NETWORK_EXCEPTIONS:
+        with patch('requests.post', side_effect=exc):
+            sensor.next_run = 0
+            with pytest.raises(SensorReadException):
+                sensor.update()
 
     mock_resp_json = MagicMock(status_code=200)
     mock_resp_json.json.side_effect = json.JSONDecodeError("msg", "doc", 0)

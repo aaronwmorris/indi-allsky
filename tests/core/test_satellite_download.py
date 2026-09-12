@@ -1,5 +1,8 @@
 import pytest
 import socket
+import ssl
+import urllib3.exceptions
+import requests
 from unittest.mock import patch, MagicMock
 
 from indi_allsky.satellite_download import IndiAllskyUpdateSatelliteData
@@ -202,3 +205,29 @@ def test_import_entries_empty(flask_app, db):
 
     entries = db.session.query(IndiAllSkyDbTleDataTable).filter_by(group=group).all()
     assert len(entries) == 0
+
+
+@pytest.mark.parametrize(
+    "exception_to_raise",
+    [
+        socket.timeout("Socket timeout"),
+        requests.exceptions.ConnectTimeout("Connect timeout"),
+        requests.exceptions.ConnectionError("Connection error"),
+        requests.exceptions.ReadTimeout("Read timeout"),
+        urllib3.exceptions.ReadTimeoutError(None, "url", "Read timeout error"),
+        ssl.SSLCertVerificationError("SSL cert verification error"),
+        requests.exceptions.SSLError("SSL error"),
+    ],
+)
+@patch('indi_allsky.satellite_download.requests.get')
+def test_update_network_exceptions(mock_get, exception_to_raise, flask_app, db):
+    """update - catches various network and SSL exceptions and continues"""
+    mock_get.side_effect = exception_to_raise
+
+    updater = IndiAllskyUpdateSatelliteData({})
+    updater.update()
+
+    for group in [constants.SATELLITE_VISUAL, constants.SATELLITE_STARLINK, constants.SATELLITE_STATIONS]:
+        entries = db.session.query(IndiAllSkyDbTleDataTable).filter_by(group=group).all()
+        assert len(entries) == 0
+

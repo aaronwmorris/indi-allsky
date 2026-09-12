@@ -73,6 +73,90 @@ def test_pycurl_syncapi_v1_connect_and_put(tmp_path):
         mock_curl.close.assert_called_once()
 
 
+def test_pycurl_syncapi_v1_ipv6_and_camera():
+    mock_pycurl = MagicMock()
+    mock_curl = MagicMock()
+    mock_pycurl.Curl.return_value = mock_curl
+    mock_pycurl.WRITEFUNCTION = 10001
+
+    callbacks = {}
+    mock_curl.setopt.side_effect = lambda opt, val: callbacks.update({opt: val})
+    mock_curl.perform.side_effect = lambda: callbacks[mock_pycurl.WRITEFUNCTION](b'{"status": "ok"}')
+
+    with patch.dict(sys.modules, {'pycurl': mock_pycurl}):
+        config = {'FILETRANSFER': {'FORCE_IPV6': True}}
+        transfer = pycurl_syncapi_v1(config)
+        transfer.connect(
+            hostname='https://sync.example.com/api/v1',
+            username='user',
+            apikey='key123',
+            cert_bypass=False,
+        )
+
+        res = transfer.put(
+            local_file='camera',
+            metadata={'camera_uuid': 'cam-1'},
+        )
+        assert res == {"status": "ok"}
+        transfer.close()
+
+
+@pytest.mark.parametrize('err_code, expected_exc', [
+    (pycurl.E_LOGIN_DENIED, AuthenticationFailure),
+    (pycurl.E_COULDNT_RESOLVE_HOST, ConnectionFailure),
+    (pycurl.E_COULDNT_CONNECT, ConnectionFailure),
+    (pycurl.E_OPERATION_TIMEDOUT, ConnectionFailure),
+    (pycurl.E_URL_MALFORMAT, ConnectionFailure),
+    (pycurl.E_PEER_FAILED_VERIFICATION, CertificateValidationFailure),
+    (pycurl.E_REMOTE_FILE_NOT_FOUND, TransferFailure),
+])
+def test_pycurl_syncapi_v1_errors(tmp_path, err_code, expected_exc):
+    mock_curl = MagicMock()
+    mock_curl.perform.side_effect = pycurl.error(err_code, "curl error message")
+
+    with patch('pycurl.Curl', return_value=mock_curl):
+        transfer = pycurl_syncapi_v1({'FILETRANSFER': {}})
+        transfer.connect(
+            hostname='https://sync.example.com/api/v1',
+            username='user',
+            apikey='key123',
+        )
+
+        test_file = tmp_path / "sync.jpg"
+        test_file.write_bytes(b"data")
+
+        with pytest.raises(expected_exc):
+            transfer.put(local_file=str(test_file), metadata={})
+
+
+def test_pycurl_syncapi_v1_unknown_error_and_json_decode_error(tmp_path):
+    mock_curl = MagicMock()
+    # Unknown pycurl error
+    mock_curl.perform.side_effect = pycurl.error(99999, "unknown error")
+
+    with patch('pycurl.Curl', return_value=mock_curl):
+        transfer = pycurl_syncapi_v1({'FILETRANSFER': {}})
+        transfer.connect(hostname='https://sync.example.com', username='u', apikey='k')
+        test_file = tmp_path / "sync.jpg"
+        test_file.write_bytes(b"data")
+
+        with pytest.raises(pycurl.error):
+            transfer.put(local_file=str(test_file), metadata={})
+
+    # JSONDecodeError
+    mock_curl_json = MagicMock()
+    def fake_perform():
+        pass  # buffer will remain empty / invalid json
+    mock_curl_json.perform.side_effect = fake_perform
+
+    with patch('pycurl.Curl', return_value=mock_curl_json):
+        transfer = pycurl_syncapi_v1({'FILETRANSFER': {}})
+        transfer.connect(hostname='https://sync.example.com', username='u', apikey='k')
+
+        with pytest.raises(TransferFailure):
+            transfer.put(local_file=str(test_file), metadata={})
+
+
 def test_webdav_lifecycle_and_put(tmp_path):
     mock_curl = MagicMock()
     with patch('pycurl.Curl', return_value=mock_curl):
