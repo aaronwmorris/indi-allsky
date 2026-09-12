@@ -8,6 +8,10 @@ This guide covers the built-in **Fix ASI676MC purple frames** tool. For the
 correction algorithm, all settings, and detailed calibration requirements, see
 [ASI676MC Purple Frame Repair Details](ASI676MC-Purple-Frame-Repair-Details).
 
+**RGB24 workaround:** [Jump directly to the original instructions](#older-rgb24-workaround).
+The built-in repair described below supports ASI676MC only; it does not support
+ASI224MC.
+
 ## Purple Images
 
 The failure affects individual frames. A persistent colour cast on every image
