@@ -630,3 +630,15 @@ jobs:
           aws s3 cp apt-repo/index.html "s3://${R2_BUCKET}/index.html" \
             --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
             --cache-control "public, max-age=3600, must-revalidate" || true
+
+  publish-docker:
+    name: Build & Publish Docker Image (GHCR)
+    needs: [deploy-apt-repo]
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/docker-publish.yml
+    with:
+      apt_channel: auto
+    secrets: inherit
+

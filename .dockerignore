@@ -1,21 +1,71 @@
-**/*.py[oc]
-**/__pycache__
-**/.git
-**/.env
-virtualenv
-#virtualenv/**/*
-log
-#log/**/*
-Docker/Dockerfile*
-.dockerignore
+# Version control and CI
 .git/
-.gitignore
 .github/
-.htaccess
-README.md
-content/
-examples/
+.gitignore
+
+# Environment files, keys, and secrets
+.env
+.env.*
+*.env
+ssl.key
+ssl.crt
+docker/.env
+docker/passwd_file
+docker/ssl.key
+docker/ssl.crt
+
+# Python byte code, cache, and test artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+
+# Virtual environments
+virtualenv/
+.venv/
+.venv-*/
+venv/
+
+# Dependencies and build artifacts
+node_modules/
+debian/.debhelper/
+debian/bundle/
+debian/wheels/
+*.deb
+
+# Logs, databases, and temporary files
 log/
-service/
+*.log
+*.log.?
+*.log.??
+*.sqlite
+*.swp
+*.lock
+*.pid
+core.*
+
+# Media, camera frames, and archives
+images/
+*.fit
+*.fits
+*.jpg
+*.jpeg
+*.png
+*.tif
+*.tiff
+*.mp4
+*.gif
+*.bin
+de421.bsp
+
+# Documentation, web content, tests, and non-build directories
+content/
+docs/
+examples/
 testing/
+tests/
+service/
+html/
 setup.sh
+README.md
