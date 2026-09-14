@@ -1,0 +1,21 @@
+[Unit]
+Description=Indi AllSky Main Service
+After=network-online.target indiserver.service gunicorn-indi-allsky.service
+Wants=indiserver.service
+
+[Service]
+Type=simple
+User=indi-allsky
+Group=indi-allsky
+WorkingDirectory=/var/lib/indi-allsky
+Environment="PYTHONPATH=/usr/share/indi-allsky"
+ExecStart=/var/lib/indi-allsky/venv/bin/python3 /usr/share/indi-allsky/allsky.py --log syslog run
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStop=/bin/kill -TERM $MAINPID
+Restart=always
+RestartSec=5
+PrivateTmp=true
+UMask=0022
+
+[Install]
+WantedBy=multi-user.target

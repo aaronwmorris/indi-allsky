@@ -48,13 +48,13 @@ This will validate the dump1090 service is operating properly.
 view1090-fa
 ```
 
-There is a test script will will execute the same code that indi-allsky utilizes so you do not have to start the program to validate the behavior.
+There is a test command that executes the exact same tracking logic that indi-allsky utilizes so you do not have to start the full capture daemon to validate your setup:
 
+```bash
+indi-allsky-ctl test-adsb
 ```
-source virtualenv/indi-allsky/bin/activate
 
-./misc/adsb_test.py
-```
+*(Or from a git checkout: `source virtualenv/indi-allsky/bin/activate && ./misc/adsb_test.py`).*
 
 ## aircraft.json URL variations
 * http://hostname/skyaware/data/aircraft.json

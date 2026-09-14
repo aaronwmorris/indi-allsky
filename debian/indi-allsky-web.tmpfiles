@@ -1,0 +1,10 @@
+# Type Path Mode User Group Age Argument
+d /var/lib/indi-allsky 0775 indi-allsky indi-allsky - -
+d /var/lib/indi-allsky/backup 0775 indi-allsky indi-allsky - -
+d /var/lib/indi-allsky/migrations 0775 indi-allsky indi-allsky - -
+d /var/log/indi-allsky 0755 indi-allsky indi-allsky - -
+d /var/www/html/allsky 0755 indi-allsky www-data - -
+d /var/www/html/allsky/images 0775 indi-allsky www-data - -
+d /var/www/html/allsky/images/darks 0775 indi-allsky www-data - -
+d /var/www/html/allsky/images/export 0775 indi-allsky www-data - -
+d /etc/indi-allsky 0775 indi-allsky indi-allsky - -

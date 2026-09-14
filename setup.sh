@@ -164,9 +164,21 @@ if which whiptail >/dev/null 2>&1; then
 fi
 
 
-echo "###############################################"
-echo "### Welcome to the indi-allsky setup script ###"
-echo "###############################################"
+echo "################################################################################"
+echo "###                    DEPRECATION NOTICE: SETUP.SH                         ###"
+echo "###                                                                          ###"
+echo "###  setup.sh is deprecated.  Please use the official APT repository:        ###"
+echo "###                                                                          ###"
+echo "###    https://apt.indi-allsky.org                                            ###"
+echo "###                                                                          ###"
+echo "###  Installation guide:                                                     ###"
+echo "###    https://github.com/aaronwmorris/indi-allsky/wiki/Getting-Started       ###"
+echo "###                                                                          ###"
+echo "################################################################################"
+echo
+echo "Welcome to the legacy indi-allsky setup script."
+echo "Setup proceeding in 5 seconds... (Press Ctrl+C to cancel and use .deb instead)"
+sleep 5
 
 
 if [[ -n "${VIRTUAL_ENV:-}" ]]; then

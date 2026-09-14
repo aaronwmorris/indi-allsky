@@ -1011,8 +1011,23 @@ class BaseView(View):
         return mask_processor.image
 
 
-    def stopSystemdUnit(self, unit, bus_type=dbus.SessionBus):
-        bus = bus_type()
+    def _get_systemd_bus(self, bus_type=None):
+        if bus_type is not None:
+            try:
+                return bus_type()
+            except Exception:
+                pass
+        try:
+            return dbus.SystemBus()
+        except Exception:
+            try:
+                return dbus.SessionBus()
+            except Exception:
+                raise dbus.exceptions.DBusException('D-Bus Unavailable')
+
+
+    def stopSystemdUnit(self, unit, bus_type=None):
+        bus = self._get_systemd_bus(bus_type)
         systemd1 = bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
         manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
         r = manager.StopUnit(unit, 'fail')
@@ -1020,8 +1035,8 @@ class BaseView(View):
         return r
 
 
-    def startSystemdUnit(self, unit, bus_type=dbus.SessionBus):
-        bus = bus_type()
+    def startSystemdUnit(self, unit, bus_type=None):
+        bus = self._get_systemd_bus(bus_type)
         systemd1 = bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
         manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
         r = manager.StartUnit(unit, 'fail')
@@ -1029,8 +1044,8 @@ class BaseView(View):
         return r
 
 
-    def restartSystemdUnit(self, unit, bus_type=dbus.SessionBus):
-        bus = bus_type()
+    def restartSystemdUnit(self, unit, bus_type=None):
+        bus = self._get_systemd_bus(bus_type)
         systemd1 = bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
         manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
         r = manager.RestartUnit(unit, 'fail')
@@ -1038,8 +1053,8 @@ class BaseView(View):
         return r
 
 
-    def hupSystemdUnit(self, unit, bus_type=dbus.SessionBus):
-        bus = bus_type()
+    def hupSystemdUnit(self, unit, bus_type=None):
+        bus = self._get_systemd_bus(bus_type)
         systemd1 = bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
         manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
         r = manager.ReloadUnit(unit, 'fail')
@@ -1047,8 +1062,8 @@ class BaseView(View):
         return r
 
 
-    def disableSystemdUnit(self, unit, bus_type=dbus.SessionBus):
-        bus = bus_type()
+    def disableSystemdUnit(self, unit, bus_type=None):
+        bus = self._get_systemd_bus(bus_type)
         systemd1 = bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
         manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
         r = manager.DisableUnitFiles([unit], False)
@@ -1058,8 +1073,8 @@ class BaseView(View):
         return r
 
 
-    def enableSystemdUnit(self, unit, bus_type=dbus.SessionBus):
-        bus = bus_type()
+    def enableSystemdUnit(self, unit, bus_type=None):
+        bus = self._get_systemd_bus(bus_type)
         systemd1 = bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
         manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
         r = manager.EnableUnitFiles([unit], False, True)
@@ -1069,34 +1084,47 @@ class BaseView(View):
         return r
 
 
-    def getSystemdUnitStatus(self, unit_name, bus_type=dbus.SessionBus):
+    def getSystemdUnitStatus(self, unit_name, bus_type=None):
         try:
-            bus = bus_type()
+            bus = self._get_systemd_bus(bus_type)
         except dbus.exceptions.DBusException:
-            # This happens in docker
+            # This happens in docker or when dbus is unavailable
             return 'D-Bus Unavailable', 'D-Bus Unavailable'
 
         systemd1 = bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
         manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
 
         try:
-            #service = bus.get_object('org.freedesktop.systemd1', object_path=manager.GetUnit(unit_name))
-
             unit = manager.LoadUnit(unit_name)
             service = bus.get_object('org.freedesktop.systemd1', str(unit))
         except dbus.exceptions.DBusException:
             return 'UNKNOWN', 'UNKNOWN'
 
         interface = dbus.Interface(service, dbus_interface='org.freedesktop.DBus.Properties')
-        unit_active_state = interface.Get('org.freedesktop.systemd1.Unit', 'ActiveState')
-        unit_file_state = interface.Get('org.freedesktop.systemd1.Unit', 'UnitFileState')
-
-        return str(unit_active_state), str(unit_file_state)
-
-
-    def getSystemdTimerTrigger(self, unit_name, bus_type=dbus.SessionBus):
+        unit_active_state = 'UNKNOWN'
         try:
-            bus = bus_type()
+            unit_active_state = str(interface.Get('org.freedesktop.systemd1.Unit', 'ActiveState'))
+        except dbus.exceptions.DBusException:
+            pass
+
+        unit_file_state = ''
+        try:
+            unit_file_state = str(interface.Get('org.freedesktop.systemd1.Unit', 'UnitFileState'))
+        except dbus.exceptions.DBusException:
+            pass
+
+        if not unit_file_state:
+            try:
+                unit_file_state = str(manager.GetUnitFileState(unit_name))
+            except dbus.exceptions.DBusException:
+                unit_file_state = 'disabled' if unit_active_state == 'inactive' else unit_active_state
+
+        return unit_active_state, unit_file_state
+
+
+    def getSystemdTimerTrigger(self, unit_name, bus_type=None):
+        try:
+            bus = self._get_systemd_bus(bus_type)
         except dbus.exceptions.DBusException:
             # This happens in docker
             return -1
@@ -1105,24 +1133,20 @@ class BaseView(View):
         manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
 
         try:
-            #service = bus.get_object('org.freedesktop.systemd1', object_path=manager.GetUnit(unit_name))
-
             unit = manager.LoadUnit(unit_name)
             service = bus.get_object('org.freedesktop.systemd1', str(unit))
         except dbus.exceptions.DBusException:
             return -1
 
-
         interface = dbus.Interface(service, dbus_interface='org.freedesktop.DBus.Properties')
-        #timer_info = interface.Get('org.freedesktop.systemd1.Timer', 'TimersMonotonic')
-        #result = interface.Get('org.freedesktop.systemd1.Timer', 'Result')
-        next_usec = interface.Get('org.freedesktop.systemd1.Timer', 'NextElapseUSecMonotonic')
-
-
-        if next_usec == 18446744073709551615:
-            # already triggered
+        try:
+            next_usec = interface.Get('org.freedesktop.systemd1.Timer', 'NextElapseUSecMonotonic')
+        except dbus.exceptions.DBusException:
             return -1
 
+        if next_usec == 18446744073709551615 or next_usec == 0:
+            # already triggered or not scheduled
+            return -1
 
         uptime_s = time.time() - psutil.boot_time()
         next_trigger_s = int((next_usec / 1000000) - uptime_s)

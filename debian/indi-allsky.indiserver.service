@@ -1,0 +1,18 @@
+[Unit]
+Description=INDI Server for Camera Control
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=indi-allsky
+Group=indi-allsky
+Environment="INDI_PORT=7624"
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+EnvironmentFile=-/etc/indi-allsky/indiserver.env
+ExecStart=/usr/bin/env indiserver -v -p $INDI_PORT indi_simulator_telescope $CCD_DRIVER $GPS_DRIVER
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

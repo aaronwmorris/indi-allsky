@@ -30,3 +30,17 @@ ssl.key
 de421.bsp
 *.h5
 node_modules/
+
+# Debian build artifacts
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/files
+debian/bundle
+debian/*.debhelper
+debian/*.substvars
+debian/indi-allsky/
+debian/wheels/
+debian/changelog
+debian/indi-allsky-web/
+*.deb
+
