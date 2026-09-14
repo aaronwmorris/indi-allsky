@@ -174,7 +174,7 @@ class youtube_oauth2(GenericFileTransfer):
                         #logger.info('Response %s', pformat(response))
                         return response
                     else:
-                        raise Exception('The upload failed with an unexpected response: {0:s}'.format(response))
+                        raise Exception('The upload failed with an unexpected response: {0}'.format(response))
             except google.auth.exceptions.RefreshError as e:
                 logger.error('RefreshError: %s', str(e))
                 raise AuthenticationFailure from e

@@ -1333,6 +1333,9 @@ def LONGTERM_KEOGRAM__OFFSET_Y_validator(form, field):
 
 
 def LONGTERM_KEOGRAM__MONTH_LABEL_TEMPLATE_validator(form, field):
+    if not field.data:
+        return
+
     now = datetime.now()
 
     test_data = {
@@ -2612,10 +2615,16 @@ def SYNCAPI__UPLOAD_IMAGE_validator(form, field):
 
 
 def FILETRANSFER__LIBCURL_OPTIONS_validator(form, field):
-    try:
-        json_data = json.loads(field.data)
-    except json.decoder.JSONDecodeError as e:
-        raise ValidationError(str(e))
+    if field.data is None:
+        return
+
+    if isinstance(field.data, dict):
+        json_data = field.data
+    else:
+        try:
+            json_data = json.loads(field.data)
+        except (json.decoder.JSONDecodeError, TypeError) as e:
+            raise ValidationError(str(e))
 
 
     import pycurl
@@ -2984,9 +2993,12 @@ def LIBCAMERA__AWB_validator(form, field):
 
 
 def LIBCAMERA__CAMERA_ID_validator(form, field):
+    if field.data is None:
+        return
+
     try:
         camera_id = int(field.data)
-    except ValueError:
+    except (ValueError, TypeError):
         raise ValidationError('Please enter a valid number')
 
     if camera_id < 0:
@@ -3156,9 +3168,12 @@ def DEW_HEATER__LEVEL_validator(form, field):
 
 
 def DEW_HEATER__THOLD_DIFF_validator(form, field):
+    if field.data is None:
+        return
+
     try:
         int(field.data)
-    except ValueError:
+    except (ValueError, TypeError):
         raise ValidationError('Please enter a valid number')
 
 
@@ -3208,9 +3223,12 @@ def FAN__LEVEL_validator(form, field):
 
 
 def FAN__THOLD_DIFF_validator(form, field):
+    if field.data is None:
+        return
+
     try:
         int(field.data)
-    except ValueError:
+    except (ValueError, TypeError):
         raise ValidationError('Please enter a valid number')
 
 
@@ -3375,6 +3393,9 @@ def TEMP_SENSOR__HDC302X_HEATER_validator(form, field):
 
 
 def TEMP_SENSOR__SI7021_HEATER_LEVEL_validator(form, field):
+    if field.data is None:
+        return
+
     try:
         data_str = str(field.data)
     except ValueError as e:
@@ -3386,9 +3407,12 @@ def TEMP_SENSOR__SI7021_HEATER_LEVEL_validator(form, field):
 
 
 def TEMP_SENSOR__TSL2561_GAIN_validator(form, field):
+    if field.data is None:
+        return
+
     try:
         data_i = int(field.data)
-    except ValueError as e:
+    except (ValueError, TypeError) as e:
         raise ValidationError('ValueError: {0:s}'.format(str(e)))
 
     if data_i < 0:
@@ -3399,9 +3423,12 @@ def TEMP_SENSOR__TSL2561_GAIN_validator(form, field):
 
 
 def TEMP_SENSOR__TSL2561_INT_validator(form, field):
+    if field.data is None:
+        return
+
     try:
         data_i = int(field.data)
-    except ValueError as e:
+    except (ValueError, TypeError) as e:
         raise ValidationError('ValueError: {0:s}'.format(str(e)))
 
     if data_i < 0:
@@ -3605,10 +3632,16 @@ def SATELLITE_TRACK__LABEL_LIMIT_validator(form, field):
 
 
 def INDI_CONFIG_DEFAULTS_validator(form, field):
-    try:
-        json_data = json.loads(field.data)
-    except json.decoder.JSONDecodeError as e:
-        raise ValidationError(str(e))
+    if field.data is None:
+        return
+
+    if isinstance(field.data, dict):
+        json_data = field.data
+    else:
+        try:
+            json_data = json.loads(field.data)
+        except (json.decoder.JSONDecodeError, TypeError) as e:
+            raise ValidationError(str(e))
 
 
     for k in json_data.keys():
@@ -5547,27 +5580,31 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
         # check cropping
-        mod_image_crop_x = (self.IMAGE_CROP_ROI_X2.data - self.IMAGE_CROP_ROI_X1.data) % 2
-        if mod_image_crop_x:
-            self.IMAGE_CROP_ROI_X2.errors.append('X coordinates must be divisible by 2')
-            result = False
+        if self.IMAGE_CROP_ROI_X1.data is not None and self.IMAGE_CROP_ROI_X2.data is not None:
+            mod_image_crop_x = (self.IMAGE_CROP_ROI_X2.data - self.IMAGE_CROP_ROI_X1.data) % 2
+            if mod_image_crop_x:
+                self.IMAGE_CROP_ROI_X2.errors.append('X coordinates must be divisible by 2')
+                result = False
 
-        mod_image_crop_y = (self.IMAGE_CROP_ROI_Y2.data - self.IMAGE_CROP_ROI_Y1.data) % 2
-        if mod_image_crop_y:
-            self.IMAGE_CROP_ROI_Y2.errors.append('Y coordinates must be divisible by 2')
-            result = False
+        if self.IMAGE_CROP_ROI_Y1.data is not None and self.IMAGE_CROP_ROI_Y2.data is not None:
+            mod_image_crop_y = (self.IMAGE_CROP_ROI_Y2.data - self.IMAGE_CROP_ROI_Y1.data) % 2
+            if mod_image_crop_y:
+                self.IMAGE_CROP_ROI_Y2.errors.append('Y coordinates must be divisible by 2')
+                result = False
 
 
         # border
-        if (self.IMAGE_BORDER__TOP.data + self.IMAGE_BORDER__BOTTOM.data) % 2:
-            self.IMAGE_BORDER__TOP.errors.append('Sum of top and bottom border must be divisible by 2')
-            self.IMAGE_BORDER__BOTTOM.errors.append('Sum of top and bottom border must be divisible by 2')
-            result = False
+        if self.IMAGE_BORDER__TOP.data is not None and self.IMAGE_BORDER__BOTTOM.data is not None:
+            if (self.IMAGE_BORDER__TOP.data + self.IMAGE_BORDER__BOTTOM.data) % 2:
+                self.IMAGE_BORDER__TOP.errors.append('Sum of top and bottom border must be divisible by 2')
+                self.IMAGE_BORDER__BOTTOM.errors.append('Sum of top and bottom border must be divisible by 2')
+                result = False
 
-        if (self.IMAGE_BORDER__LEFT.data + self.IMAGE_BORDER__RIGHT.data) % 2:
-            self.IMAGE_BORDER__LEFT.errors.append('Sum of left and right border must be divisible by 2')
-            self.IMAGE_BORDER__RIGHT.errors.append('Sum of left and right border must be divisible by 2')
-            result = False
+        if self.IMAGE_BORDER__LEFT.data is not None and self.IMAGE_BORDER__RIGHT.data is not None:
+            if (self.IMAGE_BORDER__LEFT.data + self.IMAGE_BORDER__RIGHT.data) % 2:
+                self.IMAGE_BORDER__LEFT.errors.append('Sum of left and right border must be divisible by 2')
+                self.IMAGE_BORDER__RIGHT.errors.append('Sum of left and right border must be divisible by 2')
+                result = False
 
 
         # file transfer validation
@@ -5914,7 +5951,7 @@ class IndiAllskyConfigForm(FlaskForm):
                 self.DEW_HEATER__THOLD_DIFF_MED.errors.append('MEDIUM must be less than LOW')
                 self.DEW_HEATER__THOLD_DIFF_LOW.errors.append('LOW must be greater than MEDIUM')
                 result = False
-        except ValueError:
+        except (ValueError, TypeError):
             # integer validation is caught later
             pass
 
@@ -6074,7 +6111,7 @@ class IndiAllskyConfigForm(FlaskForm):
                 self.FAN__THOLD_DIFF_MED.errors.append('MEDIUM must be greater than LOW')
                 self.FAN__THOLD_DIFF_LOW.errors.append('LOW must be less than MEDIUM')
                 result = False
-        except ValueError:
+        except (ValueError, TypeError):
             # integer validation is caught later
             pass
 
@@ -8711,7 +8748,7 @@ class IndiAllskyTimelapseGeneratorForm_old(FlaskForm):
 
 
     def __init__(self, *args, **kwargs):
-        super(IndiAllskyTimelapseGeneratorForm, self).__init__(*args, **kwargs)
+        super(IndiAllskyTimelapseGeneratorForm_old, self).__init__(*args, **kwargs)
 
         self.camera_id = kwargs['camera_id']
 
