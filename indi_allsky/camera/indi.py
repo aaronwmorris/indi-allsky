@@ -1613,6 +1613,22 @@ class IndiClient(PyIndi.BaseClient):
                 logger.warning('KeyError: %s did not report device name', indi_exec)
                 camera_name = self.ccd_device.getDeviceName()
 
+        elif indi_exec in [
+            'indi_toupcam_ccd',
+            'indi_altair_ccd',
+            'indi_altaircam_ccd',
+            'indi_nncam_ccd',
+            'indi_tscam_ccd',
+            'indi_ogmacam_ccd',
+            'indi_omegonprocam_ccd',
+        ]:
+            camera_name = self.ccd_device.getDeviceName()
+
+            # touptek cameras will sometimes initialize with a "(USB2.0)" at the end of the name.  Strip it off
+            usb2_str = '(USB2.0)'
+            if camera_name.endswith(usb2_str):
+                camera_name = camera_name[:-len(usb2_str)]
+
         else:
             # all other cameras just return device name
             camera_name = self.ccd_device.getDeviceName()
