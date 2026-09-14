@@ -73,6 +73,8 @@ The single Dockerfile installs pre-compiled binaries from the official APT repos
 docker compose build
 ```
 
+By default, local builds use the **stable** APT channel (`INDIALLSKY_APT_CHANNEL=stable`). To build against **nightly** packages instead, set `INDIALLSKY_APT_CHANNEL=nightly` in `.env` or pass `--build-arg APT_CHANNEL=nightly`.
+
 ## Run Containers
 ```bash
 docker compose up -d

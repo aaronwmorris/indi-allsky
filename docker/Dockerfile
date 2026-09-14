@@ -1,7 +1,7 @@
 FROM debian:bookworm-slim
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG APT_CHANNEL=nightly
+ARG APT_CHANNEL=stable
 
 # Install runtime and repository prerequisites
 RUN apt-get update && apt-get install -y --no-install-recommends \

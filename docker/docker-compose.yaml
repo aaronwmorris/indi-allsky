@@ -28,7 +28,7 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
       args:
-        APT_CHANNEL: ${INDIALLSKY_APT_CHANNEL:-nightly}
+        APT_CHANNEL: ${INDIALLSKY_APT_CHANNEL:-stable}
     command: indiserver
     restart: unless-stopped
     env_file: .env
@@ -47,7 +47,7 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
       args:
-        APT_CHANNEL: ${INDIALLSKY_APT_CHANNEL:-nightly}
+        APT_CHANNEL: ${INDIALLSKY_APT_CHANNEL:-stable}
     command: gunicorn
     restart: unless-stopped
     env_file: .env
@@ -74,7 +74,7 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
       args:
-        APT_CHANNEL: ${INDIALLSKY_APT_CHANNEL:-nightly}
+        APT_CHANNEL: ${INDIALLSKY_APT_CHANNEL:-stable}
     command: capture
     restart: unless-stopped
     env_file: .env

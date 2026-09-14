@@ -3,11 +3,14 @@
 # System timezone
 TZ=America/New_York
 
-# APT Repository channel for image builds: nightly or stable
-INDIALLSKY_APT_CHANNEL=nightly
+# APT Repository channel for local image builds: stable or nightly
+INDIALLSKY_APT_CHANNEL=stable
+#INDIALLSKY_APT_CHANNEL=nightly
 
 # Optional: Use pre-built Docker images from GitHub Container Registry (GHCR) instead of building locally
+# Default is 'stable' (:latest, :stable, or :vX.Y.Z)
 #INDIALLSKY_IMAGE=ghcr.io/aaronwmorris/indi-allsky:stable
+# For nightly testing builds:
 #INDIALLSKY_IMAGE=ghcr.io/aaronwmorris/indi-allsky:nightly
 
 # Primary INDI camera driver
