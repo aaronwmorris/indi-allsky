@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Fetch Latest Upstream INDI Tags
         id: check_tags
@@ -55,7 +55,7 @@ jobs:
 
       - name: Create Pull Request for Updated INDI Versions
         if: steps.check_tags.outputs.updated == '1'
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: "ci(deps): bump INDI Core to ${{ steps.check_tags.outputs.latest_core }} and 3rdparty to ${{ steps.check_tags.outputs.latest_3rd }}"
           title: "ci(deps): update INDI Core to ${{ steps.check_tags.outputs.latest_core }} & 3rdparty to ${{ steps.check_tags.outputs.latest_3rd }}"
