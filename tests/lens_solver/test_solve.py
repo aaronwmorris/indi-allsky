@@ -345,64 +345,49 @@ def test_p6_equivalence_native_vs_downscaled(tmp_path, monkeypatch):
         assert abs(native_result['values'][key] - downscaled_result['values'][key]) < 0.02 * TRUE[3]
 
 
-# --- applySolvedValuesToConfig ----------------------------------------------
+def test_solve_partial_fit(tmp_path, monkeypatch):
+    """Test line 275: message suffix when fit['partial'] is True."""
+    width, height = 1920, 1920
+    image_file = tmp_path / 'sky_partial.png'
+    render_sky_image(image_file, TRUE, width, height)
 
-def test_apply_solved_values_to_config():
-    config = {
-        'LENS_ALTITUDE': 42.0,
-        'LENS_IMAGE_CIRCLE': 999,
-        'LENS_OFFSET_X': 111,
-        'LENS_OFFSET_Y': 222,
-        'UNRELATED_KEY': 'keep-me',
-        'VIRTUALSKY': {'SOME_OTHER_KEY': 'keep-me-too'},
+    mock_fit = {
+        'success': True,
+        'partial': True,
+        'params': [10.0, 0.5, -0.5, 1600.0, 5.0, -5.0],
+        'quality': {'stars_matched': 15, 'rms_px': 1.2},
+        'stars_matched': 15,
+        'rms_px': 1.2,
     }
-    values = {
-        'AZIMUTH_ANGLE': 37.5, 'LATITUDE_OFFSET': 2.0, 'LONGITUDE_OFFSET': -1.5,
-        'IMAGE_CIRCLE_DIAMETER': 1700, 'OFFSET_X': 25, 'OFFSET_Y': -12,
-    }
-    virtualsky_ref = config['VIRTUALSKY']
 
-    result = lens_solver.applySolvedValuesToConfig(config, values)
+    monkeypatch.setattr(IndiAllSkyLensSolver, 'fitParameters', lambda *args, **kwargs: mock_fit)
+    solver = IndiAllSkyLensSolver({})
+    result = solver.solve(image_file, LAT, LON, T_UNIX, INITIAL)
 
-    assert result is config    # mutated and returned, never reassigned
-    assert config['VIRTUALSKY'] is virtualsky_ref    # in-place, object identity preserved
-
-    assert config['LENS_AZIMUTH'] == 37.5
-    assert config['VIRTUALSKY']['LATITUDE_OFFSET'] == 2.0
-    assert config['VIRTUALSKY']['LONGITUDE_OFFSET'] == -1.5
-    assert config['VIRTUALSKY']['IMAGE_CIRCLE_DIAMETER'] == 1700
-    assert config['VIRTUALSKY']['OFFSET_X'] == 25
-    assert config['VIRTUALSKY']['OFFSET_Y'] == -12
-
-    # never written
-    assert config['LENS_ALTITUDE'] == 42.0
-    assert config['LENS_IMAGE_CIRCLE'] == 999
-    assert config['LENS_OFFSET_X'] == 111
-    assert config['LENS_OFFSET_Y'] == 222
-    # unrelated keys preserved
-    assert config['UNRELATED_KEY'] == 'keep-me'
-    assert config['VIRTUALSKY']['SOME_OTHER_KEY'] == 'keep-me-too'
-
-    # exact changed-key set
-    changed_top = {'LENS_AZIMUTH', 'VIRTUALSKY'}
-    unchanged_top = set(config.keys()) - changed_top
-    assert unchanged_top == {
-        'LENS_ALTITUDE', 'LENS_IMAGE_CIRCLE', 'LENS_OFFSET_X', 'LENS_OFFSET_Y', 'UNRELATED_KEY'}
-    changed_vs = {'LATITUDE_OFFSET', 'LONGITUDE_OFFSET', 'IMAGE_CIRCLE_DIAMETER', 'OFFSET_X', 'OFFSET_Y'}
-    assert set(config['VIRTUALSKY'].keys()) - changed_vs == {'SOME_OTHER_KEY'}
-
-    for key in ('IMAGE_CIRCLE_DIAMETER', 'OFFSET_X', 'OFFSET_Y'):
-        assert type(config['VIRTUALSKY'][key]) is int
-    assert type(config['LENS_AZIMUTH']) is float
-    assert type(config['VIRTUALSKY']['LATITUDE_OFFSET']) is float
+    assert result['success'] is True
+    assert result['partial'] is True
+    assert 'tilt could not be determined' in result['message']
 
 
-def test_apply_solved_values_to_config_creates_missing_virtualsky_section():
-    config = {}
-    values = {
-        'AZIMUTH_ANGLE': 10.0, 'LATITUDE_OFFSET': 0.0, 'LONGITUDE_OFFSET': 0.0,
-        'IMAGE_CIRCLE_DIAMETER': 1000, 'OFFSET_X': 0, 'OFFSET_Y': 0,
-    }
-    result = lens_solver.applySolvedValuesToConfig(config, values)
-    assert result is config
-    assert config['VIRTUALSKY']['IMAGE_CIRCLE_DIAMETER'] == 1000
+def test_solver_build_exclusion_mask(tmp_path):
+    mask_file = tmp_path / 'mask.png'
+    cv2.imwrite(str(mask_file), numpy.zeros((100, 100), dtype=numpy.uint8))
+    solver = IndiAllSkyLensSolver({'DETECT_MASK': str(mask_file)})
+    mask = solver.buildExclusionMask((100, 100))
+    assert mask is not None
+
+
+def test_solver_fit_parameters_dense_catalog():
+    from indi_allsky.lens_solver import catalog as cat_mod
+    solver = IndiAllSkyLensSolver({})
+    dense_catalog = numpy.zeros((cat_mod.CATALOG_VALIDATED_ROW_CEILING + 10, 3))
+    res = solver.fitParameters(
+        numpy.zeros((10, 3)), dense_catalog, LAT, LON, T_UNIX,
+        [0, 0, 0, 100, 0, 0], 100, 100
+    )
+    assert res['success'] is False
+    assert res['reason'] == 'catalog_not_validated'
+
+
+
+

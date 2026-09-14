@@ -179,3 +179,39 @@ def test_large_blob_does_not_suppress_real_stars():
     assert numpy.hypot(det[:, 0] - 700, det[:, 1] - 500).min() < 1.5
     blob_detections = numpy.hypot(det[:, 0] - 150, det[:, 1] - 150) < 20
     assert numpy.sum(blob_detections) == 1
+
+
+def test_detect_mask_transforms_and_unreadable(tmp_path):
+    solver_bad_mask = IndiAllSkyLensSolver({'DETECT_MASK': str(tmp_path / 'nonexistent.png')})
+    mask = solver_bad_mask.buildExclusionMask((600, 800))
+    assert mask is None
+
+    mask_file = tmp_path / 'transform_mask.png'
+    raw_mask = numpy.full((600, 800), 255, dtype=numpy.uint8)
+    cv2.imwrite(str(mask_file), raw_mask)
+
+    config = {
+        'DETECT_MASK': str(mask_file),
+        'IMAGE_ROTATE': 'ROTATE_90_CLOCKWISE',
+        'IMAGE_ROTATE_ANGLE': 45.0,
+        'IMAGE_FLIP_H': True,
+        'IMAGE_CROP_IMAGE_CIRCLE': True,
+        'LENS_IMAGE_CIRCLE': 400,
+        'IMAGE_SCALE': 50,
+    }
+    solver_transforms = IndiAllSkyLensSolver(config)
+    mask = solver_transforms.buildExclusionMask((600, 800))
+    assert mask is not None
+    assert mask.shape == (600, 800)
+
+
+def test_detect_stars_filters_single_pixel_hot_pixels():
+    img = numpy.zeros((600, 800), dtype=numpy.uint8)
+    cv2.circle(img, (400, 300), 2, 255, -1)
+    img[100, 100] = 255
+
+    solver = IndiAllSkyLensSolver({})
+    det = solver.detectStars(img)
+    assert not any(numpy.hypot(det[:, 0] - 100, det[:, 1] - 100) < 5)
+    assert any(numpy.hypot(det[:, 0] - 400, det[:, 1] - 300) < 5)
+
