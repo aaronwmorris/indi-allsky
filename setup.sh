@@ -164,17 +164,21 @@ if which whiptail >/dev/null 2>&1; then
 fi
 
 
-echo "################################################################################"
-echo "###                    DEPRECATION NOTICE: SETUP.SH                         ###"
-echo "###                                                                          ###"
-echo "###  setup.sh is deprecated.  Please use the official APT repository:        ###"
-echo "###                                                                          ###"
-echo "###    https://apt.indi-allsky.org                                            ###"
-echo "###                                                                          ###"
-echo "###  Installation guide:                                                     ###"
-echo "###    https://github.com/aaronwmorris/indi-allsky/wiki/Getting-Started       ###"
-echo "###                                                                          ###"
-echo "################################################################################"
+cat << 'EOF'
+##################################################################################
+###                    DEPRECATION NOTICE: SETUP.SH                              ###
+###                                                                              ###
+###  setup.sh is deprecated.  Please use the official APT repository:            ###
+###                                                                              ###
+###    https://apt.indi-allsky.org                                               ###
+###                                                                              ###
+###  Installation guide:                                                         ###
+###    https://github.com/aaronwmorris/indi-allsky/wiki/Getting-Started          ###
+###  Migration guide:                                                            ###
+###    https://github.com/aaronwmorris/indi-allsky/wiki/Setup-to-Deb-Migration   ###
+###                                                                              ###
+##################################################################################
+EOF
 echo
 echo "Welcome to the legacy indi-allsky setup script."
 echo "Setup proceeding in 5 seconds... (Press Ctrl+C to cancel and use .deb instead)"
