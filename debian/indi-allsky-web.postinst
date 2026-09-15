@@ -50,8 +50,6 @@ configure_nginx() {
 
     generate_self_signed_cert /etc/nginx/ssl/indi-allsky_nginx.key /etc/nginx/ssl/indi-allsky_nginx.pem
 
-    systemctl stop apache2 2>/dev/null || true
-    systemctl disable apache2 2>/dev/null || true
     systemctl restart nginx 2>/dev/null || systemctl start nginx 2>/dev/null || true
 }
 
@@ -82,9 +80,25 @@ configure_apache() {
     a2dissite 000-default.conf default-ssl.conf >/dev/null 2>&1 || true
     a2enmod rewrite proxy proxy_http proxy_wstunnel headers ssl socache_shmcb expires http2 proxy_http2 >/dev/null 2>&1 || true
     a2ensite indi-allsky.conf >/dev/null 2>&1 || true
-    systemctl stop nginx 2>/dev/null || true
-    systemctl disable nginx 2>/dev/null || true
     systemctl restart apache2 2>/dev/null || systemctl start apache2 2>/dev/null || true
+}
+
+configure_caddy() {
+    [ -f "/usr/share/indi-allsky/service/caddy_indi-allsky.conf" ] || return 0
+
+    # This is not ideal since /etc/caddy/Caddyfile is managed by the caddy package
+    sed \
+        -e "s|%ALLSKY_DIRECTORY%|/usr/share/indi-allsky|g" \
+        -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+        -e "s|%HTTP_PORT%|${HTTP_PORT:-80}|g" \
+        -e "s|%HTTPS_PORT%|${HTTPS_PORT:-443}|g" \
+        -e "s|%UPSTREAM_SERVER%|unix//var/lib/indi-allsky/gunicorn-indi-allsky.sock|g" \
+        /usr/share/indi-allsky/service/caddy_indi-allsky.conf > /etc/caddy/Caddyfile
+    chmod 644 /etc/caddy/Caddyfile
+
+    # caddy manages its own certs
+
+    systemctl restart caddy 2>/dev/null || systemctl start caddy 2>/dev/null || true
 }
 
 configure_mosquitto() {
@@ -446,19 +460,34 @@ with app.app_context():
             "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py setadmin -u "$ADMIN_USER"
         fi
 
-        # Configure Web Server (Apache2 or Nginx)
+        # Configure Web Server
+        USE_CADDY=0
         USE_NGINX=0
-        if [ -x "$(command -v nginx 2>/dev/null)" ]; then
-            if systemctl is-active --quiet nginx 2>/dev/null || [ ! -x "$(command -v a2ensite 2>/dev/null)" ]; then
+        USE_APACHE=0
+
+        if [ -x "$(command -v caddy 2>/dev/null)" ]; then
+            if systemctl is-active --quiet caddy 2>/dev/null; then
+                USE_CADDY=1
+            fi
+        elif [ -x "$(command -v nginx 2>/dev/null)" ]; then
+            if systemctl is-active --quiet nginx 2>/dev/null; then
                 USE_NGINX=1
+            fi
+        elif [ -x "$(command -v a2ensite 2>/dev/null)" ]; then
+            if systemctl is-active --quiet apache2 2>/dev/null; then
+                USE_APACHE=1
             fi
         fi
 
-        if [ "$USE_NGINX" = "1" ]; then
+
+        if [ "$USE_CADDY" = "1" ]; then
+            configure_caddy
+        elif [ "$USE_NGINX" = "1" ]; then
             configure_nginx
-        elif [ -x "$(command -v a2ensite 2>/dev/null)" ]; then
+        elif [ "$USE_APACHE" = "1" ]; then
             configure_apache
         fi
+
 
         if [ "$INSTALL_MOSQUITTO" = "true" ]; then
             configure_mosquitto
