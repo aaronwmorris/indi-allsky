@@ -18,6 +18,33 @@ indi-allsky has a significant set of library requirements.  Not every package th
 
 ---
 
+## System Preparation
+
+Before proceeding with the installation, ensure your system timezone and locales are properly configured. Accurate system timezone and time synchronization are essential for astronomical calculations (sun/moon positions, day/night transitions, and exposure scheduling).
+
+### 1. Set System Timezone
+Verify and set your local timezone using `timedatectl`:
+```bash
+# Check current status
+timedatectl status
+
+# Set your timezone (e.g., America/New_York, Europe/London, Australia/Sydney)
+sudo timedatectl set-timezone <Region/City>
+```
+*(Raspberry Pi users can also use `sudo raspi-config` -> Localisation Options -> Timezone)*
+
+### 2. Configure System Locales
+
+Generate your preferred locales (e.g. en_US.UTF-8 or en_GB.UTF-8):
+
+``` bash
+# Multiple selections are allowed
+sudo dpkg-reconfigure locales
+```
+*(Raspberry Pi users can also use `sudo raspi-config` -> Localisation Options -> Locale)*
+
+---
+
 ## Option 1: Official APT Repository (Recommended)
 
 The recommended installation method for Raspberry Pi OS, Debian, and Ubuntu is via the official APT repository at [`apt.indi-allsky.org`](https://apt.indi-allsky.org/). Pre-built `.deb` packages bundle all dependencies, Python virtual environments, and consolidated INDI camera drivers for an automated installation.
