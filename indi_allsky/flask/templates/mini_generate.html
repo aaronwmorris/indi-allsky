@@ -36,6 +36,7 @@ var panorama_end_image = null;
 var panorama_preview_progress = 0;
 var panorama_drag = null;
 var preview_revision = 0;  // invalidates old requests, delays, and image loads
+var preview_controller = new AbortController();
 var preview_resize_observer = null;
 // The animation preview stays bounded, while preflight checks the complete
 // generation period on the server.
@@ -92,6 +93,7 @@ function init() {
 }
 
 async function loop(revision) {
+    var signal = preview_controller.signal;
     while(json_data['image_list'].length == 0) {
         if(revision !== preview_revision) {
             return;
@@ -104,14 +106,27 @@ async function loop(revision) {
     }
 
     // prevent concurrent updates to list
-    var image_list_copy = json_data['image_list'].slice();
+    var image_list_copy = json_data['image_list'].slice().reverse();
 
-    for (var i = image_list_copy.length - 1; i >= 0; i--) {
+    // Keep at most four frames loading or decoded ahead of playback.
+    var buffer = [];
+    var next_frame = 0;
+    while(next_frame < Math.min(4, image_list_copy.length)) {
+        buffer.push(loadFrame(image_list_copy[next_frame++], signal));
+    }
+
+    while(buffer.length && !signal.aborted) {
+        var frame = await buffer.shift();
         if(revision !== preview_revision) {
             return;
         }
-
-        showImage(image_list_copy[i], revision);
+        if(next_frame < image_list_copy.length) {
+            buffer.push(loadFrame(image_list_copy[next_frame++], signal));
+        }
+        if(!frame) {
+            continue;
+        }
+        showImage(frame.image, frame.entry, revision);
         await sleep(1000 / parseFloat(framerate));
     }
 
@@ -123,25 +138,64 @@ async function loop(revision) {
 }
 
 
-function showImage(entry, revision) {
-    if(source_type === 'panorama') {
-        var preview_image = new Image();
-        preview_image.onload = function() {
-            if(
-                revision !== preview_revision
-                || source_type !== 'panorama'
-                || this.naturalWidth !== panorama_data['width']
-                || this.naturalHeight !== panorama_data['height']
-            ) {
+function loadFrame(entry, signal) {
+    return new Promise(function(resolve) {
+        var image = new Image();
+        var settled = false;
+        var timeout = setTimeout(cancel, 15000);
+
+        function finish(frame) {
+            if(settled) {
                 return;
             }
+            settled = true;
+            clearTimeout(timeout);
+            signal.removeEventListener('abort', cancel);
+            image.onload = null;
+            image.onerror = null;
+            if(!frame) {
+                image.src = '';
+            }
+            resolve(frame ? { image: frame, entry: entry } : null);
+        }
 
-            panorama_preview_image = this;
-            panorama_preview_entry = entry;
-            panorama_preview_progress = panoramaFrameProgress(entry);
-            drawPanoramaOutputPreview();
+        function cancel() { finish(null); }
+        signal.addEventListener('abort', cancel, { once: true });
+        if(signal.aborted) {
+            cancel();
+            return;
+        }
+
+        image.onload = function() {
+            if(image.decode) {
+                image.decode().then(function() { finish(image); }, cancel);
+            } else {
+                finish(image);
+            }
         };
-        preview_image.src = entry["url"];
+        image.onerror = cancel;
+        image.src = entry['url'];
+    });
+}
+
+
+function showImage(image, entry, revision) {
+    if(revision !== preview_revision) {
+        return;
+    }
+
+    if(source_type === 'panorama') {
+        if(
+            image.naturalWidth !== panorama_data['width']
+            || image.naturalHeight !== panorama_data['height']
+        ) {
+            return;
+        }
+
+        panorama_preview_image = image;
+        panorama_preview_entry = entry;
+        panorama_preview_progress = panoramaFrameProgress(entry);
+        drawPanoramaOutputPreview();
         return;
     }
 
@@ -149,19 +203,9 @@ function showImage(entry, revision) {
         return;
     }
 
-    var image = new Image();
-    image.onload = function() {
-        if(revision !== preview_revision || source_type !== 'standard') {
-            return;
-        }
-
-        $('#loop-image').attr({
-            'src': this.src,
-        });
-    };
-
-
-    image.src = entry["url"];
+    $('#loop-image').attr({
+        'src': image.src,
+    });
 }
 
 
@@ -1651,6 +1695,8 @@ function updateImages() {
     history_seconds = pre_seconds + post_seconds;
     framerate = $('#FRAMERATE_SELECT').val();
     preview_revision += 1;
+    preview_controller.abort();
+    preview_controller = new AbortController();
     json_data['image_list'] = [];
     panorama_start_image = null;
     panorama_end_image = null;
@@ -1666,6 +1712,8 @@ function updateImages() {
 
 $('#SOURCE_TYPE').on('change', function() {
     preview_revision += 1;
+    preview_controller.abort();
+    preview_controller = new AbortController();
     json_data = {
         'image_list' : [],
         'message' : '',

@@ -9,7 +9,6 @@
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 var refreshInterval = {{ refreshInterval | int }};
-var loadCountdown = 0;  // load immediately
 var timestamp = {{ timestamp | int }};
 var history_seconds;  // set later
 var frame_delay_ms;  // set later
@@ -20,6 +19,12 @@ var json_data = {
     'message' : '',
 };
 var fullscreen = false;  //initial state
+var playback_controller = new AbortController();
+var loop_timer;
+var refresh_timer;
+var list_request;
+var request_id = 0;
+var restart_pending = false;
 
 function init() {
     loadImages();
@@ -28,62 +33,126 @@ function init() {
 
 async function loop() {
     console.log('Starting loop');
+    var signal = playback_controller.signal;
 
     while(json_data['image_list'].length == 0) {
         await sleep(100);
+        if (signal.aborted) return;
     }
 
     // prevent concurrent updates to list
-    var image_list_copy = JSON.parse(JSON.stringify(json_data['image_list']));
-
+    var image_list_copy = json_data['image_list'].slice().reverse();
     if (rock) {
-        for (var i = 0; i < image_list_copy.length; i++) {
-            showImage(image_list_copy[i]);
-            await sleep(frame_delay_ms);
-        };
-    };
+        image_list_copy = json_data['image_list'].concat(image_list_copy);
+    }
 
-    for (var i = image_list_copy.length - 1; i >= 0; i--) {
-        showImage(image_list_copy[i]);
+    // Keep at most four frames loading or decoded ahead of playback.
+    var buffer = [];
+    var next_frame = 0;
+    while (next_frame < Math.min(4, image_list_copy.length)) {
+        buffer.push(loadFrame(image_list_copy[next_frame++], signal));
+    }
+
+    while (buffer.length && !signal.aborted) {
+        var img = await buffer.shift();
+        if (signal.aborted) return;
+        if (next_frame < image_list_copy.length) {
+            buffer.push(loadFrame(image_list_copy[next_frame++], signal));
+        }
+        if (!img) {
+            continue;
+        }
+        showImage(img);
         await sleep(frame_delay_ms);
-    };
+    }
 
-    setTimeout(loop, 3000);
+    if (!signal.aborted) {
+        loop_timer = setTimeout(loop, 3000);
+    }
 }
 
-function showImage(entry) {
+function restartLoop() {
+    playback_controller.abort();
+    clearTimeout(loop_timer);
+    playback_controller = new AbortController();
+    loop();
+}
+
+function loadFrame(entry, signal) {
+    return new Promise(function(resolve) {
+        var img = new Image();
+        var settled = false;
+        var timeout = setTimeout(cancel, 15000);
+
+        function finish(frame) {
+            if (settled) {
+                return;
+            }
+            settled = true;
+            clearTimeout(timeout);
+            signal.removeEventListener('abort', cancel);
+            img.onload = null;
+            img.onerror = null;
+            if (!frame) {
+                img.src = '';
+            }
+            resolve(frame);
+        }
+
+        function cancel() { finish(null); }
+        signal.addEventListener('abort', cancel, { once: true });
+        if (signal.aborted) {
+            cancel();
+            return;
+        }
+
+        img.onload = function() {
+            if (img.decode) {
+                img.decode().then(function() { finish(img); }, cancel);
+            } else {
+                finish(img);
+            }
+        };
+        img.onerror = cancel;
+        img.src = entry["url"];
+    });
+}
+
+function showImage(img) {
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
 
-    var img = new Image();
-    img.onload = function() {
+    if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
         canvas.setAttribute("width", window.innerWidth);
         canvas.setAttribute("height", window.innerHeight);
-
-        var hRatio = canvas.width  / this.width;
-        var vRatio = canvas.height / this.height;
-        var ratio  = Math.min ( hRatio, vRatio );
-        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
-        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
-
-        context.drawImage(this, 0, 0, this.width, this.height,
-            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
-    };
-
-    img.src = entry["url"];
-}
-
-function loadImages() {
-    if(loadCountdown <= 0) {
-        loadCountdown = refreshInterval;
-
-        console.log('Loading next images');
-        loadJS("{{ url_for(image_loop_view) }}", {'camera_id' : camera_id, 'limit_s' : history_seconds, 'timestamp' : timestamp}, function() {});
     }
 
-    loadCountdown -= 1000;
+    var hRatio = canvas.width  / img.width;
+    var vRatio = canvas.height / img.height;
+    var ratio  = Math.min ( hRatio, vRatio );
+    var centerShift_x = ( canvas.width - img.width * ratio ) / 2;
+    var centerShift_y = ( canvas.height - img.height * ratio ) / 2;
 
-    setTimeout(loadImages, 1000);
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(img, 0, 0, img.width, img.height,
+        centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
+}
+
+function loadImages(restart = false) {
+    clearTimeout(refresh_timer);
+    restart_pending = restart_pending || restart;
+
+    function scheduleRefresh() {
+        refresh_timer = setTimeout(loadImages, refreshInterval);
+    }
+
+    loadJS("{{ url_for(image_loop_view) }}", {'camera_id' : camera_id, 'limit_s' : history_seconds, 'timestamp' : timestamp}, function() {
+        if (restart_pending) {
+            restart_pending = false;
+            restartLoop();
+        }
+        scheduleRefresh();
+    }, scheduleRefresh);
 }
 
 function sleep(time) {
@@ -96,12 +165,16 @@ function loadJS(url, data, onDone, onError) {
 
     $("#loader_loop").show();
 
-    $.ajax({
+    var current_request = ++request_id;
+    if (list_request) list_request.abort();
+    list_request = $.ajax({
         type: "GET",
+        timeout: 15000,
         url: url,
         contentType: "application/json",
         data: data,
         success: function(rdata){
+            if (current_request !== request_id) return;
             $("#loader_loop").hide();
             json_data = rdata;
             const msg = json_data['message'];
@@ -112,11 +185,14 @@ function loadJS(url, data, onDone, onError) {
                 $('#message').html('');
                 $('#message-wrapper').hide();
             }
+            onDone();
         },
         error: function(rdata){
+            if (current_request !== request_id) return;
             $("#loader_loop").hide();
             onError(rdata.status);
             $('#message').text('Error loading data. Please check the logs.');
+            $('#message-wrapper').show();
         },
     });
 }
@@ -216,6 +292,12 @@ $( document ).ready(function() {
                 <span id="loader_loop" class="tw:loading tw:loading-spinner tw:loading-xs tw:text-primary" style="display: none;"></span>
             </div>
 
+            {% if image_loop_view == 'indi_allsky.js_image_loop_view' and panorama__enable %}
+                <a href="{{ url_for('indi_allsky.panorama_loop_canvas_view', timestamp=timestamp) }}" class="tw:btn tw:btn-sm tw:btn-outline">Panorama loop</a>
+            {% elif image_loop_view == 'indi_allsky.js_panorama_loop_view' %}
+                <a href="{{ url_for('indi_allsky.image_loop_canvas_view', timestamp=timestamp) }}" class="tw:btn tw:btn-sm tw:btn-outline">Normal loop</a>
+            {% endif %}
+
         </div>
     </form>
 
@@ -237,8 +319,7 @@ $( document ).ready(function() {
 $("#HISTORY_SELECT").on("change", function() {
     history_seconds = $('#HISTORY_SELECT').val();
     console.log('Changing loop history: ' + history_seconds);
-
-    loadCountdown = 0;
+    loadImages(true);
 
     if(localStorage) {
         page_settings["history_seconds"] = history_seconds;
