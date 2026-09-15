@@ -1295,3 +1295,90 @@ class TestBaseViewsCoverage:
         jv = JsonView()
         with pytest.raises(NotImplementedError):
             jv.get_objects()
+
+    def test_base_view_dbus_fallbacks_and_errors(self, flask_app):
+        """Covers D-Bus fallback buses, property exceptions, and timer zero."""
+        bv = BaseView()
+
+        # _get_systemd_bus with bus_type=None: SystemBus fails, SessionBus succeeds
+        mock_session_bus = MagicMock()
+        with patch('dbus.SystemBus', side_effect=Exception('no sys bus')), \
+             patch('dbus.SessionBus', return_value=mock_session_bus):
+            assert bv._get_systemd_bus(None) == mock_session_bus
+
+        # _get_systemd_bus with bus_type=None: both fail -> raises DBusException
+        with patch('dbus.SystemBus', side_effect=Exception('no sys bus')), \
+             patch('dbus.SessionBus', side_effect=Exception('no session bus')):
+            with pytest.raises(dbus.exceptions.DBusException):
+                bv._get_systemd_bus(None)
+
+        # getSystemdUnitStatus: interface.Get raises DBusException on ActiveState and UnitFileState
+        mock_bus = MagicMock()
+        mock_mgr = MagicMock()
+        mock_service = MagicMock()
+        mock_bus.get_object.return_value = mock_service
+        mock_mgr.LoadUnit.return_value = 'unit_path'
+
+        mock_iface = MagicMock()
+        mock_iface.Get.side_effect = dbus.exceptions.DBusException('prop err')
+        mock_mgr.GetUnitFileState.side_effect = dbus.exceptions.DBusException('mgr err')
+
+        with patch('dbus.Interface', side_effect=[mock_mgr, mock_iface]):
+            s1, s2 = bv.getSystemdUnitStatus('test.service', bus_type=lambda: mock_bus)
+            assert s1 == 'UNKNOWN'
+            assert s2 == 'UNKNOWN'
+
+        # getSystemdUnitStatus: manager.GetUnitFileState raises DBusException when unit_active_state is inactive
+        def get_side_effect(iface_name, prop_name):
+            if prop_name == 'ActiveState':
+                return 'inactive'
+            raise dbus.exceptions.DBusException('no unit file state')
+
+        mock_iface.Get.side_effect = get_side_effect
+        mock_mgr.GetUnitFileState.side_effect = dbus.exceptions.DBusException('mgr err')
+        with patch('dbus.Interface', side_effect=[mock_mgr, mock_iface]):
+            s1, s2 = bv.getSystemdUnitStatus('test.service', bus_type=lambda: mock_bus)
+            assert s1 == 'inactive'
+            assert s2 == 'disabled'
+
+        # getSystemdTimerTrigger: interface.Get raises DBusException
+        mock_iface.Get.side_effect = dbus.exceptions.DBusException('timer prop err')
+        with patch('dbus.Interface', side_effect=[mock_mgr, mock_iface]):
+            assert bv.getSystemdTimerTrigger('test.timer', bus_type=lambda: mock_bus) == -1
+
+        # getSystemdTimerTrigger: next_usec == 0
+        mock_iface.Get.side_effect = None
+        mock_iface.Get.return_value = 0
+        with patch('dbus.Interface', side_effect=[mock_mgr, mock_iface]):
+            assert bv.getSystemdTimerTrigger('test.timer', bus_type=lambda: mock_bus) == -1
+
+    def test_base_view_astrometric_and_sensor_missing_coverage(self, flask_app):
+        """Covers moon_dir setting branch and get_sensor_info without latest_image_entry."""
+        bv = BaseView()
+        bv.camera = MagicMock()
+        bv.camera.longitude = 0.0
+        bv.camera.latitude = 0.0
+        bv.camera.elevation = 0
+        bv.camera.utc_offset = 0
+        bv.camera.nightSunAlt = -6.0
+        bv.indi_allsky_config = {
+            'PRIVACY_MODE': False,
+            'NIGHT_SUN_ALT_DEG': -6.0,
+        }
+
+        fake_transit = datetime.now(tz=timezone.utc).replace(tzinfo=None) + timedelta(hours=15)
+        with patch('ephem.Observer.next_transit', return_value=MagicMock(datetime=lambda: fake_transit)):
+            data = bv.get_astrometric_info()
+            assert data.get('moon_dir') == '&searr;'
+
+        bv.latest_image_entry = None
+        bv.cardinal_directions = ['N', 'E', 'S', 'W', 'N']
+        sensor_data = bv.get_image_data()
+        assert sensor_data['exposure'] == 0.0
+        assert sensor_data['dew_heater_status'] == 'No data'
+        assert sensor_data['fan_status'] == 'No data'
+        assert sensor_data['wind_dir'] == 'No data'
+        assert sensor_data['rain_status'] == 'No data'
+
+
+

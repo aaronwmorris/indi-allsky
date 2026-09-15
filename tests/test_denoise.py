@@ -171,3 +171,20 @@ def test_star_sigma_threshold_remains_authoritative_when_percentile_is_lower(mon
                                          expand_radius=0)
 
     assert captured['threshold'] == 10.0
+
+
+def test_median_blur_integer_fallback_scaling():
+    denoiser = _denoiser({})
+    # uint16 with ksize > 5 triggers integer divisor scaling path
+    image = numpy.full((32, 32), 10000, dtype=numpy.uint16)
+    image[16, 16] = 60000
+    res = denoiser._medianBlur(image, 7)
+    assert res.dtype == numpy.uint16
+
+
+def test_median_blur_high_bit_depth_caps_ksize():
+    denoiser = _denoiser({'IMAGE_DENOISE_STRENGTH': 5, 'CCD_BIT_DEPTH': 12})
+    image = numpy.zeros((32, 32), dtype=numpy.uint16)
+    res = denoiser.median_blur(image)
+    assert res.shape == image.shape
+    assert res.dtype == numpy.uint16
