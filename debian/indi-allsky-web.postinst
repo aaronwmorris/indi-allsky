@@ -460,21 +460,38 @@ with app.app_context():
             "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py setadmin -u "$ADMIN_USER"
         fi
 
+
+        # Disable conflicting legacy/third-party allsky service if present
+        if systemctl list-unit-files "allsky.service" 2>/dev/null | grep -q "allsky.service"; then
+            systemctl stop allsky.service 2>/dev/null || true
+            systemctl disable allsky.service 2>/dev/null || true
+
+            # allsky uses lighttpd
+            if systemctl is-enabled --quiet lighttpd 2>/dev/null; then
+                # even if we disable this here, the normal web server (eg caddy) might not be operational due to the port conflict
+                systemctl stop lighttpd.service 2>/dev/null || true
+                systemctl disable lighttpd.service 2>/dev/null || true
+            fi
+        fi
+
+
         # Configure Web Server
         USE_CADDY=0
         USE_NGINX=0
         USE_APACHE=0
 
+
+        # use is-enabled in case the unit is down due to a port conflict
         if [ -x "$(command -v caddy 2>/dev/null)" ]; then
-            if systemctl is-active --quiet caddy 2>/dev/null; then
+            if systemctl is-enabled --quiet caddy 2>/dev/null; then
                 USE_CADDY=1
             fi
         elif [ -x "$(command -v nginx 2>/dev/null)" ]; then
-            if systemctl is-active --quiet nginx 2>/dev/null; then
+            if systemctl is-enabled --quiet nginx 2>/dev/null; then
                 USE_NGINX=1
             fi
         elif [ -x "$(command -v a2ensite 2>/dev/null)" ]; then
-            if systemctl is-active --quiet apache2 2>/dev/null; then
+            if systemctl is-enabled --quiet apache2 2>/dev/null; then
                 USE_APACHE=1
             fi
         fi
@@ -504,12 +521,6 @@ with app.app_context():
             echo "indi-allsky: Disabling ModemManager to prevent serial port conflicts with GPS and cameras..."
             systemctl stop ModemManager.service 2>/dev/null || true
             systemctl disable ModemManager.service 2>/dev/null || true
-        fi
-
-        # Disable conflicting legacy/third-party allsky service if present
-        if systemctl list-unit-files "allsky.service" 2>/dev/null | grep -q "allsky.service"; then
-            systemctl stop allsky.service 2>/dev/null || true
-            systemctl disable allsky.service 2>/dev/null || true
         fi
 
         # Add indi-allsky user to hardware, web, and journal groups
