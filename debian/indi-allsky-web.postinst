@@ -296,6 +296,21 @@ EOF
             exit 1
         fi
 
+        # Ensure valid system locales exist before running python bootstrapping scripts
+        if ! "$VENV/bin/python3" -c "import locale; locale.setlocale(locale.LC_ALL, '');" >/dev/null 2>&1; then
+            echo "indi-allsky: System locale is unconfigured. Generating locales..."
+            if [ -f /etc/locale.gen ]; then
+                sed -i -E 's/^#[[:space:]]*(en_US\.UTF-8|en_GB\.UTF-8)/\1/' /etc/locale.gen
+                [ -z "$LANG" ] || sed -i "s/^#[[:space:]]*${LANG}/${LANG}/" /etc/locale.gen
+                locale-gen || true
+            fi
+
+            if ! "$VENV/bin/python3" -c "import locale; locale.setlocale(locale.LC_ALL, '');" >/dev/null 2>&1; then
+                echo "indi-allsky: ERROR: System locale unsupported. Please run 'sudo dpkg-reconfigure locales' and retry." >&2
+                exit 1
+            fi
+        fi
+
         # Initialize SQLite Database (Backup, Vacuum, Migration) & Admin User
         # Ensure services are stopped so SQLite has 0 write locks during backup/vacuum
         systemctl stop indi-allsky.service 2>/dev/null || true
