@@ -39,29 +39,24 @@ class IndiAllskyScnr(object):
 
 
     def additive_mask(self, scidata):
-        ### The function below returns an out of memory error, needs to be fixed
-
         if len(scidata.shape) == 2:
             # grayscale
             return scidata
 
         #logger.warning('Applying SCNR additive mask')
 
-
-        image_height, image_width = scidata.shape[:2]
         b, g, r = cv2.split(scidata)
 
-        #start = time.time()
+        data_max = 65535.0 if scidata.dtype == numpy.uint16 else 255.0
 
-        ones = numpy.ones([image_height, image_width])
+        r_norm = r.astype(numpy.float32) / data_max
+        b_norm = b.astype(numpy.float32) / data_max
+        m = numpy.minimum(1.0, r_norm + b_norm)
 
-        m = numpy.minimum(ones, numpy.sum(r + b))
+        g_float = g.astype(numpy.float32)
+        g_new = g_float * (1.0 - self.amount * (1.0 - m))
 
-        #g * (1 - self.amount) * (1 - m) + m * g
-        g = numpy.multiply(g * (1 - self.amount), numpy.sum(numpy.subtract(ones, m), numpy.multiply(m, g)))  # oom
-
-        #elapsed_s = time.time() - start
-        #logger.info('SCNR additive mask in %0.4f s', elapsed_s)
+        g = numpy.clip(g_new, 0, data_max).astype(scidata.dtype)
 
         return cv2.merge((b, g, r))
 

@@ -611,17 +611,14 @@ warning.
 | `indi_allsky/flask/templates/asi676mc_calibration.html` | Calibration setup/progress/result transitions, population previews, cancellation, reports, reset, and browser capability checks. |
 | `indi_allsky/flask/templates/gallery.html` | Optional repair/exclusion badges, outlines, and status-specific filtering. |
 | `indi_allsky/flask/templates/imageviewer.html` | Diagnostic preceding/purple/following FITS downloads. |
-| `testing/image/test_asi676mc_repair.py` | Detection, repair, validation, metadata, and diagnostic helper coverage. |
-| `testing/image/test_asi676mc_calibration_engine.py` | FITS inspection, matching, fitting, evidence policy, and shared-runtime coverage. |
-| `testing/image/test_asi676mc_web_calibration.py` | Sessions, cleanup, discovery, guidance, reports, and web workflow coverage. |
+| `tests/image/test_asi676mc_repair.py` | Detection, repair, validation, metadata, and diagnostic helper coverage. |
+| `tests/core/test_asi676mc_calibration_engine.py` | FITS inspection, matching, fitting, evidence policy, and shared-runtime coverage. |
+| `tests/flask/test_asi676mc_web_calibration.py` | Sessions, cleanup, discovery, guidance, reports, and web workflow coverage. |
 
 Run the focused tests from the repository root:
 
 ```text
-python -m unittest \
-    testing.image.test_asi676mc_repair \
-    testing.image.test_asi676mc_calibration_engine \
-    testing.image.test_asi676mc_web_calibration
+pytest tests/image/test_asi676mc_repair.py tests/core/test_asi676mc_calibration_engine.py tests/flask/test_asi676mc_web_calibration.py
 ```
 
 When changing correction math, update `indi_allsky/asi676mc.py` first. The

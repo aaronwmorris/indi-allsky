@@ -93,14 +93,14 @@ class TempSensorSht3x(SensorBase):
             if self.heater_on:
                 self.heater_on = False
                 self.sht3x.heater = False
-                logger.warning('[%s] SHT3X Heater Disabled')
+                logger.warning('[%s] SHT3X Heater Disabled', self.name)
                 time.sleep(1.0)
 
-        elif rh >= self.rh_heather_on_level:
+        elif rh >= self.rh_heater_on_level:
             if not self.heater_on:
                 self.heater_on = True
                 self.sht3x.heater = True
-                logger.warning('[%s] SHT3X Heater Enabled')
+                logger.warning('[%s] SHT3X Heater Enabled', self.name)
                 time.sleep(1.0)
 
 
