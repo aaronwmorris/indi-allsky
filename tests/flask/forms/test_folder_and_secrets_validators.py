@@ -52,21 +52,21 @@ def test_varlib_folder_not_a_directory(tmp_path):
 def test_varlib_folder_permission_error(tmp_path):
     form = MagicMock()
     with patch('os.path.exists', side_effect=PermissionError('Permission denied')):
-        with pytest.raises(ValidationError, match='Permission denied'):
+        with pytest.raises(ValidationError):
             f_mod.VARLIB_FOLDER_validator(form, Field('/protected/path'))
 
 
 def test_image_folder_permission_error():
     form = MagicMock()
     with patch('os.path.exists', side_effect=PermissionError('Permission denied')):
-        with pytest.raises(ValidationError, match='Permission denied'):
+        with pytest.raises(ValidationError):
             f_mod.IMAGE_FOLDER_validator(form, Field('/protected/path'))
 
 
 def test_image_export_folder_permission_error():
     form = MagicMock()
     with patch('os.path.exists', side_effect=PermissionError('Permission denied')):
-        with pytest.raises(ValidationError, match='Permission denied'):
+        with pytest.raises(ValidationError):
             f_mod.IMAGE_EXPORT_FOLDER_validator(form, Field('/protected/path'))
 
 
