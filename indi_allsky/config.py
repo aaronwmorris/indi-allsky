@@ -594,6 +594,8 @@ class IndiAllSkyConfigBase(object):
             "CAMERA_NAME"            : "",
             "CAMERA_OWNER"           : "",
             "WEBSITE_URL"            : "",
+            "MAP_LATITUDE"           : "",
+            "MAP_LONGITUDE"          : "",
             "UPLOAD_IMAGE"           : True,
             "INTERVAL"               : 10,
         },

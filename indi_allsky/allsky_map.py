@@ -67,9 +67,25 @@ def send_allsky_map_ping(config, logger, db_notification_helper=None):
     if not api_url.endswith('/api/ping'):
         api_url = f"{api_url}/api/ping"
 
-    # Lat/Lng
-    lat = config.get('LOCATION_LATITUDE', 0.0)
-    lng = config.get('LOCATION_LONGITUDE', 0.0)
+    # Lat/Lng with custom override or fuzzed fallback (rounded to 2 decimal places ~1km)
+    map_lat_raw = allskymap_conf.get('MAP_LATITUDE')
+    map_lng_raw = allskymap_conf.get('MAP_LONGITUDE')
+
+    if map_lat_raw is not None and str(map_lat_raw).strip() != '':
+        try:
+            lat = float(map_lat_raw)
+        except (ValueError, TypeError):
+            lat = round(float(config.get('LOCATION_LATITUDE', 0.0) or 0.0), 2)
+    else:
+        lat = round(float(config.get('LOCATION_LATITUDE', 0.0) or 0.0), 2)
+
+    if map_lng_raw is not None and str(map_lng_raw).strip() != '':
+        try:
+            lng = float(map_lng_raw)
+        except (ValueError, TypeError):
+            lng = round(float(config.get('LOCATION_LONGITUDE', 0.0) or 0.0), 2)
+    else:
+        lng = round(float(config.get('LOCATION_LONGITUDE', 0.0) or 0.0), 2)
 
     # Metadata overrides
     name = allskymap_conf.get('CAMERA_NAME')
