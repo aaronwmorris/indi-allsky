@@ -84,7 +84,7 @@ configure_apache() {
 }
 
 configure_caddy() {
-    [ -f "/usr/share/indi-allsky/service/caddy_indi-allsky.conf" ] || return 0
+    [ -f "/usr/share/indi-allsky/conf/caddy_indi-allsky.conf" ] || return 0
 
     # This is not ideal since /etc/caddy/Caddyfile is managed by the caddy package
     sed \
