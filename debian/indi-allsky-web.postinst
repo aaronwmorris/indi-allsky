@@ -159,6 +159,24 @@ case "$1" in
         # Create system user & group
         adduser --system --group --home /var/lib/indi-allsky --no-create-home --shell /bin/false "$ALLSKY_USER" 2>/dev/null || true
 
+
+        if [ -f /etc/os-release ]; then
+            . /etc/os-release
+
+            if [ "$ID" = "ubuntu" ]; then
+                RSYSLOG_USER="syslog"
+            elif [ "$ID" = "linuxmint" ]; then
+                RSYSLOG_USER="syslog"
+            elif [ "$ID" = "debian" ]; then
+                RSYSLOG_USER="root"
+            else
+                RSYSLOG_USER="root" # Default fallback
+            fi
+        else
+            RSYSLOG_USER="root"
+        fi
+
+
         # Bootstrap web directory assets
         if [ -d "/usr/share/indi-allsky/html" ]; then
             cp -rf /usr/share/indi-allsky/html/* /var/www/html/allsky/ 2>/dev/null || true
@@ -533,30 +551,30 @@ with app.app_context():
             usermod -a -G "$ALLSKY_GROUP" www-data
         fi
 
-        # Ensure data, database, and log directories have proper ownership and write permissions
-        SYSLOG_USER=$(stat -c '%U' /var/log)
-        SYSLOG_GROUP=$(stat -c '%G' /var/log)
 
-        chown "${SYSLOG_USER}":"${SYSLOG_GROUP}" /var/log/indi-allsky
+        # Ensure data, database, and log directories have proper ownership and write permissions
+        VAR_LOG_USER=$(stat -c '%U' /var/log)
+        VAR_LOG_GROUP=$(stat -c '%G' /var/log)
+
+
+        chown "${VAR_LOG_USER}":"${VAR_LOG_GROUP}" /var/log/indi-allsky
         chmod 755 /var/log/indi-allsky
 
-        # Using the group as the user is a hack to handle ownership
-        # differences between Debian and Ubuntu
         touch /var/log/indi-allsky/indi-allsky.log
         chmod 644 /var/log/indi-allsky/indi-allsky.log
-        chown "${SYSLOG_GROUP}":adm /var/log/indi-allsky/indi-allsky.log
+        chown "${RSYSLOG_USER}":adm /var/log/indi-allsky/indi-allsky.log
 
         touch /var/log/indi-allsky/webapp-indi-allsky.log
         chmod 644 /var/log/indi-allsky/webapp-indi-allsky.log
-        chown "${SYSLOG_GROUP}":adm /var/log/indi-allsky/webapp-indi-allsky.log
+        chown "${RSYSLOG_USER}":adm /var/log/indi-allsky/webapp-indi-allsky.log
 
         touch /var/log/indi-allsky/indiserver.log
         chmod 644 /var/log/indi-allsky/indiserver.log
-        chown "${SYSLOG_GROUP}":adm /var/log/indi-allsky/indiserver.log
+        chown "${RSYSLOG_USER}":adm /var/log/indi-allsky/indiserver.log
 
         touch /var/log/indi-allsky/upgrade.log
         chmod 644 /var/log/indi-allsky/upgrade.log
-        chown "${SYSLOG_GROUP}":adm /var/log/indi-allsky/upgrade.log
+        chown "${RSYSLOG_USER}":adm /var/log/indi-allsky/upgrade.log
 
 
         chown "${ALLSKY_USER}:${ALLSKY_GROUP}" /var/lib/indi-allsky /var/lib/indi-allsky/backup
