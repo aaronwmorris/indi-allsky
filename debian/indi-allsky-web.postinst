@@ -580,24 +580,28 @@ with app.app_context():
         chown "${ALLSKY_USER}:${ALLSKY_GROUP}" /var/lib/indi-allsky /var/lib/indi-allsky/backup
         chmod 775 /var/lib/indi-allsky /var/lib/indi-allsky/backup
         if [ -f "$DB_FILE" ]; then
-            chown "${ALLSKY_USER}:${ALLSKY_GROUP}" "$DB_FILE"
+            chown "${ALLSKY_USER}":"${ALLSKY_GROUP}" "$DB_FILE"
             chmod 664 "$DB_FILE"
         fi
 
         # Custom image directory permissions (if non-standard path)
         if [ "$IMAGE_FOLDER" != "/var/www/html/allsky/images" ] && [ -d "$IMAGE_FOLDER" ]; then
-            chown "${ALLSKY_USER}:www-data" "$IMAGE_FOLDER"
+            chown "${ALLSKY_USER}":www-data "$IMAGE_FOLDER"
             chmod 775 "$IMAGE_FOLDER"
         fi
 
         # Web application and service configuration permissions
         if [ -f "$FLASK_JSON" ]; then
-            chown "${ALLSKY_USER}:www-data" "$FLASK_JSON"
+            chown "${ALLSKY_USER}":www-data "$FLASK_JSON"
             chmod 660 "$FLASK_JSON"
         fi
+        if [ -f "/etc/indi-allsky/gunicorn.conf.py" ]; then
+            chown "${ALLSKY_USER}":"${ALLSKY_GROUP}" "/etc/indi-allsky/gunicorn.conf.py"
+            chmod 664 "/etc/indi-allsky/gunicorn.conf.py"
+        fi
         if [ -f "$INDISERVER_ENV" ]; then
-            chown "${ALLSKY_USER}:${ALLSKY_GROUP}" "$INDISERVER_ENV"
-            chmod 644 "$INDISERVER_ENV"
+            chown "${ALLSKY_USER}":"${ALLSKY_GROUP}" "$INDISERVER_ENV"
+            chmod 664 "$INDISERVER_ENV"
         fi
 
         # Always enable and start indiserver service (matches setup.sh behavior)
