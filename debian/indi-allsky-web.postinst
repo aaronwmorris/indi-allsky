@@ -92,7 +92,7 @@ configure_caddy() {
         -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
         -e "s|%HTTP_PORT%|${HTTP_PORT:-80}|g" \
         -e "s|%HTTPS_PORT%|${HTTPS_PORT:-443}|g" \
-        -e "s|%UPSTREAM_SERVER%|unix//var/lib/indi-allsky/gunicorn-indi-allsky.sock|g" \
+        -e "s|%UPSTREAM_SERVER%|unix//run/indi-allsky/gunicorn-indi-allsky.sock|g" \
         /usr/share/indi-allsky/service/caddy_indi-allsky.conf > /etc/caddy/Caddyfile
     chmod 644 /etc/caddy/Caddyfile
 
