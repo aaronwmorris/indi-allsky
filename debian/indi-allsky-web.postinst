@@ -534,10 +534,33 @@ with app.app_context():
         fi
 
         # Ensure data, database, and log directories have proper ownership and write permissions
-        chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" /var/log/indi-allsky
+        SYSLOG_USER=$(stat -c '%U' /var/log)
+        SYSLOG_GROUP=$(stat -c '%G' /var/log)
+
+        chown "${SYSLOG_USER}":"${SYSLOG_GROUP}" /var/log/indi-allsky
+        chmod 755 /var/log/indi-allsky
+
+        # Using the group as the user is a hack to handle ownership
+        # differences between Debian and Ubuntu
+        touch /var/log/indi-allsky/indi-allsky.log
+        chmod 644 /var/log/indi-allsky/indi-allsky.log
+        chown "${SYSLOG_GROUP}":adm /var/log/indi-allsky/indi-allsky.log
+
+        touch /var/log/indi-allsky/webapp-indi-allsky.log
+        chmod 644 /var/log/indi-allsky/webapp-indi-allsky.log
+        chown "${SYSLOG_GROUP}":adm /var/log/indi-allsky/webapp-indi-allsky.log
+
+        touch /var/log/indi-allsky/indiserver.log
+        chmod 644 /var/log/indi-allsky/indiserver.log
+        chown "${SYSLOG_GROUP}":adm /var/log/indi-allsky/indiserver.log
+
+        touch /var/log/indi-allsky/upgrade.log
+        chmod 644 /var/log/indi-allsky/upgrade.log
+        chown "${SYSLOG_GROUP}":adm /var/log/indi-allsky/upgrade.log
+
+
         chown "${ALLSKY_USER}:${ALLSKY_GROUP}" /var/lib/indi-allsky /var/lib/indi-allsky/backup
         chmod 775 /var/lib/indi-allsky /var/lib/indi-allsky/backup
-        chmod 755 /var/log/indi-allsky
         if [ -f "$DB_FILE" ]; then
             chown "${ALLSKY_USER}:${ALLSKY_GROUP}" "$DB_FILE"
             chmod 664 "$DB_FILE"
