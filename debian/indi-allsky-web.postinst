@@ -84,7 +84,7 @@ configure_apache() {
 }
 
 configure_caddy() {
-    [ -f "/usr/share/indi-allsky/service/caddy_indi-allsky.conf" ] || return 0
+    [ -f "/usr/share/indi-allsky/conf/caddy_indi-allsky.conf" ] || return 0
 
     # This is not ideal since /etc/caddy/Caddyfile is managed by the caddy package
     sed \
@@ -92,7 +92,7 @@ configure_caddy() {
         -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
         -e "s|%HTTP_PORT%|${HTTP_PORT:-80}|g" \
         -e "s|%HTTPS_PORT%|${HTTPS_PORT:-443}|g" \
-        -e "s|%UPSTREAM_SERVER%|unix//var/lib/indi-allsky/gunicorn-indi-allsky.sock|g" \
+        -e "s|%UPSTREAM_SERVER%|unix//run/indi-allsky/gunicorn-indi-allsky.sock|g" \
         /usr/share/indi-allsky/service/caddy_indi-allsky.conf > /etc/caddy/Caddyfile
     chmod 644 /etc/caddy/Caddyfile
 
@@ -158,6 +158,24 @@ case "$1" in
         GENERATED_MQTT_USER=""
         # Create system user & group
         adduser --system --group --home /var/lib/indi-allsky --no-create-home --shell /bin/false "$ALLSKY_USER" 2>/dev/null || true
+
+
+        if [ -f /etc/os-release ]; then
+            . /etc/os-release
+
+            if [ "$ID" = "ubuntu" ]; then
+                RSYSLOG_USER="syslog"
+            elif [ "$ID" = "linuxmint" ]; then
+                RSYSLOG_USER="syslog"
+            elif [ "$ID" = "debian" ]; then
+                RSYSLOG_USER="root"
+            else
+                RSYSLOG_USER="root" # Default fallback
+            fi
+        else
+            RSYSLOG_USER="root"
+        fi
+
 
         # Bootstrap web directory assets
         if [ -d "/usr/share/indi-allsky/html" ]; then
@@ -533,30 +551,57 @@ with app.app_context():
             usermod -a -G "$ALLSKY_GROUP" www-data
         fi
 
+
         # Ensure data, database, and log directories have proper ownership and write permissions
-        chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" /var/log/indi-allsky
+        VAR_LOG_USER=$(stat -c '%U' /var/log)
+        VAR_LOG_GROUP=$(stat -c '%G' /var/log)
+
+
+        chown "${VAR_LOG_USER}":"${VAR_LOG_GROUP}" /var/log/indi-allsky
+        chmod 755 /var/log/indi-allsky
+
+        touch /var/log/indi-allsky/indi-allsky.log
+        chmod 644 /var/log/indi-allsky/indi-allsky.log
+        chown "${RSYSLOG_USER}":adm /var/log/indi-allsky/indi-allsky.log
+
+        touch /var/log/indi-allsky/webapp-indi-allsky.log
+        chmod 644 /var/log/indi-allsky/webapp-indi-allsky.log
+        chown "${RSYSLOG_USER}":adm /var/log/indi-allsky/webapp-indi-allsky.log
+
+        touch /var/log/indi-allsky/indiserver.log
+        chmod 644 /var/log/indi-allsky/indiserver.log
+        chown "${RSYSLOG_USER}":adm /var/log/indi-allsky/indiserver.log
+
+        touch /var/log/indi-allsky/upgrade.log
+        chmod 644 /var/log/indi-allsky/upgrade.log
+        chown "${RSYSLOG_USER}":adm /var/log/indi-allsky/upgrade.log
+
+
         chown "${ALLSKY_USER}:${ALLSKY_GROUP}" /var/lib/indi-allsky /var/lib/indi-allsky/backup
         chmod 775 /var/lib/indi-allsky /var/lib/indi-allsky/backup
-        chmod 755 /var/log/indi-allsky
         if [ -f "$DB_FILE" ]; then
-            chown "${ALLSKY_USER}:${ALLSKY_GROUP}" "$DB_FILE"
+            chown "${ALLSKY_USER}":"${ALLSKY_GROUP}" "$DB_FILE"
             chmod 664 "$DB_FILE"
         fi
 
         # Custom image directory permissions (if non-standard path)
         if [ "$IMAGE_FOLDER" != "/var/www/html/allsky/images" ] && [ -d "$IMAGE_FOLDER" ]; then
-            chown "${ALLSKY_USER}:www-data" "$IMAGE_FOLDER"
+            chown "${ALLSKY_USER}":www-data "$IMAGE_FOLDER"
             chmod 775 "$IMAGE_FOLDER"
         fi
 
         # Web application and service configuration permissions
         if [ -f "$FLASK_JSON" ]; then
-            chown "${ALLSKY_USER}:www-data" "$FLASK_JSON"
+            chown "${ALLSKY_USER}":www-data "$FLASK_JSON"
             chmod 660 "$FLASK_JSON"
         fi
+        if [ -f "/etc/indi-allsky/gunicorn.conf.py" ]; then
+            chown "${ALLSKY_USER}":"${ALLSKY_GROUP}" "/etc/indi-allsky/gunicorn.conf.py"
+            chmod 664 "/etc/indi-allsky/gunicorn.conf.py"
+        fi
         if [ -f "$INDISERVER_ENV" ]; then
-            chown "${ALLSKY_USER}:${ALLSKY_GROUP}" "$INDISERVER_ENV"
-            chmod 644 "$INDISERVER_ENV"
+            chown "${ALLSKY_USER}":"${ALLSKY_GROUP}" "$INDISERVER_ENV"
+            chmod 664 "$INDISERVER_ENV"
         fi
 
         # Always enable and start indiserver service (matches setup.sh behavior)

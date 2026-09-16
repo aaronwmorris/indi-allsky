@@ -15,6 +15,8 @@ debian/conf/90-indi-allsky-sysctl.conf usr/share/indi-allsky/conf/
 debian/conf/90-indi-allsky-journald.conf usr/share/indi-allsky/conf/
 debian/conf/indi-allsky-watchdog.conf usr/share/indi-allsky/conf/
 debian/conf/apache_indi-allsky.conf usr/share/indi-allsky/conf/
+debian/conf/caddy_indi-allsky.conf usr/share/indi-allsky/conf/
 debian/conf/nginx_indi-allsky.conf usr/share/indi-allsky/conf/
+debian/conf/gunicorn.conf.py etc/indi-allsky/
 debian/conf/mosquitto_indi-allsky.conf usr/share/indi-allsky/conf/
 debian/bundle/venv.tar.zst usr/share/indi-allsky/
