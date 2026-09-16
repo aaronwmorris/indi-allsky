@@ -86,6 +86,8 @@ configure_apache() {
 configure_caddy() {
     [ -f "/usr/share/indi-allsky/conf/caddy_indi-allsky.conf" ] || return 0
 
+    usermod -a -G www-data caddy
+
     mkdir -p /etc/caddy/conf.d
 
     # 1. Generate the site config snippet into conf.d
@@ -103,20 +105,26 @@ configure_caddy() {
     if [ ! -f "$CADDYFILE" ]; then
         echo "$IMPORT_LINE" > "$CADDYFILE"
         chmod 644 "$CADDYFILE"
+    else
+        # Comment out default Caddy welcome site block if present to prevent port 80 conflict
+        if grep -q "root \* /usr/share/caddy" "$CADDYFILE"; then
+            sed -i 's/^:80 {/# :80 {/' "$CADDYFILE"
+        fi
 
-    elif ! grep -qsF "$IMPORT_LINE" "$CADDYFILE"; then
-        TMPFILE=$(mktemp)
-        echo "$IMPORT_LINE" > "$TMPFILE"
-        cat "$CADDYFILE" >> "$TMPFILE"
-        mv "$TMPFILE" "$CADDYFILE"
-        chmod 644 "$CADDYFILE"
+        if ! grep -qsF "$IMPORT_LINE" "$CADDYFILE"; then
+            TMPFILE=$(mktemp)
+            echo "$IMPORT_LINE" > "$TMPFILE"
+            cat "$CADDYFILE" >> "$TMPFILE"
+            mv "$TMPFILE" "$CADDYFILE"
+            chmod 644 "$CADDYFILE"
+        fi
     fi
 
     # 3. Reload Caddy if active, or start/enable if not running
     if systemctl is-active --quiet caddy; then
-        systemctl reload caddy 2>/dev/null || systemctl restart caddy 2>/dev/null || true
+        systemctl reload caddy || systemctl restart caddy
     else
-        systemctl enable --now caddy 2>/dev/null || systemctl start caddy 2>/dev/null || true
+        systemctl enable --now caddy
     fi
 }
 
