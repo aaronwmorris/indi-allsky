@@ -6,6 +6,10 @@ misc usr/share/indi-allsky/
 html usr/share/indi-allsky/
 requirements usr/share/indi-allsky/
 log usr/share/indi-allsky/
+service/caddy_indi-allsky.conf usr/share/indi-allsky/service/
+service/apache_indi-allsky.conf usr/share/indi-allsky/service/
+service/nginx_indi-allsky.conf usr/share/indi-allsky/service/
+service/gunicorn.conf.py etc/indi-allsky
 misc/indi-allsky-ctl usr/bin/
 debian/conf/10-indi-allsky.rsyslog.conf etc/rsyslog.d/
 debian/conf/sudoers etc/sudoers.d/indi-allsky
