@@ -84,21 +84,40 @@ configure_apache() {
 }
 
 configure_caddy() {
-    [ -f "/usr/share/indi-allsky/service/caddy_indi-allsky.conf" ] || return 0
+    [ -f "/usr/share/indi-allsky/conf/caddy_indi-allsky.conf" ] || return 0
 
-    # This is not ideal since /etc/caddy/Caddyfile is managed by the caddy package
+    mkdir -p /etc/caddy/conf.d
+
+    # 1. Generate the site config snippet into conf.d
     sed \
-        -e "s|%ALLSKY_DIRECTORY%|/usr/share/indi-allsky|g" \
         -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
         -e "s|%HTTP_PORT%|${HTTP_PORT:-80}|g" \
         -e "s|%HTTPS_PORT%|${HTTPS_PORT:-443}|g" \
-        -e "s|%UPSTREAM_SERVER%|unix//var/lib/indi-allsky/gunicorn-indi-allsky.sock|g" \
-        /usr/share/indi-allsky/service/caddy_indi-allsky.conf > /etc/caddy/Caddyfile
-    chmod 644 /etc/caddy/Caddyfile
+        /usr/share/indi-allsky/conf/caddy_indi-allsky.conf > /etc/caddy/conf.d/indi-allsky.conf
+    chmod 644 /etc/caddy/conf.d/indi-allsky.conf
 
-    # caddy manages its own certs
+    # 2. Ensure Caddyfile imports conf.d without overwriting user settings
+    CADDYFILE="/etc/caddy/Caddyfile"
+    IMPORT_LINE="import /etc/caddy/conf.d/*.conf"
 
-    systemctl restart caddy 2>/dev/null || systemctl start caddy 2>/dev/null || true
+    if [ ! -f "$CADDYFILE" ]; then
+        echo "$IMPORT_LINE" > "$CADDYFILE"
+        chmod 644 "$CADDYFILE"
+
+    elif ! grep -qsF "$IMPORT_LINE" "$CADDYFILE"; then
+        TMPFILE=$(mktemp)
+        echo "$IMPORT_LINE" > "$TMPFILE"
+        cat "$CADDYFILE" >> "$TMPFILE"
+        mv "$TMPFILE" "$CADDYFILE"
+        chmod 644 "$CADDYFILE"
+    fi
+
+    # 3. Reload Caddy if active, or start/enable if not running
+    if systemctl is-active --quiet caddy; then
+        systemctl reload caddy 2>/dev/null || systemctl restart caddy 2>/dev/null || true
+    else
+        systemctl enable --now caddy 2>/dev/null || systemctl start caddy 2>/dev/null || true
+    fi
 }
 
 configure_mosquitto() {
