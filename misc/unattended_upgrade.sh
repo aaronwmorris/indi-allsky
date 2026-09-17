@@ -177,7 +177,9 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
     fi
 
 elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
-    if [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "26.04" ]]; then
+        DISTRO="ubuntu_26.04"
+    elif [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
         DISTRO="ubuntu_24.04"
     elif [[ "$DISTRO_VERSION_ID" == "22.04" ]]; then
         DISTRO="ubuntu_22.04"
@@ -527,6 +529,86 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         udisks2 \
         dnsmasq-base \
         policykit-1 \
+        libsystemd-dev \
+        dbus-user-session
+
+elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
+    if [ "$CPU_BITS" == "32" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
+    fi
+
+
+    sudo --non-interactive apt-get update
+
+    sudo --non-interactive apt-get -y install \
+        build-essential \
+        python3 \
+        python3-dev \
+        python3-venv \
+        python3-pip \
+        virtualenv \
+        cmake \
+        gfortran \
+        whiptail \
+        bc \
+        procps \
+        rsyslog \
+        cron \
+        git \
+        cpio \
+        tzdata \
+        locales \
+        ca-certificates \
+        avahi-daemon \
+        swig \
+        libatlas-base-dev \
+        libimath-dev \
+        libopenexr-dev \
+        libgtk-3-0t64 \
+        libssl-dev \
+        libxml2-dev \
+        libxslt1-dev \
+        libgnutls28-dev \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        libffi-dev \
+        libopencv-dev \
+        libopenblas-dev \
+        libraw-dev \
+        libgeos-dev \
+        libtiff-dev \
+        libjpeg8-dev \
+        libopenjp2-7-dev \
+        libpng-dev \
+        zlib1g-dev \
+        libfreetype-dev \
+        liblcms2-dev \
+        libwebp-dev \
+        libcap-dev \
+        tcl8.6-dev \
+        tk8.6-dev \
+        python3-tk \
+        libharfbuzz-dev \
+        libfribidi-dev \
+        libxcb1-dev \
+        default-libmysqlclient-dev \
+        pkgconf \
+        rustc \
+        cargo \
+        ffmpeg \
+        gifsicle \
+        jq \
+        sqlite3 \
+        libgpiod2 \
+        i2c-tools \
+        network-manager \
+        udisks2 \
+        dnsmasq-base \
+        polkitd \
         libsystemd-dev \
         dbus-user-session
 
@@ -884,7 +966,7 @@ pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_POST}"
 
 # replace rpi.gpio module with rpi.lgpio in some cases
 if [ "${GPIO_PYTHON_MODULES}" == "true" ]; then
-    if [[ "$DISTRO" == "debian_13" || "$DISTRO" == "debian_12" || "$DISTRO" == "ubuntu_24.04" ]]; then
+    if [[ "$DISTRO" == "debian_13" || "$DISTRO" == "debian_12" || "$DISTRO" == "ubuntu_26.04" || "$DISTRO" == "ubuntu_24.04" ]]; then
         if [[ "$CPU_ARCH" == "aarch64" || "$CPU_ARCH" == "armv7l" ]]; then
             pip3 uninstall -y RPi.GPIO rpi.lgpio
 
