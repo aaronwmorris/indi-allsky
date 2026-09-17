@@ -76,7 +76,8 @@ def excluded_from_downstream_measurements(repair_result):
 
 
 DIAGNOSTIC_BAD_STATUSES = ('repaired', 'validation_failed', 'excluded')
-# Architecture and user guide: docs/asi676mc-frame-repair.md
+# Architecture reference: docs/wiki/ASI676MC-Purple-Frame-Repair-Details.md
+# User guide: docs/wiki/ASI676MC-Known-Issues.md
 
 
 _CAMERA_NAME_RE = re.compile(r'(?<![A-Z0-9])ASI[\s_-]*676MC(?![A-Z0-9])', re.IGNORECASE)
