@@ -1280,16 +1280,17 @@ class JsonImageLoopView(JsonView):
     def getLoopImages(self, camera_id, loop_dt, history_seconds):
         ts_minus_seconds = loop_dt - timedelta(seconds=history_seconds)
 
+        query_filters = [
+            IndiAllSkyDbCameraTable.id == camera_id,
+            self.model.createDate > ts_minus_seconds,
+            self.model.createDate < loop_dt,
+        ]
+        if hasattr(self.model, 'exclude'):
+            query_filters.append(self.model.exclude == sa_false())
+
         latest_images_q = self.model.query\
             .join(self.model.camera)\
-            .filter(
-                and_(
-                    IndiAllSkyDbCameraTable.id == camera_id,
-                    self.model.exclude == sa_false(),
-                    self.model.createDate > ts_minus_seconds,
-                    self.model.createDate < loop_dt,
-                )
-            )
+            .filter(and_(*query_filters))
 
 
         local = True  # default to local assets

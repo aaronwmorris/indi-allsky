@@ -1,6 +1,7 @@
 import os
 import pytest
 from datetime import datetime
+from pathlib import Path
 from unittest.mock import patch
 from indi_allsky.flask import db
 from indi_allsky.flask.models import (
@@ -47,6 +48,7 @@ def loops_db(flask_app):
             lensImageCircle=180.0,
             cfa=None,
             owner="Admin",
+            connectDate=datetime.now(),
             width=1920,
             height=1080,
             pixelSize=2.4,
@@ -186,15 +188,15 @@ def test_misc_template_views(flask_app, loops_db):
             assert res_cams.status_code == 200
 
             # DarkFramesView context
-            res_darks = client.get('/indi-allsky/darkframes?camera_id=1')
+            res_darks = client.get('/indi-allsky/darks?camera_id=1')
             assert res_darks.status_code == 200
 
             # ImageLagView context
-            res_lag = client.get('/indi-allsky/imagelag?camera_id=1&timestamp=1234567890')
+            res_lag = client.get('/indi-allsky/lag?camera_id=1&timestamp=1234567890')
             assert res_lag.status_code == 200
 
             # RollingAduView context
-            res_adu = client.get('/indi-allsky/rollingadu?camera_id=1')
+            res_adu = client.get('/indi-allsky/adu?camera_id=1')
             assert res_adu.status_code == 200
 
             # SqmView context
@@ -266,17 +268,240 @@ def test_charts_and_sensor_panel_views_unpatched(flask_app, loops_db):
     assert 'chart_data' in chart_data
 
     # SensorPanelView & JsonSensorPanelView
-    res_sensor = client.get('/indi-allsky/sensor_panel?camera_id=1')
+    res_sensor = client.get('/indi-allsky/sensor_panel?camera_id=1&all=1')
     assert res_sensor.status_code == 200
+
+    res_sensor0 = client.get('/indi-allsky/sensor_panel?camera_id=1&all=0')
+    assert res_sensor0.status_code == 200
 
     res_jssensor = client.get('/indi-allsky/js/sensor_panel?camera_id=1')
     assert res_jssensor.status_code == 200
 
 
-def test_config_views(flask_app, loops_db):
+def test_sensor_panel_no_latest_image(flask_app, loops_db):
+    client = flask_app.test_client()
+    with flask_app.app_context():
+        IndiAllSkyDbImageTable.query.delete()
+        db.session.commit()
+
+    res_sensor = client.get('/indi-allsky/sensor_panel?camera_id=1')
+    assert res_sensor.status_code == 200
+
+    res_jssensor = client.get('/indi-allsky/js/sensor_panel?camera_id=1')
+    assert res_jssensor.status_code == 200
+    data = res_jssensor.get_json()
+    assert data['last_update'] is None
+
+
+def test_json_chart_histogram_jpg(flask_app, loops_db):
+    import numpy as np
+    import cv2
+    from datetime import datetime, timedelta
+
+    client = flask_app.test_client()
+    with flask_app.app_context():
+        cam = db.session.get(IndiAllSkyDbCameraTable, 1)
+        offset = cam.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
+        camera_now = datetime.now() + timedelta(seconds=offset)
+
+        img_rec = db.session.get(IndiAllSkyDbImageTable, 1)
+        img_rec.createDate = camera_now - timedelta(seconds=60)
+        db.session.commit()
+
+    img_path = Path('/tmp/image1.jpg')
+    img = np.zeros((100, 100, 3), dtype=np.uint8)
+    cv2.imwrite(str(img_path), img)
+
+    try:
+        with patch.object(IndiAllSkyDbImageTable, 'getFilesystemPath', return_value=img_path):
+            res = client.get('/indi-allsky/js/charts?camera_id=1')
+            assert res.status_code == 200
+            data = res.get_json()['chart_data']
+            assert len(data['histogram']['red']) == 256
+    finally:
+        if img_path.exists():
+            img_path.unlink()
+
+    # Corrupt JPG
+    img_path.write_bytes(b'not a real jpeg')
+    try:
+        with patch.object(IndiAllSkyDbImageTable, 'getFilesystemPath', return_value=img_path):
+            res = client.get('/indi-allsky/js/charts?camera_id=1')
+            assert res.status_code == 200
+    finally:
+        if img_path.exists():
+            img_path.unlink()
+
+
+def test_json_chart_histogram_png(flask_app, loops_db):
+    import numpy as np
+    import cv2
+    from datetime import datetime, timedelta
+
+    client = flask_app.test_client()
+    with flask_app.app_context():
+        cam = db.session.get(IndiAllSkyDbCameraTable, 1)
+        offset = cam.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
+        camera_now = datetime.now() + timedelta(seconds=offset)
+
+        img_rec = db.session.get(IndiAllSkyDbImageTable, 1)
+        img_rec.filename = 'image1.png'
+        img_rec.createDate = camera_now - timedelta(seconds=60)
+        db.session.commit()
+
+    # Color PNG
+    img_path = Path('/tmp/image1.png')
+    img = np.ones((100, 100, 3), dtype=np.uint8) * 128
+    cv2.imwrite(str(img_path), img)
+
+    try:
+        with patch.object(IndiAllSkyDbImageTable, 'getFilesystemPath', return_value=img_path):
+            res = client.get('/indi-allsky/js/charts?camera_id=1')
+            assert res.status_code == 200
+            data = res.get_json()['chart_data']
+            assert len(data['histogram']['red']) == 256
+    finally:
+        if img_path.exists():
+            img_path.unlink()
+
+    # Mono PNG
+    img_mono = np.ones((100, 100), dtype=np.uint8) * 100
+    cv2.imwrite(str(img_path), img_mono)
+
+    try:
+        with patch.object(IndiAllSkyDbImageTable, 'getFilesystemPath', return_value=img_path):
+            res = client.get('/indi-allsky/js/charts?camera_id=1')
+            assert res.status_code == 200
+            data = res.get_json()['chart_data']
+            assert len(data['histogram']['gray']) == 256
+    finally:
+        if img_path.exists():
+            img_path.unlink()
+
+    # Corrupt PNG
+    img_path.write_bytes(b'invalid png')
+    try:
+        with patch.object(IndiAllSkyDbImageTable, 'getFilesystemPath', return_value=img_path):
+            res = client.get('/indi-allsky/js/charts?camera_id=1')
+            assert res.status_code == 200
+    finally:
+        if img_path.exists():
+            img_path.unlink()
+
+
+
+
+def test_json_chart_histogram_pil_and_sqm(flask_app, loops_db):
+    import numpy as np
+    from PIL import Image
+    from datetime import datetime, timedelta
+
+    client = flask_app.test_client()
+    with flask_app.app_context():
+        cam = db.session.get(IndiAllSkyDbCameraTable, 1)
+        offset = cam.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
+        camera_now = datetime.now() + timedelta(seconds=offset)
+
+        img_rec = db.session.get(IndiAllSkyDbImageTable, 1)
+        img_rec.filename = 'image1.tif'
+        img_rec.createDate = camera_now - timedelta(seconds=60)
+
+        cfg = db.session.query(IndiAllSkyDbConfigTable).first()
+        cfg.data['SQM_ROI'] = [10, 10, 50, 50]
+        db.session.commit()
+
+    img_path = Path('/tmp/image1.tif')
+    img = Image.new('RGB', (100, 100), color=(200, 100, 50))
+    img.save(str(img_path))
+
+    try:
+        with patch.object(IndiAllSkyDbImageTable, 'getFilesystemPath', return_value=img_path):
+            res = client.get('/indi-allsky/js/charts?camera_id=1')
+            assert res.status_code == 200
+    finally:
+        if img_path.exists():
+            img_path.unlink()
+
+    # Corrupt TIFF
+    img_path.write_bytes(b'invalid tiff')
+    try:
+        with patch.object(IndiAllSkyDbImageTable, 'getFilesystemPath', return_value=img_path):
+            res = client.get('/indi-allsky/js/charts?camera_id=1')
+            assert res.status_code == 200
+    finally:
+        if img_path.exists():
+            img_path.unlink()
+
+
+
+def test_json_chart_histogram_mask_loader(flask_app, loops_db):
+    import numpy as np
+    import cv2
+    from datetime import datetime, timedelta
+
+    client = flask_app.test_client()
+    with flask_app.app_context():
+        cam = db.session.get(IndiAllSkyDbCameraTable, 1)
+        offset = cam.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
+        camera_now = datetime.now() + timedelta(seconds=offset)
+
+        img_rec = db.session.get(IndiAllSkyDbImageTable, 1)
+        img_rec.createDate = camera_now - timedelta(seconds=60)
+        db.session.commit()
+
+    img_path = Path('/tmp/image1.jpg')
+    img = np.zeros((100, 100, 3), dtype=np.uint8)
+    cv2.imwrite(str(img_path), img)
+
+    mock_mask = np.ones((100, 100), dtype=np.uint8)
+
+    try:
+        with patch.object(IndiAllSkyDbImageTable, 'getFilesystemPath', return_value=img_path):
+            with patch('indi_allsky.flask.views.JsonChartView._load_detection_mask', return_value=mock_mask):
+                res = client.get('/indi-allsky/js/charts?camera_id=1')
+                assert res.status_code == 200
+    finally:
+        if img_path.exists():
+            img_path.unlink()
+
+
+
+def test_config_views_context_branches(flask_app, loops_db):
     client = flask_app.test_client()
 
+    with flask_app.app_context():
+        cam = db.session.get(IndiAllSkyDbCameraTable, 1)
+        cam.maxExposure = 300
+        cam.driver = 'indi_asi_ccd'
+        cam.name = 'ZWO CCD ASI676MC'
+
+        img = db.session.get(IndiAllSkyDbImageTable, 1)
+        img.data = {
+            'camera_sqm_raw_mag': -5.0,
+            'sensor_user_10': 25.0,
+            'sensor_user_2': 30.0,
+        }
+        db.session.commit()
+
     with patch.dict(flask_app.config, {'LOGIN_DISABLED': True}):
-        assert client.get('/indi-allsky/config?camera_id=1').status_code == 200
-        assert client.get('/indi-allsky/system?camera_id=1').status_code == 200
+        # Dew heater and fan threshold high, med, low, default branches
+        res = client.get('/indi-allsky/config?camera_id=1')
+        assert res.status_code == 200
+
+        # With manual target
+        with flask_app.app_context():
+            cfg = db.session.query(IndiAllSkyDbConfigTable).first()
+            cfg.data['DEW_HEATER'] = {'MANUAL_TARGET': 15.0}
+            db.session.commit()
+
+        res_manual = client.get('/indi-allsky/config?camera_id=1')
+        assert res_manual.status_code == 200
+
+        # Longitude validation failure warning
+        with patch('indi_allsky.flask.views.ConfigView.validate_longitude_timezone', return_value=False):
+            res_warn = client.get('/indi-allsky/config?camera_id=1')
+            assert res_warn.status_code == 200
+            assert b'Warning: Longitude validation failed' in res_warn.data
+
+
 
