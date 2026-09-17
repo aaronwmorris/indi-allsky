@@ -289,6 +289,21 @@ elif [[ "$DISTRO" == "arch" ]]; then
 fi
 
 
+if [[ "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "linuxmint" ]]; then
+    if [ -f "/etc/apparmor.d/mosquitto" ]; then
+        # setup apparmor policy to allow access to CA certs
+        sudo tee /etc/apparmor.d/local/mosquitto <<EOF
+/etc/ssl/certs/ca-certificates.crt r,
+EOF
+        sudo chown root:root /etc/apparmor.d/local/mosquitto
+        sudo chmod 644 /etc/apparmor.d/local/mosquitto
+
+        # reread policy
+        sudo apparmor_parser -r /etc/apparmor.d/mosquitto
+    fi
+fi
+
+
 echo "**** Setup mosquitto config ****"
 
 
