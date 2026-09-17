@@ -632,7 +632,7 @@ class LatestRawImageRedirect(LatestImageRedirect):
 
 class LatestThumbnailRedirect(LatestImageRedirect):
 
-    def getLatestImage(self, camera_id):
+    def getLatestImage(self, camera_id, night=None):
         latest_image_thumbnail_entry = db.session.query(
             IndiAllSkyDbImageTable,
             IndiAllSkyDbThumbnailTable,
@@ -1665,8 +1665,8 @@ class JsonRawImageLoopView(JsonImageLoopView):
             'last' : 0,
         }
 
-        # jsqm, camera, device
-        return sqm_data, sqm_data, sqm_data
+        # jsqm, camera sqm mag, camera sqm adu, device sqm mag
+        return sqm_data, sqm_data, sqm_data, sqm_data
 
 
     def getStarsData(self, *args):
