@@ -7,6 +7,7 @@ from scipy.spatial import cKDTree
 
 from .projection import predictAltAz
 from .projection import projectToPixels
+from .projection import cameraAltAz
 
 
 MIN_MATCHED_STARS = 20
@@ -114,11 +115,13 @@ EFFECTIVE_MIN_MATCHED_STARS = int(round(MATCH_CONFIDENCE_MULTIPLIER * MIN_MATCHE
 
 # per-solve invariants, built once by the solver and shared by every
 # fit-pipeline method via FitEngine.ctx
+# Pointing stays fixed throughout the six-parameter fit and its fallback searches.
+# Defaults preserve callers that predate support for tilted cameras.
 SolveContext = collections.namedtuple('SolveContext', [
     'detections', 'tree', 'catalog', 'latitude', 'longitude',
     'obstime_unix', 'image_width', 'image_height', 'min_alt_rad',
-    'initial_params',
-])
+    'initial_params', 'lens_altitude', 'pointing_azimuth',
+], defaults=(90.0, 0.0))
 
 
 def _rmsGatePx(diameter):
@@ -324,6 +327,20 @@ class FitEngine(object):
 
         return result
 
+    def _visibleStars(self, alt, az):
+        visible = alt > self.ctx.min_alt_rad
+        if self.ctx.lens_altitude is not None and self.ctx.lens_altitude != 90.0:
+            camera_alt, _ = cameraAltAz(
+                alt, az, self.ctx.lens_altitude, self.ctx.pointing_azimuth)
+            visible &= camera_alt > 0.0  # VirtualSky clips to the lens hemisphere
+        return numpy.flatnonzero(visible)
+
+    def _project(self, alt, az, params, mirror=False):
+        ctx = self.ctx
+        return projectToPixels(alt, az, params, ctx.image_width, ctx.image_height,
+                               mirror=mirror, lens_altitude=ctx.lens_altitude,
+                               pointing_azimuth=ctx.pointing_azimuth)
+
     def _matchAtParams(self, params, radius, precomputed_alt_az=None):
         ctx = self.ctx
         if precomputed_alt_az is not None:
@@ -333,9 +350,8 @@ class FitEngine(object):
                                    ctx.longitude + params[2], ctx.obstime_unix)
             self.predict_calls += 1
 
-        visible = numpy.flatnonzero(alt > ctx.min_alt_rad)
-        x, y = projectToPixels(alt[visible], az[visible], params,
-                               ctx.image_width, ctx.image_height)
+        visible = self._visibleStars(alt, az)
+        x, y = self._project(alt[visible], az[visible], params)
         self.predict_calls += 1
         pred_m, det_m = _matchStars(ctx.detections, numpy.column_stack([x, y]), radius)
         return visible[pred_m], det_m
@@ -349,7 +365,7 @@ class FitEngine(object):
         alt, az = predictAltAz(ctx.catalog[cat_idx], ctx.latitude + params[1],
                                ctx.longitude + params[2], ctx.obstime_unix)
         self.predict_calls += 1
-        x, y = projectToPixels(alt, az, params, ctx.image_width, ctx.image_height)
+        x, y = self._project(alt, az, params)
         self.predict_calls += 1
         resid = numpy.column_stack([x, y]) - ctx.detections[det_idx, :2]
         rms = float(numpy.sqrt(numpy.mean(numpy.sum(resid ** 2, axis=1))))
@@ -387,7 +403,7 @@ class FitEngine(object):
                 self.predict_calls += 1
             else:
                 alt, az = fixed_alt_az
-            x, y = projectToPixels(alt, az, trial, ctx.image_width, ctx.image_height)
+            x, y = self._project(alt, az, trial)
             return numpy.column_stack([x, y]).ravel() - target_xy.ravel()
 
         x0 = _feasibleStart(params[free_idx], lower, upper)
@@ -407,7 +423,7 @@ class FitEngine(object):
         alt, az = predictAltAz(ctx.catalog, ctx.latitude + p0[1],
                                ctx.longitude + p0[2], ctx.obstime_unix)
         self.predict_calls += 1
-        visible = numpy.flatnonzero(alt > ctx.min_alt_rad)
+        visible = self._visibleStars(alt, az)
         alt_v, az_v = alt[visible], az[visible]
 
         best = {'count': -1, 'az': float(p0[0])}
@@ -424,8 +440,7 @@ class FitEngine(object):
             trial = p0.copy()
             trial[0] = p0[0] + d_az
             for mirror in (False, True):
-                x, y = projectToPixels(alt_v, az_v, trial, ctx.image_width,
-                                       ctx.image_height, mirror=mirror)
+                x, y = self._project(alt_v, az_v, trial, mirror=mirror)
                 self.predict_calls += 1
                 count = _countMatches(ctx.tree, numpy.column_stack([x, y]), radius)
                 if mirror:
@@ -446,7 +461,7 @@ class FitEngine(object):
         alt, az = predictAltAz(
             ctx.catalog, ctx.latitude + p0[1], ctx.longitude + p0[2], ctx.obstime_unix)
         self.predict_calls += 1
-        visible = numpy.flatnonzero(alt > ctx.min_alt_rad)
+        visible = self._visibleStars(alt, az)
         alt_v, az_v = alt[visible], az[visible]
 
         best = None
@@ -468,8 +483,7 @@ class FitEngine(object):
                         trial = trial0.copy()
                         trial[4] = p0[4] + fx * diameter0
                         trial[5] = p0[5] + fy * diameter0
-                        x, y = projectToPixels(alt_v, az_v, trial,
-                                               ctx.image_width, ctx.image_height)
+                        x, y = self._project(alt_v, az_v, trial)
                         self.predict_calls += 1
                         count = _countMatches(
                             ctx.tree, numpy.column_stack([x, y]), radius)
