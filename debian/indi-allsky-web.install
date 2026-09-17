@@ -5,7 +5,6 @@ indi_allsky usr/share/indi-allsky/
 misc usr/share/indi-allsky/
 html usr/share/indi-allsky/
 requirements usr/share/indi-allsky/
-log usr/share/indi-allsky/
 misc/indi-allsky-ctl usr/bin/
 debian/conf/10-indi-allsky.rsyslog.conf etc/rsyslog.d/
 debian/conf/sudoers etc/sudoers.d/indi-allsky
