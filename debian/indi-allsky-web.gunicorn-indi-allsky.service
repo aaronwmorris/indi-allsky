@@ -16,8 +16,7 @@ Environment="PYTHONPATH=/usr/share/indi-allsky"
 ExecStart=/var/lib/indi-allsky/venv/bin/gunicorn --config /etc/indi-allsky/gunicorn.conf.py indi_allsky.wsgi:application
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed
-Restart=always
-RestartSec=3
+Nice=10
 
 [Install]
 WantedBy=multi-user.target
