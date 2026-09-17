@@ -1236,7 +1236,7 @@ class JsonImageLoopView(JsonView):
         end_dt = datetime.fromtimestamp(timestamp)
         start_dt = end_dt - timedelta(seconds=history_seconds)
 
-        image_entries = self.model.query\
+        image_entries_q = self.model.query\
             .join(self.model.camera)\
             .filter(
                 and_(
@@ -1245,7 +1245,22 @@ class JsonImageLoopView(JsonView):
                     self.model.createDate >= start_dt,
                     self.model.createDate <= end_dt,
                 )
-            )\
+            )
+
+        local = not self.web_nonlocal_images or (
+            self.web_local_images_admin and self.verify_admin_network()
+        )
+
+        if not local:
+            image_entries_q = image_entries_q\
+                .filter(
+                    or_(
+                        self.model.remote_url != sa_null(),
+                        self.model.s3_key != sa_null(),
+                    )
+                )
+
+        image_entries = image_entries_q\
             .order_by(self.model.createDate.asc(), self.model.id.asc())\
             .yield_per(100)
 
@@ -1253,12 +1268,13 @@ class JsonImageLoopView(JsonView):
         start_reference = None
         end_reference = None
         for image_entry in image_entries:
-            try:
-                image_path = Path(image_entry.getFilesystemPath())
-                if not image_path.stat().st_size:
+            if local:
+                try:
+                    image_path = Path(image_entry.getFilesystemPath())
+                    if not image_path.stat().st_size:
+                        continue
+                except (OSError, ValueError):
                     continue
-            except (OSError, ValueError):
-                continue
 
             frame_count += 1
             frame_reference = {
@@ -1539,7 +1555,7 @@ class JsonPanoramaLoopView(JsonImageLoopView):
         loop_dt = datetime.fromtimestamp(timestamp)
         start_dt = loop_dt - timedelta(seconds=requested_history_seconds)
 
-        panorama_entries = self.model.query\
+        panorama_entries_q = self.model.query\
             .join(self.model.camera)\
             .filter(
                 and_(
@@ -1548,13 +1564,24 @@ class JsonPanoramaLoopView(JsonImageLoopView):
                     self.model.createDate >= start_dt,
                     self.model.createDate <= loop_dt,
                 )
-            )\
-            .order_by(self.model.createDate.asc(), self.model.id.asc())\
-            .yield_per(100)
+            )
 
         local = not self.web_nonlocal_images or (
             self.web_local_images_admin and self.verify_admin_network()
         )
+
+        if not local:
+            panorama_entries_q = panorama_entries_q\
+                .filter(
+                    or_(
+                        self.model.remote_url != sa_null(),
+                        self.model.s3_key != sa_null(),
+                    )
+                )
+
+        panorama_entries = panorama_entries_q\
+            .order_by(self.model.createDate.asc(), self.model.id.asc())\
+            .yield_per(100)
 
         local_frame_count = 0
         dimensions_match = True
@@ -1569,16 +1596,17 @@ class JsonPanoramaLoopView(JsonImageLoopView):
                 or panorama_entry.height != expected_height
             )
 
-            try:
-                panorama_path = Path(panorama_entry.getFilesystemPath())
-                if not panorama_path.stat().st_size:
+            if local:
+                try:
+                    panorama_path = Path(panorama_entry.getFilesystemPath())
+                    if not panorama_path.stat().st_size:
+                        continue
+                except (OSError, ValueError):
                     continue
 
-                local_frame_count += 1
-                if dimension_mismatch:
-                    dimensions_match = False
-                    continue
-            except (OSError, ValueError):
+            local_frame_count += 1
+            if dimension_mismatch:
+                dimensions_match = False
                 continue
 
             if panorama_entry.id in preview_entry_ids:
