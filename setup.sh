@@ -1368,7 +1368,7 @@ elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
         libatlas-ecmwf-dev \
         libimath-dev \
         libopenexr-dev \
-        libgtk-3-0 \
+        libgtk-3-0t64 \
         libssl-dev \
         libxml2-dev \
         libxslt1-dev \
