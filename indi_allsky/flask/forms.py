@@ -2887,6 +2887,46 @@ def ALLSKYMAP__INTERVAL_validator(form, field):
             raise ValidationError('Please enter a valid number')
 
 
+def ALLSKYMAP__MAP_LATITUDE_validator(form, field):
+    if field.data is not None and str(field.data).strip() != '':
+        try:
+            val = float(field.data)
+            if val < -90.0 or val > 90.0:
+                raise ValidationError('Latitude must be between -90 and 90')
+        except (ValueError, TypeError):
+            raise ValidationError('Please enter a valid number for latitude')
+
+        loc_lat = getattr(form, 'LOCATION_LATITUDE', None)
+        if loc_lat and loc_lat.data is not None and str(loc_lat.data).strip() != '':
+            try:
+                actual_lat = float(loc_lat.data)
+                if abs(val - actual_lat) > 1.0:
+                    raise ValidationError('Map latitude must be within 1 degree of your configured location latitude')
+            except (ValueError, TypeError):
+                pass
+
+
+def ALLSKYMAP__MAP_LONGITUDE_validator(form, field):
+    if field.data is not None and str(field.data).strip() != '':
+        try:
+            val = float(field.data)
+            if val < -180.0 or val > 180.0:
+                raise ValidationError('Longitude must be between -180 and 180')
+        except (ValueError, TypeError):
+            raise ValidationError('Please enter a valid number for longitude')
+
+        loc_lng = getattr(form, 'LOCATION_LONGITUDE', None)
+        if loc_lng and loc_lng.data is not None and str(loc_lng.data).strip() != '':
+            try:
+                actual_lng = float(loc_lng.data)
+                diff = abs(val - actual_lng) % 360.0
+                min_diff = min(diff, 360.0 - diff)
+                if min_diff > 1.0:
+                    raise ValidationError('Map longitude must be within 1 degree of your configured location longitude')
+            except (ValueError, TypeError):
+                pass
+
+
 def YOUTUBE__SECRETS_FILE_validator(form, field):
     if not field.data:
         return
@@ -4983,6 +5023,8 @@ class IndiAllskyConfigForm(FlaskForm):
     ALLSKYMAP__CAMERA_NAME           = StringField('Camera Name')
     ALLSKYMAP__CAMERA_OWNER          = StringField('Camera Owner')
     ALLSKYMAP__WEBSITE_URL           = StringField('Website URL')
+    ALLSKYMAP__MAP_LATITUDE          = StringField('Map Latitude', validators=[ALLSKYMAP__MAP_LATITUDE_validator])
+    ALLSKYMAP__MAP_LONGITUDE         = StringField('Map Longitude', validators=[ALLSKYMAP__MAP_LONGITUDE_validator])
     ALLSKYMAP__UPLOAD_IMAGE          = BooleanField('Upload Latest Image')
     ALLSKYMAP__INTERVAL              = IntegerField('Interval (Minutes)', validators=[ALLSKYMAP__INTERVAL_validator])
     YOUTUBE__ENABLE                  = BooleanField('Enable')
