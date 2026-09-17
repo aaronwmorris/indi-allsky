@@ -13,6 +13,7 @@ debian/conf/90-indi-allsky.rules etc/polkit-1/rules.d/
 debian/conf/99indi-allsky etc/apt/apt.conf.d/
 debian/conf/90-indi-allsky-sysctl.conf usr/share/indi-allsky/conf/
 debian/conf/90-indi-allsky-journald.conf usr/share/indi-allsky/conf/
+debian/conf/90-gunicorn-indi-allsky.preset usr/lib/systemd/system-preset/
 debian/conf/indi-allsky-watchdog.conf usr/share/indi-allsky/conf/
 debian/conf/apache_indi-allsky.conf usr/share/indi-allsky/conf/
 debian/conf/caddy_indi-allsky.conf usr/share/indi-allsky/conf/

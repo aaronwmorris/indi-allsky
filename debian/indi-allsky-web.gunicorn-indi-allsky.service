@@ -9,8 +9,6 @@ Type=simple
 User=indi-allsky
 Group=www-data
 SupplementaryGroups=indi-allsky
-RuntimeDirectory=indi-allsky
-RuntimeDirectoryMode=0755
 WorkingDirectory=/usr/share/indi-allsky
 Environment="PYTHONPATH=/usr/share/indi-allsky"
 ExecStart=/var/lib/indi-allsky/venv/bin/gunicorn --config /etc/indi-allsky/gunicorn.conf.py indi_allsky.wsgi:application
@@ -19,4 +17,3 @@ KillMode=mixed
 Nice=10
 
 [Install]
-WantedBy=multi-user.target
