@@ -1365,7 +1365,7 @@ elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
         ca-certificates \
         avahi-daemon \
         swig \
-        libatlas-base-dev \
+        libatlas-ecmwf-dev \
         libimath-dev \
         libopenexr-dev \
         libgtk-3-0 \
@@ -1406,7 +1406,7 @@ elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
         gifsicle \
         jq \
         sqlite3 \
-        libgpiod2 \
+        libgpiod3 \
         i2c-tools \
         network-manager \
         udisks2 \
