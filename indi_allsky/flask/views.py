@@ -14110,6 +14110,10 @@ class WsShellView(BaseView):
         if not current_user.is_admin:
             return 'Unauthorized', 401
 
+        if not self.verify_admin_network():
+            return 'Unauthorized', 401
+
+
         ws = simple_websocket.Server.accept(request.environ)
 
         # Create pseudo-terminal
