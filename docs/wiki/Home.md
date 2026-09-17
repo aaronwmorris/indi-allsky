@@ -6,7 +6,9 @@ Welcome to the indi-allsky wiki!
 * [General Recommended Settings](General-Recommended-Settings)
 * [Known Camera Problems](Known-Camera-Problems)
 * [Upgrading indi-allsky](Updating-indi-allsky)
+* [Migration Guide: setup.sh to .deb](Setup-to-Deb-Migration)
 * [Password Management](Web-Interface-Password)
+* [Command-Line Control Utility (`indi-allsky-ctl`)](indi-allsky-ctl)
 * [INDI Configuration](INDI-custom-config)
 * [libcamera setup](libcamera-enablement)
 * [Web Status Configuration](Web-Status-Configuration)
@@ -14,6 +16,7 @@ Welcome to the indi-allsky wiki!
 * [Dark Calibration Frames](Dark-Calibration-Frames)
 * [Keogram Rotation](Keogram-Rotation)
 * [Detection Masks](Detection-Masks)
+* [Star Detection](Star-Detection)
 * [Docker](Docker)
 * [YouTube Uploads](Youtube-Uploads)
 

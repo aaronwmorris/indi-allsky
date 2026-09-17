@@ -7135,9 +7135,9 @@ class AjaxIndiServerChangeView(BaseView):
         return jsonify({'success-message' : success_message})
 
 
-    def reloadSystemdUnits(self, bus_type=dbus.SessionBus):
+    def reloadSystemdUnits(self, bus_type=None):
         try:
-            bus = bus_type()
+            bus = self._get_systemd_bus(bus_type)
         except dbus.exceptions.DBusException:
             # This happens in docker
             return 'D-Bus Unavailable', 'D-Bus Unavailable'
@@ -14083,6 +14083,10 @@ class WsShellView(BaseView):
 
         if not current_user.is_admin:
             return 'Unauthorized', 401
+
+        if not self.verify_admin_network():
+            return 'Unauthorized', 401
+
 
         ws = simple_websocket.Server.accept(request.environ)
 

@@ -6,78 +6,136 @@ indi-allsky has a significant set of library requirements.  Not every package th
 | --------------------- | --------------- | ------- | ---- |
 | Single board computer | Raspberry Pi 4+<br>Any SBC with 2+GB of RAM | Raspberry Pi 3 | |
 | Mini PC               | Any modern Intel/AMD processor<br>Most Virtualization Platforms | | |
-| Platform              | 64-bit          | 64-bit  | :x: 32-bit builds will not finish as of April 2026 |
-| OS                    | Ubuntu 24.04 Noble or Debian 13 Bookworm | Ubuntu 22.04/Debian 12 | |
+| Platform              | 64-bit (`arm64`, `amd64`) | 64-bit  | 32-bit platforms lack required scientific Python wheels |
+| OS                    | Raspberry Pi OS 12/13, Debian 12/13, Ubuntu 24.04/26.04 | Ubuntu 22.04 / Debian 12 | 64-bit distributions recommended |
 | CPUs                  | 2+              | 1       | |
-| RAM                   | 2+              | 1       | |
+| RAM                   | 2+ GB           | 1 GB    | |
 | Storage               | 256GB           | 64GB    | |
 
+> [!WARNING]
+> **32-bit Platforms (`armhf`, `x86`)**:
+> 32-bit builds are unsupported due to upstream Python dependencies (`pyarrow`, `dask-image`) lacking 32-bit binary wheels. A 64-bit operating system (`arm64` / `amd64`) is strongly recommended.
 
-### 32-bit builds (x86 & armhf)
-:x: As of April 2026, 32-bit builds will not longer complete due to Python module requirements. :x:
+---
 
-Current not working due to having to compile python module `dask-image` which requires `dask[array,dataframe]` which requires `pyarrow`. pyarrow will not compile without Apache Arrow libs (not available on 32-bit platforms)
+## System Preparation
 
-**WARNING**: Many python modules need to be compiled from source.  This can take several hours to complete.  Recommend the 64-bit release.
+Before proceeding with the installation, ensure your system timezone and locales are properly configured. Accurate system timezone and time synchronization are essential for astronomical calculations (sun/moon positions, day/night transitions, and exposure scheduling).
 
+### 1. Set System Timezone
+Verify and set your local timezone using `timedatectl`:
+```bash
+# Check current status
+timedatectl status
 
-## Warning
-Due to the large number of packages installed, it is **NOT** recommended to install indi-allsky on a production system that has other purposes.  indi-allsky will not damage your system, but if you uninstall indi-allsky it can be difficult to remove all of the dependencies and you may be left with 3-5GB of additional packages that you do not need.  All of the packages are regular system packages, so they will still be managed and patched through the system package manager (apt).
+# Set your timezone (e.g., America/New_York, Europe/London, Australia/Sydney)
+sudo timedatectl set-timezone <Region/City>
+```
+*(Raspberry Pi users can also use `sudo raspi-config` -> Localisation Options -> Timezone)*
 
+### 2. Configure System Locales
 
-## Full Install
-To run an instance of indi-allsky, you need to perform the following actions:
+Generate your preferred locales (e.g. en_US.UTF-8 or en_GB.UTF-8):
 
-1. (Optional) Setup locales
+``` bash
+# Multiple selections are allowed
+sudo dpkg-reconfigure locales
+```
+*(Raspberry Pi users can also use `sudo raspi-config` -> Localisation Options -> Locale)*
 
-       sudo dpkg-reconfigure locales
+---
 
-1. Install git
+## Option 1: Official APT Repository (Recommended)
 
-       sudo apt-get update
-       sudo apt-get install git
+The recommended installation method for Raspberry Pi OS, Debian, and Ubuntu is via the official APT repository at [`apt.indi-allsky.org`](https://apt.indi-allsky.org/). Pre-built `.deb` packages bundle all dependencies, Python virtual environments, and consolidated INDI camera drivers for an automated installation.
 
-1. Clone the indi-allsky git repository
+> [!TIP]
+> Installing via `apt` takes less than 1 minute and automatically manages dependencies, upgrades, and systemd services.
 
-      git clone https://github.com/aaronwmorris/indi-allsky.git
+### 1. Add GPG Keyring
+```bash
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://apt.indi-allsky.org/key.gpg | \
+  sudo gpg --dearmor -o /etc/apt/keyrings/indi-allsky.gpg
+sudo chmod a+r /etc/apt/keyrings/indi-allsky.gpg
+```
 
-    * Note:  If git prompts for a password, use the following command instead.
-        
-          GIT_ASKPASS=false git clone https://github.com/aaronwmorris/indi-allsky.git
+### 2. Add Repository Source (DEB822 format)
+```bash
+sudo tee /etc/apt/sources.list.d/indi-allsky.sources <<EOF
+Types: deb
+URIs: https://apt.indi-allsky.org
+Suites: $(lsb_release -cs)
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/indi-allsky.gpg
+EOF
+```
 
-1. Navigate to the indi-allky sub-directory
+> [!NOTE]
+> To use bleeding-edge nightly builds, set `Components: nightly` in the `.sources` file above, or visit the [APT Web Portal](https://apt.indi-allsky.org/) to toggle release channels.
 
-       cd indi-allsky/
+### 3. Install indi-allsky
+```bash
+sudo apt update
+sudo apt install -y indi-allsky
+```
 
-1. Run setup.sh to install the indi-allsky system
+During installation, an interactive setup wizard will guide you through configuring your camera driver, administrator credentials, and observatory coordinates.
 
-       ./setup.sh
+---
 
-    * _The setup.sh script will tell you if you are required to build the INDI software (documented below)_
-    * Note 1: If you run into problems with missing commands here, you may need to install additional packages to get started.
+## Option 2: Manual Source Installation (`setup.sh`)
 
-          sudo apt-get install lsb-release libc-bin whiptail
+For development environments or unsupported platforms, you can clone the git repository and run the setup script:
 
-          # Ubuntu only
-          sudo apt-get install software-properties-common
+> [!CAUTION]
+> Installing via `setup.sh` requires compiling INDI and Python wheels from source, which can take from 20 minutes to several hours depending on your hardware.
 
-    * Note 2:  If you run into a problem where the DBUS user session is not found even after rebooting, make sure you are running setup.sh **WITHOUT** the use of a virtual terminal such as `screen`, `tmux`, or `byobu`.  Some condition, which is not fully understood, may cause problems with the DBUS user session.
+> [!NOTE]
+> Existing systems previously installed using `setup.sh` can migrate cleanly to official `.deb` packages with all configuration and database history preserved. See the [Migration Guide](Setup-to-Deb-Migration).
 
-1. Start the software
+1. (Optional) Setup locales:
+   ```bash
+   sudo dpkg-reconfigure locales
+   ```
 
-       systemctl --user start indi-allsky
+2. Install git:
+   ```bash
+   sudo apt-get update
+   sudo apt-get install -y git
+   ```
 
-    * _Make sure your camera is plugged in before starting the services_
+3. Clone the git repository:
+   ```bash
+   git clone https://github.com/aaronwmorris/indi-allsky.git
+   cd indi-allsky/
+   ```
 
-1. Login to the indi-allsky web application https://raspberrypi.local/
-   * *Note: The web server is configured with a self-signed certificate.*
+4. Run `setup.sh` to install the system:
+   ```bash
+   ./setup.sh
+   ```
 
+5. Start the software:
+   ```bash
+   systemctl --user start indi-allsky
+   ```
 
-## INDI requirements
-indi-allsky requires a modern version of the INDI library (2.0.0+) to operate.  This will have to be installed from a custom repository or built from source.  Pre-compiled binaries are currently only available for the Ubuntu x86_64 and arm64 distribution.  The setup.sh script will automatically setup the INDI PPA repository for you under Ubuntu.
+6. Open the web interface: `https://<device-ip>/` (or `https://raspberrypi.local/`).
 
+---
 
-### Compiling INDI
+## INDI Requirements
+
+> [!NOTE]
+> When using **Option 1 (APT Repository)**, INDI Core and all consolidated 3rd-party camera drivers (ZWO ASI, QHY, Player One, SVBony, ToupTek, etc.) are pre-compiled and bundled automatically. No manual INDI compilation is required.
+
+If you are using **Option 2 (Manual Source Installation)**, INDI must be compiled using the bundled build script:
+
+```bash
+./misc/build_indi.sh
+```
 indi-allsky includes a script for compiling INDI from source.  The script is completely self-contained and automated.
 
 `./misc/build_indi.sh`

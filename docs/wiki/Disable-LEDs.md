@@ -1,8 +1,12 @@
 # Automatic setup
 
-The indi-allsky repository contains a script to automatically perform the correct action to disable the systems LEDs:
-
+On package installations, disable the onboard LEDs using the [`indi-allsky-ctl`](indi-allsky-ctl) utility:
+```bash
+sudo indi-allsky-ctl disable-leds
 ```
+
+Or execute the setup script directly from a git checkout:
+```bash
 ./misc/setup_disable_leds.sh
 ```
 

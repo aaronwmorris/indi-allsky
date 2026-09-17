@@ -892,11 +892,11 @@ class CaptureWorker(Process):
         logger.warning('Connecting to CCD device %s', self.indiclient.ccd_device.getDeviceName())
         self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())
 
-        if self.indiclient.telescope_device:
+        if self.indiclient.telescope_device is not None:
             logger.warning('Connecting to Telescope device %s', self.indiclient.telescope_device.getDeviceName())
             self.indiclient.connectDevice(self.indiclient.telescope_device.getDeviceName())
 
-        if self.config.get('GPS_ENABLE') and self.indiclient.gps_device:
+        if self.config.get('GPS_ENABLE') and self.indiclient.gps_device is not None:
             logger.warning('Connecting to GPS device %s', self.indiclient.gps_device.getDeviceName())
             self.indiclient.connectDevice(self.indiclient.gps_device.getDeviceName())
 
@@ -910,7 +910,7 @@ class CaptureWorker(Process):
 
 
         ### GPS config
-        if self.config.get('GPS_ENABLE') and self.indiclient.gps_device:
+        if self.config.get('GPS_ENABLE') and self.indiclient.gps_device is not None:
             gps_config = {
                 'PROPERTIES' : {
                     'GPS_REFRESH_PERIOD' : {
@@ -950,7 +950,7 @@ class CaptureWorker(Process):
 
         ### Telescope config
         # park the telescope at zenith and stop tracking
-        if self.indiclient.telescope_device:
+        if self.indiclient.telescope_device is not None:
             telescope_config = {
                 'SWITCHES' : {
                     'TELESCOPE_TRACK_STATE' : {
@@ -972,7 +972,7 @@ class CaptureWorker(Process):
 
 
         if self.config.get('GPS_ENABLE'):
-            if self.indiclient.telescope_device and self.indiclient.gps_device:
+            if self.indiclient.telescope_device is not None and self.indiclient.gps_device is not None:
                 # Set Telescope GPS
                 self.indiclient.setTelescopeGps(self.indiclient.gps_device.getDeviceName())
 
@@ -1866,7 +1866,7 @@ class CaptureWorker(Process):
         if not self.config.get('GPS_ENABLE'):
             return
 
-        if not self.indiclient.gps_device:
+        if self.indiclient.gps_device is None:
             return
 
         update_position = False
@@ -1914,7 +1914,7 @@ class CaptureWorker(Process):
 
 
     def getTelescopeRaDec(self):
-        if not self.indiclient.telescope_device:
+        if self.indiclient.telescope_device is None:
             return
 
         ra, dec = self.indiclient.getTelescopeRaDec()
@@ -1954,7 +1954,7 @@ class CaptureWorker(Process):
 
 
     def reparkTelescope(self):
-        if not self.indiclient.telescope_device:
+        if self.indiclient.telescope_device is None:
             return
 
         self.indiclient.unparkTelescope()

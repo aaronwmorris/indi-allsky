@@ -350,7 +350,7 @@ class IndiAllSkyDarks(object):
             sys.exit(1)
 
 
-        if not self.indiclient.ccd_device:
+        if self.indiclient.ccd_device is None:
             logger.error('No CCDs detected')
             time.sleep(1)
             sys.exit(1)

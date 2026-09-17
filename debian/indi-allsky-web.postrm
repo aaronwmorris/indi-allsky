@@ -1,0 +1,33 @@
+#!/bin/sh
+set -e
+
+if [ -f /usr/share/debconf/confmodule ]; then
+    . /usr/share/debconf/confmodule
+fi
+
+case "$1" in
+    purge)
+        if [ -e /usr/share/debconf/confmodule ]; then
+            db_purge
+        fi
+
+        # Remove indi-allsky core data, web assets, and configuration directories
+        rm -rf /var/lib/indi-allsky /etc/indi-allsky /var/log/indi-allsky /var/www/html/allsky
+
+        # Clean up generated web server configuration and certificates
+        rm -f /etc/apache2/sites-available/indi-allsky.conf /etc/apache2/sites-enabled/indi-allsky.conf
+        rm -rf /etc/apache2/ssl/indi-allsky_apache.*
+        rm -f /etc/nginx/sites-available/indi-allsky.conf /etc/nginx/sites-enabled/indi-allsky.conf
+        rm -rf /etc/nginx/ssl/indi-allsky_nginx.*
+
+        rm -f /var/lib/indi-allsky/.pending_summary
+        rm -rf /usr/share/indi-allsky
+    ;;
+    remove)
+        rm -f /var/lib/indi-allsky/.pending_summary
+    ;;
+esac
+
+#DEBHELPER#
+
+exit 0
