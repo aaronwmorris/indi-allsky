@@ -6262,9 +6262,6 @@
   .tw\:pt-3 {
     padding-top: calc(var(--tw-spacing) * 3);
   }
-  .tw\:pt-4 {
-    padding-top: calc(var(--tw-spacing) * 4);
-  }
   .tw\:pt-5 {
     padding-top: calc(var(--tw-spacing) * 5);
   }
@@ -6294,9 +6291,6 @@
   }
   .tw\:pb-4 {
     padding-bottom: calc(var(--tw-spacing) * 4);
-  }
-  .tw\:pb-6 {
-    padding-bottom: calc(var(--tw-spacing) * 6);
   }
   .tw\:pl-1 {
     padding-left: var(--tw-spacing);
@@ -7055,9 +7049,6 @@
   @media (width >= 40rem) {
     .tw\:sm\:grid-cols-2 {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .tw\:sm\:grid-cols-3 {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
     .tw\:sm\:grid-cols-\[10rem_1fr\] {
       grid-template-columns: 10rem 1fr;
