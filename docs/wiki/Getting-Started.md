@@ -81,6 +81,9 @@ sudo apt update
 sudo apt install -y indi-allsky
 ```
 
+> [!TIP]
+> To choose a reverse proxy (Default is Caddy), add `apache2` or `nginx` to the `apt install` command.
+
 During installation, an interactive setup wizard will guide you through configuring your camera driver, administrator credentials, and observatory coordinates.
 
 ---
@@ -156,40 +159,82 @@ If you plan on using a libcamera supported camera module, you only need to compi
 
 
 ## indiserver-only Install
-1. Install git
 
-       sudo apt-get install git
+An indiserver-only installation deploys the INDI driver server and camera drivers on a remote single-board computer or dedicated camera node, without the `indi-allsky` capture process or web interface.
 
-1. Clone the indi-allsky git repository
+### Option 1: Official APT Repository (In Progress)
 
-       git clone https://github.com/aaronwmorris/indi-allsky.git
+> [!NOTE]
+> Direct APT repository packaging for indiserver-only deployments is currently in progress. Please use **Option 2** (`indiserver_only_setup.sh`) below for standalone indiserver setups in the meantime.
 
-1. Navigate to the indi-allky sub-directory
+1. Add GPG Keyring:
+   ```bash
+   sudo mkdir -p /etc/apt/keyrings
+   curl -fsSL https://apt.indi-allsky.org/key.gpg | \
+     sudo gpg --dearmor -o /etc/apt/keyrings/indi-allsky.gpg
+   sudo chmod a+r /etc/apt/keyrings/indi-allsky.gpg
+   ```
 
-       cd indi-allsky/
+2. Add Repository Source (DEB822 format):
+   ```bash
+   sudo tee /etc/apt/sources.list.d/indi-allsky.sources <<EOF
+   Types: deb
+   URIs: https://apt.indi-allsky.org
+   Suites: $(lsb_release -cs)
+   Components: stable
+   Architectures: $(dpkg --print-architecture)
+   Signed-By: /etc/apt/keyrings/indi-allsky.gpg
+   EOF
+   ```
 
-1. Run indiserver_only_setup.sh to install the indiserver
+3. Install indiserver & drivers:
+   ```bash
+   sudo apt update
+   sudo apt install -y indi-bin indi-3rdparty
+   ```
 
-       ./misc/indiserver_only_setup.sh
+### Option 2: Manual Source Installation (`indiserver_only_setup.sh`)
 
-    * _The setup script will tell you if you are required to build the INDI software (documented below)_
+1. Install git:
+   ```bash
+   sudo apt-get update
+   sudo apt-get install -y git
+   ```
 
+2. Clone the git repository:
+   ```bash
+   git clone https://github.com/aaronwmorris/indi-allsky.git
+   cd indi-allsky/
+   ```
 
-### Manual operation
-1. Stop indi-allsky service
+3. Run `indiserver_only_setup.sh` to install indiserver:
+   ```bash
+   ./misc/indiserver_only_setup.sh
+   ```
 
-       systemctl --user stop indi-allsky
+   > [!NOTE]
+   > The setup script will inform you if you are required to build the INDI software from source using `./misc/build_indi.sh`.
 
-1. Activate the indi-allsky python virtual environment
+### Manual Operation
 
-       source virtualenv/indi-allsky/bin/activate
+1. Stop indi-allsky service:
+   ```bash
+   systemctl --user stop indi-allsky
+   ```
 
-1. Start indi-allsky
+2. Activate the indi-allsky Python virtual environment:
+   ```bash
+   source virtualenv/indi-allsky/bin/activate
+   ```
 
-       ./allsky.py run
+3. Start indi-allsky:
+   ```bash
+   ./allsky.py run
+   ```
 
 
 ## Services
+
 The indi-allsky system consists of three services:
 
 | Service    | systemd              | Purpose |
@@ -200,31 +245,64 @@ The indi-allsky system consists of three services:
 
 
 ## Web-only install
-The web-only install is intended for configuration to use the [SyncAPI](https://github.com/aaronwmorris/indi-allsky/wiki/SyncAPI-Setup) and no camera is directly connected.
 
-1. Install git
+The web-only install is intended for remote configuration to use the [SyncAPI](https://github.com/aaronwmorris/indi-allsky/wiki/SyncAPI-Setup) on a VPS or central server where no camera is directly connected.
 
-       sudo apt-get install git
+### Option 1: Official APT Repository (Recommended)
 
+1. Add GPG Keyring:
+   ```bash
+   sudo mkdir -p /etc/apt/keyrings
+   curl -fsSL https://apt.indi-allsky.org/key.gpg | \
+     sudo gpg --dearmor -o /etc/apt/keyrings/indi-allsky.gpg
+   sudo chmod a+r /etc/apt/keyrings/indi-allsky.gpg
+   ```
 
-2. Clone the indi-allsky git repository
+2. Add Repository Source (DEB822 format):
+   ```bash
+   sudo tee /etc/apt/sources.list.d/indi-allsky.sources <<EOF
+   Types: deb
+   URIs: https://apt.indi-allsky.org
+   Suites: $(lsb_release -cs)
+   Components: stable
+   Architectures: $(dpkg --print-architecture)
+   Signed-By: /etc/apt/keyrings/indi-allsky.gpg
+   EOF
+   ```
 
-       git clone https://github.com/aaronwmorris/indi-allsky.git
+3. Install `indi-allsky-web`:
+   ```bash
+   sudo apt update
+   sudo apt install -y indi-allsky-web
+   ```
 
+> [!TIP]
+> `indi-allsky-web` provides the Flask dashboard, Gunicorn application server, and web server configuration for remote sync portals without requiring local camera hardware or INDI drivers.
 
-3. Navigate to the indi-allky sub-directory
+### Option 2: Manual Source Installation (`web_only_setup.sh`)
 
-       cd indi-allsky/
+1. Install git:
+   ```bash
+   sudo apt-get update
+   sudo apt-get install -y git
+   ```
 
+2. Clone the git repository:
+   ```bash
+   git clone https://github.com/aaronwmorris/indi-allsky.git
+   cd indi-allsky/
+   ```
 
-4. Run setup.sh to install the indi-allsky system
+3. Run `web_only_setup.sh` to install the web interface:
+   ```bash
+   ./misc/web_only_setup.sh
+   ```
 
-       ./misc/web_only_setup.sh
+4. Login to the indi-allsky web application:
+   `https://<device-ip>/` (or `https://hostname/`)
 
+   > [!NOTE]
+   > The web server is configured with a self-signed certificate by default.
 
-5. Login to the indi-allsky web application
-https://hostname/
- * *Note: The web server is configured with a self-signed certificate.*
+5. On an internet-facing system, you can set up a signed certificate using [Let's Encrypt](https://letsencrypt.org/) or a similar service. Certificate locations can be updated at `/etc/apache2/sites-enabled/indi-allsky.conf` (or equivalent Caddy/Nginx configuration).
 
-6. On an internet-facing system, you now have the opportunity to setup proper signed certificate using [Lets Encrypt](https://letsencrypt.org/) or a similar service.  The certificate locations can be updated in the following location:
- * `/etc/apache2/sites-enabled/indi-allsky.conf`
