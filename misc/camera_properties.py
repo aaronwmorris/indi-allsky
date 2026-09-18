@@ -169,11 +169,18 @@ class IndiProperties(PyIndi.BaseClient):
                 if prop_v['type'] == PyIndi.INDI_NUMBER:
                     # number
                     for c in prop_v['controls']:
+                        if c['name'] == 'CCD_EXPOSURE_VALUE':
+                            ### ensure precision for exposure
+                            c_format = '%0.8f'
+                        else:
+                            c_format = c['format']
+
+
                         try:
                             # try to use embedded C formatting
-                            c_value = c['format'] % c['value']
-                            c_min = c['format'] % c['min']
-                            c_max = c['format'] % c['max']
+                            c_value = c_format % c['value']
+                            c_min = c_format % c['min']
+                            c_max = c_format % c['max']
                         except ValueError:
                             c_value = c['value']
                             c_min = c['min']

@@ -6506,9 +6506,6 @@
   .tw\:pt-3 {
     padding-top: calc(var(--tw-spacing) * 3);
   }
-  .tw\:pt-4 {
-    padding-top: calc(var(--tw-spacing) * 4);
-  }
   .tw\:pt-5 {
     padding-top: calc(var(--tw-spacing) * 5);
   }
@@ -6538,9 +6535,6 @@
   }
   .tw\:pb-4 {
     padding-bottom: calc(var(--tw-spacing) * 4);
-  }
-  .tw\:pb-6 {
-    padding-bottom: calc(var(--tw-spacing) * 6);
   }
   .tw\:pl-1 {
     padding-left: var(--tw-spacing);

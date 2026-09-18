@@ -23,4 +23,7 @@ indi-allsky tracks the sync status of images and videos by a flag in the databas
 * Resync
 
         # exit sqlite
-        ./misc/upload_sync.py sync
+        indi-allsky-ctl retry-uploads sync
+
+        # Or from git checkout:
+        # ./misc/upload_sync.py sync

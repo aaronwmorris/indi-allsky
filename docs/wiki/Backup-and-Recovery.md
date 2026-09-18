@@ -14,8 +14,11 @@ Database backups can be automatically uploaded to a remote FTP/SFTP server using
 ## Database
 ### SQLite database
 #### Manual Backup with Backup API
-```
-# Backup (backup API)
+```bash
+# Via indi-allsky-ctl (Debian packages):
+sudo indi-allsky-ctl backup-db
+
+# Or manually via sqlite3:
 DB_BACKUP="backup_indi-allsky_sqlite_$(date +%Y%m%d_%H%M%S).sqlite"
 sqlite3 "/var/lib/indi-allsky/indi-allsky.sqlite" ".backup $DB_BACKUP"
 gzip "$DB_BACKUP"
@@ -99,7 +102,9 @@ Images and videos are normally located at `/var/www/html/allsky/images/`
 
         rsync -prv /var/www/html/allsky/images/. username@newallsky.local:/var/www/html/allsky/images/.
 
-1. Re-run `setup.sh` on the new system to fix any outstanding file permissions issues.
+1. Restore permissions on the new system:
+    * **Debian packages**: `sudo indi-allsky-ctl fix-perms`
+    * **Legacy `setup.sh`**: Re-run `./setup.sh` to fix any outstanding file permissions issues.
 1. If all is well, you should be able to view images in the Gallery, Image Viewer, and Timelapse views.
 1. Move your camera to the new system
     * Reboot your system if you hot-plugged your camera.

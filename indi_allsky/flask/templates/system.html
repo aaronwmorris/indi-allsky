@@ -400,23 +400,13 @@ var camera_id = {{ camera_id }};
                         </div>
                         <div class="lg:tw:col-span-3 tw:flex tw:gap-2 tw:items-center">
                             <span class="tw:badge {% if indiserver_service_activestate == 'active' %}tw:badge-success{% elif indiserver_service_activestate in ['failed', 'inactive'] %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.625rem] tw:rounded-[var(--radius-box)]">{{indiserver_service_activestate}}</span>
-                            {% if indiserver_next_trigger > 0 %}<span class="tw:text-[0.625rem] tw:font-bold tw:text-info">Next in {{indiserver_next_trigger}}s</span>{% endif %}
+                            <span class="tw:badge {% if indiserver_service_unitstate == 'enabled' %}tw:badge-success tw:badge-outline{% elif indiserver_service_unitstate == 'disabled' %}tw:badge-neutral tw:badge-outline{% elif indiserver_service_unitstate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.5rem] tw:h-4 tw:px-1.5 tw:rounded-[var(--radius-box)]">{{indiserver_service_unitstate}}</span>
                         </div>
                         <div class="lg:tw:col-span-6 tw:flex tw:gap-2">
                             <button class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_service_stop">Stop</button>
                             <button class="tw:btn tw:btn-primary tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_service_start">Start</button>
-                        </div>
-                        <div class="lg:tw:col-span-12 tw:border-t tw:border-base-content/5 tw:my-1"></div>
-                        <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
-                            <span class="tw:text-xs tw:font-bold tw:text-base-content/85">Timer Unit</span>
-                            <div class="tw:flex tw:items-center tw:gap-1.5 tw:mt-0.5">
-                                <span class="tw:text-[0.5625rem] tw:font-mono tw:opacity-50">STATE:</span>
-                                <span class="tw:badge {% if indiserver_timer_unitstate == 'enabled' %}tw:badge-success tw:badge-outline{% elif indiserver_timer_unitstate == 'disabled' %}tw:badge-neutral tw:badge-outline{% elif indiserver_timer_unitstate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.5rem] tw:h-4 tw:px-1.5 tw:rounded-[var(--radius-box)]">{{indiserver_timer_unitstate}}</span>
-                            </div>
-                        </div>
-                        <div class="lg:tw:col-span-9 tw:flex tw:gap-2">
-                            <button class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_timer_disable">Disable Timer</button>
-                            <button class="tw:btn tw:btn-info tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_timer_enable">Enable Timer</button>
+                            <button class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_service_disable">Disable</button>
+                            <button class="tw:btn tw:btn-info tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_service_enable">Enable</button>
                         </div>
                     </div>
 
@@ -428,24 +418,14 @@ var camera_id = {{ camera_id }};
                         </div>
                         <div class="lg:tw:col-span-3 tw:flex tw:gap-2 tw:items-center">
                             <span class="tw:badge {% if indi_allsky_service_activestate == 'active' %}tw:badge-success{% elif indi_allsky_service_activestate in ['failed', 'inactive'] %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.625rem] tw:rounded-[var(--radius-box)]">{{indi_allsky_service_activestate}}</span>
-                            {% if indi_allsky_next_trigger > 0 %}<span class="tw:text-[0.625rem] tw:font-bold tw:text-info">Next in {{indi_allsky_next_trigger}}s</span>{% endif %}
+                            <span class="tw:badge {% if indi_allsky_service_unitstate == 'enabled' %}tw:badge-success tw:badge-outline{% elif indi_allsky_service_unitstate == 'disabled' %}tw:badge-neutral tw:badge-outline{% elif indi_allsky_service_unitstate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.5rem] tw:h-4 tw:px-1.5 tw:rounded-[var(--radius-box)]">{{indi_allsky_service_unitstate}}</span>
                         </div>
                         <div class="lg:tw:col-span-6 tw:flex tw:gap-2">
                             <button class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indi_allsky_service_hup">Reload</button>
                             <button class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indi_allsky_service_stop">Stop</button>
                             <button class="tw:btn tw:btn-primary tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indi_allsky_service_start">Start</button>
-                        </div>
-                        <div class="lg:tw:col-span-12 tw:border-t tw:border-base-content/5 tw:my-1"></div>
-                        <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
-                            <span class="tw:text-xs tw:font-bold tw:text-base-content/85">Timer Unit</span>
-                            <div class="tw:flex tw:items-center tw:gap-1.5 tw:mt-0.5">
-                                <span class="tw:text-[0.5625rem] tw:font-mono tw:opacity-50">STATE:</span>
-                                <span class="tw:badge {% if indi_allsky_timer_unitstate == 'enabled' %}tw:badge-success tw:badge-outline{% elif indi_allsky_timer_unitstate == 'disabled' %}tw:badge-neutral tw:badge-outline{% elif indi_allsky_timer_unitstate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.5rem] tw:h-4 tw:px-1.5 tw:rounded-[var(--radius-box)]">{{indi_allsky_timer_unitstate}}</span>
-                            </div>
-                        </div>
-                        <div class="lg:tw:col-span-9 tw:flex tw:gap-2">
-                            <button class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indi_allsky_timer_disable">Disable Timer</button>
-                            <button class="tw:btn tw:btn-info tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indi_allsky_timer_enable">Enable Timer</button>
+                            <button class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indi_allsky_service_disable">Disable</button>
+                            <button class="tw:btn tw:btn-info tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indi_allsky_service_enable">Enable</button>
                         </div>
                     </div>
 
@@ -475,7 +455,7 @@ var camera_id = {{ camera_id }};
 
                 <div class="tw:alert tw:alert-info tw:py-3 tw:text-xs tw:rounded-[var(--radius-box)]">
                     <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
-                    <span>Services are activated at boot by their respective timers or sockets. Disabling a timer prevents the service from starting automatically.</span>
+                    <span>Services are managed via systemd user units. Disabling a service prevents it from starting automatically at boot.</span>
                 </div>
             </div>
         </div>
@@ -743,13 +723,13 @@ function button_click(service, command) {
 // Service Button Handlers
 $("#button_indiserver_service_stop").on("click", () => button_click('indiserver.service', 'stop'));
 $("#button_indiserver_service_start").on("click", () => button_click('indiserver.service', 'start'));
-$("#button_indiserver_timer_disable").on("click", () => button_click('indiserver.timer', 'disable'));
-$("#button_indiserver_timer_enable").on("click", () => button_click('indiserver.timer', 'enable'));
+$("#button_indiserver_service_disable").on("click", () => button_click('indiserver.service', 'disable'));
+$("#button_indiserver_service_enable").on("click", () => button_click('indiserver.service', 'enable'));
 $("#button_indi_allsky_service_hup").on("click", () => button_click('indi-allsky.service', 'hup'));
 $("#button_indi_allsky_service_stop").on("click", () => button_click('indi-allsky.service', 'stop'));
 $("#button_indi_allsky_service_start").on("click", () => button_click('indi-allsky.service', 'start'));
-$("#button_indi_allsky_timer_disable").on("click", () => button_click('indi-allsky.timer', 'disable'));
-$("#button_indi_allsky_timer_enable").on("click", () => button_click('indi-allsky.timer', 'enable'));
+$("#button_indi_allsky_service_disable").on("click", () => button_click('indi-allsky.service', 'disable'));
+$("#button_indi_allsky_service_enable").on("click", () => button_click('indi-allsky.service', 'enable'));
 $("#button_gunicorn_indi_allsky_service_stop").on("click", () => button_click('gunicorn-indi-allsky.service', 'stop'));
 
 // Confirmation Utility Handlers

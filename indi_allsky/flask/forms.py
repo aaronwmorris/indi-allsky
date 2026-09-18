@@ -2887,6 +2887,46 @@ def ALLSKYMAP__INTERVAL_validator(form, field):
             raise ValidationError('Please enter a valid number')
 
 
+def ALLSKYMAP__MAP_LATITUDE_validator(form, field):
+    if field.data is not None and str(field.data).strip() != '':
+        try:
+            val = float(field.data)
+            if val < -90.0 or val > 90.0:
+                raise ValidationError('Latitude must be between -90 and 90')
+        except (ValueError, TypeError):
+            raise ValidationError('Please enter a valid number for latitude')
+
+        loc_lat = getattr(form, 'LOCATION_LATITUDE', None)
+        if loc_lat and loc_lat.data is not None and str(loc_lat.data).strip() != '':
+            try:
+                actual_lat = float(loc_lat.data)
+                if abs(val - actual_lat) > 1.0:
+                    raise ValidationError('Map latitude must be within 1 degree of your configured location latitude')
+            except (ValueError, TypeError):
+                pass
+
+
+def ALLSKYMAP__MAP_LONGITUDE_validator(form, field):
+    if field.data is not None and str(field.data).strip() != '':
+        try:
+            val = float(field.data)
+            if val < -180.0 or val > 180.0:
+                raise ValidationError('Longitude must be between -180 and 180')
+        except (ValueError, TypeError):
+            raise ValidationError('Please enter a valid number for longitude')
+
+        loc_lng = getattr(form, 'LOCATION_LONGITUDE', None)
+        if loc_lng and loc_lng.data is not None and str(loc_lng.data).strip() != '':
+            try:
+                actual_lng = float(loc_lng.data)
+                diff = abs(val - actual_lng) % 360.0
+                min_diff = min(diff, 360.0 - diff)
+                if min_diff > 1.0:
+                    raise ValidationError('Map longitude must be within 1 degree of your configured location longitude')
+            except (ValueError, TypeError):
+                pass
+
+
 def YOUTUBE__SECRETS_FILE_validator(form, field):
     if not field.data:
         return
@@ -3102,12 +3142,12 @@ def VIRTUALSKY__IMAGE_CIRCLE_DIAMETER_validator(form, field):
 
 
 def VIRTUALSKY__LATITUDE_OFFSET_validator(form, field):
-    if not isinstance(field.data, (int, float)):
+    if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
         raise ValidationError('Please enter a valid number')
 
 
 def VIRTUALSKY__LONGITUDE_OFFSET_validator(form, field):
-    if not isinstance(field.data, (int, float)):
+    if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
         raise ValidationError('Please enter a valid number')
 
 
@@ -4983,6 +5023,8 @@ class IndiAllskyConfigForm(FlaskForm):
     ALLSKYMAP__CAMERA_NAME           = StringField('Camera Name')
     ALLSKYMAP__CAMERA_OWNER          = StringField('Camera Owner')
     ALLSKYMAP__WEBSITE_URL           = StringField('Website URL')
+    ALLSKYMAP__MAP_LATITUDE          = StringField('Map Latitude', validators=[ALLSKYMAP__MAP_LATITUDE_validator])
+    ALLSKYMAP__MAP_LONGITUDE         = StringField('Map Longitude', validators=[ALLSKYMAP__MAP_LONGITUDE_validator])
     ALLSKYMAP__UPLOAD_IMAGE          = BooleanField('Upload Latest Image')
     ALLSKYMAP__INTERVAL              = IntegerField('Interval (Minutes)', validators=[ALLSKYMAP__INTERVAL_validator])
     YOUTUBE__ENABLE                  = BooleanField('Enable')
@@ -5049,6 +5091,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TEST_CAMERA__ROTATING_STAR_FACTOR   = FloatField('Test Camera - Rotating Star Rotation Factor', validators=[DataRequired(), TEST_CAMERA__ROTATING_STAR_FACTOR_validator])
     TEST_CAMERA__BUBBLE_COUNT           = IntegerField('Test Camera - Bubble Count', validators=[DataRequired(), TEST_CAMERA__BUBBLE_COUNT_validator])
     VIRTUALSKY__MAGNITUDE               = FloatField('VirtualSky Limiting Magnitude', validators=[VIRTUALSKY__MAGNITUDE_validator], widget=NumberInput(step=0.25))
+    VIRTUALSKY__POINTING_AZIMUTH        = FloatField('Camera pointing direction', default=0.0, validators=[NumberRange(min=0.0, max=360.0)], widget=NumberInput(min=0, max=360, step=0.1))
     VIRTUALSKY__CONSTELLATIONS          = BooleanField('Show Constellations')
     VIRTUALSKY__CONSTELLATIONLABELS     = BooleanField('Constellation Labels')
     VIRTUALSKY__SHOWSTARS               = BooleanField('Show Stars')
@@ -7417,7 +7460,9 @@ class IndiAllskyFitsImageViewer(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(IndiAllskyFitsImageViewer, self).__init__(*args, **kwargs)
 
+        self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
+        self.local = kwargs.get('local', True)
 
 
     def getYears(self):
@@ -7425,6 +7470,17 @@ class IndiAllskyFitsImageViewer(FlaskForm):
             self.model.createDate_year,
         )\
             .filter(self.model.camera_id == self.camera_id)
+
+
+        if not self.local:
+            # Do not serve local assets
+            years_query = years_query\
+                .filter(
+                    or_(
+                        self.model.remote_url != sa_null(),
+                        self.model.s3_key != sa_null(),
+                    )
+                )
 
 
         years_query = years_query\
@@ -7453,7 +7509,18 @@ class IndiAllskyFitsImageViewer(FlaskForm):
                     self.model.camera_id == self.camera_id,
                     self.model.createDate_year == year,
                 )
-        )
+            )
+
+
+        if not self.local:
+            # Do not serve local assets
+            months_query = months_query\
+                .filter(
+                    or_(
+                        self.model.remote_url != sa_null(),
+                        self.model.s3_key != sa_null(),
+                    )
+                )
 
 
         months_query = months_query\
@@ -7484,7 +7551,18 @@ class IndiAllskyFitsImageViewer(FlaskForm):
                     self.model.createDate_year == year,
                     self.model.createDate_month == month,
                 )
-        )
+            )
+
+
+        if not self.local:
+            # Do not serve local assets
+            days_query = days_query\
+                .filter(
+                    or_(
+                        self.model.remote_url != sa_null(),
+                        self.model.s3_key != sa_null(),
+                    )
+                )
 
 
         days_query = days_query\
@@ -7515,7 +7593,18 @@ class IndiAllskyFitsImageViewer(FlaskForm):
                     self.model.createDate_month == month,
                     self.model.createDate_day == day,
                 )
-        )
+            )
+
+
+        if not self.local:
+            # Do not serve local assets
+            hours_query = hours_query\
+                .filter(
+                    or_(
+                        self.model.remote_url != sa_null(),
+                        self.model.s3_key != sa_null(),
+                    )
+                )
 
 
         hours_query = hours_query\
@@ -7544,7 +7633,18 @@ class IndiAllskyFitsImageViewer(FlaskForm):
                     self.model.createDate_day == day,
                     self.model.createDate_hour == hour,
                 )
-        )
+            )
+
+
+        if not self.local:
+            # Do not serve local assets
+            images_query = images_query\
+                .filter(
+                    or_(
+                        self.model.remote_url != sa_null(),
+                        self.model.s3_key != sa_null(),
+                    )
+                )
 
 
         images_query = images_query\
@@ -7570,7 +7670,11 @@ class IndiAllskyFitsImageViewer(FlaskForm):
                     role_names,
                 )
 
-            fits_url = img.getUrl(local=True)
+            try:
+                fits_url = img.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+            except ValueError as e:
+                app.logger.error('Error determining relative file name: %s', str(e))
+                continue
 
             image_dict = dict()
             image_dict['id'] = img.id
@@ -7596,7 +7700,18 @@ class IndiAllskyFitsImageViewerPreload(IndiAllskyFitsImageViewer):
         last_fits_image = db.session.query(
             self.model,
         )\
-            .filter(self.model.camera_id == self.camera_id)\
+            .filter(self.model.camera_id == self.camera_id)
+
+        if not self.local:
+            last_fits_image = last_fits_image\
+                .filter(
+                    or_(
+                        self.model.remote_url != sa_null(),
+                        self.model.s3_key != sa_null(),
+                    )
+                )
+
+        last_fits_image = last_fits_image\
             .order_by(self.model.createDate.desc())\
             .first()
 
@@ -10456,19 +10571,22 @@ class IndiAllskyImageCircleHelperForm(FlaskForm):
 
 
 class IndiAllskyVirtualSkyHelperForm(FlaskForm):
-    AZIMUTH_ANGLE           = FloatField('Azimuth Angle', widget=NumberInput(min=0.0, max=359.9, step=0.1))
-    LATITUDE_OFFSET         = FloatField('Latitude Offset', widget=NumberInput(step=0.25))
-    LONGITUDE_OFFSET        = FloatField('Longitude Offset', widget=NumberInput(step=0.25))
-    IMAGE_CIRCLE_DIAMETER   = IntegerField('Diameter', widget=NumberInput(step=5))
+    # Match Config labels; Azimuth is image roll, not the camera's pointing direction.
+    RADIAL_DISTORTION       = FloatField('Lens curvature', default=0.0, validators=[NumberRange(min=-0.5, max=1.0)], widget=NumberInput(min=-0.5, max=1, step=0.001))
+    POINTING_AZIMUTH        = FloatField('Camera pointing direction', default=0.0, validators=[NumberRange(min=0.0, max=360.0)], widget=NumberInput(min=0, max=360, step=0.1))
+    AZIMUTH_ANGLE           = FloatField('Azimuth', widget=NumberInput(min=0.0, max=359.9, step=0.1))
+    LATITUDE_OFFSET         = FloatField('VirtualSky Latitude Offset', widget=NumberInput(step=0.25))
+    LONGITUDE_OFFSET        = FloatField('VirtualSky Longitude Offset', widget=NumberInput(step=0.25))
+    IMAGE_CIRCLE_DIAMETER   = IntegerField('Image Circle', widget=NumberInput(step=5))
     OFFSET_X                = IntegerField('X Offset', default=0, widget=NumberInput(step=10))
     OFFSET_Y                = IntegerField('Y Offset', default=0, widget=NumberInput(step=10))
-    MAGNITUDE               = FloatField('Magnitude', widget=NumberInput(step=0.25))
-    CONSTELLATIONS          = BooleanField('Constellations')
-    CONSTELLATIONLABELS     = BooleanField('Label')
-    SHOWSTARS               = BooleanField('Stars')
-    SHOWSTARLABELS          = BooleanField('Label')
-    SHOWPLANETS             = BooleanField('Planets')
-    SHOWPLANETLABELS        = BooleanField('Label')
+    MAGNITUDE               = FloatField('VirtualSky Limiting Magnitude', widget=NumberInput(step=0.25))
+    CONSTELLATIONS          = BooleanField('Show Constellations')
+    CONSTELLATIONLABELS     = BooleanField('Constellation Labels')
+    SHOWSTARS               = BooleanField('Show Stars')
+    SHOWSTARLABELS          = BooleanField('Star Labels')
+    SHOWPLANETS             = BooleanField('Show Planets')
+    SHOWPLANETLABELS        = BooleanField('Planet Labels')
     #FLIP_NS                 = BooleanField('Flip North/South')
     #FLIP_EW                 = BooleanField('Flip East/West')
 

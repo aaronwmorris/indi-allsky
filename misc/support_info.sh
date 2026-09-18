@@ -84,6 +84,45 @@ ALLSKY_DIRECTORY=$PWD
 cd "$OLDPWD"
 
 
+# Detect installation type and APT channel
+INSTALL_TYPE="git / source"
+APT_CHANNEL=""
+DEB_PKG=""
+DEB_VERSION=""
+
+if command -v dpkg-query >/dev/null 2>&1; then
+    for pkg in indi-allsky indi-allsky-web; do
+        if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "ok installed"; then
+            DEB_PKG="$pkg"
+            DEB_VERSION=$(dpkg-query -W -f='${Version}' "$pkg" 2>/dev/null || true)
+            INSTALL_TYPE="deb"
+            break
+        fi
+    done
+fi
+
+if [ "$INSTALL_TYPE" = "deb" ]; then
+    if command -v apt-cache >/dev/null 2>&1 && [ -n "$DEB_PKG" ]; then
+        POLICY=$(apt-cache policy "$DEB_PKG" 2>/dev/null || true)
+        if echo "$POLICY" | grep -E "apt\.indi-allsky\.org" | grep -q "nightly"; then
+            APT_CHANNEL="nightly"
+        elif echo "$POLICY" | grep -E "apt\.indi-allsky\.org" | grep -q "stable"; then
+            APT_CHANNEL="stable"
+        fi
+    fi
+
+    if [ -z "$APT_CHANNEL" ]; then
+        if grep -rqsE "(Components:.*nightly|/nightly)" /etc/apt/sources.list.d/ /etc/apt/sources.list 2>/dev/null; then
+            APT_CHANNEL="nightly"
+        elif grep -rqsE "(Components:.*stable|/stable)" /etc/apt/sources.list.d/ /etc/apt/sources.list 2>/dev/null; then
+            APT_CHANNEL="stable"
+        else
+            APT_CHANNEL="local / custom"
+        fi
+    fi
+fi
+
+
 # go ahead and prompt for password
 #sudo true
 
@@ -109,6 +148,11 @@ echo "CPUs: $CPU_TOTAL"
 echo "Memory: $MEM_TOTAL kB"
 echo
 echo "System: $SYSTEM_MODEL"
+if [ "$INSTALL_TYPE" = "deb" ]; then
+    echo "Install: deb (APT channel: ${APT_CHANNEL:-unknown}, package: ${DEB_PKG} ${DEB_VERSION})"
+else
+    echo "Install: git / source"
+fi
 
 
 if [[ -d "/etc/stellarmate" ]]; then
@@ -337,12 +381,20 @@ systemd-analyze cat-config systemd/journald.conf.d || true
 
 echo
 echo "git status"
-git status | head -n 100
+if [ -d "${ALLSKY_DIRECTORY}/.git" ]; then
+    git status | head -n 100
+else
+    echo "N/A (Installed via deb package)"
+fi
 
 
 echo
 echo "git log"
-git log -n 1 | head -n 100
+if [ -d "${ALLSKY_DIRECTORY}/.git" ]; then
+    git log -n 1 | head -n 100
+else
+    echo "N/A (Installed via deb package)"
+fi
 
 
 if pkg-config --exists libindi; then
@@ -407,6 +459,16 @@ if [ -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
 
     # shellcheck source=/dev/null
     source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
+elif [ -d "/var/lib/indi-allsky/venv" ]; then
+    echo
+    echo "Detected apt indi-allsky virtualenv"
+
+    # shellcheck source=/dev/null
+    #source "/var/lib/indi-allsky/venv/bin/activate"
+
+    # hack to enable venv.  It is in a different folder than the build
+    export VIRTUAL_ENV="/var/lib/indi-allsky/venv"
+    export PATH="/var/lib/indi-allsky/venv/bin:$PATH"
 elif [ -d "/home/allsky/venv" ]; then
     # Docker
     echo
@@ -438,8 +500,11 @@ if [[ -n "${VIRTUAL_ENV:-}" ]]; then
 
     echo
     echo "virtualenv python modules"
-    pip freeze || true
-
+    if which pip >/dev/null 2>&1; then
+        pip freeze || true
+    else
+        echo '*** pip not available ***'
+    fi
 
     echo
     echo "\`\`\`"  # markdown
@@ -474,8 +539,6 @@ if [[ -n "${VIRTUAL_ENV:-}" ]]; then
     echo "\`\`\`json"  # markdown
     # Remove all secrets from config
     echo "$INDI_ALLSKY_CONFIG" | jq --arg redacted "REDACTED" '.OWNER = $redacted | .FILETRANSFER.PASSWORD = $redacted | .FILETRANSFER.PASSWORD_E = $redacted | .S3UPLOAD.SECRET_KEY = $redacted | .S3UPLOAD.SECRET_KEY_E = $redacted | .MQTTPUBLISH.PASSWORD = $redacted | .MQTTPUBLISH.PASSWORD_E = $redacted | .SYNCAPI.APIKEY = $redacted | .SYNCAPI.APIKEY_E = $redacted | .PYCURL_CAMERA.PASSWORD = $redacted | .PYCURL_CAMERA.PASSWORD_E = $redacted | .TEMP_SENSOR.OPENWEATHERMAP_APIKEY = $redacted | .TEMP_SENSOR.OPENWEATHERMAP_APIKEY_E = $redacted | .TEMP_SENSOR.WUNDERGROUND_APIKEY = $redacted | .TEMP_SENSOR.WUNDERGROUND_APIKEY_E = $redacted | .TEMP_SENSOR.ASTROSPHERIC_APIKEY = $redacted | .TEMP_SENSOR.ASTROSPHERIC_APIKEY_E = $redacted | .TEMP_SENSOR.AMBIENTWEATHER_APIKEY = $redacted | .TEMP_SENSOR.AMBIENTWEATHER_APIKEY_E = $redacted | .TEMP_SENSOR.AMBIENTWEATHER_APPLICATIONKEY = $redacted | .TEMP_SENSOR.AMBIENTWEATHER_APPLICATIONKEY_E = $redacted | .TEMP_SENSOR.AMBIENTWEATHER_MACADDRESS = $redacted | .TEMP_SENSOR.AMBIENTWEATHER_MACADDRESS_E = $redacted | .TEMP_SENSOR.ECOWITT_APIKEY = $redacted | .TEMP_SENSOR.ECOWITT_APIKEY_E = $redacted | .TEMP_SENSOR.ECOWITT_APPLICATIONKEY = $redacted | .TEMP_SENSOR.ECOWITT_APPLICATIONKEY_E = $redacted | .TEMP_SENSOR.ECOWITT_MACADDRESS = $redacted | .TEMP_SENSOR.ECOWITT_MACADDRESS_E = $redacted | .TEMP_SENSOR.MQTT_PASSWORD = $redacted | .TEMP_SENSOR.MQTT_PASSWORD_E = $redacted | .DEVICE.MQTT_PASSWORD = $redacted | .DEVICE.MQTT_PASSWORD_E = $redacted | .LIBCAMERA.MQTT_PASSWORD = $redacted | .LIBCAMERA.MQTT_PASSWORD_E = $redacted | .ADSB.PASSWORD = $redacted | .ADSB.PASSWORD_E = $redacted | .IMAGE_OVERLAY.A_PASSWORD = $redacted | .IMAGE_OVERLAY.A_PASSWORD_E = $redacted'
-
-    deactivate
 else
     echo
     echo "indi-allsky virtualenv is not created"

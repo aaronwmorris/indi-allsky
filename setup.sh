@@ -164,9 +164,25 @@ if which whiptail >/dev/null 2>&1; then
 fi
 
 
-echo "###############################################"
-echo "### Welcome to the indi-allsky setup script ###"
-echo "###############################################"
+cat << 'EOF'
+##################################################################################
+###                    DEPRECATION NOTICE: SETUP.SH                              ###
+###                                                                              ###
+###  setup.sh is deprecated.  Please use the official APT repository:            ###
+###                                                                              ###
+###    https://apt.indi-allsky.org                                               ###
+###                                                                              ###
+###  Installation guide:                                                         ###
+###    https://github.com/aaronwmorris/indi-allsky/wiki/Getting-Started          ###
+###  Migration guide:                                                            ###
+###    https://github.com/aaronwmorris/indi-allsky/wiki/Setup-to-Deb-Migration   ###
+###                                                                              ###
+##################################################################################
+EOF
+echo
+echo "Welcome to the legacy indi-allsky setup script."
+echo "Setup proceeding in 5 seconds... (Press Ctrl+C to cancel and use .deb instead)"
+sleep 5
 
 
 if [[ -n "${VIRTUAL_ENV:-}" ]]; then
@@ -616,7 +632,9 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
     fi
 
 elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
-    if [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "26.04" ]]; then
+        DISTRO="ubuntu_26.04"
+    elif [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
         DISTRO="ubuntu_24.04"
     elif [[ "$DISTRO_VERSION_ID" == "22.04" ]]; then
         DISTRO="ubuntu_22.04"
@@ -1276,6 +1294,168 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
             indi-gpsd \
             indi-gpsnmea
     fi
+
+elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
+    RSYSLOG_USER=syslog
+    RSYSLOG_GROUP=adm
+
+    APACHE_ETC="/etc/apache2"
+    APACHE_SERVICE_NAME="apache2.service"
+
+    MYSQL_ETC="/etc/mysql"
+
+    PYTHON_BIN=python3.14
+
+
+    if [ "$CPU_BITS" == "32" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
+    fi
+
+
+    if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
+        fi
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
+        fi
+    else
+        INSTALL_INDI="false"
+
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            echo
+            echo
+            echo "There are not prebuilt indi packages for this distribution"
+            echo "Please run ./misc/build_indi.sh before running setup.sh"
+            echo
+            echo
+            exit 1
+        fi
+    fi
+
+
+    sudo apt-get update
+
+
+    if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+        sudo apt-get -y dist-upgrade
+    fi
+
+
+    sudo apt-get -y install \
+        build-essential \
+        python3 \
+        python3-dev \
+        python3-venv \
+        python3-pip \
+        virtualenv \
+        cmake \
+        gfortran \
+        whiptail \
+        bc \
+        procps \
+        rsyslog \
+        cron \
+        git \
+        cpio \
+        tzdata \
+        locales \
+        ca-certificates \
+        avahi-daemon \
+        swig \
+        libatlas-ecmwf-dev \
+        libimath-dev \
+        libopenexr-dev \
+        libgtk-3-0t64 \
+        libssl-dev \
+        libxml2-dev \
+        libxslt1-dev \
+        libgnutls28-dev \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        libffi-dev \
+        libopencv-dev \
+        libopenblas-dev \
+        libraw-dev \
+        libgeos-dev \
+        libtiff-dev \
+        libjpeg8-dev \
+        libopenjp2-7-dev \
+        libpng-dev \
+        zlib1g-dev \
+        libfreetype-dev \
+        liblcms2-dev \
+        libwebp-dev \
+        libcap-dev \
+        tcl8.6-dev \
+        tk8.6-dev \
+        python3-tk \
+        libharfbuzz-dev \
+        libfribidi-dev \
+        libxcb1-dev \
+        default-libmysqlclient-dev \
+        pkgconf \
+        rustc \
+        cargo \
+        ffmpeg \
+        gifsicle \
+        jq \
+        sqlite3 \
+        libgpiod3 \
+        i2c-tools \
+        network-manager \
+        udisks2 \
+        dnsmasq-base \
+        polkitd \
+        libsystemd-dev \
+        dbus-user-session
+
+    if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
+        sudo apt-get -y install \
+            mariadb-server
+    fi
+
+
+    if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
+        if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
+            INSTALL_INDI="false"
+        fi
+    fi
+
+    if [[ "$INSTALL_INDI" == "true" ]]; then
+        sudo apt-get -y install \
+            indi-bin \
+            libindi-data \
+            libindi-dev \
+            indi-webcam \
+            indi-asi \
+            libasi \
+            indi-qhy \
+            libqhy \
+            indi-playerone \
+            libplayerone \
+            indi-svbony \
+            libsvbony \
+            libsvbonycam \
+            libaltaircam \
+            libmeadecam \
+            libmallincam \
+            libmicam \
+            libnncam \
+            indi-toupbase \
+            libtoupcam \
+            indi-gphoto \
+            indi-sx \
+            indi-dsi \
+            indi-gpsd \
+            indi-gpsnmea
+    fi
+
 elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
@@ -2066,7 +2246,7 @@ pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_POST}"
 
 # replace rpi.gpio module with rpi.lgpio in some cases
 if [ "${GPIO_PYTHON_MODULES}" == "true" ]; then
-    if [[ "$DISTRO" == "debian_13" || "$DISTRO" == "debian_12" || "$DISTRO" == "ubuntu_24.04" ]]; then
+    if [[ "$DISTRO" == "debian_13" || "$DISTRO" == "debian_12" || "$DISTRO" == "ubuntu_26.04" || "$DISTRO" == "ubuntu_24.04" ]]; then
         if [[ "$CPU_ARCH" == "aarch64" || "$CPU_ARCH" == "armv7l" ]]; then
             pip3 uninstall -y RPi.GPIO rpi.lgpio
 
@@ -2288,11 +2468,11 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
     echo
     echo "**** Setting up indiserver service ****"
 
-
-    # timer
-    cp -f "${ALLSKY_DIRECTORY}/service/${INDISERVER_SERVICE_NAME}.timer" "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
-    chmod 644 "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
-
+    # remove legacy timer if present
+    if [[ -f "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer" ]]; then
+        systemctl --user disable "${INDISERVER_SERVICE_NAME}.timer" 2>/dev/null || true
+        rm -f "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
+    fi
 
     TMP1=$(mktemp)
     sed \
@@ -2317,9 +2497,11 @@ fi
 
 
 echo "**** Setting up indi-allsky service ****"
-# timer
-cp -f "${ALLSKY_DIRECTORY}/service/${ALLSKY_SERVICE_NAME}.timer" "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.timer"
-chmod 644 "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.timer"
+# remove legacy timer if present
+if [[ -f "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.timer" ]]; then
+    systemctl --user disable "${ALLSKY_SERVICE_NAME}.timer" 2>/dev/null || true
+    rm -f "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.timer"
+fi
 
 
 TMP2=$(mktemp)
@@ -2373,8 +2555,8 @@ echo "**** Enabling services ****"
 sudo loginctl enable-linger "$USER"
 systemctl --user daemon-reload
 
-# indi-allsky service is started by the timer (2 minutes after boot)
-systemctl --user disable "${ALLSKY_SERVICE_NAME}.service"
+# enable indi-allsky service directly at boot (ordered after indiserver and gunicorn)
+systemctl --user enable "${ALLSKY_SERVICE_NAME}.service"
 
 # gunicorn service is started by the socket
 systemctl --user disable "${GUNICORN_SERVICE_NAME}.service"
@@ -2501,11 +2683,9 @@ jq \
  --arg indi_allsky_docroot "$HTDOCS_FOLDER" \
  --arg migration_folder "$MIGRATION_FOLDER" \
  --arg allsky_service_name "${ALLSKY_SERVICE_NAME}.service" \
- --arg allsky_timer_name "${ALLSKY_SERVICE_NAME}.timer" \
  --arg indiserver_service_name "${INDISERVER_SERVICE_NAME}.service" \
- --arg indiserver_timer_name "${INDISERVER_SERVICE_NAME}.timer" \
  --arg gunicorn_service_name "${GUNICORN_SERVICE_NAME}.service" \
- '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri | .INDI_ALLSKY_DOCROOT = $indi_allsky_docroot | .MIGRATION_FOLDER = $migration_folder | .ALLSKY_SERVICE_NAME = $allsky_service_name | .ALLSKY_TIMER_NAME = $allsky_timer_name | .INDISERVER_SERVICE_NAME = $indiserver_service_name | .INDISERVER_TIMER_NAME = $indiserver_timer_name | .GUNICORN_SERVICE_NAME = $gunicorn_service_name' \
+ '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri | .INDI_ALLSKY_DOCROOT = $indi_allsky_docroot | .MIGRATION_FOLDER = $migration_folder | .ALLSKY_SERVICE_NAME = $allsky_service_name | .INDISERVER_SERVICE_NAME = $indiserver_service_name | .GUNICORN_SERVICE_NAME = $gunicorn_service_name' \
  "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP_FLASK"
 
 
@@ -3550,9 +3730,7 @@ fi
 
 
 if [ "$INSTALL_INDISERVER" == "true" ]; then
-    systemctl --user enable "${INDISERVER_SERVICE_NAME}.timer"
-    # indiserver service is started by the timer (30 seconds after boot)
-    systemctl --user disable "${INDISERVER_SERVICE_NAME}.service"
+    systemctl --user enable "${INDISERVER_SERVICE_NAME}.service"
 
 
     while [ -z "${RESTART_INDISERVER:-}" ]; do

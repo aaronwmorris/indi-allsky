@@ -1,0 +1,19 @@
+[Unit]
+Description=Gunicorn daemon for indi-allsky Flask Web UI
+Requires=gunicorn-indi-allsky.socket
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=indi-allsky
+Group=www-data
+SupplementaryGroups=indi-allsky
+WorkingDirectory=/usr/share/indi-allsky
+Environment="PYTHONPATH=/usr/share/indi-allsky"
+ExecStart=/var/lib/indi-allsky/venv/bin/gunicorn --config /etc/indi-allsky/gunicorn.conf.py indi_allsky.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+Nice=10
+
+[Install]

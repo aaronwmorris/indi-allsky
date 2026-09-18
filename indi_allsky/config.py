@@ -594,6 +594,8 @@ class IndiAllSkyConfigBase(object):
             "CAMERA_NAME"            : "",
             "CAMERA_OWNER"           : "",
             "WEBSITE_URL"            : "",
+            "MAP_LATITUDE"           : "",
+            "MAP_LONGITUDE"          : "",
             "UPLOAD_IMAGE"           : True,
             "INTERVAL"               : 10,
         },
@@ -676,6 +678,11 @@ class IndiAllSkyConfigBase(object):
             "BUBBLE_COUNT"           : 1000,
         },
         "VIRTUALSKY" : {
+            "CALIBRATION_ENABLED"    : False,
+            "CALIBRATION"            : None,
+            "POINTING_AZIMUTH"       : 0.0,
+            "PRECESSION"             : False,
+            "RADIAL_DISTORTION"      : 0.0,
             "MAGNITUDE"              : 6.0,
             "CONSTELLATIONS"         : True,
             "CONSTELLATIONLABELS"    : False,
@@ -1265,7 +1272,10 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
 
                     try:
-                        if isinstance(self.config[key][key_l2], int):
+                        if (key, key_l2) == ('VIRTUALSKY', 'CALIBRATION'):
+                            # An absent correction is null; a learned model is an object.
+                            valid_types = (dict, type(None))
+                        elif isinstance(self.config[key][key_l2], int):
                             # jq will convert floats that end in .0 to ints
                             valid_types = (int, float)
                         else:
@@ -1533,9 +1543,9 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         try:
             self._getConfigEntry()
 
-            logger.warning('Configuration already initialized')
+            logger.info('Configuration already initialized')
 
-            sys.exit(1)
+            sys.exit(0)
         except NoResultFound:
             pass
 
