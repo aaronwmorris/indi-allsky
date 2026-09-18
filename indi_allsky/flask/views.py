@@ -2995,6 +2995,8 @@ class ConfigView(FormView):
             'ALLSKYMAP__CAMERA_NAME'         : self.indi_allsky_config.get('ALLSKYMAP', {}).get('CAMERA_NAME', ''),
             'ALLSKYMAP__CAMERA_OWNER'        : self.indi_allsky_config.get('ALLSKYMAP', {}).get('CAMERA_OWNER', ''),
             'ALLSKYMAP__WEBSITE_URL'         : self.indi_allsky_config.get('ALLSKYMAP', {}).get('WEBSITE_URL', ''),
+            'ALLSKYMAP__MAP_LATITUDE'        : self.indi_allsky_config.get('ALLSKYMAP', {}).get('MAP_LATITUDE', ''),
+            'ALLSKYMAP__MAP_LONGITUDE'       : self.indi_allsky_config.get('ALLSKYMAP', {}).get('MAP_LONGITUDE', ''),
             'ALLSKYMAP__UPLOAD_IMAGE'        : self.indi_allsky_config.get('ALLSKYMAP', {}).get('UPLOAD_IMAGE', True),
             'ALLSKYMAP__INTERVAL'            : self.indi_allsky_config.get('ALLSKYMAP', {}).get('INTERVAL', 10),
             'YOUTUBE__ENABLE'                : self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE', False),
@@ -4072,6 +4074,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['ALLSKYMAP']['CAMERA_NAME']             = str(request.json['ALLSKYMAP__CAMERA_NAME'])
         self.indi_allsky_config['ALLSKYMAP']['CAMERA_OWNER']            = str(request.json['ALLSKYMAP__CAMERA_OWNER'])
         self.indi_allsky_config['ALLSKYMAP']['WEBSITE_URL']             = str(request.json['ALLSKYMAP__WEBSITE_URL'])
+        self.indi_allsky_config['ALLSKYMAP']['MAP_LATITUDE']            = str(request.json['ALLSKYMAP__MAP_LATITUDE'])
+        self.indi_allsky_config['ALLSKYMAP']['MAP_LONGITUDE']           = str(request.json['ALLSKYMAP__MAP_LONGITUDE'])
         self.indi_allsky_config['ALLSKYMAP']['UPLOAD_IMAGE']            = bool(request.json['ALLSKYMAP__UPLOAD_IMAGE'])
         self.indi_allsky_config['ALLSKYMAP']['INTERVAL']                = int(request.json['ALLSKYMAP__INTERVAL'])
         self.indi_allsky_config['YOUTUBE']['ENABLE']                    = bool(request.json['YOUTUBE__ENABLE'])
