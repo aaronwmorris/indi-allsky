@@ -549,12 +549,13 @@ class VirtualSkyView(TemplateView):
             # The image mask is applied after rotation/flipping/cropping, before
             # scaling and borders. Detection masks/ROIs are not display masks.
             focus_mode = self.indi_allsky_config.get('FOCUS_MODE', False)
-            context['overlay_image_mask'] = [mask.get('DIAMETER', 3000),
+            context['overlay_image_mask'] = [
+                mask.get('DIAMETER', 3000),
                 self.indi_allsky_config.get('LENS_OFFSET_X', 0),
                 self.indi_allsky_config.get('LENS_OFFSET_Y', 0),
                 100 if focus_mode else self.indi_allsky_config.get('IMAGE_SCALE', 100),
                 *[0 if focus_mode else self.indi_allsky_config.get('IMAGE_BORDER', {}).get(k, 0)
-                  for k in ('TOP', 'RIGHT', 'BOTTOM', 'LEFT')]]
+                    for k in ('TOP', 'RIGHT', 'BOTTOM', 'LEFT')]]
         context['precession'] = self.camera.data.get('vs_precession', False)
 
 
@@ -10052,8 +10053,9 @@ class StreamLogViewBase(BaseView):
     def __init__(self, **kwargs):
         super(StreamLogViewBase, self).__init__(**kwargs)
 
-        self.user_unit_name = 'changeme'
         self.syslog_facility = None
+        self.user_unit_name = None
+        self.unit_name = None
 
 
     def dispatch_request(self):
@@ -10068,10 +10070,13 @@ class StreamLogViewBase(BaseView):
             if not isinstance(self.syslog_facility, type(None)):
                 app.logger.info('Streaming log from facility %s', self.syslog_facility)
                 reader.add_match(SYSLOG_FACILITY=self.syslog_facility)
-            else:
-                # use unit name
+            elif not isinstance(self.user_unit_name, type(None)):
                 app.logger.info('Streaming log from user unit %s', self.user_unit_name)
                 reader.add_match(_SYSTEMD_USER_UNIT=self.user_unit_name)
+            else:
+                # use unit name
+                app.logger.info('Streaming log from system unit %s', self.unit_name)
+                reader.add_match(_SYSTEMD_UNIT=self.unit_name)
 
 
             reader.seek_tail()
@@ -10107,16 +10112,17 @@ class StreamLogView(StreamLogViewBase):
         super(StreamLogView, self).__init__(**kwargs)
 
         self.syslog_facility = '22'  # local6
-        #self.user_unit_name = app.config['ALLSKY_SERVICE_NAME']
         self.user_unit_name = None
+        self.unit_name = None
 
 
 class StreamIndiserverLogView(StreamLogViewBase):
     def __init__(self, **kwargs):
         super(StreamIndiserverLogView, self).__init__(**kwargs)
 
-        self.syslog_facility = None
-        self.user_unit_name = app.config['INDISERVER_SERVICE_NAME']
+        self.syslog_facility = '21'  # local5
+        self.user_unit_name = None
+        self.unit_name = None
 
 
 class LogDownloadView(BaseView):
