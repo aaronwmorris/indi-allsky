@@ -2900,10 +2900,11 @@ def ALLSKYMAP__MAP_LATITUDE_validator(form, field):
         if loc_lat and loc_lat.data is not None and str(loc_lat.data).strip() != '':
             try:
                 actual_lat = float(loc_lat.data)
-                if abs(val - actual_lat) > 1.0:
-                    raise ValidationError('Map latitude must be within 1 degree of your configured location latitude')
             except (ValueError, TypeError):
-                pass
+                actual_lat = None
+
+            if actual_lat is not None and abs(val - actual_lat) > 1.0:
+                raise ValidationError('Map latitude must be within 1 degree of your configured location latitude')
 
 
 def ALLSKYMAP__MAP_LONGITUDE_validator(form, field):
@@ -2919,12 +2920,14 @@ def ALLSKYMAP__MAP_LONGITUDE_validator(form, field):
         if loc_lng and loc_lng.data is not None and str(loc_lng.data).strip() != '':
             try:
                 actual_lng = float(loc_lng.data)
+            except (ValueError, TypeError):
+                actual_lng = None
+
+            if actual_lng is not None:
                 diff = abs(val - actual_lng) % 360.0
                 min_diff = min(diff, 360.0 - diff)
                 if min_diff > 1.0:
                     raise ValidationError('Map longitude must be within 1 degree of your configured location longitude')
-            except (ValueError, TypeError):
-                pass
 
 
 def YOUTUBE__SECRETS_FILE_validator(form, field):
