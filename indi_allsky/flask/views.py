@@ -549,12 +549,13 @@ class VirtualSkyView(TemplateView):
             # The image mask is applied after rotation/flipping/cropping, before
             # scaling and borders. Detection masks/ROIs are not display masks.
             focus_mode = self.indi_allsky_config.get('FOCUS_MODE', False)
-            context['overlay_image_mask'] = [mask.get('DIAMETER', 3000),
+            context['overlay_image_mask'] = [
+                mask.get('DIAMETER', 3000),
                 self.indi_allsky_config.get('LENS_OFFSET_X', 0),
                 self.indi_allsky_config.get('LENS_OFFSET_Y', 0),
                 100 if focus_mode else self.indi_allsky_config.get('IMAGE_SCALE', 100),
                 *[0 if focus_mode else self.indi_allsky_config.get('IMAGE_BORDER', {}).get(k, 0)
-                  for k in ('TOP', 'RIGHT', 'BOTTOM', 'LEFT')]]
+                    for k in ('TOP', 'RIGHT', 'BOTTOM', 'LEFT')]]
         context['precession'] = self.camera.data.get('vs_precession', False)
 
 
