@@ -807,25 +807,25 @@ def LOCATION_NAME_validator(form, field):
 
 
 def LOCATION_LATITUDE_validator(form, field):
-    if not isinstance(field.data, (int, float)):
-        raise ValidationError('Please enter valid number')
+    if field.data is not None and str(field.data).strip() != '':
+        try:
+            val = float(field.data)
+        except (ValueError, TypeError):
+            raise ValidationError('Please enter a valid number for latitude')
 
-    if field.data < -90:
-        raise ValidationError('Latitude must be greater than -90')
-
-    if field.data > 90:
-        raise ValidationError('Latitude must be less than 90')
+        if val < -90.0 or val > 90.0:
+            raise ValidationError('Latitude must be between -90 and 90')
 
 
 def LOCATION_LONGITUDE_validator(form, field):
-    if not isinstance(field.data, (int, float)):
-        raise ValidationError('Please enter valid number')
+    if field.data is not None and str(field.data).strip() != '':
+        try:
+            val = float(field.data)
+        except (ValueError, TypeError):
+            raise ValidationError('Please enter a valid number for longitude')
 
-    if field.data < -180:
-        raise ValidationError('Longitude must be greater than -180')
-
-    if field.data > 180:
-        raise ValidationError('Longitude must be less than 180')
+        if val < -180.0 or val > 180.0:
+            raise ValidationError('Longitude must be between -180 and 180')
 
 
 def LOCATION_ELEVATION_validator(form, field):
@@ -2891,15 +2891,18 @@ def ALLSKYMAP__MAP_LATITUDE_validator(form, field):
     if field.data is not None and str(field.data).strip() != '':
         try:
             val = float(field.data)
-            if val < -90.0 or val > 90.0:
-                raise ValidationError('Latitude must be between -90 and 90')
         except (ValueError, TypeError):
             raise ValidationError('Please enter a valid number for latitude')
+
+        if val < -90.0 or val > 90.0:
+            raise ValidationError('Latitude must be between -90 and 90')
 
         loc_lat = getattr(form, 'LOCATION_LATITUDE', None)
         if loc_lat and loc_lat.data is not None and str(loc_lat.data).strip() != '':
             try:
                 actual_lat = float(loc_lat.data)
+                if actual_lat < -90.0 or actual_lat > 90.0:
+                    actual_lat = None
             except (ValueError, TypeError):
                 actual_lat = None
 
@@ -2911,15 +2914,18 @@ def ALLSKYMAP__MAP_LONGITUDE_validator(form, field):
     if field.data is not None and str(field.data).strip() != '':
         try:
             val = float(field.data)
-            if val < -180.0 or val > 180.0:
-                raise ValidationError('Longitude must be between -180 and 180')
         except (ValueError, TypeError):
             raise ValidationError('Please enter a valid number for longitude')
+
+        if val < -180.0 or val > 180.0:
+            raise ValidationError('Longitude must be between -180 and 180')
 
         loc_lng = getattr(form, 'LOCATION_LONGITUDE', None)
         if loc_lng and loc_lng.data is not None and str(loc_lng.data).strip() != '':
             try:
                 actual_lng = float(loc_lng.data)
+                if actual_lng < -180.0 or actual_lng > 180.0:
+                    actual_lng = None
             except (ValueError, TypeError):
                 actual_lng = None
 
