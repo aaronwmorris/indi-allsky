@@ -122,8 +122,8 @@ configure_caddy() {
     chmod 644 /etc/caddy/Caddyfile
 
     generate_self_signed_cert \
-        /etc/nginx/ssl/indi-allsky_caddy.key \
-        /etc/nginx/ssl/indi-allsky_caddy.pem
+        /etc/caddy/ssl/indi-allsky_caddy.key \
+        /etc/caddy/ssl/indi-allsky_caddy.pem
 
     systemctl restart caddy 2>/dev/null || systemctl start caddy 2>/dev/null || true
 }
