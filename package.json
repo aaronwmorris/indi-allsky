@@ -13,10 +13,10 @@
     "prepare": "git config core.hooksPath githooks && git config merge.build_css.driver \"npm run build -- && cp indi_allsky/flask/static/css/dist.css %A\" && git config merge.build_css.name \"Rebuild Tailwind dist.css on merge conflict\" || true"
   },
   "devDependencies": {
-    "@iconify-json/lucide": "^1.2.5",
+    "@iconify-json/lucide": "^1.2.131",
     "@iconify/tailwind4": "^1.1.4",
     "@tailwindcss/cli": "^4.3.3",
-    "daisyui": "^5.7.14",
+    "daisyui": "^5.7.36",
     "tailwindcss": "^4.3.3"
   },
   "dependencies": {
