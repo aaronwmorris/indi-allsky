@@ -81,6 +81,9 @@ sudo apt update
 sudo apt install -y indi-allsky
 ```
 
+> [!TIP]
+> To choose a reverse proxy (Default is Caddy), add `apache2` or `nginx` to the `apt install` command.
+
 During installation, an interactive setup wizard will guide you through configuring your camera driver, administrator credentials, and observatory coordinates.
 
 ---
