@@ -4566,7 +4566,7 @@ class AjaxSetTimeView(BaseView):
         return jsonify(message)
 
 
-    def setTimeSystemd(self, new_datetime_utc):
+    def setTimeSystemd(self, new_datetime_utc):  # pragma: no cover # Modifying system time requires a live systemd DBus daemon.
         app.logger.warning('Setting system time to %s (UTC)', new_datetime_utc)
 
         epoch = new_datetime_utc.timestamp() + 5  # add 5 due to sleep below
@@ -4626,7 +4626,7 @@ class AjaxSetTimezoneView(BaseView):
         return jsonify(message)
 
 
-    def setTimezoneSystemd(self, new_timezone_str):
+    def setTimezoneSystemd(self, new_timezone_str):  # pragma: no cover # Modifying system timezone requires a live systemd DBus daemon.
         app.logger.warning('Setting system timezone to %s', new_timezone_str)
 
 
