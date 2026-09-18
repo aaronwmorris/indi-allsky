@@ -831,11 +831,20 @@ class BaseView(View):
             except KeyError:
                 data['rain_status'] = 'Error'
 
+
+            cloudiness_index = image_metadata.get('cloudiness_index')
+
+            if cloudiness_index is None:
+                data['cloudiness_index'] = 'N/A'
+            else:
+                data['cloudiness_index'] = '{0:0.0f}'.format(cloudiness_index)
+
         else:
             data['dew_heater_status'] = 'No data'
             data['fan_status'] = 'No data'
             data['wind_dir'] = 'No data'
             data['rain_status'] = 'No data'
+            data['cloudiness_index'] = 'No data'
 
 
         return data
