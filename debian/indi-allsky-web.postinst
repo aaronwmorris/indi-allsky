@@ -56,6 +56,12 @@ generate_self_signed_cert() {
 
 configure_nginx() {
     [ -f "/usr/share/indi-allsky/conf/nginx_indi-allsky.conf" ] || return 0
+
+    if grep -q "HOLDLOCK" /etc/nginx/sites-available/indi-allsky.conf 2>/dev/null; then
+        # leave config untouched if HOLDLOCK string found in config
+        return 0
+    fi
+
     mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
     sed \
         -e "s|%ALLSKY_DIRECTORY%|/usr/share/indi-allsky|g" \
@@ -78,6 +84,12 @@ configure_nginx() {
 
 configure_apache() {
     [ -f "/usr/share/indi-allsky/conf/apache_indi-allsky.conf" ] || return 0
+
+    if grep -q "HOLDLOCK" /etc/apache2/sites-available/indi-allsky.conf 2>/dev/null; then
+        # leave config untouched if HOLDLOCK string found in config
+        return 0
+    fi
+
     sed \
         -e "s|%ALLSKY_DIRECTORY%|/usr/share/indi-allsky|g" \
         -e "s|%ALLSKY_ETC%|/etc/indi-allsky|g" \
@@ -110,6 +122,11 @@ configure_apache() {
 
 configure_caddy() {
     [ -f "/usr/share/indi-allsky/conf/caddy_indi-allsky.conf" ] || return 0
+
+    if grep -q "HOLDLOCK" /etc/caddy/Caddyfile 2>/dev/null; then
+        # leave config untouched if HOLDLOCK string found in config
+        return 0
+    fi
 
     # This is not ideal since /etc/caddy/Caddyfile is managed by the caddy package
     sed \
