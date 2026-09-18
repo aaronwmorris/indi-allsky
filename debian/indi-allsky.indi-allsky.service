@@ -1,6 +1,6 @@
 [Unit]
 Description=Indi AllSky Main Service
-After=network-online.target indiserver.service gunicorn-indi-allsky.service
+After=network-online.target indiserver.service
 Wants=indiserver.service
 
 [Service]

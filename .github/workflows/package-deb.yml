@@ -538,35 +538,56 @@ jobs:
             CURRENT_TAG="nightly"
           fi
 
+          # Helper to safely include a .deb package into reprepro with duplicate replacement
+          include_package() {
+            local comp="$1"
+            local distro="$2"
+            local deb_file="$3"
+
+            if [ -f "$deb_file" ]; then
+              local pkg_name
+              pkg_name=$(dpkg-deb -f "$deb_file" Package 2>/dev/null || true)
+              local pkg_arch
+              pkg_arch=$(dpkg-deb -f "$deb_file" Architecture 2>/dev/null || true)
+
+              if [ -n "$pkg_name" ]; then
+                # Remove existing package metadata to allow clean replacement of rebuilt binaries
+                if [ -n "$pkg_arch" ] && [ "$pkg_arch" != "all" ]; then
+                  reprepro -C "$comp" -A "$pkg_arch" -b apt-repo remove "$distro" "$pkg_name" 2>/dev/null || true
+                else
+                  reprepro -C "$comp" -b apt-repo remove "$distro" "$pkg_name" 2>/dev/null || true
+                fi
+              fi
+              reprepro -C "$comp" -b apt-repo --ignore=ignore includedeb "$distro" "$deb_file" || true
+            fi
+          }
+
+          index_debs_dir() {
+            local comp="$1"
+            local dir="$2"
+            for deb in "$dir"/*.deb; do
+              if [ -f "$deb" ]; then
+                case "$deb" in
+                  *+bookworm*) include_package "$comp" bookworm "$deb" ;;
+                  *+trixie*)   include_package "$comp" trixie "$deb" ;;
+                  *+noble*)    include_package "$comp" noble "$deb" ;;
+                  *+resolute*) include_package "$comp" resolute "$deb" ;;
+                esac
+              fi
+            done
+          }
+
           # Index all historical tagged releases into 'stable' component
           echo "=== Fetching all tagged stable release packages from GitHub Releases ==="
           mkdir -p debs-tags
           for tag in $(gh release list --exclude-drafts --limit 10 --json tagName --jq '.[].tagName' 2>/dev/null | grep -v '^nightly$' || true); do
             mkdir -p "debs-tags/$tag"
             gh release download "$tag" --pattern '*.deb' --dir "debs-tags/$tag" 2>/dev/null || true
-            for deb in debs-tags/"$tag"/*.deb; do
-              if [ -f "$deb" ]; then
-                case "$deb" in
-                  *+bookworm*) reprepro -C stable -b apt-repo --ignore=ignore includedeb bookworm "$deb" || true ;;
-                  *+trixie*)   reprepro -C stable -b apt-repo --ignore=ignore includedeb trixie "$deb" || true ;;
-                  *+noble*)    reprepro -C stable -b apt-repo --ignore=ignore includedeb noble "$deb" || true ;;
-                  *+resolute*) reprepro -C stable -b apt-repo --ignore=ignore includedeb resolute "$deb" || true ;;
-                esac
-              fi
-            done
+            index_debs_dir stable "debs-tags/$tag"
           done
 
           # Index current stable packages if tagged
-          for deb in debs-stable/*.deb; do
-            if [ -f "$deb" ]; then
-              case "$deb" in
-                *+bookworm*) reprepro -C stable -b apt-repo --ignore=ignore includedeb bookworm "$deb" || true ;;
-                *+trixie*)   reprepro -C stable -b apt-repo --ignore=ignore includedeb trixie "$deb" || true ;;
-                *+noble*)    reprepro -C stable -b apt-repo --ignore=ignore includedeb noble "$deb" || true ;;
-                *+resolute*) reprepro -C stable -b apt-repo --ignore=ignore includedeb resolute "$deb" || true ;;
-              esac
-            fi
-          done
+          index_debs_dir stable debs-stable
 
           # If building a stable release, also fetch existing nightly packages so nightly component remains populated
           if [ "${CURRENT_TAG}" != "nightly" ]; then
@@ -577,16 +598,10 @@ jobs:
 
           # Index nightly packages into 'nightly' component
           echo "=== Indexing nightly packages into reprepro ==="
-          for deb in debs-nightly/*.deb; do
-            if [ -f "$deb" ]; then
-              case "$deb" in
-                *+bookworm*) reprepro -C nightly -b apt-repo --ignore=ignore includedeb bookworm "$deb" || true ;;
-                *+trixie*)   reprepro -C nightly -b apt-repo --ignore=ignore includedeb trixie "$deb" || true ;;
-                *+noble*)    reprepro -C nightly -b apt-repo --ignore=ignore includedeb noble "$deb" || true ;;
-                *+resolute*) reprepro -C nightly -b apt-repo --ignore=ignore includedeb resolute "$deb" || true ;;
-              esac
-            fi
-          done
+          index_debs_dir nightly debs-nightly
+
+          # Clean up unreferenced pool files
+          reprepro -b apt-repo deleteunreferenced 2>/dev/null || true
 
           # Export all distributions Release & InRelease indices
           reprepro -b apt-repo export
