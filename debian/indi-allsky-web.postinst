@@ -20,13 +20,34 @@ generate_self_signed_cert() {
     if [ ! -f "$_CRT" ] || [ ! -f "$_KEY" ]; then
         mkdir -p "$(dirname "$_KEY")" "$(dirname "$_CRT")"
         _HOSTNAME=$(hostname -s 2>/dev/null || echo "indi-allsky")
+
+        ### EC cert
         openssl req \
-            -new -newkey rsa:4096 -sha512 -days 3650 -nodes -x509 \
-            -subj "/CN=${_HOSTNAME}.local" \
+            -x509 \
+            -days 3650 \
+            -newkey ec \
+            -sha384 \
+            -nodes \
+            -pkeyopt ec_paramgen_curve:secp384r1 \
+            -subj "/CN=${_HOSTNAME}" \
+            -addext "subjectAltName=DNS:${_HOSTNAME},DNS:${_HOSTNAME}.local,DNS:localhost" \
             -keyout "$_KEY" \
             -out "$_CRT" \
-            -addext "subjectAltName=DNS:${_HOSTNAME}.local,DNS:${_HOSTNAME},DNS:localhost" \
             2>/dev/null || true
+
+        ### RSA cert
+        #openssl req \
+        #    -new \
+        #    -newkey rsa:4096 \
+        #    -sha512 \
+        #    -days 3650 \
+        #    -nodes \
+        #    -x509 \
+        #    -subj "/CN=${_HOSTNAME}.local" \
+        #    -addext "subjectAltName=DNS:${_HOSTNAME}.local,DNS:${_HOSTNAME},DNS:localhost" \
+        #    -keyout "$_KEY" \
+        #    -out "$_CRT" \
+        #    2>/dev/null || true
     fi
     chown "root:${_GROUP}" "$_KEY" "$_CRT" 2>/dev/null || true
     chmod "$_KEY_PERMS" "$_KEY" 2>/dev/null || true
@@ -34,7 +55,13 @@ generate_self_signed_cert() {
 }
 
 configure_nginx() {
-    [ -f "/usr/share/indi-allsky/service/nginx_indi-allsky.conf" ] || return 0
+    [ -f "/usr/share/indi-allsky/conf/nginx_indi-allsky.conf" ] || return 0
+
+    if grep -q "HOLDLOCK" /etc/nginx/sites-available/indi-allsky.conf 2>/dev/null; then
+        # leave config untouched if HOLDLOCK string found in config
+        return 0
+    fi
+
     mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
     sed \
         -e "s|%ALLSKY_DIRECTORY%|/usr/share/indi-allsky|g" \
@@ -43,20 +70,26 @@ configure_nginx() {
         -e "s|%HTTP_PORT%|${HTTP_PORT:-80}|g" \
         -e "s|%HTTPS_PORT%|${HTTPS_PORT:-443}|g" \
         -e "s|%UPSTREAM_SERVER%|unix:/run/indi-allsky/gunicorn-indi-allsky.sock|g" \
-        /usr/share/indi-allsky/service/nginx_indi-allsky.conf > /etc/nginx/sites-available/indi-allsky.conf
+        /usr/share/indi-allsky/conf/nginx_indi-allsky.conf > /etc/nginx/sites-available/indi-allsky.conf
     chmod 644 /etc/nginx/sites-available/indi-allsky.conf
     ln -sf /etc/nginx/sites-available/indi-allsky.conf /etc/nginx/sites-enabled/indi-allsky.conf
     rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
 
-    generate_self_signed_cert /etc/nginx/ssl/indi-allsky_nginx.key /etc/nginx/ssl/indi-allsky_nginx.pem
+    generate_self_signed_cert \
+        /etc/nginx/ssl/indi-allsky_nginx.key \
+        /etc/nginx/ssl/indi-allsky_nginx.pem
 
-    systemctl stop apache2 2>/dev/null || true
-    systemctl disable apache2 2>/dev/null || true
     systemctl restart nginx 2>/dev/null || systemctl start nginx 2>/dev/null || true
 }
 
 configure_apache() {
-    [ -f "/usr/share/indi-allsky/service/apache_indi-allsky.conf" ] || return 0
+    [ -f "/usr/share/indi-allsky/conf/apache_indi-allsky.conf" ] || return 0
+
+    if grep -q "HOLDLOCK" /etc/apache2/sites-available/indi-allsky.conf 2>/dev/null; then
+        # leave config untouched if HOLDLOCK string found in config
+        return 0
+    fi
+
     sed \
         -e "s|%ALLSKY_DIRECTORY%|/usr/share/indi-allsky|g" \
         -e "s|%ALLSKY_ETC%|/etc/indi-allsky|g" \
@@ -66,10 +99,12 @@ configure_apache() {
         -e "s|%APACHE_ETC%|/etc/apache2|g" \
         -e "s|%UPSTREAM_SERVER%|unix:/run/indi-allsky/gunicorn-indi-allsky.sock\|http://localhost/indi-allsky|g" \
         -e "s|%UPSTREAM_SERVER_WS%|unix:/run/indi-allsky/gunicorn-indi-allsky.sock\|ws://localhost/indi-allsky/ws|g" \
-        /usr/share/indi-allsky/service/apache_indi-allsky.conf > /etc/apache2/sites-available/indi-allsky.conf
+        /usr/share/indi-allsky/conf/apache_indi-allsky.conf > /etc/apache2/sites-available/indi-allsky.conf
     chmod 644 /etc/apache2/sites-available/indi-allsky.conf
 
-    generate_self_signed_cert /etc/apache2/ssl/indi-allsky_apache.key /etc/apache2/ssl/indi-allsky_apache.pem
+    generate_self_signed_cert \
+        /etc/apache2/ssl/indi-allsky_apache.key \
+        /etc/apache2/ssl/indi-allsky_apache.pem
 
     PORTS_CONF="/etc/apache2/ports.conf"
     HTTP_P="${HTTP_PORT:-80}"
@@ -82,9 +117,36 @@ configure_apache() {
     a2dissite 000-default.conf default-ssl.conf >/dev/null 2>&1 || true
     a2enmod rewrite proxy proxy_http proxy_wstunnel headers ssl socache_shmcb expires http2 proxy_http2 >/dev/null 2>&1 || true
     a2ensite indi-allsky.conf >/dev/null 2>&1 || true
-    systemctl stop nginx 2>/dev/null || true
-    systemctl disable nginx 2>/dev/null || true
     systemctl restart apache2 2>/dev/null || systemctl start apache2 2>/dev/null || true
+}
+
+configure_caddy() {
+    [ -f "/usr/share/indi-allsky/conf/caddy_indi-allsky.conf" ] || return 0
+
+    if grep -q "HOLDLOCK" /etc/caddy/Caddyfile 2>/dev/null; then
+        # leave config untouched if HOLDLOCK string found in config
+        return 0
+    fi
+
+    # This is not ideal since /etc/caddy/Caddyfile is managed by the caddy package
+    sed \
+        -e "s|%ALLSKY_DIRECTORY%|/usr/share/indi-allsky|g" \
+        -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+        -e "s|%HTTP_PORT%|${HTTP_PORT:-80}|g" \
+        -e "s|%HTTPS_PORT%|${HTTPS_PORT:-443}|g" \
+        -e "s|%UPSTREAM_SERVER%|unix//run/indi-allsky/gunicorn-indi-allsky.sock|g" \
+        /usr/share/indi-allsky/conf/caddy_indi-allsky.conf > /etc/caddy/Caddyfile
+    chmod 644 /etc/caddy/Caddyfile
+
+    CADDY_GROUP="caddy"
+
+    generate_self_signed_cert \
+        /etc/caddy/ssl/indi-allsky_caddy.key \
+        /etc/caddy/ssl/indi-allsky_caddy.pem \
+        "$CADDY_GROUP" \
+        640
+
+    systemctl restart caddy 2>/dev/null || systemctl start caddy 2>/dev/null || true
 }
 
 configure_mosquitto() {
@@ -111,9 +173,9 @@ configure_mosquitto() {
     fi
 
     # Install indi-allsky mosquitto configuration
-    if [ -f "/usr/share/indi-allsky/service/mosquitto_indi-allsky.conf" ]; then
+    if [ -f "/usr/share/indi-allsky/conf/mosquitto_indi-allsky.conf" ]; then
         mkdir -p /etc/mosquitto/conf.d
-        cp -f /usr/share/indi-allsky/service/mosquitto_indi-allsky.conf /etc/mosquitto/conf.d/mosquitto_indi-allsky.conf
+        cp -f /usr/share/indi-allsky/conf/mosquitto_indi-allsky.conf /etc/mosquitto/conf.d/mosquitto_indi-allsky.conf
         chown root:root /etc/mosquitto/conf.d/mosquitto_indi-allsky.conf 2>/dev/null || true
         chmod 644 /etc/mosquitto/conf.d/mosquitto_indi-allsky.conf 2>/dev/null || true
     fi
@@ -144,6 +206,24 @@ case "$1" in
         GENERATED_MQTT_USER=""
         # Create system user & group
         adduser --system --group --home /var/lib/indi-allsky --no-create-home --shell /bin/false "$ALLSKY_USER" 2>/dev/null || true
+
+
+        if [ -f /etc/os-release ]; then
+            . /etc/os-release
+
+            if [ "$ID" = "ubuntu" ]; then
+                RSYSLOG_USER="syslog"
+            elif [ "$ID" = "linuxmint" ]; then
+                RSYSLOG_USER="syslog"
+            elif [ "$ID" = "debian" ]; then
+                RSYSLOG_USER="root"
+            else
+                RSYSLOG_USER="root" # Default fallback
+            fi
+        else
+            RSYSLOG_USER="root"
+        fi
+
 
         # Bootstrap web directory assets
         if [ -d "/usr/share/indi-allsky/html" ]; then
@@ -296,6 +376,21 @@ EOF
             exit 1
         fi
 
+        # Ensure valid system locales exist before running python bootstrapping scripts
+        if ! "$VENV/bin/python3" -c "import locale; locale.setlocale(locale.LC_ALL, '');" >/dev/null 2>&1; then
+            echo "indi-allsky: System locale is unconfigured. Generating locales..."
+            if [ -f /etc/locale.gen ]; then
+                sed -i -E 's/^#[[:space:]]*(en_US\.UTF-8|en_GB\.UTF-8)/\1/' /etc/locale.gen
+                [ -z "$LANG" ] || sed -i "s/^#[[:space:]]*${LANG}/${LANG}/" /etc/locale.gen
+                locale-gen || true
+            fi
+
+            if ! "$VENV/bin/python3" -c "import locale; locale.setlocale(locale.LC_ALL, '');" >/dev/null 2>&1; then
+                echo "indi-allsky: ERROR: System locale unsupported. Please run 'sudo dpkg-reconfigure locales' and retry." >&2
+                exit 1
+            fi
+        fi
+
         # Initialize SQLite Database (Backup, Vacuum, Migration) & Admin User
         # Ensure services are stopped so SQLite has 0 write locks during backup/vacuum
         systemctl stop indi-allsky.service 2>/dev/null || true
@@ -431,19 +526,51 @@ with app.app_context():
             "$VENV/bin/python3" /usr/share/indi-allsky/misc/usertool.py setadmin -u "$ADMIN_USER"
         fi
 
-        # Configure Web Server (Apache2 or Nginx)
-        USE_NGINX=0
-        if [ -x "$(command -v nginx 2>/dev/null)" ]; then
-            if systemctl is-active --quiet nginx 2>/dev/null || [ ! -x "$(command -v a2ensite 2>/dev/null)" ]; then
-                USE_NGINX=1
+
+        # Disable conflicting legacy/third-party allsky service if present
+        if systemctl list-unit-files "allsky.service" 2>/dev/null | grep -q "allsky.service"; then
+            systemctl stop allsky.service 2>/dev/null || true
+            systemctl disable allsky.service 2>/dev/null || true
+
+            # allsky uses lighttpd
+            if systemctl is-enabled --quiet lighttpd 2>/dev/null; then
+                # even if we disable this here, the normal web server (eg caddy) might not be operational due to the port conflict
+                systemctl stop lighttpd.service 2>/dev/null || true
+                systemctl disable lighttpd.service 2>/dev/null || true
             fi
         fi
 
-        if [ "$USE_NGINX" = "1" ]; then
-            configure_nginx
+
+        # Configure Web Server
+        USE_CADDY=0
+        USE_NGINX=0
+        USE_APACHE=0
+
+
+        # use is-enabled in case the unit is down due to a port conflict
+        if [ -x "$(command -v caddy 2>/dev/null)" ]; then
+            if systemctl is-enabled --quiet caddy 2>/dev/null; then
+                USE_CADDY=1
+            fi
+        elif [ -x "$(command -v nginx 2>/dev/null)" ]; then
+            if systemctl is-enabled --quiet nginx 2>/dev/null; then
+                USE_NGINX=1
+            fi
         elif [ -x "$(command -v a2ensite 2>/dev/null)" ]; then
+            if systemctl is-enabled --quiet apache2 2>/dev/null; then
+                USE_APACHE=1
+            fi
+        fi
+
+
+        if [ "$USE_CADDY" = "1" ]; then
+            configure_caddy
+        elif [ "$USE_NGINX" = "1" ]; then
+            configure_nginx
+        elif [ "$USE_APACHE" = "1" ]; then
             configure_apache
         fi
+
 
         if [ "$INSTALL_MOSQUITTO" = "true" ]; then
             configure_mosquitto
@@ -462,12 +589,6 @@ with app.app_context():
             systemctl disable ModemManager.service 2>/dev/null || true
         fi
 
-        # Disable conflicting legacy/third-party allsky service if present
-        if systemctl list-unit-files "allsky.service" 2>/dev/null | grep -q "allsky.service"; then
-            systemctl stop allsky.service 2>/dev/null || true
-            systemctl disable allsky.service 2>/dev/null || true
-        fi
-
         # Add indi-allsky user to hardware, web, and journal groups
         for GRP in dialout video plugdev gpio i2c spi adm systemd-journal www-data; do
             if getent group "$GRP" >/dev/null 2>&1; then
@@ -478,30 +599,57 @@ with app.app_context():
             usermod -a -G "$ALLSKY_GROUP" www-data
         fi
 
+
         # Ensure data, database, and log directories have proper ownership and write permissions
-        chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" /var/log/indi-allsky
+        VAR_LOG_USER=$(stat -c '%U' /var/log)
+        VAR_LOG_GROUP=$(stat -c '%G' /var/log)
+
+
+        chown "${VAR_LOG_USER}":"${VAR_LOG_GROUP}" /var/log/indi-allsky
+        chmod 755 /var/log/indi-allsky
+
+        touch /var/log/indi-allsky/indi-allsky.log
+        chmod 644 /var/log/indi-allsky/indi-allsky.log
+        chown "${RSYSLOG_USER}":adm /var/log/indi-allsky/indi-allsky.log
+
+        touch /var/log/indi-allsky/webapp-indi-allsky.log
+        chmod 644 /var/log/indi-allsky/webapp-indi-allsky.log
+        chown "${RSYSLOG_USER}":adm /var/log/indi-allsky/webapp-indi-allsky.log
+
+        touch /var/log/indi-allsky/indiserver.log
+        chmod 644 /var/log/indi-allsky/indiserver.log
+        chown "${RSYSLOG_USER}":adm /var/log/indi-allsky/indiserver.log
+
+        touch /var/log/indi-allsky/upgrade.log
+        chmod 644 /var/log/indi-allsky/upgrade.log
+        chown "${RSYSLOG_USER}":adm /var/log/indi-allsky/upgrade.log
+
+
         chown "${ALLSKY_USER}:${ALLSKY_GROUP}" /var/lib/indi-allsky /var/lib/indi-allsky/backup
         chmod 775 /var/lib/indi-allsky /var/lib/indi-allsky/backup
-        chmod 755 /var/log/indi-allsky
         if [ -f "$DB_FILE" ]; then
-            chown "${ALLSKY_USER}:${ALLSKY_GROUP}" "$DB_FILE"
+            chown "${ALLSKY_USER}":"${ALLSKY_GROUP}" "$DB_FILE"
             chmod 664 "$DB_FILE"
         fi
 
         # Custom image directory permissions (if non-standard path)
         if [ "$IMAGE_FOLDER" != "/var/www/html/allsky/images" ] && [ -d "$IMAGE_FOLDER" ]; then
-            chown "${ALLSKY_USER}:www-data" "$IMAGE_FOLDER"
+            chown "${ALLSKY_USER}":www-data "$IMAGE_FOLDER"
             chmod 775 "$IMAGE_FOLDER"
         fi
 
         # Web application and service configuration permissions
         if [ -f "$FLASK_JSON" ]; then
-            chown "${ALLSKY_USER}:www-data" "$FLASK_JSON"
+            chown "${ALLSKY_USER}":www-data "$FLASK_JSON"
             chmod 660 "$FLASK_JSON"
         fi
+        if [ -f "/etc/indi-allsky/gunicorn.conf.py" ]; then
+            chown "${ALLSKY_USER}":"${ALLSKY_GROUP}" "/etc/indi-allsky/gunicorn.conf.py"
+            chmod 664 "/etc/indi-allsky/gunicorn.conf.py"
+        fi
         if [ -f "$INDISERVER_ENV" ]; then
-            chown "${ALLSKY_USER}:${ALLSKY_GROUP}" "$INDISERVER_ENV"
-            chmod 644 "$INDISERVER_ENV"
+            chown "${ALLSKY_USER}":"${ALLSKY_GROUP}" "$INDISERVER_ENV"
+            chmod 664 "$INDISERVER_ENV"
         fi
 
         # Always enable and start indiserver service (matches setup.sh behavior)

@@ -1,6 +1,7 @@
 [Unit]
 Description=Indi AllSky Service
-After=network.target indiserver.service
+After=network-online.target indiserver.service gunicorn-indi-allsky.service
+Wants=indiserver.service
  
 [Service]
 EnvironmentFile=%ALLSKY_ETC%/indi-allsky.env

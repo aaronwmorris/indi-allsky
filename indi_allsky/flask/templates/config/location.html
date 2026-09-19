@@ -101,8 +101,8 @@
                 <!-- Location Elevation -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3">
                     <div class="tw:flex tw:flex-col">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LOCATION_ELEVATION.label.text }}</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Elevation in meters</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LOCATION_ELEVATION.label.text }} (m)</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Site height above sea level.</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.LOCATION_ELEVATION(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -165,7 +165,7 @@
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_IMAGE_CIRCLE.label.text }}</span>
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Image-circle diameter in pixels. If the edge is outside the frame, use a value larger than the image diagonal.</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Image-circle diameter in pixels. If the edge is outside the frame, use a value larger than the image diagonal. This circle and its offsets are separate from VirtualSky; Solve does not change them.</span>
                     </div>
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col">
                         {{ form_config.LENS_IMAGE_CIRCLE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -191,15 +191,15 @@
                 <!-- Lens Altitude & Azimuth -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_ALTITUDE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_ALTITUDE.label.text }} (°)</span>
                         {{ form_config.LENS_ALTITUDE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Lens elevation in degrees; 90° points at the zenith.</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Lens angle: 0° horizontal, 90° straight up (zenith).</span>
                         <div id="LENS_ALTITUDE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_AZIMUTH.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_AZIMUTH.label.text }} (°)</span>
                         {{ form_config.LENS_AZIMUTH(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">This affects Cardinal directions and VirtualSky.</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Rotation of the VirtualSky overlay and cardinal-direction labels to match the image.</span>
                         <div id="LENS_AZIMUTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -242,18 +242,25 @@
                     <a href="https://github.com/aaronwmorris/indi-allsky/wiki/VirtualSky" class="tw:link tw:link-info tw:text-xs tw:no-underline" target="_blank">Wiki Reference</a>
                 </div>
 
+                <div class="tw:flex tw:flex-col tw:gap-1">
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__POINTING_AZIMUTH.label.text }} (°)</span>
+                    {{ form_config.VIRTUALSKY__POINTING_AZIMUTH(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                    <span class="tw:text-[0.625rem] tw:text-base-content/40">Direction of the camera's lean: 0° N, 90° E, 180° S, 270° W. Uses Altitude above; ignored at 90°. Azimuth controls the overlay rotation.</span>
+                    <div id="VIRTUALSKY__POINTING_AZIMUTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                </div>
+                <p class="tw:text-xs tw:text-base-content/60">Review Lens curvature and optional additional overlay correction on <a href="{{ url_for('indi_allsky.virtualsky_view') }}" class="tw:link tw:link-info">VirtualSky</a>. Solving requires the correct camera location and image time.</p>
                 <!-- Offsets Latitude & Longitude -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__LATITUDE_OFFSET.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__LATITUDE_OFFSET.label.text }} (°)</span>
                         {{ form_config.VIRTUALSKY__LATITUDE_OFFSET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Latitude offset in degrees applied only to VirtualSky.</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Applied only to VirtualSky. Recovering camera pointing resets this to zero.</span>
                         <div id="VIRTUALSKY__LATITUDE_OFFSET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__LONGITUDE_OFFSET.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__LONGITUDE_OFFSET.label.text }} (°)</span>
                         {{ form_config.VIRTUALSKY__LONGITUDE_OFFSET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Longitude offset in degrees applied only to VirtualSky. Reload to apply the change.</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Applied only to VirtualSky. Recovering camera pointing resets this to zero. Reload to apply changes.</span>
                         <div id="VIRTUALSKY__LONGITUDE_OFFSET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
@@ -261,17 +268,18 @@
                 <!-- Diameter, Offsets X & Y, Magnitude -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__IMAGE_CIRCLE_DIAMETER.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__IMAGE_CIRCLE_DIAMETER.label.text }} (px)</span>
                         {{ form_config.VIRTUALSKY__IMAGE_CIRCLE_DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">180° reference diameter for the overlay. It may differ from the visible lens circle.</span>
                         <div id="VIRTUALSKY__IMAGE_CIRCLE_DIAMETER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__OFFSET_X.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__OFFSET_X.label.text }} (px)</span>
                         {{ form_config.VIRTUALSKY__OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="VIRTUALSKY__OFFSET_X-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__OFFSET_Y.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VIRTUALSKY__OFFSET_Y.label.text }} (px)</span>
                         {{ form_config.VIRTUALSKY__OFFSET_Y(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="VIRTUALSKY__OFFSET_Y-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>

@@ -1012,12 +1012,16 @@ class BaseView(View):
 
     def _get_systemd_bus(self, bus_type=None):
         if bus_type is not None:
-            return bus_type()
+            try:
+                return bus_type()
+            except Exception:
+                pass
         try:
-            return dbus.SystemBus()
+            # The user session bus should not exist with the apt install of indi-allsky
+            return dbus.SessionBus()
         except Exception:
             try:
-                return dbus.SessionBus()
+                return dbus.SystemBus()
             except Exception:
                 raise dbus.exceptions.DBusException('D-Bus Unavailable')
 

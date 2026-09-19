@@ -35,6 +35,50 @@ class StarDetector(object):
         # populated by detectStars() for the solver's reason codes and timing
         self.last_n_labels = 0
         self.last_component_flood = False
+        self.use_sky_hints = False
+        self.sensor_shape = None
+        self.binning = 1
+
+    def preferredDetections(self, detections, image_shape):
+        """SQM_ROI is a sensor-coordinate hint, never an exclusion of other sky."""
+        roi = self.config.get('SQM_ROI')
+        if not self.sensor_shape or not isinstance(roi, (list, tuple)) or len(roi) != 4:
+            return detections[:0]
+        try:
+            if any(isinstance(v, bool) or not numpy.isfinite(v) for v in roi):
+                return detections[:0]
+            x1, y1, x2, y2 = [int(v / self.binning) for v in roi]
+            height, width = self.sensor_shape
+            if not 0 <= x1 < x2 <= width or not 0 <= y1 < y2 <= height:
+                return detections[:0]
+            mask = numpy.zeros(self.sensor_shape, dtype=numpy.uint8)
+            mask[y1:y2, x1:x2] = 255
+            mask = self._transformMask(mask, image_shape, self.binning)
+            xy = detections[:, :2].astype(int)
+            return detections[mask[xy[:, 1], xy[:, 0]] > MASK_BINARIZE_THRESHOLD]
+        except (TypeError, ValueError, OverflowError):
+            return detections[:0]
+
+    def _transformMask(self, mask, image_shape, binning=1):
+        processor = MaskProcessor(self.config)
+        processor.image = mask
+        processor.binning = binning
+        processor.rotate_90()
+        processor.rotate_angle()
+        processor.flip_v()
+        processor.flip_h()
+        if self.config.get('IMAGE_CROP_IMAGE_CIRCLE') or self.config.get('IMAGE_CROP_ROI'):
+            processor.crop_image()
+        # Focus frames skip scale and borders in the image pipeline too.
+        if not (self.use_sky_hints and self.config.get('FOCUS_MODE')):
+            if self.config.get('IMAGE_SCALE') and self.config['IMAGE_SCALE'] != 100:
+                processor.scale_image()
+            if self.use_sky_hints:
+                processor.add_border()
+        height, width = image_shape[:2]
+        if processor.image.shape != (height, width):
+            return cv2.resize(processor.image, (width, height))
+        return processor.image
 
     def buildExclusionMask(self, image_shape):
         # 255 = usable sky, 0 = excluded; None when nothing to exclude
@@ -48,25 +92,14 @@ class StarDetector(object):
             if user_mask is not None:
                 # masks are authored in sensor orientation; apply the same
                 # transforms the image pipeline applies to captured frames
-                # (mirrors BaseView._load_detection_mask, binning 1)
-                mask_processor = MaskProcessor(self.config)
-                mask_processor.image = user_mask
-                if self.config.get('IMAGE_ROTATE'):
-                    mask_processor.rotate_90()
-                if self.config.get('IMAGE_ROTATE_ANGLE'):
-                    mask_processor.rotate_angle()
-                if self.config.get('IMAGE_FLIP_V'):
-                    mask_processor.flip_v()
-                if self.config.get('IMAGE_FLIP_H'):
-                    mask_processor.flip_h()
-                if self.config.get('IMAGE_CROP_IMAGE_CIRCLE') or self.config.get('IMAGE_CROP_ROI'):
-                    mask_processor.crop_image()
-                if self.config.get('IMAGE_SCALE') and self.config['IMAGE_SCALE'] != 100:
-                    mask_processor.scale_image()
-                user_mask = mask_processor.image
-
-                if user_mask.shape != (height, width):
-                    user_mask = cv2.resize(user_mask, (width, height))
+                binning = 1
+                if self.use_sky_hints:
+                    binning = self.binning
+                    # Older camera records may lack dimensions. Detection masks
+                    # are authored at full sensor resolution, before binning.
+                    shape = self.sensor_shape or tuple(max(1, n // binning) for n in user_mask.shape)
+                    user_mask = cv2.resize(user_mask, shape[::-1])
+                user_mask = self._transformMask(user_mask, image_shape, binning)
 
                 # binarize AFTER resize
                 binary_mask = numpy.zeros_like(user_mask)
@@ -106,17 +139,23 @@ class StarDetector(object):
                                 interpolation=cv2.INTER_LINEAR)
         signal = cv2.subtract(image_gray, background)
 
-        _mean, stddev = cv2.meanStdDev(signal)   # 4x faster than numpy.std
-        std = float(stddev[0, 0])
-        threshold_value = max(MIN_DETECTION_THRESHOLD, DETECTION_SIGMA * std)
-        _, thresh = cv2.threshold(signal, threshold_value, 255, cv2.THRESH_BINARY)
-
         mask = self.buildExclusionMask(image_gray.shape)
-        if mask is not None:
-            thresh = cv2.bitwise_and(thresh, mask)
-
-        n_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
-            thresh, connectivity=8)
+        # Excluded lights must not raise the threshold for the permitted sky.
+        threshold_masks = (mask, None) if self.use_sky_hints and mask is not None else (None,)
+        threshold_value = MIN_DETECTION_THRESHOLD
+        for threshold_mask in threshold_masks:
+            _mean, stddev = cv2.meanStdDev(signal, mask=threshold_mask)
+            threshold_value = max(threshold_value, DETECTION_SIGMA * float(stddev[0, 0]))
+            _, thresh = cv2.threshold(signal, threshold_value, 255, cv2.THRESH_BINARY)
+            if mask is not None:
+                thresh = cv2.bitwise_and(thresh, mask)
+            n_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
+                thresh, connectivity=8)
+            if n_labels <= MAX_COMPONENTS:
+                break
+            # Masked sky can admit too much noise on stretched images. Retry
+            # once at the normal threshold, keeping exclusions and the limit.
+            del labels, stats, centroids  # release the large label map before retrying
         self.last_n_labels = int(n_labels)
 
         if n_labels > MAX_COMPONENTS:

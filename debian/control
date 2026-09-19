@@ -19,7 +19,7 @@ Package: indi-allsky-web
 Architecture: any
 Depends: ${misc:Depends},
  python3 (>= 3.9),
- apache2 | nginx,
+ caddy | apache2 | nginx,
  sqlite3,
  pigz,
  zstd,

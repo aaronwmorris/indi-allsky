@@ -2404,9 +2404,12 @@ class VideoWorker(Process):
         task.setRunning()
 
         satellite = IndiAllskyUpdateSatelliteData(self.config)
-        satellite.update()
+        success = satellite.update()
 
-        task.setSuccess('Satellite data updated')
+        if success:
+            task.setSuccess('Satellite data updated')
+        else:
+            task.setFailed('Satellite data update deferred or failed')
 
 
     def backupDatabase(self, task, **kwargs):

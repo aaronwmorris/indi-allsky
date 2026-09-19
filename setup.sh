@@ -164,17 +164,21 @@ if which whiptail >/dev/null 2>&1; then
 fi
 
 
-echo "################################################################################"
-echo "###                    DEPRECATION NOTICE: SETUP.SH                         ###"
-echo "###                                                                          ###"
-echo "###  setup.sh is deprecated.  Please use the official APT repository:        ###"
-echo "###                                                                          ###"
-echo "###    https://apt.indi-allsky.org                                            ###"
-echo "###                                                                          ###"
-echo "###  Installation guide:                                                     ###"
-echo "###    https://github.com/aaronwmorris/indi-allsky/wiki/Getting-Started       ###"
-echo "###                                                                          ###"
-echo "################################################################################"
+cat << 'EOF'
+####################################################################################
+###                    DEPRECATION NOTICE: SETUP.SH                              ###
+###                                                                              ###
+###  setup.sh is deprecated.  Please use the official APT repository:            ###
+###                                                                              ###
+###    https://apt.indi-allsky.org                                               ###
+###                                                                              ###
+###  Installation guide:                                                         ###
+###    https://github.com/aaronwmorris/indi-allsky/wiki/Getting-Started          ###
+###  Migration guide:                                                            ###
+###    https://github.com/aaronwmorris/indi-allsky/wiki/Setup-to-Deb-Migration   ###
+###                                                                              ###
+####################################################################################
+EOF
 echo
 echo "Welcome to the legacy indi-allsky setup script."
 echo "Setup proceeding in 5 seconds... (Press Ctrl+C to cancel and use .deb instead)"
@@ -359,6 +363,16 @@ if systemctl --quiet is-enabled "nginx.service" 2>/dev/null; then
 
         WEBSERVER="nginx"
     fi
+fi
+
+if systemctl --quiet is-enabled "caddy.service" 2>/dev/null; then
+    echo
+    echo "Detected caddy web server is active"
+    echo
+
+    #sleep 3
+
+    WEBSERVER="caddy"
 fi
 
 
@@ -628,7 +642,9 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
     fi
 
 elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
-    if [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "26.04" ]]; then
+        DISTRO="ubuntu_26.04"
+    elif [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
         DISTRO="ubuntu_24.04"
     elif [[ "$DISTRO_VERSION_ID" == "22.04" ]]; then
         DISTRO="ubuntu_22.04"
@@ -700,15 +716,15 @@ if [[ "$DISTRO" == "debian_13" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -780,18 +796,18 @@ if [[ "$DISTRO" == "debian_13" ]]; then
 
     if [ "$CPU_BITS" != "32" ]; then
         # not available on 32-bit platforms
-        sudo apt-get -y install \
+        sudo apt -y install \
             libatlas-ecmwf-dev
     fi
 
 
     # this can fail on non-raspberry pi OS repos
-    sudo apt-get -y install \
+    sudo apt -y install \
         liblgpio-dev || true
 
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -811,7 +827,7 @@ if [[ "$DISTRO" == "debian_13" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-bin \
             libindi-data \
             libindi-dev \
@@ -840,7 +856,7 @@ if [[ "$DISTRO" == "debian_13" ]]; then
     fi
 
     if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             rpicam-apps
     fi
 
@@ -876,15 +892,15 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -956,7 +972,7 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -970,7 +986,7 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-full \
             libindi-dev \
             indi-webcam \
@@ -995,7 +1011,7 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
     fi
 
     if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             rpicam-apps
     fi
 
@@ -1030,15 +1046,15 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -1109,7 +1125,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -1123,7 +1139,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-full \
             libindi-dev \
             indi-webcam \
@@ -1150,7 +1166,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
 
     if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
         # this can fail on non-raspberry pi OS repos
-        sudo apt-get -y install \
+        sudo apt -y install \
             libcamera-apps || true
     fi
 
@@ -1188,15 +1204,15 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -1250,7 +1266,7 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -1264,7 +1280,7 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-full \
             libindi-dev \
             indi-rpicam \
@@ -1288,6 +1304,168 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
             indi-gpsd \
             indi-gpsnmea
     fi
+
+elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
+    RSYSLOG_USER=syslog
+    RSYSLOG_GROUP=adm
+
+    APACHE_ETC="/etc/apache2"
+    APACHE_SERVICE_NAME="apache2.service"
+
+    MYSQL_ETC="/etc/mysql"
+
+    PYTHON_BIN=python3.14
+
+
+    if [ "$CPU_BITS" == "32" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
+    fi
+
+
+    if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
+        fi
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
+        fi
+    else
+        INSTALL_INDI="false"
+
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            echo
+            echo
+            echo "There are not prebuilt indi packages for this distribution"
+            echo "Please run ./misc/build_indi.sh before running setup.sh"
+            echo
+            echo
+            exit 1
+        fi
+    fi
+
+
+    sudo apt update
+
+
+    if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+        sudo apt -y full-upgrade
+    fi
+
+
+    sudo apt -y install \
+        build-essential \
+        python3 \
+        python3-dev \
+        python3-venv \
+        python3-pip \
+        virtualenv \
+        cmake \
+        gfortran \
+        whiptail \
+        bc \
+        procps \
+        rsyslog \
+        cron \
+        git \
+        cpio \
+        tzdata \
+        locales \
+        ca-certificates \
+        avahi-daemon \
+        swig \
+        libatlas-ecmwf-dev \
+        libimath-dev \
+        libopenexr-dev \
+        libgtk-3-0t64 \
+        libssl-dev \
+        libxml2-dev \
+        libxslt1-dev \
+        libgnutls28-dev \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        libffi-dev \
+        libopencv-dev \
+        libopenblas-dev \
+        libraw-dev \
+        libgeos-dev \
+        libtiff-dev \
+        libjpeg8-dev \
+        libopenjp2-7-dev \
+        libpng-dev \
+        zlib1g-dev \
+        libfreetype-dev \
+        liblcms2-dev \
+        libwebp-dev \
+        libcap-dev \
+        tcl8.6-dev \
+        tk8.6-dev \
+        python3-tk \
+        libharfbuzz-dev \
+        libfribidi-dev \
+        libxcb1-dev \
+        default-libmysqlclient-dev \
+        pkgconf \
+        rustc \
+        cargo \
+        ffmpeg \
+        gifsicle \
+        jq \
+        sqlite3 \
+        libgpiod3 \
+        i2c-tools \
+        network-manager \
+        udisks2 \
+        dnsmasq-base \
+        polkitd \
+        libsystemd-dev \
+        dbus-user-session
+
+    if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
+        sudo apt -y install \
+            mariadb-server
+    fi
+
+
+    if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
+        if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
+            INSTALL_INDI="false"
+        fi
+    fi
+
+    if [[ "$INSTALL_INDI" == "true" ]]; then
+        sudo apt -y install \
+            indi-bin \
+            libindi-data \
+            libindi-dev \
+            indi-webcam \
+            indi-asi \
+            libasi \
+            indi-qhy \
+            libqhy \
+            indi-playerone \
+            libplayerone \
+            indi-svbony \
+            libsvbony \
+            libsvbonycam \
+            libaltaircam \
+            libmeadecam \
+            libmallincam \
+            libmicam \
+            libnncam \
+            indi-toupbase \
+            libtoupcam \
+            indi-gphoto \
+            indi-sx \
+            indi-dsi \
+            indi-gpsd \
+            indi-gpsnmea
+    fi
+
 elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
@@ -1332,15 +1510,15 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -1412,7 +1590,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -1424,7 +1602,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-bin \
             libindi-data \
             libindi-dev \
@@ -1454,7 +1632,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
 
 
     #if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
-    #    sudo apt-get -y install \
+    #    sudo apt -y install \
     #        rpicam-apps
     #fi
 
@@ -1503,15 +1681,15 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3.11 \
         python3.11-dev \
@@ -1586,7 +1764,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -1598,7 +1776,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-full \
             libindi-dev \
             indi-webcam \
@@ -1665,15 +1843,15 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3.9 \
         python3.9-dev \
@@ -1747,7 +1925,7 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -1759,7 +1937,7 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-full \
             libindi-dev \
             indi-webcam \
@@ -1894,12 +2072,12 @@ fi
 
 if [[ "$STELLARMATE" == "true" ]]; then
     # nginx already installed
-    #sudo apt-get -y install \
+    #sudo apt -y install \
     #    nginx
 
     # stellarmate does not install libindi-dev by default
     if ! dpkg -s libindi-dev >/dev/null; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             libindi-dev
     fi
 elif [[ "$ASTROBERRY3" == "true" ]]; then
@@ -1907,7 +2085,7 @@ elif [[ "$ASTROBERRY3" == "true" ]]; then
 
     # astroberry 3 does not install libindi-dev by default
     if ! dpkg -s libindi-dev >/dev/null; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             libindi-dev
     fi
 elif [[ "$ASTROBERRY2" == "true" ]]; then
@@ -1916,13 +2094,13 @@ elif [[ "$ASTROBERRY2" == "true" ]]; then
 else
     if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
         if [ "$WEBSERVER" == "nginx" ]; then
-            sudo apt-get -y install \
+            sudo apt -y install \
                 nginx
         elif [ "$WEBSERVER" == "caddy" ]; then
-            sudo apt-get -y install \
+            sudo apt -y install \
                 caddy
         elif [ "$WEBSERVER" == "apache" ]; then
-            sudo apt-get -y install \
+            sudo apt -y install \
                 apache2
         else
             echo
@@ -1992,7 +2170,7 @@ fi
 if systemctl --quiet is-enabled "${INDISERVER_SERVICE_NAME}" 2>/dev/null; then
     # system
     INSTALL_INDISERVER="false"
-elif systemctl --user --quiet is-enabled "${INDISERVER_SERVICE_NAME}.timer" 2>/dev/null; then
+elif systemctl --user --quiet is-enabled "${INDISERVER_SERVICE_NAME}.service" 2>/dev/null; then
     while [ -z "${INSTALL_INDISERVER:-}" ]; do
         # user
         if whiptail --title "indiserver update" --yesno "An indiserver service is already defined, would you like to replace it?\n\nThis is normally not needed during an upgrade.\n\nIf you are trying change camera vendors, choose YES" 0 0 --defaultno; then
@@ -2078,7 +2256,7 @@ pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_POST}"
 
 # replace rpi.gpio module with rpi.lgpio in some cases
 if [ "${GPIO_PYTHON_MODULES}" == "true" ]; then
-    if [[ "$DISTRO" == "debian_13" || "$DISTRO" == "debian_12" || "$DISTRO" == "ubuntu_24.04" ]]; then
+    if [[ "$DISTRO" == "debian_13" || "$DISTRO" == "debian_12" || "$DISTRO" == "ubuntu_26.04" || "$DISTRO" == "ubuntu_24.04" ]]; then
         if [[ "$CPU_ARCH" == "aarch64" || "$CPU_ARCH" == "armv7l" ]]; then
             pip3 uninstall -y RPi.GPIO rpi.lgpio
 
@@ -2300,11 +2478,11 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
     echo
     echo "**** Setting up indiserver service ****"
 
-
-    # timer
-    cp -f "${ALLSKY_DIRECTORY}/service/${INDISERVER_SERVICE_NAME}.timer" "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
-    chmod 644 "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
-
+    # remove legacy timer if present
+    if [[ -f "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer" ]]; then
+        systemctl --user disable "${INDISERVER_SERVICE_NAME}.timer" 2>/dev/null || true
+        rm -f "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
+    fi
 
     TMP1=$(mktemp)
     sed \
@@ -2329,9 +2507,11 @@ fi
 
 
 echo "**** Setting up indi-allsky service ****"
-# timer
-cp -f "${ALLSKY_DIRECTORY}/service/${ALLSKY_SERVICE_NAME}.timer" "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.timer"
-chmod 644 "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.timer"
+# remove legacy timer if present
+if [[ -f "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.timer" ]]; then
+    systemctl --user disable "${ALLSKY_SERVICE_NAME}.timer" 2>/dev/null || true
+    rm -f "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.timer"
+fi
 
 
 TMP2=$(mktemp)
@@ -2384,9 +2564,6 @@ chmod 644 "${HOME}/.config/systemd/user/${UPGRADE_ALLSKY_SERVICE_NAME}.service"
 echo "**** Enabling services ****"
 sudo loginctl enable-linger "$USER"
 systemctl --user daemon-reload
-
-# indi-allsky service is started by the timer (2 minutes after boot)
-systemctl --user disable "${ALLSKY_SERVICE_NAME}.service"
 
 # gunicorn service is started by the socket
 systemctl --user disable "${GUNICORN_SERVICE_NAME}.service"
@@ -2513,11 +2690,9 @@ jq \
  --arg indi_allsky_docroot "$HTDOCS_FOLDER" \
  --arg migration_folder "$MIGRATION_FOLDER" \
  --arg allsky_service_name "${ALLSKY_SERVICE_NAME}.service" \
- --arg allsky_timer_name "${ALLSKY_SERVICE_NAME}.timer" \
  --arg indiserver_service_name "${INDISERVER_SERVICE_NAME}.service" \
- --arg indiserver_timer_name "${INDISERVER_SERVICE_NAME}.timer" \
  --arg gunicorn_service_name "${GUNICORN_SERVICE_NAME}.service" \
- '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri | .INDI_ALLSKY_DOCROOT = $indi_allsky_docroot | .MIGRATION_FOLDER = $migration_folder | .ALLSKY_SERVICE_NAME = $allsky_service_name | .ALLSKY_TIMER_NAME = $allsky_timer_name | .INDISERVER_SERVICE_NAME = $indiserver_service_name | .INDISERVER_TIMER_NAME = $indiserver_timer_name | .GUNICORN_SERVICE_NAME = $gunicorn_service_name' \
+ '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri | .INDI_ALLSKY_DOCROOT = $indi_allsky_docroot | .MIGRATION_FOLDER = $migration_folder | .ALLSKY_SERVICE_NAME = $allsky_service_name | .INDISERVER_SERVICE_NAME = $indiserver_service_name | .GUNICORN_SERVICE_NAME = $gunicorn_service_name' \
  "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP_FLASK"
 
 
@@ -2997,6 +3172,11 @@ elif [[ "$WEBSERVER" == "nginx" && "$ASTROBERRY2" == "true" ]]; then
     sudo systemctl restart nginx
 
 elif [[ "$WEBSERVER" == "nginx" ]]; then
+    if systemctl --quiet is-active caddy.service; then
+        echo "!!! WARNING - caddy is active - This might interfere with apache !!!"
+        sleep 3
+    fi
+
     if systemctl --quiet is-active "$APACHE_SERVICE_NAME"; then
         echo "!!! WARNING - apache2 is active - This might interfere with nginx !!!"
         sleep 3
@@ -3114,6 +3294,11 @@ elif [[ "$WEBSERVER" == "nginx" ]]; then
     sudo systemctl restart nginx
 
 elif [[ "$WEBSERVER" == "apache" ]]; then
+    if systemctl --quiet is-active caddy.service; then
+        echo "!!! WARNING - caddy is active - This might interfere with apache !!!"
+        sleep 3
+    fi
+
     if systemctl --quiet is-active nginx.service; then
         echo "!!! WARNING - nginx is active - This might interfere with apache !!!"
         sleep 3
@@ -3394,8 +3579,92 @@ elif [[ "$WEBSERVER" == "caddy" ]]; then
         sleep 3
     fi
 
-    # FUTURE - setup caddy here
 
+    if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+        while [ -z "${WEBSERVER_CONFIG:-}" ]; do
+            if whiptail --title "Web Server Configuration" --yesno "Do you want to update the web server configuration?\n\nIf you have performed customizations to the caddy config, you should choose \"no\"\n\n(Hint: Most people should pick \"yes\")" 0 0; then
+                WEBSERVER_CONFIG="true"
+            else
+                WEBSERVER_CONFIG="false"
+            fi
+        done
+
+
+        if [ "$WEBSERVER_CONFIG" == "true" ]; then
+            echo "**** Setup caddy service ****"
+            TMP_HTTP=$(mktemp)
+            sed \
+             -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+             -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+             -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
+             -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
+             -e "s|%UPSTREAM_SERVER%|unix/$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock|g" \
+             "${ALLSKY_DIRECTORY}/service/caddy_indi-allsky.conf" > "$TMP_HTTP"
+
+
+            # backup existing config
+            sudo cp -f "/etc/caddy/Caddyfile" "/etc/caddy/backup_Caddyfile_$(date +%Y%m%d_%H%M%S)"
+
+
+            sudo cp -f "$TMP_HTTP" /etc/caddy/Caddyfile
+            sudo chown root:root /etc/caddy/Caddyfile
+            sudo chmod 644 /etc/caddy/Caddyfile
+
+
+            if [[ ! -d "/etc/caddy/ssl" ]]; then
+                sudo mkdir /etc/caddy/ssl
+            fi
+
+            sudo chown root:root /etc/caddy/ssl
+            sudo chmod 755 /etc/caddy/ssl
+
+
+            if [[ ! -e "/etc/caddy/ssl/indi-allsky_caddy.key" || ! -e "/etc/caddy/ssl/indi-allsky_caddy.pem" ]]; then
+                sudo rm -f /etc/caddy/ssl/indi-allsky_caddy.key
+                sudo rm -f /etc/caddy/ssl/indi-allsky_caddy.pem
+
+                SHORT_HOSTNAME=$(hostname -s)
+                HTTP_KEY_TMP=$(mktemp --suffix=.key)
+                HTTP_CRT_TMP=$(mktemp --suffix=.pem)
+
+                # sudo has problems with process substitution <()
+                openssl req \
+                    -x509 \
+                    -days 3650 \
+                    -newkey ec \
+                    -sha384 \
+                    -nodes \
+                    -pkeyopt ec_paramgen_curve:secp384r1 \
+                    -subj "/CN=${SHORT_HOSTNAME}" \
+                    -addext "subjectAltName=DNS:${SHORT_HOSTNAME},DNS:${SHORT_HOSTNAME}.local,DNS:localhost" \
+                    -keyout "$HTTP_KEY_TMP" \
+                    -out "$HTTP_CRT_TMP"
+
+                sudo cp -f "$HTTP_KEY_TMP" /etc/caddy/ssl/indi-allsky_caddy.key
+                sudo cp -f "$HTTP_CRT_TMP" /etc/caddy/ssl/indi-allsky_caddy.pem
+
+                rm -f "$HTTP_KEY_TMP"
+                rm -f "$HTTP_CRT_TMP"
+            fi
+
+
+            sudo chown root:caddy /etc/caddy/ssl/indi-allsky_caddy.key
+            sudo chmod 640 /etc/caddy/ssl/indi-allsky_caddy.key
+            sudo chown root:root /etc/caddy/ssl/indi-allsky_caddy.pem
+            sudo chmod 644 /etc/caddy/ssl/indi-allsky_caddy.pem
+
+            # system certificate store
+            sudo cp -f /etc/caddy/ssl/indi-allsky_caddy.pem /usr/local/share/ca-certificates/indi-allsky_caddy.crt
+            sudo chown root:root /usr/local/share/ca-certificates/indi-allsky_caddy.crt
+            sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky_caddy.crt
+            sudo update-ca-certificates
+        fi
+    fi
+
+
+    # Always do this
+    sudo systemctl enable caddy
+    sudo systemctl restart caddy
 else
     echo
     echo "Unknown web server: $WEBSERVER"
@@ -3562,9 +3831,7 @@ fi
 
 
 if [ "$INSTALL_INDISERVER" == "true" ]; then
-    systemctl --user enable "${INDISERVER_SERVICE_NAME}.timer"
-    # indiserver service is started by the timer (30 seconds after boot)
-    systemctl --user disable "${INDISERVER_SERVICE_NAME}.service"
+    systemctl --user enable "${INDISERVER_SERVICE_NAME}.service"
 
 
     while [ -z "${RESTART_INDISERVER:-}" ]; do
@@ -3630,9 +3897,9 @@ done
 
 
 if [ "$INDIALLSKY_AUTOSTART" == "true" ]; then
-    systemctl --user enable "${ALLSKY_SERVICE_NAME}.timer"
+    systemctl --user enable "${ALLSKY_SERVICE_NAME}.service"
 else
-    systemctl --user disable "${ALLSKY_SERVICE_NAME}.timer"
+    systemctl --user disable "${ALLSKY_SERVICE_NAME}.service"
 fi
 
 

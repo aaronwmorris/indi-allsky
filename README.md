@@ -332,7 +332,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/Getting-Started
 * Web interface logs: `/var/log/indi-allsky/webapp-indi-allsky.log` (syslog facility local7)
 * Systemd service status:
   ```bash
-  sudo systemctl status indi-allsky.service gunicorn-indi-allsky.socket indiserver.service apache2
+  sudo systemctl status indi-allsky.service gunicorn-indi-allsky.socket indiserver.service caddy.service
   ```
 
 

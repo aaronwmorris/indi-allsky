@@ -63,6 +63,22 @@
                     </div>
                 </div>
 
+                <!-- Map Coordinates Override (Privacy Fuzzing) -->
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ALLSKYMAP__MAP_LATITUDE.label.text }}</span>
+                        {{ form_config.ALLSKYMAP__MAP_LATITUDE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full', placeholder='e.g. -34.93') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">If left empty, it will use the configured location fuzzed to 2 decimal places (~1km). Must be within 1° of actual location.</span>
+                        <div id="ALLSKYMAP__MAP_LATITUDE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ALLSKYMAP__MAP_LONGITUDE.label.text }}</span>
+                        {{ form_config.ALLSKYMAP__MAP_LONGITUDE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full', placeholder='e.g. 138.60') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">If left empty, it will use the configured location fuzzed to 2 decimal places (~1km). Must be within 1° of actual location.</span>
+                        <div id="ALLSKYMAP__MAP_LONGITUDE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
                 <!-- Website URL & Ping Interval -->
                 <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
                     <div class="tw:flex tw:flex-col tw:gap-1">

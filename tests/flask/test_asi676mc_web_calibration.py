@@ -2471,7 +2471,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertNotIn('showCalibrationSetupView()', failed_status_body)
 
         docs = project_root.joinpath(
-            'docs', 'asi676mc-frame-repair.md'
+            'docs', 'wiki', 'ASI676MC-Purple-Frame-Repair-Details.md'
         ).read_text(encoding='utf-8')
         self.assertIn('camera-bound legacy', docs)
         self.assertIn('Start over', docs)

@@ -74,7 +74,9 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
     fi
 
 elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
-    if [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "26.04" ]]; then
+        DISTRO="ubuntu_26.04"
+    elif [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
         DISTRO="ubuntu_24.04"
     elif [[ "$DISTRO_VERSION_ID" == "22.04" ]]; then
         DISTRO="ubuntu_22.04"
@@ -111,8 +113,8 @@ if [[ "$DISTRO" == "debian_13" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
-    sudo apt-get update
-    sudo apt-get -y install \
+    sudo apt update
+    sudo apt -y install \
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
@@ -123,8 +125,8 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
-    sudo apt-get update
-    sudo apt-get -y install \
+    sudo apt update
+    sudo apt -y install \
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
@@ -135,8 +137,8 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
-    sudo apt-get update
-    sudo apt-get -y install \
+    sudo apt update
+    sudo apt -y install \
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
@@ -147,8 +149,20 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
-    sudo apt-get update
-    sudo apt-get -y install \
+    sudo apt update
+    sudo apt -y install \
+        mosquitto \
+        mosquitto-clients \
+        mosquitto-dev \
+        whiptail \
+        ca-certificates
+
+elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
+    #MOSQUITTO_USER=mosquitto
+    MOSQUITTO_GROUP=mosquitto
+
+    sudo apt update
+    sudo apt -y install \
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
@@ -159,8 +173,8 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
-    sudo apt-get update
-    sudo apt-get -y install \
+    sudo apt update
+    sudo apt -y install \
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
@@ -171,8 +185,8 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
-    sudo apt-get update
-    sudo apt-get -y install \
+    sudo apt update
+    sudo apt -y install \
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
@@ -183,8 +197,8 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
-    sudo apt-get update
-    sudo apt-get -y install \
+    sudo apt update
+    sudo apt -y install \
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
@@ -272,6 +286,21 @@ elif [[ "$DISTRO" == "arch" ]]; then
     sudo chown root:root /etc/ca-certificates/trust-source/anchors/indi-allsky_mosquitto.crt
     sudo chmod 644 /etc/ca-certificates/trust-source/anchors/indi-allsky_mosquitto.crt
     sudo update-ca-trust extract
+fi
+
+
+if [[ "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "linuxmint" ]]; then
+    if [ -f "/etc/apparmor.d/mosquitto" ]; then
+        # setup apparmor policy to allow access to CA certs
+        sudo tee /etc/apparmor.d/local/mosquitto <<EOF
+/etc/ssl/certs/ca-certificates.crt r,
+EOF
+        sudo chown root:root /etc/apparmor.d/local/mosquitto
+        sudo chmod 644 /etc/apparmor.d/local/mosquitto
+
+        # reread policy
+        sudo apparmor_parser -r /etc/apparmor.d/mosquitto
+    fi
 fi
 
 
