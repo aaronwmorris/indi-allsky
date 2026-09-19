@@ -165,7 +165,7 @@ fi
 
 
 cat << 'EOF'
-##################################################################################
+####################################################################################
 ###                    DEPRECATION NOTICE: SETUP.SH                              ###
 ###                                                                              ###
 ###  setup.sh is deprecated.  Please use the official APT repository:            ###
@@ -177,7 +177,7 @@ cat << 'EOF'
 ###  Migration guide:                                                            ###
 ###    https://github.com/aaronwmorris/indi-allsky/wiki/Setup-to-Deb-Migration   ###
 ###                                                                              ###
-##################################################################################
+####################################################################################
 EOF
 echo
 echo "Welcome to the legacy indi-allsky setup script."
