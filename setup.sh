@@ -706,15 +706,15 @@ if [[ "$DISTRO" == "debian_13" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -786,18 +786,18 @@ if [[ "$DISTRO" == "debian_13" ]]; then
 
     if [ "$CPU_BITS" != "32" ]; then
         # not available on 32-bit platforms
-        sudo apt-get -y install \
+        sudo apt -y install \
             libatlas-ecmwf-dev
     fi
 
 
     # this can fail on non-raspberry pi OS repos
-    sudo apt-get -y install \
+    sudo apt -y install \
         liblgpio-dev || true
 
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -817,7 +817,7 @@ if [[ "$DISTRO" == "debian_13" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-bin \
             libindi-data \
             libindi-dev \
@@ -846,7 +846,7 @@ if [[ "$DISTRO" == "debian_13" ]]; then
     fi
 
     if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             rpicam-apps
     fi
 
@@ -882,15 +882,15 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -962,7 +962,7 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -976,7 +976,7 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-full \
             libindi-dev \
             indi-webcam \
@@ -1001,7 +1001,7 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
     fi
 
     if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             rpicam-apps
     fi
 
@@ -1036,15 +1036,15 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -1115,7 +1115,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -1129,7 +1129,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-full \
             libindi-dev \
             indi-webcam \
@@ -1156,7 +1156,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
 
     if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
         # this can fail on non-raspberry pi OS repos
-        sudo apt-get -y install \
+        sudo apt -y install \
             libcamera-apps || true
     fi
 
@@ -1194,15 +1194,15 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -1256,7 +1256,7 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -1270,7 +1270,7 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-full \
             libindi-dev \
             indi-rpicam \
@@ -1336,15 +1336,15 @@ elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -1416,7 +1416,7 @@ elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -1428,7 +1428,7 @@ elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-bin \
             libindi-data \
             libindi-dev \
@@ -1500,15 +1500,15 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -1580,7 +1580,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -1592,7 +1592,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-bin \
             libindi-data \
             libindi-dev \
@@ -1622,7 +1622,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
 
 
     #if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
-    #    sudo apt-get -y install \
+    #    sudo apt -y install \
     #        rpicam-apps
     #fi
 
@@ -1671,15 +1671,15 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3.11 \
         python3.11-dev \
@@ -1754,7 +1754,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -1766,7 +1766,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-full \
             libindi-dev \
             indi-webcam \
@@ -1833,15 +1833,15 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3.9 \
         python3.9-dev \
@@ -1915,7 +1915,7 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -1927,7 +1927,7 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-full \
             libindi-dev \
             indi-webcam \
@@ -2062,12 +2062,12 @@ fi
 
 if [[ "$STELLARMATE" == "true" ]]; then
     # nginx already installed
-    #sudo apt-get -y install \
+    #sudo apt -y install \
     #    nginx
 
     # stellarmate does not install libindi-dev by default
     if ! dpkg -s libindi-dev >/dev/null; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             libindi-dev
     fi
 elif [[ "$ASTROBERRY3" == "true" ]]; then
@@ -2075,7 +2075,7 @@ elif [[ "$ASTROBERRY3" == "true" ]]; then
 
     # astroberry 3 does not install libindi-dev by default
     if ! dpkg -s libindi-dev >/dev/null; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             libindi-dev
     fi
 elif [[ "$ASTROBERRY2" == "true" ]]; then
@@ -2084,13 +2084,13 @@ elif [[ "$ASTROBERRY2" == "true" ]]; then
 else
     if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
         if [ "$WEBSERVER" == "nginx" ]; then
-            sudo apt-get -y install \
+            sudo apt -y install \
                 nginx
         elif [ "$WEBSERVER" == "caddy" ]; then
-            sudo apt-get -y install \
+            sudo apt -y install \
                 caddy
         elif [ "$WEBSERVER" == "apache" ]; then
-            sudo apt-get -y install \
+            sudo apt -y install \
                 apache2
         else
             echo
