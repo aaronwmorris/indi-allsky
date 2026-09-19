@@ -132,14 +132,13 @@ class IndiAllSky(object):
                     sat_last_ts = 0
 
                 if not sat_last_ts:
-                    with app.app_context():
-                        latest_sat = IndiAllSkyDbTleDataTable.query\
-                            .filter(IndiAllSkyDbTleDataTable.group == constants.SATELLITE_VISUAL)\
-                            .order_by(IndiAllSkyDbTleDataTable.createDate.desc())\
-                            .first()
-                        if latest_sat and latest_sat.createDate:
-                            sat_last_ts = int(latest_sat.createDate.timestamp())
-                            self._miscDb.setState('SATELLITE_TLE_TS', sat_last_ts)
+                    latest_sat = IndiAllSkyDbTleDataTable.query\
+                        .filter(IndiAllSkyDbTleDataTable.group == constants.SATELLITE_VISUAL)\
+                        .order_by(IndiAllSkyDbTleDataTable.createDate.desc())\
+                        .first()
+                    if latest_sat and latest_sat.createDate:
+                        sat_last_ts = int(latest_sat.createDate.timestamp())
+                        self._miscDb.setState('SATELLITE_TLE_TS', sat_last_ts)
 
                 if sat_last_ts and (sat_last_ts + self.sat_data_tasks_offset > now_time):
                     self.sat_data_tasks_time = sat_last_ts + self.sat_data_tasks_offset
