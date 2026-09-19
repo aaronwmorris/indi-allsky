@@ -786,7 +786,7 @@ class IndiAllSkyDarks(object):
                 hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
-            elif self.ccd_info['CCD_CFA']['CFA_TYPE'].get('text'):
+            elif self.ccd_info['CCD_CFA'].get('CFA_TYPE', {}).get('text'):
                 hdulist[0].header['BAYERPAT'] = self.ccd_info['CCD_CFA']['CFA_TYPE']['text']
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
