@@ -73,8 +73,8 @@ def test_send_allsky_map_ping_success(tmp_path):
         req = mock_urlopen.call_args[0][0]
         assert req.get_header('X-api-key') == 'secret-key-123'
         body = json.loads(req.data.decode('utf-8'))
-        assert body['lat'] == -34.9285
-        assert body['lng'] == 138.6007
+        assert body['lat'] == -34.93
+        assert body['lng'] == 138.6
         assert 'imageBase64' in body
 
 
@@ -250,4 +250,29 @@ def test_send_allsky_map_ping_errors_and_notifications():
         assert ok is False
         assert "Unexpected error: Boom" in msg
         mock_logger.error.assert_called()
+
+
+def test_send_allsky_map_ping_invalid_lat_lng_fallback():
+    config = {
+        'ALLSKYMAP': {
+            'API_URL': 'https://map.allsky.tv/api/ping',
+            'API_KEY': 'my-key',
+            'MAP_LATITUDE': 'invalid_lat',
+            'MAP_LONGITUDE': 'invalid_lng',
+        },
+        'LOCATION_LATITUDE': -34.9285,
+        'LOCATION_LONGITUDE': 138.6007,
+    }
+    fake_response = MagicMock()
+    fake_response.read.return_value = b'{"status": "ok"}'
+    fake_response.__enter__.return_value = fake_response
+    fake_response.__exit__.return_value = None
+
+    with patch('urllib.request.urlopen', return_value=fake_response) as mock_urlopen:
+        ok, msg = send_allsky_map_ping(config, None)
+        assert ok is True
+        req = mock_urlopen.call_args[0][0]
+        body = json.loads(req.data.decode('utf-8'))
+        assert body['lat'] == -34.93
+        assert body['lng'] == 138.6
 

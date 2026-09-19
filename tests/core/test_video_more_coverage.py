@@ -782,3 +782,16 @@ def test_generate_keogram_startrails_overwrite_true_and_orphans(more_worker, app
             assert not sv_file.exists()
 
 
+def test_update_satellite_data_failed(more_worker, app):
+    """Cover line 2412: task.setFailed in updateSatelliteTleData when satellite.update() returns False."""
+    worker = more_worker
+    with app.app_context():
+        task = MagicMock()
+        with patch('indi_allsky.video.IndiAllskyUpdateSatelliteData') as mock_sat_cls:
+            mock_sat_cls.return_value.update.return_value = False
+            worker.updateSatelliteTleData(task)
+            task.setFailed.assert_called_with('Satellite data update deferred or failed')
+
+
+
+

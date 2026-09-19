@@ -362,3 +362,83 @@ def test_config_restore_and_asi676mc_calibration_forms(flask_app, db):
             assets = f_mod._asi676mc_diagnostic_assets([img_mock], camera_id=cam.id, s3_prefix='', local=True)
             assert 1 in assets
             assert assets[1]['bad'] is not None
+
+
+def test_allskymap_form_validators(flask_app):
+    """Cover ALLSKYMAP__MAP_LATITUDE_validator and ALLSKYMAP__MAP_LONGITUDE_validator edge cases."""
+    with flask_app.test_request_context():
+        from wtforms.validators import ValidationError
+
+        class DummyForm:
+            LOCATION_LATITUDE = MagicMock(data='-34.9')
+            LOCATION_LONGITUDE = MagicMock(data='138.6')
+
+        form = DummyForm()
+
+        # Latitude invalid float
+        field = MagicMock(data='invalid')
+        with pytest.raises(ValidationError, match='valid number for latitude'):
+            f_mod.ALLSKYMAP__MAP_LATITUDE_validator(form, field)
+
+        # Latitude out of range
+        field = MagicMock(data='95.0')
+        with pytest.raises(ValidationError, match='between -90 and 90'):
+            f_mod.ALLSKYMAP__MAP_LATITUDE_validator(form, field)
+
+        # Latitude difference > 1 degree
+        field = MagicMock(data='-30.0')
+        with pytest.raises(ValidationError, match='within 1 degree'):
+            f_mod.ALLSKYMAP__MAP_LATITUDE_validator(form, field)
+
+        # Longitude invalid float
+        field = MagicMock(data='invalid')
+        with pytest.raises(ValidationError, match='valid number for longitude'):
+            f_mod.ALLSKYMAP__MAP_LONGITUDE_validator(form, field)
+
+        # Longitude out of range
+        field = MagicMock(data='200.0')
+        with pytest.raises(ValidationError, match='between -180 and 180'):
+            f_mod.ALLSKYMAP__MAP_LONGITUDE_validator(form, field)
+
+        # Longitude difference > 1 degree
+        field = MagicMock(data='145.0')
+        with pytest.raises(ValidationError, match='within 1 degree'):
+            f_mod.ALLSKYMAP__MAP_LONGITUDE_validator(form, field)
+
+
+def test_fits_selector_form_coverage(flask_app):
+    """Cover FitsSelectorForm getYears, getMonths, getDays, getHours with local=False and getUrl ValueError."""
+    with flask_app.test_request_context():
+        cam = f_mod.IndiAllSkyDbCameraTable.query.first()
+        cam_id = cam.id if cam else 1
+
+        selector = f_mod.IndiAllskyFitsImageViewer(
+            camera_id=cam_id,
+            s3_prefix='',
+            local=False,  # filter non-local
+            model=f_mod.IndiAllSkyDbFitsImageTable
+        )
+        selector.getYears()
+        selector.getMonths(2026)
+        selector.getDays(2026, 2)
+        selector.getHours(2026, 2, 1)
+
+        # getImages error handling when getUrl raises ValueError
+        now = datetime.now()
+        fits_img = f_mod.IndiAllSkyDbFitsImageTable(
+            camera_id=cam_id,
+            filename='bad_url.fits',
+            createDate=now,
+            dayDate=now.date(),
+            exposure=1.0,
+            gain=100.0,
+        )
+        f_mod.db.session.add(fits_img)
+        f_mod.db.session.commit()
+
+
+        with patch.object(f_mod.IndiAllSkyDbFitsImageTable, 'getUrl', side_effect=ValueError("bad path")):
+            imgs = selector.getImages(now.year, now.month, now.day, now.hour)
+            assert isinstance(imgs, list)
+
+

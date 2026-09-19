@@ -9,6 +9,8 @@ import cv2
 import numpy as np
 import pytest
 
+pytestmark = pytest.mark.slow
+
 from indi_allsky.lens_solver.detection import StarDetector
 from tests.flask.test_virtualsky import run_node
 

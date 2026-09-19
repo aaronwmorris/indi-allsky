@@ -574,20 +574,21 @@ def test_ajax_fits_image_viewer_local_url(auth_client, flask_app, db):
         db.session.add(fits_row)
         db.session.commit()
 
-    ajax_payload = {
-        'CAMERA_ID': 1,
-        'YEAR_SELECT': 2026,
-        'MONTH_SELECT': 9,
-        'DAY_SELECT': 8,
-        'HOUR_SELECT': 22,
-    }
-    response = auth_client.post('/indi-allsky/ajax/fitsimageviewer', json=ajax_payload)
-    assert response.status_code == 200
-    data = response.get_json()
+    with patch.dict(flask_app.config, {'INDI_ALLSKY_IMAGE_FOLDER': '/var/www/html/allsky/images'}):
+        ajax_payload = {
+            'CAMERA_ID': 1,
+            'YEAR_SELECT': 2026,
+            'MONTH_SELECT': 9,
+            'DAY_SELECT': 8,
+            'HOUR_SELECT': 22,
+        }
+        response = auth_client.post('/indi-allsky/ajax/fitsimageviewer', json=ajax_payload)
+        assert response.status_code == 200
+        data = response.get_json()
 
-    assert 'IMAGE_DATA' in data
-    assert len(data['IMAGE_DATA']) == 1
-    assert data['IMAGE_DATA'][0]['fits'].startswith('images/')
+        assert 'IMAGE_DATA' in data
+        assert len(data['IMAGE_DATA']) == 1
+        assert data['IMAGE_DATA'][0]['fits'].startswith('images/')
 
 
 def test_fits2jpeg_local_file_success(auth_client, flask_app, db, tmp_path):

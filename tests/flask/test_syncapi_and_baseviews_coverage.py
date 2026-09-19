@@ -56,11 +56,9 @@ def make_auth_header(username, raw_api_key, metadata_bytes):
 
 @pytest.fixture(autouse=True)
 def _base_sync_db(flask_app, tmp_path, db):
-    flask_app.config['INDI_ALLSKY_IMAGE_FOLDER'] = str(tmp_path)
-    flask_app.config['ADMIN_NETWORKS'] = ['127.0.0.1/32']
-
-    with flask_app.app_context():
-        cam = IndiAllSkyDbCameraTable.query.first()
+    with patch.dict(flask_app.config, {'INDI_ALLSKY_IMAGE_FOLDER': str(tmp_path), 'ADMIN_NETWORKS': ['127.0.0.1/32']}):
+        with flask_app.app_context():
+            cam = IndiAllSkyDbCameraTable.query.first()
         if not cam:
             cam = IndiAllSkyDbCameraTable(
                 name="sync_cam",
@@ -1379,6 +1377,21 @@ class TestBaseViewsCoverage:
         assert sensor_data['fan_status'] == 'No data'
         assert sensor_data['wind_dir'] == 'No data'
         assert sensor_data['rain_status'] == 'No data'
+
+    def test_base_view_night_astro_setup(self, flask_app):
+        bv = BaseView()
+        bv.camera = MagicMock()
+        bv.camera.longitude = 0.0
+        bv.camera.latitude = 0.0
+        bv.camera.elevation = 0
+        bv.camera.utc_offset = 0
+        bv.camera.nightSunAlt = 90.0  # force sun.alt <= nightSunAlt
+        bv.indi_allsky_config = {
+            'PRIVACY_MODE': False,
+            'NIGHT_SUN_ALT_DEG': -6.0,
+        }
+        data = bv.get_astrometric_info()
+        assert data['mode'] == 'Night'
 
 
 

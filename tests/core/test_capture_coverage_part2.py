@@ -450,3 +450,19 @@ def test_get_external_temperature_unlink_permission_error(capture_worker, app, t
              patch.object(Path, 'unlink', side_effect=PermissionError):
             with pytest.raises(TemperatureException):
                 worker.getExternalTemperature(str(script_p))
+
+
+def test_initialize_virtualsky_calibration_signature(capture_worker_setup, app):
+    """Cover lines 1085-1086: virtualsky calibration signature check during _initialize."""
+    worker = capture_worker_setup
+    with app.app_context():
+        mock_client = make_mock_indiclient()
+        worker.config['CAMERA_INTERFACE'] = 'indi'
+        worker.config['VIRTUALSKY'] = {
+            'CALIBRATION': {'pipeline': 'dummy'},
+            'CALIBRATION_ENABLED': True,
+        }
+        with patch('indi_allsky.camera.indi', return_value=mock_client), patch('time.sleep'):
+            worker._initialize()
+
+

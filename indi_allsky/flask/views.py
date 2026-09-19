@@ -8156,7 +8156,7 @@ class AjaxLensSolverView(BaseView):
             result = solver.solve(
                 image_file, latitude, longitude, obstime_unix, values,
                 lens_altitude=values.get('LENS_ALTITUDE', self.camera.alt),
-                pointing_azimuth=values.get('POINTING_AZIMUTH', self.camera.data.get('vs_pointing_azimuth', 0.0)),
+                pointing_azimuth=values.get('POINTING_AZIMUTH', (self.camera.data or {}).get('vs_pointing_azimuth', 0.0)),
                 **hints)
             if result.get('calibration'):
                 result['calibration']['camera_uuid'] = self.camera.uuid
@@ -9464,6 +9464,7 @@ class JsonImageProcessingView(JsonView):
                 'processing_elapsed_s' : 0.0,
                 'message' : 'No FITS images found',
             }
+            return jsonify(json_data)
         try:
             filename_p = fits_entry.getLocalOrCachedPath(s3_prefix=self.s3_prefix)
         except Exception as e:

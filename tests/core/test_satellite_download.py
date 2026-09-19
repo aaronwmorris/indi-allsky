@@ -329,3 +329,90 @@ def test_update_purges_legacy_groups(mock_get, flask_app, db):
     all_entries = db.session.query(IndiAllSkyDbTleDataTable).all()
     assert len(all_entries) == 1
     assert all_entries[0].group == constants.SATELLITE_VISUAL
+
+
+def test_satellite_download_exceptions(flask_app):
+    import requests
+    import urllib3
+    import ssl
+    from requests.exceptions import ConnectTimeout, ConnectionError, ReadTimeout, SSLError, RequestException
+
+    updater = IndiAllskyUpdateSatelliteData({})
+    exceptions = [
+        socket.timeout("timeout"),
+        ConnectTimeout("connect timeout"),
+        ConnectionError("connect error"),
+        ReadTimeout("read timeout"),
+        urllib3.exceptions.ReadTimeoutError(None, "url", "read timeout"),
+        SSLError("ssl error"),
+        RequestException("req error"),
+    ]
+
+    for exc in exceptions:
+        with patch.object(updater, 'download_tle', side_effect=exc):
+            assert updater.update(force=True) is False
+
+    # HTTP 500
+    with patch.object(updater, 'download_tle', return_value="some_data"):
+        updater.last_status_code = 500
+        assert updater.update(force=True) is False
+
+    # Empty response
+    with patch.object(updater, 'download_tle', return_value=""):
+        updater.last_status_code = 200
+        assert updater.update(force=True) is False
+
+    # parse_tle returns None
+    with patch.object(updater, 'download_tle', return_value="data"), patch.object(updater, 'parse_tle', return_value=None):
+        updater.last_status_code = 200
+        assert updater.update(force=True) is False
+
+
+def test_satellite_download_db_fallback_and_notice_exceptions(flask_app, db):
+    updater = IndiAllskyUpdateSatelliteData({})
+
+    # Failure notification exception in _record_failure
+    with patch.object(updater._miscDb, 'addNotification', side_effect=Exception("DB fail")):
+        updater._record_failure(is_rate_limit=False, error_msg="err")
+
+    # Clear notification exception in _record_success
+    with patch.object(updater._miscDb, 'clearNotification', side_effect=Exception("Clear fail")):
+        updater._record_success()
+
+    # DB fallback when SATELLITE_TLE_TS is 0
+    tle_row = IndiAllSkyDbTleDataTable(
+        title="TEST SAT",
+        line1=VALID_LINE1,
+        line2=VALID_LINE2,
+        group=constants.SATELLITE_VISUAL,
+        createDate=datetime.now(),
+    )
+    db.session.add(tle_row)
+    db.session.commit()
+
+    updater._miscDb.setState('SATELLITE_TLE_TS', 0)
+    assert updater.update(force=False) is True
+
+
+def test_satellite_download_extra_exceptions_and_invalid_ts(flask_app, db):
+    """Cover lines 121-122 (invalid SATELLITE_TLE_TS string state), 158 (SSLError), 172-174 (HTTP 500 error code handling)."""
+    import ssl
+    import requests
+
+    updater = IndiAllskyUpdateSatelliteData({})
+
+    # Lines 121-122: Invalid string in SATELLITE_TLE_TS
+    updater._miscDb.setState('SATELLITE_TLE_TS', 'not_an_int')
+    valid_tle = "ISS (ZARYA)\n1 25544U 98067A   24001.00000000  .00016717  00000-0  30000-3 0  9993\n2 25544  51.6400 300.0000 0007000 100.0000 260.0000 15.50000000400000\n"
+    with patch.object(updater, 'download_tle', return_value=valid_tle):
+        assert updater.update(force=False) is True
+
+    # Line 158: SSLCertVerificationError
+    with patch('requests.get', side_effect=ssl.SSLCertVerificationError('SSL verification failed')):
+        assert updater.update(force=True) is False
+
+    # Lines 172-174: HTTP 500 status code
+    mock_response = MagicMock(status_code=500)
+    with patch('requests.get', return_value=mock_response):
+        assert updater.update(force=True) is False
+

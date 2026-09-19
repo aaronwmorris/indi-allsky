@@ -121,8 +121,7 @@ class TestModelsCoverage:
 
     def test_file_base_relative_path_and_url(self, flask_app, tmp_path, db):
         """Covers lines 151-153, 158-161, 174, 182-187, 191-196, 202-217 in models.py."""
-        with flask_app.app_context():
-            flask_app.config['INDI_ALLSKY_IMAGE_FOLDER'] = str(tmp_path)
+        with flask_app.app_context(), patch.dict(flask_app.config, {'INDI_ALLSKY_IMAGE_FOLDER': str(tmp_path)}):
             cam = IndiAllSkyDbCameraTable.query.first()
 
             # Relative filename
@@ -1133,3 +1132,126 @@ class TestYoutubeViewsCoverage:
                 mdb = miscDb({})
                 with pytest.raises(Exception):
                     mdb.getState('YOUTUBE_CREDENTIALS')
+
+
+def test_get_local_or_cached_path_edge_cases(flask_app, tmp_path):
+    """Cover lines 178-179, 183, 195, 229-232, 238-239 in models.py (getLocalOrCachedPath)."""
+    with flask_app.app_context():
+        cam = IndiAllSkyDbCameraTable.query.first()
+        cam.s3_prefix = 'https://s3.example.com/prefix'
+
+        img = IndiAllSkyDbImageTable(
+            filename='nonexistent/image.jpg',
+            createDate=datetime.now(),
+            dayDate=datetime.now().date(),
+            exposure=1.0, gain=100.0, adu=100.0,
+            camera_id=cam.id,
+            s3_key='key/image.jpg',
+        )
+        img.camera = cam
+
+        # Exception in getFilesystemPath (lines 178-179) and camera.s3_prefix fallback (line 183)
+        with patch.object(img, 'getFilesystemPath', side_effect=Exception('Path error')):
+            # Non-http remote_url (line 195)
+            img.remote_url = 'ftp://invalid-scheme.com/img.jpg'
+            assert img.getLocalOrCachedPath() is None
+
+            # Http remote_url with download exception & temp file cleanup (lines 229-232, 238-239)
+            img.remote_url = 'https://example.com/fake.jpg'
+            with patch('requests.get', side_effect=Exception('Download failed')):
+                assert img.getLocalOrCachedPath() is None
+
+
+def test_models_100_coverage_additional(flask_app, tmp_path):
+    """Cover lines 169-170, 176-177, 187-192, 213, 219-226 in models.py."""
+    with flask_app.app_context():
+        cam = IndiAllSkyDbCameraTable.query.first()
+        img = IndiAllSkyDbImageTable(
+            filename='test/image.jpg',
+            createDate=datetime.now(),
+            dayDate=datetime.now().date(),
+            exposure=1.0, gain=100.0, adu=100.0,
+            camera_id=cam.id if cam else 1,
+            s3_key='key/image.jpg',
+        )
+
+        # 169-170: ValueError in getRelativePath inside getUrl
+        with patch.object(img, 'getRelativePath', side_effect=ValueError('Invalid path')):
+            assert img.getUrl() == Path('test/image.jpg')
+
+        # 176-177: Local file exists
+        dummy_file = tmp_path / "dummy.jpg"
+        dummy_file.write_text("data")
+        with patch.object(img, 'getFilesystemPath', return_value=dummy_file):
+            assert img.getLocalOrCachedPath() == dummy_file
+
+        # 191-192: No remote_url, s3_prefix, or s3_key
+        img.remote_url = None
+        img.s3_key = None
+        img.camera = None
+        assert img.getLocalOrCachedPath() is None
+
+        # 187-190, 219-226: s3_prefix + s3_key fallback & successful download
+        img.s3_key = 'folder/test_download.jpg'
+        with patch('requests.get') as mock_req:
+            mock_resp = MagicMock()
+            mock_resp.__enter__.return_value = mock_resp
+            mock_resp.iter_content.return_value = [b"chunk1", b"chunk2"]
+            mock_req.return_value = mock_resp
+
+            cached_path = img.getLocalOrCachedPath(s3_prefix='https://s3.example.com/bucket')
+            assert cached_path is not None
+            assert cached_path.is_file()
+
+            # 213: Cached file exists and stat > 0
+            cached_again = img.getLocalOrCachedPath(s3_prefix='https://s3.example.com/bucket')
+            assert cached_again == cached_path
+
+        # 225-226: Successful download completion
+        img.remote_url = 'https://example.com/successful_download.jpg'
+        mock_success_resp = MagicMock()
+        mock_success_resp.__enter__.return_value = mock_success_resp
+        mock_success_resp.iter_content.return_value = [b"full_file_content"]
+
+        with patch('requests.get', return_value=mock_success_resp):
+            success_cached = img.getLocalOrCachedPath()
+            assert success_cached is not None
+            assert success_cached.read_bytes() == b"full_file_content"
+
+        # 225-226: Successful download completion with unique remote_url
+        img.remote_url = 'https://example.com/unique_fresh_download_225_226.jpg'
+        mock_success_resp = MagicMock()
+        mock_success_resp.__enter__.return_value = mock_success_resp
+        mock_success_resp.iter_content.return_value = [b"full_file_content"]
+
+        with patch('requests.get', return_value=mock_success_resp):
+            success_cached = img.getLocalOrCachedPath()
+            assert success_cached is not None
+            assert success_cached.read_bytes() == b"full_file_content"
+
+        # 229-232: temp_path exists and unlink raises OSError
+        img.remote_url = 'https://example.com/unlink_oserror.jpg'
+
+        def failing_chunk_gen():
+            yield b"partial_data"
+            raise Exception("Stream error mid-download")
+
+        mock_err_resp = MagicMock()
+        mock_err_resp.__enter__.return_value = mock_err_resp
+        mock_err_resp.iter_content = MagicMock(side_effect=lambda chunk_size=65536: failing_chunk_gen())
+
+        with patch('requests.get', return_value=mock_err_resp):
+            with patch('pathlib.Path.unlink', side_effect=OSError('Permission denied')):
+                assert img.getLocalOrCachedPath() is None
+
+        # 238-239: Exception when evaluating 'if app:' in download error handler
+        class FaultyApp:
+            def __bool__(self):
+                raise RuntimeError("App error")
+
+        img.remote_url = 'https://example.com/app_error.jpg'
+        with patch('requests.get', side_effect=Exception('Download error')):
+            with patch('indi_allsky.flask.models.app', FaultyApp()):
+                assert img.getLocalOrCachedPath() is None
+
+

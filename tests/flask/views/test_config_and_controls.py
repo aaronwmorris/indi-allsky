@@ -535,6 +535,8 @@ def get_base_payload():
         'ALLSKYMAP__CAMERA_NAME': '',
         'ALLSKYMAP__CAMERA_OWNER': '',
         'ALLSKYMAP__WEBSITE_URL': '',
+        'ALLSKYMAP__MAP_LATITUDE': -34.9,
+        'ALLSKYMAP__MAP_LONGITUDE': 138.6,
         'ALLSKYMAP__UPLOAD_IMAGE': True,
         'ALLSKYMAP__INTERVAL': 10,
         'YOUTUBE__ENABLE': False,

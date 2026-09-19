@@ -1,6 +1,8 @@
 import numpy
 import pytest
 
+pytestmark = pytest.mark.slow
+
 from indi_allsky import lens_solver
 from indi_allsky.lens_solver import fitting
 from indi_allsky.lens_solver import (

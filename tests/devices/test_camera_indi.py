@@ -1046,3 +1046,26 @@ def test_indi_final_edge_cases(indi_client):
     vec_txt = MockIndiVector([MockIndiElement('T1', text='old')], state=PyIndi.IPS_OK)
     dev.add_control('TXT_SYNC', 'text', vec_txt)
     indi_client.set_text(dev, 'TXT_SYNC', {'T1': 'new'}, sync=True)
+
+
+def test_indi_camera_name_overrides(indi_client):
+    """Cover lines 1622-1627, 1633-1638, 1650-1656 in camera/indi.py."""
+    dev = MockIndiDevice('ZWO ASI120MM')
+    indi_client.ccd_device = dev
+
+    # 1. indi_asi_single_ccd with ZWO camera name
+    with patch.object(dev, 'getDriverExec', return_value='indi_asi_single_ccd'), \
+         patch.object(dev, 'getDeviceName', return_value='ZWO ASI120MM'):
+        assert indi_client.generateIndiAllskyCameraName() == 'ZWO CCD ASI120MM'
+
+    # 2. indi_playerone_single_ccd with PlayerOne camera name
+    with patch.object(dev, 'getDriverExec', return_value='indi_playerone_single_ccd'), \
+         patch.object(dev, 'getDeviceName', return_value='PlayerOne Ares-M'):
+        assert indi_client.generateIndiAllskyCameraName() == 'PlayerOne CCD Ares-M'
+
+    # 3. indi_toupcam_ccd with (USB2.0) suffix
+    with patch.object(dev, 'getDriverExec', return_value='indi_toupcam_ccd'), \
+         patch.object(dev, 'getDeviceName', return_value='ToupTek Cam(USB2.0)'):
+        assert indi_client.generateIndiAllskyCameraName() == 'ToupTek Cam'
+
+

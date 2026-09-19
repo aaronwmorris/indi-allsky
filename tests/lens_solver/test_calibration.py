@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 import pytest
 
+pytestmark = pytest.mark.slow
+
 from indi_allsky.lens_solver.calibration import (
     fitCorrection, displacement, validateCalibration, pipelineSignature)
 from indi_allsky.lens_solver.detection import StarDetector

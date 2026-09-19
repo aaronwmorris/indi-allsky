@@ -915,3 +915,48 @@ def test_start_capture_worker_dead_with_empty_error_queue(create_allsky_instance
         allsky._startCaptureWorker()
         assert allsky.capture_worker is new_worker
 
+
+def test_satellite_task_timing_coverage(create_allsky_instance, app):
+    """Cover lines 127, 140-141, 144, 1515 in allsky.py."""
+    with app.app_context():
+        from indi_allsky.flask.models import IndiAllSkyDbTleDataTable
+        from datetime import datetime
+
+        allsky = create_allsky_instance()
+        now_ts = time.time()
+
+        # Case 1: sat_next_attempt > now_time (line 127)
+        allsky._miscDb.setState('SATELLITE_TLE_NEXT_ATTEMPT_TS', int(now_ts + 500))
+        inst1 = create_allsky_instance()
+        assert inst1.sat_data_tasks_time == int(now_ts + 500) or inst1.sat_data_tasks_time > now_ts
+
+        # Case 2: no sat_last_ts state, fallback to DB record (lines 140-141, 144)
+        allsky._miscDb.setState('SATELLITE_TLE_NEXT_ATTEMPT_TS', 0)
+        allsky._miscDb.setState('SATELLITE_TLE_TS', 0)
+        tle_rec = IndiAllSkyDbTleDataTable(
+            group=constants.SATELLITE_VISUAL,
+            title='ISS',
+            line1='1...',
+            line2='2...',
+            createDate=datetime.now(),
+        )
+
+        db.session.add(tle_rec)
+        db.session.commit()
+
+        inst2 = create_allsky_instance()
+        assert inst2.sat_data_tasks_time > 0
+
+        # Case 3: sat_next_attempt > now_time in periodic main loop check (line 1515)
+        now_ts = time.time()
+        allsky._miscDb.setState('SATELLITE_TLE_NEXT_ATTEMPT_TS', int(now_ts + 600))
+        db.session.commit()
+        allsky.periodic_tasks_time = now_ts - 10
+        allsky.sat_data_tasks_time = now_ts - 10
+        with patch.object(allsky, '_updateSatelliteTleData') as mock_sat:
+            allsky._periodic_tasks()
+            mock_sat.assert_not_called()
+        assert allsky.sat_data_tasks_time == int(now_ts + 600)
+
+
+

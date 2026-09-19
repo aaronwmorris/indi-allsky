@@ -118,20 +118,20 @@ def test_location_and_clahe_validators():
     forms.LOCATION_NAME_validator(None, DummyField('Observatory'))
 
     # LOCATION_LATITUDE_validator
-    with pytest.raises(ValidationError, match='Please enter valid number'):
+    with pytest.raises(ValidationError, match='Please enter.*valid number'):
         forms.LOCATION_LATITUDE_validator(None, DummyField('abc'))
-    with pytest.raises(ValidationError, match='Latitude must be greater than -90'):
+    with pytest.raises(ValidationError, match='Latitude must be between -90 and 90'):
         forms.LOCATION_LATITUDE_validator(None, DummyField(-91.0))
-    with pytest.raises(ValidationError, match='Latitude must be less than 90'):
+    with pytest.raises(ValidationError, match='Latitude must be between -90 and 90'):
         forms.LOCATION_LATITUDE_validator(None, DummyField(91.0))
     forms.LOCATION_LATITUDE_validator(None, DummyField(35.0))
 
     # LOCATION_LONGITUDE_validator
-    with pytest.raises(ValidationError, match='Please enter valid number'):
+    with pytest.raises(ValidationError, match='Please enter.*valid number'):
         forms.LOCATION_LONGITUDE_validator(None, DummyField('abc'))
-    with pytest.raises(ValidationError, match='Longitude must be greater than -180'):
+    with pytest.raises(ValidationError, match='Longitude must be between -180 and 180'):
         forms.LOCATION_LONGITUDE_validator(None, DummyField(-181.0))
-    with pytest.raises(ValidationError, match='Longitude must be less than 180'):
+    with pytest.raises(ValidationError, match='Longitude must be between -180 and 180'):
         forms.LOCATION_LONGITUDE_validator(None, DummyField(181.0))
     forms.LOCATION_LONGITUDE_validator(None, DummyField(139.0))
 

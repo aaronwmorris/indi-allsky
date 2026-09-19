@@ -228,16 +228,18 @@ def test_ajax_system_info_view_timers_and_gunicorn(flask_app, system_db):
              patch.object(AjaxSystemInfoView, "enableSystemdUnit", return_value="enabled"), \
              patch.object(AjaxSystemInfoView, "stopSystemdUnit", return_value="stopped"):
 
-            # Indiserver timer
-            payload = {"CAMERA_ID": "1", "SERVICE_HIDDEN": flask_app.config["INDISERVER_TIMER_NAME"], "COMMAND_HIDDEN": "disable"}
+            # Indiserver service
+            indiserver_svc = flask_app.config.get("INDISERVER_SERVICE_NAME", "indiserver.service")
+            payload = {"CAMERA_ID": "1", "SERVICE_HIDDEN": indiserver_svc, "COMMAND_HIDDEN": "disable"}
             assert client.post("/indi-allsky/ajax/system", json=payload).status_code == 200
             payload["COMMAND_HIDDEN"] = "enable"
             assert client.post("/indi-allsky/ajax/system", json=payload).status_code == 200
             payload["COMMAND_HIDDEN"] = "invalid"
             assert client.post("/indi-allsky/ajax/system", json=payload).status_code == 400
 
-            # Allsky timer
-            payload = {"CAMERA_ID": "1", "SERVICE_HIDDEN": flask_app.config["ALLSKY_TIMER_NAME"], "COMMAND_HIDDEN": "enable"}
+            # Allsky service
+            allsky_svc = flask_app.config.get("ALLSKY_SERVICE_NAME", "indi-allsky.service")
+            payload = {"CAMERA_ID": "1", "SERVICE_HIDDEN": allsky_svc, "COMMAND_HIDDEN": "enable"}
             assert client.post("/indi-allsky/ajax/system", json=payload).status_code == 200
             payload["COMMAND_HIDDEN"] = "disable"
             assert client.post("/indi-allsky/ajax/system", json=payload).status_code == 200
@@ -245,7 +247,8 @@ def test_ajax_system_info_view_timers_and_gunicorn(flask_app, system_db):
             assert client.post("/indi-allsky/ajax/system", json=payload).status_code == 400
 
             # Gunicorn service
-            payload = {"CAMERA_ID": "1", "SERVICE_HIDDEN": flask_app.config["GUNICORN_SERVICE_NAME"], "COMMAND_HIDDEN": "stop"}
+            gunicorn_svc = flask_app.config.get("GUNICORN_SERVICE_NAME", "indi-allsky-ui.service")
+            payload = {"CAMERA_ID": "1", "SERVICE_HIDDEN": gunicorn_svc, "COMMAND_HIDDEN": "stop"}
             assert client.post("/indi-allsky/ajax/system", json=payload).status_code == 200
             payload["COMMAND_HIDDEN"] = "invalid"
             assert client.post("/indi-allsky/ajax/system", json=payload).status_code == 400

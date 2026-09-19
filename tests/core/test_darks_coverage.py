@@ -1396,8 +1396,7 @@ def test_flush_no_dark_frames(app, db, darks_instance):
 
 
 def test_flush_success(app, db, darks_instance, tmp_path):
-    with app.app_context():
-        app.config['INDI_ALLSKY_IMAGE_FOLDER'] = str(tmp_path)
+    with app.app_context(), patch.dict(app.config, {'INDI_ALLSKY_IMAGE_FOLDER': str(tmp_path)}):
         cam = IndiAllSkyDbCameraTable(name="CameraWithDarks")
         db.session.add(cam)
         db.session.commit()
