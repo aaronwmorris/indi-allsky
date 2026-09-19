@@ -216,6 +216,17 @@ if systemctl --quiet is-enabled "nginx.service" 2>/dev/null; then
 fi
 
 
+if systemctl --quiet is-enabled "caddy.service" 2>/dev/null; then
+    echo
+    echo "Detected nginx web server is active"
+    echo
+
+    #sleep 3
+
+    WEBSERVER="caddy"
+fi
+
+
 if [ -n "${WHIPTAIL_BIN:-}" ]; then
     "$WHIPTAIL_BIN" \
         --title "Welcome to indi-allsky" \
@@ -1572,6 +1583,11 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
 
 
 if [[ "$WEBSERVER" == "nginx" ]]; then
+    if systemctl --quiet is-active caddy; then
+        echo "!!! WARNING - caddy is active - This might interfere with nginx !!!"
+        sleep 3
+    fi
+
     if systemctl --quiet is-active "$APACHE_SERVICE_NAME"; then
         echo "!!! WARNING - apache2 is active - This might interfere with nginx !!!"
         sleep 3
@@ -1707,6 +1723,11 @@ elif [[ "$WEBSERVER" == "caddy" ]]; then
     # FUTURE - setup caddy here
 
 elif [[ "$WEBSERVER" == "apache" ]]; then
+    if systemctl --quiet is-active caddy; then
+        echo "!!! WARNING - caddy is active - This might interfere with apache !!!"
+        sleep 3
+    fi
+
     if systemctl --quiet is-active nginx; then
         echo "!!! WARNING - nginx is active - This might interfere with apache !!!"
         sleep 3

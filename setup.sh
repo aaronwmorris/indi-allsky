@@ -365,6 +365,16 @@ if systemctl --quiet is-enabled "nginx.service" 2>/dev/null; then
     fi
 fi
 
+if systemctl --quiet is-enabled "caddy.service" 2>/dev/null; then
+    echo
+    echo "Detected caddy web server is active"
+    echo
+
+    #sleep 3
+
+    WEBSERVER="caddy"
+fi
+
 
 if [ -n "${WHIPTAIL_BIN:-}" ]; then
     "$WHIPTAIL_BIN" \
@@ -3162,6 +3172,11 @@ elif [[ "$WEBSERVER" == "nginx" && "$ASTROBERRY2" == "true" ]]; then
     sudo systemctl restart nginx
 
 elif [[ "$WEBSERVER" == "nginx" ]]; then
+    if systemctl --quiet is-active caddy.service; then
+        echo "!!! WARNING - caddy is active - This might interfere with apache !!!"
+        sleep 3
+    fi
+
     if systemctl --quiet is-active "$APACHE_SERVICE_NAME"; then
         echo "!!! WARNING - apache2 is active - This might interfere with nginx !!!"
         sleep 3
@@ -3279,6 +3294,11 @@ elif [[ "$WEBSERVER" == "nginx" ]]; then
     sudo systemctl restart nginx
 
 elif [[ "$WEBSERVER" == "apache" ]]; then
+    if systemctl --quiet is-active caddy.service; then
+        echo "!!! WARNING - caddy is active - This might interfere with apache !!!"
+        sleep 3
+    fi
+
     if systemctl --quiet is-active nginx.service; then
         echo "!!! WARNING - nginx is active - This might interfere with apache !!!"
         sleep 3
