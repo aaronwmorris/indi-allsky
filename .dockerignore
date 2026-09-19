@@ -2,6 +2,12 @@
 **/__pycache__
 **/.git
 **/.env
+.pytest_cache/
+.pytest-tmp/
+.pytest-temp-*/
+.tmp/
+.venv-test/
+node_modules/
 virtualenv
 #virtualenv/**/*
 log
