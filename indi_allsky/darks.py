@@ -377,7 +377,7 @@ class IndiAllSkyDarks(object):
         if self.config.get('CFA_PATTERN'):
             cfa_pattern = self.config['CFA_PATTERN']
         else:
-            cfa_pattern = ccd_info['CCD_CFA']['CFA_TYPE'].get('text')
+            cfa_pattern = ccd_info['CCD_CFA'].get('CFA_TYPE', {}).get('text')
 
 
         ccd_min_exp = math.ceil(float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']) * 1000000) / 1000000
