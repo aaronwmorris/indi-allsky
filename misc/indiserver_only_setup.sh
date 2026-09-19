@@ -428,16 +428,16 @@ if [[ "$DISTRO" == "debian_13" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
     if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             rpicam-apps
     fi
 
@@ -455,16 +455,16 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
     if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             rpicam-apps
     fi
 
@@ -482,11 +482,11 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
@@ -514,15 +514,15 @@ elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         whiptail
 
 
@@ -533,7 +533,7 @@ elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-full \
             libindi-dev \
             indi-webcam \
@@ -581,15 +581,15 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         whiptail
 
 
@@ -600,7 +600,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-full \
             libindi-dev \
             indi-webcam \
@@ -650,15 +650,15 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         whiptail
 
 
@@ -669,7 +669,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-full \
             libindi-dev \
             indi-webcam \
@@ -718,15 +718,15 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         whiptail
 
 
@@ -737,7 +737,7 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-full \
             libindi-dev \
             indi-webcam \
