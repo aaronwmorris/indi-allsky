@@ -3562,8 +3562,92 @@ elif [[ "$WEBSERVER" == "caddy" ]]; then
         sleep 3
     fi
 
-    # FUTURE - setup caddy here
 
+    if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+        while [ -z "${WEBSERVER_CONFIG:-}" ]; do
+            if whiptail --title "Web Server Configuration" --yesno "Do you want to update the web server configuration?\n\nIf you have performed customizations to the caddy config, you should choose \"no\"\n\n(Hint: Most people should pick \"yes\")" 0 0; then
+                WEBSERVER_CONFIG="true"
+            else
+                WEBSERVER_CONFIG="false"
+            fi
+        done
+
+
+        if [ "$WEBSERVER_CONFIG" == "true" ]; then
+            echo "**** Setup caddy service ****"
+            TMP_HTTP=$(mktemp)
+            sed \
+             -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+             -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+             -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
+             -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
+             -e "s|%UPSTREAM_SERVER%|unix/$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock|g" \
+             "${ALLSKY_DIRECTORY}/service/caddy_indi-allsky.conf" > "$TMP_HTTP"
+
+
+            # backup existing config
+            sudo cp -f "/etc/caddy/Caddyfile" "/etc/caddy/backup_Caddyfile_$(date +%Y%m%d_%H%M%S)"
+
+
+            sudo cp -f "$TMP_HTTP" /etc/caddy/Caddyfile
+            sudo chown root:root /etc/caddy/Caddyfile
+            sudo chmod 644 /etc/caddy/Caddyfile
+
+
+            if [[ ! -d "/etc/caddy/ssl" ]]; then
+                sudo mkdir /etc/caddy/ssl
+            fi
+
+            sudo chown root:root /etc/caddy/ssl
+            sudo chmod 755 /etc/caddy/ssl
+
+
+            if [[ ! -e "/etc/caddy/ssl/indi-allsky_caddy.key" || ! -e "/etc/caddy/ssl/indi-allsky_caddy.pem" ]]; then
+                sudo rm -f /etc/caddy/ssl/indi-allsky_caddy.key
+                sudo rm -f /etc/caddy/ssl/indi-allsky_caddy.pem
+
+                SHORT_HOSTNAME=$(hostname -s)
+                HTTP_KEY_TMP=$(mktemp --suffix=.key)
+                HTTP_CRT_TMP=$(mktemp --suffix=.pem)
+
+                # sudo has problems with process substitution <()
+                openssl req \
+                    -x509 \
+                    -days 3650 \
+                    -newkey ec \
+                    -sha384 \
+                    -nodes \
+                    -pkeyopt ec_paramgen_curve:secp384r1 \
+                    -subj "/CN=${SHORT_HOSTNAME}" \
+                    -addext "subjectAltName=DNS:${SHORT_HOSTNAME},DNS:${SHORT_HOSTNAME}.local,DNS:localhost" \
+                    -keyout "$HTTP_KEY_TMP" \
+                    -out "$HTTP_CRT_TMP"
+
+                sudo cp -f "$HTTP_KEY_TMP" /etc/caddy/ssl/indi-allsky_caddy.key
+                sudo cp -f "$HTTP_CRT_TMP" /etc/caddy/ssl/indi-allsky_caddy.pem
+
+                rm -f "$HTTP_KEY_TMP"
+                rm -f "$HTTP_CRT_TMP"
+            fi
+
+
+            sudo chown root:caddy /etc/caddy/ssl/indi-allsky_caddy.key
+            sudo chmod 640 /etc/caddy/ssl/indi-allsky_caddy.key
+            sudo chown root:root /etc/caddy/ssl/indi-allsky_caddy.pem
+            sudo chmod 644 /etc/caddy/ssl/indi-allsky_caddy.pem
+
+            # system certificate store
+            sudo cp -f /etc/caddy/ssl/indi-allsky_caddy.pem /usr/local/share/ca-certificates/indi-allsky_caddy.crt
+            sudo chown root:root /usr/local/share/ca-certificates/indi-allsky_caddy.crt
+            sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky_caddy.crt
+            sudo update-ca-certificates
+        fi
+    fi
+
+
+    # Always do this
+    sudo systemctl enable caddy
+    sudo systemctl restart caddy
 else
     echo
     echo "Unknown web server: $WEBSERVER"
