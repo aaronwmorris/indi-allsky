@@ -87,7 +87,7 @@ def test_journal_log_downloads(flask_app, system_db):
     ]
 
     with patch.dict(flask_app.config, {"LOGIN_DISABLED": True}), \
-         patch("systemd.journal.Reader", mock_reader):
+         patch("systemd.journal.Reader", mock_reader, create=True):
         res = client.get("/indi-allsky/log/indiserver_download")
         assert res.status_code == 200
 
@@ -119,7 +119,7 @@ def test_notifications_views(flask_app, system_db):
             category=NotificationCategory.GENERAL,
             item="test",
             notification="System update available",
-            expireDate=datetime.now() + timedelta(hours=1),
+            expireDate=datetime.now() + timedelta(days=7),
         )
         db.session.add(notice)
         db.session.commit()

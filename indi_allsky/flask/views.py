@@ -8020,7 +8020,7 @@ class AjaxFocusControllerView(BaseView):
         direction = str(request.json['DIRECTION'])
         degrees = int(request.json['STEP_DEGREES'])
 
-        app.logger.info('Focusing: {0:s}', direction)
+        app.logger.info('Focusing: %s', direction)
 
         try:
             focuser_interface = IndiAllSkyFocuserInterface(self.indi_allsky_config)
