@@ -2160,7 +2160,7 @@ fi
 if systemctl --quiet is-enabled "${INDISERVER_SERVICE_NAME}" 2>/dev/null; then
     # system
     INSTALL_INDISERVER="false"
-elif systemctl --user --quiet is-enabled "${INDISERVER_SERVICE_NAME}.timer" 2>/dev/null; then
+elif systemctl --user --quiet is-enabled "${INDISERVER_SERVICE_NAME}.service" 2>/dev/null; then
     while [ -z "${INSTALL_INDISERVER:-}" ]; do
         # user
         if whiptail --title "indiserver update" --yesno "An indiserver service is already defined, would you like to replace it?\n\nThis is normally not needed during an upgrade.\n\nIf you are trying change camera vendors, choose YES" 0 0 --defaultno; then
@@ -2554,9 +2554,6 @@ chmod 644 "${HOME}/.config/systemd/user/${UPGRADE_ALLSKY_SERVICE_NAME}.service"
 echo "**** Enabling services ****"
 sudo loginctl enable-linger "$USER"
 systemctl --user daemon-reload
-
-# enable indi-allsky service directly at boot (ordered after indiserver and gunicorn)
-systemctl --user enable "${ALLSKY_SERVICE_NAME}.service"
 
 # gunicorn service is started by the socket
 systemctl --user disable "${GUNICORN_SERVICE_NAME}.service"
@@ -3880,9 +3877,9 @@ done
 
 
 if [ "$INDIALLSKY_AUTOSTART" == "true" ]; then
-    systemctl --user enable "${ALLSKY_SERVICE_NAME}.timer"
+    systemctl --user enable "${ALLSKY_SERVICE_NAME}.service"
 else
-    systemctl --user disable "${ALLSKY_SERVICE_NAME}.timer"
+    systemctl --user disable "${ALLSKY_SERVICE_NAME}.service"
 fi
 
 
