@@ -793,7 +793,7 @@ fi
 if systemctl --quiet is-enabled "${INDISERVER_SERVICE_NAME}" 2>/dev/null; then
     # system
     INSTALL_INDISERVER="false"
-elif systemctl --user --quiet is-enabled "${INDISERVER_SERVICE_NAME}.timer" 2>/dev/null; then
+elif systemctl --user --quiet is-enabled "${INDISERVER_SERVICE_NAME}.service" 2>/dev/null; then
     while [ -z "${INSTALL_INDISERVER:-}" ]; do
         # user
         if whiptail --title "indiserver update" --yesno "An indiserver service is already defined, would you like to replace it?\n\nThis is normally not needed during an upgrade.\n\nIf you are trying change camera vendors, choose YES" 0 0 --defaultno; then
@@ -920,9 +920,11 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
     echo "**** Setting up indiserver service ****"
 
 
-    # timer
-    cp -f "${ALLSKY_DIRECTORY}/service/${INDISERVER_SERVICE_NAME}.timer" "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
-    chmod 644 "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
+    # remove legacy timer if present
+    if [[ -f "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer" ]]; then
+        systemctl --user disable "${INDISERVER_SERVICE_NAME}.timer" 2>/dev/null || true
+        rm -f "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
+    fi
 
 
     TMP1=$(mktemp)
@@ -952,9 +954,7 @@ systemctl --user daemon-reload
 
 
 if [ "$INSTALL_INDISERVER" == "true" ]; then
-    # service started by timer
-    systemctl --user disable "${INDISERVER_SERVICE_NAME}.service"
-    systemctl --user enable "${INDISERVER_SERVICE_NAME}.timer"
+    systemctl --user enable "${INDISERVER_SERVICE_NAME}.service"
 
 
     while [ -z "${RESTART_INDISERVER:-}" ]; do
