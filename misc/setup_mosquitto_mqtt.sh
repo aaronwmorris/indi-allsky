@@ -113,8 +113,8 @@ if [[ "$DISTRO" == "debian_13" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
-    sudo apt-get update
-    sudo apt-get -y install \
+    sudo apt update
+    sudo apt -y install \
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
@@ -125,8 +125,8 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
-    sudo apt-get update
-    sudo apt-get -y install \
+    sudo apt update
+    sudo apt -y install \
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
@@ -137,8 +137,8 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
-    sudo apt-get update
-    sudo apt-get -y install \
+    sudo apt update
+    sudo apt -y install \
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
@@ -149,8 +149,8 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
-    sudo apt-get update
-    sudo apt-get -y install \
+    sudo apt update
+    sudo apt -y install \
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
@@ -161,8 +161,8 @@ elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
-    sudo apt-get update
-    sudo apt-get -y install \
+    sudo apt update
+    sudo apt -y install \
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
@@ -173,8 +173,8 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
-    sudo apt-get update
-    sudo apt-get -y install \
+    sudo apt update
+    sudo apt -y install \
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
@@ -185,8 +185,8 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
-    sudo apt-get update
-    sudo apt-get -y install \
+    sudo apt update
+    sudo apt -y install \
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \
@@ -197,8 +197,8 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
-    sudo apt-get update
-    sudo apt-get -y install \
+    sudo apt update
+    sudo apt -y install \
         mosquitto \
         mosquitto-clients \
         mosquitto-dev \

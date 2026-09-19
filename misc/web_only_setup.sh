@@ -216,6 +216,17 @@ if systemctl --quiet is-enabled "nginx.service" 2>/dev/null; then
 fi
 
 
+if systemctl --quiet is-enabled "caddy.service" 2>/dev/null; then
+    echo
+    echo "Detected nginx web server is active"
+    echo
+
+    #sleep 3
+
+    WEBSERVER="caddy"
+fi
+
+
 if [ -n "${WHIPTAIL_BIN:-}" ]; then
     "$WHIPTAIL_BIN" \
         --title "Welcome to indi-allsky" \
@@ -356,15 +367,15 @@ if [[ "$DISTRO" == "debian_13" ]]; then
     PYTHON_BIN=python3.13
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -430,13 +441,13 @@ if [[ "$DISTRO" == "debian_13" ]]; then
 
     if [ "$CPU_BITS" != "32" ]; then
         # not available on 32-bit platforms
-        sudo apt-get -y install \
+        sudo apt -y install \
             libatlas-ecmwf-dev
     fi
 
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -451,15 +462,15 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
     PYTHON_BIN=python3.11
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -525,7 +536,7 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -542,15 +553,15 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
     VIRTUALENV_REQ=requirements/requirements_debian11_web.txt
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -616,7 +627,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -633,15 +644,15 @@ elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
     VIRTUALENV_REQ=requirements/requirements_latest_web.txt
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -707,7 +718,7 @@ elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -725,15 +736,15 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     VIRTUALENV_REQ=requirements/requirements_latest_web.txt
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -799,7 +810,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -816,15 +827,15 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     VIRTUALENV_REQ=requirements/requirements_latest_web.txt
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3.11 \
         python3.11-dev \
@@ -893,7 +904,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -910,15 +921,15 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
     VIRTUALENV_REQ=requirements/requirements_debian11_web.txt
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3.9 \
         python3.9-dev \
@@ -987,7 +998,7 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -1091,13 +1102,13 @@ fi
 
 if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
     if [ "$WEBSERVER" == "nginx" ]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             nginx
     elif [ "$WEBSERVER" == "caddy" ]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             caddy
     elif [ "$WEBSERVER" == "apache" ]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             apache2
 
     else
@@ -1572,6 +1583,11 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
 
 
 if [[ "$WEBSERVER" == "nginx" ]]; then
+    if systemctl --quiet is-active caddy; then
+        echo "!!! WARNING - caddy is active - This might interfere with nginx !!!"
+        sleep 3
+    fi
+
     if systemctl --quiet is-active "$APACHE_SERVICE_NAME"; then
         echo "!!! WARNING - apache2 is active - This might interfere with nginx !!!"
         sleep 3
@@ -1707,6 +1723,11 @@ elif [[ "$WEBSERVER" == "caddy" ]]; then
     # FUTURE - setup caddy here
 
 elif [[ "$WEBSERVER" == "apache" ]]; then
+    if systemctl --quiet is-active caddy; then
+        echo "!!! WARNING - caddy is active - This might interfere with apache !!!"
+        sleep 3
+    fi
+
     if systemctl --quiet is-active nginx; then
         echo "!!! WARNING - nginx is active - This might interfere with apache !!!"
         sleep 3

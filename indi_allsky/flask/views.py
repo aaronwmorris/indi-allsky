@@ -1163,6 +1163,7 @@ def _dark_capture_options(
     return {
         'exposure_max': exposure_max,
         'exposure_step': exposure_step,
+        'exposure_delay': dark_automation.validate_exposure_delay(request_data.get('exposure_delay', 0.0)),
         'capture_order': capture_order,
         'temperature_range': temperature_range,
         'temperature_policy': temperature_policy,
@@ -1757,6 +1758,7 @@ class DarkFramesView(TemplateView):
                 'groups': [],
                 'target_count': 0,
                 'frame_count': 10,
+                'exposure_delay': 0.0,
                 'estimated_time': '0h 00m 00s',
                 'estimated_library_storage': '0 B',
                 'estimated_peak_storage': '0 B',
@@ -1904,6 +1906,7 @@ class AjaxDarkAutomationPlanView(BaseView):
                 coverage,
                 strategy,
                 frame_count=frame_count,
+                exposure_delay=options['exposure_delay'],
                 capture_order=options['capture_order'],
                 temperature_policy=options['temperature_policy'],
                 temperature_source=options['temperature_source'],
@@ -2035,6 +2038,7 @@ class AjaxDarkAutomationStartView(BaseView):
             'strategy': execution['strategy'],
             'method': execution['method'],
             'frame_count': execution['frame_count'],
+            'exposure_delay': execution['exposure_delay'],
             'config_signature': execution['config_signature'],
             'plan_signature': execution['plan_signature'],
             'groups': execution['groups'],
@@ -4559,6 +4563,8 @@ class ConfigView(FormView):
             'ALLSKYMAP__CAMERA_NAME'         : self.indi_allsky_config.get('ALLSKYMAP', {}).get('CAMERA_NAME', ''),
             'ALLSKYMAP__CAMERA_OWNER'        : self.indi_allsky_config.get('ALLSKYMAP', {}).get('CAMERA_OWNER', ''),
             'ALLSKYMAP__WEBSITE_URL'         : self.indi_allsky_config.get('ALLSKYMAP', {}).get('WEBSITE_URL', ''),
+            'ALLSKYMAP__MAP_LATITUDE'        : self.indi_allsky_config.get('ALLSKYMAP', {}).get('MAP_LATITUDE', ''),
+            'ALLSKYMAP__MAP_LONGITUDE'       : self.indi_allsky_config.get('ALLSKYMAP', {}).get('MAP_LONGITUDE', ''),
             'ALLSKYMAP__UPLOAD_IMAGE'        : self.indi_allsky_config.get('ALLSKYMAP', {}).get('UPLOAD_IMAGE', True),
             'ALLSKYMAP__INTERVAL'            : self.indi_allsky_config.get('ALLSKYMAP', {}).get('INTERVAL', 10),
             'YOUTUBE__ENABLE'                : self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE', False),
@@ -5636,6 +5642,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['ALLSKYMAP']['CAMERA_NAME']             = str(request.json['ALLSKYMAP__CAMERA_NAME'])
         self.indi_allsky_config['ALLSKYMAP']['CAMERA_OWNER']            = str(request.json['ALLSKYMAP__CAMERA_OWNER'])
         self.indi_allsky_config['ALLSKYMAP']['WEBSITE_URL']             = str(request.json['ALLSKYMAP__WEBSITE_URL'])
+        self.indi_allsky_config['ALLSKYMAP']['MAP_LATITUDE']            = str(request.json['ALLSKYMAP__MAP_LATITUDE'])
+        self.indi_allsky_config['ALLSKYMAP']['MAP_LONGITUDE']           = str(request.json['ALLSKYMAP__MAP_LONGITUDE'])
         self.indi_allsky_config['ALLSKYMAP']['UPLOAD_IMAGE']            = bool(request.json['ALLSKYMAP__UPLOAD_IMAGE'])
         self.indi_allsky_config['ALLSKYMAP']['INTERVAL']                = int(request.json['ALLSKYMAP__INTERVAL'])
         self.indi_allsky_config['YOUTUBE']['ENABLE']                    = bool(request.json['YOUTUBE__ENABLE'])

@@ -1007,7 +1007,7 @@ class CaptureWorker(Process):
         if self.config.get('CFA_PATTERN'):
             cfa_pattern = self.config['CFA_PATTERN']
         else:
-            cfa_pattern = ccd_info['CCD_CFA']['CFA_TYPE'].get('text')
+            cfa_pattern = ccd_info['CCD_CFA'].get('CFA_TYPE', {}).get('text')
 
 
         # populate S3 data

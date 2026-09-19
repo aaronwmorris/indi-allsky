@@ -581,7 +581,7 @@ class IndiAllSkyDarks(object):
         if self.config.get('CFA_PATTERN'):
             cfa_pattern = self.config['CFA_PATTERN']
         else:
-            cfa_pattern = ccd_info['CCD_CFA']['CFA_TYPE'].get('text')
+            cfa_pattern = ccd_info['CCD_CFA'].get('CFA_TYPE', {}).get('text')
 
 
         ccd_min_exp = math.ceil(float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']) * 1000000) / 1000000
@@ -996,7 +996,7 @@ class IndiAllSkyDarks(object):
                 hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
-            elif self.ccd_info['CCD_CFA']['CFA_TYPE'].get('text'):
+            elif self.ccd_info['CCD_CFA'].get('CFA_TYPE', {}).get('text'):
                 hdulist[0].header['BAYERPAT'] = self.ccd_info['CCD_CFA']['CFA_TYPE']['text']
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
@@ -1944,6 +1944,11 @@ class IndiAllSkyDarks(object):
 
     def _take_exposures(self, exposure, gain, binning, dark_filename_t, bpm_filename_t, stacking_class):
         automation_capture = bool(self.automation_manifest.get('automation'))
+        exposure_delay = (
+            self.automation_manifest.get('exposure_delay', 0.0)
+            if automation_capture else 0.0
+        )
+        exposure_delay = float(exposure) if exposure_delay == 'exposure' else float(exposure_delay)
         if automation_capture:
             tmp_fit_dir = tempfile.TemporaryDirectory(
                 prefix='indi-allsky-dark-source-',
@@ -1961,8 +1966,17 @@ class IndiAllSkyDarks(object):
         master_temperature = None
 
         i = 1
+        exposure_attempted = False
         while i <= self.count:
             self._check_shutdown()
+            if exposure_attempted and exposure_delay > 0:
+                self._publish_progress(
+                    'capturing',
+                    'Waiting {0:g}s between source images for sensor cooldown.'.format(exposure_delay),
+                    current_frame=i - 1,
+                )
+                self._sleep_interruptibly(exposure_delay)
+                self._check_shutdown()
             self._publish_progress(
                 'capturing',
                 'Capturing image {0:d} of {1:d} at gain {2:g}, exposure {3:g}s.'.format(
@@ -1980,6 +1994,7 @@ class IndiAllSkyDarks(object):
             self._pre_shoot_reconfigure()
 
             self.shoot(exposure, gain, binning, sync=True, timeout=180.0)  # flat 3 minute timeout
+            exposure_attempted = True
 
             frame_elapsed = time.time() - start
             frame_delta = frame_elapsed - exposure
@@ -2064,6 +2079,8 @@ class IndiAllSkyDarks(object):
 
 
         self._check_shutdown()
+        # Build the master while the final source image cools down.
+        cooldown_deadline = time.monotonic() + exposure_delay if exposure_delay > 0 else None
         self._publish_progress(
             'stacking',
             'Building the dark and bad-pixel map for gain {0:g}, exposure {1:g}s.'.format(
@@ -2209,6 +2226,16 @@ class IndiAllSkyDarks(object):
 
         try:
             self._check_shutdown()
+            if cooldown_deadline is not None:
+                remaining_delay = cooldown_deadline - time.monotonic()
+                if remaining_delay > 0:
+                    self._publish_progress(
+                        'capturing',
+                        'Waiting {0:g}s between source images for sensor cooldown.'.format(remaining_delay),
+                        current_frame=self.count,
+                    )
+                    self._sleep_interruptibly(remaining_delay)
+                    self._check_shutdown()
             from .dark_automation import checkpoint_master_pair
 
             bpm_frame = self._miscDb.addBadPixelMap(

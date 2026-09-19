@@ -148,6 +148,7 @@
     max-width: 100%;
 }
 
+#dark-exposure-delay-control,
 #dark-capture-controls label.tw\:form-control,
 #dark-temperature-workflow label.tw\:form-control {
     display: flex;
@@ -335,6 +336,7 @@
     border-radius: var(--dark-tool-radius);
 }
 
+#dark-exposure-delay-control,
 #dark-capture-controls label.tw\:form-control,
 #dark-temperature-workflow label.tw\:form-control {
     height: 100%;
@@ -946,6 +948,7 @@
     color: var(--dark-muted);
 }
 
+#dark-exposure-delay-control,
 #dark-capture-controls label.tw\:form-control,
 #dark-temperature-workflow label.tw\:form-control {
     padding: 0.75rem;
@@ -2756,6 +2759,18 @@ const initialDarkTaskId = {{ dark_automation_task_id | tojson }};
                                 </select>
                                 <span id="dark-capture-order-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">Changes order only. Longest first finishes maximum-exposure masters sooner if the run is interrupted.</span>
                             </label>
+                            <div id="dark-exposure-delay-control" class="tw:form-control tw:min-w-0">
+                                <label for="dark-exposure-delay-mode" class="tw:label-text tw:text-xs tw:font-semibold tw:mb-1">Delay between source images</label>
+                                <select id="dark-exposure-delay-mode" class="tw:select tw:select-bordered tw:select-sm tw:w-full tw:max-w-full tw:min-w-0" aria-describedby="dark-exposure-delay-help">
+                                    <option value="fixed" {% if dark_execution_preview.exposure_delay != 'exposure' %}selected{% endif %}>Fixed seconds</option>
+                                    <option value="exposure" {% if dark_execution_preview.exposure_delay == 'exposure' %}selected{% endif %}>Match exposure time</option>
+                                </select>
+                                <div id="dark-exposure-delay-seconds" class="tw:join tw:min-w-0 tw:mt-2{% if dark_execution_preview.exposure_delay == 'exposure' %} tw:hidden{% endif %}">
+                                    <input id="dark-exposure-delay" class="tw:input tw:input-bordered tw:input-sm tw:join-item tw:w-full tw:min-w-0" type="number" min="0" step="any" value="{{ 0 if dark_execution_preview.exposure_delay == 'exposure' else dark_execution_preview.exposure_delay }}" required {% if dark_execution_preview.exposure_delay == 'exposure' %}disabled{% endif %} aria-label="Fixed delay in seconds" aria-describedby="dark-exposure-delay-help">
+                                    <span class="tw:btn tw:btn-sm tw:join-item tw:pointer-events-none">seconds</span>
+                                </div>
+                                <span id="dark-exposure-delay-help" class="tw:label-text-alt tw:text-base-content/50 tw:mt-1 tw:leading-snug">Wait after every source image, including the last in each master set, for sensor cooldown. The final wait overlaps master creation. Match exposure time uses that image’s exposure time; fixed 0 adds no delay.</span>
+                            </div>
                         </div>
 
                         <p class="tw:text-xs tw:text-base-content/60">
@@ -3812,6 +3827,17 @@ function showDarkActionError(message) {
     panel.removeClass('tw:hidden').text(message);
 }
 
+function darkExposureDelayValue() {
+    return $('#dark-exposure-delay-mode').val() === 'exposure'
+        ? 'exposure' : Number($('#dark-exposure-delay').val());
+}
+
+function updateDarkExposureDelayControls() {
+    const automatic = $('#dark-exposure-delay-mode').val() === 'exposure';
+    $('#dark-exposure-delay').prop('disabled', automatic);
+    $('#dark-exposure-delay-seconds').toggleClass('tw:hidden', automatic);
+}
+
 function darkPlanValidationFailure(masterCount, includeGroups) {
     const frameControl = $('#dark-frame-count')[0];
     const frameCount = Number($('#dark-frame-count').val());
@@ -3820,6 +3846,18 @@ function darkPlanValidationFailure(masterCount, includeGroups) {
         return {
             field: $('#dark-frame-count'),
             message: 'Choose 3 to 50 images per master set.',
+        };
+    }
+
+    const exposureDelayControl = $('#dark-exposure-delay')[0];
+    const exposureDelayText = String($('#dark-exposure-delay').val() ?? '').trim();
+    const exposureDelay = Number(exposureDelayText);
+    if ($('#dark-exposure-delay-mode').val() !== 'exposure'
+            && (!exposureDelayControl || !exposureDelayControl.checkValidity()
+                || exposureDelayText === '' || !Number.isFinite(exposureDelay) || exposureDelay < 0)) {
+        return {
+            field: $('#dark-exposure-delay'),
+            message: 'Enter a delay between source images of 0 or more seconds.',
         };
     }
 
@@ -4035,7 +4073,7 @@ function darkPlanValidationFailure(masterCount, includeGroups) {
 }
 
 function updateDarkPlanValidation(masterCount, includeGroups) {
-    const fields = $('#dark-frame-count, #dark-exposure-max, #dark-exposure-step, '
+    const fields = $('#dark-frame-count, #dark-exposure-delay, #dark-exposure-max, #dark-exposure-step, '
         + '#dark-temperature-range, #dark-temperature-delta, #dark-temperature-target, .dark-group-binning, '
         + '.dark-group-gains, .dark-group-exposures');
     fields.removeClass('tw:input-error').removeAttr('aria-invalid');
@@ -4723,6 +4761,7 @@ function resolveDarkPreparedPlanCustomization(state) {
         || state.capture_mode_changed
         || state.stacking_method_changed
         || state.frame_count_changed
+        || state.exposure_delay_changed
         || state.capture_order_changed;
 }
 
@@ -4741,6 +4780,7 @@ function darkPreparedPlanIsCustomized() {
         capture_mode_changed: $('#dark-capture-mode').val() !== 'single',
         stacking_method_changed: $('#dark-method').val() !== recommendedMethod,
         frame_count_changed: Number($('#dark-frame-count').val()) !== initialFrameCount,
+        exposure_delay_changed: darkExposureDelayValue() !== (initialDarkPlan.exposure_delay ?? 0),
         capture_order_changed: $('#dark-capture-order').val() !== initialCaptureOrder,
     });
 }
@@ -4791,6 +4831,7 @@ function updateDarkPlanSummary() {
     let largestTemporaryCell = 0;
     let storageKnown = true;
     const frameCount = Number($('#dark-frame-count').val()) || 0;
+    const exposureDelay = darkExposureDelayValue() || 0;
     $('.dark-plan-row').each(function() {
         const row = $(this);
         const gains = parseDarkNumberList(row.find('.dark-group-gains').val());
@@ -4800,7 +4841,9 @@ function updateDarkPlanSummary() {
         if (!row.find('.dark-group-enabled').is(':checked')) return;
         masterCount += count;
         gains.forEach(() => exposures.forEach((exposure) => {
-            estimatedSeconds += (Number(exposure) * frameCount) + 30;
+            const delay = exposureDelay === 'exposure' ? Number(exposure) : exposureDelay;
+            estimatedSeconds += (Number(exposure) * frameCount) + Math.max(30, delay)
+                + Math.max(0, frameCount - 1) * delay;
         }));
         const group = (currentDarkPlan.groups || []).find((item) => item.id === row.data('group-id')) || {};
         const capabilities = ((currentDarkPlan.analysis || {}).capabilities || {});
@@ -5017,6 +5060,7 @@ async function refreshDarkPlan(options) {
                     : darkCaptureGroupBaseStrategy,
                 quality: $('#dark-quality').val(),
                 frame_count: Number($('#dark-frame-count').val()),
+                exposure_delay: darkExposureDelayValue(),
                 exposure_max: Number($('#dark-exposure-max').val()),
                 exposure_step: Number($('#dark-exposure-step').val()),
                 temperature_range: Number($('#dark-temperature-range').val()),
@@ -5059,6 +5103,7 @@ async function startDarkCalibration() {
                 quality: $('#dark-quality').val(),
                 method: $('#dark-method').val(),
                 frame_count: Number($('#dark-frame-count').val()),
+                exposure_delay: darkExposureDelayValue(),
                 exposure_max: Number($('#dark-exposure-max').val()),
                 exposure_step: Number($('#dark-exposure-step').val()),
                 temperature_range: Number($('#dark-temperature-range').val()),
@@ -6013,12 +6058,18 @@ $( document ).ready(function() {
             syncDarkCaptureGroupStrategy(true);
             refreshDarkPlan();
         });
-        $('#dark-frame-count').on('input', function() {
+        $('#dark-frame-count, #dark-exposure-delay').on('input', function() {
             updateDarkPlanSummary();
             if (this.checkValidity()) scheduleDarkPlanRefresh(350, {preserve_group_edits: true});
         }).on('change', function() {
             updateDarkPlanSummary();
             if (this.checkValidity()) refreshDarkPlan({preserve_group_edits: true});
+        });
+        updateDarkExposureDelayControls();
+        $('#dark-exposure-delay-mode').on('change', function() {
+            updateDarkExposureDelayControls();
+            updateDarkPlanSummary();
+            refreshDarkPlan({preserve_group_edits: true});
         });
         $('#dark-exposure-max, #dark-exposure-step').on('input', function() {
             syncDarkCaptureGroupStrategy(true);

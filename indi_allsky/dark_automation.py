@@ -295,8 +295,10 @@ def execution_preview(
         capture_mode=CAPTURE_MODE_SINGLE,
         temperature_delta=DEFAULT_TEMPERATURE_RANGE,
         temperature_target=None,
+        exposure_delay=0.0,
 ):
     frame_count = _validate_frame_count(frame_count)
+    exposure_delay = validate_exposure_delay(exposure_delay)
     capture_order = _validate_choice(
         capture_order,
         CAPTURE_ORDERS,
@@ -343,7 +345,9 @@ def execution_preview(
     )
     estimate_multiplier = temperature_set_count or 1
     estimated_seconds = (
-        estimate_execution_seconds(groups, frame_count, analysis.plan.quality.overhead_seconds)
+        estimate_execution_seconds(
+            groups, frame_count, analysis.plan.quality.overhead_seconds, exposure_delay,
+        )
         * estimate_multiplier
     )
     storage = estimate_execution_storage(groups, frame_count)
@@ -356,6 +360,7 @@ def execution_preview(
         'groups': groups,
         'target_count': target_count,
         'frame_count': frame_count,
+        'exposure_delay': exposure_delay,
         'estimated_seconds': estimated_seconds,
         'estimated_time': format_duration(estimated_seconds),
         'estimated_library_bytes': storage['library_bytes'],
@@ -396,6 +401,7 @@ def normalize_execution_request(analysis, capabilities, capture_state, request_d
         raise DarkAutomationError('Select sigma clipping or average stacking')
 
     frame_count = _validate_frame_count(request_data.get('frame_count', 10))
+    exposure_delay = validate_exposure_delay(request_data.get('exposure_delay', 0.0))
     capture_order = _validate_choice(
         request_data.get('capture_order', 'long_first'),
         CAPTURE_ORDERS,
@@ -444,6 +450,7 @@ def normalize_execution_request(analysis, capabilities, capture_state, request_d
         analysis,
         strategy,
         frame_count=frame_count,
+        exposure_delay=exposure_delay,
         capture_order=capture_order,
         temperature_policy=temperature_policy,
         temperature_source=temperature_source,
@@ -461,6 +468,7 @@ def normalize_execution_request(analysis, capabilities, capture_state, request_d
             analysis,
             STRATEGY_COMPLETE,
             frame_count=frame_count,
+            exposure_delay=exposure_delay,
             capture_order=capture_order,
             temperature_policy=temperature_policy,
             temperature_source=temperature_source,
@@ -555,6 +563,7 @@ def normalize_execution_request(analysis, capabilities, capture_state, request_d
         normalised_groups,
         frame_count,
         analysis.plan.quality.overhead_seconds,
+        exposure_delay,
     )
     estimate_multiplier = blueprint['temperature_set_count'] or 1
     estimated_seconds *= estimate_multiplier
@@ -568,6 +577,7 @@ def normalize_execution_request(analysis, capabilities, capture_state, request_d
         'quality': analysis.plan.quality.name,
         'method': method,
         'frame_count': frame_count,
+        'exposure_delay': exposure_delay,
         'config_signature': analysis.plan.config_signature,
         'groups': normalised_groups,
         'target_count': target_count,
@@ -593,12 +603,28 @@ def normalize_execution_request(analysis, capabilities, capture_state, request_d
     return execution
 
 
-def estimate_execution_seconds(groups, frame_count, overhead_seconds=30.0):
+def validate_exposure_delay(value):
+    """Accept fixed seconds or 'exposure' to match each source image's duration."""
+    if value == 'exposure':
+        return value
+    message = 'Enter a delay between source images of 0 or more seconds.'
+    try:
+        delay = float(value)
+    except (TypeError, ValueError):
+        raise DarkAutomationError(message)
+    if isinstance(value, bool) or not math.isfinite(delay) or delay < 0:
+        raise DarkAutomationError(message)
+    return delay
+
+
+def estimate_execution_seconds(groups, frame_count, overhead_seconds=30.0, exposure_delay=0.0):
     total = 0.0
     for group in groups:
         for exposure in group['exposures']:
+            delay = float(exposure) if exposure_delay == 'exposure' else float(exposure_delay)
             total += len(group['gains']) * (
-                (float(exposure) * int(frame_count)) + float(overhead_seconds)
+                (float(exposure) * int(frame_count)) + max(float(overhead_seconds), delay)
+                + max(0, int(frame_count) - 1) * delay
             )
     return total
 
@@ -652,6 +678,7 @@ def _execution_signature(execution):
         'quality': execution['quality'],
         'method': execution['method'],
         'frame_count': execution['frame_count'],
+        'exposure_delay': execution.get('exposure_delay', 0.0),
         'config_signature': execution['config_signature'],
         'exposure_max': execution['exposure_max'],
         'exposure_step': execution['exposure_step'],
@@ -1947,6 +1974,7 @@ def run_task(app, task_id, repository_root, stop_requested=None):
                 'quality': str(task_data['quality']),
                 'method': str(task_data['method']),
                 'frame_count': int(task_data['frame_count']),
+                'exposure_delay': validate_exposure_delay(task_data.get('exposure_delay', 0.0)),
                 'capture_order': str(task_data.get('capture_order') or 'long_first'),
                 'exposure_max': float(task_data['exposure_max']),
                 'exposure_step': float(task_data['exposure_step']),

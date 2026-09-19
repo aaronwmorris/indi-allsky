@@ -42,6 +42,7 @@ from indi_allsky.dark_automation import checkpoint_master_pair
 from indi_allsky.dark_automation import cleanup_interrupted_capture_artifacts
 from indi_allsky.dark_automation import determine_capture_restore_state
 from indi_allsky.dark_automation import execution_preview
+from indi_allsky.dark_automation import estimate_execution_seconds
 from indi_allsky.dark_automation import estimate_execution_storage
 from indi_allsky.dark_automation import flush_camera_library
 from indi_allsky.dark_automation import flush_library_batches
@@ -1304,6 +1305,65 @@ def test_manual_edit_accepts_an_irregular_fill_gaps_group():
     assert execution['strategy'] == 'custom'
     assert execution['groups'][0]['id'] == completion_group['id']
     assert execution['target_count'] == completion_group['target_count']
+
+
+@pytest.mark.parametrize('capture_mode,temperature_target', [
+    ('single', None), ('temperature_series', None), ('temperature_series', 8),
+])
+@pytest.mark.parametrize('delay', [2.5, 60, 'exposure'])
+def test_exposure_delay_is_preserved_and_included_in_plan_estimates(capture_mode, temperature_target, delay):
+    capabilities = _capabilities()
+    state = build_effective_capture_state(_config(exposure_max=5), capabilities)
+    plan = build_dark_plan(state, capabilities, camera_id=1)
+    analysis = analyze_dark_plan(plan, (), temperature=20)
+    options = {
+        'frame_count': 3,
+        'capture_mode': capture_mode,
+        'temperature_delta': 5,
+        'temperature_target': temperature_target,
+    }
+    baseline = execution_preview(analysis, 'custom', **options)
+    preview = execution_preview(analysis, 'custom', exposure_delay=delay, **options)
+    request = {'strategy': 'custom', 'config_signature': plan.config_signature, **options}
+    original = normalize_execution_request(analysis, capabilities, state, request)
+    delayed = normalize_execution_request(
+        analysis, capabilities, state, {**request, 'exposure_delay': str(delay)},
+    )
+
+    if delay == 'exposure':
+        delay_per_gap = sum(len(group['gains']) * sum(group['exposures']) for group in preview['groups'])
+    else:
+        delay_per_gap = preview['target_count'] * delay
+    final_wait = preview['target_count'] * max(0, delay - 30) if delay != 'exposure' else 0
+    expected_delay = (delay_per_gap * (options['frame_count'] - 1) + final_wait) * (preview['temperature_set_count'] or 1)
+    assert baseline['exposure_delay'] == original['exposure_delay'] == 0
+    assert preview['exposure_delay'] == delayed['exposure_delay'] == delay
+    assert preview['estimated_seconds'] - baseline['estimated_seconds'] == expected_delay
+    assert delayed['estimated_seconds'] == preview['estimated_seconds']
+    assert delayed['groups'] == original['groups']
+    assert delayed['estimated_library_bytes'] == original['estimated_library_bytes']
+    assert delayed['plan_signature'] != original['plan_signature']
+
+
+def test_automatic_delay_longer_than_processing_overlaps_the_final_wait():
+    groups = [{'exposures': [60], 'gains': [0]}]
+    # Three 60s images, two full 60s gaps, then 60s shared by cooldown and processing.
+    assert estimate_execution_seconds(groups, 3, 30, 'exposure') == 360
+
+
+@pytest.mark.parametrize('delay', [-1, 'invalid', '', None, True, float('nan'), float('inf')])
+def test_preview_and_capture_reject_invalid_exposure_delays(delay):
+    capabilities = _capabilities()
+    state = build_effective_capture_state(_config(exposure_max=1), capabilities)
+    plan = build_dark_plan(state, capabilities, camera_id=1)
+    analysis = analyze_dark_plan(plan, (), temperature=20)
+
+    with pytest.raises(DarkAutomationError, match='0 or more seconds'):
+        execution_preview(analysis, 'custom', exposure_delay=delay)
+    with pytest.raises(DarkAutomationError, match='0 or more seconds'):
+        normalize_execution_request(analysis, capabilities, state, {
+            'strategy': 'custom', 'config_signature': plan.config_signature, 'exposure_delay': delay,
+        })
 
 
 def test_manual_binning_and_bitmax_overrides_are_validated_and_normalised():
