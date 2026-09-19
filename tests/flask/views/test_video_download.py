@@ -1,9 +1,17 @@
+import sys
 from unittest.mock import patch, MagicMock
 from pathlib import Path
 import pytest
 from datetime import datetime, timedelta
 import io
 import gzip
+
+if "systemd" not in sys.modules:
+    mock_systemd = MagicMock()
+    mock_journal = MagicMock()
+    mock_systemd.journal = mock_journal
+    sys.modules["systemd"] = mock_systemd
+    sys.modules["systemd.journal"] = mock_journal
 
 from indi_allsky.flask import db
 from indi_allsky.flask.models import (
