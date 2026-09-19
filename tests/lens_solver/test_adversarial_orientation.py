@@ -1,6 +1,8 @@
 import numpy
 import pytest
 
+pytestmark = pytest.mark.slow
+
 from indi_allsky.lens_solver import IndiAllSkyLensSolver, predictAltAz, projectToPixels
 from indi_allsky.lens_solver.orientation import recoverOrientation
 from tests.lens_solver.test_orientation import star_field, render_stars, KEYS

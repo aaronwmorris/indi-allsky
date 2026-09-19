@@ -2242,7 +2242,7 @@ class VideoWorker(Process):
                 sun_civilDawn_date = obs.previous_rising(sun).datetime()
         except ephem.NeverUpError:
             # northern hemisphere
-            sun_civilDawn_date = utcnow + timedelta(years=10)
+            sun_civilDawn_date = utcnow + timedelta(days=3650)
         except ephem.AlwaysUpError:
             # southern hemisphere
             sun_civilDawn_date = utcnow - timedelta(days=1)
@@ -2255,7 +2255,7 @@ class VideoWorker(Process):
             sun_civilTwilight_date = utcnow - timedelta(days=1)
         except ephem.NeverUpError:
             # southern hemisphere
-            sun_civilTwilight_date = utcnow + timedelta(years=10)
+            sun_civilTwilight_date = utcnow + timedelta(days=3650)
 
 
         data = {
@@ -2598,9 +2598,9 @@ class VideoWorker(Process):
 
             try:
                 d.rmdir()
-            except OSError as e:
-                logger.error('Cannot remove folder: %s', str(e))
             except PermissionError as e:
+                logger.error('Cannot remove folder: %s', str(e))
+            except OSError as e:
                 logger.error('Cannot remove folder: %s', str(e))
 
 

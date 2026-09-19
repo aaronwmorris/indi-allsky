@@ -4,7 +4,7 @@ from micropython import const
 try:
     from busio import I2C
 except ImportError:
-    pass
+    I2C = None
 
 # imports
 

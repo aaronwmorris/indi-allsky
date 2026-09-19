@@ -35,7 +35,7 @@ class IndiAllskyStacker(object):
 
     @detection_sigma.setter
     def detection_sigma(self, new_detection_sigma):
-        self._detection_simga = int(new_detection_sigma)
+        self._detection_sigma = int(new_detection_sigma)
 
 
     @property

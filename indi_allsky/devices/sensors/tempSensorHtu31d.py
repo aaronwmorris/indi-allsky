@@ -94,14 +94,14 @@ class TempSensorHtu31d(SensorBase):
             if self.heater_on:
                 self.heater_on = False
                 self.htu31d.heater = False
-                logger.warning('[%s] HTU31D Heater Disabled')
+                logger.warning('[%s] HTU31D Heater Disabled', self.name)
                 time.sleep(1.0)
 
-        elif rh >= self.rh_heather_on_level:
+        elif rh >= self.rh_heater_on_level:
             if not self.heater_on:
                 self.heater_on = True
                 self.htu31d.heater = True
-                logger.warning('[%s] HTU31D Heater Enabled')
+                logger.warning('[%s] HTU31D Heater Enabled', self.name)
                 time.sleep(1.0)
 
 

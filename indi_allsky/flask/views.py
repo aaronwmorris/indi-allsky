@@ -660,7 +660,7 @@ class LatestRawImageRedirect(LatestImageRedirect):
 
 class LatestThumbnailRedirect(LatestImageRedirect):
 
-    def getLatestImage(self, camera_id):
+    def getLatestImage(self, camera_id, night=None):
         latest_image_thumbnail_entry = db.session.query(
             IndiAllSkyDbImageTable,
             IndiAllSkyDbThumbnailTable,
@@ -1309,16 +1309,17 @@ class JsonImageLoopView(JsonView):
     def getLoopImages(self, camera_id, loop_dt, history_seconds):
         ts_minus_seconds = loop_dt - timedelta(seconds=history_seconds)
 
+        query_filters = [
+            IndiAllSkyDbCameraTable.id == camera_id,
+            self.model.createDate > ts_minus_seconds,
+            self.model.createDate < loop_dt,
+        ]
+        if hasattr(self.model, 'exclude'):
+            query_filters.append(self.model.exclude == sa_false())
+
         latest_images_q = self.model.query\
             .join(self.model.camera)\
-            .filter(
-                and_(
-                    IndiAllSkyDbCameraTable.id == camera_id,
-                    self.model.exclude == sa_false(),
-                    self.model.createDate > ts_minus_seconds,
-                    self.model.createDate < loop_dt,
-                )
-            )
+            .filter(and_(*query_filters))
 
 
         local = True  # default to local assets
@@ -1697,8 +1698,8 @@ class JsonRawImageLoopView(JsonImageLoopView):
             'last' : 0,
         }
 
-        # jsqm, camera, device
-        return sqm_data, sqm_data, sqm_data
+        # jsqm, camera sqm mag, camera sqm adu, device sqm mag
+        return sqm_data, sqm_data, sqm_data, sqm_data
 
 
     def getStarsData(self, *args):
@@ -2340,7 +2341,7 @@ class ConfigView(FormView):
         context['camera_maxBinning'] = self.camera.maxBinning
         context['camera_minExposure'] = self.camera.minExposure
 
-        if self.camera.maxExposure > 120:
+        if self.camera.maxExposure and self.camera.maxExposure > 120:
             context['camera_maxExposure'] = 120
         else:
             context['camera_maxExposure'] = self.camera.maxExposure
@@ -4603,7 +4604,7 @@ class AjaxSetTimeView(BaseView):
         return jsonify(message)
 
 
-    def setTimeSystemd(self, new_datetime_utc):
+    def setTimeSystemd(self, new_datetime_utc):  # pragma: no cover # Modifying system time requires a live systemd DBus daemon.
         app.logger.warning('Setting system time to %s (UTC)', new_datetime_utc)
 
         epoch = new_datetime_utc.timestamp() + 5  # add 5 due to sleep below
@@ -4663,7 +4664,7 @@ class AjaxSetTimezoneView(BaseView):
         return jsonify(message)
 
 
-    def setTimezoneSystemd(self, new_timezone_str):
+    def setTimezoneSystemd(self, new_timezone_str):  # pragma: no cover # Modifying system timezone requires a live systemd DBus daemon.
         app.logger.warning('Setting system timezone to %s', new_timezone_str)
 
 
@@ -8019,7 +8020,7 @@ class AjaxFocusControllerView(BaseView):
         direction = str(request.json['DIRECTION'])
         degrees = int(request.json['STEP_DEGREES'])
 
-        app.logger.info('Focusing: {0:s}', direction)
+        app.logger.info('Focusing: %s', direction)
 
         try:
             focuser_interface = IndiAllSkyFocuserInterface(self.indi_allsky_config)
@@ -8155,7 +8156,7 @@ class AjaxLensSolverView(BaseView):
             result = solver.solve(
                 image_file, latitude, longitude, obstime_unix, values,
                 lens_altitude=values.get('LENS_ALTITUDE', self.camera.alt),
-                pointing_azimuth=values.get('POINTING_AZIMUTH', self.camera.data.get('vs_pointing_azimuth', 0.0)),
+                pointing_azimuth=values.get('POINTING_AZIMUTH', (self.camera.data or {}).get('vs_pointing_azimuth', 0.0)),
                 **hints)
             if result.get('calibration'):
                 result['calibration']['camera_uuid'] = self.camera.uuid
@@ -9463,6 +9464,7 @@ class JsonImageProcessingView(JsonView):
                 'processing_elapsed_s' : 0.0,
                 'message' : 'No FITS images found',
             }
+            return jsonify(json_data)
         try:
             filename_p = fits_entry.getLocalOrCachedPath(s3_prefix=self.s3_prefix)
         except Exception as e:

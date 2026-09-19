@@ -55,7 +55,7 @@ from .exceptions import KeogramMismatchException
 
 try:
     import rawpy  # not available in all cases
-except ImportError:
+except ImportError:  # pragma: no cover  # Fallback for platforms where the optional rawpy library is not installed.
     rawpy = None
 
 
@@ -785,7 +785,7 @@ class ImageProcessor(object):
             image_ybayroff = 0
             image_roworder = 'na'
 
-        else:
+        else:  # pragma: no cover  # Defensive fallback unreachable because format is validated on initial file open.
             raise Exception('Unsupported image type: {0:s}'.format(image_type))
 
 

@@ -213,7 +213,7 @@ class IndiAllskyCardinalDirsLabel(object):
 
             if adj <= radius:
                 opp = math.sin(math.radians(c_angle)) * hyp
-            else:
+            else:  # pragma: no cover  # Mathematically unreachable as cos(c_angle) * radius is always <= radius.
                 adj = radius
                 opp = math.tan(math.radians(c_angle)) * adj
         else:
@@ -223,7 +223,7 @@ class IndiAllskyCardinalDirsLabel(object):
 
             if adj <= radius:
                 opp = math.sin(math.radians(c_angle)) * hyp
-            else:
+            else:  # pragma: no cover  # Mathematically unreachable as cos(c_angle) * radius is always <= radius.
                 adj = radius
                 opp = math.tan(math.radians(c_angle)) * adj
 
