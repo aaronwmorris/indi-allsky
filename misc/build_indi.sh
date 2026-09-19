@@ -378,15 +378,15 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         fi
     done
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         git \
         ca-certificates \
@@ -426,11 +426,11 @@ if [[ "$DISTRO" == "debian_13" ]]; then
 
 
     if [[ "$CPU_ARCH" == "aarch64" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             libcamera-dev
 
         # this can fail on non-raspberry pi OS repos
-        sudo apt-get -y install \
+        sudo apt -y install \
             librpicam-app-dev || true
     fi
 
@@ -446,15 +446,15 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         fi
     done
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         git \
         ca-certificates \
@@ -494,11 +494,11 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
 
 
     if [[ "$CPU_ARCH" == "aarch64" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             libcamera-dev
 
         # this can fail on non-raspberry pi OS repos
-        sudo apt-get -y install \
+        sudo apt -y install \
             librpicam-app-dev || true
     fi
 
@@ -515,15 +515,15 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
     done
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         git \
         ca-certificates \
@@ -572,15 +572,15 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
     done
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         git \
         ca-certificates \
@@ -626,15 +626,15 @@ elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
         fi
     done
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         git \
         ca-certificates \
@@ -685,15 +685,15 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         fi
     done
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         git \
         ca-certificates \
@@ -744,15 +744,15 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         fi
     done
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         git \
         ca-certificates \
@@ -800,15 +800,15 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         fi
     done
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         git \
         ca-certificates \
