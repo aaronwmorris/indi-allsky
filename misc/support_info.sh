@@ -459,6 +459,16 @@ if [ -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
 
     # shellcheck source=/dev/null
     source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
+elif [ -d "/var/lib/indi-allsky/venv" ]; then
+    echo
+    echo "Detected apt indi-allsky virtualenv"
+
+    # shellcheck source=/dev/null
+    #source "/var/lib/indi-allsky/venv/bin/activate"
+
+    # hack to enable venv.  It is in a different folder than the build
+    export VIRTUAL_ENV="/var/lib/indi-allsky/venv"
+    export PATH="/var/lib/indi-allsky/venv/bin:$PATH"
 elif [ -d "/home/allsky/venv" ]; then
     # Docker
     echo
@@ -490,8 +500,11 @@ if [[ -n "${VIRTUAL_ENV:-}" ]]; then
 
     echo
     echo "virtualenv python modules"
-    pip freeze || true
-
+    if which pip >/dev/null 2>&1; then
+        pip freeze || true
+    else
+        echo '*** pip not available ***'
+    fi
 
     echo
     echo "\`\`\`"  # markdown
@@ -526,8 +539,6 @@ if [[ -n "${VIRTUAL_ENV:-}" ]]; then
     echo "\`\`\`json"  # markdown
     # Remove all secrets from config
     echo "$INDI_ALLSKY_CONFIG" | jq --arg redacted "REDACTED" '.OWNER = $redacted | .FILETRANSFER.PASSWORD = $redacted | .FILETRANSFER.PASSWORD_E = $redacted | .S3UPLOAD.SECRET_KEY = $redacted | .S3UPLOAD.SECRET_KEY_E = $redacted | .MQTTPUBLISH.PASSWORD = $redacted | .MQTTPUBLISH.PASSWORD_E = $redacted | .SYNCAPI.APIKEY = $redacted | .SYNCAPI.APIKEY_E = $redacted | .PYCURL_CAMERA.PASSWORD = $redacted | .PYCURL_CAMERA.PASSWORD_E = $redacted | .TEMP_SENSOR.OPENWEATHERMAP_APIKEY = $redacted | .TEMP_SENSOR.OPENWEATHERMAP_APIKEY_E = $redacted | .TEMP_SENSOR.WUNDERGROUND_APIKEY = $redacted | .TEMP_SENSOR.WUNDERGROUND_APIKEY_E = $redacted | .TEMP_SENSOR.ASTROSPHERIC_APIKEY = $redacted | .TEMP_SENSOR.ASTROSPHERIC_APIKEY_E = $redacted | .TEMP_SENSOR.AMBIENTWEATHER_APIKEY = $redacted | .TEMP_SENSOR.AMBIENTWEATHER_APIKEY_E = $redacted | .TEMP_SENSOR.AMBIENTWEATHER_APPLICATIONKEY = $redacted | .TEMP_SENSOR.AMBIENTWEATHER_APPLICATIONKEY_E = $redacted | .TEMP_SENSOR.AMBIENTWEATHER_MACADDRESS = $redacted | .TEMP_SENSOR.AMBIENTWEATHER_MACADDRESS_E = $redacted | .TEMP_SENSOR.ECOWITT_APIKEY = $redacted | .TEMP_SENSOR.ECOWITT_APIKEY_E = $redacted | .TEMP_SENSOR.ECOWITT_APPLICATIONKEY = $redacted | .TEMP_SENSOR.ECOWITT_APPLICATIONKEY_E = $redacted | .TEMP_SENSOR.ECOWITT_MACADDRESS = $redacted | .TEMP_SENSOR.ECOWITT_MACADDRESS_E = $redacted | .TEMP_SENSOR.MQTT_PASSWORD = $redacted | .TEMP_SENSOR.MQTT_PASSWORD_E = $redacted | .DEVICE.MQTT_PASSWORD = $redacted | .DEVICE.MQTT_PASSWORD_E = $redacted | .LIBCAMERA.MQTT_PASSWORD = $redacted | .LIBCAMERA.MQTT_PASSWORD_E = $redacted | .ADSB.PASSWORD = $redacted | .ADSB.PASSWORD_E = $redacted | .IMAGE_OVERLAY.A_PASSWORD = $redacted | .IMAGE_OVERLAY.A_PASSWORD_E = $redacted'
-
-    deactivate
 else
     echo
     echo "indi-allsky virtualenv is not created"
