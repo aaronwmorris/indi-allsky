@@ -7,7 +7,7 @@ from indi_allsky import lens_solver
 from indi_allsky.lens_solver import catalog as catalog_mod
 from indi_allsky.lens_solver import IndiAllSkyLensSolver
 
-from testing import generate_lens_solver_catalog as gen_cat
+from tools import generate_lens_solver_catalog as gen_cat
 
 
 def test_catalog_loads_bright_stars():

@@ -116,3 +116,21 @@ def test_builtin_types_exact():
     for key in ('IMAGE_CIRCLE_DIAMETER', 'OFFSET_X', 'OFFSET_Y'):
         assert type(values[key]) is int, key
     json.dumps(values)
+
+
+def test_calibration_mismatched_geometry_rejected():
+    mismatched_model = {
+        'version': 2,
+        'coefficients': [[0.0, 0.0]] * 10,
+        'bounds': [-1.0, -1.0, 1.0, 1.0],
+        'geometry': [0.0, 0.0, 0.0, 1000, 0, 0, 90.0, 0.0, 0.0, 0],
+        'image_size': [1920, 1080],
+        'context': [40.1, -75.4, 0],
+        'pipeline': 'a' * 64,
+        'camera_uuid': 'cam-1',
+        'summary': 'Test',
+    }
+    payload = dict(GOOD, CALIBRATION_ENABLED=True, CALIBRATION=mismatched_model)
+    values, error = parseSolverRequestValues(payload, for_save=True)
+    assert values is None
+    assert error == 'Alignment changed since calibration; solve again'

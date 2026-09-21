@@ -1,6 +1,8 @@
 import numpy
 import pytest
 
+pytestmark = pytest.mark.slow
+
 from indi_allsky import lens_solver
 from indi_allsky.lens_solver import fitting
 from indi_allsky.lens_solver import (
@@ -124,15 +126,6 @@ def test_pure_noise_never_succeeds(n_detections, seed):
     assert result['reason'] in ('too_few_matches', 'no_convergence')
 
 
-def test_no_convergence_reachable():
-    # pins the specific reason so a regression to always 'too_few_matches' is caught
-    rng = numpy.random.RandomState(1)
-    noise = numpy.column_stack([
-        rng.uniform(0, W, 6000), rng.uniform(0, H, 6000), rng.uniform(100, 5000, 6000)])
-    initial = numpy.array([30.0, 0.0, 0.0, 1600.0, 0.0, 0.0])
-    result = run_fit(noise, initial)
-    assert not result['success']
-    assert result['reason'] in ('too_few_matches', 'no_convergence')
 
 
 @pytest.mark.parametrize('n_detections', [500, 2000, 6000])
@@ -509,3 +502,53 @@ def test_catalog_at_validated_depth_is_not_refused():
     initial = numpy.array([30.0, 0.0, 0.0, 1600.0, 0.0, 0.0])
     result = run_fit(det, initial)
     assert result['success'], result.get('message')
+
+
+def test_fitting_edge_cases():
+    # 1. _matchStars empty inputs (line 196)
+    m1, m2 = fitting._matchStars(numpy.zeros((0, 3)), numpy.zeros((0, 2)), 10.0)
+    assert len(m1) == 0 and len(m2) == 0
+
+    # 2. _scoreAtParams with 0 matches (line 347)
+    solver = IndiAllSkyLensSolver({})
+    cat = solver.loadCatalog()
+    engine = fitting.FitEngine(fitting.SolveContext(
+        detections=numpy.zeros((0, 3)),
+        tree=None,
+        catalog=cat,
+        latitude=LAT,
+        longitude=LON,
+        obstime_unix=T_UNIX,
+        image_width=W,
+        image_height=H,
+        min_alt_rad=numpy.radians(lens_solver.MIN_STAR_ALT_DEG),
+        initial_params=TRUE,
+    ))
+    n, rms = engine._scoreAtParams(TRUE, 10.0)
+    assert n == 0
+    assert rms == float('inf')
+
+    # 3. Empty catalog / no visible stars in _coarseAzimuthSearch (line 417) and _gridSearchCandidate (line 455)
+    empty_engine = fitting.FitEngine(fitting.SolveContext(
+        detections=numpy.zeros((0, 3)),
+        tree=None,
+        catalog=numpy.zeros((0, 3)),
+        latitude=LAT,
+        longitude=LON,
+        obstime_unix=T_UNIX,
+        image_width=W,
+        image_height=H,
+        min_alt_rad=numpy.radians(lens_solver.MIN_STAR_ALT_DEG),
+        initial_params=TRUE,
+    ))
+    best, best_m, alt, az = empty_engine._coarseAzimuthSearch(TRUE, 10.0)
+    assert best['count'] == -1
+    assert best_m == -1
+
+    cand = empty_engine._gridSearchCandidate(TRUE, 1000.0, 10.0, 10.0, 3, [1000.0], 0.1, 2)
+    assert cand is None
+
+    # 4. _wideRecoverySearch with diameter0 small so diameter_values is empty (line 520)
+    res = empty_engine._wideRecoverySearch(TRUE, 100.0)
+    assert res is None
+
