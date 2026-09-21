@@ -67,3 +67,4 @@ mysql-connector-python
 PyWavelets >= 1.4.0
 systemd-python
 pyindi-client >= 2.2.0
+
