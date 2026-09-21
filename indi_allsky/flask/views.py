@@ -534,8 +534,8 @@ class VirtualSkyView(TemplateView):
             'SHOWSTARLABELS'        : self.camera.data.get('vs_showstarlabels', True),
             'SHOWPLANETS'           : self.camera.data.get('vs_showplanets', True),
             'SHOWPLANETLABELS'      : self.camera.data.get('vs_showplanetlabels', True),
-            #'FLIP_NS'               : self.camera.data.get('vs_flip_ns', False),
-            #'FLIP_EW'               : self.camera.data.get('vs_flip_ew', False),
+            'FLIP_H'                : self.camera.data.get('vs_flip_h', False),
+            'FLIP_V'                : self.camera.data.get('vs_flip_v', False),
         }
 
         context['form_virtualsky'] = IndiAllskyVirtualSkyHelperForm(data=data)
@@ -3062,8 +3062,8 @@ class ConfigView(FormView):
             'VIRTUALSKY__LONGITUDE_OFFSET'   : self.indi_allsky_config.get('VIRTUALSKY', {}).get('LONGITUDE_OFFSET', 0.0),
             'VIRTUALSKY__OFFSET_X'           : self.indi_allsky_config.get('VIRTUALSKY', {}).get('OFFSET_X', 0),
             'VIRTUALSKY__OFFSET_Y'           : self.indi_allsky_config.get('VIRTUALSKY', {}).get('OFFSET_Y', 0),
-            #'VIRTUALSKY__FLIP_NS'            : self.indi_allsky_config.get('VIRTUALSKY', {}).get('FLIP_NS', False),
-            #'VIRTUALSKY__FLIP_EW'            : self.indi_allsky_config.get('VIRTUALSKY', {}).get('FLIP_EW', False),
+            'VIRTUALSKY__FLIP_H'             : self.indi_allsky_config.get('VIRTUALSKY', {}).get('FLIP_H', False),
+            'VIRTUALSKY__FLIP_V'             : self.indi_allsky_config.get('VIRTUALSKY', {}).get('FLIP_V', False),
             'CIRCULAR_DISPLAY__ENABLE'       : self.indi_allsky_config.get('CIRCULAR_DISPLAY', {}).get('ENABLE', False),
             'CIRCULAR_DISPLAY__RESOLUTION'   : str(self.indi_allsky_config.get('CIRCULAR_DISPLAY', {}).get('RESOLUTION', 800)),  # string in form, int in config
             'CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER' : self.indi_allsky_config.get('CIRCULAR_DISPLAY', {}).get('IMAGE_CIRCLE_DIAMETER', 3500),
@@ -4151,8 +4151,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['VIRTUALSKY']['LONGITUDE_OFFSET']       = float(request.json['VIRTUALSKY__LONGITUDE_OFFSET'])
         self.indi_allsky_config['VIRTUALSKY']['OFFSET_X']               = int(request.json['VIRTUALSKY__OFFSET_X'])
         self.indi_allsky_config['VIRTUALSKY']['OFFSET_Y']               = int(request.json['VIRTUALSKY__OFFSET_Y'])
-        #self.indi_allsky_config['VIRTUALSKY']['FLIP_NS']                = bool(request.json['VIRTUALSKY__FLIP_NS'])
-        #self.indi_allsky_config['VIRTUALSKY']['FLIP_EW']                = bool(request.json['VIRTUALSKY__FLIP_EW'])
+        for key in ('FLIP_H', 'FLIP_V'):
+            if 'VIRTUALSKY__' + key in request.json:
+                self.indi_allsky_config['VIRTUALSKY'][key] = bool(request.json['VIRTUALSKY__' + key])
         self.indi_allsky_config['CIRCULAR_DISPLAY']['ENABLE']           = bool(request.json['CIRCULAR_DISPLAY__ENABLE'])
         self.indi_allsky_config['CIRCULAR_DISPLAY']['RESOLUTION']       = int(request.json['CIRCULAR_DISPLAY__RESOLUTION'])
         self.indi_allsky_config['CIRCULAR_DISPLAY']['IMAGE_CIRCLE_DIAMETER'] = int(request.json['CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER'])
@@ -8175,7 +8176,12 @@ class AjaxLensSolverView(BaseView):
             if not current_user.is_admin:
                 return jsonify({'success': False, 'message': 'You do not have permission to make configuration changes'}), 403
 
-        values, error = parseSolverRequestValues(request.json, for_save=True)
+        data = dict(request.json)
+        # Legacy clients omit flips; validate their correction against the
+        # orientation that will actually remain in the saved configuration.
+        for key in ('FLIP_H', 'FLIP_V'):
+            data.setdefault(key, self.indi_allsky_config.get('VIRTUALSKY', {}).get(key, False))
+        values, error = parseSolverRequestValues(data, for_save=True)
         if error:
             return jsonify({'success': False, 'message': error}), 400
 

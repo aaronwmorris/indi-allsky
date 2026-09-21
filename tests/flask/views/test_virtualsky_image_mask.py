@@ -16,7 +16,7 @@ import pytest
 from sqlalchemy import Column, DateTime
 
 
-VIEWS = ast.parse((Path(__file__).resolve().parents[2] / 'indi_allsky/flask/views.py').read_text(encoding='utf-8'))
+VIEWS = ast.parse((Path(__file__).resolve().parents[3] / 'indi_allsky/flask/views.py').read_text(encoding='utf-8'))
 
 
 @pytest.fixture
@@ -26,7 +26,7 @@ def virtualsky_view():
             return {}
 
     cls = next(n for n in VIEWS.body if isinstance(n, ast.ClassDef) and n.name == 'VirtualSkyView')
-    app = flask.Flask(__name__, static_folder=str(Path(__file__).resolve().parents[2] / 'indi_allsky/flask/static'))
+    app = flask.Flask(__name__, static_folder=str(Path(__file__).resolve().parents[3] / 'indi_allsky/flask/static'))
     namespace = dict(TemplateView=TemplateView, math=math, datetime=datetime, hashlib=hashlib, Path=Path, app=app,
                      request=SimpleNamespace(args={}), IndiAllskyVirtualSkyHelperForm=lambda **kwargs: None)
     exec(compile(ast.Module(body=[cls], type_ignores=[]), 'views.py', 'exec'), namespace)
@@ -67,7 +67,7 @@ def test_script_urls_change_with_contents_even_if_file_metadata_is_preserved(vir
     app.static_folder = str(tmp_path)
     templates = Environment(autoescape=True, loader=ChoiceLoader([
         DictLoader({'base.html': '{% block head %}{% endblock %}'}),
-        FileSystemLoader(Path(__file__).resolve().parents[2] / 'indi_allsky/flask/templates'),
+        FileSystemLoader(Path(__file__).resolve().parents[3] / 'indi_allsky/flask/templates'),
     ]))
 
     def script_urls():

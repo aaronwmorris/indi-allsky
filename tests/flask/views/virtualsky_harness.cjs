@@ -17,7 +17,7 @@ function makeSky(options = {}, asset = 'virtualsky.js') {
         navigator: {language: 'en'}, Date, console,
     });
     vm.runInContext(fs.readFileSync(path.join(__dirname,
-        '../../indi_allsky/flask/static/virtualsky', asset), 'utf8'), context);
+        '../../../indi_allsky/flask/static/virtualsky', asset), 'utf8'), context);
     return S.virtualsky({projection: 'fisheye', width: 1000, height: 1000,
         latitude: 46.51, longitude: 8, clock: new Date(1770000000000),
         az: 180, ...options});

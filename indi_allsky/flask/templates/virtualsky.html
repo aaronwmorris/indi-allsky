@@ -265,6 +265,8 @@ async function loop() {
             var sky_options = {
                 id: 'starmap',
                 projection: 'fisheye',
+                flip_h: $('#FLIP_H').prop('checked'),
+                flip_v: $('#FLIP_V').prop('checked'),
                 live: false,
                 clock: clock,
                 latitude: vs_latitude,
@@ -321,7 +323,7 @@ async function loop() {
             if ($('#CALIBRATION_ENABLED').prop('checked') && lensCalibration) {
                 if (VirtualSkyCalibration.compatible(lensCalibration, calibrationGeometry(),
                         [image_width, image_height], [camera_latitude, camera_longitude, time_offset],
-                        calibrationCameraUuid)) {
+                        calibrationCameraUuid, [$('#FLIP_H').prop('checked'), $('#FLIP_V').prop('checked')])) {
                     VirtualSkyCalibration.install(planetarium, lensCalibration);
                     updateCalibrationStatus();
                 } else {
@@ -449,6 +451,19 @@ function loadJS(url, data, onDone, onError) {
                     </div>
 
                     <fieldset class="virtualsky-group">
+                        <legend>Overlay orientation</legend>
+                        <div class="tw:flex tw:flex-wrap tw:gap-4">
+                            {% for field in [form_virtualsky.FLIP_H, form_virtualsky.FLIP_V] %}
+                            <label for="{{ field.id }}" class="tw:flex tw:items-center tw:gap-2">
+                                {{ field(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                                <span>{{ field.label.text }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+
+                        <p>Solve detects rotation and mirroring automatically. These controls also allow manual adjustment; the image stays unchanged.</p>
+                    </fieldset>
+                    <fieldset class="virtualsky-group">
                         <legend>Additional overlay correction (optional)</legend>
                         <label class="virtualsky-layer" for="CALIBRATION_ENABLED">
                             <input id="CALIBRATION_ENABLED" type="checkbox" class="tw:toggle tw:toggle-primary tw:toggle-sm"
@@ -483,7 +498,7 @@ function loadJS(url, data, onDone, onError) {
                     <div class="tw:flex tw:flex-wrap tw:gap-3 tw:items-center">
                         {% if can_save_config %}
                         <button id="lens_solve" type="button" disabled
-                                title="Solve overlay geometry and recover camera pointing if needed. Results fill the form for review; nothing is saved."
+                                title="Detect mirroring, solve overlay geometry and recover camera pointing if needed. Results fill the form for review; nothing is saved."
                                 class="tw:btn tw:btn-sm tw:btn-info tw:gap-1.5 tw:rounded-[var(--radius-box)]">
                             <span id="lens_solve_spinner" class="tw:loading tw:loading-spinner tw:loading-xs" style="display: none;" aria-hidden="true"></span>
                             Solve
@@ -520,7 +535,7 @@ function loadJS(url, data, onDone, onError) {
                     <div id="lens_help" style="display: none;"
                          class="tw:text-xs tw:text-base-content/70 tw:space-y-1.5 tw:pt-2 tw:max-w-2xl">
                         <p><strong>Solve</strong> matches stars in the displayed image using the camera location and
-                           image time, which must be correct. It starts from the entered alignment and searches for
+                           image time, which must be correct. It detects mirroring, starts from the entered alignment and searches for
                            Altitude and Camera pointing direction if needed. Recovered pointing resets latitude/longitude offsets
                            to zero. Results update the fields and overlay for review; nothing is saved.</p>
                         <p>Use a clear, star-rich frame from the Gallery. Clouds, bright sky and obstructions can
@@ -529,7 +544,7 @@ function loadJS(url, data, onDone, onError) {
                            existing saved alignments keep their original coordinates until solved again.</p>
                         <p>Lens curvature separates radial lens distortion from camera tilt. It is calibrated by
                            the normal solver; zero retains the original equisolid projection.</p>
-                        <p id="lens_save_help"><strong>Save</strong> writes all nine calibration values to the camera configuration,
+                        <p id="lens_save_help"><strong>Save</strong> writes all nine calibration values and overlay flips to the camera configuration,
                            including manually entered values. Display controls are not saved. Azimuth also repositions
                            the cardinal-direction labels burned into future captured images.</p>
                         <p><strong>Additional overlay correction</strong> is optional and can reduce residual mismatches
@@ -581,34 +596,6 @@ function forceRedrawPlanetarium() {
     };
 }
 
-
-$("#AZIMUTH_ANGLE").on("change", function() {
-    forceRedrawPlanetarium();
-});
-
-$("#POINTING_AZIMUTH").on("change", function() {
-    forceRedrawPlanetarium();
-});
-
-$("#LATITUDE_OFFSET").on("change", function() {
-    forceRedrawPlanetarium();
-});
-
-$("#LONGITUDE_OFFSET").on("change", function() {
-    forceRedrawPlanetarium();
-});
-
-$("#IMAGE_CIRCLE_DIAMETER").on("change", function() {
-    forceRedrawPlanetarium();
-});
-
-$("#OFFSET_X").on("change", function() {
-    forceRedrawPlanetarium();
-});
-
-$("#OFFSET_Y, #RADIAL_DISTORTION").on("change", function() {
-    forceRedrawPlanetarium();
-});
 
 $("#MAGNITUDE").on("change", function() {
     forceRedrawPlanetarium();
@@ -898,11 +885,13 @@ $('#CALIBRATION_ENABLED').on('change', function() {
     updateCalibrationStatus();
     forceRedrawPlanetarium();
 });
-$(SOLVE_FIELDS.map(f => '#' + f).concat('#POINTING_AZIMUTH').join(', ')).on('change', function() {
+$(SOLVE_FIELDS.map(f => '#' + f).concat('#POINTING_AZIMUTH', '#FLIP_H', '#FLIP_V').join(', ')).on('change', function() {
     // A residual field belongs to one base alignment, not arbitrary new settings.
+    // Clear it before requesting a redraw, including when only a flip changes.
     lensCalibration = null;
     calibrationMessage = 'Alignment changed. Solve again to calculate an additional correction.';
     updateCalibrationStatus();
+    forceRedrawPlanetarium();
 });
 
 function solverPayload(action) {
@@ -913,6 +902,10 @@ function solverPayload(action) {
     SOLVE_FIELDS.forEach(function(f) {
         payload[f] = $('#' + f).val();
     });
+    ['FLIP_H', 'FLIP_V'].forEach(function(f) {
+        payload[f] = $('#' + f).prop('checked');
+    });
+
     payload.CALIBRATION_ENABLED = Boolean($('#CALIBRATION_ENABLED').prop('checked'));
     if (action === 'save') payload.CALIBRATION = lensCalibration;
     return payload;
@@ -980,6 +973,10 @@ $('#lens_solve').on('click', function() {
                 SOLVE_FIELDS.forEach(function(f) {
                     $('#' + f).val(rdata['values'][f]);
                 });
+                ['FLIP_H', 'FLIP_V'].forEach(function(f) {
+                    $('#' + f).prop('checked', rdata['values'][f]);
+                });
+
                 // A recovered orientation replaces the request's fixed pointing.
                 // Otherwise retain the heading used, even if it was edited in flight.
                 $('#POINTING_AZIMUTH').val(rdata['values']['POINTING_AZIMUTH'] !== undefined

@@ -9,7 +9,7 @@ import pytest
 from indi_allsky.lens_solver.projection import predictAltAz, projectToPixels, precessCatalog, cameraAltAz
 
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def run_node(*args, input=None):
@@ -22,7 +22,7 @@ def run_node(*args, input=None):
 
 
 def test_virtualsky_javascript():
-    run_node('--test', 'tests/flask/virtualsky.test.cjs', 'tests/flask/virtualsky_refresh.test.cjs')
+    run_node('--test', 'tests/flask/views/virtualsky.test.cjs', 'tests/flask/views/virtualsky_refresh.test.cjs')
 
 
 @pytest.mark.parametrize('altitude,heading', [(90, 215), (54, 0), (20, 120), (0, 350)])
@@ -45,7 +45,7 @@ def test_browser_and_solver_agree_across_timestamps(altitude, heading, precessio
     payload = dict(cases=cases, altitude=altitude, heading=heading, precession=precession, radial=radial)
     run_node('-e', '''
 const assert = require('node:assert/strict');
-const {makeSky} = require('./tests/flask/virtualsky_harness.cjs');
+const {makeSky} = require('./tests/flask/views/virtualsky_harness.cjs');
 const input = JSON.parse(require('node:fs').readFileSync(0, 'utf8'));
 for (const asset of ['virtualsky.js', 'virtualsky.min.js']) {
   for (const c of input.cases) {

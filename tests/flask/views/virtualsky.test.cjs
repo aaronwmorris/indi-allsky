@@ -120,7 +120,7 @@ for (const asset of ['virtualsky.js', 'virtualsky.min.js']) {
 
 function calibrationPage() {
     const html = fs.readFileSync(path.join(__dirname,
-        '../../indi_allsky/flask/templates/virtualsky.html'), 'utf8');
+        '../../../indi_allsky/flask/templates/virtualsky.html'), 'utf8');
     const controls = new Map();
     const $ = id => {
         if (!controls.has(id)) controls.set(id, {
