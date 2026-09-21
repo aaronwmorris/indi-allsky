@@ -197,3 +197,17 @@ Description: Run recursive image archive permissions repair now?
  .
  Note: If you have tens of thousands of archived images on an SD card, this may take several minutes.
  You can also run this at any time later via 'sudo indi-allsky-ctl fix-perms'.
+
+Template: indi-allsky/web_only_instance
+Type: boolean
+Default: false
+Description: Web-only instance
+ Will this install be a web-only instance of indi-allsky?
+ .
+ Note: This will disable the indi-allsky capture and indiserver services
+
+Template: indi-allsky/auto_start_capture
+Type: boolean
+Default: true
+Description: Enable auto-start
+ Do you want the indi-allsky capture service to be started at boot?

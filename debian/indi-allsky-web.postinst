@@ -275,6 +275,8 @@ case "$1" in
         ENABLE_WATCHDOG=$(fetch_debconf enable_watchdog false)
         SYSTEM_OPTIMIZE=$(fetch_debconf system_optimize false)
         REPAIR_PERMISSIONS=$(fetch_debconf repair_permissions false)
+        WEB_ONLY_INSTANCE=$(fetch_debconf web_only_instance false)
+        AUTO_START_CAPTURE=$(fetch_debconf auto_start_capture true)
 
         # Security: Clear sensitive credentials from debconf database immediately
         db_set indi-allsky/web_pass "" 2>/dev/null || true
@@ -394,7 +396,6 @@ EOF
         # Initialize SQLite Database (Backup, Vacuum, Migration) & Admin User
         # Ensure services are stopped so SQLite has 0 write locks during backup/vacuum
         systemctl stop indi-allsky.service 2>/dev/null || true
-        systemctl stop indiserver.service 2>/dev/null || true
         systemctl stop gunicorn-indi-allsky.service 2>/dev/null || true
 
         DB_DIR="/var/lib/indi-allsky"
@@ -548,18 +549,12 @@ with app.app_context():
 
 
         # use is-enabled in case the unit is down due to a port conflict
-        if [ -x "$(command -v caddy 2>/dev/null)" ]; then
-            if systemctl is-enabled --quiet caddy 2>/dev/null; then
-                USE_CADDY=1
-            fi
-        elif [ -x "$(command -v nginx 2>/dev/null)" ]; then
-            if systemctl is-enabled --quiet nginx 2>/dev/null; then
-                USE_NGINX=1
-            fi
-        elif [ -x "$(command -v a2ensite 2>/dev/null)" ]; then
-            if systemctl is-enabled --quiet apache2 2>/dev/null; then
-                USE_APACHE=1
-            fi
+        if systemctl is-enabled --quiet caddy 2>/dev/null; then
+            USE_CADDY=1
+        elif systemctl is-enabled --quiet nginx 2>/dev/null; then
+            USE_NGINX=1
+        elif systemctl is-enabled --quiet apache2 2>/dev/null; then
+            USE_APACHE=1
         fi
 
 
@@ -652,11 +647,6 @@ with app.app_context():
             chmod 664 "$INDISERVER_ENV"
         fi
 
-        # Always enable and start indiserver service (matches setup.sh behavior)
-        # Even libcamera and test configurations connect to localhost indiserver for core subsystem operations
-        systemctl enable indiserver.service 2>/dev/null || true
-        systemctl restart indiserver.service 2>/dev/null || systemctl start indiserver.service 2>/dev/null || true
-
         # Optional System Performance & Hardware Optimizations
         if [ "$SYSTEM_OPTIMIZE" = "true" ]; then
             echo "indi-allsky: Applying system performance optimizations (sysctl & journald)..."
@@ -720,6 +710,31 @@ EOF
         if [ "$REPAIR_PERMISSIONS" = "true" ] && [ -x "/usr/bin/indi-allsky-ctl" ]; then
             echo "indi-allsky: Running recursive image archive permissions repair as requested..."
             /usr/bin/indi-allsky-ctl fix-perms || true
+        fi
+
+
+        systemctl daemon-reload 2>/dev/null || true
+
+        if [ "$WEB_ONLY_INSTANCE" = "true" ]; then
+            # Web-only instance does not require indiserver or capture service
+            systemctl disable indiserver.service 2>/dev/null || true
+            systemctl stop indiserver.service 2>/dev/null || true
+
+            systemctl disable indi-allsky.service 2>/dev/null || true
+            systemctl stop indi-allsky.service 2>/dev/null || true
+        else
+            # Always enable and start indiserver service (matches setup.sh behavior)
+            # Even libcamera and test configurations connect to localhost indiserver for core subsystem operations
+            systemctl enable indiserver.service 2>/dev/null || true
+            systemctl restart indiserver.service 2>/dev/null || systemctl start indiserver.service 2>/dev/null || true
+
+            if [ "$AUTO_START_CAPTURE" = "true" ]; then
+                systemctl enable indi-allsky.service 2>/dev/null || true
+                systemctl restart indi-allsky.service 2>/dev/null || systemctl start indi-allsky.service 2>/dev/null || true
+            else
+                systemctl disable indi-allsky.service 2>/dev/null || true
+                systemctl stop indi-allsky.service 2>/dev/null || true
+            fi
         fi
     ;;
 esac

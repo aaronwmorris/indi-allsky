@@ -130,6 +130,10 @@ class VideoWorker(Process):
         else:
             self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
 
+        # scratch files which may be deleted
+        self.scratch_base_dir = self.image_dir.joinpath('scratch')
+
+
         self._shutdown = False
 
 
@@ -2624,6 +2628,26 @@ class VideoWorker(Process):
                 )
 
 
+        ### Expire temporary scratch files
+        if self.scratch_base_dir.is_dir():
+            orphaned_scratch_file_list = list()
+            self._getFolderFilesAll(self.scratch_base_dir, orphaned_scratch_file_list)
+
+
+            now_minus_24h_ts = (now - timedelta(hours=24)).timestamp()
+            orphaned_scratch_file_list_24h = filter(lambda f: f.stat().st_mtime < now_minus_24h_ts, orphaned_scratch_file_list)
+
+            for f in orphaned_scratch_file_list_24h:
+                logger.warning('Deleting orphaned scratch file: %s', f)
+
+                try:
+                    f.unlink()
+                except PermissionError:
+                    pass
+                except OSError:
+                    pass
+
+
         task.setSuccess(
             'Expired {0:d} assets and {1:d} calibration sessions'.format(
                 delete_count,
@@ -2691,6 +2715,14 @@ class VideoWorker(Process):
             if item.is_dir():
                 dir_list.append(item)
                 self._getFolderFolders(item, dir_list)  # recursion
+
+
+    def _getFolderFilesAll(self, folder, file_list):
+        for item in Path(folder).iterdir():
+            if item.is_file():
+                file_list.append(item)
+            elif item.is_dir():
+                self._getFolderFilesAll(item, file_list)  # recursion
 
 
     def _load_detection_mask(self):
