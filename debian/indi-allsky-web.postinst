@@ -276,6 +276,7 @@ case "$1" in
         SYSTEM_OPTIMIZE=$(fetch_debconf system_optimize false)
         REPAIR_PERMISSIONS=$(fetch_debconf repair_permissions false)
         WEB_ONLY_INSTANCE=$(fetch_debconf web_only_instance false)
+        INDISERVER_ONLY_INSTANCE=$(fetch_debconf indiserver_only_instance false)
         AUTO_START_CAPTURE=$(fetch_debconf auto_start_capture true)
 
         # Security: Clear sensitive credentials from debconf database immediately
@@ -396,6 +397,9 @@ EOF
         # Initialize SQLite Database (Backup, Vacuum, Migration) & Admin User
         # Ensure services are stopped so SQLite has 0 write locks during backup/vacuum
         systemctl stop indi-allsky.service 2>/dev/null || true
+
+        # Stop the socket to prevent requests from auto-starting the service
+        systemctl stop gunicorn-indi-allsky.socket 2>/dev/null || true
         systemctl stop gunicorn-indi-allsky.service 2>/dev/null || true
 
         DB_DIR="/var/lib/indi-allsky"
@@ -715,13 +719,26 @@ EOF
 
         systemctl daemon-reload 2>/dev/null || true
 
+
+        # stopped above for database migration
+        # socket will auto-start service
+        systemctl start gunicorn-indi-allsky.socket 2>/dev/null || true
+
+
         if [ "$WEB_ONLY_INSTANCE" = "true" ]; then
             # Web-only instance does not require indiserver or capture service
-            systemctl disable indiserver.service 2>/dev/null || true
-            systemctl stop indiserver.service 2>/dev/null || true
-
             systemctl disable indi-allsky.service 2>/dev/null || true
             systemctl stop indi-allsky.service 2>/dev/null || true
+
+            systemctl disable indiserver.service 2>/dev/null || true
+            systemctl stop indiserver.service 2>/dev/null || true
+        elif [ "$INDISERVER_ONLY_INSTANCE" = "true" ]; then
+            # leave the gunicorn service operational
+            systemctl disable indi-allsky.service 2>/dev/null || true
+            systemctl stop indi-allsky.service 2>/dev/null || true
+
+            systemctl enable indiserver.service 2>/dev/null || true
+            systemctl restart indiserver.service 2>/dev/null || systemctl start indiserver.service 2>/dev/null || true
         else
             # Always enable and start indiserver service (matches setup.sh behavior)
             # Even libcamera and test configurations connect to localhost indiserver for core subsystem operations
