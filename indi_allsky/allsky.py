@@ -4,6 +4,7 @@ import locale
 import fcntl
 #import errno
 import os
+import shutil
 import time
 import io
 import re
@@ -277,9 +278,11 @@ class IndiAllSky(object):
             self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
 
 
+        # scratch files which may be deleted
+        self.scratch_base_dir = self.image_dir.joinpath('scratch')
+
         varlib_folder = self.config.get('VARLIB_FOLDER', '/var/lib/indi-allsky')
         self.varlib_folder_p = Path(varlib_folder)
-
 
         self._pid_file = self.varlib_folder_p.joinpath('indi-allsky.pid')
 
@@ -756,6 +759,7 @@ class IndiAllSky(object):
             self.write_pid()
 
             self._expireOrphanedTasks()
+            self._deleteScratchFolder()
 
             self._startup()
 
@@ -1363,6 +1367,12 @@ class IndiAllSky(object):
         logger.warning('Found %d expired tasks to delete', flush_old_tasks.count())
         flush_old_tasks.delete()
         db.session.commit()
+
+
+    def _deleteScratchFolder(self):
+        if self.scratch_base_dir.is_dir():
+            logger.warning('Clearing scratch folder')
+            shutil.rmtree(str(self.scratch_base_dir), ignore_errors=True)
 
 
     def _queueManualTasks(self):
