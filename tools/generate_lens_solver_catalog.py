@@ -22,7 +22,7 @@ it directly and never parses virtualsky.js at runtime.
 
 Rerun after virtualsky.js or stars.json changes upstream:
 
-    python testing/generate_lens_solver_catalog.py
+    python tools/generate_lens_solver_catalog.py
 """
 import json
 import re
