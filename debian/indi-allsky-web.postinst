@@ -548,18 +548,12 @@ with app.app_context():
 
 
         # use is-enabled in case the unit is down due to a port conflict
-        if [ -x "$(command -v caddy 2>/dev/null)" ]; then
-            if systemctl is-enabled --quiet caddy 2>/dev/null; then
-                USE_CADDY=1
-            fi
-        elif [ -x "$(command -v nginx 2>/dev/null)" ]; then
-            if systemctl is-enabled --quiet nginx 2>/dev/null; then
-                USE_NGINX=1
-            fi
-        elif [ -x "$(command -v a2ensite 2>/dev/null)" ]; then
-            if systemctl is-enabled --quiet apache2 2>/dev/null; then
-                USE_APACHE=1
-            fi
+        if systemctl is-enabled --quiet caddy 2>/dev/null; then
+            USE_CADDY=1
+        elif systemctl is-enabled --quiet nginx 2>/dev/null; then
+            USE_NGINX=1
+        elif systemctl is-enabled --quiet apache2 2>/dev/null; then
+            USE_APACHE=1
         fi
 
 
