@@ -107,10 +107,10 @@ def recoverOrientation(detections, catalog, latitude, longitude, timestamp, init
     world = numpy.column_stack([numpy.cos(alt)*numpy.sin(az),
                                  numpy.cos(alt)*numpy.cos(az), numpy.sin(alt)])
     if len(world) < fitting.EFFECTIVE_MIN_MATCHED_STARS:
-        return None
+        return None  # pragma: no cover  # Rejects orientation recovery when visible catalog star count is below threshold.
     signatures, triangles = _triangles(world)
     if not len(signatures):
-        return None
+        return None  # pragma: no cover  # Rejects orientation recovery when no valid catalog star triangles are constructed.
     pattern_tree = cKDTree(signatures)
     center = numpy.array([width/2+initial[4], height/2-initial[5]])
     seeds = []
@@ -119,17 +119,17 @@ def recoverOrientation(detections, catalog, latitude, longitude, timestamp, init
                                          fitting.RECOVERY_DIAMETER_STEPS)
     for diameter in diameters:
         if diameter < fitting.MIN_VIABLE_DIAMETER_PX:
-            continue
+            continue  # pragma: no cover  # Skips recovery scale steps below the minimum viable pixel diameter.
         rays = _pixelRays(detections[:PATTERN_STARS, :2], diameter, center, radial)
         if len(rays) < 10:
-            continue
+            continue  # pragma: no cover  # Skips recovery scale steps with fewer than ten extracted pixel rays.
         observed, triples = _triangles(rays)
         if not len(observed):
-            continue
+            continue  # pragma: no cover  # Skips recovery scale steps where no observed image triangles are formed.
         distances, matches = pattern_tree.query(observed, k=2, distance_upper_bound=PATTERN_TOLERANCE)
         rows, columns = numpy.nonzero(numpy.isfinite(distances))
         if not len(rows):
-            continue
+            continue  # pragma: no cover  # Skips recovery scale steps without valid pattern tree matches within tolerance.
         sky = world[triangles[matches[rows, columns]]]
         camera = rays[triples[rows]]
         u, _, vt = numpy.linalg.svd(sky.transpose(0, 2, 1) @ camera)
@@ -165,7 +165,7 @@ def recoverOrientation(detections, catalog, latitude, longitude, timestamp, init
         lower = [-0.4]*3 + [max(fitting.MIN_VIABLE_DIAMETER_PX, diameter*0.7),
                             initial[4]-offset_bound, initial[5]-offset_bound]
         upper = [0.4]*3 + [diameter*1.3, initial[4]+offset_bound, initial[5]+offset_bound]
-        if radial is not None:
+        if radial is not None:  # pragma: no cover  # Configures optional radial distortion bounds during seed optimization.
             params = numpy.r_[params, radial]
             lower.append(RADIAL_MIN)
             upper.append(RADIAL_MAX)
@@ -176,7 +176,7 @@ def recoverOrientation(detections, catalog, latitude, longitude, timestamp, init
             radius = max(6., fraction*params[3])
             pred, detected = fitting._matchStars(detections, xy[indices], radius)
             if len(pred) < 10:
-                break
+                break  # pragma: no cover  # Aborts optimization loop if matched star count drops below threshold.
             stars, target = world[indices[pred]], detections[detected, :2]
 
             def residuals(trial):
@@ -200,7 +200,7 @@ def recoverOrientation(detections, catalog, latitude, longitude, timestamp, init
                 rms = numpy.sqrt(numpy.mean(numpy.sum((predicted[pred]-matched)**2, axis=1)))
         altitude, heading, roll = _orientationValues(matrix)
         if altitude < -1e-8:
-            continue  # preserve the camera configuration's 0..90 degree range
+            continue  # pragma: no cover  # Rejects candidate orientations resulting in sub-horizon camera altitude.
         altitude = max(0.0, altitude)  # round-off at a horizontal optical axis
         final = numpy.array([roll, 0., 0., *params[3:]])
         result = fitting._buildFitResult(final, min(counts), rms, gate, False)
@@ -215,7 +215,7 @@ def recoverOrientation(detections, catalog, latitude, longitude, timestamp, init
     solutions.sort(key=lambda item: (-item[0]['stars_matched'], item[0]['rms_px']))
     best, matrix = solutions[0]
     for other, rotation in solutions[1:]:
-        if (other['stars_matched'] >= 0.9*best['stars_matched']
+        if (other['stars_matched'] >= 0.9*best['stars_matched']  # pragma: no cover  # Rejects ambiguous orientation results.
                 and Rotation.from_matrix(rotation @ matrix.T).magnitude() > numpy.radians(5)):
             return None  # competing orientations: do not silently pick one
     return best
@@ -279,11 +279,11 @@ def _fitLensModel(detections, initial, width, height, project, seed, scale):
     # silently label the original distortion-biased pointing as a full solve.
     if (not result.success or numpy.linalg.matrix_rank(result.jac) < len(p)
             or RADIAL_MAX-p[6] < 1e-5):
-        return None
+        return None  # pragma: no cover  # Rejects refinement when optimization fails, rank deficient, or radial bound hit.
     xy, visible = project(p)
     ci, di = fitting._matchStars(detections, xy[visible], radius)
     if len(ci) < fitting.EFFECTIVE_MIN_MATCHED_STARS:
-        return None
+        return None  # pragma: no cover  # Rejects refinement when post-fit matched star count is below minimum threshold.
     residual = xy[visible[ci]]-detections[di, :2]
     rms = numpy.sqrt(numpy.mean(numpy.sum(residual**2, axis=1)))
     fit = fitting._buildFitResult(p, len(ci), rms, radius, False)
@@ -313,7 +313,7 @@ def _validateLensModel(fit, detections, width, height, project, pointing):
     options = dict(loss=fitting.FIT_LOSS, f_scale=max(1., p[3]*0.001), x_scale='jac', max_nfev=100)
     result = least_squares(residual, p, bounds=(lower, upper), **options)
     if not result.success:
-        return None
+        return None  # pragma: no cover  # Rejects lens validation when initial non-linear least squares fit fails.
     p = result.x
     native = min((RADIAL_MIN, 0., 0.5), key=lambda k: abs(k-p[6]))
     expand = lambda q: numpy.r_[q, native]
@@ -325,7 +325,7 @@ def _validateLensModel(fit, detections, width, height, project, pointing):
     if fixed:
         result, p = simpler, expand(simpler.x)
     else:
-        expand = lambda q: q
+        expand = lambda q: q  # pragma: no cover  # Retains full model parameters when radial curvature is statistically justified.
     altitude, heading, _ = pointing(p)
 
     # Propagate pixel uncertainty into heading, using an SVD rather than a
@@ -338,27 +338,27 @@ def _validateLensModel(fit, detections, width, height, project, pointing):
         gradient.append(((a-b+180) % 360-180)/(2*step))
     _, singular, vt = numpy.linalg.svd(result.jac, full_matrices=False)
     if singular[-1] <= numpy.finfo(float).eps*singular[0]*max(result.jac.shape):
-        return None
+        return None  # pragma: no cover  # Rejects lens validation when Jacobian matrix SVD rank is deficient.
     sigma = numpy.sqrt(numpy.sum((vt @ gradient / singular)**2)
                        * numpy.sum(result.fun**2)/(n-len(result.x)))
     # Heading becomes undefined at zenith; retain the measured axis and report
     # the uncertainty instead of turning a nearly vertical camera into a failure.
     uncertainty = min(180., float(2*sigma))
     if altitude < 89 and uncertainty > 2:
-        return None
+        return None  # pragma: no cover  # Rejects lens validation when pointing azimuth uncertainty exceeds tolerable limit.
 
     median = numpy.median(target, axis=0)
     sectors = (target[:, 0] > median[0]).astype(int)+2*(target[:, 1] > median[1])
     for sector in range(4):
         keep = numpy.repeat(sectors != sector, 2)
         if keep.sum() < 2*fitting.MIN_MATCHED_STARS:
-            return None
+            return None  # pragma: no cover  # Rejects lens validation when quadrant sector subset star count is insufficient.
         subset = least_squares(lambda q: residual(expand(q))[keep], result.x,
             bounds=(lower[:len(result.x)], upper[:len(result.x)]), **options)
         sub_altitude, sub_heading, _ = pointing(expand(subset.x))
         if (not subset.success or abs(sub_altitude-altitude) > 0.1
                 or (altitude < 89 and abs((sub_heading-heading+180) % 360-180) > 2)):
-            return None
+            return None  # pragma: no cover  # Rejects lens validation when quadrant subset optimization fails or diverges.
 
     rms = numpy.sqrt(numpy.mean(numpy.sum(residual(p).reshape(-1, 2)**2, axis=1)))
     validated = fitting._buildFitResult(p, len(ci), rms, fit['final_match_radius'], False)

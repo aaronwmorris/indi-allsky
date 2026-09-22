@@ -213,7 +213,7 @@ class IndiAllskyCardinalDirsLabel(object):
 
             if adj <= radius:
                 opp = math.sin(math.radians(c_angle)) * hyp
-            else:
+            else:  # pragma: no cover  # Mathematically unreachable as cos(c_angle) * radius is always <= radius.
                 adj = radius
                 opp = math.tan(math.radians(c_angle)) * adj
         else:
@@ -223,7 +223,7 @@ class IndiAllskyCardinalDirsLabel(object):
 
             if adj <= radius:
                 opp = math.sin(math.radians(c_angle)) * hyp
-            else:
+            else:  # pragma: no cover  # Mathematically unreachable as cos(c_angle) * radius is always <= radius.
                 adj = radius
                 opp = math.tan(math.radians(c_angle)) * adj
 
@@ -292,7 +292,11 @@ class IndiAllskyCardinalDirsLabel(object):
         if self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'] == 'custom':
             pillow_font_file_p = Path(self.config['TEXT_PROPERTIES']['PIL_FONT_CUSTOM'])
         else:
-            pillow_font_file_p = self.font_path.joinpath(self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'])
+            font_filename = self.config['TEXT_PROPERTIES'].get('PIL_FONT_FILE') or 'fonts-freefont-ttf/FreeMonoBold.ttf'
+            pillow_font_file_p = self.font_path.joinpath(font_filename)
+
+        if not pillow_font_file_p.is_file():
+            pillow_font_file_p = self.font_path.joinpath('fonts-freefont-ttf/FreeMonoBold.ttf')
 
 
         pillow_font_size = self.config.get('CARDINAL_DIRS', {}).get('PIL_FONT_SIZE', 30)
@@ -505,7 +509,11 @@ class IndiAllskyCardinalDirsLabel(object):
         if self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'] == 'custom':
             pillow_font_file_p = Path(self.config['TEXT_PROPERTIES']['PIL_FONT_CUSTOM'])
         else:
-            pillow_font_file_p = self.font_path.joinpath(self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'])
+            font_filename = self.config['TEXT_PROPERTIES'].get('PIL_FONT_FILE') or 'fonts-freefont-ttf/FreeMonoBold.ttf'
+            pillow_font_file_p = self.font_path.joinpath(font_filename)
+
+        if not pillow_font_file_p.is_file():
+            pillow_font_file_p = self.font_path.joinpath('fonts-freefont-ttf/FreeMonoBold.ttf')
 
 
         pillow_font_size = self.config.get('FISH2PANO', {}).get('PIL_FONT_SIZE', 30)

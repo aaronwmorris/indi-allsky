@@ -16,7 +16,7 @@ from flask_login import LoginManager
 try:
     from authlib.integrations.flask_client import OAuth
     oauth = OAuth()
-except ModuleNotFoundError:
+except ModuleNotFoundError:  # pragma: no cover  # authlib is installed in runtime environment
     oauth = None
 
 
