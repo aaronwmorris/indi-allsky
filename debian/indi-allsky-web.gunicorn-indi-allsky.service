@@ -11,6 +11,7 @@ Group=www-data
 SupplementaryGroups=indi-allsky
 WorkingDirectory=/usr/share/indi-allsky
 Environment="PYTHONPATH=/usr/share/indi-allsky"
+EnvironmentFile=-/etc/indi-allsky/indi-allsky.env
 ExecStart=/var/lib/indi-allsky/venv/bin/gunicorn --config /etc/indi-allsky/gunicorn.conf.py indi_allsky.wsgi:application
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed

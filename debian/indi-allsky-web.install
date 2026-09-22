@@ -19,4 +19,5 @@ debian/conf/caddy_indi-allsky.conf usr/share/indi-allsky/conf/
 debian/conf/nginx_indi-allsky.conf usr/share/indi-allsky/conf/
 debian/conf/gunicorn.conf.py etc/indi-allsky/
 debian/conf/mosquitto_indi-allsky.conf usr/share/indi-allsky/conf/
+debian/conf/indi-allsky.env usr/share/indi-allsky/conf/
 debian/bundle/venv.tar.zst usr/share/indi-allsky/

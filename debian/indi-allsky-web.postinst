@@ -343,7 +343,13 @@ INDI_PORT="${SAFE_INDI_PORT}"
 CCD_DRIVER="${CCD_DRIVER:-indi_simulator_ccd}"
 GPS_DRIVER="${GPS_DRIVER_VAL}"
 EOF
-            chmod 644 "$INDISERVER_ENV"
+        fi
+
+
+        INDI_ALLSKY_ENV="/etc/indi-allsky/indi_allsky.env"
+        if [ ! -f "$INDI_ALLSKY_ENV" ]; then
+            # once the file exists, do not reconfigure
+            cp -f /usr/share/indi-allsky/conf/indi-allsky.env "$INDI_ALLSKY_ENV" 2>/dev/null || true
         fi
 
 
@@ -641,6 +647,10 @@ with app.app_context():
         if [ -f "$INDISERVER_ENV" ]; then
             chown "${ALLSKY_USER}":"${ALLSKY_GROUP}" "$INDISERVER_ENV"
             chmod 664 "$INDISERVER_ENV"
+        fi
+        if [ -f "$INDI_ALLSKY_ENV" ]; then
+            chown "${ALLSKY_USER}":"${ALLSKY_GROUP}" "$INDI_ALLSKY_ENV"
+            chmod 664 "$INDI_ALLSKY_ENV"
         fi
 
         # Optional System Performance & Hardware Optimizations
