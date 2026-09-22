@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict');
 const {test} = require('node:test');
+const {isDeepStrictEqual} = require('node:util');
 const {makeSky} = require('./virtualsky_harness.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -8,6 +9,38 @@ const rad = Math.PI / 180;
 const close = (a, b, tolerance = 1e-8) => assert.ok(Math.abs(a-b) < tolerance, `${a} != ${b}`);
 
 for (const asset of ['virtualsky.js', 'virtualsky.min.js']) {
+    test(`${asset}: a late galaxy response preserves the outline across redraws`, () => {
+        const sky = makeSky({showgalaxy: true}, asset);
+        const raw = fs.readFileSync(path.join(__dirname,
+            '../../../indi_allsky/flask/static/virtualsky/galaxy.json'), 'utf8');
+        const responses = [];
+        sky.loadJSON = function (file, callback) { responses.push(callback); return this; };
+        sky.draw = () => {}; // Explicitly render between the two network responses.
+        let points;
+        sky.ctx = {
+            beginPath() { points = []; }, stroke() {},
+            moveTo(x, y) { points.push(['move', x, y]); },
+            lineTo(x, y) { points.push(['line', x, y]); },
+        };
+        const render = () => { sky.drawGalaxy(); return points; };
+        sky.load('galaxy', sky.file.galaxy);
+        sky.load('galaxy', sky.file.galaxy);
+        responses.shift().call(sky, JSON.parse(raw));
+        const expected = render();
+        const converted = structuredClone(sky.galaxy);
+        assert.ok(expected.some(p => p.slice(1).every(Number.isFinite)));
+
+        // Replacement data arrives in degrees after the first array was converted.
+        responses.shift().call(sky, JSON.parse(raw));
+        assert.ok(isDeepStrictEqual(render(), expected), 'A late response changed the outline');
+        assert.ok(isDeepStrictEqual(sky.galaxy, converted), 'Replacement coordinates must be in radians');
+        assert.ok(isDeepStrictEqual(render(), expected), 'Redraws must not convert again');
+
+        sky.load('lines', sky.file.lines);
+        responses.shift().call(sky, {lines: []});
+        assert.ok(isDeepStrictEqual(render(), expected), 'Other catalogs must not invalidate the galaxy');
+    });
+
     test(`${asset}: invalid lens curvature cannot replace a working projection`, () => {
         const sky = makeSky({fisheye_radial: 0.08}, asset);
         for (const value of [null, '0.1', NaN, Infinity, -0.51, 1.01]) {

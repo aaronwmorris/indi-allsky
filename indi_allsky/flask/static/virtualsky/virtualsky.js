@@ -1280,6 +1280,8 @@ VirtualSky.prototype.load = function(t,file,fn){
 			for(i = 0; i < this.stars.length; i++) this.lookup.star.push({'ra':this.stars[i][2],'dec':this.stars[i][3],'label':this.stars[i][0],'mag':this.stars[i][1]});
 		}
 		else{ this[t] = data[t]; }
+		// A late response replaces the converted outline with coordinates in degrees.
+		if(t=="galaxy") this.gal.processed = false;
 		this.draw();
 		this.trigger("loaded"+(t.charAt(0).toUpperCase() + t.slice(1)),{data:data});
 	},fn);
