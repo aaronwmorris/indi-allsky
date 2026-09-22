@@ -295,8 +295,6 @@ case "$1" in
         # Generate /etc/indi-allsky/flask.json if not present (from shipped template)
         FLASK_JSON="/etc/indi-allsky/flask.json"
         FLASK_TEMPLATE="/usr/share/indi-allsky/flask.json_template"
-        SAFE_HTTP_PORT=$(safe_port "$HTTP_PORT" 80)
-        SAFE_HTTPS_PORT=$(safe_port "$HTTPS_PORT" 443)
         SAFE_INDI_PORT=$(safe_port "$INDI_PORT" 7624)
 
         if [ ! -f "$FLASK_JSON" ]; then
@@ -306,11 +304,6 @@ case "$1" in
             jq \
                 --arg secret_key "$SECRET_KEY" \
                 --arg password_key "$PASSWORD_KEY" \
-                --arg camera_interface "${CAMERA_INTERFACE}" \
-                --arg ccd_driver "${CCD_DRIVER}" \
-                --argjson http_port "$SAFE_HTTP_PORT" \
-                --argjson https_port "$SAFE_HTTPS_PORT" \
-                --argjson indi_port "$SAFE_INDI_PORT" \
                 --argjson auth_all_views "${WEB_AUTH_ALL_VIEWS:-false}" \
                 --argjson oidc_enable "${OIDC_ENABLE:-false}" \
                 --arg oidc_client_id "${OIDC_CLIENT_ID}" \
@@ -319,11 +312,6 @@ case "$1" in
                 '
                 .SECRET_KEY = $secret_key |
                 .PASSWORD_KEY = $password_key |
-                .CAMERA_INTERFACE = $camera_interface |
-                .CCD_DRIVER = $ccd_driver |
-                .HTTP_PORT = $http_port |
-                .HTTPS_PORT = $https_port |
-                .INDI_PORT = $indi_port |
                 .INDI_ALLSKY_AUTH_ALL_VIEWS = $auth_all_views |
                 .LOCAL_AUTH_ENABLE = true |
                 .OIDC_ENABLE = $oidc_enable |
