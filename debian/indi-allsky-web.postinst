@@ -343,17 +343,21 @@ case "$1" in
 
         # Generate /etc/indi-allsky/indiserver.env
         INDISERVER_ENV="/etc/indi-allsky/indiserver.env"
-        if [ "$GPS_DRIVER" = "None" ] || [ -z "$GPS_DRIVER" ]; then
-            GPS_DRIVER_VAL=""
-        else
-            GPS_DRIVER_VAL="$GPS_DRIVER"
-        fi
-        cat <<EOF > "$INDISERVER_ENV"
+        if [ ! -f "$INDISERVER_ENV" ]; then
+            # once the file exists, indiserver changes may be managed in the web app
+            if [ "$GPS_DRIVER" = "None" ] || [ -z "$GPS_DRIVER" ]; then
+                GPS_DRIVER_VAL=""
+            else
+                GPS_DRIVER_VAL="$GPS_DRIVER"
+            fi
+            cat <<EOF > "$INDISERVER_ENV"
 INDI_PORT="${SAFE_INDI_PORT}"
 CCD_DRIVER="${CCD_DRIVER:-indi_simulator_ccd}"
 GPS_DRIVER="${GPS_DRIVER_VAL}"
 EOF
-        chmod 644 "$INDISERVER_ENV"
+            chmod 644 "$INDISERVER_ENV"
+        fi
+
 
         # Unpack bundled virtual environment if shipped in package
         VENV="/var/lib/indi-allsky/venv"
