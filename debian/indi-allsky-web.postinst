@@ -346,7 +346,7 @@ EOF
         fi
 
 
-        INDI_ALLSKY_ENV="/etc/indi-allsky/indi_allsky.env"
+        INDI_ALLSKY_ENV="/etc/indi-allsky/indi-allsky.env"
         if [ ! -f "$INDI_ALLSKY_ENV" ]; then
             # once the file exists, do not reconfigure
             cp -f /usr/share/indi-allsky/conf/indi-allsky.env "$INDI_ALLSKY_ENV" 2>/dev/null || true
