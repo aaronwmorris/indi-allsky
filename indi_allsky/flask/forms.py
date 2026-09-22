@@ -9509,6 +9509,8 @@ class IndiAllskyCameraSelectForm(FlaskForm):
             else:
                 camera_name = camera.name
 
+            camera_name = '({0:d}) {1:s}'.format(camera.id, camera_name)
+
             camera_list.append((camera.id, camera_name))
 
         return camera_list
