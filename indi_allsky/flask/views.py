@@ -6310,6 +6310,15 @@ class AjaxSystemInfoView(BaseView):
                 return jsonify(errors_data), 400
 
         elif service == app.config['UPGRADE_ALLSKY_SERVICE_NAME']:
+            allsky_directory_p = Path(__file__).parent.parent.parent.absolute()
+            if allsky_directory_p.is_relative_to('/usr/share'):
+                app.logger.error('Cannot upgrade apt managed instance')
+                errors_data = {
+                    'COMMAND_HIDDEN' : ['Cannot upgrade apt managed instance.  Please use apt command on CLI.'],
+                }
+                return jsonify(errors_data), 400
+
+
             if command == 'start':
                 fs_list = psutil.disk_partitions(all=True)
                 for fs in fs_list:
