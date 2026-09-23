@@ -34,7 +34,7 @@ override_dh_auto_build:
 	done
 
 	@echo "=== [3/4] Pruning build tools and caches from unified virtualenv ==="
-	debian/venv/bin/python3 -m pip uninstall -y pip setuptools wheel cython Cython setuptools-rust 2>/dev/null || true
+	debian/venv/bin/python3 -m pip uninstall -y setuptools wheel cython Cython setuptools-rust 2>/dev/null || true
 	find debian/venv -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	find debian/venv -type f -name "*.pyc" -delete 2>/dev/null || true
 	find debian/venv -type f -name "*.a" -delete 2>/dev/null || true
