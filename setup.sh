@@ -2503,7 +2503,6 @@ INDI_PORT="$INDI_PORT"
 CCD_DRIVER="$CCD_DRIVER"
 GPS_DRIVER="$GPS_DRIVER"
 EOF
-    sudo chown indi-allsky "$INDISERVER_ENV"
     sudo chown "$USER":"$PGRP" "$INDISERVER_ENV"
     sudo chmod 644 "$INDISERVER_ENV"
 
