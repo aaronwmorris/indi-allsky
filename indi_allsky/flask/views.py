@@ -7878,6 +7878,15 @@ class AjaxSystemInfoView(BaseView):
                 return jsonify(errors_data), 400
 
         elif service == app.config['UPGRADE_ALLSKY_SERVICE_NAME']:
+            allsky_directory_p = Path(__file__).parent.parent.parent.absolute()
+            if allsky_directory_p.is_relative_to('/usr/share'):
+                app.logger.error('Cannot upgrade apt managed instance')
+                errors_data = {
+                    'COMMAND_HIDDEN' : ['Cannot upgrade apt managed instance.  Please use apt command on CLI.'],
+                }
+                return jsonify(errors_data), 400
+
+
             if command == 'start':
                 fs_list = psutil.disk_partitions(all=True)
                 for fs in fs_list:
@@ -8737,28 +8746,37 @@ class AjaxIndiServerChangeView(BaseView):
         allsky_directory_p = Path(__file__).parent.parent.parent.absolute()
 
 
-        with io.open(str(allsky_directory_p.joinpath('service', 'indiserver.service')), 'r') as f_service_tmpl:
-            service_tmpl = f_service_tmpl.read()
+        if not allsky_directory_p.is_relative_to('/usr/share'):
+            # only refresh a user unit definition
+            with io.open(str(allsky_directory_p.joinpath('service', 'indiserver.service')), 'r') as f_service_tmpl:
+                service_tmpl = f_service_tmpl.read()
 
 
-        service_tmpl = service_tmpl.replace('%ALLSKY_DIRECTORY%', str(allsky_directory_p))\
-            .replace('%INDI_DRIVER_PATH%', str(indiserver_p.parent.absolute()))\
-            .replace('%INDI_PORT%', str(self.indi_allsky_config.get('INDI_PORT', 7624)))\
-            .replace('%INDI_CCD_DRIVER%', camera_server)\
-            .replace('%INDI_GPS_DRIVER%', gps_server)\
-            .replace('%INDISERVER_USER%', os.getlogin())
+            service_tmpl = service_tmpl.replace('%ALLSKY_DIRECTORY%', str(allsky_directory_p))\
+                .replace('%INDI_DRIVER_PATH%', str(indiserver_p.parent.absolute()))\
+                .replace('%INDISERVER_USER%', os.getlogin())
 
 
-        indiserver_service_p = Path(os.environ.get('HOME', '/home/{0:s}'.format(os.getlogin()))).joinpath('.config', 'systemd', 'user', app.config['INDISERVER_SERVICE_NAME'])
+            indiserver_service_p = Path(os.environ.get('HOME', '/home/{0:s}'.format(os.getlogin()))).joinpath('.config', 'systemd', 'user', app.config['INDISERVER_SERVICE_NAME'])
 
-        with io.open(str(indiserver_service_p), 'w') as f_indiserver_service:
-            f_indiserver_service.write(service_tmpl)
-
-
-        indiserver_service_p.chmod(0o644)
+            with io.open(str(indiserver_service_p), 'w') as f_indiserver_service:
+                f_indiserver_service.write(service_tmpl)
 
 
-        self.reloadSystemdUnits()
+            indiserver_service_p.chmod(0o644)
+
+
+            self.reloadSystemdUnits()
+
+
+        # re-create env file
+        indiserver_env_p = Path('/etc/indi-allsky/indiserver.env')
+        with io.open(str(indiserver_env_p), 'w') as f_indiserver_env:
+            f_indiserver_env.write('CCD_DRIVER={0:s}\n'.format(camera_server))
+            f_indiserver_env.write('GPS_DRIVER={0:s}\n'.format(gps_server))
+            f_indiserver_env.write('INDI_PORT={0:d}\n'.format(self.indi_allsky_config.get('INDI_PORT', 7624)))
+
+        indiserver_env_p.chmod(0o644)
 
 
         success_message = 'Reconfigure completed.'

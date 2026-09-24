@@ -276,6 +276,7 @@ case "$1" in
         SYSTEM_OPTIMIZE=$(fetch_debconf system_optimize false)
         REPAIR_PERMISSIONS=$(fetch_debconf repair_permissions false)
         WEB_ONLY_INSTANCE=$(fetch_debconf web_only_instance false)
+        INDISERVER_ONLY_INSTANCE=$(fetch_debconf indiserver_only_instance false)
         AUTO_START_CAPTURE=$(fetch_debconf auto_start_capture true)
 
         # Security: Clear sensitive credentials from debconf database immediately
@@ -294,8 +295,6 @@ case "$1" in
         # Generate /etc/indi-allsky/flask.json if not present (from shipped template)
         FLASK_JSON="/etc/indi-allsky/flask.json"
         FLASK_TEMPLATE="/usr/share/indi-allsky/flask.json_template"
-        SAFE_HTTP_PORT=$(safe_port "$HTTP_PORT" 80)
-        SAFE_HTTPS_PORT=$(safe_port "$HTTPS_PORT" 443)
         SAFE_INDI_PORT=$(safe_port "$INDI_PORT" 7624)
 
         if [ ! -f "$FLASK_JSON" ]; then
@@ -305,11 +304,6 @@ case "$1" in
             jq \
                 --arg secret_key "$SECRET_KEY" \
                 --arg password_key "$PASSWORD_KEY" \
-                --arg camera_interface "${CAMERA_INTERFACE}" \
-                --arg ccd_driver "${CCD_DRIVER}" \
-                --argjson http_port "$SAFE_HTTP_PORT" \
-                --argjson https_port "$SAFE_HTTPS_PORT" \
-                --argjson indi_port "$SAFE_INDI_PORT" \
                 --argjson auth_all_views "${WEB_AUTH_ALL_VIEWS:-false}" \
                 --argjson oidc_enable "${OIDC_ENABLE:-false}" \
                 --arg oidc_client_id "${OIDC_CLIENT_ID}" \
@@ -318,11 +312,6 @@ case "$1" in
                 '
                 .SECRET_KEY = $secret_key |
                 .PASSWORD_KEY = $password_key |
-                .CAMERA_INTERFACE = $camera_interface |
-                .CCD_DRIVER = $ccd_driver |
-                .HTTP_PORT = $http_port |
-                .HTTPS_PORT = $https_port |
-                .INDI_PORT = $indi_port |
                 .INDI_ALLSKY_AUTH_ALL_VIEWS = $auth_all_views |
                 .LOCAL_AUTH_ENABLE = true |
                 .OIDC_ENABLE = $oidc_enable |
@@ -342,17 +331,27 @@ case "$1" in
 
         # Generate /etc/indi-allsky/indiserver.env
         INDISERVER_ENV="/etc/indi-allsky/indiserver.env"
-        if [ "$GPS_DRIVER" = "None" ] || [ -z "$GPS_DRIVER" ]; then
-            GPS_DRIVER_VAL=""
-        else
-            GPS_DRIVER_VAL="$GPS_DRIVER"
-        fi
-        cat <<EOF > "$INDISERVER_ENV"
+        if [ ! -f "$INDISERVER_ENV" ]; then
+            # once the file exists, indiserver changes may be managed in the web app
+            if [ "$GPS_DRIVER" = "None" ] || [ -z "$GPS_DRIVER" ]; then
+                GPS_DRIVER_VAL=""
+            else
+                GPS_DRIVER_VAL="$GPS_DRIVER"
+            fi
+            cat <<EOF > "$INDISERVER_ENV"
 INDI_PORT="${SAFE_INDI_PORT}"
 CCD_DRIVER="${CCD_DRIVER:-indi_simulator_ccd}"
 GPS_DRIVER="${GPS_DRIVER_VAL}"
 EOF
-        chmod 644 "$INDISERVER_ENV"
+        fi
+
+
+        INDI_ALLSKY_ENV="/etc/indi-allsky/indi-allsky.env"
+        if [ ! -f "$INDI_ALLSKY_ENV" ]; then
+            # once the file exists, do not reconfigure
+            cp -f /usr/share/indi-allsky/conf/indi-allsky.env "$INDI_ALLSKY_ENV" 2>/dev/null || true
+        fi
+
 
         # Unpack bundled virtual environment if shipped in package
         VENV="/var/lib/indi-allsky/venv"
@@ -396,6 +395,9 @@ EOF
         # Initialize SQLite Database (Backup, Vacuum, Migration) & Admin User
         # Ensure services are stopped so SQLite has 0 write locks during backup/vacuum
         systemctl stop indi-allsky.service 2>/dev/null || true
+
+        # Stop the socket to prevent requests from auto-starting the service
+        systemctl stop gunicorn-indi-allsky.socket 2>/dev/null || true
         systemctl stop gunicorn-indi-allsky.service 2>/dev/null || true
 
         DB_DIR="/var/lib/indi-allsky"
@@ -440,6 +442,17 @@ with app.app_context():
     db.create_all()
 '
 
+
+        WORKING_DIR="/var/lib/indi-allsky/working"
+        if [ -d "$WORKING_DIR" ]; then
+            chown -R "${ALLSKY_USER}":"${ALLSKY_GROUP}" "$WORKING_DIR"
+            chmod 775 "$WORKING_DIR"
+            chmod 775 "$WORKING_DIR/indi-allsky"
+            chmod 775 "$WORKING_DIR/indiserver"
+            chmod 775 "$WORKING_DIR/gunicorn"
+        fi
+
+
         MIGRATION_FOLDER="/var/lib/indi-allsky/migrations"
         if [ ! -d "$MIGRATION_FOLDER/versions" ]; then
             FLASK_APP="indi_allsky.flask:create_app()" "$VENV/bin/python3" -m flask db init -d "$MIGRATION_FOLDER" >/dev/null
@@ -452,7 +465,7 @@ with app.app_context():
         if [ "$FRESH_DB" = "0" ]; then
             "$VENV/bin/python3" /usr/share/indi-allsky/config.py update_level
         fi
-        chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" "$MIGRATION_FOLDER"
+        chown -R "${ALLSKY_USER}":"${ALLSKY_GROUP}" "$MIGRATION_FOLDER"
 
         # Detect and configure IMAGE_FOLDER (supporting custom/non-standard paths)
         IMAGE_FOLDER="/var/www/html/allsky/images"
@@ -646,6 +659,10 @@ with app.app_context():
             chown "${ALLSKY_USER}":"${ALLSKY_GROUP}" "$INDISERVER_ENV"
             chmod 664 "$INDISERVER_ENV"
         fi
+        if [ -f "$INDI_ALLSKY_ENV" ]; then
+            chown "${ALLSKY_USER}":"${ALLSKY_GROUP}" "$INDI_ALLSKY_ENV"
+            chmod 664 "$INDI_ALLSKY_ENV"
+        fi
 
         # Optional System Performance & Hardware Optimizations
         if [ "$SYSTEM_OPTIMIZE" = "true" ]; then
@@ -715,13 +732,26 @@ EOF
 
         systemctl daemon-reload 2>/dev/null || true
 
+
+        # stopped above for database migration
+        # socket will auto-start service
+        systemctl start gunicorn-indi-allsky.socket 2>/dev/null || true
+
+
         if [ "$WEB_ONLY_INSTANCE" = "true" ]; then
             # Web-only instance does not require indiserver or capture service
-            systemctl disable indiserver.service 2>/dev/null || true
-            systemctl stop indiserver.service 2>/dev/null || true
-
             systemctl disable indi-allsky.service 2>/dev/null || true
             systemctl stop indi-allsky.service 2>/dev/null || true
+
+            systemctl disable indiserver.service 2>/dev/null || true
+            systemctl stop indiserver.service 2>/dev/null || true
+        elif [ "$INDISERVER_ONLY_INSTANCE" = "true" ]; then
+            # leave the gunicorn service operational
+            systemctl disable indi-allsky.service 2>/dev/null || true
+            systemctl stop indi-allsky.service 2>/dev/null || true
+
+            systemctl enable indiserver.service 2>/dev/null || true
+            systemctl restart indiserver.service 2>/dev/null || systemctl start indiserver.service 2>/dev/null || true
         else
             # Always enable and start indiserver service (matches setup.sh behavior)
             # Even libcamera and test configurations connect to localhost indiserver for core subsystem operations
