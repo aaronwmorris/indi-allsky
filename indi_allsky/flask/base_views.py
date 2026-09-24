@@ -260,6 +260,12 @@ class BaseView(View):
         now = time.time()
 
         if now > (watchdog_time + 600):
+            self._miscDb.addNotification(
+                NotificationCategory.GENERAL,
+                'watchdog',
+                'Watchdog expired.  indi-allsky may be in a failed state.',
+                expire=timedelta(minutes=60),
+            )
             data['status'] = '<span class="tw:text-error">DOWN</span>'
             return data
 
@@ -270,17 +276,6 @@ class BaseView(View):
         if self.indi_allsky_config.get('FOCUS_MODE', False):
             data['status'] = '<span class="tw:text-warning">FOCUS MODE</span>'
             return data
-
-
-        if now > (watchdog_time + 600):
-            # this notification is only supposed to fire if the program is
-            # running normally and the watchdog timestamp is older than 10 minutes
-            self._miscDb.addNotification(
-                NotificationCategory.GENERAL,
-                'watchdog',
-                'Watchdog expired.  indi-allsky may be in a failed state.',
-                expire=timedelta(minutes=60),
-            )
 
 
         try:
