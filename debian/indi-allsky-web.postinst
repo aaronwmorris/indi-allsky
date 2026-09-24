@@ -442,6 +442,17 @@ with app.app_context():
     db.create_all()
 '
 
+
+        WORKING_DIR="/var/lib/indi-allsky/working"
+        if [ -d "$WORKING_DIR" ]; then
+            chown -R "${ALLSKY_USER}":"${ALLSKY_GROUP}" "$WORKING_DIR"
+            chmod 775 "$WORKING_DIR"
+            chmod 775 "$WORKING_DIR/indi-allsky"
+            chmod 775 "$WORKING_DIR/indiserver"
+            chmod 775 "$WORKING_DIR/gunicorn"
+        fi
+
+
         MIGRATION_FOLDER="/var/lib/indi-allsky/migrations"
         if [ ! -d "$MIGRATION_FOLDER/versions" ]; then
             FLASK_APP="indi_allsky.flask:create_app()" "$VENV/bin/python3" -m flask db init -d "$MIGRATION_FOLDER" >/dev/null
@@ -454,7 +465,7 @@ with app.app_context():
         if [ "$FRESH_DB" = "0" ]; then
             "$VENV/bin/python3" /usr/share/indi-allsky/config.py update_level
         fi
-        chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" "$MIGRATION_FOLDER"
+        chown -R "${ALLSKY_USER}":"${ALLSKY_GROUP}" "$MIGRATION_FOLDER"
 
         # Detect and configure IMAGE_FOLDER (supporting custom/non-standard paths)
         IMAGE_FOLDER="/var/www/html/allsky/images"
