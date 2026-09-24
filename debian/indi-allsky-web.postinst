@@ -446,7 +446,9 @@ with app.app_context():
         WORKING_DIR="/var/lib/indi-allsky/working"
         if [ -d "$WORKING_DIR" ]; then
             chown -R "${ALLSKY_USER}":"${ALLSKY_GROUP}" "$WORKING_DIR"
-            chmod 664 "$WORKING_DIR"
+            chmod 775 "$WORKING_DIR"
+            chmod 775 "$WORKING_DIR/indi-allsky"
+            chmod 775 "$WORKING_DIR/gunicorn"
         fi
 
 
