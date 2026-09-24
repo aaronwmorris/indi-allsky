@@ -56,10 +56,10 @@ def test_only_the_local_cameras_opaque_image_mask_is_used(virtualsky_view, local
     assert view.get_context()['overlay_image_mask'] == (expected if masked else None)
 
 
-@pytest.mark.parametrize('changed', ['virtualsky/virtualsky.min.js', 'js/virtualsky-calibration.js'])
+@pytest.mark.parametrize('changed', ['virtualsky/virtualsky.min.js', 'js/virtualsky-calibration.js', 'virtualsky/virtualsky-planets.js'])
 def test_script_urls_change_with_contents_even_if_file_metadata_is_preserved(virtualsky_view, tmp_path, changed):
     view, app = virtualsky_view
-    names = ('virtualsky/virtualsky.min.js', 'js/virtualsky-calibration.js')
+    names = ('virtualsky/virtualsky.min.js', 'js/virtualsky-calibration.js', 'virtualsky/virtualsky-planets.js')
     for name in names:
         file = tmp_path / name
         file.parent.mkdir(exist_ok=True)
@@ -75,7 +75,7 @@ def test_script_urls_change_with_contents_even_if_file_metadata_is_preserved(vir
             html = templates.get_template('virtualsky.html').render(**view.get_context(),
                 url_for=lambda endpoint, **kwargs: flask.url_for('static', **kwargs) if 'filename' in kwargs else '/unused')
         # Inspect actual rendered URLs, including the query used as the cache key.
-        return re.findall(r'<script src="([^"]+)"', html)
+        return re.findall(r'<script src="([^"]+)"', html) + re.findall(r'\bplanets:\s*"([^"]+)"', html)
 
     before = script_urls()
     assert script_urls() == before  # unchanged scripts can still use the cache

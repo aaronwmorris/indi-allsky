@@ -23,4 +23,13 @@ function makeSky(options = {}, asset = 'virtualsky.js') {
         az: 180, ...options});
 }
 
-module.exports = {makeSky};
+function loadPlanets(sky) {
+    const S = {virtualsky: {plugins: []}};
+    vm.runInNewContext(fs.readFileSync(path.join(__dirname,
+        '../../../indi_allsky/flask/static/virtualsky/virtualsky-planets.js'), 'utf8'), {S});
+    S.virtualsky.plugins[0].init.call(sky);
+    sky.trigger('loadedPlanets');
+    return sky;
+}
+
+module.exports = {makeSky, loadPlanets};

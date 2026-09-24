@@ -508,7 +508,7 @@ class VirtualSkyView(TemplateView):
         # new page settings paired with the matching renderer after updates.
         context['virtualsky_scripts'] = {
             name: hashlib.sha256((Path(app.static_folder) / name).read_bytes()).hexdigest()
-            for name in ('virtualsky/virtualsky.min.js', 'js/virtualsky-calibration.js')
+            for name in ('virtualsky/virtualsky.min.js', 'js/virtualsky-calibration.js', 'virtualsky/virtualsky-planets.js')
         }
 
         context['image_loop_view'] = self.image_loop_view

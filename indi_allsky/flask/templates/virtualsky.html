@@ -265,6 +265,7 @@ async function loop() {
             var sky_options = {
                 id: 'starmap',
                 projection: 'fisheye',
+                planets: {{ url_for('indi_allsky.static', filename='virtualsky/virtualsky-planets.js', v=virtualsky_scripts['virtualsky/virtualsky-planets.js']) | tojson }},
                 flip_h: $('#FLIP_H').prop('checked'),
                 flip_v: $('#FLIP_V').prop('checked'),
                 live: false,

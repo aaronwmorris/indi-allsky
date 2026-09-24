@@ -2755,7 +2755,9 @@ VirtualSky.prototype.interpolate = function(jd,data){
 		ddec = data[mini+2];
 		dmag = data[mini+3];
 	}else{
-		dra = (Math.abs(data[pos_2]-data[pos_1]) > 180) ? (data[pos_1]+(data[pos_2]+360-data[pos_1])*fract)%360 : (data[pos_1]+(data[pos_2]-data[pos_1])*fract)%360;
+		// Follow the short arc through 0/360 in either direction, including retrograde motion.
+		var deltaRA = (data[pos_2]-data[pos_1]+540)%360-180;
+		dra = (data[pos_1]+deltaRA*fract+360)%360;
 		ddec = data[pos_1+1]+(data[pos_2+1]-data[pos_1+1])*fract;
 		dmag = data[pos_1+2]+(data[pos_2+2]-data[pos_1+2])*fract;
 	}

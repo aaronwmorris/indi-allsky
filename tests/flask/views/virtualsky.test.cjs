@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const {test} = require('node:test');
 const {isDeepStrictEqual} = require('node:util');
-const {makeSky} = require('./virtualsky_harness.cjs');
+const {makeSky, loadPlanets} = require('./virtualsky_harness.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
@@ -9,6 +9,35 @@ const rad = Math.PI / 180;
 const close = (a, b, tolerance = 1e-8) => assert.ok(Math.abs(a-b) < tolerance, `${a} != ${b}`);
 
 for (const asset of ['virtualsky.js', 'virtualsky.min.js']) {
+    test(`${asset}: planet interpolation follows the short arc in both directions`, () => {
+        const sky = makeSky({}, asset);
+        for (const year of [2022, 2026, 2050, 2100]) {
+            const jd = Date.UTC(year, 0, 1)/86400000 + 2440587.5;
+            for (const [start, end, step] of [[359, 1, 2], [1, 359, -2], [0, 359, -1],
+                [359, 0, 1], [15, 25, 10], [25, 15, -10], [0, 0, 0]]) {
+                for (const fraction of [0, 0.25, 0.5, 0.75, 1]) {
+                    const actual = sky.interpolate(jd+fraction, [jd, start, -4, 1, jd+1, end, 4, 3]);
+                    close(actual.ra, (start+step*fraction+360)%360);
+                    close(actual.dec, -4+8*fraction);
+                    close(actual.mag, 1+2*fraction);
+                }
+            }
+        }
+    });
+
+    test(`${asset}: planet positions do not depend on the date the table was loaded`, () => {
+        const date = new Date('2026-09-23T02:36:45Z');
+        const first = loadPlanets(makeSky({clock: date}, asset));
+        const next = loadPlanets(makeSky({clock: new Date(date.getTime()+86400000)}, asset));
+        for (let i = 0; i < first.planets.length; i++) {
+            const a = first.interpolate(first.times.JD, first.planets[i][2]);
+            const b = next.interpolate(first.times.JD, next.planets[i][2]);
+            close(a.ra, b.ra);
+            close(a.dec, b.dec);
+            close(a.mag, b.mag);
+        }
+    });
+
     test(`${asset}: a late galaxy response preserves the outline across redraws`, () => {
         const sky = makeSky({showgalaxy: true}, asset);
         const raw = fs.readFileSync(path.join(__dirname,
