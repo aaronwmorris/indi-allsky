@@ -448,6 +448,7 @@ with app.app_context():
             chown -R "${ALLSKY_USER}":"${ALLSKY_GROUP}" "$WORKING_DIR"
             chmod 775 "$WORKING_DIR"
             chmod 775 "$WORKING_DIR/indi-allsky"
+            chmod 775 "$WORKING_DIR/indiserver"
             chmod 775 "$WORKING_DIR/gunicorn"
         fi
 
