@@ -86,12 +86,10 @@ echo "============================================================"
 echo "=== 7. Testing Package Purge ==="
 echo "============================================================"
 apt-get purge -y indi-allsky
-PYTHONPATH=/usr/share/indi-allsky /var/lib/indi-allsky/venv/bin/python3 -c "
-import flask, astropy, cv2, cryptography, dbus, systemd, boto3, google.cloud.storage
-from indi_allsky.wsgi import application
-assert application is not None
-print('Standalone indi-allsky-web WSGI application verified successfully after hardware purge!')
-"
+test ! -d /var/lib/indi-allsky
+test ! -d /etc/indi-allsky
+echo "Package purge verified successfully!"
+
 echo "============================================================"
 echo "=== All Automated .deb QA Probes Passed Successfully! ==="
 echo "============================================================"

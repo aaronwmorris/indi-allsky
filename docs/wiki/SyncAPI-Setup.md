@@ -40,13 +40,10 @@ Architectures: $(dpkg --print-architecture)
 Signed-By: /etc/apt/keyrings/indi-allsky.gpg
 EOF
 
-# 3. Install Web-Only Package
+# 3. Install Package
 sudo apt update
-sudo apt install -y indi-allsky-web
+sudo apt install -y indi-allsky
 ```
-
-> [!TIP]
-> `indi-allsky-web` provides the Flask dashboard, Gunicorn application server, and web server configuration for remote sync portals without requiring camera hardware or local INDI drivers.
 
 ---
 

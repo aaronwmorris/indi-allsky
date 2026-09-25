@@ -8,7 +8,7 @@ If you installed indi-allsky from the official APT repository:
 
 ### Remove Application (Preserve Data & Config)
 ```bash
-sudo apt remove indi-allsky indi-allsky-web
+sudo apt remove indi-allsky
 ```
 
 ### Complete Purge (Delete All Configuration & Data)
@@ -16,7 +16,7 @@ sudo apt remove indi-allsky indi-allsky-web
 > Running `apt purge` permanently removes all configuration files in `/etc/indi-allsky/`, SQLite databases in `/var/lib/indi-allsky/`, and system user accounts.
 
 ```bash
-sudo apt purge indi-allsky indi-allsky-web
+sudo apt purge indi-allsky
 ```
 
 ---
