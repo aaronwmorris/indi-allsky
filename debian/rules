@@ -22,10 +22,12 @@ override_dh_auto_build:
 			echo "/usr/lib/python3/dist-packages" > "$$sp/dist-packages.pth"; \
 		fi; \
 	done
-	# Fix SWIG __nonzero__ compatibility for Python 3.13 in PyIndi wrapper
-	for pyindi_py in $$(find debian/venv -name "PyIndi.py"); do \
-		sed -i 's/return _PyIndi\..*___nonzero__(self)/return True/g' "$$pyindi_py" 2>/dev/null || true; \
-	done
+
+	### Fix SWIG __nonzero__ compatibility for Python 3.13 in PyIndi wrapper
+	### no longer necessary as of pyindi-client 2.3.0
+	#for pyindi_py in $$(find debian/venv -name "PyIndi.py"); do \
+	#	sed -i 's/return _PyIndi\..*___nonzero__(self)/return True/g' "$$pyindi_py" 2>/dev/null || true; \
+	#done
 
 	@echo "=== [2/3] Pruning build tools and caches from virtualenv ==="
 	debian/venv/bin/python3 -m pip uninstall -y setuptools wheel cython Cython setuptools-rust 2>/dev/null || true
