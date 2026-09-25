@@ -390,7 +390,11 @@
             }
         });
 
+        var notificationPending = false;
+
         function ackNotification(notice_id, onDone, onError) {
+            if (notificationPending) return;
+            notificationPending = true;
             var postData = {
                 'camera_id': camera_id,
                 'ack_id': notice_id
@@ -405,10 +409,14 @@
                 data: JSON.stringify(postData),
                 success: function (rdata) { onDone(rdata); },
                 error: function (rdata) { onError(rdata); },
+                timeout: 10000,
+                complete: function () { notificationPending = false; },
             });
         }
 
         function loadNotification() {
+            if (notificationPending || document.getElementById('notificationModal').open) return;
+            notificationPending = true;
             var getData = { 'camera_id': camera_id };
             $.ajax({
                 type: "GET",
@@ -416,6 +424,8 @@
                 contentType: "application/json",
                 data: getData,
                 success: function (rdata) { showNotification(rdata); },
+                timeout: 10000,
+                complete: function () { notificationPending = false; },
             });
         }
 
@@ -534,6 +544,7 @@
             }
 
             loadNotification();
+            setInterval(loadNotification, 60000);
             getStatusText();
             $("#CAMERA_SELECT").on("change", changeCamera);
         });
