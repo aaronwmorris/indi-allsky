@@ -98,7 +98,7 @@ def cameraAltAz(alt_rad, az_rad, lens_altitude=90.0, pointing_azimuth=0.0):
 
 
 def projectToPixels(alt_rad, az_rad, params, image_width, image_height, mirror=False,
-                    lens_altitude=90.0, pointing_azimuth=0.0):
+                    lens_altitude=90.0, pointing_azimuth=0.0, *, flip_h=False, flip_v=False):
     """Project alt/az to pixels via VirtualSky's fisheye model.
     params: [azimuth_deg, lat_off_deg, long_off_deg, diameter_px,
     offset_x_px, offset_y_px]; the lat/long offsets (1, 2) are applied by
@@ -124,9 +124,11 @@ def projectToPixels(alt_rad, az_rad, params, image_width, image_height, mirror=F
 
     psi = az_rad - numpy.radians(azimuth_deg)
 
-    sign = 1.0 if mirror else -1.0
+    # Reflect in image axes about the optical center, after rotation. The
+    # mirror probe tests chirality relative to the selected orientation.
+    sign = 1.0 if mirror != flip_h else -1.0
     x = cx + sign * r * numpy.sin(psi)
-    y = cy - r * numpy.cos(psi)
+    y = cy + (1.0 if flip_v else -1.0) * r * numpy.cos(psi)
 
     return x, y
 

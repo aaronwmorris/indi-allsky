@@ -16,7 +16,7 @@ import pytest
 from sqlalchemy import Column, DateTime
 
 
-VIEWS = ast.parse((Path(__file__).resolve().parents[2] / 'indi_allsky/flask/views.py').read_text(encoding='utf-8'))
+VIEWS = ast.parse((Path(__file__).resolve().parents[3] / 'indi_allsky/flask/views.py').read_text(encoding='utf-8'))
 
 
 @pytest.fixture
@@ -26,7 +26,7 @@ def virtualsky_view():
             return {}
 
     cls = next(n for n in VIEWS.body if isinstance(n, ast.ClassDef) and n.name == 'VirtualSkyView')
-    app = flask.Flask(__name__, static_folder=str(Path(__file__).resolve().parents[2] / 'indi_allsky/flask/static'))
+    app = flask.Flask(__name__, static_folder=str(Path(__file__).resolve().parents[3] / 'indi_allsky/flask/static'))
     namespace = dict(TemplateView=TemplateView, math=math, datetime=datetime, hashlib=hashlib, Path=Path, app=app,
                      request=SimpleNamespace(args={}), IndiAllskyVirtualSkyHelperForm=lambda **kwargs: None)
     exec(compile(ast.Module(body=[cls], type_ignores=[]), 'views.py', 'exec'), namespace)
@@ -56,10 +56,10 @@ def test_only_the_local_cameras_opaque_image_mask_is_used(virtualsky_view, local
     assert view.get_context()['overlay_image_mask'] == (expected if masked else None)
 
 
-@pytest.mark.parametrize('changed', ['virtualsky/virtualsky.min.js', 'js/virtualsky-calibration.js'])
+@pytest.mark.parametrize('changed', ['virtualsky/virtualsky.min.js', 'js/virtualsky-calibration.js', 'virtualsky/virtualsky-planets.js'])
 def test_script_urls_change_with_contents_even_if_file_metadata_is_preserved(virtualsky_view, tmp_path, changed):
     view, app = virtualsky_view
-    names = ('virtualsky/virtualsky.min.js', 'js/virtualsky-calibration.js')
+    names = ('virtualsky/virtualsky.min.js', 'js/virtualsky-calibration.js', 'virtualsky/virtualsky-planets.js')
     for name in names:
         file = tmp_path / name
         file.parent.mkdir(exist_ok=True)
@@ -67,7 +67,7 @@ def test_script_urls_change_with_contents_even_if_file_metadata_is_preserved(vir
     app.static_folder = str(tmp_path)
     templates = Environment(autoescape=True, loader=ChoiceLoader([
         DictLoader({'base.html': '{% block head %}{% endblock %}'}),
-        FileSystemLoader(Path(__file__).resolve().parents[2] / 'indi_allsky/flask/templates'),
+        FileSystemLoader(Path(__file__).resolve().parents[3] / 'indi_allsky/flask/templates'),
     ]))
 
     def script_urls():
@@ -75,7 +75,7 @@ def test_script_urls_change_with_contents_even_if_file_metadata_is_preserved(vir
             html = templates.get_template('virtualsky.html').render(**view.get_context(),
                 url_for=lambda endpoint, **kwargs: flask.url_for('static', **kwargs) if 'filename' in kwargs else '/unused')
         # Inspect actual rendered URLs, including the query used as the cache key.
-        return re.findall(r'<script src="([^"]+)"', html)
+        return re.findall(r'<script src="([^"]+)"', html) + re.findall(r'\bplanets:\s*"([^"]+)"', html)
 
     before = script_urls()
     assert script_urls() == before  # unchanged scripts can still use the cache

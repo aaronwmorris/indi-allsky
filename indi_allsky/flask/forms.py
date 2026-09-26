@@ -5112,8 +5112,8 @@ class IndiAllskyConfigForm(FlaskForm):
     VIRTUALSKY__LONGITUDE_OFFSET        = FloatField('VirtualSky Longitude Offset', validators=[VIRTUALSKY__LONGITUDE_OFFSET_validator], widget=NumberInput(step=0.25))
     VIRTUALSKY__OFFSET_X                = IntegerField('X Offset', validators=[VIRTUALSKY__OFFSET_X_validator])
     VIRTUALSKY__OFFSET_Y                = IntegerField('Y Offset', validators=[VIRTUALSKY__OFFSET_Y_validator])
-    #VIRTUALSKY__FLIP_NS                 = BooleanField('Flip North/South')
-    #VIRTUALSKY__FLIP_EW                 = BooleanField('Flip East/West')
+    VIRTUALSKY__FLIP_H                 = BooleanField('Flip Overlay Horizontally')
+    VIRTUALSKY__FLIP_V                 = BooleanField('Flip Overlay Vertically')
     CIRCULAR_DISPLAY__ENABLE         = BooleanField('Enable Circular Display Output')
     CIRCULAR_DISPLAY__RESOLUTION     = SelectField('Resolution', choices=CIRCULAR_DISPLAY__RESOLUTION_choices, validators=[DataRequired(), CIRCULAR_DISPLAY__RESOLUTION_validator])
     CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER  = IntegerField('Image Circle', validators=[CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER_validator])
@@ -10673,8 +10673,8 @@ class IndiAllskyVirtualSkyHelperForm(FlaskForm):
     SHOWSTARLABELS          = BooleanField('Star Labels')
     SHOWPLANETS             = BooleanField('Show Planets')
     SHOWPLANETLABELS        = BooleanField('Planet Labels')
-    #FLIP_NS                 = BooleanField('Flip North/South')
-    #FLIP_EW                 = BooleanField('Flip East/West')
+    FLIP_H                  = BooleanField('Flip Overlay Horizontally')
+    FLIP_V                  = BooleanField('Flip Overlay Vertically')
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):

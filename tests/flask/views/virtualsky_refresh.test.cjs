@@ -8,7 +8,7 @@ const {makeSky} = require('./virtualsky_harness.cjs');
 // Execute the page's real refresh code with controllable image/network loads.
 function page() {
     const html = fs.readFileSync(path.join(__dirname,
-        '../../indi_allsky/flask/templates/virtualsky.html'), 'utf8');
+        '../../../indi_allsky/flask/templates/virtualsky.html'), 'utf8');
     const controls = new Map(), requests = [], instances = [], images = [];
     const $ = selector => {
         if (!controls.has(selector)) controls.set(selector, {
