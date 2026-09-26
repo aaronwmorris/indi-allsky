@@ -31,6 +31,7 @@ from fractions import Fraction
 
 from . import constants
 from . import asi676mc
+from . import sensors_mapping
 
 from .processing import ImageProcessor
 from .panorama import panoramaSourceCircleClipped
@@ -406,6 +407,10 @@ class ImageWorker(Process):
             #task.setFailed('Bad Image: {0:s}'.format(str(filename_p)))
             return
 
+        i_ref.cloudiness_index = sensors_mapping.calculate_cloudiness_index(
+            self.config,
+            lambda idx: self.sensors_user_av[idx],
+        )
 
         # Purple-frame handling deliberately precedes both pre-dark and
         # post-dark standard FITS saving. In active repair mode those outputs
@@ -906,6 +911,10 @@ class ImageWorker(Process):
                 image_add_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
 
 
+            if i_ref.cloudiness_index is not None:
+                image_add_data['cloudiness_index'] = i_ref.cloudiness_index
+
+
             if self.adsb_aircraft_list:
                 image_add_data['aircraft'] = list()
 
@@ -1118,6 +1127,10 @@ class ImageWorker(Process):
             for i in range(100, 110):
                 sensor_topic = 'sensor_user_{0:d}'.format(i)
                 mqtt_data[sensor_topic] = round(self.sensors_user_av[i], 3)
+
+
+            if i_ref.cloudiness_index is not None:
+                mqtt_data['cloudiness_index'] = round(i_ref.cloudiness_index, 1)
 
 
             if new_filename:

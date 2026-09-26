@@ -3322,6 +3322,12 @@ class ImageProcessor(object):
         label_data['rain_status'] = rain_sensor_status
 
 
+        if i_ref.cloudiness_index is None:
+            label_data['cloudiness_index'] = 'N/A'
+        else:
+            label_data['cloudiness_index'] = '{0:0.0f}'.format(i_ref.cloudiness_index)
+
+
         # dew heater
         if self.sensors_user_av[constants.SENSOR_USER_DEW_HEATER_LEVEL]:
             label_data['dew_heater_status'] = 'On'
@@ -4628,6 +4634,7 @@ class ImageData(object):
 
         self._smoke_rating = constants.SMOKE_RATING_NODATA
 
+        self._cloudiness_index = None
         self._sqm_value = None
         self._lines = list()
         self._stars = list()
@@ -4848,6 +4855,14 @@ class ImageData(object):
     @smoke_rating.setter
     def smoke_rating(self, new_smoke_rating):
         self._smoke_rating = int(new_smoke_rating)
+
+    @property
+    def cloudiness_index(self):
+        return self._cloudiness_index
+
+    @cloudiness_index.setter
+    def cloudiness_index(self, new_cloudiness_index):
+        self._cloudiness_index = new_cloudiness_index
 
     @property
     def sqm_value(self):

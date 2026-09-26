@@ -745,5 +745,72 @@
             </div>
         </div>
 
+        <!-- Cloudiness Index Card -->
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+            <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
+                <div class="tw:flex tw:flex-col">
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Cloudiness Index (MLX90614 / MLX90615 / MLX90640)</span>
+                </div>
+
+                <div class="tw:grid tw:grid-cols-1 tw:gap-4">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full sm:tw:w-1/3') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Used for both reference readings.</span>
+                        <div id="TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4">
+                    <div class="tw:flex tw:items-center tw:gap-3 tw:pt-4">
+                        {{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <span class="tw:text-xs tw:text-base-content">{{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE.label.text }}</span>
+                        <div id="TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">Clear-Sky Reference</span>
+                <div class="tw:grid tw:grid-cols-1 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">Cloudy-Sky Reference</span>
+                <div class="tw:grid tw:grid-cols-1 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_TEMP.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_TEMP(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Use {cloudiness_index:s} in overlay templates.</span>
+                        <div id="TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_TEMP-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60">Optional Index Tuning</span>
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:py-3">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Multiplies the calibrated index. Leave at 1.0 for the unadjusted result.</span>
+                        <div id="TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET.label.text }}</span>
+                        {{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Adds index points after calibration. Leave at 0 for the unadjusted result.</span>
+                        <div id="TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
     </div>
 </div><!-- end sensors tab -->
