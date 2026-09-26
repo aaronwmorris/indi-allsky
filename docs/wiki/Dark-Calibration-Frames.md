@@ -82,15 +82,21 @@ If the camera's temperature drops too fast, consider wrapping the camera in a si
 
 ## Removing dark frames
 
-You may delete all of the existing dark frames by running the `flush` command
+You may delete all of the existing dark frames by running the `flush` command:
 
-```
+```bash
 # navigate to indi-allsky git checkout folder
 cd indi-allsky
-```
-
-```
 source virtualenv/indi-allsky/bin/activate
-
 ./darks.py flush
 ```
+
+## Importing Existing Dark Frames & Bad Pixel Maps
+
+If you already have master dark frames or bad pixel maps (BPMs) created externally or backed up from another setup, you can import them interactively into the database using [`indi-allsky-ctl`](indi-allsky-ctl):
+
+```bash
+sudo indi-allsky-ctl import-darks
+```
+
+*(Or from a git checkout: `source virtualenv/indi-allsky/bin/activate && ./misc/import_darks_frames.py`).*

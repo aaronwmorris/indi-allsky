@@ -178,6 +178,7 @@ class CameraLinearityTest(object):
         self._exposure_min = None
         self._exposure_increase = None
         self._gain = None
+        self._reverse = None
 
         self.session = self._getDbConn()
 
@@ -194,20 +195,6 @@ class CameraLinearityTest(object):
     def offset(self, new_offset):
         self._offset = int(new_offset)
         logger.warning('Using offset: %d', self.offset)
-
-
-    @property
-    def calibrate(self):
-        return self._calibrate
-
-    @calibrate.setter
-    def calibrate(self, new_calibrate):
-        self._calibrate = bool(new_calibrate)
-
-        if self.calibrate:
-            logger.warning('Image Calibration Enabled')
-        else:
-            logger.warning('Image Calibration Disabled')
 
 
     @property
@@ -253,6 +240,29 @@ class CameraLinearityTest(object):
     @gain.setter
     def gain(self, new_gain):
         self._gain = float(new_gain)
+
+
+    @property
+    def calibrate(self):
+        return self._calibrate
+
+    @calibrate.setter
+    def calibrate(self, new_calibrate):
+        self._calibrate = bool(new_calibrate)
+
+        if self.calibrate:
+            logger.warning('Image Calibration Enabled')
+        else:
+            logger.warning('Image Calibration Disabled')
+
+
+    @property
+    def reverse(self):
+        return self._reverse
+
+    @reverse.setter
+    def reverse(self, new_reverse):
+        self._reverse = bool(new_reverse)
 
 
     def sigint_handler_main(self, signum, frame):
@@ -339,9 +349,29 @@ class CameraLinearityTest(object):
         if self.calibrate:
             self.image_processor.calibrate(libcamera_black_level=libcamera_black_level)
 
-        self.image_processor.debayer()  # populates self.opencv_data
 
-        image = i_ref.opencv_data
+        if len(i_ref.hdulist[0].data.shape) == 2:
+            # mono or bayered
+            image = i_ref.hdulist[0].data
+
+            if i_ref.image_bayerpat in ['RGGB', 'BGGR']:
+                # bayered
+                image = image[0::2, 1::2]  # extract first set of green pixels for calculations (reduces resolution by half)
+            elif i_ref.image_bayerpat in ['GRBG', 'GBRG']:
+                # bayered
+                image = image[0::2, 0::2]  # extract first set of green pixels for calculations (reduces resolution by half)
+            else:
+                # mono
+                pass
+
+        else:
+            # color
+            image = i_ref.hdulist[0].data[1]  # use green channel for calculations
+
+
+        if not self.calibrate:
+            image = cv2.subtract(image, self.offset)
+
 
         if isinstance(self._adu_mask_dict[i_ref.binning], type(None)):
             # This only needs to be done once if a mask is not provided
@@ -350,22 +380,30 @@ class CameraLinearityTest(object):
 
         if len(image.shape) == 2:
             # mono
-            adu = cv2.mean(src=image, mask=self._adu_mask_dict[i_ref.binning])[0]
+            adu_mean = cv2.mean(src=image, mask=self._adu_mask_dict[i_ref.binning])[0]
+
+            min_val, max_val, _, _ = cv2.minMaxLoc(image, mask=self._adu_mask_dict[i_ref.binning])
+            logger.info('Min: %d - Max: %d', min_val, max_val)
         else:
-            data_mono = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            adu = cv2.mean(src=data_mono, mask=self._adu_mask_dict[i_ref.binning])[0]
+            image_mono = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            adu_mean = cv2.mean(src=image_mono, mask=self._adu_mask_dict[i_ref.binning])[0]
+
+            min_val, max_val, _, _ = cv2.minMaxLoc(image_mono, mask=self._adu_mask_dict[i_ref.binning])
+            logger.info('Min: %d - Max: %d', min_val, max_val)
 
 
-        # subtract the manual offset
-        adu -= self.offset
+        if min_val == 0:
+            logger.warning('Minimum is 0, offset may be too high')
 
 
-        logger.info('ADU: %0.1f', adu)
+        logger.info('ADU Mean: %0.1f', adu_mean)
         adu_entry = LinearityTable(
             exposure=exposure,
             gain=gain,
             binning=binning,
-            adu=adu,
+            adu=adu_mean,
+            minimum=min_val,
+            maximum=max_val,
         )
         self.session.add(adu_entry)
         self.session.commit()
@@ -377,8 +415,10 @@ class CameraLinearityTest(object):
             'Exposure',
             'Gain',
             'Count',
-            'ADU Average',
-            'ADU Range',
+            'ADU Min',
+            'ADU Max',
+            'ADU Mean',
+            'ADU Mean Range',
             #'Prev Exposure',
             'Exposure Diff',
             #'Prev ADU',
@@ -394,6 +434,8 @@ class CameraLinearityTest(object):
             LinearityTable.exposure,
             LinearityTable.gain,
             func.count(LinearityTable.exposure).label('exposure_count'),
+            LinearityTable.minimum,
+            LinearityTable.maximum,
             adu_avg.label('adu_avg_current'),
             (func.max(LinearityTable.adu) - func.min(LinearityTable.adu)).label('adu_range'),
             func.lag(LinearityTable.exposure, 1).over(
@@ -428,6 +470,8 @@ class CameraLinearityTest(object):
                 '{0:0.6f}'.format(entry.exposure),
                 '{0:0.3f}'.format(entry.gain),
                 '{0:d}'.format(entry.exposure_count),
+                '{0:d}'.format(entry.minimum),
+                '{0:d}'.format(entry.maximum),
                 '{0:0.4f}'.format(entry.adu_avg_current),
                 '{0:0.1f}'.format(entry.adu_range),
                 #'{0:0.6f}'.format(entry.exposure_previous),
@@ -484,6 +528,7 @@ class CameraLinearityTest(object):
             exposure_min=self.exposure_min,
             exposure_increase=self.exposure_increase,
             gain=self.gain,
+            reverse=self.reverse,
         )
 
         self.capture_worker.start()
@@ -511,20 +556,19 @@ class CameraLinearityTest(object):
         mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
 
         logger.warning('Using central ROI for ADU calculations')
-        adu_fov_div = self.config.get('ADU_FOV_DIV', 4)
-        x1 = int((image_width / 2) - (image_width / adu_fov_div))
-        y1 = int((image_height / 2) - (image_height / adu_fov_div))
-        x2 = int((image_width / 2) + (image_width / adu_fov_div))
-        y2 = int((image_height / 2) + (image_height / adu_fov_div))
+        center = (int(image_width / 2), int(image_height / 2))
+        radius = int(image_height / 4)
+
 
         # The white area is what we keep
-        cv2.rectangle(
+        cv2.circle(
             img=mask,
-            pt1=(x1, y1),
-            pt2=(x2, y2),
+            center=center,
+            radius=radius,
             color=255,  # mono
             thickness=cv2.FILLED,
         )
+
 
         self._adu_mask_dict[binning] = mask
 
@@ -546,8 +590,9 @@ class CaptureWorker(Process):
         exposure_count=3,
         exposure_max=1.0,
         exposure_min=0.0,
-        exposure_increase=75,
+        exposure_increase=25,
         gain=0.0,
+        reverse=False,
     ):
 
         super(CaptureWorker, self).__init__()
@@ -577,12 +622,14 @@ class CaptureWorker(Process):
         self._exposure_min = None
         self._exposure_increase = None
         self._gain = None
+        self._reverse = False
 
         self.exposure_count = exposure_count
         self.exposure_max = exposure_max
         self.exposure_min = exposure_min
         self.exposure_increase = exposure_increase
         self.gain = gain
+        self.reverse = reverse
 
         self._shutdown = False
 
@@ -641,6 +688,20 @@ class CaptureWorker(Process):
         logger.warning('Exposure Increase: %d%%', self.exposure_increase)
 
 
+    @property
+    def reverse(self):
+        return self._reverse
+
+    @reverse.setter
+    def reverse(self, new_reverse):
+        self._reverse = bool(new_reverse)
+
+        if self.reverse:
+            logger.warning('Taking exposures from max to min')
+        else:
+            logger.warning('Taking exposures from min to max')
+
+
     def sigint_handler_worker(self, signum, frame):
         logger.warning('Caught INT signal')
 
@@ -694,6 +755,10 @@ class CaptureWorker(Process):
                 })
 
             exposure *= (self.exposure_increase + 100) / 100
+
+
+        if self.reverse:
+            exposures_list.reverse()
 
 
         #logger.info('Exposures: %s', pformat(exposures_list))
@@ -1031,6 +1096,8 @@ class LinearityTable(Base):
     gain        = Column(Float, nullable=False, index=True)
     binning     = Column(Integer, nullable=False, index=True)
     adu         = Column(Float, nullable=False)
+    minimum     = Column(Integer, nullable=False)
+    maximum     = Column(Integer, nullable=False)
 
 
 if __name__ == "__main__":
@@ -1074,16 +1141,15 @@ if __name__ == "__main__":
     argparser.add_argument(
         '--level',
         '-l',
-        help='exposure level increase percent [default: 75%%]',  # format
+        help='exposure level increase percent [default: 25%%]',  # format
         type=int,
-        default=75,
+        default=25,
     )
-
 
     calibrate_group = argparser.add_mutually_exclusive_group(required=False)
     calibrate_group.add_argument(
         '--no-calibrate',
-        help='disable image calibration (default)',
+        help='disable image calibration [default]',
         dest='calibrate',
         action='store_false',
     )
@@ -1094,6 +1160,21 @@ if __name__ == "__main__":
         action='store_true',
     )
     calibrate_group.set_defaults(calibrate=False)
+
+    reverse_group = argparser.add_mutually_exclusive_group(required=False)
+    reverse_group.add_argument(
+        '--no-reverse',
+        help='Take exposures min to max [default]',
+        dest='reverse',
+        action='store_false',
+    )
+    reverse_group.add_argument(
+        '--reverse',
+        help='Take exposures max to min',
+        dest='reverse',
+        action='store_true',
+    )
+    reverse_group.set_defaults(reverse=False)
 
 
     args = argparser.parse_args()
@@ -1107,4 +1188,5 @@ if __name__ == "__main__":
     clt.exposure_max = args.Max_exposure
     clt.exposure_min = args.min_exposure
     clt.gain = args.gain
+    clt.reverse = args.reverse
     clt.main()

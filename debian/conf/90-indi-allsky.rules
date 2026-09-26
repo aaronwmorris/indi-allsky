@@ -1,0 +1,79 @@
+polkit.addRule(function(action, subject) {
+    // Allow indi-allsky user to shutdown
+    const shutdown_reboot_actions = [
+        "org.freedesktop.login1.power-off",
+        "org.freedesktop.login1.power-off-multiple-sessions",
+        "org.freedesktop.login1.reboot",
+        "org.freedesktop.login1.reboot-multiple-sessions",
+    ];
+
+    if (shutdown_reboot_actions.indexOf(action.id) > -1) {
+        if (subject.user == "indi-allsky") {
+            return polkit.Result.YES;
+        }
+    }
+
+
+    // Allow indi-allsky user to manage network
+    const network_actions = [
+        "org.freedesktop.NetworkManager.enable-disable-wifi",
+        "org.freedesktop.NetworkManager.network-control",
+        "org.freedesktop.NetworkManager.wifi.share.protected",
+        "org.freedesktop.NetworkManager.settings.modify.system",
+        "org.freedesktop.NetworkManager.wifi.scan",
+        "org.freedesktop.NetworkManager.settings.modify.own",
+    ];
+
+    if (network_actions.indexOf(action.id) > -1) {
+        if (subject.user == "indi-allsky") {
+            return polkit.Result.YES;
+        }
+    }
+
+
+    // Allow indi-allsky user to mount USB disks
+    const mount_usb_actions = [
+        "org.freedesktop.udisks2.filesystem-mount-system",
+        "org.freedesktop.udisks2.filesystem-mount",
+        "org.freedesktop.udisks2.filesystem-mount-other-seat",
+        "org.freedesktop.udisks2.power-off-drive",
+        "org.freedesktop.udisks2.power-off-drive-other-seat",
+        "org.freedesktop.udisks2.eject-media",
+        "org.freedesktop.udisks2.eject-media-other-seat",
+        "org.freedesktop.udisks2.filesystem-unmount-others",
+    ];
+
+    if (mount_usb_actions.indexOf(action.id) > -1) {
+        if (subject.user == "indi-allsky") {
+            return polkit.Result.YES;
+        }
+    }
+
+
+    // Allow indi-allsky user to set system time
+    const set_time_actions = [
+        "org.freedesktop.timedate1.set-time",
+        "org.freedesktop.timedate1.set-timezone",
+        "org.freedesktop.timedate1.set-ntp",
+    ];
+
+    if (set_time_actions.indexOf(action.id) > -1) {
+        if (subject.user == "indi-allsky") {
+            return polkit.Result.YES;
+        }
+    }
+
+
+    // Allow indi-allsky user to manage systemd services and timers
+    const systemd_actions = [
+        "org.freedesktop.systemd1.manage-units",
+        "org.freedesktop.systemd1.manage-unit-files",
+        "org.freedesktop.systemd1.reload-daemon",
+    ];
+
+    if (systemd_actions.indexOf(action.id) > -1) {
+        if (subject.user == "indi-allsky") {
+            return polkit.Result.YES;
+        }
+    }
+});

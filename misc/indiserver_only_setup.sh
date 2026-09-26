@@ -379,7 +379,9 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
     fi
 
 elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
-    if [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "26.04" ]]; then
+        DISTRO="ubuntu_26.04"
+    elif [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
         DISTRO="ubuntu_24.04"
     elif [[ "$DISTRO_VERSION_ID" == "22.04" ]]; then
         DISTRO="ubuntu_22.04"
@@ -426,16 +428,16 @@ if [[ "$DISTRO" == "debian_13" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
     if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             rpicam-apps
     fi
 
@@ -453,16 +455,16 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
     if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             rpicam-apps
     fi
 
@@ -480,11 +482,79 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
+    fi
+
+
+elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
+    if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
+        fi
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
+        fi
+    else
+        INSTALL_INDI="false"
+
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            echo
+            echo
+            echo "There are not prebuilt indi packages for this distribution"
+            echo "Please run ./misc/build_indi.sh before running setup.sh"
+            echo
+            echo
+            exit 1
+        fi
+    fi
+
+
+    sudo apt update
+
+
+    if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+        sudo apt -y full-upgrade
+    fi
+
+
+    sudo apt -y install \
+        whiptail
+
+
+    if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
+        if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
+            INSTALL_INDI="false"
+        fi
+    fi
+
+    if [[ "$INSTALL_INDI" == "true" ]]; then
+        sudo apt -y install \
+            indi-full \
+            libindi-dev \
+            indi-webcam \
+            indi-asi \
+            libasi \
+            indi-qhy \
+            libqhy \
+            indi-playerone \
+            libplayerone \
+            indi-svbony \
+            libsvbony \
+            libaltaircam \
+            libmallincam \
+            libmicam \
+            libnncam \
+            indi-toupbase \
+            libtoupcam \
+            indi-gphoto \
+            indi-sx \
+            indi-gpsd \
+            indi-gpsnmea
     fi
 
 elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
@@ -511,15 +581,15 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         whiptail
 
 
@@ -530,7 +600,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-full \
             libindi-dev \
             indi-webcam \
@@ -580,15 +650,15 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         whiptail
 
 
@@ -599,7 +669,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-full \
             libindi-dev \
             indi-webcam \
@@ -648,15 +718,15 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         whiptail
 
 
@@ -667,7 +737,7 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
     fi
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             indi-full \
             libindi-dev \
             indi-webcam \
@@ -723,7 +793,7 @@ fi
 if systemctl --quiet is-enabled "${INDISERVER_SERVICE_NAME}" 2>/dev/null; then
     # system
     INSTALL_INDISERVER="false"
-elif systemctl --user --quiet is-enabled "${INDISERVER_SERVICE_NAME}.timer" 2>/dev/null; then
+elif systemctl --user --quiet is-enabled "${INDISERVER_SERVICE_NAME}.service" 2>/dev/null; then
     while [ -z "${INSTALL_INDISERVER:-}" ]; do
         # user
         if whiptail --title "indiserver update" --yesno "An indiserver service is already defined, would you like to replace it?\n\nThis is normally not needed during an upgrade.\n\nIf you are trying change camera vendors, choose YES" 0 0 --defaultno; then
@@ -850,9 +920,11 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
     echo "**** Setting up indiserver service ****"
 
 
-    # timer
-    cp -f "${ALLSKY_DIRECTORY}/service/${INDISERVER_SERVICE_NAME}.timer" "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
-    chmod 644 "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
+    # remove legacy timer if present
+    if [[ -f "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer" ]]; then
+        systemctl --user disable "${INDISERVER_SERVICE_NAME}.timer" 2>/dev/null || true
+        rm -f "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
+    fi
 
 
     TMP1=$(mktemp)
@@ -860,15 +932,23 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
      -e "s|%INDI_DRIVER_PATH%|$INDI_DRIVER_PATH|g" \
      -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
      -e "s|%INDISERVER_USER%|$USER|g" \
-     -e "s|%INDI_PORT%|$INDI_PORT|g" \
-     -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|g" \
-     -e "s|%INDI_GPS_DRIVER%|$GPS_DRIVER|g" \
      "${ALLSKY_DIRECTORY}/service/indiserver.service" > "$TMP1"
 
 
     cp -f "$TMP1" "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.service"
     chmod 644 "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.service"
     [[ -f "$TMP1" ]] && rm -f "$TMP1"
+
+
+    INDISERVER_ENV="/etc/indi-allsky/indiserver.env"
+    sudo tee "$INDISERVER_ENV" <<EOF
+INDI_PORT="$INDI_PORT"
+CCD_DRIVER="$CCD_DRIVER"
+GPS_DRIVER="$GPS_DRIVER"
+EOF
+    sudo chown indi-allsky "$INDISERVER_ENV"
+    sudo chown "$USER":"$PGRP" "$INDISERVER_ENV"
+    sudo chmod 644 "$INDISERVER_ENV"
 
 else
     echo
@@ -882,9 +962,7 @@ systemctl --user daemon-reload
 
 
 if [ "$INSTALL_INDISERVER" == "true" ]; then
-    # service started by timer
-    systemctl --user disable "${INDISERVER_SERVICE_NAME}.service"
-    systemctl --user enable "${INDISERVER_SERVICE_NAME}.timer"
+    systemctl --user enable "${INDISERVER_SERVICE_NAME}.service"
 
 
     while [ -z "${RESTART_INDISERVER:-}" ]; do

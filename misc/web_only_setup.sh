@@ -216,6 +216,17 @@ if systemctl --quiet is-enabled "nginx.service" 2>/dev/null; then
 fi
 
 
+if systemctl --quiet is-enabled "caddy.service" 2>/dev/null; then
+    echo
+    echo "Detected nginx web server is active"
+    echo
+
+    #sleep 3
+
+    WEBSERVER="caddy"
+fi
+
+
 if [ -n "${WHIPTAIL_BIN:-}" ]; then
     "$WHIPTAIL_BIN" \
         --title "Welcome to indi-allsky" \
@@ -306,7 +317,9 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
     fi
 
 elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
-    if [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "26.04" ]]; then
+        DISTRO="ubuntu_26.04"
+    elif [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
         DISTRO="ubuntu_24.04"
     elif [[ "$DISTRO_VERSION_ID" == "22.04" ]]; then
         DISTRO="ubuntu_22.04"
@@ -354,15 +367,15 @@ if [[ "$DISTRO" == "debian_13" ]]; then
     PYTHON_BIN=python3.13
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -428,13 +441,13 @@ if [[ "$DISTRO" == "debian_13" ]]; then
 
     if [ "$CPU_BITS" != "32" ]; then
         # not available on 32-bit platforms
-        sudo apt-get -y install \
+        sudo apt -y install \
             libatlas-ecmwf-dev
     fi
 
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -449,15 +462,15 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
     PYTHON_BIN=python3.11
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -523,7 +536,7 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -540,15 +553,15 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
     VIRTUALENV_REQ=requirements/requirements_debian11_web.txt
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -614,9 +627,101 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
+
+elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
+    RSYSLOG_USER=syslog
+    RSYSLOG_GROUP=adm
+
+    APACHE_SERVICE_NAME="apache2.service"
+
+    MYSQL_ETC="/etc/mysql"
+
+    PYTHON_BIN=python3.14
+
+    VIRTUALENV_REQ=requirements/requirements_latest_web.txt
+
+
+    sudo apt update
+
+
+    if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+        sudo apt -y full-upgrade
+    fi
+
+
+    sudo apt -y install \
+        build-essential \
+        python3 \
+        python3-dev \
+        python3-venv \
+        python3-pip \
+        virtualenv \
+        cmake \
+        gfortran \
+        whiptail \
+        procps \
+        rsyslog \
+        cron \
+        git \
+        cpio \
+        tzdata \
+        locales \
+        ca-certificates \
+        avahi-daemon \
+        swig \
+        libatlas-base-dev \
+        libimath-dev \
+        libopenexr-dev \
+        libgtk-3-0t64 \
+        libssl-dev \
+        libxml2-dev \
+        libxslt1-dev \
+        libgnutls28-dev \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        libffi-dev \
+        libopencv-dev \
+        libopenblas-dev \
+        libraw-dev \
+        libgeos-dev \
+        libtiff-dev \
+        libjpeg8-dev \
+        libopenjp2-7-dev \
+        libpng-dev \
+        zlib1g-dev \
+        libfreetype-dev \
+        liblcms2-dev \
+        libwebp-dev \
+        libcap-dev \
+        tcl8.6-dev \
+        tk8.6-dev \
+        python3-tk \
+        libharfbuzz-dev \
+        libfribidi-dev \
+        libxcb1-dev \
+        default-libmysqlclient-dev \
+        pkgconf \
+        rustc \
+        cargo \
+        ffmpeg \
+        gifsicle \
+        jq \
+        sqlite3 \
+        polkitd \
+        libsystemd-dev \
+        dbus-user-session
+
+    if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
+        sudo apt -y install \
+            mariadb-server
+    fi
+
 
 elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     RSYSLOG_USER=syslog
@@ -631,15 +736,15 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     VIRTUALENV_REQ=requirements/requirements_latest_web.txt
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -705,7 +810,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -722,15 +827,15 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     VIRTUALENV_REQ=requirements/requirements_latest_web.txt
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3.11 \
         python3.11-dev \
@@ -799,7 +904,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -816,15 +921,15 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
     VIRTUALENV_REQ=requirements/requirements_debian11_web.txt
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         python3.9 \
         python3.9-dev \
@@ -893,7 +998,7 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         dbus-user-session
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             mariadb-server
     fi
 
@@ -997,13 +1102,13 @@ fi
 
 if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
     if [ "$WEBSERVER" == "nginx" ]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             nginx
     elif [ "$WEBSERVER" == "caddy" ]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             caddy
     elif [ "$WEBSERVER" == "apache" ]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             apache2
 
     else
@@ -1218,11 +1323,9 @@ jq \
  --argjson indi_allsky_auth_all_views "$FLASK_AUTH_ALL_VIEWS" \
  --arg migration_folder "$MIGRATION_FOLDER" \
  --arg allsky_service_name "${ALLSKY_SERVICE_NAME}.service" \
- --arg allsky_timer_name "${ALLSKY_SERVICE_NAME}.timer" \
  --arg indiserver_service_name "${INDISERVER_SERVICE_NAME}.service" \
- --arg indiserver_timer_name "${INDISERVER_SERVICE_NAME}.timer" \
  --arg gunicorn_service_name "${GUNICORN_SERVICE_NAME}.service" \
- '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri | .INDI_ALLSKY_DOCROOT = $indi_allsky_docroot | .INDI_ALLSKY_AUTH_ALL_VIEWS = $indi_allsky_auth_all_views | .MIGRATION_FOLDER = $migration_folder | .ALLSKY_SERVICE_NAME = $allsky_service_name | .ALLSKY_TIMER_NAME = $allsky_timer_name | .INDISERVER_SERVICE_NAME = $indiserver_service_name | .INDISERVER_TIMER_NAME = $indiserver_timer_name | .GUNICORN_SERVICE_NAME = $gunicorn_service_name' \
+ '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri | .INDI_ALLSKY_DOCROOT = $indi_allsky_docroot | .INDI_ALLSKY_AUTH_ALL_VIEWS = $indi_allsky_auth_all_views | .MIGRATION_FOLDER = $migration_folder | .ALLSKY_SERVICE_NAME = $allsky_service_name | .INDISERVER_SERVICE_NAME = $indiserver_service_name | .GUNICORN_SERVICE_NAME = $gunicorn_service_name' \
  "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP_FLASK"
 
 
@@ -1480,6 +1583,11 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
 
 
 if [[ "$WEBSERVER" == "nginx" ]]; then
+    if systemctl --quiet is-active caddy; then
+        echo "!!! WARNING - caddy is active - This might interfere with nginx !!!"
+        sleep 3
+    fi
+
     if systemctl --quiet is-active "$APACHE_SERVICE_NAME"; then
         echo "!!! WARNING - apache2 is active - This might interfere with nginx !!!"
         sleep 3
@@ -1615,6 +1723,11 @@ elif [[ "$WEBSERVER" == "caddy" ]]; then
     # FUTURE - setup caddy here
 
 elif [[ "$WEBSERVER" == "apache" ]]; then
+    if systemctl --quiet is-active caddy; then
+        echo "!!! WARNING - caddy is active - This might interfere with apache !!!"
+        sleep 3
+    fi
+
     if systemctl --quiet is-active nginx; then
         echo "!!! WARNING - nginx is active - This might interfere with apache !!!"
         sleep 3

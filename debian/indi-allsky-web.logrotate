@@ -1,0 +1,10 @@
+/var/log/indi-allsky/*.log
+{
+    rotate 30
+    daily
+    missingok
+    dateext
+    copytruncate
+    notifempty
+    compress
+}

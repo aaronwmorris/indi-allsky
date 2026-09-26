@@ -5,6 +5,7 @@ from datetime import timezone
 import io
 import tempfile
 import json
+import hashlib
 from collections import OrderedDict
 from functools import wraps
 import time
@@ -503,6 +504,13 @@ class VirtualSkyView(TemplateView):
     def get_context(self):
         context = super(VirtualSkyView, self).get_context()
 
+        # The service worker serves cached scripts first; content versions keep
+        # new page settings paired with the matching renderer after updates.
+        context['virtualsky_scripts'] = {
+            name: hashlib.sha256((Path(app.static_folder) / name).read_bytes()).hexdigest()
+            for name in ('virtualsky/virtualsky.min.js', 'js/virtualsky-calibration.js')
+        }
+
         context['image_loop_view'] = self.image_loop_view
 
 
@@ -512,6 +520,8 @@ class VirtualSkyView(TemplateView):
 
         data = {
             'AZIMUTH_ANGLE'         : self.camera.az,
+            'POINTING_AZIMUTH'      : self.camera.data.get('vs_pointing_azimuth', 0.0),
+            'RADIAL_DISTORTION'     : self.camera.data.get('vs_radial_distortion', 0.0),
             'IMAGE_CIRCLE_DIAMETER' : self.camera.data.get('vs_image_circle_diameter', 3500),
             'LATITUDE_OFFSET'       : self.camera.data.get('vs_latitude_offset', 0.0),
             'LONGITUDE_OFFSET'      : self.camera.data.get('vs_longitude_offset', 0.0),
@@ -529,6 +539,24 @@ class VirtualSkyView(TemplateView):
         }
 
         context['form_virtualsky'] = IndiAllskyVirtualSkyHelperForm(data=data)
+        context['camera_altitude'] = self.camera.alt if self.camera.alt is not None else 90.0
+        context['lens_calibration'] = self.camera.data.get('vs_calibration')
+        context['lens_calibration_enabled'] = self.camera.data.get('vs_calibration_enabled', False)
+        context['calibration_camera_uuid'] = getattr(self.camera, 'uuid', '')
+        mask = self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {})
+        context['overlay_image_mask'] = None
+        if self.camera.local and mask.get('ENABLE') and mask.get('OPACITY', 100) == 100 and not mask.get('OUTLINE'):
+            # The image mask is applied after rotation/flipping/cropping, before
+            # scaling and borders. Detection masks/ROIs are not display masks.
+            focus_mode = self.indi_allsky_config.get('FOCUS_MODE', False)
+            context['overlay_image_mask'] = [
+                mask.get('DIAMETER', 3000),
+                self.indi_allsky_config.get('LENS_OFFSET_X', 0),
+                self.indi_allsky_config.get('LENS_OFFSET_Y', 0),
+                100 if focus_mode else self.indi_allsky_config.get('IMAGE_SCALE', 100),
+                *[0 if focus_mode else self.indi_allsky_config.get('IMAGE_BORDER', {}).get(k, 0)
+                    for k in ('TOP', 'RIGHT', 'BOTTOM', 'LEFT')]]
+        context['precession'] = self.camera.data.get('vs_precession', False)
 
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
@@ -1162,6 +1190,7 @@ class ImageLoopCanvasView(TemplateView):
         context = super(ImageLoopCanvasView, self).get_context()
 
         context['image_loop_view'] = self.image_loop_view
+        context['panorama__enable'] = bool(self.indi_allsky_config.get('FISH2PANO', {}).get('ENABLE', False))
 
         context['timestamp'] = int(request.args.get('timestamp', 0))
 
@@ -1331,6 +1360,8 @@ class JsonImageLoopView(JsonView):
             }
             if self.include_id:
                 data['id'] = i.id
+            if request.args.get('virtualsky') == '1':
+                data['binmode'] = getattr(i, 'binmode', None)
 
 
             try:
@@ -1493,6 +1524,7 @@ class ImageLoopImgView(TemplateView):
         context = super(ImageLoopImgView, self).get_context()
 
         context['image_loop_view'] = self.image_loop_view
+        context['panorama__enable'] = bool(self.indi_allsky_config.get('FISH2PANO', {}).get('ENABLE', False))
 
         context['timestamp'] = int(request.args.get('timestamp', 0))
 
@@ -2963,6 +2995,8 @@ class ConfigView(FormView):
             'ALLSKYMAP__CAMERA_NAME'         : self.indi_allsky_config.get('ALLSKYMAP', {}).get('CAMERA_NAME', ''),
             'ALLSKYMAP__CAMERA_OWNER'        : self.indi_allsky_config.get('ALLSKYMAP', {}).get('CAMERA_OWNER', ''),
             'ALLSKYMAP__WEBSITE_URL'         : self.indi_allsky_config.get('ALLSKYMAP', {}).get('WEBSITE_URL', ''),
+            'ALLSKYMAP__MAP_LATITUDE'        : self.indi_allsky_config.get('ALLSKYMAP', {}).get('MAP_LATITUDE', ''),
+            'ALLSKYMAP__MAP_LONGITUDE'       : self.indi_allsky_config.get('ALLSKYMAP', {}).get('MAP_LONGITUDE', ''),
             'ALLSKYMAP__UPLOAD_IMAGE'        : self.indi_allsky_config.get('ALLSKYMAP', {}).get('UPLOAD_IMAGE', True),
             'ALLSKYMAP__INTERVAL'            : self.indi_allsky_config.get('ALLSKYMAP', {}).get('INTERVAL', 10),
             'YOUTUBE__ENABLE'                : self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE', False),
@@ -3016,6 +3050,7 @@ class ConfigView(FormView):
             'TEST_CAMERA__ROTATING_STAR_FACTOR' : self.indi_allsky_config.get('TEST_CAMERA', {}).get('ROTATING_STAR_FACTOR', 1.0),
             'TEST_CAMERA__BUBBLE_COUNT'      : self.indi_allsky_config.get('TEST_CAMERA', {}).get('BUBBLE_COUNT', 1000),
             'VIRTUALSKY__MAGNITUDE'          : self.indi_allsky_config.get('VIRTUALSKY', {}).get('MAGNITUDE', 6.0),
+            'VIRTUALSKY__POINTING_AZIMUTH'   : self.indi_allsky_config.get('VIRTUALSKY', {}).get('POINTING_AZIMUTH', 0.0),
             'VIRTUALSKY__CONSTELLATIONS'     : self.indi_allsky_config.get('VIRTUALSKY', {}).get('CONSTELLATIONS', True),
             'VIRTUALSKY__CONSTELLATIONLABELS': self.indi_allsky_config.get('VIRTUALSKY', {}).get('CONSTELLATIONLABELS', False),
             'VIRTUALSKY__SHOWSTARS'          : self.indi_allsky_config.get('VIRTUALSKY', {}).get('SHOWSTARS', True),
@@ -4046,6 +4081,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['ALLSKYMAP']['CAMERA_NAME']             = str(request.json['ALLSKYMAP__CAMERA_NAME'])
         self.indi_allsky_config['ALLSKYMAP']['CAMERA_OWNER']            = str(request.json['ALLSKYMAP__CAMERA_OWNER'])
         self.indi_allsky_config['ALLSKYMAP']['WEBSITE_URL']             = str(request.json['ALLSKYMAP__WEBSITE_URL'])
+        self.indi_allsky_config['ALLSKYMAP']['MAP_LATITUDE']            = str(request.json['ALLSKYMAP__MAP_LATITUDE'])
+        self.indi_allsky_config['ALLSKYMAP']['MAP_LONGITUDE']           = str(request.json['ALLSKYMAP__MAP_LONGITUDE'])
         self.indi_allsky_config['ALLSKYMAP']['UPLOAD_IMAGE']            = bool(request.json['ALLSKYMAP__UPLOAD_IMAGE'])
         self.indi_allsky_config['ALLSKYMAP']['INTERVAL']                = int(request.json['ALLSKYMAP__INTERVAL'])
         self.indi_allsky_config['YOUTUBE']['ENABLE']                    = bool(request.json['YOUTUBE__ENABLE'])
@@ -4109,6 +4146,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEST_CAMERA']['ROTATING_STAR_FACTOR']  = float(request.json['TEST_CAMERA__ROTATING_STAR_FACTOR'])
         self.indi_allsky_config['TEST_CAMERA']['BUBBLE_COUNT']          = int(request.json['TEST_CAMERA__BUBBLE_COUNT'])
         self.indi_allsky_config['VIRTUALSKY']['MAGNITUDE']              = float(request.json['VIRTUALSKY__MAGNITUDE'])
+        self.indi_allsky_config['VIRTUALSKY']['POINTING_AZIMUTH']       = float(request.json.get('VIRTUALSKY__POINTING_AZIMUTH', self.indi_allsky_config['VIRTUALSKY'].get('POINTING_AZIMUTH', 0.0)))
         self.indi_allsky_config['VIRTUALSKY']['CONSTELLATIONS']         = bool(request.json['VIRTUALSKY__CONSTELLATIONS'])
         self.indi_allsky_config['VIRTUALSKY']['CONSTELLATIONLABELS']    = bool(request.json['VIRTUALSKY__CONSTELLATIONLABELS'])
         self.indi_allsky_config['VIRTUALSKY']['SHOWSTARS']              = bool(request.json['VIRTUALSKY__SHOWSTARS'])
@@ -4867,9 +4905,19 @@ class FitsImageViewerView(FormView):
         }
 
 
+        local = True  # default to local assets
+        if self.web_nonlocal_images:
+            if self.web_local_images_admin and self.verify_admin_network():
+                pass
+            else:
+                local = False
+
+
         context['form_fits_viewer'] = IndiAllskyFitsImageViewerPreload(
             data=form_data,
             camera_id=self.camera.id,
+            s3_prefix=self.s3_prefix,
+            local=local,
         )
 
         return context
@@ -4893,9 +4941,19 @@ class AjaxFitsImageViewerView(BaseView):
         self.cameraSetup(camera_id=camera_id)
 
 
+        local = True  # default to local assets
+        if self.web_nonlocal_images:
+            if self.web_local_images_admin and self.verify_admin_network():
+                pass
+            else:
+                local = False
+
+
         form_viewer = IndiAllskyFitsImageViewer(
             data=request.json,
             camera_id=camera_id,
+            s3_prefix=self.s3_prefix,
+            local=local,
         )
 
 
@@ -5038,13 +5096,24 @@ class Fits2JpegView(BaseView):
         self.cameraSetup(camera_id=fits_entry.camera_id)
 
 
-        filename_p = Path(fits_entry.getFilesystemPath())
+        try:
+            filename_p = fits_entry.getLocalOrCachedPath(s3_prefix=self.s3_prefix)
+        except Exception as e:
+            app.logger.error('Error resolving FITS file: %s', str(e))
+            filename_p = None
+
+        if not filename_p or not filename_p.is_file():
+            return 'FITS not found', 404
 
 
         p_config = self.indi_allsky_config.copy()
 
 
-        hdulist = fits.open(filename_p)
+        try:
+            hdulist = fits.open(filename_p)
+        except OSError as e:
+            app.logger.error('Failed to open FITS file %s: %s', filename_p, str(e))
+            return 'Bad FITS file', 500
 
         exposure = float(hdulist[0].header.get('EXPTIME', 0))
         exposure_av = Array(ctypes.c_int32, [int(exposure * 1000000)])
@@ -5076,8 +5145,8 @@ class Fits2JpegView(BaseView):
         processing_start = time.time()
 
 
-        # use mtime for date
-        image_date = datetime.fromtimestamp(filename_p.stat().st_mtime)
+        # use createDate for date
+        image_date = fits_entry.createDate or datetime.fromtimestamp(filename_p.stat().st_mtime)
 
 
         image_processor.update_astrometric_data(image_date)
@@ -5736,11 +5805,7 @@ class SystemInfoView(TemplateView):
         context['systemd_target'] = self.getSystemdTarget()
 
         context['indiserver_service_activestate'], context['indiserver_service_unitstate'] = self.getSystemdUnitStatus(app.config['INDISERVER_SERVICE_NAME'])
-        context['indiserver_timer_activestate'], context['indiserver_timer_unitstate'] = self.getSystemdUnitStatus(app.config['INDISERVER_TIMER_NAME'])
         context['indi_allsky_service_activestate'], context['indi_allsky_service_unitstate'] = self.getSystemdUnitStatus(app.config['ALLSKY_SERVICE_NAME'])
-        context['indi_allsky_timer_activestate'], context['indi_allsky_timer_unitstate'] = self.getSystemdUnitStatus(app.config['ALLSKY_TIMER_NAME'])
-        context['indiserver_next_trigger'] = self.getSystemdTimerTrigger(app.config['INDISERVER_TIMER_NAME'])
-        context['indi_allsky_next_trigger'] = self.getSystemdTimerTrigger(app.config['ALLSKY_TIMER_NAME'])
         context['gunicorn_indi_allsky_service_activestate'], context['gunicorn_indi_allsky_service_unitstate'] = self.getSystemdUnitStatus(app.config['GUNICORN_SERVICE_NAME'])
         context['gunicorn_indi_allsky_socket_activestate'], context['gunicorn_indi_allsky_socket_unitstate'] = self.getSystemdUnitStatus(app.config['GUNICORN_SOCKET_NAME'])
 
@@ -6208,10 +6273,10 @@ class AjaxSystemInfoView(BaseView):
                 r = self.stopSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
             elif command == 'start':
                 r = self.startSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
-            #elif command == 'disable':
-            #    r = self.disableSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
-            #elif command == 'enable':
-            #    r = self.enableSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
+            elif command == 'disable':
+                r = self.disableSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
+            elif command == 'enable':
+                r = self.enableSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
             else:
                 errors_data = {
                     'COMMAND_HIDDEN' : ['Unhandled command'],
@@ -6239,32 +6304,10 @@ class AjaxSystemInfoView(BaseView):
                 r = self.stopSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
             elif command == 'start':
                 r = self.startSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
-            #elif command == 'disable':
-            #    r = self.disableSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
-            #elif command == 'enable':
-            #    r = self.enableSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
-            else:
-                errors_data = {
-                    'COMMAND_HIDDEN' : ['Unhandled command'],
-                }
-                return jsonify(errors_data), 400
-
-        elif service == app.config['INDISERVER_TIMER_NAME']:
-            if command == 'disable':
-                r = self.disableSystemdUnit(app.config['INDISERVER_TIMER_NAME'])
+            elif command == 'disable':
+                r = self.disableSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
             elif command == 'enable':
-                r = self.enableSystemdUnit(app.config['INDISERVER_TIMER_NAME'])
-            else:
-                errors_data = {
-                    'COMMAND_HIDDEN' : ['Unhandled command'],
-                }
-                return jsonify(errors_data), 400
-
-        elif service == app.config['ALLSKY_TIMER_NAME']:
-            if command == 'disable':
-                r = self.disableSystemdUnit(app.config['ALLSKY_TIMER_NAME'])
-            elif command == 'enable':
-                r = self.enableSystemdUnit(app.config['ALLSKY_TIMER_NAME'])
+                r = self.enableSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
             else:
                 errors_data = {
                     'COMMAND_HIDDEN' : ['Unhandled command'],
@@ -6281,6 +6324,15 @@ class AjaxSystemInfoView(BaseView):
                 return jsonify(errors_data), 400
 
         elif service == app.config['UPGRADE_ALLSKY_SERVICE_NAME']:
+            allsky_directory_p = Path(__file__).parent.parent.parent.absolute()
+            if allsky_directory_p.is_relative_to('/usr/share'):
+                app.logger.error('Cannot upgrade apt managed instance')
+                errors_data = {
+                    'COMMAND_HIDDEN' : ['Cannot upgrade apt managed instance.  Please use apt command on CLI.'],
+                }
+                return jsonify(errors_data), 400
+
+
             if command == 'start':
                 fs_list = psutil.disk_partitions(all=True)
                 for fs in fs_list:
@@ -7140,28 +7192,37 @@ class AjaxIndiServerChangeView(BaseView):
         allsky_directory_p = Path(__file__).parent.parent.parent.absolute()
 
 
-        with io.open(str(allsky_directory_p.joinpath('service', 'indiserver.service')), 'r') as f_service_tmpl:
-            service_tmpl = f_service_tmpl.read()
+        if not allsky_directory_p.is_relative_to('/usr/share'):
+            # only refresh a user unit definition
+            with io.open(str(allsky_directory_p.joinpath('service', 'indiserver.service')), 'r') as f_service_tmpl:
+                service_tmpl = f_service_tmpl.read()
 
 
-        service_tmpl = service_tmpl.replace('%ALLSKY_DIRECTORY%', str(allsky_directory_p))\
-            .replace('%INDI_DRIVER_PATH%', str(indiserver_p.parent.absolute()))\
-            .replace('%INDI_PORT%', str(self.indi_allsky_config.get('INDI_PORT', 7624)))\
-            .replace('%INDI_CCD_DRIVER%', camera_server)\
-            .replace('%INDI_GPS_DRIVER%', gps_server)\
-            .replace('%INDISERVER_USER%', os.getlogin())
+            service_tmpl = service_tmpl.replace('%ALLSKY_DIRECTORY%', str(allsky_directory_p))\
+                .replace('%INDI_DRIVER_PATH%', str(indiserver_p.parent.absolute()))\
+                .replace('%INDISERVER_USER%', os.getlogin())
 
 
-        indiserver_service_p = Path(os.environ.get('HOME', '/home/{0:s}'.format(os.getlogin()))).joinpath('.config', 'systemd', 'user', app.config['INDISERVER_SERVICE_NAME'])
+            indiserver_service_p = Path(os.environ.get('HOME', '/home/{0:s}'.format(os.getlogin()))).joinpath('.config', 'systemd', 'user', app.config['INDISERVER_SERVICE_NAME'])
 
-        with io.open(str(indiserver_service_p), 'w') as f_indiserver_service:
-            f_indiserver_service.write(service_tmpl)
-
-
-        indiserver_service_p.chmod(0o644)
+            with io.open(str(indiserver_service_p), 'w') as f_indiserver_service:
+                f_indiserver_service.write(service_tmpl)
 
 
-        self.reloadSystemdUnits()
+            indiserver_service_p.chmod(0o644)
+
+
+            self.reloadSystemdUnits()
+
+
+        # re-create env file
+        indiserver_env_p = Path('/etc/indi-allsky/indiserver.env')
+        with io.open(str(indiserver_env_p), 'w') as f_indiserver_env:
+            f_indiserver_env.write('CCD_DRIVER={0:s}\n'.format(camera_server))
+            f_indiserver_env.write('GPS_DRIVER={0:s}\n'.format(gps_server))
+            f_indiserver_env.write('INDI_PORT={0:d}\n'.format(self.indi_allsky_config.get('INDI_PORT', 7624)))
+
+        indiserver_env_p.chmod(0o644)
 
 
         success_message = 'Reconfigure completed.'
@@ -7175,9 +7236,9 @@ class AjaxIndiServerChangeView(BaseView):
         return jsonify({'success-message' : success_message})
 
 
-    def reloadSystemdUnits(self, bus_type=dbus.SessionBus):
+    def reloadSystemdUnits(self, bus_type=None):
         try:
-            bus = bus_type()
+            bus = self._get_systemd_bus(bus_type)
         except dbus.exceptions.DBusException:
             # This happens in docker
             return 'D-Bus Unavailable', 'D-Bus Unavailable'
@@ -8044,6 +8105,8 @@ class AjaxLensSolverView(BaseView):
 
 
     def dispatch_request(self):
+        if not isinstance(request.json, dict):
+            return jsonify({'success': False, 'message': 'Expected a JSON object'}), 400
         action = str(request.json.get('action', ''))
 
         if action == 'solve':
@@ -8060,9 +8123,13 @@ class AjaxLensSolverView(BaseView):
             return jsonify({'success': False, 'message': error}), 400
 
         try:
+            if isinstance(request.json['camera_id'], bool) or isinstance(request.json['timestamp'], bool):
+                raise ValueError
             camera_id = int(request.json['camera_id'])
             timestamp = int(request.json['timestamp'])
-        except (KeyError, TypeError, ValueError):
+            if not 0 < camera_id < 2**63:
+                raise ValueError  # prevent integer overflow in the database driver
+        except (KeyError, TypeError, ValueError, OverflowError):
             return jsonify({'success': False, 'message': 'camera_id and timestamp required'}), 400
 
         # explicit check: an unknown camera_id would otherwise fall through to a FakeCamera (lat/long 0.0) and solve silently wrong
@@ -8079,9 +8146,9 @@ class AjaxLensSolverView(BaseView):
         # resolve by exact camera + timestamp (NEVER "latest"); a huge int can raise OverflowError/OSError, not just ValueError
         try:
             ts_dt = datetime.fromtimestamp(timestamp)
+            ts_dt_end = ts_dt + timedelta(seconds=1)
         except (OverflowError, OSError, ValueError):
             return jsonify({'success': False, 'message': 'Invalid timestamp'}), 400
-        ts_dt_end = ts_dt + timedelta(seconds=1)
 
         image_entry = IndiAllSkyDbImageTable.query\
             .filter(IndiAllSkyDbImageTable.camera_id == camera_id)\
@@ -8111,7 +8178,20 @@ class AjaxLensSolverView(BaseView):
             }), 429, {'Retry-After': str(self.LOCK_RETRY_AFTER_S)}
 
         try:
-            result = solver.solve(image_file, latitude, longitude, obstime_unix, values)
+            hints = {}
+            if values.get('CALIBRATION_ENABLED'):
+                binning = image_entry.binmode or 1
+                hints['binning'] = binning
+                if self.camera.width and self.camera.height:
+                    hints['sensor_shape'] = (self.camera.height // binning, self.camera.width // binning)
+            result = solver.solve(
+                image_file, latitude, longitude, obstime_unix, values,
+                lens_altitude=values.get('LENS_ALTITUDE', self.camera.alt),
+                pointing_azimuth=values.get('POINTING_AZIMUTH', self.camera.data.get('vs_pointing_azimuth', 0.0)),
+                **hints)
+            if result.get('calibration'):
+                result['calibration']['camera_uuid'] = self.camera.uuid
+                result['calibration']['context'][2] = self.camera_time_offset
         except Exception:  # noqa: BLE001
             # never return a raw exception string to the client
             app.logger.exception('Lens solver failed')
@@ -8127,11 +8207,13 @@ class AjaxLensSolverView(BaseView):
             if not current_user.is_admin:
                 return jsonify({'success': False, 'message': 'You do not have permission to make configuration changes'}), 403
 
-        values, error = parseSolverRequestValues(request.json)
+        values, error = parseSolverRequestValues(request.json, for_save=True)
         if error:
             return jsonify({'success': False, 'message': error}), 400
 
-        reload_on_save = bool(request.json.get('RELOAD_ON_SAVE', False))
+        reload_on_save = request.json.get('RELOAD_ON_SAVE', False)
+        if not isinstance(reload_on_save, bool):
+            return jsonify({'success': False, 'message': 'RELOAD_ON_SAVE must be a boolean'}), 400
 
         applySolvedValuesToConfig(self.indi_allsky_config, values)
 
@@ -9413,11 +9495,19 @@ class JsonImageProcessingView(JsonView):
                 'processing_elapsed_s' : 0.0,
                 'message' : 'No FITS images found',
             }
-            return jsonify(json_data)
+        try:
+            filename_p = fits_entry.getLocalOrCachedPath(s3_prefix=self.s3_prefix)
+        except Exception as e:
+            app.logger.error('Error resolving FITS file: %s', str(e))
+            filename_p = None
 
-
-
-        filename_p = Path(fits_entry.getFilesystemPath())
+        if not filename_p or not filename_p.is_file():
+            json_data = {
+                'image_b64' : None,
+                'processing_elapsed_s' : 0.0,
+                'message' : 'FITS file not found',
+            }
+            return jsonify(json_data), 404
 
 
         p_config = self.indi_allsky_config.copy()
@@ -9609,7 +9699,16 @@ class JsonImageProcessingView(JsonView):
         p_config['LIGHTGRAPH_OVERLAY']['FONT_COLOR'] = [int(x) for x in lightgraph_overlay__font_color_str.split(',')]
 
 
-        hdulist = fits.open(filename_p)
+        try:
+            hdulist = fits.open(filename_p)
+        except OSError as e:
+            app.logger.error('Failed to open FITS file %s: %s', filename_p, str(e))
+            json_data = {
+                'image_b64' : None,
+                'processing_elapsed_s' : 0.0,
+                'message' : 'Bad FITS file',
+            }
+            return jsonify(json_data), 500
 
         exposure = float(hdulist[0].header.get('EXPTIME', 0))
         exposure_av = Array(ctypes.c_int32, [int(exposure * 1000000)])
@@ -9695,8 +9794,8 @@ class JsonImageProcessingView(JsonView):
         if disable_processing:
             # just return original image with no processing
 
-            # use mtime for date
-            image_date = datetime.fromtimestamp(filename_p.stat().st_mtime)
+            # use createDate for date
+            image_date = fits_entry.createDate or datetime.fromtimestamp(filename_p.stat().st_mtime)
 
             image_processor.add(
                 filename_p,
@@ -9744,12 +9843,22 @@ class JsonImageProcessingView(JsonView):
                     .limit(p_config['IMAGE_STACK_COUNT'] - 1)
 
                 for f_image in fits_image_query:
-                    f_image_p = f_image.getFilesystemPath()
+                    try:
+                        f_image_p = f_image.getLocalOrCachedPath(s3_prefix=self.s3_prefix)
+                    except Exception as e:
+                        app.logger.error('Error resolving stacked FITS file: %s', str(e))
+                        f_image_p = None
 
-                    # use mtime for date
-                    pre_image_date = datetime.fromtimestamp(f_image_p.stat().st_mtime)
+                    if not f_image_p or not f_image_p.is_file():
+                        continue
 
-                    alt_hdulist = fits.open(f_image_p)
+                    # use createDate for date
+                    pre_image_date = f_image.createDate or datetime.fromtimestamp(f_image_p.stat().st_mtime)
+
+                    try:
+                        alt_hdulist = fits.open(f_image_p)
+                    except OSError:
+                        continue
                     alt_exposure = float(alt_hdulist[0].header.get('EXPTIME', 0))
                     alt_gain = float(alt_hdulist[0].header.get('GAIN', 0))
                     alt_binning = int(alt_hdulist[0].header.get('XBINNING', 1))
@@ -9771,8 +9880,8 @@ class JsonImageProcessingView(JsonView):
                 message_list.append('Stacked {0:d} images'.format(p_config['IMAGE_STACK_COUNT']))
 
 
-            # use mtime for date
-            image_date = datetime.fromtimestamp(filename_p.stat().st_mtime)
+            # use createDate for date
+            image_date = fits_entry.createDate or datetime.fromtimestamp(filename_p.stat().st_mtime)
 
 
             image_processor.update_astrometric_data(image_date)
@@ -9980,8 +10089,9 @@ class StreamLogViewBase(BaseView):
     def __init__(self, **kwargs):
         super(StreamLogViewBase, self).__init__(**kwargs)
 
-        self.user_unit_name = 'changeme'
         self.syslog_facility = None
+        self.user_unit_name = None
+        self.unit_name = None
 
 
     def dispatch_request(self):
@@ -9996,10 +10106,13 @@ class StreamLogViewBase(BaseView):
             if not isinstance(self.syslog_facility, type(None)):
                 app.logger.info('Streaming log from facility %s', self.syslog_facility)
                 reader.add_match(SYSLOG_FACILITY=self.syslog_facility)
-            else:
-                # use unit name
+            elif not isinstance(self.user_unit_name, type(None)):
                 app.logger.info('Streaming log from user unit %s', self.user_unit_name)
                 reader.add_match(_SYSTEMD_USER_UNIT=self.user_unit_name)
+            else:
+                # use unit name
+                app.logger.info('Streaming log from system unit %s', self.unit_name)
+                reader.add_match(_SYSTEMD_UNIT=self.unit_name)
 
 
             reader.seek_tail()
@@ -10035,16 +10148,17 @@ class StreamLogView(StreamLogViewBase):
         super(StreamLogView, self).__init__(**kwargs)
 
         self.syslog_facility = '22'  # local6
-        #self.user_unit_name = app.config['ALLSKY_SERVICE_NAME']
         self.user_unit_name = None
+        self.unit_name = None
 
 
 class StreamIndiserverLogView(StreamLogViewBase):
     def __init__(self, **kwargs):
         super(StreamIndiserverLogView, self).__init__(**kwargs)
 
-        self.syslog_facility = None
-        self.user_unit_name = app.config['INDISERVER_SERVICE_NAME']
+        self.syslog_facility = '21'  # local5
+        self.user_unit_name = None
+        self.unit_name = None
 
 
 class LogDownloadView(BaseView):
@@ -14123,6 +14237,10 @@ class WsShellView(BaseView):
 
         if not current_user.is_admin:
             return 'Unauthorized', 401
+
+        if not self.verify_admin_network():
+            return 'Unauthorized', 401
+
 
         ws = simple_websocket.Server.accept(request.environ)
 

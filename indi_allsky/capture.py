@@ -892,11 +892,11 @@ class CaptureWorker(Process):
         logger.warning('Connecting to CCD device %s', self.indiclient.ccd_device.getDeviceName())
         self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())
 
-        if self.indiclient.telescope_device:
+        if self.indiclient.telescope_device is not None:
             logger.warning('Connecting to Telescope device %s', self.indiclient.telescope_device.getDeviceName())
             self.indiclient.connectDevice(self.indiclient.telescope_device.getDeviceName())
 
-        if self.config.get('GPS_ENABLE') and self.indiclient.gps_device:
+        if self.config.get('GPS_ENABLE') and self.indiclient.gps_device is not None:
             logger.warning('Connecting to GPS device %s', self.indiclient.gps_device.getDeviceName())
             self.indiclient.connectDevice(self.indiclient.gps_device.getDeviceName())
 
@@ -910,7 +910,7 @@ class CaptureWorker(Process):
 
 
         ### GPS config
-        if self.config.get('GPS_ENABLE') and self.indiclient.gps_device:
+        if self.config.get('GPS_ENABLE') and self.indiclient.gps_device is not None:
             gps_config = {
                 'PROPERTIES' : {
                     'GPS_REFRESH_PERIOD' : {
@@ -950,7 +950,7 @@ class CaptureWorker(Process):
 
         ### Telescope config
         # park the telescope at zenith and stop tracking
-        if self.indiclient.telescope_device:
+        if self.indiclient.telescope_device is not None:
             telescope_config = {
                 'SWITCHES' : {
                     'TELESCOPE_TRACK_STATE' : {
@@ -972,7 +972,7 @@ class CaptureWorker(Process):
 
 
         if self.config.get('GPS_ENABLE'):
-            if self.indiclient.telescope_device and self.indiclient.gps_device:
+            if self.indiclient.telescope_device is not None and self.indiclient.gps_device is not None:
                 # Set Telescope GPS
                 self.indiclient.setTelescopeGps(self.indiclient.gps_device.getDeviceName())
 
@@ -992,7 +992,7 @@ class CaptureWorker(Process):
         if self.config.get('CFA_PATTERN'):
             cfa_pattern = self.config['CFA_PATTERN']
         else:
-            cfa_pattern = ccd_info['CCD_CFA']['CFA_TYPE'].get('text')
+            cfa_pattern = ccd_info['CCD_CFA'].get('CFA_TYPE', {}).get('text')
 
 
         # populate S3 data
@@ -1077,6 +1077,17 @@ class CaptureWorker(Process):
 
 
         # virtualsky
+        camera_metadata['data']['vs_pointing_azimuth'] = self.config.get('VIRTUALSKY', {}).get('POINTING_AZIMUTH', 0.0)
+        calibration = self.config.get('VIRTUALSKY', {}).get('CALIBRATION')
+        calibration_enabled = self.config.get('VIRTUALSKY', {}).get('CALIBRATION_ENABLED', False)
+        if calibration and calibration_enabled:
+            # A changed crop/rotation/scale invalidates the learned pixel mapping.
+            from .lens_solver.calibration import pipelineSignature
+            calibration_enabled = calibration.get('pipeline') == pipelineSignature(self.config)
+        camera_metadata['data']['vs_calibration'] = calibration
+        camera_metadata['data']['vs_calibration_enabled'] = calibration_enabled
+        camera_metadata['data']['vs_precession'] = self.config.get('VIRTUALSKY', {}).get('PRECESSION', False)
+        camera_metadata['data']['vs_radial_distortion'] = self.config.get('VIRTUALSKY', {}).get('RADIAL_DISTORTION', 0.0)
         camera_metadata['data']['vs_magnitude'] = self.config.get('VIRTUALSKY', {}).get('MAGNITUDE', 6.0)
         camera_metadata['data']['vs_constellations'] = self.config.get('VIRTUALSKY', {}).get('CONSTELLATIONS', True)
         camera_metadata['data']['vs_constellationlabels'] = self.config.get('VIRTUALSKY', {}).get('CONSTELLATIONLABELS', False)
@@ -1866,7 +1877,7 @@ class CaptureWorker(Process):
         if not self.config.get('GPS_ENABLE'):
             return
 
-        if not self.indiclient.gps_device:
+        if self.indiclient.gps_device is None:
             return
 
         update_position = False
@@ -1914,7 +1925,7 @@ class CaptureWorker(Process):
 
 
     def getTelescopeRaDec(self):
-        if not self.indiclient.telescope_device:
+        if self.indiclient.telescope_device is None:
             return
 
         ra, dec = self.indiclient.getTelescopeRaDec()
@@ -1954,7 +1965,7 @@ class CaptureWorker(Process):
 
 
     def reparkTelescope(self):
-        if not self.indiclient.telescope_device:
+        if self.indiclient.telescope_device is None:
             return
 
         self.indiclient.unparkTelescope()

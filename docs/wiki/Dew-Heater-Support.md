@@ -16,13 +16,13 @@ https://github.com/aaronwmorris/indi-allsky/wiki/GPIO-Permissions
 **The pins from a SBC cannot be used to directly drive a dew heater.  Trying to do so WILL damage your system.**
 
 ## Testing Dew Heaters
-The following test script can be used to test your dew heater for proper wiring and operation.  Dew Heaters can be difficult to detect operation if you do not have an oscilloscope or thermal camera.  An LED is probably the best option to get feedback from the system.
+The following test command can be used to test your dew heater for proper wiring and operation. Dew Heaters can be difficult to detect operation if you do not have an oscilloscope or thermal camera. An LED is probably the best option to get feedback from the system.
 
+```bash
+indi-allsky-ctl test-devices dew_heater
 ```
-source virtualenv/indi-allsky/bin/activate
 
-./misc/device_test.py dew_heater
-```
+*(Or from a git checkout: `source virtualenv/indi-allsky/bin/activate && ./misc/device_test.py dew_heater`).*
 
 ## Dew Heater - Standard
 This type of dew heater only supports two modes:  ON and OFF.  Any duty cycle applied to this dew heater will set it to FULL power.  This type may use either a relay or MOSFET driver.

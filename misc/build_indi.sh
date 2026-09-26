@@ -331,7 +331,9 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
     fi
 
 elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
-    if [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "26.04" ]]; then
+        DISTRO="ubuntu_26.04"
+    elif [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
         DISTRO="ubuntu_24.04"
     elif [[ "$DISTRO_VERSION_ID" == "22.04" ]]; then
         DISTRO="ubuntu_22.04"
@@ -376,15 +378,15 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         fi
     done
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         git \
         ca-certificates \
@@ -424,11 +426,11 @@ if [[ "$DISTRO" == "debian_13" ]]; then
 
 
     if [[ "$CPU_ARCH" == "aarch64" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             libcamera-dev
 
         # this can fail on non-raspberry pi OS repos
-        sudo apt-get -y install \
+        sudo apt -y install \
             librpicam-app-dev || true
     fi
 
@@ -444,15 +446,15 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         fi
     done
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         git \
         ca-certificates \
@@ -492,11 +494,11 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
 
 
     if [[ "$CPU_ARCH" == "aarch64" ]]; then
-        sudo apt-get -y install \
+        sudo apt -y install \
             libcamera-dev
 
         # this can fail on non-raspberry pi OS repos
-        sudo apt-get -y install \
+        sudo apt -y install \
             librpicam-app-dev || true
     fi
 
@@ -513,15 +515,15 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
     done
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         git \
         ca-certificates \
@@ -570,15 +572,15 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
     done
 
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         git \
         ca-certificates \
@@ -612,6 +614,65 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
         libusb-1.0-0-dev \
         zlib1g-dev
 
+elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
+    BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
+    for p in $BLOCKING_PACKAGES; do
+        if dpkg -s "$p" >/dev/null 2>&1; then
+            echo
+            echo
+            echo "Package $p needs to be uninstalled"
+            echo
+            exit 1
+        fi
+    done
+
+    sudo apt update
+
+
+    if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+        sudo apt -y full-upgrade
+    fi
+
+
+    sudo apt -y install \
+        build-essential \
+        git \
+        ca-certificates \
+        cmake \
+        whiptail \
+        fxload \
+        pkgconf \
+        libudev-dev \
+        libavcodec-dev \
+        libavdevice-dev \
+        libboost-dev \
+        libboost-regex-dev \
+        libcfitsio-dev \
+        libcurl4-gnutls-dev \
+        libdc1394-dev \
+        libev-dev \
+        libfftw3-dev \
+        libftdi1-dev \
+        libftdi-dev \
+        libgmock-dev \
+        libgphoto2-dev \
+        libgps-dev \
+        libgsl-dev \
+        libjpeg-dev \
+        liblimesuite-dev \
+        libnova-dev \
+        libraw-dev \
+        librtlsdr-dev \
+        libtheora-dev \
+        libtiff-dev \
+        libusb-1.0-0-dev \
+        libnutclient-dev \
+        libzmq3-dev \
+        libahp-gt-dev \
+        libcamera-dev \
+        libboost-program-options-dev \
+        zlib1g-dev
+
 elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
     for p in $BLOCKING_PACKAGES; do
@@ -624,15 +685,15 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         fi
     done
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         git \
         ca-certificates \
@@ -683,15 +744,15 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         fi
     done
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         git \
         ca-certificates \
@@ -739,15 +800,15 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         fi
     done
 
-    sudo apt-get update
+    sudo apt update
 
 
     if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-        sudo apt-get -y dist-upgrade
+        sudo apt -y full-upgrade
     fi
 
 
-    sudo apt-get -y install \
+    sudo apt -y install \
         build-essential \
         git \
         ca-certificates \

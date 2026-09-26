@@ -158,12 +158,87 @@ class IndiAllSkyDbFileBase(db.Model):
             if self.remote_url:
                 return self.remote_url
             elif self.s3_key:
-                return '{0:s}/{1:s}'.format(str(s3_prefix), self.s3_key)
+                prefix = str(s3_prefix).rstrip('/')
+                key = str(self.s3_key).lstrip('/')
+                return '{0:s}/{1:s}'.format(prefix, key)
 
 
-        rel_filename_p = self.getRelativePath()
+        try:
+            rel_filename_p = self.getRelativePath()
+            return Path('images').joinpath(rel_filename_p)
+        except ValueError:
+            return Path(self.filename)
 
-        return Path('images').joinpath(rel_filename_p)
+
+    def getLocalOrCachedPath(self, s3_prefix='', timeout=30.0):
+        try:
+            filename_p = self.getFilesystemPath()
+            if filename_p.is_file():
+                return filename_p
+        except Exception:
+            filename_p = Path(self.filename)
+
+        # If not on local filesystem, check for remote asset
+        if not s3_prefix and hasattr(self, 'camera') and self.camera and self.camera.s3_prefix:
+            s3_prefix = self.camera.s3_prefix
+
+        if self.remote_url:
+            remote_url = self.remote_url
+        elif s3_prefix and self.s3_key:
+            prefix = str(s3_prefix).rstrip('/')
+            key = str(self.s3_key).lstrip('/')
+            remote_url = '{0:s}/{1:s}'.format(prefix, key)
+        else:
+            return None
+
+        if not str(remote_url).startswith(('http://', 'https://')):
+            return None
+
+        import hashlib
+        import tempfile
+        import os
+        import time
+        import logging
+
+        remote_url_str = str(remote_url)
+        suffix = filename_p.suffix if filename_p.suffix else '.fit'
+
+        cache_dir = Path(tempfile.gettempdir()).joinpath('indi_allsky_cache')
+        cache_dir.mkdir(parents=True, exist_ok=True)
+
+        url_hash = hashlib.sha256(remote_url_str.encode('utf-8')).hexdigest()
+        cached_path = cache_dir.joinpath(f"{url_hash}{suffix}")
+
+        if cached_path.is_file() and cached_path.stat().st_size > 0:
+            return cached_path
+
+        temp_path = cached_path.with_suffix(f".tmp_{os.getpid()}_{time.time_ns()}")
+        try:
+            import requests
+            with requests.get(remote_url_str, stream=True, timeout=timeout) as r:
+                r.raise_for_status()
+                with open(temp_path, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=65536):
+                        if chunk:
+                            f.write(chunk)
+
+            temp_path.replace(cached_path)
+            return cached_path
+        except Exception as e:
+            if temp_path.exists():
+                try:
+                    temp_path.unlink()
+                except OSError:
+                    pass
+
+            logger = logging.getLogger('indi_allsky')
+            try:
+                if app:
+                    logger = app.logger
+            except Exception:
+                pass
+            logger.error('Failed to download remote file from %s: %s', remote_url_str, str(e))
+            return None
 
 
     def getFilesystemPath(self):

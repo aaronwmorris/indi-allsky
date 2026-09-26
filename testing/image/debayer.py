@@ -39,7 +39,7 @@ class Debayer(object):
             sys.exit(1)
 
 
-        if inputfile_p.suffix == '.fit' or inputfile_p.suffix == '.fits':
+        if inputfile_p.suffix.lower() in ['.fit', '.fits']:
             # fits
             hdulist = fits.open(inputfile_p)
             data = hdulist[0].data

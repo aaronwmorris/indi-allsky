@@ -163,7 +163,8 @@ class TestAsi676mcFrameRepair(unittest.TestCase):
         docs = (
             Path(__file__).resolve().parents[2]
             / 'docs'
-            / 'asi676mc-frame-repair.md'
+            / 'wiki'
+            / 'ASI676MC-Purple-Frame-Repair-Details.md'
         ).read_text(encoding='utf-8')
 
         self.assertIn('### Multiple ASI676MC units', docs)

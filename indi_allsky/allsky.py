@@ -4,6 +4,7 @@ import locale
 import fcntl
 #import errno
 import os
+import shutil
 import time
 import io
 import re
@@ -48,6 +49,7 @@ from .flask.models import IndiAllSkyDbStarTrailsVideoTable
 from .flask.models import IndiAllSkyDbPanoramaImageTable
 from .flask.models import IndiAllSkyDbPanoramaVideoTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
+from .flask.models import IndiAllSkyDbTleDataTable
 
 from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
@@ -90,13 +92,13 @@ class IndiAllSky(object):
 
 
         if __config_level__ != self._config_obj.config_level:
-            logger.error('indi-allsky version does not match config, please rerun setup.sh')
+            logger.error('indi-allsky version does not match config, please upgrade/reconfigure indi-allsky')
 
             with app.app_context():
                 self._miscDb.addNotification(
                     NotificationCategory.STATE,
                     'config_version',
-                    'WARNING: indi-allsky version does not match config, please rerun setup.sh',
+                    'WARNING: indi-allsky version does not match config, please upgrade indi-allsky',
                     expire=timedelta(hours=2),
                 )
 
@@ -113,7 +115,38 @@ class IndiAllSky(object):
         self.cleanup_tasks_time = now_time   # run asap
         self.aurora_tasks_time = now_time    # run asap
         self.smoke_tasks_time = now_time     # run asap
-        self.sat_data_tasks_time = now_time  # run asap
+        # satellite tle task time based on persistent state and cache freshness
+
+
+        with app.app_context():
+            try:
+                sat_next_attempt = int(self._miscDb.getState('SATELLITE_TLE_NEXT_ATTEMPT_TS'))
+            except (NoResultFound, ValueError, TypeError):
+                sat_next_attempt = 0
+
+            if sat_next_attempt > now_time:
+                self.sat_data_tasks_time = sat_next_attempt
+            else:
+                try:
+                    sat_last_ts = int(self._miscDb.getState('SATELLITE_TLE_TS'))
+                except (NoResultFound, ValueError, TypeError):
+                    sat_last_ts = 0
+
+                if not sat_last_ts:
+                    latest_sat = IndiAllSkyDbTleDataTable.query\
+                        .filter(IndiAllSkyDbTleDataTable.group == constants.SATELLITE_VISUAL)\
+                        .order_by(IndiAllSkyDbTleDataTable.createDate.desc())\
+                        .first()
+                    if latest_sat and latest_sat.createDate:
+                        sat_last_ts = int(latest_sat.createDate.timestamp())
+                        self._miscDb.setState('SATELLITE_TLE_TS', sat_last_ts)
+
+                if sat_last_ts and (sat_last_ts + self.sat_data_tasks_offset > now_time):
+                    self.sat_data_tasks_time = sat_last_ts + self.sat_data_tasks_offset
+                else:
+                    self.sat_data_tasks_time = now_time  # run asap
+
+
         self.backup_tasks_time = now_time    # run asap
         self.allskymap_tasks_time = now_time  # run asap
 
@@ -245,9 +278,11 @@ class IndiAllSky(object):
             self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
 
 
+        # scratch files which may be deleted
+        self.scratch_base_dir = self.image_dir.joinpath('scratch')
+
         varlib_folder = self.config.get('VARLIB_FOLDER', '/var/lib/indi-allsky')
         self.varlib_folder_p = Path(varlib_folder)
-
 
         self._pid_file = self.varlib_folder_p.joinpath('indi-allsky.pid')
 
@@ -724,6 +759,7 @@ class IndiAllSky(object):
             self.write_pid()
 
             self._expireOrphanedTasks()
+            self._deleteScratchFolder()
 
             self._startup()
 
@@ -796,12 +832,12 @@ class IndiAllSky(object):
 
 
         if __config_level__ != self._config_obj.config_level:
-            logger.error('indi-allsky version does not match config, please rerun setup.sh')
+            logger.error('indi-allsky version does not match config, please upgrade/reconfigure indi-allsky')
 
             self._miscDb.addNotification(
                 NotificationCategory.STATE,
                 'config_version',
-                'WARNING: indi-allsky version does not match config, please rerun setup.sh',
+                'WARNING: indi-allsky version does not match config, please upgrade indi-allsky',
                 expire=timedelta(hours=2),
             )
 
@@ -858,6 +894,7 @@ class IndiAllSky(object):
                 'elevation'   : 0,
                 'alt'         : 0,
                 'az'          : 0,
+                'nightSunAlt' : -6.0,
             }
             camera = self._miscDb.addCamera(camera_metadata)
             camera_id = camera.id
@@ -1332,6 +1369,12 @@ class IndiAllSky(object):
         db.session.commit()
 
 
+    def _deleteScratchFolder(self):
+        if self.scratch_base_dir.is_dir():
+            logger.warning('Clearing scratch folder')
+            shutil.rmtree(str(self.scratch_base_dir), ignore_errors=True)
+
+
     def _queueManualTasks(self):
         #logger.info('Checking for manually submitted tasks')
         manual_tasks = IndiAllSkyDbTaskQueueTable.query\
@@ -1469,10 +1512,19 @@ class IndiAllSky(object):
 
         # satellite tle data update
         if self.sat_data_tasks_time < now_time:
-            self.sat_data_tasks_time = now_time + self.smoke_tasks_offset
+            self.sat_data_tasks_time = now_time + self.sat_data_tasks_offset
 
-            logger.info('Creating satellite tle data update task')
-            self._updateSatelliteTleData()
+            # check if backoff cooldown is active
+            try:
+                sat_next_attempt = int(self._miscDb.getState('SATELLITE_TLE_NEXT_ATTEMPT_TS'))
+            except (NoResultFound, ValueError, TypeError):
+                sat_next_attempt = 0
+
+            if sat_next_attempt > now_time:
+                self.sat_data_tasks_time = sat_next_attempt
+            else:
+                logger.info('Creating satellite tle data update task')
+                self._updateSatelliteTleData()
 
 
         # check if we need to backup database

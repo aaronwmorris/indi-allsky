@@ -1,7 +1,8 @@
 [Unit]
 Description=indi-allsky gunicorn daemon
 Requires=%GUNICORN_SERVICE_NAME%.socket
-After=network.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=notify
