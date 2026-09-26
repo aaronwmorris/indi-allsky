@@ -658,6 +658,8 @@ class IndiClient(PyIndi.BaseClient):
                 ccdinfo['CCD_CFA'][i.getName()] = {
                     'text' : i.getText(),
                 }
+            if 'CFA_TYPE' not in ccdinfo['CCD_CFA']:
+                ccdinfo['CCD_CFA']['CFA_TYPE'] = {}
         except TimeOutException:
             logger.warning('CCD_CFA fetch timeout, assuming monochrome camera')
             ccdinfo['CCD_CFA'] = {
