@@ -157,6 +157,16 @@ MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
 PGRP=$(id -ng)
 
 
+if [[ -n "${VIRTUAL_ENV:-}" ]]; then
+    echo
+    echo "Please do not run $(basename "$0") with a virtualenv active"
+    echo "Run \"deactivate\" to exit your current virtualenv"
+    echo
+    echo
+    exit 1
+fi
+
+
 if which whiptail >/dev/null 2>&1; then
     ### whiptail might not be installed on first run
     WHIPTAIL_BIN=$(which whiptail)
@@ -164,7 +174,6 @@ if which whiptail >/dev/null 2>&1; then
     ### testing
     #WHIPTAIL_BIN=""
 fi
-
 
 
 if [ -n "${WHIPTAIL_BIN:-}" ]; then
@@ -195,16 +204,6 @@ EOF
     echo
     echo
     sleep 5
-fi
-
-
-if [[ -n "${VIRTUAL_ENV:-}" ]]; then
-    echo
-    echo "Please do not run $(basename "$0") with a virtualenv active"
-    echo "Run \"deactivate\" to exit your current virtualenv"
-    echo
-    echo
-    exit 1
 fi
 
 
