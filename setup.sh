@@ -80,6 +80,8 @@ WEB_EMAIL="${INDIALLSKY_WEB_EMAIL:-}"
 OPTIONAL_PYTHON_MODULES="${INDIALLSKY_OPTIONAL_PYTHON_MODULES:-false}"
 GPIO_PYTHON_MODULES="${INDIALLSKY_GPIO_PYTHON_MODULES:-false}"
 
+# The PyPi module is now usable
+PYINDI_2_2_0="pyindi-client >= 2.3.0"
 PYINDI_2_0_4="git+https://github.com/indilib/pyindi-client.git@d8ad88f#egg=pyindi-client"
 PYINDI_2_0_0="git+https://github.com/indilib/pyindi-client.git@674706f#egg=pyindi-client"
 PYINDI_1_9_9="git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client"
@@ -155,6 +157,16 @@ MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
 PGRP=$(id -ng)
 
 
+if [[ -n "${VIRTUAL_ENV:-}" ]]; then
+    echo
+    echo "Please do not run $(basename "$0") with a virtualenv active"
+    echo "Run \"deactivate\" to exit your current virtualenv"
+    echo
+    echo
+    exit 1
+fi
+
+
 if which whiptail >/dev/null 2>&1; then
     ### whiptail might not be installed on first run
     WHIPTAIL_BIN=$(which whiptail)
@@ -162,7 +174,6 @@ if which whiptail >/dev/null 2>&1; then
     ### testing
     #WHIPTAIL_BIN=""
 fi
-
 
 
 if [ -n "${WHIPTAIL_BIN:-}" ]; then
@@ -193,16 +204,6 @@ EOF
     echo
     echo
     sleep 5
-fi
-
-
-if [[ -n "${VIRTUAL_ENV:-}" ]]; then
-    echo
-    echo "Please do not run $(basename "$0") with a virtualenv active"
-    echo "Run \"deactivate\" to exit your current virtualenv"
-    echo
-    echo
-    exit 1
 fi
 
 
@@ -2361,24 +2362,59 @@ done
 
 
 
-if [ "$INDI_VERSION" == "2.0.3" ]; then
-    pip3 install "$PYINDI_2_0_0"
+if [ "$INDI_VERSION" == "2.1.9" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.8" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.7" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.6" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.5" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.4" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.3" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.2" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.1" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.0" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.9" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.8" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.7" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.6" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.5" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.4" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.3" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_0"
 elif [ "$INDI_VERSION" == "2.0.2" ]; then
-    pip3 install "$PYINDI_2_0_0"
+    PYINDI_SPEC="$PYINDI_2_0_0"
 elif [ "$INDI_VERSION" == "2.0.1" ]; then
-    pip3 install "$PYINDI_2_0_0"
+    PYINDI_SPEC="$PYINDI_2_0_0"
 elif [ "$INDI_VERSION" == "2.0.0" ]; then
-    pip3 install "$PYINDI_2_0_0"
+    PYINDI_SPEC="$PYINDI_2_0_0"
 elif [ "$INDI_VERSION" == "1.9.9" ]; then
-    pip3 install "$PYINDI_1_9_9"
+    PYINDI_SPEC="$PYINDI_1_9_9"
 elif [ "$INDI_VERSION" == "1.9.8" ]; then
-    pip3 install "$PYINDI_1_9_8"
+    PYINDI_SPEC="$PYINDI_1_9_8"
 elif [ "$INDI_VERSION" == "1.9.7" ]; then
-    pip3 install "$PYINDI_1_9_8"
+    PYINDI_SPEC="$PYINDI_1_9_8"
 else
     # default to latest release
-    pip3 install "$PYINDI_2_0_4"
+    PYINDI_SPEC="$PYINDI_2_2_0"
 fi
+
+
+pip3 install "$PYINDI_SPEC"
 
 
 ### Camera ###
