@@ -3170,6 +3170,7 @@ class ConfigView(FormView):
             'TEMP_SENSOR__FC37_ACTIVE_LOW'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('FC37_ACTIVE_LOW', True),
             'TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUDINESS_INDEX_ENABLE', False),
             'TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUDINESS_INDEX_SENSOR', ''),
+            'TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUDINESS_INDEX_USE_GROUND_SENSOR', False),
             'TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUDINESS_INDEX_GROUND_SENSOR', ''),
             'TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUDINESS_INDEX_TEMP_UNIT', 'c'),
             'TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLOUDINESS_INDEX_CLEAR_TEMP', 0.0),
@@ -4269,6 +4270,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['FC37_ACTIVE_LOW']       = bool(request.json['TEMP_SENSOR__FC37_ACTIVE_LOW'])
         self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_ENABLE']       = bool(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE'])
         self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_SENSOR']       = str(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR'])
+        self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_USE_GROUND_SENSOR'] = bool(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR'])
         self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_GROUND_SENSOR'] = str(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR'])
         self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_TEMP_UNIT']    = str(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT'])
         self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_CLEAR_TEMP']   = float(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP'])

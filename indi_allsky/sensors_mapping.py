@@ -156,7 +156,8 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
     ref_unit = temp_sensor_cfg.get('CLOUDINESS_INDEX_TEMP_UNIT', 'c')
 
     selected_ground_slot = temp_sensor_cfg.get('CLOUDINESS_INDEX_GROUND_SENSOR', '')
-    if selected_ground_slot:
+    use_ground_sensor = temp_sensor_cfg.get('CLOUDINESS_INDEX_USE_GROUND_SENSOR', False)
+    if use_ground_sensor or candidate['ambient_index'] is None:
         ground_index = constants.SENSOR_INDEX_MAP.get(str(selected_ground_slot))
     else:
         ground_index = candidate['ambient_index']

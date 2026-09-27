@@ -5289,6 +5289,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__FC37_ACTIVE_LOW     = BooleanField('Rain Sensor FC-37 - Invert logic')
     TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE      = BooleanField('Enable Cloudiness Index')
     TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR      = SelectField('Cloudiness Sensor', choices=[], validators=[CLOUDINESS_INDEX_SENSOR_validator])
+    TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR = BooleanField('Use External Ambient Sensor')
     TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR = SelectField('Ground Temperature Sensor', choices=[], validators=[CLOUDINESS_INDEX_GROUND_SENSOR_validator])
     TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT   = SelectField('Reference Reading Units', choices=TEMP_DISPLAY_choices, validators=[DataRequired(), CLOUDINESS_INDEX_TEMP_UNIT_validator])
     TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP  = FloatField('Clear-Sky Reference: Sky Reading', validators=[CLOUDINESS_INDEX_CLEAR_TEMP_validator], widget=NumberInput(step=0.1))
@@ -5716,9 +5717,10 @@ class IndiAllskyConfigForm(FlaskForm):
             if not selected_cloud_sensor and len(cloud_sensor_choices) == 1:
                 selected_cloud_sensor = cloud_sensor_choices[0][0]
 
-            if selected_cloud_sensor and not self.TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR.data and selected_cloud_sensor not in self.cloud_sensor_auto_ground_slots:
+            requires_ground_sensor = self.TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR.data or selected_cloud_sensor not in self.cloud_sensor_auto_ground_slots
+            if selected_cloud_sensor and requires_ground_sensor and not self.TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR.data:
                 self.TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR.errors.append(
-                    'Select a ground temperature sensor for this MLX sensor'
+                    'Select an external ambient sensor'
                 )
                 result = False
 

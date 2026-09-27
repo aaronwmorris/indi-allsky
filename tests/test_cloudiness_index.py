@@ -94,8 +94,20 @@ def test_mlx_without_paired_ambient_requires_a_selected_ground_sensor():
 
 def test_selected_ground_sensor_overrides_paired_mlx_ambient():
     cloudiness_index = sensors_mapping.calculate_cloudiness_index(
-        _config(CLOUDINESS_INDEX_GROUND_SENSOR='sensor_user_12'),
+        _config(
+            CLOUDINESS_INDEX_USE_GROUND_SENSOR=True,
+            CLOUDINESS_INDEX_GROUND_SENSOR='sensor_user_12',
+        ),
         _values({10: 40.0, 11: -5.0, 12: 10.0}),
+    )
+
+    assert cloudiness_index == 50.0
+
+
+def test_paired_mlx_ambient_is_used_until_external_sensor_is_enabled():
+    cloudiness_index = sensors_mapping.calculate_cloudiness_index(
+        _config(CLOUDINESS_INDEX_GROUND_SENSOR='sensor_user_12'),
+        _values({10: 10.0, 11: -5.0, 12: 40.0}),
     )
 
     assert cloudiness_index == 50.0

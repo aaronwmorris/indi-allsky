@@ -894,6 +894,7 @@ class IndiAllSkyConfigBase(object):
             "FC37_ACTIVE_LOW"        : True,
             "CLOUDINESS_INDEX_ENABLE"       : False,
             "CLOUDINESS_INDEX_SENSOR"       : "",
+            "CLOUDINESS_INDEX_USE_GROUND_SENSOR" : False,
             "CLOUDINESS_INDEX_GROUND_SENSOR" : "",
             "CLOUDINESS_INDEX_CLEAR_TEMP"   : 0.0,
             "CLOUDINESS_INDEX_CLOUDY_TEMP"  : 0.0,
