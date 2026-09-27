@@ -44,6 +44,5 @@ debian/*.substvars
 debian/indi-allsky/
 debian/wheels/
 debian/changelog
-debian/indi-allsky-web/
 *.deb
 
