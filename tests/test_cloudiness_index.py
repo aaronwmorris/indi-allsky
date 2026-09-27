@@ -13,6 +13,8 @@ def _config(**temp_sensor):
         'CLOUDINESS_INDEX_TEMP_UNIT': 'c',
         'CLOUDINESS_INDEX_CLEAR_TEMP': -20.0,
         'CLOUDINESS_INDEX_CLOUDY_TEMP': 10.0,
+        'CLOUDINESS_INDEX_CLEAR_GROUND_TEMP': 10.0,
+        'CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP': 10.0,
     }
     settings.update(temp_sensor)
     return {'TEMP_SENSOR': settings}
@@ -24,8 +26,9 @@ def test_returns_none_until_calibration_is_enabled():
     assert sensors_mapping.calculate_cloudiness_index(config, _values({10: 10.0, 11: -20.0})) is None
 
 
-def test_raw_sky_calibration_interpolates_live_sky_temperature():
-    # -5 C is halfway between the -20 C clear and 10 C cloudy references.
+def test_paired_ambient_calibration_interpolates_live_temperature_difference():
+    # A live ground-to-sky difference of 15 C is halfway between 30 C clear
+    # and 0 C cloudy reference differences.
     cloudiness_index = sensors_mapping.calculate_cloudiness_index(
         _config(),
         _values({10: 10.0, 11: -5.0}),
@@ -56,7 +59,7 @@ def test_coefficient_and_offset_tune_the_normalized_index():
     assert cloudiness_index == 35.0
 
 
-def test_mlx90640_uses_its_sky_temperature_without_an_ambient_reference():
+def test_selected_ground_sensor_is_used_when_mlx_has_no_ambient_reference():
     config = {
         'TEMP_SENSOR': {
             'A_CLASSNAME': 'blinka_temp_sensor_mlx90640_i2c',
@@ -64,10 +67,38 @@ def test_mlx90640_uses_its_sky_temperature_without_an_ambient_reference():
             'CLOUDINESS_INDEX_ENABLE': True,
             'CLOUDINESS_INDEX_CLEAR_TEMP': -20.0,
             'CLOUDINESS_INDEX_CLOUDY_TEMP': 10.0,
+            'CLOUDINESS_INDEX_CLEAR_GROUND_TEMP': 10.0,
+            'CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP': 10.0,
+            'CLOUDINESS_INDEX_GROUND_SENSOR': 'sensor_user_11',
         },
     }
 
-    assert sensors_mapping.calculate_cloudiness_index(config, _values({10: -5.0})) == 50.0
+    assert sensors_mapping.calculate_cloudiness_index(config, _values({10: -5.0, 11: 10.0})) == 50.0
+
+
+def test_mlx_without_paired_ambient_requires_a_selected_ground_sensor():
+    config = {
+        'TEMP_SENSOR': {
+            'A_CLASSNAME': 'blinka_temp_sensor_mlx90640_i2c',
+            'A_USER_VAR_SLOT': 'sensor_user_10',
+            'CLOUDINESS_INDEX_ENABLE': True,
+            'CLOUDINESS_INDEX_CLEAR_TEMP': -20.0,
+            'CLOUDINESS_INDEX_CLOUDY_TEMP': 10.0,
+            'CLOUDINESS_INDEX_CLEAR_GROUND_TEMP': 10.0,
+            'CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP': 10.0,
+        },
+    }
+
+    assert sensors_mapping.calculate_cloudiness_index(config, _values({10: -5.0})) is None
+
+
+def test_selected_ground_sensor_overrides_paired_mlx_ambient():
+    cloudiness_index = sensors_mapping.calculate_cloudiness_index(
+        _config(CLOUDINESS_INDEX_GROUND_SENSOR='sensor_user_12'),
+        _values({10: 40.0, 11: -5.0, 12: 10.0}),
+    )
+
+    assert cloudiness_index == 50.0
 
 
 def test_multiple_cloud_sensors_require_an_explicit_selection():

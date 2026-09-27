@@ -228,6 +228,8 @@ CLOUD_SENSOR_CLASSNAMES = (
     'blinka_temp_sensor_mlx90640_i2c',
 )
 
+CLOUD_AMBIENT_TEMP_LABEL = 'Temperature'
+
 
 SENSOR_INDEX_MAP = {
     'sensor_user_0'     : 0,
