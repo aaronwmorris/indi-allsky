@@ -5729,14 +5729,7 @@ class SystemInfoView(TemplateView):
     def get_context(self):
         import sys
         import platform
-        import importlib
-        import cv2
-        import dbus
-
-        #try:
-        #    import PyIndi
-        #except ImportError:
-        #    PyIndi = None
+        import importlib.metadata
 
         context = super(SystemInfoView, self).get_context()
 
@@ -5787,12 +5780,26 @@ class SystemInfoView(TemplateView):
 
         context['gunicorn_version'] = importlib.metadata.version('gunicorn')
         context['cryptography_version'] = importlib.metadata.version('cryptography')
-        context['cv2_version'] = str(getattr(cv2, '__version__', -1))
         context['ephem_version'] = importlib.metadata.version('ephem')
         context['numpy_version'] = importlib.metadata.version('numpy')
         context['astropy_version'] = importlib.metadata.version('astropy')
         context['flask_version'] = importlib.metadata.version('flask')
-        context['dbus_version'] = str(getattr(dbus, '__version__', -1))
+        context['dbus_python_version'] = importlib.metadata.version('dbus-python')
+
+
+        try:
+            context['pyindi_client_version'] = importlib.metadata.version('pyindi-client')
+        except importlib.metadata.PackageNotFoundError:
+            context['pyindi_client_version'] = 'Not installed'
+
+
+        try:
+            context['opencv_python_version'] = importlib.metadata.version('opencv-python-headless')
+        except importlib.metadata.PackageNotFoundError:
+            try:
+                context['opencv_python_version'] = importlib.metadata.version('opencv-python')
+            except importlib.metadata.PackageNotFoundError:
+                context['opencv_python'] = 'Not installed'
 
 
         try:
@@ -5805,15 +5812,6 @@ class SystemInfoView(TemplateView):
         except importlib.metadata.PackageNotFoundError:
             context['pahomqtt_version'] = 'Not installed'
 
-        ### PyIndi no longer reports a version
-        #if PyIndi:
-        #    context['pyindi_version'] = '.'.join((
-        #        str(getattr(PyIndi, 'INDI_VERSION_MAJOR', -1)),
-        #        str(getattr(PyIndi, 'INDI_VERSION_MINOR', -1)),
-        #        str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
-        #    ))
-        #else:
-        #    context['pyindi_version'] = 'Not installed'
 
         try:
             context['skyfield_version'] = importlib.metadata.version('skyfield')
