@@ -5729,32 +5729,14 @@ class SystemInfoView(TemplateView):
     def get_context(self):
         import sys
         import platform
-        import astropy
-        import flask
-        import numpy
+        import importlib
         import cv2
-        import gunicorn
-        import cryptography
-
-        try:
-            import pycurl
-        except ImportError:
-            pycurl = None
-
-        try:
-            import paho.mqtt as paho_mqtt
-        except ImportError:
-            paho_mqtt = None
+        import dbus
 
         #try:
         #    import PyIndi
         #except ImportError:
         #    PyIndi = None
-
-        try:
-            import skyfield
-        except ImportError:
-            skyfield = None
 
         context = super(SystemInfoView, self).get_context()
 
@@ -5803,24 +5785,24 @@ class SystemInfoView(TemplateView):
         else:
             context['cpu_bits'] = 32
 
-        context['gunicorn_version'] = str(getattr(gunicorn, '__version__', -1))
-        context['cryptography_version'] = str(getattr(cryptography, '__version__', -1))
+        context['gunicorn_version'] = importlib.metadata.version('gunicorn')
+        context['cryptography_version'] = importlib.metadata.version('cryptography')
         context['cv2_version'] = str(getattr(cv2, '__version__', -1))
-        context['ephem_version'] = str(getattr(ephem, '__version__', -1))
-        context['numpy_version'] = str(getattr(numpy, '__version__', -1))
-        context['astropy_version'] = str(getattr(astropy, '__version__', -1))
-        context['flask_version'] = str(getattr(flask, '__version__', -1))
+        context['ephem_version'] = importlib.metadata.version('ephem')
+        context['numpy_version'] = importlib.metadata.version('numpy')
+        context['astropy_version'] = importlib.metadata.version('astropy')
+        context['flask_version'] = importlib.metadata.version('flask')
         context['dbus_version'] = str(getattr(dbus, '__version__', -1))
 
 
-        if pycurl:
-            context['pycurl_version'] = str(getattr(pycurl, 'version', -1))
-        else:
+        try:
+            context['pycurl_version'] = importlib.metadata.version('pycurl')
+        except importlib.metadata.PackageNotFoundError:
             context['pycurl_version'] = 'Not installed'
 
-        if paho_mqtt:
-            context['pahomqtt_version'] = str(getattr(paho_mqtt, '__version__', -1))
-        else:
+        try:
+            context['pahomqtt_version'] = importlib.metadata.version('paho_mqtt')
+        except importlib.metadata.PackageNotFoundError:
             context['pahomqtt_version'] = 'Not installed'
 
         ### PyIndi no longer reports a version
@@ -5833,9 +5815,9 @@ class SystemInfoView(TemplateView):
         #else:
         #    context['pyindi_version'] = 'Not installed'
 
-        if skyfield:
-            context['skyfield_version'] = str(getattr(skyfield, '__version__', -1))
-        else:
+        try:
+            context['skyfield_version'] = importlib.metadata.version('skyfield')
+        except importlib.metadata.PackageNotFoundError:
             context['skyfield_version'] = 'Not installed'
 
 
