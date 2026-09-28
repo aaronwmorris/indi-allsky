@@ -80,6 +80,8 @@ WEB_EMAIL="${INDIALLSKY_WEB_EMAIL:-}"
 OPTIONAL_PYTHON_MODULES="${INDIALLSKY_OPTIONAL_PYTHON_MODULES:-false}"
 GPIO_PYTHON_MODULES="${INDIALLSKY_GPIO_PYTHON_MODULES:-false}"
 
+# The PyPi module is now usable
+PYINDI_2_2_0="pyindi-client >= 2.3.0"
 PYINDI_2_0_4="git+https://github.com/indilib/pyindi-client.git@d8ad88f#egg=pyindi-client"
 PYINDI_2_0_0="git+https://github.com/indilib/pyindi-client.git@674706f#egg=pyindi-client"
 PYINDI_1_9_9="git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client"
@@ -155,6 +157,16 @@ MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
 PGRP=$(id -ng)
 
 
+if [[ -n "${VIRTUAL_ENV:-}" ]]; then
+    echo
+    echo "Please do not run $(basename "$0") with a virtualenv active"
+    echo "Run \"deactivate\" to exit your current virtualenv"
+    echo
+    echo
+    exit 1
+fi
+
+
 if which whiptail >/dev/null 2>&1; then
     ### whiptail might not be installed on first run
     WHIPTAIL_BIN=$(which whiptail)
@@ -164,11 +176,17 @@ if which whiptail >/dev/null 2>&1; then
 fi
 
 
-cat << 'EOF'
+if [ -n "${WHIPTAIL_BIN:-}" ]; then
+    "$WHIPTAIL_BIN" \
+        --title "NEW METHOD OF INSTALLATION" \
+        --msgbox "There is now an official APT repository:\n\n  https://apt.indi-allsky.org\n\nInstallation guide:\n  https://github.com/aaronwmorris/indi-allsky/wiki/Getting-Started\n\nMigration guide:\n  https://github.com/aaronwmorris/indi-allsky/wiki/Setup-to-Deb-Migration\n\n\nIt is *NOT* a requirement to migrate to the apt repository.  You may continue using the setup.sh to manage your installation." 0 0
+else
+    cat <<EOF
 ####################################################################################
-###                    DEPRECATION NOTICE: SETUP.SH                              ###
+########################   NEW METHOD OF INSTALLATION   ############################
+####################################################################################
 ###                                                                              ###
-###  setup.sh is deprecated.  Please use the official APT repository:            ###
+###  There is now an official APT repository:                                    ###
 ###                                                                              ###
 ###    https://apt.indi-allsky.org                                               ###
 ###                                                                              ###
@@ -177,21 +195,15 @@ cat << 'EOF'
 ###  Migration guide:                                                            ###
 ###    https://github.com/aaronwmorris/indi-allsky/wiki/Setup-to-Deb-Migration   ###
 ###                                                                              ###
+###                                                                              ###
+###  It is *NOT* a requirement to migrate to the apt repository.  You may        ###
+###  continue using the setup.sh to manage your installation.                    ###
+###                                                                              ###
 ####################################################################################
 EOF
-echo
-echo "Welcome to the legacy indi-allsky setup script."
-echo "Setup proceeding in 5 seconds... (Press Ctrl+C to cancel and use .deb instead)"
-sleep 5
-
-
-if [[ -n "${VIRTUAL_ENV:-}" ]]; then
-    echo
-    echo "Please do not run $(basename "$0") with a virtualenv active"
-    echo "Run \"deactivate\" to exit your current virtualenv"
     echo
     echo
-    exit 1
+    sleep 5
 fi
 
 
@@ -2350,24 +2362,59 @@ done
 
 
 
-if [ "$INDI_VERSION" == "2.0.3" ]; then
-    pip3 install "$PYINDI_2_0_0"
+if [ "$INDI_VERSION" == "2.1.9" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.8" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.7" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.6" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.5" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.4" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.3" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.2" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.1" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.0" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.9" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.8" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.7" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.6" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.5" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.4" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.3" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_0"
 elif [ "$INDI_VERSION" == "2.0.2" ]; then
-    pip3 install "$PYINDI_2_0_0"
+    PYINDI_SPEC="$PYINDI_2_0_0"
 elif [ "$INDI_VERSION" == "2.0.1" ]; then
-    pip3 install "$PYINDI_2_0_0"
+    PYINDI_SPEC="$PYINDI_2_0_0"
 elif [ "$INDI_VERSION" == "2.0.0" ]; then
-    pip3 install "$PYINDI_2_0_0"
+    PYINDI_SPEC="$PYINDI_2_0_0"
 elif [ "$INDI_VERSION" == "1.9.9" ]; then
-    pip3 install "$PYINDI_1_9_9"
+    PYINDI_SPEC="$PYINDI_1_9_9"
 elif [ "$INDI_VERSION" == "1.9.8" ]; then
-    pip3 install "$PYINDI_1_9_8"
+    PYINDI_SPEC="$PYINDI_1_9_8"
 elif [ "$INDI_VERSION" == "1.9.7" ]; then
-    pip3 install "$PYINDI_1_9_8"
+    PYINDI_SPEC="$PYINDI_1_9_8"
 else
     # default to latest release
-    pip3 install "$PYINDI_2_0_4"
+    PYINDI_SPEC="$PYINDI_2_2_0"
 fi
+
+
+pip3 install "$PYINDI_SPEC"
 
 
 ### Camera ###
@@ -2489,15 +2536,23 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
      -e "s|%INDI_DRIVER_PATH%|$INDI_DRIVER_PATH|g" \
      -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
      -e "s|%INDISERVER_USER%|$USER|g" \
-     -e "s|%INDI_PORT%|$INDI_PORT|g" \
-     -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|g" \
-     -e "s|%INDI_GPS_DRIVER%|$GPS_DRIVER|g" \
      "${ALLSKY_DIRECTORY}/service/indiserver.service" > "$TMP1"
 
 
     cp -f "$TMP1" "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.service"
     chmod 644 "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.service"
     [[ -f "$TMP1" ]] && rm -f "$TMP1"
+
+
+    INDISERVER_ENV="/etc/indi-allsky/indiserver.env"
+    sudo tee "$INDISERVER_ENV" <<EOF
+INDI_PORT="$INDI_PORT"
+CCD_DRIVER="$CCD_DRIVER"
+GPS_DRIVER="$GPS_DRIVER"
+EOF
+    sudo chown "$USER":"$PGRP" "$INDISERVER_ENV"
+    sudo chmod 644 "$INDISERVER_ENV"
+
 else
     echo
     echo

@@ -7,6 +7,7 @@ Wants=network-online.target
 Type=simple
 User=indi-allsky
 Group=indi-allsky
+WorkingDirectory=/var/lib/indi-allsky/working/indiserver
 Environment="PATH=/usr/local/bin:/usr/bin:/bin"
 EnvironmentFile=-/etc/indi-allsky/indiserver.env
 ExecStart=/usr/bin/env indiserver -v -p $INDI_PORT indi_simulator_telescope $CCD_DRIVER $GPS_DRIVER

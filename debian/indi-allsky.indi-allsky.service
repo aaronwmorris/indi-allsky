@@ -7,8 +7,9 @@ Wants=indiserver.service
 Type=simple
 User=indi-allsky
 Group=indi-allsky
-WorkingDirectory=/var/lib/indi-allsky
+WorkingDirectory=/var/lib/indi-allsky/working/indi-allsky
 Environment="PYTHONPATH=/usr/share/indi-allsky"
+EnvironmentFile=-/etc/indi-allsky/indi-allsky.env
 ExecStart=/var/lib/indi-allsky/venv/bin/python3 /usr/share/indi-allsky/allsky.py --log syslog run
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStop=/bin/kill -TERM $MAINPID

@@ -5,4 +5,4 @@ __version__ = "indi_v2026.09.01"
 ### Increment the __config_level__ whenever the user needs new
 ### mandatory config variables, perform a database migration,
 ### python module install/upgrade, etc
-__config_level__ = "20260826.0"
+__config_level__ = "20260922.0"

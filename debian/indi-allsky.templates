@@ -206,6 +206,14 @@ Description: Web-only instance
  .
  Note: This will disable the indi-allsky capture and indiserver services
 
+Template: indi-allsky/indiserver_only_instance
+Type: boolean
+Default: false
+Description: indiserver-only instance
+ Will this install be an indiserver-only instance?
+ .
+ Note: This will disable the indi-allsky capture process
+
 Template: indi-allsky/auto_start_capture
 Type: boolean
 Default: true

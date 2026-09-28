@@ -270,14 +270,11 @@ The web-only install is intended for remote configuration to use the [SyncAPI](h
    EOF
    ```
 
-3. Install `indi-allsky-web`:
+3. Install `indi-allsky`:
    ```bash
    sudo apt update
-   sudo apt install -y indi-allsky-web
+   sudo apt install -y indi-allsky
    ```
-
-> [!TIP]
-> `indi-allsky-web` provides the Flask dashboard, Gunicorn application server, and web server configuration for remote sync portals without requiring local camera hardware or INDI drivers.
 
 ### Option 2: Manual Source Installation (`web_only_setup.sh`)
 

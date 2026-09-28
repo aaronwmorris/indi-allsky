@@ -932,15 +932,23 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
      -e "s|%INDI_DRIVER_PATH%|$INDI_DRIVER_PATH|g" \
      -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
      -e "s|%INDISERVER_USER%|$USER|g" \
-     -e "s|%INDI_PORT%|$INDI_PORT|g" \
-     -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|g" \
-     -e "s|%INDI_GPS_DRIVER%|$GPS_DRIVER|g" \
      "${ALLSKY_DIRECTORY}/service/indiserver.service" > "$TMP1"
 
 
     cp -f "$TMP1" "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.service"
     chmod 644 "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.service"
     [[ -f "$TMP1" ]] && rm -f "$TMP1"
+
+
+    INDISERVER_ENV="/etc/indi-allsky/indiserver.env"
+    sudo tee "$INDISERVER_ENV" <<EOF
+INDI_PORT="$INDI_PORT"
+CCD_DRIVER="$CCD_DRIVER"
+GPS_DRIVER="$GPS_DRIVER"
+EOF
+    sudo chown indi-allsky "$INDISERVER_ENV"
+    sudo chown "$USER":"$PGRP" "$INDISERVER_ENV"
+    sudo chmod 644 "$INDISERVER_ENV"
 
 else
     echo

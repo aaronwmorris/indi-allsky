@@ -2,6 +2,10 @@ etc/indi-allsky
 var/lib/indi-allsky
 var/lib/indi-allsky/backup
 var/lib/indi-allsky/migrations
+var/lib/indi-allsky/working
+var/lib/indi-allsky/working/indi-allsky
+var/lib/indi-allsky/working/indiserver
+var/lib/indi-allsky/working/gunicorn
 var/log/indi-allsky
 var/www/html/allsky
 var/www/html/allsky/images

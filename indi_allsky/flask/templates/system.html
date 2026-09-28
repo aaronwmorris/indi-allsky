@@ -392,24 +392,6 @@ var camera_id = {{ camera_id }};
                 </h4>
 
                 <div class="tw:flex tw:flex-col tw:gap-4">
-                    <!-- indiserver -->
-                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
-                        <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
-                            <span class="tw:text-sm tw:font-bold tw:text-base-content">indiserver</span>
-                            <span class="tw:text-[0.5625rem] tw:font-mono tw:opacity-50">UNIT: indiserver.service</span>
-                        </div>
-                        <div class="lg:tw:col-span-3 tw:flex tw:gap-2 tw:items-center">
-                            <span class="tw:badge {% if indiserver_service_activestate == 'active' %}tw:badge-success{% elif indiserver_service_activestate in ['failed', 'inactive'] %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.625rem] tw:rounded-[var(--radius-box)]">{{indiserver_service_activestate}}</span>
-                            <span class="tw:badge {% if indiserver_service_unitstate == 'enabled' %}tw:badge-success tw:badge-outline{% elif indiserver_service_unitstate == 'disabled' %}tw:badge-neutral tw:badge-outline{% elif indiserver_service_unitstate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.5rem] tw:h-4 tw:px-1.5 tw:rounded-[var(--radius-box)]">{{indiserver_service_unitstate}}</span>
-                        </div>
-                        <div class="lg:tw:col-span-6 tw:flex tw:gap-2">
-                            <button class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_service_stop">Stop</button>
-                            <button class="tw:btn tw:btn-primary tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_service_start">Start</button>
-                            <button class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_service_disable">Disable</button>
-                            <button class="tw:btn tw:btn-info tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_service_enable">Enable</button>
-                        </div>
-                    </div>
-
                     <!-- indi-allsky -->
                     <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
                         <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
@@ -426,6 +408,24 @@ var camera_id = {{ camera_id }};
                             <button class="tw:btn tw:btn-primary tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indi_allsky_service_start">Start</button>
                             <button class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indi_allsky_service_disable">Disable</button>
                             <button class="tw:btn tw:btn-info tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indi_allsky_service_enable">Enable</button>
+                        </div>
+                    </div>
+
+                    <!-- indiserver -->
+                    <div class="tw:grid tw:grid-cols-1 lg:tw:grid-cols-12 tw:gap-4 tw:items-center tw:bg-base-300/40 tw:border tw:border-base-content/10 tw:p-4 tw:rounded-[var(--radius-box)]">
+                        <div class="lg:tw:col-span-3 tw:flex tw:flex-col">
+                            <span class="tw:text-sm tw:font-bold tw:text-base-content">indiserver</span>
+                            <span class="tw:text-[0.5625rem] tw:font-mono tw:opacity-50">UNIT: indiserver.service</span>
+                        </div>
+                        <div class="lg:tw:col-span-3 tw:flex tw:gap-2 tw:items-center">
+                            <span class="tw:badge {% if indiserver_service_activestate == 'active' %}tw:badge-success{% elif indiserver_service_activestate in ['failed', 'inactive'] %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.625rem] tw:rounded-[var(--radius-box)]">{{indiserver_service_activestate}}</span>
+                            <span class="tw:badge {% if indiserver_service_unitstate == 'enabled' %}tw:badge-success tw:badge-outline{% elif indiserver_service_unitstate == 'disabled' %}tw:badge-neutral tw:badge-outline{% elif indiserver_service_unitstate == 'failed' %}tw:badge-error{% else %}tw:badge-ghost{% endif %} tw:font-mono tw:text-[0.5rem] tw:h-4 tw:px-1.5 tw:rounded-[var(--radius-box)]">{{indiserver_service_unitstate}}</span>
+                        </div>
+                        <div class="lg:tw:col-span-6 tw:flex tw:gap-2">
+                            <button class="tw:btn tw:btn-warning tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_service_stop">Stop</button>
+                            <button class="tw:btn tw:btn-primary tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_service_start">Start</button>
+                            <button class="tw:btn tw:btn-neutral tw:bg-base-300 tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_service_disable">Disable</button>
+                            <button class="tw:btn tw:btn-info tw:btn-sm tw:flex-1 tw:rounded-[var(--radius-box)]" id="button_indiserver_service_enable">Enable</button>
                         </div>
                     </div>
 

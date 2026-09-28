@@ -5807,7 +5807,7 @@ class IndiAllskyConfigForm(FlaskForm):
                         result = False
 
                 except NotImplementedError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
-                    self.FOCUSER__CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    self.FOCUSER__CLASSNAME.errors.append('System not supported by Adafruit Blinka module')
                     result = False
 
                 except ImportError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -5819,6 +5819,10 @@ class IndiAllskyConfigForm(FlaskForm):
                     self.FOCUSER__GPIO_PIN_2.errors.append('GPIO permissions need to be fixed')
                     self.FOCUSER__GPIO_PIN_3.errors.append('GPIO permissions need to be fixed')
                     self.FOCUSER__GPIO_PIN_4.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.FOCUSER__CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
                 except AttributeError as e:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -5865,7 +5869,7 @@ class IndiAllskyConfigForm(FlaskForm):
                         result = False
 
                 except NotImplementedError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
-                    self.FOCUSER__CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    self.DEW_HEATER__CLASSNAME.errors.append('System not supported by Adafruit Blinka module')
                     result = False
 
                 except ImportError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -5874,6 +5878,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.DEW_HEATER__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.DEW_HEATER__CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
                 except AttributeError as e:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -5969,6 +5977,9 @@ class IndiAllskyConfigForm(FlaskForm):
                 except PermissionError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.DEW_HEATER__PIN_1.errors.append('GPIO permissions need to be fixed')
                     result = False
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.DEW_HEATER__CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
+                    result = False
 
 
                 try:
@@ -5987,7 +5998,7 @@ class IndiAllskyConfigForm(FlaskForm):
                         self.DEW_HEATER__PIN_1.errors.append('PIN must be defined')
                         result = False
 
-                except AttributeError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
+                except (AttributeError, RuntimeError, ValueError, FileNotFoundError, OSError):  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.DEW_HEATER__CLASSNAME.errors.append('I2C not available for your system')
                     result = False
 
@@ -6025,7 +6036,7 @@ class IndiAllskyConfigForm(FlaskForm):
                         result = False
 
                 except NotImplementedError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
-                    self.FOCUSER__CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    self.FAN__CLASSNAME.errors.append('System not supported by Adafruit Blinka module')
                     result = False
 
                 except ImportError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6034,6 +6045,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.FAN__CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
                 except AttributeError as e:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6130,6 +6145,9 @@ class IndiAllskyConfigForm(FlaskForm):
                 except PermissionError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
                     result = False
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.FAN__CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
+                    result = False
 
 
                 try:
@@ -6148,7 +6166,7 @@ class IndiAllskyConfigForm(FlaskForm):
                         self.FAN__PIN_1.errors.append('PIN must be defined')
                         result = False
 
-                except AttributeError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
+                except (AttributeError, RuntimeError, ValueError, FileNotFoundError, OSError):  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.FAN__CLASSNAME.errors.append('I2C not available for your system')
                     result = False
 
@@ -6185,7 +6203,7 @@ class IndiAllskyConfigForm(FlaskForm):
                         result = False
 
                 except NotImplementedError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
-                    self.FOCUSER__CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    self.GENERIC_GPIO__A_CLASSNAME.errors.append('System not supported by Adafruit Blinka module')
                     result = False
 
                 except ImportError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6194,6 +6212,14 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.GENERIC_GPIO__A_PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.GENERIC_GPIO__A_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
+                    result = False
+
+                except AttributeError as e:
+                    self.GENERIC_GPIO__A_CLASSNAME.errors.append('AttributeError: {0:s}'.format(str(e)))
                     result = False
 
             elif self.GENERIC_GPIO__A_CLASSNAME.data == 'gpio_dockerpi_4channel_relay':  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6205,6 +6231,9 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
                 except PermissionError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.GENERIC_GPIO__A_PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.GENERIC_GPIO__A_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
 
@@ -6224,7 +6253,7 @@ class IndiAllskyConfigForm(FlaskForm):
                         self.GENERIC_GPIO__A_PIN_1.errors.append('PIN must be defined')
                         result = False
 
-                except AttributeError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
+                except (AttributeError, RuntimeError, ValueError, FileNotFoundError, OSError):  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.GENERIC_GPIO__A_CLASSNAME.errors.append('I2C not available for your system')
                     result = False
 
@@ -6324,7 +6353,7 @@ class IndiAllskyConfigForm(FlaskForm):
                         pass
 
                 except NotImplementedError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
-                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('System not supported by Adafruit Blinka module')
                     result = False
 
                 except ImportError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6333,6 +6362,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.TEMP_SENSOR__A_PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
                 except AttributeError as e:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6365,6 +6398,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except ImportError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.TEMP_SENSOR__A_CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
                 except AttributeError as e:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6416,7 +6453,7 @@ class IndiAllskyConfigForm(FlaskForm):
                         pass
 
                 except NotImplementedError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
-                    self.TEMP_SENSOR__B_CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    self.TEMP_SENSOR__B_CLASSNAME.errors.append('System not supported by Adafruit Blinka module')
                     result = False
 
                 except ImportError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6425,6 +6462,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.TEMP_SENSOR__B_PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.TEMP_SENSOR__B_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
                 except AttributeError as e:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6457,6 +6498,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except ImportError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.TEMP_SENSOR__B_CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.TEMP_SENSOR__B_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
                 except AttributeError as e:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6509,7 +6554,7 @@ class IndiAllskyConfigForm(FlaskForm):
                         pass
 
                 except NotImplementedError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
-                    self.TEMP_SENSOR__C_CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    self.TEMP_SENSOR__C_CLASSNAME.errors.append('System not supported by Adafruit Blinka module')
                     result = False
 
                 except ImportError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6518,6 +6563,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.TEMP_SENSOR__C_PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.TEMP_SENSOR__C_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
                 except AttributeError as e:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6550,6 +6599,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except ImportError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.TEMP_SENSOR__C_CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.TEMP_SENSOR__C_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
                 except AttributeError as e:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6602,7 +6655,7 @@ class IndiAllskyConfigForm(FlaskForm):
                         pass
 
                 except NotImplementedError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
-                    self.TEMP_SENSOR__D_CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    self.TEMP_SENSOR__D_CLASSNAME.errors.append('System not supported by Adafruit Blinka module')
                     result = False
 
                 except ImportError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6611,6 +6664,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.TEMP_SENSOR__D_PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.TEMP_SENSOR__D_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
                 except AttributeError as e:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6643,6 +6700,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except ImportError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.TEMP_SENSOR__D_CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.TEMP_SENSOR__D_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
                 except AttributeError as e:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6695,7 +6756,7 @@ class IndiAllskyConfigForm(FlaskForm):
                         pass
 
                 except NotImplementedError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
-                    self.TEMP_SENSOR__E_CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    self.TEMP_SENSOR__E_CLASSNAME.errors.append('System not supported by Adafruit Blinka module')
                     result = False
 
                 except ImportError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6704,6 +6765,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.TEMP_SENSOR__E_PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.TEMP_SENSOR__E_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
                 except AttributeError as e:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6736,6 +6801,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except ImportError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.TEMP_SENSOR__E_CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.TEMP_SENSOR__E_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
                 except AttributeError as e:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6788,7 +6857,7 @@ class IndiAllskyConfigForm(FlaskForm):
                         pass
 
                 except NotImplementedError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
-                    self.TEMP_SENSOR__F_CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    self.TEMP_SENSOR__F_CLASSNAME.errors.append('System not supported by Adafruit Blinka module')
                     result = False
 
                 except ImportError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6797,6 +6866,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.TEMP_SENSOR__F_PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.TEMP_SENSOR__F_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
                 except AttributeError as e:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
@@ -6829,6 +6902,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except ImportError:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
                     self.TEMP_SENSOR__F_CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.TEMP_SENSOR__F_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
                 except AttributeError as e:  # pragma: no cover  # Requires physical GPIO/I2C hardware unavailable in CI
