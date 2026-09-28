@@ -65,3 +65,4 @@ pytz
 mysql-connector-python
 PyWavelets >= 1.4.0
 systemd-python
+pkgconfig
