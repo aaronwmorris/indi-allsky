@@ -5791,9 +5791,10 @@ class SystemInfoView(TemplateView):
             import pkgconfig
             context['libindi_version'] = pkgconfig.modversion('libindi')
         except ImportError:
+            # separate exception handling
             context['libindi_version'] = 'Info not available'
         except pkgconfig.pkgconfig.PackageNotFoundError:
-            context['libindi_version'] = 'Not found'
+            context['libindi_version'] = 'Info not available'
 
 
         try:

@@ -75,6 +75,19 @@ class IndiProperties(PyIndi.BaseClient):
     def __init__(self):
         super(IndiProperties, self).__init__()
 
+
+        try:
+            import pkgconfig
+            libindi_version = pkgconfig.modversion('libindi')
+        except ImportError:
+            # separate exception handling
+            libindi_version = 'Info not available'
+        except pkgconfig.pkgconfig.PackageNotFoundError:
+            libindi_version = 'Info not available'
+
+        logger.info('INDI version: %s', libindi_version)
+
+
         pyindi_client_version = importlib.metadata.version('pyindi-client')
         logger.info('PyIndi version: %s', pyindi_client_version)
 
