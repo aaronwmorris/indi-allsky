@@ -1049,7 +1049,7 @@ def test_ajax_indiserver_change_view(flask_app, config_db, tmp_path):
     service_dir = Path(__file__).parent.parent.parent / 'service'
     service_dir.mkdir(parents=True, exist_ok=True)
     service_file = service_dir / 'indiserver.service'
-    service_file.write_text('%ALLSKY_DIRECTORY%\n%INDI_DRIVER_PATH%\n%INDI_PORT%\n%INDI_CCD_DRIVER%\n%INDI_GPS_DRIVER%\n%INDISERVER_USER%')
+    service_file.write_text('%ALLSKY_DIRECTORY%\n%INDI_DRIVER_PATH%\n%INDISERVER_USER%')
 
     payload = {
         'CAMERA_SERVER_SELECT': '',
@@ -1063,18 +1063,37 @@ def test_ajax_indiserver_change_view(flask_app, config_db, tmp_path):
 
     user_config_dir = tmp_path / '.config' / 'systemd' / 'user'
     user_config_dir.mkdir(parents=True, exist_ok=True)
+    target_service_file = user_config_dir / 'indiserver.service'
+    dummy_env = tmp_path / 'indiserver.env'
+
+    orig_open = open
+
+    def mock_io_open(file, *args, **kwargs):
+        if str(file) == '/etc/indi-allsky/indiserver.env':
+            return orig_open(dummy_env, *args, **kwargs)
+        if 'service' in str(file) and 'indiserver.service' in str(file):
+            if 'w' in str(args) or kwargs.get('mode', '').startswith('w'):
+                return orig_open(target_service_file, *args, **kwargs)
+            return orig_open(service_file, *args, **kwargs)
+        return orig_open(file, *args, **kwargs)
 
     try:
         with patch.dict(flask_app.config, {'LOGIN_DISABLED': True, 'INDISERVER_SERVICE_NAME': 'indiserver.service'}):
-            with patch('pathlib.Path.exists', side_effect=lambda: True):
-                with patch('shutil.which', return_value=str(indiserver_bin)):
-                    with patch('os.getlogin', return_value='testuser'):
-                        with patch('os.environ.get', return_value=str(tmp_path)):
-                            with patch('indi_allsky.flask.views.AjaxIndiServerChangeView.reloadSystemdUnits', return_value=None):
-                                with patch('indi_allsky.flask.views.AjaxIndiServerChangeView.restartSystemdUnit', return_value=None):
-                                    res = client.post('/indi-allsky/ajax/indiserver', json=payload)
-                                    assert res.status_code == 200
-                                    assert 'Reconfigure completed' in res.get_json()['success-message']
+            with patch('pathlib.Path.exists', return_value=True), \
+                 patch('pathlib.Path.chmod', return_value=None), \
+                 patch('io.open', side_effect=mock_io_open), \
+                 patch('shutil.which', return_value=str(indiserver_bin)), \
+                 patch('os.getlogin', return_value='testuser'), \
+                 patch('os.environ.get', return_value=str(tmp_path)), \
+                 patch('indi_allsky.flask.views.AjaxIndiServerChangeView.reloadSystemdUnits', return_value=None), \
+                 patch('indi_allsky.flask.views.AjaxIndiServerChangeView.restartSystemdUnit', return_value=None):
+                res = client.post('/indi-allsky/ajax/indiserver', json=payload)
+                assert res.status_code == 200
+                assert 'Reconfigure completed' in res.get_json()['success-message']
+                assert dummy_env.exists()
+                env_content = dummy_env.read_text()
+                assert 'CCD_DRIVER=' in env_content
+                assert 'INDI_PORT=7624' in env_content
     finally:
         if service_file.exists():
             service_file.unlink()

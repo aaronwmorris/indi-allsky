@@ -36,42 +36,70 @@ def test_ajax_indiserver_change_paths_and_execution(flask_app, system_db, tmp_pa
     fake_home = tmp_path / "home"
     systemd_user_dir = fake_home / ".config" / "systemd" / "user"
     systemd_user_dir.mkdir(parents=True, exist_ok=True)
+    target_service_file = systemd_user_dir / "indiserver.service"
+    dummy_env = tmp_path / "indiserver.env"
 
-    with patch.dict(flask_app.config, {"LOGIN_DISABLED": True, "INDISERVER_SERVICE_NAME": "indiserver.service"}):
-        with patch.dict(os.environ, {"HOME": str(fake_home)}):
-            with patch("os.getlogin", return_value="testuser"):
-                # 1. Test indiserver not found exception
-                with patch("shutil.which", return_value=None):
-                    with patch("pathlib.Path.exists", lambda self: False):
-                        with pytest.raises(Exception, match="indiserver not found"):
-                            with flask_app.test_request_context(
-                                "/indi-allsky/ajax/indiserver",
-                                json={
-                                    "CAMERA_SERVER_SELECT": "",
-                                    "GPS_SERVER_SELECT": "",
-                                    "RESTART_INDISERVER": True,
-                                },
-                            ):
-                                v = AjaxIndiServerChangeView()
-                                v.dispatch_request()
+    service_dir = Path(__file__).parent.parent.parent / "service"
+    service_dir.mkdir(parents=True, exist_ok=True)
+    service_file = service_dir / "indiserver.service"
+    service_file.write_text("%ALLSKY_DIRECTORY%\n%INDI_DRIVER_PATH%\n%INDISERVER_USER%")
 
-                # 2. Test successful indiserver change with restart
-                with patch("shutil.which", return_value="/usr/bin/indiserver"):
-                    with patch("pathlib.Path.exists", lambda self: True if "service" in str(self) or str(self) == "/usr/bin/indiserver" else False):
-                        with patch.object(AjaxIndiServerChangeView, "reloadSystemdUnits") as mock_reload:
-                            with patch.object(AjaxIndiServerChangeView, "restartSystemdUnit") as mock_restart:
-                                res = client.post(
+    orig_open = open
+
+    def mock_io_open(file, *args, **kwargs):
+        if str(file) == "/etc/indi-allsky/indiserver.env":
+            return orig_open(dummy_env, *args, **kwargs)
+        if "service" in str(file) and "indiserver.service" in str(file):
+            if "w" in str(args) or kwargs.get("mode", "").startswith("w"):
+                return orig_open(target_service_file, *args, **kwargs)
+            return orig_open(service_file, *args, **kwargs)
+        return orig_open(file, *args, **kwargs)
+
+    try:
+        with patch.dict(flask_app.config, {"LOGIN_DISABLED": True, "INDISERVER_SERVICE_NAME": "indiserver.service"}):
+            with patch.dict(os.environ, {"HOME": str(fake_home)}):
+                with patch("os.getlogin", return_value="testuser"):
+                    # 1. Test indiserver not found exception
+                    with patch("shutil.which", return_value=None):
+                        with patch("pathlib.Path.exists", lambda self: False):
+                            with pytest.raises(Exception, match="indiserver not found"):
+                                with flask_app.test_request_context(
                                     "/indi-allsky/ajax/indiserver",
                                     json={
                                         "CAMERA_SERVER_SELECT": "",
                                         "GPS_SERVER_SELECT": "",
                                         "RESTART_INDISERVER": True,
                                     },
-                                )
-                                assert res.status_code == 200
-                                assert "Restart complete" in res.get_json()["success-message"]
-                                mock_reload.assert_called_once()
-                                mock_restart.assert_called_once_with("indiserver.service")
+                                ):
+                                    v = AjaxIndiServerChangeView()
+                                    v.dispatch_request()
+
+                    # 2. Test successful indiserver change with restart
+                    with patch("shutil.which", return_value="/usr/bin/indiserver"):
+                        with patch("pathlib.Path.exists", return_value=True):
+                            with patch("io.open", side_effect=mock_io_open):
+                                with patch.object(Path, "chmod", return_value=None):
+                                    with patch.object(AjaxIndiServerChangeView, "reloadSystemdUnits") as mock_reload:
+                                        with patch.object(AjaxIndiServerChangeView, "restartSystemdUnit") as mock_restart:
+                                            res = client.post(
+                                                "/indi-allsky/ajax/indiserver",
+                                                json={
+                                                    "CAMERA_SERVER_SELECT": "",
+                                                    "GPS_SERVER_SELECT": "",
+                                                    "RESTART_INDISERVER": True,
+                                                },
+                                            )
+                                            assert res.status_code == 200
+                                            assert "Restart complete" in res.get_json()["success-message"]
+                                            mock_reload.assert_called_once()
+                                            mock_restart.assert_called_once_with("indiserver.service")
+                                            assert dummy_env.exists()
+                                            env_content = dummy_env.read_text()
+                                            assert "CCD_DRIVER=" in env_content
+                                            assert "INDI_PORT=7624" in env_content
+    finally:
+        if service_file.exists():
+            service_file.unlink()
 
 
 def test_reload_systemd_units_dbus_exceptions(flask_app, system_db):
