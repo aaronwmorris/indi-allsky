@@ -5788,6 +5788,15 @@ class SystemInfoView(TemplateView):
 
 
         try:
+            import pkgconfig
+            context['libindi_version'] = pkgconfig.modversion('libindi')
+        except ImportError:
+            context['libindi_version'] = 'Info not available'
+        except pkgconfig.pkgconfig.PackageNotFoundError:
+            context['libindi_version'] = 'Not found'
+
+
+        try:
             context['pyindi_client_version'] = importlib.metadata.version('pyindi-client')
         except importlib.metadata.PackageNotFoundError:
             context['pyindi_client_version'] = 'Not installed'
