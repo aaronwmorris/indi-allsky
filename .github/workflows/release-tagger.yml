@@ -1,0 +1,61 @@
+name: Monthly Release Bump
+
+on:
+  schedule:
+    - cron: '20 4 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure Git identity
+        run: |
+          git config user.name "indi-release-bot[bot]"
+          git config user.email "indi-release-bot[bot]@users.noreply.github.com"
+
+      - name: Bump version, tag, and push
+        run: |
+          # Generate version string based on current UTC date: indi_vYYYY.MM.01
+          RELEASE_TAG="indi_v$(date -u +'%Y.%m.01')"
+          echo "Bumping to version: ${RELEASE_TAG}"
+
+          # 1. Run version bump script
+          npm run version:bump -- "${RELEASE_TAG}"
+
+          # 2. Stage tracked modified files and commit
+          git add -u
+          git commit -m "Release ${RELEASE_TAG}"
+
+          # 3. Create annotated tag
+          git tag -a "${RELEASE_TAG}" -m "Release ${RELEASE_TAG}"
+
+          # 4. Push commit and tags to main (will trigger the deb workflow)
+          git push origin main
+          git push origin "${RELEASE_TAG}"
