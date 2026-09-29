@@ -33,8 +33,8 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
         stretch_start = time.time()
 
 
-        if isinstance(self._mtf_lut, type(None)):
-            # only need to generate the lookup table once
+        if isinstance(self._mtf_lut, type(None)) or self._mtf_lut.size != 2 ** image_bit_depth:
+            # Regenerate the lookup table when the image bit depth changes.
             if image_bit_depth == 8:
                 numpy_dtype = numpy.uint8
             else:

@@ -2543,16 +2543,7 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
     chmod 644 "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.service"
     [[ -f "$TMP1" ]] && rm -f "$TMP1"
 
-
-    INDISERVER_ENV="/etc/indi-allsky/indiserver.env"
-    sudo tee "$INDISERVER_ENV" <<EOF
-INDI_PORT="$INDI_PORT"
-CCD_DRIVER="$CCD_DRIVER"
-GPS_DRIVER="$GPS_DRIVER"
-EOF
-    sudo chown "$USER":"$PGRP" "$INDISERVER_ENV"
-    sudo chmod 644 "$INDISERVER_ENV"
-
+    # indiserver.env setup after /etc/indi-allsky is created
 else
     echo
     echo
@@ -2736,6 +2727,18 @@ if [ ! -e "${ALLSKY_ETC}/indi-allsky.env" ]; then
 fi
 
 chmod 600 "${ALLSKY_ETC}/indi-allsky.env"
+
+
+if [ "$INSTALL_INDISERVER" == "true" ]; then
+    INDISERVER_ENV="${ALLSKY_ETC}/indiserver.env"
+    sudo tee "$INDISERVER_ENV" <<EOF
+INDI_PORT="$INDI_PORT"
+CCD_DRIVER="$CCD_DRIVER"
+GPS_DRIVER="$GPS_DRIVER"
+EOF
+    sudo chown "$USER":"$PGRP" "$INDISERVER_ENV"
+    sudo chmod 644 "$INDISERVER_ENV"
+fi
 
 
 echo "**** Flask config ****"

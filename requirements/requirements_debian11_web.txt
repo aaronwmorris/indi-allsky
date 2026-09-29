@@ -44,3 +44,4 @@ shapely
 pytz
 mysql-connector-python
 systemd-python
+pkgconfig
