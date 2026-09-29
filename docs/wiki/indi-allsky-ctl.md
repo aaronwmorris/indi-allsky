@@ -264,6 +264,37 @@ indi-allsky-ctl test-websocket --action keogram
 indi-allsky-ctl test-ws --action ping
 ```
 
+### Model Context Protocol (MCP) Server
+Manage the Model Context Protocol (MCP) server daemon for AI assistant integrations (e.g. Google Antigravity, Claude Desktop, Cursor), or execute the server in the foreground:
+
+```bash
+# Enable and start background daemon on boot:
+sudo indi-allsky-ctl mcp enable
+
+# Check daemon running status:
+indi-allsky-ctl mcp status
+
+# Follow real-time daemon logs:
+indi-allsky-ctl mcp logs
+
+# Stop / restart daemon:
+sudo indi-allsky-ctl mcp stop
+sudo indi-allsky-ctl mcp restart
+
+# Disable daemon:
+sudo indi-allsky-ctl mcp disable
+
+# Run server interactively in foreground (SSE transport on port 8000):
+indi-allsky-ctl mcp run
+
+# Run with custom host/port:
+indi-allsky-ctl mcp run --host 127.0.0.1 --port 8080
+
+# Run in stdio transport mode:
+indi-allsky-ctl mcp run --transport stdio
+```
+*(For detailed tool reference, resources, and client connection configs, see the [Model Context Protocol (MCP)](Model-Context-Protocol-(MCP)) guide).*
+
 ### Generate Diagnostic Support Bundle
 Generate a redacted diagnostic report containing system logs, hardware configurations, and environment details for troubleshooting:
 ```bash

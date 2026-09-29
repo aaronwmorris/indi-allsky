@@ -70,7 +70,8 @@ override_dh_installsystemd:
 	# Enable indi-allsky and indiserver services in full indi-allsky
 	dh_installsystemd -pindi-allsky --name=indi-allsky
 	dh_installsystemd -pindi-allsky --name=indiserver
-	dh_installsystemd -pindi-allsky --name=indi-allsky-mcp
+	# Install indi-allsky-mcp service but do not enable or start automatically
+	dh_installsystemd -pindi-allsky --name=indi-allsky-mcp --no-enable --no-start
 
 override_dh_fixperms:
 	dh_fixperms
