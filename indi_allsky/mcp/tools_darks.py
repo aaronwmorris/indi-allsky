@@ -77,7 +77,52 @@ def generate_bad_pixel_map(
         }
 
 
+def generate_master_darks(
+    exposure: float, gain: float, temp_bin: float = 0.0, camera_id: int = 1
+) -> Dict[str, Any]:
+    """Enqueue an automated master dark calibration frame stacking job into the task queue.
+
+    Args:
+        exposure: Exposure time in seconds.
+        gain: Sensor gain setting.
+        temp_bin: Target temperature bin in Celsius (default: 0.0).
+        camera_id: Camera identifier (default: 1).
+
+    Returns:
+        Dictionary confirming master dark generation job submission.
+    """
+    from ..flask import db
+    from ..flask.models import IndiAllSkyDbTaskQueueTable, TaskQueueQueue, TaskQueueState
+
+    app = _get_flask_app()
+    with app.app_context():
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.MAIN,
+            state=TaskQueueState.MANUAL,
+            priority=80,
+            data={
+                "action": "generateMasterDark",
+                "camera_id": camera_id,
+                "exposure": exposure,
+                "gain": gain,
+                "temp": temp_bin,
+            },
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        return {
+            "status": "success",
+            "message": "Master dark frame generation task enqueued.",
+            "task_id": task.id,
+            "exposure": exposure,
+            "gain": gain,
+            "temp_bin": temp_bin,
+        }
+
+
 def register_dark_tools(mcp_server: Any) -> None:
     """Register dark library tools with the MCPServer instance."""
     mcp_server.tool()(audit_dark_library)
     mcp_server.tool()(generate_bad_pixel_map)
+    mcp_server.tool()(generate_master_darks)

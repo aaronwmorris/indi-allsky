@@ -12,6 +12,7 @@ from .tools_astrometry import register_astrometry_tools
 from .tools_hardware import register_hardware_tools
 from .tools_darks import register_dark_tools
 from .tools_ops import register_ops_tools
+from .tools_ephemeris import register_ephemeris_tools
 from .resources import register_resources
 from .prompts import register_prompts
 
@@ -37,6 +38,7 @@ def create_mcp_server(name: str = "indi-allsky-mcp") -> MCPServer:
     register_hardware_tools(server)
     register_dark_tools(server)
     register_ops_tools(server)
+    register_ephemeris_tools(server)
 
     # Register resources & prompt workflows
     register_resources(server)

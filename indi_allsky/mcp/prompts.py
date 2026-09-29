@@ -34,3 +34,39 @@ def register_prompts(mcp_server: Any) -> None:
             "4. Run `evaluate_image_quality` on the latest raw FITS frames to measure SNR and FWHM.\n"
             "5. Report findings and suggest configuration adjustments or hardware maintenance (e.g. focuser adjustments or dome cleaning)."
         )
+
+    @mcp_server.prompt()
+    def diagnose_optics_and_focus() -> str:
+        """Prompt to diagnose optical alignment, field rotation, and focus curve state."""
+        return (
+            "You are diagnosing optical alignment, True North cardinal orientation, and focuser state.\n"
+            "1. Call `get_raw_fits_catalog(limit=3)` to obtain recent clear night frames.\n"
+            "2. Execute `solve_lens_geometry` to determine optical focal length, field-of-view, and center offsets.\n"
+            "3. Call `align_cardinal_directions` to derive True North alignment error.\n"
+            "4. Read `get_focuser_position` and examine star sharpness.\n"
+            "5. If defocusing or tilt is detected, recommend target focuser step movement via `move_focuser` or `run_autofocus_sweep`."
+        )
+
+    @mcp_server.prompt()
+    def audit_observatory_health() -> str:
+        """Prompt to inspect dark frame library, environmental metrics, and storage quotas."""
+        return (
+            "You are auditing observatory environmental health and calibration library coverage.\n"
+            "1. Read `allsky://telemetry/environment` and check ambient temperature, humidity, and dew point.\n"
+            "2. Inspect dark frame library coverage gaps using `audit_dark_library`.\n"
+            "3. Check hardware throttling state using `get_hardware_throttling`.\n"
+            "4. Inspect pending operations using `inspect_task_queue`.\n"
+            "5. If temperature bins lack dark calibration, trigger `generate_master_darks` or adjust dew heater power via `control_dew_heater`."
+        )
+
+    @mcp_server.prompt()
+    def diagnose_system_logs() -> str:
+        """Prompt to review system logs for hardware driver or connection errors."""
+        return (
+            "You are diagnosing INDI Allsky system logs for hardware or communication faults.\n"
+            "1. Call `get_system_logs(log_type='app', lines=100)` to review recent daemon messages.\n"
+            "2. Call `get_system_logs(log_type='indiserver', lines=100)` to detect USB disconnects or driver crashes.\n"
+            "3. Check `get_hardware_throttling` for undervoltage or CPU thermal throttling.\n"
+            "4. Propose remedial steps or trigger a notification alert via `send_notification`."
+        )
+

@@ -274,6 +274,92 @@ def backup_database() -> Dict[str, Any]:
         }
 
 
+def render_keogram(
+    day_date: str, night: bool = True, camera_id: int = 1
+) -> Dict[str, Any]:
+    """Enqueue a full keogram generation task for a specific day or night date.
+
+    Args:
+        day_date: Target date string formatted as YYYYMMDD (e.g. '20260929').
+        night: If True, renders night keogram; otherwise daytime keogram.
+        camera_id: Camera identifier (default: 1).
+
+    Returns:
+        Dictionary confirming keogram rendering task submission.
+    """
+    from ..flask import db
+    from ..flask.models import IndiAllSkyDbTaskQueueTable, TaskQueueQueue, TaskQueueState
+
+    app = _get_flask_app()
+    with app.app_context():
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=TaskQueueState.MANUAL,
+            priority=90,
+            data={
+                "action": "generateKeogramStarTrails",
+                "kwargs": {
+                    "timespec": day_date,
+                    "night": bool(night),
+                    "camera_id": camera_id,
+                },
+            },
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        return {
+            "status": "success",
+            "message": "Keogram rendering task enqueued.",
+            "task_id": task.id,
+            "day_date": day_date,
+            "night": bool(night),
+        }
+
+
+def generate_startrails(
+    day_date: str, night: bool = True, camera_id: int = 1
+) -> Dict[str, Any]:
+    """Enqueue a star trail composite image and video generation task.
+
+    Args:
+        day_date: Target date string formatted as YYYYMMDD (e.g. '20260929').
+        night: If True, compiles night frames.
+        camera_id: Camera identifier (default: 1).
+
+    Returns:
+        Dictionary confirming star trails generation job submission.
+    """
+    from ..flask import db
+    from ..flask.models import IndiAllSkyDbTaskQueueTable, TaskQueueQueue, TaskQueueState
+
+    app = _get_flask_app()
+    with app.app_context():
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=TaskQueueState.MANUAL,
+            priority=90,
+            data={
+                "action": "generateKeogramStarTrails",
+                "kwargs": {
+                    "timespec": day_date,
+                    "night": bool(night),
+                    "camera_id": camera_id,
+                },
+            },
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        return {
+            "status": "success",
+            "message": "Star trails generation task enqueued.",
+            "task_id": task.id,
+            "day_date": day_date,
+            "night": bool(night),
+        }
+
+
 def register_ops_tools(mcp_server: Any) -> None:
     """Register operational and diagnostic tools with the MCPServer instance."""
     mcp_server.tool()(get_system_logs)
@@ -283,4 +369,6 @@ def register_ops_tools(mcp_server: Any) -> None:
     mcp_server.tool()(trigger_cloud_sync)
     mcp_server.tool()(send_notification)
     mcp_server.tool()(generate_custom_timelapse)
+    mcp_server.tool()(render_keogram)
+    mcp_server.tool()(generate_startrails)
     mcp_server.tool()(backup_database)

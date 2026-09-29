@@ -14,6 +14,8 @@ from indi_allsky.mcp.tools_ops import (
     trigger_cloud_sync,
     send_notification,
     generate_custom_timelapse,
+    render_keogram,
+    generate_startrails,
     backup_database,
 )
 
@@ -101,6 +103,26 @@ def test_generate_custom_timelapse(app_ctx):
         )
         assert res["status"] == "success"
         assert res["fps"] == 30
+        assert mock_session.add.called
+        assert mock_session.commit.called
+
+
+def test_render_keogram(app_ctx):
+    with patch("indi_allsky.flask.db.session") as mock_session:
+        res = render_keogram(day_date="20260929", night=True)
+        assert res["status"] == "success"
+        assert res["day_date"] == "20260929"
+        assert res["night"] is True
+        assert mock_session.add.called
+        assert mock_session.commit.called
+
+
+def test_generate_startrails(app_ctx):
+    with patch("indi_allsky.flask.db.session") as mock_session:
+        res = generate_startrails(day_date="20260929", night=True)
+        assert res["status"] == "success"
+        assert res["day_date"] == "20260929"
+        assert res["night"] is True
         assert mock_session.add.called
         assert mock_session.commit.called
 
