@@ -10,6 +10,7 @@ from indi_allsky.mcp.tools_simulator import (
     simulate_processing,
     evaluate_image_quality,
     compare_simulation_variants,
+    detect_lines_and_meteors,
 )
 
 
@@ -77,3 +78,17 @@ def test_compare_simulation_variants(app_ctx):
         assert len(ranked) == 2
         assert ranked[0]["quality_score"] >= ranked[1]["quality_score"]
         assert ranked[0]["quality_score"] == 140.0
+
+
+def test_detect_lines_and_meteors(app_ctx):
+    mock_sim = {
+        "status": "success",
+        "fits_id": 1,
+        "stars_count": 45,
+    }
+    with patch("indi_allsky.mcp.tools_simulator.simulate_processing", return_value=mock_sim):
+        res = detect_lines_and_meteors(fits_id=1)
+        assert res["status"] == "success"
+        assert res["detected_lines_count"] == 1
+        assert res["lines"][0]["type"] == "meteor_candidate"
+

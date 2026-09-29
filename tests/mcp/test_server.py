@@ -31,18 +31,21 @@ def test_mcp_server_all_tools_registered():
         "simulate_processing",
         "evaluate_image_quality",
         "compare_simulation_variants",
+        "detect_lines_and_meteors",
         # Phase 3 Tools
         "solve_lens_geometry",
         "align_cardinal_directions",
         "get_focuser_position",
         "move_focuser",
+        "run_autofocus_sweep",
         "get_sensor_telemetry",
         "control_dew_heater",
         "control_enclosure_fan",
         "set_capture_pause",
         "audit_dark_library",
         "generate_bad_pixel_map",
-        # Phase 4 Tools
+        "generate_master_darks",
+        # Phase 4 Tools & Media
         "get_system_logs",
         "get_hardware_throttling",
         "inspect_task_queue",
@@ -50,7 +53,14 @@ def test_mcp_server_all_tools_registered():
         "trigger_cloud_sync",
         "send_notification",
         "generate_custom_timelapse",
+        "render_keogram",
+        "generate_startrails",
         "backup_database",
+        # Ephemeris & Space Weather Tools
+        "update_orbital_elements",
+        "get_satellite_passes",
+        "get_aurora_telemetry",
+        "query_air_traffic",
     ]
 
     for tool_name in expected_tools:
@@ -64,3 +74,7 @@ def test_mcp_server_prompts_registered():
 
     assert "optimize_image_pipeline" in registered_prompts
     assert "diagnose_capture_quality" in registered_prompts
+    assert "diagnose_optics_and_focus" in registered_prompts
+    assert "audit_observatory_health" in registered_prompts
+    assert "diagnose_system_logs" in registered_prompts
+

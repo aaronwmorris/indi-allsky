@@ -80,3 +80,28 @@ def register_resources(mcp_server: Any) -> None:
                 },
                 indent=2,
             )
+
+    @mcp_server.resource("allsky://telemetry/environment")
+    def get_environment_resource() -> str:
+        """Real-time environmental sensor telemetry."""
+        from .tools_hardware import get_sensor_telemetry
+
+        telemetry = get_sensor_telemetry()
+        return json.dumps(telemetry, indent=2)
+
+    @mcp_server.resource("allsky://queue/active")
+    def get_task_queue_resource() -> str:
+        """Active and pending tasks in the asynchronous execution queue."""
+        from .tools_ops import inspect_task_queue
+
+        queue_items = inspect_task_queue()
+        return json.dumps(queue_items, indent=2)
+
+    @mcp_server.resource("allsky://logs/recent")
+    def get_recent_logs_resource() -> str:
+        """Recent application logs from indi-allsky."""
+        from .tools_ops import get_system_logs
+
+        logs_data = get_system_logs(log_type="app", lines=50)
+        return "\n".join(logs_data.get("lines", []))
+

@@ -8,6 +8,7 @@ from indi_allsky.flask import create_app
 from indi_allsky.mcp.tools_hardware import (
     get_focuser_position,
     move_focuser,
+    run_autofocus_sweep,
     get_sensor_telemetry,
     control_dew_heater,
     control_enclosure_fan,
@@ -49,6 +50,15 @@ def test_move_focuser(app_ctx):
         assert res["status"] == "success"
         assert res["commanded_steps"] == 50
         mock_focuser.moveRelative.assert_called_once_with(50)
+
+
+def test_run_autofocus_sweep():
+    res = run_autofocus_sweep(start_pos=2000, end_pos=2200, step_size=50)
+    assert res["status"] == "success"
+    assert res["start_position"] == 2000
+    assert res["end_position"] == 2200
+    assert len(res["v_curve"]) == 5
+    assert res["optimal_focus_position"] == 2100
 
 
 def test_get_sensor_telemetry(app_ctx):
@@ -98,3 +108,4 @@ def test_set_capture_pause(app_ctx):
         assert res["pause"] is True
         assert mock_session.add.called
         assert mock_session.commit.called
+

@@ -8,6 +8,7 @@ from indi_allsky.flask import create_app
 from indi_allsky.mcp.tools_darks import (
     audit_dark_library,
     generate_bad_pixel_map,
+    generate_master_darks,
 )
 
 
@@ -52,3 +53,15 @@ def test_generate_bad_pixel_map(app_ctx):
         mock_q.filter.return_value.first.return_value = None
         res_err = generate_bad_pixel_map(dark_id=999)
         assert res_err["status"] == "error"
+
+
+def test_generate_master_darks(app_ctx):
+    with patch("indi_allsky.flask.db.session") as mock_session:
+        res = generate_master_darks(exposure=30.0, gain=120.0, temp_bin=5.0)
+        assert res["status"] == "success"
+        assert res["exposure"] == 30.0
+        assert res["gain"] == 120.0
+        assert res["temp_bin"] == 5.0
+        assert mock_session.add.called
+        assert mock_session.commit.called
+
