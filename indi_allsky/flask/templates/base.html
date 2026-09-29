@@ -406,6 +406,7 @@
                 type: "POST",
                 url: "{{ url_for('indi_allsky.ajax_notification_view') }}",
                 contentType: "application/json",
+                dataType: "json",
                 data: JSON.stringify(postData),
                 success: function (rdata) { onDone(rdata); },
                 error: function (rdata) { onError(rdata); },
@@ -422,6 +423,7 @@
                 type: "GET",
                 url: "{{ url_for('indi_allsky.ajax_notification_view') }}",
                 contentType: "application/json",
+                dataType: "json",
                 data: getData,
                 success: function (rdata) { showNotification(rdata); },
                 timeout: 10000,
@@ -430,7 +432,10 @@
         }
 
         function showNotification(data) {
-            if (!data || data.id == 0) return;
+            if (!data || !Number.isInteger(data.id) || data.id <= 0
+                || typeof data.category !== 'string'
+                || typeof data.createDate !== 'string'
+                || typeof data.notification !== 'string') return;
             $("#ack_button").off().on("click", function () { ackNotification(data.id, showNotification); });
             const modal = document.getElementById("notificationModal");
             document.getElementById('notificationLabel').textContent = data.category;

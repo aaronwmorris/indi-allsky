@@ -93,6 +93,52 @@ function page() {
 
 const notice = (id) => ({ id, category: 'general', createDate: '2026-09-25 00:00:00', notification: `Failure ${id}` });
 
+test('polling and acknowledgement require JSON responses', () => {
+    const p = page();
+    assert.equal(p.notices()[0].dataType, 'json');
+    p.notices()[0].respond(notice(1));
+    p.acknowledge();
+    assert.equal(p.notices()[1].dataType, 'json');
+});
+
+const invalidResponses = {
+    'HTML page': '<!doctype html><title>Session expired</title>',
+    'empty object': {},
+    'array': [],
+    'null': null,
+    'missing ID': { ...notice(1), id: undefined },
+    'zero ID': notice(0),
+    'negative ID': notice(-1),
+    'fractional ID': notice(1.5),
+    'string ID': notice('1'),
+    'missing category': { ...notice(1), category: undefined },
+    'missing date': { ...notice(1), createDate: undefined },
+    'missing message': { ...notice(1), notification: undefined },
+    'invalid category': { ...notice(1), category: {} },
+    'invalid date': { ...notice(1), createDate: 123 },
+    'invalid message': { ...notice(1), notification: null },
+};
+
+for (const [name, response] of Object.entries(invalidResponses)) {
+    for (const acknowledge of [false, true]) {
+        test(`${acknowledge ? 'acknowledgement' : 'polling'} ignores ${name} and polling recovers`, () => {
+            const p = page();
+            if (acknowledge) {
+                p.notices()[0].respond(notice(1));
+                p.acknowledge();
+            }
+            p.notices().at(-1).respond(response);
+            assert.equal(p.modal.open, false);
+            assert.equal(p.modal.shown, acknowledge ? 1 : 0);
+            p.advance(60000);
+            assert.equal(p.notices().length, acknowledge ? 3 : 2);
+            p.notices().at(-1).respond(notice(2));
+            assert.equal(p.modal.open, true);
+            assert.equal(p.text(), 'Failure 2');
+        });
+    }
+}
+
 test('an alert created after 35 minutes appears without reloading the page', () => {
     const p = page();
     assert.equal(p.notices().length, 1);
