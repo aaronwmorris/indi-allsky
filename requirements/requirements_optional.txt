@@ -5,5 +5,7 @@ apache-libcloud
 google-cloud-storage
 google-api-python-client
 google_auth_oauthlib
+mcp >= 2.0.0
 ### OCI has old cryptography and pyopenssl requirements
 #oci
+

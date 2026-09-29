@@ -67,6 +67,7 @@ Hardware & Diagnostics:
   test-adsb                Test ADS-B aircraft tracking receiver connection
   test-oci                 Validate Oracle Cloud Infrastructure (OCI) credentials
   test-websocket           Test WebSocket real-time events and send control commands
+  mcp                      Start Model Context Protocol (MCP) server for AI agents
   support-info             Generate diagnostic report bundle for troubleshooting
 
 Peripheral Configuration & Integrations:
@@ -393,6 +394,9 @@ case "$COMMAND" in
         ;;
     test-websocket|test-ws)
         exec "$PYTHON_BIN" "${APP_DIR}/misc/test_websocket_events.py" "$@"
+        ;;
+    mcp)
+        exec "$PYTHON_BIN" "${APP_DIR}/misc/indi_allsky_mcp.py" "$@"
         ;;
     support-info)
         exec bash "${APP_DIR}/misc/support_info.sh" "$@"
