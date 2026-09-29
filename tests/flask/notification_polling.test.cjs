@@ -187,6 +187,26 @@ test('status polling failure does not stop notification checks', () => {
     assert.equal(p.modal.open, true);
 });
 
+for (const outcome of ['success', 'error', 'parsererror', 'timeout']) {
+    test(`status polling continues after ${outcome} without duplicate timers`, () => {
+        const p = page();
+        const statuses = () => p.requests.filter(r => r.url === '/ajax_status_update_view');
+        p.advance(5000);
+        assert.equal(statuses().length, 1);
+        if (outcome === 'timeout') p.advance(5000);
+        else if (outcome === 'success') statuses()[0].respond({ status_text: 'RUNNING' });
+        else statuses()[0].fail(outcome);
+
+        p.advance(59999);
+        assert.equal(statuses().length, 1, 'wait one minute after the request completes');
+        p.advance(1);
+        assert.equal(statuses().length, 2);
+        statuses()[1].respond({ status_text: 'RUNNING' });
+        p.advance(60000);
+        assert.equal(statuses().length, 3, 'resume exactly one polling chain');
+    });
+}
+
 test('polling does not replace a notification while it is being read', () => {
     const p = page();
     p.notices()[0].respond(notice(11));

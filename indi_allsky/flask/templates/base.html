@@ -461,6 +461,8 @@
                 url: "{{ url_for('indi_allsky.ajax_status_update_view') }}",
                 data: { 'camera_id': camera_id },
                 success: function(rdata) { updateStatus(rdata); },
+                timeout: 10000,
+                complete: function () { setTimeout(getStatusText, 60000); },
             });
         }
 
@@ -472,7 +474,6 @@
                 html = html.replace(/class="text-error"/g, 'class="tw:text-error"');
                 $("#status_text").html(html);
             }
-            setTimeout(getStatusText, 60000);
         }
 
         window.applyAllskyTheme = function() {
