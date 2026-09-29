@@ -17,6 +17,7 @@ export PKG_CONFIG_PATH
 
 
 #### config ####
+ALLSKY_ETC="/etc/indi-allsky"
 INDI_DRIVER_PATH="/usr/bin"
 INDISERVER_SERVICE_NAME="indiserver"
 OS_PACKAGE_UPGRADE="${INDI_ALLSKY_OS_PACKAGE_UPGRADE:-}"
@@ -939,7 +940,21 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
     chmod 644 "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.service"
     [[ -f "$TMP1" ]] && rm -f "$TMP1"
 
+    # indiserver.env setup after /etc/indi-allsky is created
 
+else
+    echo
+    echo
+    echo
+    echo "! Bypassing indiserver setup"
+fi
+
+
+[[ ! -d "$ALLSKY_ETC" ]] && sudo mkdir "$ALLSKY_ETC"
+sudo chown -R "$USER":"$PGRP" "$ALLSKY_ETC"
+sudo chmod 775 "${ALLSKY_ETC}"
+
+if [ "$INSTALL_INDISERVER" == "true" ]; then
     INDISERVER_ENV="/etc/indi-allsky/indiserver.env"
     sudo tee "$INDISERVER_ENV" <<EOF
 INDI_PORT="$INDI_PORT"
@@ -949,12 +964,6 @@ EOF
     sudo chown indi-allsky "$INDISERVER_ENV"
     sudo chown "$USER":"$PGRP" "$INDISERVER_ENV"
     sudo chmod 644 "$INDISERVER_ENV"
-
-else
-    echo
-    echo
-    echo
-    echo "! Bypassing indiserver setup"
 fi
 
 

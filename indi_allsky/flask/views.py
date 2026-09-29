@@ -7297,32 +7297,7 @@ class SystemInfoView(TemplateView):
     def get_context(self):
         import sys
         import platform
-        import astropy
-        import flask
-        import numpy
-        import cv2
-        import gunicorn
-        import cryptography
-
-        try:
-            import pycurl
-        except ImportError:
-            pycurl = None
-
-        try:
-            import paho.mqtt as paho_mqtt
-        except ImportError:
-            paho_mqtt = None
-
-        #try:
-        #    import PyIndi
-        #except ImportError:
-        #    PyIndi = None
-
-        try:
-            import skyfield
-        except ImportError:
-            skyfield = None
+        import importlib.metadata
 
         context = super(SystemInfoView, self).get_context()
 
@@ -7371,39 +7346,54 @@ class SystemInfoView(TemplateView):
         else:
             context['cpu_bits'] = 32
 
-        context['gunicorn_version'] = str(getattr(gunicorn, '__version__', -1))
-        context['cryptography_version'] = str(getattr(cryptography, '__version__', -1))
-        context['cv2_version'] = str(getattr(cv2, '__version__', -1))
-        context['ephem_version'] = str(getattr(ephem, '__version__', -1))
-        context['numpy_version'] = str(getattr(numpy, '__version__', -1))
-        context['astropy_version'] = str(getattr(astropy, '__version__', -1))
-        context['flask_version'] = str(getattr(flask, '__version__', -1))
-        context['dbus_version'] = str(getattr(dbus, '__version__', -1))
+        context['gunicorn_version'] = importlib.metadata.version('gunicorn')
+        context['cryptography_version'] = importlib.metadata.version('cryptography')
+        context['ephem_version'] = importlib.metadata.version('ephem')
+        context['numpy_version'] = importlib.metadata.version('numpy')
+        context['astropy_version'] = importlib.metadata.version('astropy')
+        context['flask_version'] = importlib.metadata.version('flask')
+        context['dbus_python_version'] = importlib.metadata.version('dbus-python')
 
 
-        if pycurl:
-            context['pycurl_version'] = str(getattr(pycurl, 'version', -1))
-        else:
+        try:
+            import pkgconfig
+            context['libindi_version'] = pkgconfig.modversion('libindi')
+        except ImportError:
+            # separate exception handling
+            context['libindi_version'] = 'Info not available'
+        except pkgconfig.pkgconfig.PackageNotFoundError:
+            context['libindi_version'] = 'Info not available'
+
+
+        try:
+            context['pyindi_client_version'] = importlib.metadata.version('pyindi-client')
+        except importlib.metadata.PackageNotFoundError:
+            context['pyindi_client_version'] = 'Not installed'
+
+
+        try:
+            context['opencv_python_version'] = importlib.metadata.version('opencv-python-headless')
+        except importlib.metadata.PackageNotFoundError:
+            try:
+                context['opencv_python_version'] = importlib.metadata.version('opencv-python')
+            except importlib.metadata.PackageNotFoundError:
+                context['opencv_python'] = 'Not installed'
+
+
+        try:
+            context['pycurl_version'] = importlib.metadata.version('pycurl')
+        except importlib.metadata.PackageNotFoundError:
             context['pycurl_version'] = 'Not installed'
 
-        if paho_mqtt:
-            context['pahomqtt_version'] = str(getattr(paho_mqtt, '__version__', -1))
-        else:
+        try:
+            context['pahomqtt_version'] = importlib.metadata.version('paho_mqtt')
+        except importlib.metadata.PackageNotFoundError:
             context['pahomqtt_version'] = 'Not installed'
 
-        ### PyIndi no longer reports a version
-        #if PyIndi:
-        #    context['pyindi_version'] = '.'.join((
-        #        str(getattr(PyIndi, 'INDI_VERSION_MAJOR', -1)),
-        #        str(getattr(PyIndi, 'INDI_VERSION_MINOR', -1)),
-        #        str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
-        #    ))
-        #else:
-        #    context['pyindi_version'] = 'Not installed'
 
-        if skyfield:
-            context['skyfield_version'] = str(getattr(skyfield, '__version__', -1))
-        else:
+        try:
+            context['skyfield_version'] = importlib.metadata.version('skyfield')
+        except importlib.metadata.PackageNotFoundError:
             context['skyfield_version'] = 'Not installed'
 
 
