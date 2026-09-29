@@ -47,7 +47,7 @@ def create_mcp_server(name: str = "indi-allsky-mcp") -> MCPServer:
     return server
 
 
-def main(transport: str = "stdio", host: str = "127.0.0.1", port: int = 8000) -> None:
+def main(transport: str = "sse", host: str = "0.0.0.0", port: int = 8000) -> None:
     """CLI entry point for running the MCP server."""
     server = create_mcp_server()
     if transport == "sse":
