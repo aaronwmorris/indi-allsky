@@ -111,6 +111,37 @@ if which whiptail >/dev/null 2>&1; then
 fi
 
 
+if [ -n "${WHIPTAIL_BIN:-}" ]; then
+    "$WHIPTAIL_BIN" \
+        --title "NEW METHOD OF INSTALLATION" \
+        --msgbox "There is now an official APT repository:\n\n  https://apt.indi-allsky.org\n\nInstallation guide:\n  https://github.com/aaronwmorris/indi-allsky/wiki/Getting-Started\n\nMigration guide:\n  https://github.com/aaronwmorris/indi-allsky/wiki/Setup-to-Deb-Migration\n\n\nIt is *NOT* a requirement to migrate to the apt repository.  You may continue using the setup.sh to manage your installation." 0 0
+else
+    cat <<EOF
+####################################################################################
+########################   NEW METHOD OF INSTALLATION   ############################
+####################################################################################
+###                                                                              ###
+###  There is now an official APT repository:                                    ###
+###                                                                              ###
+###    https://apt.indi-allsky.org                                               ###
+###                                                                              ###
+###  Installation guide:                                                         ###
+###    https://github.com/aaronwmorris/indi-allsky/wiki/Getting-Started          ###
+###  Migration guide:                                                            ###
+###    https://github.com/aaronwmorris/indi-allsky/wiki/Setup-to-Deb-Migration   ###
+###                                                                              ###
+###                                                                              ###
+###  It is *NOT* a requirement to migrate to the apt repository.  You may        ###
+###  continue using the setup.sh to manage your installation.                    ###
+###                                                                              ###
+####################################################################################
+EOF
+    echo
+    echo
+    sleep 5
+fi
+
+
 echo "######################################################"
 echo "### Welcome to the indi-allsky indi compile script ###"
 echo "######################################################"

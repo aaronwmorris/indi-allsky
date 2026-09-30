@@ -171,3 +171,14 @@ def test_star_sigma_threshold_remains_authoritative_when_percentile_is_lower(mon
                                          expand_radius=0)
 
     assert captured['threshold'] == 10.0
+
+
+def test_paint_stars_uses_current_centroid_column_names():
+    table = {
+        'x_centroid': numpy.array([2.0]),
+        'y_centroid': numpy.array([3.0]),
+    }
+
+    mask = protection_masks._paint_stars_from_table(table, (7, 7), fwhm=1.0)
+
+    assert mask[3, 2] == 1.0
