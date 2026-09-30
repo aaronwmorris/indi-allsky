@@ -5779,14 +5779,19 @@ class SystemInfoView(TemplateView):
         else:
             context['cpu_bits'] = 32
 
-        context['gunicorn_version'] = importlib.metadata.version('gunicorn')
-        context['cryptography_version'] = importlib.metadata.version('cryptography')
-        context['ephem_version'] = importlib.metadata.version('ephem')
-        context['numpy_version'] = importlib.metadata.version('numpy')
-        context['astropy_version'] = importlib.metadata.version('astropy')
-        context['flask_version'] = importlib.metadata.version('flask')
-        context['dbus_python_version'] = importlib.metadata.version('dbus-python')
+        def _get_package_version(name, fallback="Not installed"):
+            try:
+                return importlib.metadata.version(name)
+            except (importlib.metadata.PackageNotFoundError, Exception):
+                return fallback
 
+        context['gunicorn_version'] = _get_package_version('gunicorn')
+        context['cryptography_version'] = _get_package_version('cryptography')
+        context['ephem_version'] = _get_package_version('ephem')
+        context['numpy_version'] = _get_package_version('numpy')
+        context['astropy_version'] = _get_package_version('astropy')
+        context['flask_version'] = _get_package_version('flask')
+        context['dbus_python_version'] = _get_package_version('dbus-python')
 
         try:
             import pkgconfig
@@ -5797,36 +5802,29 @@ class SystemInfoView(TemplateView):
         except pkgconfig.pkgconfig.PackageNotFoundError:
             context['libindi_version'] = 'Info not available'
 
+        context['pyindi_client_version'] = _get_package_version('pyindi-client')
+
+        opencv_ver = _get_package_version('opencv-python-headless', None)
+        if not opencv_ver:
+            opencv_ver = _get_package_version('opencv-python', 'Not installed')
+        context['opencv_python_version'] = opencv_ver
 
         try:
-            context['pyindi_client_version'] = importlib.metadata.version('pyindi-client')
-        except importlib.metadata.PackageNotFoundError:
-            context['pyindi_client_version'] = 'Not installed'
-
-
-        try:
-            context['opencv_python_version'] = importlib.metadata.version('opencv-python-headless')
-        except importlib.metadata.PackageNotFoundError:
-            try:
-                context['opencv_python_version'] = importlib.metadata.version('opencv-python')
-            except importlib.metadata.PackageNotFoundError:
-                context['opencv_python'] = 'Not installed'
-
-
-        try:
+            import pycurl
             context['pycurl_version'] = importlib.metadata.version('pycurl')
-        except importlib.metadata.PackageNotFoundError:
+        except (ImportError, importlib.metadata.PackageNotFoundError, Exception):
             context['pycurl_version'] = 'Not installed'
 
         try:
+            import paho.mqtt
             context['pahomqtt_version'] = importlib.metadata.version('paho_mqtt')
-        except importlib.metadata.PackageNotFoundError:
+        except (ImportError, importlib.metadata.PackageNotFoundError, Exception):
             context['pahomqtt_version'] = 'Not installed'
 
-
         try:
+            import skyfield
             context['skyfield_version'] = importlib.metadata.version('skyfield')
-        except importlib.metadata.PackageNotFoundError:
+        except (ImportError, importlib.metadata.PackageNotFoundError, Exception):
             context['skyfield_version'] = 'Not installed'
 
 

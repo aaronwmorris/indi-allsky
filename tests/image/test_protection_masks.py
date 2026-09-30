@@ -130,7 +130,7 @@ def test_protection_masks_edge_cases():
         assert sm.shape == (20, 20)
 
     # 12. fast_star_mask with edge detections (sy1 <= sy0 or sx1 <= sx0)
-    fake_tbl = {'xcentroid': [1000.0, -1000.0], 'ycentroid': [1000.0, -1000.0]}
+    fake_tbl = {'x_centroid': [1000.0, -1000.0], 'y_centroid': [1000.0, -1000.0]}
     with patch('photutils.detection.DAOStarFinder.__call__', return_value=fake_tbl):
         mask_bounds = fast_star_mask(noisy, downsample=1, patch_size=8, percentile=50)
         assert mask_bounds.shape == (64, 64)
@@ -139,6 +139,55 @@ def test_protection_masks_edge_cases():
     with patch('numpy.nonzero', return_value=([200], [200])):
         mask_empty = fast_star_mask(noisy, downsample=1, patch_size=8, percentile=50)
         assert mask_empty.shape == (64, 64)
+
+
+def test_extract_centroids_various_formats():
+    from astropy.table import Table, QTable
+    from indi_allsky.protection_masks import _extract_centroids
+
+    # 1. Astropy Table with modern column names
+    t_modern = Table({'x_centroid': [10.0, 20.0], 'y_centroid': [30.0, 40.0]})
+    x, y = _extract_centroids(t_modern)
+    np.testing.assert_array_equal(x, [10.0, 20.0])
+    np.testing.assert_array_equal(y, [30.0, 40.0])
+
+    # 2. Astropy Table with legacy column names
+    t_legacy = Table({'xcentroid': [11.0, 21.0], 'ycentroid': [31.0, 41.0]})
+    x, y = _extract_centroids(t_legacy)
+    np.testing.assert_array_equal(x, [11.0, 21.0])
+    np.testing.assert_array_equal(y, [31.0, 41.0])
+
+    # 3. Astropy QTable with modern column names
+    qt_modern = QTable({'x_centroid': [12.0], 'y_centroid': [32.0]})
+    x, y = _extract_centroids(qt_modern)
+    np.testing.assert_array_equal(x, [12.0])
+    np.testing.assert_array_equal(y, [32.0])
+
+    # 4. Dict with modern column names
+    d_modern = {'x_centroid': [1.0], 'y_centroid': [2.0]}
+    x, y = _extract_centroids(d_modern)
+    assert x == [1.0] and y == [2.0]
+
+    # 5. Dict with legacy column names
+    d_legacy = {'xcentroid': [3.0], 'ycentroid': [4.0]}
+    x, y = _extract_centroids(d_legacy)
+    assert x == [3.0] and y == [4.0]
+
+    # 6. Generic mapping fallback
+    class MockMapping:
+        def __init__(self, d):
+            self._d = d
+        def __getitem__(self, item):
+            return self._d[item]
+
+    m_modern = MockMapping({'x_centroid': [5.0], 'y_centroid': [6.0]})
+    x, y = _extract_centroids(m_modern)
+    assert x == [5.0] and y == [6.0]
+
+    m_legacy = MockMapping({'xcentroid': [7.0], 'ycentroid': [8.0]})
+    x, y = _extract_centroids(m_legacy)
+    assert x == [7.0] and y == [8.0]
+
 
 
 
