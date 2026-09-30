@@ -36,6 +36,8 @@ Depends: ${misc:Depends},
  locales,
  ca-certificates,
  libindi1 | libindiclient1 | libindi2,
+ libindi-dev,
+ pkgconf,
  ffmpeg,
  network-manager,
  udisks2
