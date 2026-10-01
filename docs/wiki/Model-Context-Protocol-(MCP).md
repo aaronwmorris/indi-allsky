@@ -4,10 +4,10 @@ INDI Allsky includes a native **Model Context Protocol (MCP)** server (`indi-all
 
 With the MCP server enabled, an AI agent can:
 - **Inspect & Tune Image Processing**: Simulate processing curves, tune stretch parameters (`MODE1_GAMMA`, `MODE2_MIDTONES`, `CLAHE`), optimize star detection, and apply configuration changes with automated rollback protection.
-- **Analyze Astrometry & Optics**: Calculate lens distortion, focal length, True North orientation alignment, and star sharpness curves.
-- **Control Hardware Peripherals**: Read temperature/humidity/SQM telemetry, command dew heaters and enclosure fans, and run stepper motor autofocus sweeps.
-- **Audit Calibration & Quality**: Inspect dark frame libraries for temperature/gain coverage gaps, generate bad pixel maps, and analyze historical sky conditions.
-- **Monitor System Health & Queue**: Inspect task queues, check Raspberry Pi hardware throttling/undervoltage flags, stream application logs, and inject desktop notifications.
+- **Analyze Astrometry & Optics**: Calculate lens distortion, focal length, True North orientation alignment, and star field matching.
+- **Monitor Hardware Telemetry & Capture State**: Read real-time temperature, humidity, dew point, infrared sky temperature, and SQM telemetry, and pause or resume the camera exposure loop.
+- **Audit Calibration & Quality**: Inspect master dark frame libraries for temperature/gain coverage gaps and analyze historical sky conditions.
+- **Monitor System Health & Queue**: Inspect task queues, check Raspberry Pi hardware throttling/undervoltage flags, stream application logs, query generated media catalogs, and inject desktop notifications.
 
 ---
 
@@ -99,7 +99,7 @@ Using an SSH tunnel or local stdio invocation:
 
 ## 3. Tool Catalog Reference
 
-The MCP server exposes 38 specialized tools grouped by subsystem:
+The MCP server exposes 30 specialized tools grouped by subsystem:
 
 ### Configuration Subsystem
 | Tool | Description |
@@ -115,7 +115,7 @@ The MCP server exposes 38 specialized tools grouped by subsystem:
 | `get_latest_image` | Retrieve latest captured light frame metadata, SQM, star count, and file paths. |
 | `query_image_history` | Filter historical exposures by star count, sun altitude, or day date. |
 | `get_raw_fits_catalog` | List available raw 16-bit FITS captures stored on disk. |
-| `get_image_metadata` | Inspect EXIF headers, camera parameters, and processing records for a specific image. |
+| `get_image_metadata` | Inspect headers, camera parameters, and processing records for a specific raw FITS image. |
 
 ### Image Processing Simulator
 | Tool | Description |
@@ -128,48 +128,40 @@ The MCP server exposes 38 specialized tools grouped by subsystem:
 ### Astrometry & Optics
 | Tool | Description |
 | :--- | :--- |
-| `solve_lens_geometry` | Execute astrometric plate solving to derive optical focal length, field-of-view, and center offsets. |
+| `solve_lens_geometry` | Execute astrometric plate solving on an image capture to derive optical focal length, field-of-view, center offsets, and rotation azimuth. |
 | `align_cardinal_directions` | Derive True North orientation error and cardinal label placement. |
 
 ### Hardware & Peripherals
 | Tool | Description |
 | :--- | :--- |
-| `get_sensor_telemetry` | Read real-time environmental sensors (temperature, humidity, dew point, SQM, ambient lux). |
-| `control_dew_heater` | Command dew heater power duty cycle (0-100%) and operational mode. |
-| `control_enclosure_fan` | Command enclosure cooling fan target temperature and manual speed. |
-| `get_focuser_position` | Query current stepper motor focuser step position and limits. |
-| `move_focuser` | Command relative or absolute focuser step motion. |
-| `run_autofocus_sweep` | Execute automated V-curve focus sweep to identify optimal star sharpness point. |
-| `set_capture_pause` | Temporarily pause or resume camera image acquisition. |
+| `get_sensor_telemetry` | Read real-time environmental sensors (temperature, humidity, dew point, infrared sky temp, SQM rating). |
+| `set_capture_pause` | Temporarily pause or resume camera image acquisition loop via task queue. |
 
 ### Calibration & Dark Frames
 | Tool | Description |
 | :--- | :--- |
-| `audit_dark_library` | Audit dark frame library coverage across temperature bins, gains, and exposures. |
-| `generate_bad_pixel_map` | Create static bad pixel map from master dark frames. |
-| `generate_master_darks` | Trigger master dark frame stacking for specified temperature bins. |
+| `audit_dark_library` | Audit master dark frame library coverage across temperature bins, gains, exposures, and bit depths. |
 
 ### Ephemeris & Space Weather
 | Tool | Description |
 | :--- | :--- |
 | `get_aurora_telemetry` | Read NOAA Ovation aurora probability, solar wind velocity, and geomagnetic Kp-index. |
-| `get_satellite_passes` | Predict upcoming visible passes for ISS, Tiangong, HST, and custom satellites. |
+| `get_satellite_passes` | Track satellites and retrieve Two-Line Element (TLE) orbital pass metadata. |
 | `update_orbital_elements` | Refresh Two-Line Element (TLE) ephemeris data from CelesTrak. |
-| `query_air_traffic` | Fetch local ADS-B aircraft positions within optical field-of-view. |
+| `query_air_traffic` | Fetch local ADS-B aircraft positions within optical field-of-view from configured receiver. |
 
 ### Operations & Diagnostics
 | Tool | Description |
 | :--- | :--- |
 | `get_system_logs` | Retrieve recent log lines from application, web, or INDI server logs. |
 | `get_hardware_throttling` | Check Raspberry Pi CPU throttling, undervoltage, and frequency capping flags. |
-| `inspect_task_queue` | List pending and running background video/timelapse generation tasks. |
-| `cancel_task` | Cancel a running or queued background task. |
-| `trigger_cloud_sync` | Initiate immediate cloud storage sync (SFTP, S3, Sync API). |
+| `inspect_task_queue` | List pending and running background tasks in the database task queue. |
+| `cancel_task` | Cancel and remove a pending or stalled background task. |
 | `send_notification` | Inject user alert notification into the database and UI banner. |
-| `generate_custom_timelapse` | Render custom MP4 timelapse for a specified date range. |
-| `render_keogram` | Render full night keogram from captured images. |
-| `generate_startrails` | Generate composite star trail image with threshold masking. |
-| `backup_database` | Trigger immediate database backup snapshot. |
+| `generate_timelapse` | Enqueue full nightly timelapse video generation task. |
+| `generate_keogram_and_startrails` | Enqueue combined keogram and star trail composite generation task. |
+| `backup_database` | Trigger immediate database backup snapshot via task queue. |
+| `query_media_catalog` | Query database catalog of generated media assets (timelapses, keograms, star trails, mini timelapses). |
 
 ---
 
@@ -182,6 +174,7 @@ Clients can subscribe to or read standardized read-only URI resources:
 - `allsky://images/latest` — Metadata of the most recently acquired image.
 - `allsky://telemetry/environment` — Real-time environmental sensor metrics (temperature, humidity, SQM).
 - `allsky://queue/active` — Active and queued background operations.
+- `allsky://darks/library` — Active master dark frame library coverage summary.
 - `allsky://logs/recent` — Recent lines from the primary application log.
 
 ---
@@ -192,7 +185,7 @@ Predefined interactive prompt workflows guide AI agents through complex diagnost
 
 1. `optimize_image_pipeline` — Systematic parameter tuning for dark sky vs. moonlit conditions.
 2. `diagnose_capture_quality` — End-to-end capture health, SNR evaluation, and detection verification.
-3. `diagnose_optics_and_focus` — Astrometric plate solving, True North verification, and focus V-curve analysis.
+3. `diagnose_optics_and_focus` — Astrometric plate solving, field-of-view determination, and True North verification.
 4. `audit_observatory_health` — Environmental checks, dark library gap identification, and thermal throttling review.
 5. `diagnose_system_logs` — Automated error pattern recognition across application and INDI server logs.
 

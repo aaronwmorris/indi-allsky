@@ -143,28 +143,6 @@ def cancel_task(task_id: int) -> Dict[str, Any]:
         return {"status": "success", "message": f"Task {task_id} canceled successfully."}
 
 
-def trigger_cloud_sync() -> Dict[str, Any]:
-    """Force immediate synchronization of pending uploads to remote cloud / storage providers."""
-    from ..flask import db
-    from ..flask.models import IndiAllSkyDbTaskQueueTable, TaskQueueQueue, TaskQueueState
-
-    app = _get_flask_app()
-    with app.app_context():
-        task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.MAIN,
-            state=TaskQueueState.MANUAL,
-            priority=50,
-            data={"action": "sync_uploads"},
-        )
-        db.session.add(task)
-        db.session.commit()
-
-        return {
-            "status": "success",
-            "message": "Cloud sync task enqueued.",
-            "task_id": task.id,
-        }
-
 
 def send_notification(title: str, message: str, category: str = "general") -> Dict[str, Any]:
     """Inject a notification alert into the system for dispatch to configured channels.
@@ -213,19 +191,16 @@ def send_notification(title: str, message: str, category: str = "general") -> Di
         }
 
 
-def generate_custom_timelapse(
-    start_dt: str, end_dt: str, fps: int = 25, camera_id: int = 1
-) -> Dict[str, Any]:
-    """Enqueue a custom mini-timelapse generation task for a designated time window.
+def generate_timelapse(day_date: str, night: bool = True, camera_id: int = 1) -> Dict[str, Any]:
+    """Enqueue a full nightly timelapse video generation task.
 
     Args:
-        start_dt: ISO start datetime (e.g. '2026-09-29T02:00:00').
-        end_dt: ISO end datetime (e.g. '2026-09-29T02:30:00').
-        fps: Desired framerate (default: 25).
-        camera_id: Target camera ID.
+        day_date: Target date string formatted as YYYYMMDD (e.g. '20260929').
+        night: If True, renders night timelapse; otherwise daytime timelapse.
+        camera_id: Camera identifier (default: 1).
 
     Returns:
-        Dictionary confirming video generation job submission.
+        Dictionary confirming timelapse video generation task submission.
     """
     from ..flask import db
     from ..flask.models import IndiAllSkyDbTaskQueueTable, TaskQueueQueue, TaskQueueState
@@ -235,13 +210,14 @@ def generate_custom_timelapse(
         task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.VIDEO,
             state=TaskQueueState.MANUAL,
-            priority=80,
+            priority=100,
             data={
-                "action": "mini_timelapse",
-                "camera_id": camera_id,
-                "start": start_dt,
-                "end": end_dt,
-                "fps": fps,
+                "action": "generateVideo",
+                "kwargs": {
+                    "timespec": day_date,
+                    "night": bool(night),
+                    "camera_id": camera_id,
+                },
             },
         )
         db.session.add(task)
@@ -249,43 +225,64 @@ def generate_custom_timelapse(
 
         return {
             "status": "success",
-            "message": "Custom mini-timelapse task queued.",
+            "message": "Timelapse video generation task enqueued.",
             "task_id": task.id,
-            "start": start_dt,
-            "end": end_dt,
-            "fps": fps,
+            "day_date": day_date,
+            "night": bool(night),
+        }
+
+
+def generate_keogram_and_startrails(
+    day_date: str, night: bool = True, camera_id: int = 1
+) -> Dict[str, Any]:
+    """Enqueue a combined keogram and star trail composite generation task.
+
+    The underlying worker always generates both the keogram and the star trail composite
+    image in a single task — they cannot be requested independently.
+
+    Args:
+        day_date: Target date string formatted as YYYYMMDD (e.g. '20260929').
+        night: If True, compiles night frames; otherwise daytime frames.
+        camera_id: Camera identifier (default: 1).
+
+    Returns:
+        Dictionary confirming keogram and star trails generation task submission.
+    """
+    from ..flask import db
+    from ..flask.models import IndiAllSkyDbTaskQueueTable, TaskQueueQueue, TaskQueueState
+
+    app = _get_flask_app()
+    with app.app_context():
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=TaskQueueState.MANUAL,
+            priority=100,
+            data={
+                "action": "generateKeogramStarTrails",
+                "kwargs": {
+                    "timespec": day_date,
+                    "night": bool(night),
+                    "camera_id": camera_id,
+                },
+            },
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        return {
+            "status": "success",
+            "message": "Keogram and star trails generation task enqueued.",
+            "task_id": task.id,
+            "day_date": day_date,
+            "night": bool(night),
         }
 
 
 def backup_database() -> Dict[str, Any]:
-    """Trigger an immediate snapshot backup of the SQLite/MySQL database and configuration."""
-    from ..config import IndiAllSkyConfig
-    from ..backup import IndiAllskyDatabaseBackup
-
-    app = _get_flask_app()
-    with app.app_context():
-        config_obj = IndiAllSkyConfig()
-        backup_runner = IndiAllskyDatabaseBackup(config_obj.config)
-        backup_file = backup_runner.db_backup() if hasattr(backup_runner, 'db_backup') else "/tmp/backup.sqlite"
-        return {
-            "status": "success",
-            "message": "Database backup completed.",
-            "backup_file": str(backup_file),
-        }
-
-
-def render_keogram(
-    day_date: str, night: bool = True, camera_id: int = 1
-) -> Dict[str, Any]:
-    """Enqueue a full keogram generation task for a specific day or night date.
-
-    Args:
-        day_date: Target date string formatted as YYYYMMDD (e.g. '20260929').
-        night: If True, renders night keogram; otherwise daytime keogram.
-        camera_id: Camera identifier (default: 1).
+    """Trigger an immediate snapshot backup of the database via the task queue.
 
     Returns:
-        Dictionary confirming keogram rendering task submission.
+        Dictionary confirming the backup task was enqueued.
     """
     from ..flask import db
     from ..flask.models import IndiAllSkyDbTaskQueueTable, TaskQueueQueue, TaskQueueState
@@ -295,14 +292,10 @@ def render_keogram(
         task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.VIDEO,
             state=TaskQueueState.MANUAL,
-            priority=90,
+            priority=100,
             data={
-                "action": "generateKeogramStarTrails",
-                "kwargs": {
-                    "timespec": day_date,
-                    "night": bool(night),
-                    "camera_id": camera_id,
-                },
+                "action": "backupDatabase",
+                "kwargs": {},
             },
         )
         db.session.add(task)
@@ -310,54 +303,86 @@ def render_keogram(
 
         return {
             "status": "success",
-            "message": "Keogram rendering task enqueued.",
+            "message": "Database backup task enqueued.",
             "task_id": task.id,
-            "day_date": day_date,
-            "night": bool(night),
         }
 
 
-def generate_startrails(
-    day_date: str, night: bool = True, camera_id: int = 1
-) -> Dict[str, Any]:
-    """Enqueue a star trail composite image and video generation task.
+def query_media_catalog(
+    media_type: str,
+    camera_id: int = 1,
+    limit: int = 20,
+    night_only: bool = True,
+    day_date: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """Query the database catalog of generated media assets.
 
     Args:
-        day_date: Target date string formatted as YYYYMMDD (e.g. '20260929').
-        night: If True, compiles night frames.
+        media_type: Type of media — one of 'timelapse', 'keogram', 'startrails',
+                    'startrails_video', or 'mini_timelapse'.
         camera_id: Camera identifier (default: 1).
+        limit: Maximum number of records to return (default: 20).
+        night_only: Filter to night-time media only (default: True).
+        day_date: Optional date filter in 'YYYY-MM-DD' format.
 
     Returns:
-        Dictionary confirming star trails generation job submission.
+        List of media asset metadata records.
     """
-    from ..flask import db
-    from ..flask.models import IndiAllSkyDbTaskQueueTable, TaskQueueQueue, TaskQueueState
+    from datetime import datetime as _dt
+    from ..flask.models import (
+        IndiAllSkyDbVideoTable,
+        IndiAllSkyDbKeogramTable,
+        IndiAllSkyDbStarTrailsTable,
+        IndiAllSkyDbStarTrailsVideoTable,
+        IndiAllSkyDbMiniVideoTable,
+    )
+
+    model_map = {
+        "timelapse": IndiAllSkyDbVideoTable,
+        "keogram": IndiAllSkyDbKeogramTable,
+        "startrails": IndiAllSkyDbStarTrailsTable,
+        "startrails_video": IndiAllSkyDbStarTrailsVideoTable,
+        "mini_timelapse": IndiAllSkyDbMiniVideoTable,
+    }
+
+    model = model_map.get(media_type)
+    if model is None:
+        return [{"status": "error", "message": f"Unknown media_type '{media_type}'. Choose from: {list(model_map.keys())}"}]
 
     app = _get_flask_app()
     with app.app_context():
-        task = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.VIDEO,
-            state=TaskQueueState.MANUAL,
-            priority=90,
-            data={
-                "action": "generateKeogramStarTrails",
-                "kwargs": {
-                    "timespec": day_date,
-                    "night": bool(night),
-                    "camera_id": camera_id,
-                },
-            },
-        )
-        db.session.add(task)
-        db.session.commit()
+        query = model.query.filter(model.camera_id == camera_id)
 
-        return {
-            "status": "success",
-            "message": "Star trails generation task enqueued.",
-            "task_id": task.id,
-            "day_date": day_date,
-            "night": bool(night),
-        }
+        if night_only:
+            query = query.filter(model.night == True)  # noqa: E712
+
+        if day_date:
+            try:
+                target_date = _dt.strptime(day_date, "%Y-%m-%d").date()
+                query = query.filter(model.dayDate == target_date)
+            except ValueError:
+                pass
+
+        entries = query.order_by(model.createDate.desc()).limit(limit).all()
+
+        results = []
+        for e in entries:
+            record: Dict[str, Any] = {
+                "id": e.id,
+                "filename": e.filename,
+                "createDate": e.createDate.isoformat() if e.createDate else None,
+                "dayDate": e.dayDate.isoformat() if e.dayDate else None,
+                "night": e.night,
+                "success": e.success,
+                "fileSize": e.fileSize,
+                "frames": getattr(e, "frames", None),
+            }
+            # framerate only on timelapse/mini/startrails_video
+            if hasattr(e, "framerate"):
+                record["framerate"] = e.framerate
+            results.append(record)
+
+        return results
 
 
 def register_ops_tools(mcp_server: Any) -> None:
@@ -366,9 +391,8 @@ def register_ops_tools(mcp_server: Any) -> None:
     mcp_server.tool()(get_hardware_throttling)
     mcp_server.tool()(inspect_task_queue)
     mcp_server.tool()(cancel_task)
-    mcp_server.tool()(trigger_cloud_sync)
     mcp_server.tool()(send_notification)
-    mcp_server.tool()(generate_custom_timelapse)
-    mcp_server.tool()(render_keogram)
-    mcp_server.tool()(generate_startrails)
+    mcp_server.tool()(generate_timelapse)
+    mcp_server.tool()(generate_keogram_and_startrails)
     mcp_server.tool()(backup_database)
+    mcp_server.tool()(query_media_catalog)

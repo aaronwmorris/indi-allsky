@@ -289,28 +289,23 @@ def detect_lines_and_meteors(
         config_overrides: Optional parameter overrides for sensitivity thresholds.
 
     Returns:
-        Dictionary containing detected line segments, coordinates, and classification count.
+        Dictionary containing the actual detected line count from the image processor.
     """
     sim_res = simulate_processing(
         fits_id=fits_id,
         config_overrides=config_overrides,
         return_image=False,
+        run_detection=True,
     )
     if sim_res.get("status") != "success":
         return sim_res
 
-    stars = sim_res.get("stars_count", 0)
-    lines = (
-        [{"length_px": 84, "angle_deg": 45.2, "confidence": 0.88, "type": "meteor_candidate"}]
-        if stars > 20
-        else []
-    )
-
     return {
         "status": "success",
         "fits_id": fits_id,
-        "detected_lines_count": len(lines),
-        "lines": lines,
+        "stars_count": sim_res.get("stars_count", 0),
+        "detected_lines_count": sim_res.get("detections_count", 0),
+        "processing_elapsed_s": sim_res.get("processing_elapsed_s"),
     }
 
 

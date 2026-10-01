@@ -2,6 +2,7 @@
 """INDI Allsky Model Context Protocol (MCP) Server CLI launcher."""
 
 import argparse
+import logging
 import sys
 from pathlib import Path
 
@@ -30,7 +31,18 @@ def cli():
         default=8000,
         help="Port for network transport (default: 8000)",
     )
+    parser.add_argument(
+        "--log-level",
+        default="INFO",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        help="Log verbosity level (default: INFO)",
+    )
     args = parser.parse_args()
+
+    logging.basicConfig(
+        level=getattr(logging, args.log_level),
+        format="%(asctime)s %(name)s %(levelname)s %(message)s",
+    )
 
     main(transport=args.transport, host=args.host, port=args.port)
 
