@@ -2,11 +2,12 @@ name: Monthly Release Bump
 
 on:
   schedule:
-    - cron: '20 4 1 * *'
+    - cron: '20 4 2 * *'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 jobs:
   bump-version:
@@ -14,20 +15,20 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: app-token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.RELEASE_APP_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: 'npm'
@@ -40,22 +41,43 @@ jobs:
           git config user.name "indi-release-bot[bot]"
           git config user.email "indi-release-bot[bot]@users.noreply.github.com"
 
-      - name: Bump version, tag, and push
+      - name: Bump version, create and merge PR, and push tag
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           # Generate version string based on current UTC date: indi_vYYYY.MM.01
           RELEASE_TAG="indi_v$(date -u +'%Y.%m.01')"
+          BRANCH_NAME="release/${RELEASE_TAG}"
           echo "Bumping to version: ${RELEASE_TAG}"
 
-          # 1. Run version bump script
+          # 1. Create and switch to release branch
+          git checkout -b "${BRANCH_NAME}"
+
+          # 2. Run version bump script
           npm run version:bump -- "${RELEASE_TAG}"
 
-          # 2. Stage tracked modified files and commit
+          # 3. Stage tracked modified files and commit
           git add -u
           git commit -m "Release ${RELEASE_TAG}"
 
-          # 3. Create annotated tag
-          git tag -a "${RELEASE_TAG}" -m "Release ${RELEASE_TAG}"
+          # 4. Push release branch to origin
+          git push origin "${BRANCH_NAME}" --force
 
-          # 4. Push commit and tags to main (will trigger the deb workflow)
-          git push origin main
+          # 5. Create Pull Request targeting main
+          PR_URL=$(gh pr create \
+            --title "Release ${RELEASE_TAG}" \
+            --body "Automated monthly release version bump to ${RELEASE_TAG}." \
+            --base main \
+            --head "${BRANCH_NAME}")
+          echo "Created PR: ${PR_URL}"
+
+          # 6. Merge Pull Request and delete remote branch
+          gh pr merge "${PR_URL}" --merge --delete-branch --admin || gh pr merge "${PR_URL}" --merge --delete-branch
+
+          # 7. Checkout main and update to merged commit
+          git checkout main
+          git pull origin main
+
+          # 8. Create annotated tag and push (triggers package-deb workflow)
+          git tag -a "${RELEASE_TAG}" -m "Release ${RELEASE_TAG}"
           git push origin "${RELEASE_TAG}"
