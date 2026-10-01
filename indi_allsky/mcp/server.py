@@ -1,6 +1,8 @@
 """INDI Allsky Model Context Protocol (MCP) Server."""
 
 import logging
+import argparse
+import sys
 from typing import Optional
 
 from mcp.server.mcpserver import MCPServer

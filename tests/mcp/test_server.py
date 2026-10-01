@@ -14,49 +14,45 @@ def test_create_mcp_server_instance():
 
 
 def test_mcp_server_all_tools_registered():
-    """Verify all toolsets across all phases are registered on the MCPServer."""
+    """Verify all toolsets are registered on the MCPServer."""
     server = create_mcp_server()
     registered_tools = [tool.name for tool in server._tool_manager.list_tools()]
 
     expected_tools = [
-        # Phase 2 Tools
+        # Config tools
         "get_config",
         "update_config",
         "list_config_history",
         "rollback_config",
+        # Image tools
         "get_latest_image",
         "query_image_history",
         "get_raw_fits_catalog",
         "get_image_metadata",
+        # Simulator tools
         "simulate_processing",
         "evaluate_image_quality",
         "compare_simulation_variants",
         "detect_lines_and_meteors",
-        # Phase 3 Tools
+        # Astrometry tools
         "solve_lens_geometry",
         "align_cardinal_directions",
-        "get_focuser_position",
-        "move_focuser",
-        "run_autofocus_sweep",
+        # Hardware tools (focuser removed — no real API exists)
         "get_sensor_telemetry",
-        "control_dew_heater",
-        "control_enclosure_fan",
         "set_capture_pause",
+        # Dark tools (BPM and master dark generation removed — no real task action exists)
         "audit_dark_library",
-        "generate_bad_pixel_map",
-        "generate_master_darks",
-        # Phase 4 Tools & Media
+        # Ops tools
         "get_system_logs",
         "get_hardware_throttling",
         "inspect_task_queue",
         "cancel_task",
-        "trigger_cloud_sync",
         "send_notification",
-        "generate_custom_timelapse",
-        "render_keogram",
-        "generate_startrails",
+        "generate_timelapse",
+        "generate_keogram_and_startrails",
         "backup_database",
-        # Ephemeris & Space Weather Tools
+        "query_media_catalog",
+        # Ephemeris & Space Weather tools
         "update_orbital_elements",
         "get_satellite_passes",
         "get_aurora_telemetry",
@@ -65,6 +61,23 @@ def test_mcp_server_all_tools_registered():
 
     for tool_name in expected_tools:
         assert tool_name in registered_tools, f"Expected tool '{tool_name}' to be registered."
+
+    # Verify removed tools are NOT registered
+    removed_tools = [
+        "get_focuser_position",
+        "move_focuser",
+        "run_autofocus_sweep",
+        "control_dew_heater",
+        "control_enclosure_fan",
+        "generate_bad_pixel_map",
+        "generate_master_darks",
+        "render_keogram",
+        "generate_startrails",
+        "generate_custom_timelapse",
+        "trigger_cloud_sync",
+    ]
+    for tool_name in removed_tools:
+        assert tool_name not in registered_tools, f"Removed tool '{tool_name}' should not be registered."
 
 
 def test_mcp_server_prompts_registered():
@@ -77,4 +90,3 @@ def test_mcp_server_prompts_registered():
     assert "diagnose_optics_and_focus" in registered_prompts
     assert "audit_observatory_health" in registered_prompts
     assert "diagnose_system_logs" in registered_prompts
-

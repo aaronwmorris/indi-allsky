@@ -31,20 +31,20 @@ def register_prompts(mcp_server: Any) -> None:
             "1. Read `allsky://camera/status` and `allsky://images/latest` resources.\n"
             "2. Query recent image history via `query_image_history(limit=10)`.\n"
             "3. Identify anomalies in star count, ADU levels, or detection rates.\n"
-            "4. Run `evaluate_image_quality` on the latest raw FITS frames to measure SNR and FWHM.\n"
-            "5. Report findings and suggest configuration adjustments or hardware maintenance (e.g. focuser adjustments or dome cleaning)."
+            "4. Run `evaluate_image_quality` on the latest raw FITS frames to measure SNR.\n"
+            "5. Report findings and suggest configuration adjustments or hardware maintenance (e.g. dome cleaning)."
         )
 
     @mcp_server.prompt()
     def diagnose_optics_and_focus() -> str:
-        """Prompt to diagnose optical alignment, field rotation, and focus curve state."""
+        """Prompt to diagnose optical alignment and field rotation."""
         return (
-            "You are diagnosing optical alignment, True North cardinal orientation, and focuser state.\n"
-            "1. Call `get_raw_fits_catalog(limit=3)` to obtain recent clear night frames.\n"
-            "2. Execute `solve_lens_geometry` to determine optical focal length, field-of-view, and center offsets.\n"
+            "You are diagnosing optical alignment and True North cardinal orientation.\n"
+            "1. Call `query_image_history(limit=3, night_only=True)` to obtain recent clear night frames.\n"
+            "2. Execute `solve_lens_geometry` using an `image_id` to determine optical focal length, field-of-view, and center offsets.\n"
             "3. Call `align_cardinal_directions` to derive True North alignment error.\n"
-            "4. Read `get_focuser_position` and examine star sharpness.\n"
-            "5. If defocusing or tilt is detected, recommend target focuser step movement via `move_focuser` or `run_autofocus_sweep`."
+            "4. Examine star counts and background noise from the solve result.\n"
+            "5. If misalignment is detected, recommend correcting LENS_AZIMUTH, LENS_OFFSET_X/Y via `update_config`."
         )
 
     @mcp_server.prompt()
@@ -52,11 +52,12 @@ def register_prompts(mcp_server: Any) -> None:
         """Prompt to inspect dark frame library, environmental metrics, and storage quotas."""
         return (
             "You are auditing observatory environmental health and calibration library coverage.\n"
-            "1. Read `allsky://telemetry/environment` and check ambient temperature, humidity, and dew point.\n"
-            "2. Inspect dark frame library coverage gaps using `audit_dark_library`.\n"
+            "1. Read `allsky://telemetry/environment` and check ambient temperature and SQM.\n"
+            "2. Read `allsky://darks/library` to inspect dark frame library coverage gaps.\n"
             "3. Check hardware throttling state using `get_hardware_throttling`.\n"
             "4. Inspect pending operations using `inspect_task_queue`.\n"
-            "5. If temperature bins lack dark calibration, trigger `generate_master_darks` or adjust dew heater power via `control_dew_heater`."
+            "5. If temperature bins lack dark calibration, trigger `generate_keogram_and_startrails` "
+            "or pause capture via `set_capture_pause` if conditions are poor."
         )
 
     @mcp_server.prompt()
@@ -69,4 +70,3 @@ def register_prompts(mcp_server: Any) -> None:
             "3. Check `get_hardware_throttling` for undervoltage or CPU thermal throttling.\n"
             "4. Propose remedial steps or trigger a notification alert via `send_notification`."
         )
-

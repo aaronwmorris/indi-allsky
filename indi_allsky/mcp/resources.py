@@ -97,6 +97,14 @@ def register_resources(mcp_server: Any) -> None:
         queue_items = inspect_task_queue()
         return json.dumps(queue_items, indent=2)
 
+    @mcp_server.resource("allsky://darks/library")
+    def get_dark_library_resource() -> str:
+        """Active master dark frame library coverage summary."""
+        from .tools_darks import audit_dark_library
+
+        result = audit_dark_library()
+        return json.dumps(result, indent=2)
+
     @mcp_server.resource("allsky://logs/recent")
     def get_recent_logs_resource() -> str:
         """Recent application logs from indi-allsky."""
@@ -104,4 +112,3 @@ def register_resources(mcp_server: Any) -> None:
 
         logs_data = get_system_logs(log_type="app", lines=50)
         return "\n".join(logs_data.get("lines", []))
-
