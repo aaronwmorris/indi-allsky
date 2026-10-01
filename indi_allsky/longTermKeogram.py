@@ -368,7 +368,11 @@ class LongTermKeogramGenerator(object):
         if self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'] == 'custom':
             pillow_font_file_p = Path(self.config['TEXT_PROPERTIES']['PIL_FONT_CUSTOM'])
         else:
-            pillow_font_file_p = self.font_path.joinpath(self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'])
+            font_filename = self.config['TEXT_PROPERTIES'].get('PIL_FONT_FILE') or 'fonts-freefont-ttf/FreeMonoBold.ttf'
+            pillow_font_file_p = self.font_path.joinpath(font_filename)
+
+        if not pillow_font_file_p.is_file():
+            pillow_font_file_p = self.font_path.joinpath('fonts-freefont-ttf/FreeMonoBold.ttf')
 
 
         pillow_font_size = self.config.get('LONGTERM_KEOGRAM', {}).get('PIL_FONT_SIZE', 30)

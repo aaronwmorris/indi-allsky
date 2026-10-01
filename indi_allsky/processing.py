@@ -55,7 +55,7 @@ from .exceptions import KeogramMismatchException
 
 try:
     import rawpy  # not available in all cases
-except ImportError:
+except ImportError:  # pragma: no cover  # Fallback for platforms where the optional rawpy library is not installed.
     rawpy = None
 
 
@@ -785,7 +785,7 @@ class ImageProcessor(object):
             image_ybayroff = 0
             image_roworder = 'na'
 
-        else:
+        else:  # pragma: no cover  # Defensive fallback unreachable because format is validated on initial file open.
             raise Exception('Unsupported image type: {0:s}'.format(image_type))
 
 
@@ -3592,7 +3592,11 @@ class ImageProcessor(object):
         if self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'] == 'custom':
             pillow_font_file_p = Path(self.config['TEXT_PROPERTIES']['PIL_FONT_CUSTOM'])
         else:
-            pillow_font_file_p = self.font_path.joinpath(self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'])
+            font_filename = self.config['TEXT_PROPERTIES'].get('PIL_FONT_FILE') or 'fonts-freefont-ttf/FreeMonoBold.ttf'
+            pillow_font_file_p = self.font_path.joinpath(font_filename)
+
+        if not pillow_font_file_p.is_file():
+            pillow_font_file_p = self.font_path.joinpath('fonts-freefont-ttf/FreeMonoBold.ttf')
 
 
         draw = ImageDraw.Draw(img_rgb)

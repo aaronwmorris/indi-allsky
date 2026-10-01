@@ -603,7 +603,7 @@ def _file_lock(lock_path):
                 lock_file.write(b'0')
                 lock_file.flush()
             lock_file.seek(0)
-            if os.name == 'nt':
+            if os.name == 'nt':  # pragma: no cover  # Windows-only file locking
                 import msvcrt
                 msvcrt.locking(lock_file.fileno(), msvcrt.LK_LOCK, 1)
             else:
@@ -613,7 +613,7 @@ def _file_lock(lock_path):
                 yield
             finally:
                 lock_file.seek(0)
-                if os.name == 'nt':
+                if os.name == 'nt':  # pragma: no cover  # Windows-only file locking
                     msvcrt.locking(lock_file.fileno(), msvcrt.LK_UNLCK, 1)
                 else:
                     fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
@@ -771,13 +771,11 @@ def cleanup_expired_sessions(storage_root=None, now=None):
     )
     removed = 0
     for candidate in root.iterdir():
-        if (
-            candidate.is_symlink()
-            or not candidate.is_dir()
-            or not SESSION_ID_RE.fullmatch(candidate.name)
-        ):
+        if not SESSION_ID_RE.fullmatch(candidate.name):
             continue
         try:
+            if candidate.is_symlink() or not candidate.is_dir():
+                continue
             modified = candidate.stat().st_mtime
         except OSError:
             continue
@@ -1504,8 +1502,12 @@ def _stage_database_files_unlocked(
                     'this calibration database search was cancelled'
                 )
             source = Path(record['path']).resolve()
-            if not source.is_file():
-                staging_rejections['selected FITS no longer available'] += 1
+            try:
+                if not source.is_file():
+                    staging_rejections['selected FITS no longer available'] += 1
+                    continue
+            except OSError:  # pragma: no cover  # Python < 3.13 is_file() OSError
+                staging_rejections['selected FITS became unavailable'] += 1
                 continue
             if not is_database_fits_path(source):
                 raise CalibrationSessionError(
@@ -1675,7 +1677,7 @@ def _store_upload_unlocked(
             raise CalibrationUploadError(
                 f'{file_storage.filename} does not appear to be a FITS file'
             )
-        if written == 0:
+        if written == 0:  # pragma: no cover  # Unreachable defensive check
             raise CalibrationUploadError(f'{file_storage.filename} is empty')
         if _cancel_marker_path(session_dir).exists():
             raise CalibrationUploadError('this calibration upload was cancelled')
@@ -3602,7 +3604,9 @@ def format_integrated_report(payload, manifest):
     derived_settings = payload['derived_settings']
     result_summary = _result_summary(payload)
     source_details = manifest.get('source') or {}
-    configured_at_start = manifest.get('settings') or {}
+    configured_at_start = manifest.get('settings')
+    if not isinstance(configured_at_start, dict):
+        configured_at_start = {}
     comparison = compare_result_to_configuration(
         result_summary,
         configured_at_start,

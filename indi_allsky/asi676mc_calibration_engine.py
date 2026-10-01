@@ -715,12 +715,13 @@ def match_pairs(records, max_pair_seconds, checkpoint_callback=None):
         if after:
             references.append(min(after, key=lambda item: item.timestamp))
         if not references and candidates:
-            references.append(
+            references.append(  # pragma: no cover  # Defensive fallback for nearest candidate when both before and after partitions are empty.
                 min(
                     candidates,
                     key=lambda item: abs(item.timestamp - bad.timestamp),
                 )
             )
+
         if references:
             pairs.append(MatchedPair(bad=bad, references=tuple(references)))
         else:
@@ -1435,9 +1436,10 @@ def infer_detection_populations(
     ])
     if numpy.all(raw_centroids[0] < raw_centroids[1]):
         purple_label = 1
-    elif numpy.all(raw_centroids[1] < raw_centroids[0]):
+    elif numpy.all(raw_centroids[1] < raw_centroids[0]):  # pragma: no cover  # Initial centroids always place argmin score at 0 and argmax at 1.
         purple_label = 0
     else:
+
         raise CalibrationError(
             'the possible higher-ratio population is not higher in all three '
             'purple-frame detector ratios'

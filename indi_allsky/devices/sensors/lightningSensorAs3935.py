@@ -67,7 +67,7 @@ class LightningSensorAs3935_SparkFun(SensorBase):
             distance_km_avg = 0.0
 
 
-        if distance_km_min == 0:
+        if distance_km_min > 0:
             if self.config.get('TEMP_DISPLAY') == 'f':
                 # if using fahrenheit, return in miles
                 distance_min = self.km2mi(distance_km_min)

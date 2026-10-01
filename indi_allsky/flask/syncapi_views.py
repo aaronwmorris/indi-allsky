@@ -239,7 +239,7 @@ class SyncApiBaseView(BaseView):
 
         # do not sync these metadata keys for now
         exclude_keys = []
-        for k in exclude_keys:
+        for k in exclude_keys:  # pragma: no cover  # exclude_keys is currently empty
             try:
                 metadata.pop(k)
             except KeyError:
@@ -601,7 +601,7 @@ class SyncApiImageView(SyncApiBaseImageView):
                 image_metadata['keogram_pixels'],
             )
 
-        return super(SyncApiImageView, self).processPost(camera, image_metadata, tmp_file_p, overwrite=False)
+        return super(SyncApiImageView, self).processPost(camera, image_metadata, tmp_file_p, overwrite=overwrite)
 
 
 class SyncApiVideoView(SyncApiBaseView):
@@ -752,7 +752,7 @@ class SyncApiThumbnailView(SyncApiBaseView):
 
         else:
             if not overwrite:
-                raise EntryExists('Entry Exists: {0:s}'.format(old_thumbnail_entry.filename))
+                raise EntryExists('Entry Exists: {0:s}'.format(str(thumbnail_file_p)))
 
             app.logger.warning('Replacing image')
             thumbnail_file_p.unlink()

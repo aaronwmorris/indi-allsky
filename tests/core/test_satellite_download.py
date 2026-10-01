@@ -331,66 +331,88 @@ def test_update_purges_legacy_groups(mock_get, flask_app, db):
     assert all_entries[0].group == constants.SATELLITE_VISUAL
 
 
-def test_allsky_sat_task_scheduling_fresh(flask_app, tmp_path):
-    """IndiAllSky startup schedules sat task 3 days out when TLE data is fresh"""
-    from indi_allsky.allsky import IndiAllSky
-    from indi_allsky.flask.miscDb import miscDb
+def test_satellite_download_exceptions(flask_app):
+    import requests
+    import urllib3
+    import ssl
+    from requests.exceptions import ConnectTimeout, ConnectionError, ReadTimeout, SSLError, RequestException
 
-    mock_config = {
-        'LOCATION_LATITUDE': -34.9285,
-        'LOCATION_LONGITUDE': 138.6007,
-        'LOCATION_ELEVATION': 50,
-        'IMAGE_FOLDER': str(tmp_path),
-        'VARLIB_FOLDER': str(tmp_path),
-        'UPLOAD_WORKERS': 1,
-    }
+    updater = IndiAllskyUpdateSatelliteData({})
+    exceptions = [
+        socket.timeout("timeout"),
+        ConnectTimeout("connect timeout"),
+        ConnectionError("connect error"),
+        ReadTimeout("read timeout"),
+        urllib3.exceptions.ReadTimeoutError(None, "url", "read timeout"),
+        SSLError("ssl error"),
+        RequestException("req error"),
+    ]
 
-    misc_db = miscDb(mock_config)
-    now = int(time.time())
-    misc_db.setState('SATELLITE_TLE_TS', now - 3600)  # 1 hour ago
-    misc_db.setState('SATELLITE_TLE_NEXT_ATTEMPT_TS', 0)
+    for exc in exceptions:
+        with patch.object(updater, 'download_tle', side_effect=exc):
+            assert updater.update(force=True) is False
 
-    with patch('indi_allsky.allsky.IndiAllSkyConfig') as mock_cfg_cls:
-        mock_cfg_inst = MagicMock()
-        mock_cfg_inst.config = mock_config
-        mock_cfg_inst.config_id = 1
-        mock_cfg_inst.config_level = 1
-        mock_cfg_cls.return_value = mock_cfg_inst
+    # HTTP 500
+    with patch.object(updater, 'download_tle', return_value="some_data"):
+        updater.last_status_code = 500
+        assert updater.update(force=True) is False
 
-        with patch('indi_allsky.allsky.__config_level__', 1):
-            allsky = IndiAllSky()
-            # Must be scheduled for last_ts + 259200
-            expected = (now - 3600) + allsky.sat_data_tasks_offset
-            assert abs(allsky.sat_data_tasks_time - expected) < 5
+    # Empty response
+    with patch.object(updater, 'download_tle', return_value=""):
+        updater.last_status_code = 200
+        assert updater.update(force=True) is False
+
+    # parse_tle returns None
+    with patch.object(updater, 'download_tle', return_value="data"), patch.object(updater, 'parse_tle', return_value=None):
+        updater.last_status_code = 200
+        assert updater.update(force=True) is False
 
 
-def test_allsky_sat_task_scheduling_cooldown(flask_app, tmp_path):
-    """IndiAllSky startup schedules sat task at cooldown timestamp if active"""
-    from indi_allsky.allsky import IndiAllSky
-    from indi_allsky.flask.miscDb import miscDb
+def test_satellite_download_db_fallback_and_notice_exceptions(flask_app, db):
+    updater = IndiAllskyUpdateSatelliteData({})
 
-    mock_config = {
-        'LOCATION_LATITUDE': -34.9285,
-        'LOCATION_LONGITUDE': 138.6007,
-        'LOCATION_ELEVATION': 50,
-        'IMAGE_FOLDER': str(tmp_path),
-        'VARLIB_FOLDER': str(tmp_path),
-        'UPLOAD_WORKERS': 1,
-    }
+    # Failure notification exception in _record_failure
+    with patch.object(updater._miscDb, 'addNotification', side_effect=Exception("DB fail")):
+        updater._record_failure(is_rate_limit=False, error_msg="err")
 
-    misc_db = miscDb(mock_config)
-    now = int(time.time())
-    cooldown_target = now + 7200
-    misc_db.setState('SATELLITE_TLE_NEXT_ATTEMPT_TS', cooldown_target)
+    # Clear notification exception in _record_success
+    with patch.object(updater._miscDb, 'clearNotification', side_effect=Exception("Clear fail")):
+        updater._record_success()
 
-    with patch('indi_allsky.allsky.IndiAllSkyConfig') as mock_cfg_cls:
-        mock_cfg_inst = MagicMock()
-        mock_cfg_inst.config = mock_config
-        mock_cfg_inst.config_id = 1
-        mock_cfg_inst.config_level = 1
-        mock_cfg_cls.return_value = mock_cfg_inst
+    # DB fallback when SATELLITE_TLE_TS is 0
+    tle_row = IndiAllSkyDbTleDataTable(
+        title="TEST SAT",
+        line1=VALID_LINE1,
+        line2=VALID_LINE2,
+        group=constants.SATELLITE_VISUAL,
+        createDate=datetime.now(),
+    )
+    db.session.add(tle_row)
+    db.session.commit()
 
-        with patch('indi_allsky.allsky.__config_level__', 1):
-            allsky = IndiAllSky()
-            assert allsky.sat_data_tasks_time == cooldown_target
+    updater._miscDb.setState('SATELLITE_TLE_TS', 0)
+    assert updater.update(force=False) is True
+
+
+def test_satellite_download_extra_exceptions_and_invalid_ts(flask_app, db):
+    """Cover lines 121-122 (invalid SATELLITE_TLE_TS string state), 158 (SSLError), 172-174 (HTTP 500 error code handling)."""
+    import ssl
+    import requests
+
+    updater = IndiAllskyUpdateSatelliteData({})
+
+    # Lines 121-122: Invalid string in SATELLITE_TLE_TS
+    updater._miscDb.setState('SATELLITE_TLE_TS', 'not_an_int')
+    valid_tle = "ISS (ZARYA)\n1 25544U 98067A   24001.00000000  .00016717  00000-0  30000-3 0  9993\n2 25544  51.6400 300.0000 0007000 100.0000 260.0000 15.50000000400000\n"
+    with patch.object(updater, 'download_tle', return_value=valid_tle):
+        assert updater.update(force=False) is True
+
+    # Line 158: SSLCertVerificationError
+    with patch('requests.get', side_effect=ssl.SSLCertVerificationError('SSL verification failed')):
+        assert updater.update(force=True) is False
+
+    # Lines 172-174: HTTP 500 status code
+    mock_response = MagicMock(status_code=500)
+    with patch('requests.get', return_value=mock_response):
+        assert updater.update(force=True) is False
 

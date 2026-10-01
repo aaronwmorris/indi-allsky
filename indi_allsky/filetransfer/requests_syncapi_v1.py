@@ -158,14 +158,14 @@ class requests_syncapi_v1(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except requests.exceptions.ConnectTimeout as e:
             raise ConnectionFailure(str(e)) from e
-        except requests.exceptions.ConnectionError as e:
-            raise ConnectionFailure(str(e)) from e
         except requests.exceptions.ReadTimeout as e:
             raise ConnectionFailure(str(e)) from e
         except ssl.SSLCertVerificationError as e:
             raise CertificateValidationFailure(str(e)) from e
         except requests.exceptions.SSLError as e:
             raise CertificateValidationFailure(str(e)) from e
+        except requests.exceptions.ConnectionError as e:
+            raise ConnectionFailure(str(e)) from e
         finally:
             f_metadata.close()
             f_media.close()

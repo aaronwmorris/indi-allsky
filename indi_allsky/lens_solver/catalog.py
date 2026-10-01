@@ -14,7 +14,7 @@ CATALOG_VALIDATED_ROW_CEILING = 1000
 CATALOG_VALIDATION_EPSILON_MAG = 0.05
 
 # catalog rows are [hip, vmag, ra_deg, dec_deg], extracted from the vendored
-# virtualsky.js + stars.json by testing/generate_lens_solver_catalog.py
+# virtualsky.js + stars.json by tools/generate_lens_solver_catalog.py
 CATALOG_ROW_LEN = 4
 CATALOG_JSON = Path(__file__).parent.parent.joinpath(
     'data', 'lens_solver_stars.json')

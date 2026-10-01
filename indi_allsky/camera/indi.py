@@ -160,7 +160,13 @@ class IndiClient(PyIndi.BaseClient):
         logger.info('INDI version: %s', libindi_version)
 
 
-        pyindi_client_version = importlib.metadata.version('pyindi-client')
+        try:
+            pyindi_client_version = importlib.metadata.version('pyindi-client')
+        except importlib.metadata.PackageNotFoundError:
+            pyindi_client_version = 'Info not available'
+        except Exception:
+            pyindi_client_version = 'Info not available'
+
         logger.info('PyIndi version: %s', pyindi_client_version)
 
 
@@ -1781,7 +1787,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def number_values(self, device, name, ctl=None):
-        return self.__control2dict(device, name, 'text', lambda c: {'value': c.getValue(), 'min': c.min, 'max': c.max, 'step': c.step, 'format': c.format}, ctl)
+        return self.__control2dict(device, name, 'number', lambda c: {'value': c.getValue(), 'min': c.min, 'max': c.max, 'step': c.step, 'format': c.format}, ctl)
 
 
     def light_values(self, device, name, ctl=None):
