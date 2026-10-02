@@ -19,6 +19,7 @@ Welcome to the indi-allsky wiki!
 * [Star Detection](Star-Detection)
 * [Docker](Docker)
 * [YouTube Uploads](Youtube-Uploads)
+* [Model Context Protocol (MCP)](Model-Context-Protocol-(MCP))
 
 # Backup and Recovery
 * [Backup and Recovery](Backup-and-Recovery)

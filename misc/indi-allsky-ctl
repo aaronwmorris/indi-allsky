@@ -67,6 +67,7 @@ Hardware & Diagnostics:
   test-adsb                Test ADS-B aircraft tracking receiver connection
   test-oci                 Validate Oracle Cloud Infrastructure (OCI) credentials
   test-websocket           Test WebSocket real-time events and send control commands
+  mcp [action]             Control MCP server daemon (enable|disable|start|stop|restart|status|logs|run)
   support-info             Generate diagnostic report bundle for troubleshooting
 
 Peripheral Configuration & Integrations:
@@ -393,6 +394,46 @@ case "$COMMAND" in
         ;;
     test-websocket|test-ws)
         exec "$PYTHON_BIN" "${APP_DIR}/misc/test_websocket_events.py" "$@"
+        ;;
+    mcp)
+        case "${1:-}" in
+            enable)
+                sudo systemctl enable --now indi-allsky-mcp.service
+                echo "indi-allsky: MCP server daemon enabled and started."
+                ;;
+            disable)
+                sudo systemctl disable --now indi-allsky-mcp.service
+                echo "indi-allsky: MCP server daemon stopped and disabled."
+                ;;
+            start)
+                sudo systemctl start indi-allsky-mcp.service
+                echo "indi-allsky: MCP server daemon started."
+                ;;
+            stop)
+                sudo systemctl stop indi-allsky-mcp.service
+                echo "indi-allsky: MCP server daemon stopped."
+                ;;
+            restart)
+                sudo systemctl restart indi-allsky-mcp.service
+                echo "indi-allsky: MCP server daemon restarted."
+                ;;
+            status)
+                systemctl status indi-allsky-mcp.service --no-pager
+                ;;
+            logs)
+                journalctl -u indi-allsky-mcp.service -f
+                ;;
+            run)
+                shift
+                exec "$PYTHON_BIN" "${APP_DIR}/misc/indi_allsky_mcp.py" "$@"
+                ;;
+            "")
+                exec "$PYTHON_BIN" "${APP_DIR}/misc/indi_allsky_mcp.py"
+                ;;
+            *)
+                exec "$PYTHON_BIN" "${APP_DIR}/misc/indi_allsky_mcp.py" "$@"
+                ;;
+        esac
         ;;
     support-info)
         exec bash "${APP_DIR}/misc/support_info.sh" "$@"
