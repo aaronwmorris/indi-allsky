@@ -18,6 +18,8 @@ INDI_VERSION="${INDIALLSKY_INDI_VERSION:-}"
 #### end config ####
 
 
+# The PyPi module is now usable
+PYINDI_2_2_0="pyindi-client >= 2.3.0"
 PYINDI_2_0_4="git+https://github.com/indilib/pyindi-client.git@d8ad88f#egg=pyindi-client"
 PYINDI_2_0_0="git+https://github.com/indilib/pyindi-client.git@674706f#egg=pyindi-client"
 PYINDI_1_9_9="git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client"
@@ -81,6 +83,7 @@ sleep 10
 
 # pyindi-client setup
 SUPPORTED_INDI_VERSIONS=(
+    "2.2.4"
     "2.2.3"
     "2.2.2"
     "2.2.1"
@@ -153,33 +156,60 @@ START_TIME=$(date +%s)
 source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 
 
-if [ "$INDI_VERSION" == "2.0.3" ]; then
-    pip3 uninstall -y pyindi-client
-    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_0"
+if [ "$INDI_VERSION" == "2.1.9" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.8" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.7" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.6" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.5" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.4" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.3" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.2" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.1" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.0" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.9" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.8" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.7" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.6" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.5" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.4" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.0.3" ]; then
+    PYINDI_SPEC="$PYINDI_2_0_0"
 elif [ "$INDI_VERSION" == "2.0.2" ]; then
-    pip3 uninstall -y pyindi-client
-    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_0"
+    PYINDI_SPEC="$PYINDI_2_0_0"
 elif [ "$INDI_VERSION" == "2.0.1" ]; then
-    pip3 uninstall -y pyindi-client
-    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_0"
+    PYINDI_SPEC="$PYINDI_2_0_0"
 elif [ "$INDI_VERSION" == "2.0.0" ]; then
-    pip3 uninstall -y pyindi-client
-    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_0"
+    PYINDI_SPEC="$PYINDI_2_0_0"
 elif [ "$INDI_VERSION" == "1.9.9" ]; then
-    pip3 uninstall -y pyindi-client
-    pip3 install --no-cache-dir --upgrade "$PYINDI_1_9_9"
+    PYINDI_SPEC="$PYINDI_1_9_9"
 elif [ "$INDI_VERSION" == "1.9.8" ]; then
-    pip3 uninstall -y pyindi-client
-    pip3 install --no-cache-dir --upgrade "$PYINDI_1_9_8"
+    PYINDI_SPEC="$PYINDI_1_9_8"
 elif [ "$INDI_VERSION" == "1.9.7" ]; then
-    pip3 uninstall -y pyindi-client
-    pip3 install --no-cache-dir --upgrade "$PYINDI_1_9_8"
+    PYINDI_SPEC="$PYINDI_1_9_8"
 else
     # default latest release
-    pip3 uninstall -y pyindi-client
-    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_4"
+    PYINDI_SPEC="$PYINDI_2_2_0"
 fi
 
+
+pip3 uninstall -y pyindi-client
+pip3 install --no-cache-dir --upgrade "$PYINDI_SPEC"
 
 
 END_TIME=$(date +%s)

@@ -103,7 +103,7 @@ def _paint_stars_from_table(tbl, shape: tuple, fwhm: float) -> np.ndarray:
     """Paint detected stars as convolved impulses.
 
     Args:
-        tbl: Astropy table with xcentroid, ycentroid columns
+        tbl: Astropy table with x_centroid, y_centroid columns
         shape: (height, width) of output mask
         fwhm: full-width half-max of stars for stamp generation
 
@@ -114,8 +114,8 @@ def _paint_stars_from_table(tbl, shape: tuple, fwhm: float) -> np.ndarray:
     if tbl is None or len(tbl) == 0:
         return impulses
 
-    xs = np.rint(tbl['xcentroid']).astype(int)
-    ys = np.rint(tbl['ycentroid']).astype(int)
+    xs = np.rint(tbl['x_centroid']).astype(int)
+    ys = np.rint(tbl['y_centroid']).astype(int)
     xs = np.clip(xs, 0, shape[1] - 1)
     ys = np.clip(ys, 0, shape[0] - 1)
     impulses[ys, xs] = 1.0
@@ -312,7 +312,7 @@ def fast_star_mask(img: np.ndarray, downsample: int = 4, patch_size: int = 32,
         if tbl is None:
             continue
         # stamp each detection, translating coords to image space
-        for xcent, ycent in zip(tbl['xcentroid'], tbl['ycentroid']):
+        for xcent, ycent in zip(tbl['x_centroid'], tbl['y_centroid']):
             gx = int(round(x0 + xcent))
             gy = int(round(y0 + ycent))
             y0s = max(gy - hh, 0)

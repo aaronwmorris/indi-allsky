@@ -8,6 +8,7 @@ import PyIndi
 import ctypes
 import sys
 import time
+import importlib.metadata
 from prettytable import PrettyTable
 import logging
 
@@ -49,13 +50,8 @@ class IndiListCameras(PyIndi.BaseClient):
     def __init__(self):
         super(IndiListCameras, self).__init__()
 
-        pyindi_version = '.'.join((
-            str(getattr(PyIndi, 'INDI_VERSION_MAJOR', -1)),
-            str(getattr(PyIndi, 'INDI_VERSION_MINOR', -1)),
-            str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
-        ))
-
-        logger.warning("INDI version: %s", pyindi_version)
+        pyindi_client_version = importlib.metadata.version('pyindi-client')
+        logger.info('PyIndi version: %s', pyindi_client_version)
 
 
     def newDevice(self, d):
