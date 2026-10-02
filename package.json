@@ -1,6 +1,6 @@
 {
   "name": "indi-allsky-ui",
-  "version": "2026.09.01",
+  "version": "2026.10.01",
   "description": "Frontend assets for indi-allsky",
   "scripts": {
     "test": "python -m pytest tests/",
