@@ -1,5 +1,6 @@
 import logging
 import time
+from threading import Lock
 
 from .sensorBase import SensorBase
 from ... import constants
@@ -32,38 +33,43 @@ class WindSpeedSensorWhSpWs01(SensorBase):
 
         try:
             import board
-            import countio
-            import digitalio
+            from gpiozero import DigitalInputDevice
         except Exception as e:
-            raise SensorException('WH-SP-WS01 sensor requires board/countio/digitalio support: %s' % str(e)) from e
+            raise SensorException('WH-SP-WS01 sensor requires board/gpiozero support: %s' % str(e)) from e
 
         if not hasattr(board, pin_1_name):
             raise SensorException('WH-SP-WS01 sensor pin name "%s" is not valid' % pin_1_name)
 
-        try:
-            self.counter = countio.Counter(
-                getattr(board, pin_1_name),
-                edge=countio.Edge.RISE,
-                pull=digitalio.Pull.DOWN,
-            )
-        except Exception as e:
-            raise SensorException('Unable to initialize WH-SP-WS01 sensor on pin %s: %s' % (pin_1_name, str(e))) from e
-
+        self._pulse_lock = Lock()
+        self._pulse_count = 0
         self.last_update = time.monotonic()
+        self.input_device = None
+
+        try:
+            self.input_device = DigitalInputDevice(
+                getattr(board, pin_1_name).id,
+                pull_up=False,
+            )
+            self.input_device.when_activated = self._count_pulse
+        except Exception as e:
+            self.deinit()
+            raise SensorException('Unable to initialize WH-SP-WS01 sensor on pin %s: %s' % (pin_1_name, str(e))) from e
 
         logger.warning('[%s] Initialized WH-SP-WS01 cup anemometer on pin %s with pull-down', self.name, pin_1_name)
 
 
-    def update(self):
-        now = time.monotonic()
-        elapsed = now - self.last_update
-        self.last_update = now
+    def _count_pulse(self):
+        with self._pulse_lock:
+            self._pulse_count += 1
 
-        try:
-            pulse_count = self.counter.count
-            self.counter.reset()
-        except Exception as e:
-            raise SensorException('WH-SP-WS01 sensor read failure: %s' % str(e)) from e
+
+    def update(self):
+        with self._pulse_lock:
+            now = time.monotonic()
+            elapsed = now - self.last_update
+            self.last_update = now
+            pulse_count = self._pulse_count
+            self._pulse_count = 0
 
         if elapsed <= 0:
             wind_speed_mps = 0.0
@@ -92,6 +98,7 @@ class WindSpeedSensorWhSpWs01(SensorBase):
 
     def deinit(self):
         try:
-            self.counter.deinit()
+            if self.input_device is not None:
+                self.input_device.close()
         except Exception:
             pass
