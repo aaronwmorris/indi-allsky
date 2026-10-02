@@ -33,20 +33,25 @@ class WindSpeedSensorWhSpWs01(SensorBase):
         try:
             import board
             import countio
+            import digitalio
         except Exception as e:
-            raise SensorException('WH-SP-WS01 sensor requires board/countio support: %s' % str(e)) from e
+            raise SensorException('WH-SP-WS01 sensor requires board/countio/digitalio support: %s' % str(e)) from e
 
         if not hasattr(board, pin_1_name):
             raise SensorException('WH-SP-WS01 sensor pin name "%s" is not valid' % pin_1_name)
 
         try:
-            self.counter = countio.Counter(getattr(board, pin_1_name), edge=countio.Edge.RISE)
+            self.counter = countio.Counter(
+                getattr(board, pin_1_name),
+                edge=countio.Edge.RISE,
+                pull=digitalio.Pull.DOWN,
+            )
         except Exception as e:
             raise SensorException('Unable to initialize WH-SP-WS01 sensor on pin %s: %s' % (pin_1_name, str(e))) from e
 
         self.last_update = time.monotonic()
 
-        logger.warning('[%s] Initialized WH-SP-WS01 cup anemometer on pin %s', self.name, pin_1_name)
+        logger.warning('[%s] Initialized WH-SP-WS01 cup anemometer on pin %s with pull-down', self.name, pin_1_name)
 
 
     def update(self):
@@ -75,7 +80,7 @@ class WindSpeedSensorWhSpWs01(SensorBase):
         else:
             wind_speed = wind_speed_mps
 
-        logger.info('[%s] WH-SP-WS01 wind speed: %0.1f', self.name, wind_speed)
+        logger.info('[%s] WH-SP-WS01 wind speed: %0.1f (%d pulses in %0.3f seconds)', self.name, wind_speed, pulse_count, elapsed)
 
         return {
             'wind_speed': wind_speed,

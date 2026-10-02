@@ -88,6 +88,14 @@ Select **WH-SP-WS01 Cup Anemometer** in any sensor slot and set that slot's **Pi
 
 Use `{windspeed:0.1f}` in an image-label template to show the current wind speed. The selected slot also records the numeric value in its normal user-sensor slot.
 
+#### Wiring and units
+
+The counter enables an internal pull-down. Connect the passive reed switch/dry contact between the GPIO input and 3.3 V, not ground. Never apply 5 V to a Raspberry Pi GPIO.
+
+Use Blinka pin names, for example `D25` for BCM GPIO25 (physical header pin 22). The I2C address is not used.
+
+The overlay contains only the numeric speed. Add a suffix matching Wind Speed Display, for example `Wind {windspeed:0.1f} km/h`. Update the suffix if the setting changes.
+
 ## Chart Titles
 Chart titles may be customized by updating the title template
 
