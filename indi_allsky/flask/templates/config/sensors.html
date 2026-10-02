@@ -433,6 +433,11 @@
                         {{ form_config.TEMP_SENSOR__FC37_ACTIVE_LOW(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="TEMP_SENSOR__FC37_ACTIVE_LOW-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        {{ form_config.WINDSPEED_DISPLAY.label(class='tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80') }}
+                        {{ form_config.WINDSPEED_DISPLAY(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="WINDSPEED_DISPLAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__DHT_USE_PULSEIO.label.text }}</span>
                         {{ form_config.TEMP_SENSOR__DHT_USE_PULSEIO(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}

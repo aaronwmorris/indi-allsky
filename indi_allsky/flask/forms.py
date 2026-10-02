@@ -3816,10 +3816,10 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
     WINDSPEED_DISPLAY_choices = (
-        ('ms', 'Meters/second (m/s)'),
-        ('knots', 'Knots'),
-        ('mph', 'Miles/hour (mph)'),
         ('kph', 'Kilometers/hour (km/h)'),
+        ('mph', 'Miles/hour (mph)'),
+        ('knots', 'Knots'),
+        ('ms', 'Meters/second (m/s)'),
     )
 
     IMAGE_FILE_TYPE_choices = (
