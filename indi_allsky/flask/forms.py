@@ -982,6 +982,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'dew_heater_status' : '',
         'fan_status' : '',
         'wind_dir' : '',
+        'windspeed' : 0.0,
         'rain_status' : '',
         'custom_1' : '',
         'custom_2' : '',
