@@ -33,7 +33,7 @@ class WindSpeedSensorWhSpWs01(SensorBase):
 
         try:
             import board
-            from gpiozero import DigitalInputDevice
+            from gpiozero import Button
         except Exception as e:
             raise SensorException('WH-SP-WS01 sensor requires board/gpiozero support: %s' % str(e)) from e
 
@@ -46,16 +46,17 @@ class WindSpeedSensorWhSpWs01(SensorBase):
         self.input_device = None
 
         try:
-            self.input_device = DigitalInputDevice(
+            self.input_device = Button(
                 getattr(board, pin_1_name).id,
-                pull_up=False,
+                pull_up=True,
+                bounce_time=0.02,
             )
-            self.input_device.when_activated = self._count_pulse
+            self.input_device.when_pressed = self._count_pulse
         except Exception as e:
             self.deinit()
             raise SensorException('Unable to initialize WH-SP-WS01 sensor on pin %s: %s' % (pin_1_name, str(e))) from e
 
-        logger.warning('[%s] Initialized WH-SP-WS01 cup anemometer on pin %s with pull-down', self.name, pin_1_name)
+        logger.warning('[%s] Initialized WH-SP-WS01 cup anemometer on pin %s with pull-up', self.name, pin_1_name)
 
 
     def _count_pulse(self):

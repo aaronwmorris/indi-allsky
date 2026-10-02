@@ -12,8 +12,10 @@ from indi_allsky.devices.exceptions import SensorException
 def gpio_backend(monkeypatch):
     device = Mock()
     factory = Mock(return_value=device)
-    monkeypatch.setitem(sys.modules, 'board', SimpleNamespace(D25=SimpleNamespace(id=25)))
-    monkeypatch.setitem(sys.modules, 'gpiozero', SimpleNamespace(DigitalInputDevice=factory))
+    monkeypatch.setitem(sys.modules, 'board', SimpleNamespace(
+        D24=SimpleNamespace(id=24), D25=SimpleNamespace(id=25),
+    ))
+    monkeypatch.setitem(sys.modules, 'gpiozero', SimpleNamespace(Button=factory))
     return device, factory
 
 
@@ -23,24 +25,25 @@ def gpio_backend(monkeypatch):
     ('mph', (10.0 / 3.0) * 2.2369362921),
     ('knots', (10.0 / 3.0) * 1.9438444924),
 ])
-def test_pulse_count_and_units(gpio_backend, monkeypatch, units, expected):
+@pytest.mark.parametrize('pin_name, gpio_number', [('D24', 24), ('D25', 25)])
+def test_pulse_count_and_units(gpio_backend, monkeypatch, units, expected, pin_name, gpio_number):
     device, factory = gpio_backend
     clock = iter([100.0, 102.0, 104.0, 106.0])
     monkeypatch.setattr(wind_sensor.time, 'monotonic', lambda: next(clock))
     sensor = wind_sensor.WindSpeedSensorWhSpWs01(
-        {'WINDSPEED_DISPLAY': units}, 'Wind', None, None, pin_1_name='D25',
+        {'WINDSPEED_DISPLAY': units}, 'Wind', None, None, pin_1_name=pin_name,
     )
-    factory.assert_called_once_with(25, pull_up=False)
+    factory.assert_called_once_with(gpio_number, pull_up=True, bounce_time=0.02)
 
     for pulse_index in range(10):
-        device.when_activated()
+        device.when_pressed()
 
     result = sensor.update()
     assert result['wind_speed'] == pytest.approx(expected, rel=1e-5)
     assert result['data'] == (result['wind_speed'],)
     assert sensor.update()['wind_speed'] == 0.0
 
-    device.when_activated()
+    device.when_pressed()
     assert sensor.update()['wind_speed'] == pytest.approx(expected / 10.0, rel=1e-5)
     sensor.deinit()
     device.close.assert_called_once()
@@ -67,11 +70,11 @@ def test_callback_setup_failure_closes_device(gpio_backend):
         close = Mock()
 
         @property
-        def when_activated(self):
+        def when_pressed(self):
             return None
 
-        @when_activated.setter
-        def when_activated(self, callback):
+        @when_pressed.setter
+        def when_pressed(self, callback):
             raise RuntimeError('Edge detection unavailable')
 
     failing_device = FailingDevice()
