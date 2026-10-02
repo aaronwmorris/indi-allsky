@@ -35,6 +35,7 @@ class SensorWorker(Process):
         sensors_user_av,
         night_av,
         astro_av,
+        sensors_user_read_time_av=None,
     ):
         super(SensorWorker, self).__init__()
 
@@ -46,6 +47,7 @@ class SensorWorker(Process):
 
         self.sensors_temp_av = sensors_temp_av
         self.sensors_user_av = sensors_user_av
+        self.sensors_user_read_time_av = sensors_user_read_time_av
         self.astro_av = astro_av
         self.night_av = night_av
         self.night = None  # None forces day/night change at startup
@@ -674,6 +676,7 @@ class SensorWorker(Process):
     def update_sensors(self):
         # update sensor readings
         for sensor in self.sensors:
+            read_count = 0
             try:
                 sensor_data = sensor.update()
 
@@ -699,6 +702,7 @@ class SensorWorker(Process):
 
                     for i, v in enumerate(sensor_data['data']):
                         self.sensors_user_av[sensor.slot + i] = float(v)
+                    read_count = len(sensor_data['data'])
             except SensorReadException as e:
                 logger.error('SensorReadException: {0:s}'.format(str(e)))
             except OSError as e:
@@ -707,6 +711,16 @@ class SensorWorker(Process):
                 logger.error('Sensor IOError: {0:s}'.format(str(e)))
             except IndexError as e:
                 logger.error('Sensor slot error: {0:s}'.format(str(e)))
+            except (TypeError, ValueError, OverflowError) as e:
+                logger.error('Sensor value error: %s', str(e))
+            finally:
+                if self.sensors_user_read_time_av is not None:
+                    with self.sensors_user_av.get_lock():
+                        read_time = time.monotonic()
+                        for offset in range(sensor.METADATA['count']):
+                            index = sensor.slot + offset
+                            if 0 <= index < len(self.sensors_user_read_time_av):
+                                self.sensors_user_read_time_av[index] = read_time if offset < read_count else 0.0
 
 
     def check_dew_heater_thresholds(self):

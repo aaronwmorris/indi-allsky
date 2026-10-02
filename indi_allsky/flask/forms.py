@@ -3405,17 +3405,17 @@ def SENSOR_USER_VAR_SLOT_validator(form, field):
 
 
 def CLOUDINESS_INDEX_CLEAR_TEMP_validator(form, field):
-    if not isinstance(field.data, (int, float)):
+    if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
         raise ValidationError('Please enter a valid number')
 
 
 def CLOUDINESS_INDEX_CLOUDY_TEMP_validator(form, field):
-    if not isinstance(field.data, (int, float)):
+    if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
         raise ValidationError('Please enter a valid number')
 
 
 def CLOUDINESS_INDEX_GROUND_TEMP_validator(form, field):
-    if not isinstance(field.data, (int, float)):
+    if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
         raise ValidationError('Please enter a valid number')
 
 
@@ -3425,7 +3425,7 @@ def CLOUDINESS_INDEX_TEMP_UNIT_validator(form, field):
 
 
 def CLOUDINESS_INDEX_COEFFICIENT_validator(form, field):
-    if not isinstance(field.data, (int, float)):
+    if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
         raise ValidationError('Please enter a valid number')
 
     if field.data <= 0.0 or field.data > 10.0:
@@ -3433,7 +3433,7 @@ def CLOUDINESS_INDEX_COEFFICIENT_validator(form, field):
 
 
 def CLOUDINESS_INDEX_OFFSET_validator(form, field):
-    if not isinstance(field.data, (int, float)):
+    if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
         raise ValidationError('Please enter a valid number')
 
     if abs(field.data) > 100.0:

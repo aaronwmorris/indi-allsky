@@ -3,6 +3,8 @@ Sensor Mapping Helper for indi-allsky.
 Dynamically resolves configured sensor slots into named dictionary entries based on system configuration and sensor metadata.
 """
 import logging
+import math
+import time
 from typing import Dict, Any, List
 from datetime import datetime
 from . import constants
@@ -50,6 +52,20 @@ TYPE_DEVICE_CLASS_MAP = {
 
 # labels used by the MLX90614/90615/90640 family to identify sky vs ambient readings
 CLOUD_SKY_TEMP_LABEL = 'Sky Temperature'
+
+
+def get_fresh_sensor_value(values, read_times, index, now=None, max_age=60.0):
+    if read_times is None:
+        return None
+
+    if now is None:
+        now = time.monotonic()
+
+    read_time = read_times[index]
+    if not math.isfinite(read_time) or read_time <= 0.0 or not 0.0 <= now - read_time <= max_age:
+        return None
+
+    return values[index]
 
 
 def _display_temperature_to_celsius(value: float, temp_display: str) -> float:
@@ -106,6 +122,9 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
 
     temp_sensor_cfg = config.get('TEMP_SENSOR', {})
 
+    if not temp_sensor_cfg.get('CLOUDINESS_INDEX_ENABLE', False):
+        return None
+
     candidates = list()
 
     for letter in ('A', 'B', 'C', 'D', 'E', 'F'):
@@ -149,9 +168,6 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
     if sky_temp is None:
         return None
 
-    if not temp_sensor_cfg.get('CLOUDINESS_INDEX_ENABLE', False):
-        return None
-
     temp_display = config.get('TEMP_DISPLAY', 'c')
     ref_unit = temp_sensor_cfg.get('CLOUDINESS_INDEX_TEMP_UNIT', 'c')
 
@@ -181,26 +197,37 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
             float(temp_sensor_cfg['CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP']), ref_unit)
         sky_temp_c = _display_temperature_to_celsius(float(sky_temp), temp_display)
         ground_temp_c = _display_temperature_to_celsius(float(ground_temp), temp_display)
-    except (KeyError, TypeError, ValueError):
+    except (KeyError, TypeError, ValueError, OverflowError):
         logger.error('Cloud calibration or live sensor readings are invalid')
+        return None
+
+    if not all(math.isfinite(value) for value in (
+            clear_sky_temp, cloudy_sky_temp, clear_ground_temp,
+            cloudy_ground_temp, sky_temp_c, ground_temp_c)):
         return None
 
     clear_delta = clear_ground_temp - clear_sky_temp
     cloudy_delta = cloudy_ground_temp - cloudy_sky_temp
     span = clear_delta - cloudy_delta
-    if span <= 0:
+    if not math.isfinite(span) or span <= 0:
         logger.error('Clear-sky ground-to-sky difference must exceed cloudy-sky difference')
         return None
 
     try:
         coefficient = float(temp_sensor_cfg.get('CLOUDINESS_INDEX_COEFFICIENT', 1.0))
         offset = float(temp_sensor_cfg.get('CLOUDINESS_INDEX_OFFSET', 0.0))
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         logger.error('Cloud calibration coefficient or offset is invalid')
+        return None
+
+    if (not math.isfinite(coefficient) or not 0.0 < coefficient <= 10.0
+            or not math.isfinite(offset) or abs(offset) > 100.0):
         return None
 
     cloudiness_index = ((clear_delta - (ground_temp_c - sky_temp_c)) / span) * 100.0
     cloudiness_index = (cloudiness_index * coefficient) + offset
+    if not math.isfinite(cloudiness_index):
+        return None
     return max(0.0, min(100.0, cloudiness_index))
 
 

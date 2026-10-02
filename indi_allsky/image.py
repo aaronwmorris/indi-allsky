@@ -86,6 +86,7 @@ class ImageWorker(Process):
         sensors_user_av,
         night_av,
         astro_av,
+        sensors_user_read_time_av=None,
     ):
         super(ImageWorker, self).__init__()
 
@@ -104,6 +105,7 @@ class ImageWorker(Process):
 
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av
+        self.sensors_user_read_time_av = sensors_user_read_time_av
         self.night_av = night_av
         self.astro_av = astro_av
 
@@ -407,10 +409,12 @@ class ImageWorker(Process):
             #task.setFailed('Bad Image: {0:s}'.format(str(filename_p)))
             return
 
-        i_ref.cloudiness_index = sensors_mapping.calculate_cloudiness_index(
-            self.config,
-            lambda idx: self.sensors_user_av[idx],
-        )
+        with self.sensors_user_av.get_lock():
+            i_ref.cloudiness_index = sensors_mapping.calculate_cloudiness_index(
+                self.config,
+                lambda idx: sensors_mapping.get_fresh_sensor_value(
+                    self.sensors_user_av, self.sensors_user_read_time_av, idx),
+            )
 
         # Purple-frame handling deliberately precedes both pre-dark and
         # post-dark standard FITS saving. In active repair mode those outputs
@@ -1129,8 +1133,9 @@ class ImageWorker(Process):
                 mqtt_data[sensor_topic] = round(self.sensors_user_av[i], 3)
 
 
-            if i_ref.cloudiness_index is not None:
-                mqtt_data['cloudiness_index'] = round(i_ref.cloudiness_index, 1)
+            mqtt_data['cloudiness_index'] = (
+                round(i_ref.cloudiness_index, 1) if i_ref.cloudiness_index is not None else ''
+            )
 
 
             if new_filename:
@@ -2335,6 +2340,7 @@ class ImageWorker(Process):
             'current_adu'         : adu,
             'adu_average'         : adu_average,
             'sqm'                 : i_ref.sqm_value,
+            'cloudiness_index'    : i_ref.cloudiness_index,
             'stars'               : len(i_ref.stars),
             'detections'          : len(i_ref.lines),
             'time'                : i_ref.exp_date.strftime('%s'),
