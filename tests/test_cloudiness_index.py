@@ -136,6 +136,7 @@ def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled, c
     assert ('style="display: none;"' in panel.split('>', 1)[0]) is not has_cloud_sensor
     before_settings, settings = rendered.split('<div id="cloudiness-index-settings"', 1)
 
+    assert 'This is a local IR cloudiness indicator, not a percentage of sky covered by clouds.' in before_settings
     assert 'id="' + enable_field + '"' in before_settings
     assert ('style="display: none;"' in settings.split('>', 1)[0]) is not enabled
     for name in field_names - {enable_field}:
@@ -147,6 +148,57 @@ def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled, c
     for name in ('TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT', 'TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET'):
         assert 'id="' + name + '"' not in before_tuning
         assert 'id="' + name + '"' in tuning
+
+
+@pytest.mark.parametrize('read_time, expected', [(100.0, 50.0), (40.0, None), (0.0, None), (None, None)])
+def test_image_cloudiness_calculation_uses_snapshot_after_releasing_lock(monkeypatch, read_time, expected):
+    import time
+    from threading import Lock
+
+    source = Path(__file__).resolve().parents[1] / 'indi_allsky' / 'image.py'
+    tree = ast.parse(source.read_text(encoding='utf-8'))
+    method = next(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)
+                  and any(isinstance(child, ast.Call) and isinstance(child.func, ast.Attribute)
+                          and child.func.attr == 'calculate_cloudiness_index' for child in ast.walk(node)))
+    start = next(index for index, node in enumerate(method.body) if isinstance(node, ast.With)
+                 and any(isinstance(child, ast.Attribute) and child.attr == 'sensors_user_av'
+                         for child in ast.walk(node)))
+
+    sensor_lock = Lock()
+    values = [0.0] * 110
+    values[10:12] = [10.0, -5.0]
+    read_times = [read_time] * 110
+
+    class SensorArray:
+        def __init__(self, data):
+            self.data = data
+
+        def get_lock(self):
+            return sensor_lock
+
+        def __getitem__(self, index):
+            assert sensor_lock.locked()
+            return self.data[index]
+
+    worker = SimpleNamespace(
+        config=_config(), sensors_user_av=SensorArray(values),
+        sensors_user_read_time_av=SensorArray(read_times) if read_time is not None else None,
+    )
+    image_ref = SimpleNamespace()
+    calculate = sensors_mapping.calculate_cloudiness_index
+
+    def calculate_from_snapshot(config, get_sensor_value):
+        assert not sensor_lock.locked()
+        values[10:12] = [40.0, -20.0]
+        read_times[:] = [0.0] * 110
+        return calculate(config, get_sensor_value)
+
+    monkeypatch.setattr(sensors_mapping, 'calculate_cloudiness_index', calculate_from_snapshot)
+    monkeypatch.setattr(time, 'monotonic', lambda: 101.0)
+    namespace = {'self': worker, 'i_ref': image_ref, 'sensors_mapping': sensors_mapping, 'time': time}
+    exec(compile(ast.Module(body=method.body[start:start + 3], type_ignores=[]),
+                 str(source), 'exec'), namespace)
+    assert image_ref.cloudiness_index == expected
 
 
 def test_returns_none_until_calibration_is_enabled():

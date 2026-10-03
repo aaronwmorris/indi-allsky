@@ -410,11 +410,19 @@ class ImageWorker(Process):
             return
 
         with self.sensors_user_av.get_lock():
-            i_ref.cloudiness_index = sensors_mapping.calculate_cloudiness_index(
-                self.config,
-                lambda idx: sensors_mapping.get_fresh_sensor_value(
-                    self.sensors_user_av, self.sensors_user_read_time_av, idx),
+            cloudiness_sensor_values = self.sensors_user_av[:]
+            cloudiness_sensor_read_times = (
+                self.sensors_user_read_time_av[:]
+                if self.sensors_user_read_time_av is not None else None
             )
+
+        cloudiness_snapshot_time = time.monotonic()
+        i_ref.cloudiness_index = sensors_mapping.calculate_cloudiness_index(
+            self.config,
+            lambda idx: sensors_mapping.get_fresh_sensor_value(
+                cloudiness_sensor_values, cloudiness_sensor_read_times, idx,
+                now=cloudiness_snapshot_time),
+        )
 
         # Purple-frame handling deliberately precedes both pre-dark and
         # post-dark standard FITS saving. In active repair mode those outputs
