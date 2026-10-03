@@ -117,9 +117,9 @@ def test_windspeed_settings_group_visibility_and_units(sensor_slot, classname, u
         form_data['TEMP_SENSOR__' + sensor_slot + '_CLASSNAME'] = classname
     rendered = Environment(autoescape=True).from_string(section).render(form_config=form_type(**form_data))
     group = rendered.split('<div id="windspeed-sensor-settings"', 1)[1]
-    has_wind_sensor = classname == 'blinka_wind_speed_sensor_wh_sp_ws01'
 
-    assert ('style="display: none;"' in group.split('>', 1)[0]) is not has_wind_sensor
+    assert 'style="display: none;"' in group.split('>', 1)[0]
+    assert 'data-sensor-classname="blinka_wind_speed_sensor_wh_sp_ws01"' in group.split('>', 1)[0]
     assert 'WH-SP-WS01 Cup Anemometer' in group
     assert 'id="WINDSPEED_DISPLAY"' in group
     assert '<option selected value="' + units + '">' in group
