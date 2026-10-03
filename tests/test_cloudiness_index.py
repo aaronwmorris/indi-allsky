@@ -77,10 +77,13 @@ def _cloudiness_ground_form(config, ground_slot, enabled):
         namespace['temp_sensor__' + letter.lower() + '_user_var_slot'] = config['TEMP_SENSOR'].get(letter + '_USER_VAR_SLOT', '')
     initialize = next(node for node in form_class.body
                       if isinstance(node, ast.FunctionDef) and node.name == '__init__')
+    temp_sensors = next(node for node in initialize.body
+                        if isinstance(node, ast.Assign) and isinstance(node.targets[0], ast.Name)
+                        and node.targets[0].id == 'temp_sensors')
     start = next(index for index, node in enumerate(initialize.body)
                  if isinstance(node, ast.Assign) and isinstance(node.targets[0], ast.Name)
                  and node.targets[0].id == 'ground_sensor_choices')
-    exec(compile(ast.Module(body=initialize.body[start:start + 3], type_ignores=[]),
+    exec(compile(ast.Module(body=[temp_sensors] + initialize.body[start:start + 3], type_ignores=[]),
                  str(source), 'exec'), namespace)
     return form
 
@@ -595,17 +598,17 @@ def test_nonfinite_calibration_is_unavailable(key, value):
 
 
 @pytest.mark.parametrize('name', [
-    'CLOUDINESS_INDEX_CLEAR_TEMP_validator', 'CLOUDINESS_INDEX_CLOUDY_TEMP_validator',
-    'CLOUDINESS_INDEX_GROUND_TEMP_validator', 'CLOUDINESS_INDEX_COEFFICIENT_validator',
+    'CLOUDINESS_INDEX_TEMP_validator', 'CLOUDINESS_INDEX_COEFFICIENT_validator',
     'CLOUDINESS_INDEX_OFFSET_validator',
 ])
 @pytest.mark.parametrize('value', [float('nan'), float('inf'), -float('inf')])
 def test_form_validators_reject_nonfinite_values(name, value):
     source = Path(__file__).resolve().parents[1] / 'indi_allsky' / 'flask' / 'forms.py'
     tree = ast.parse(source.read_text(encoding='utf-8'))
-    function = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == name)
+    functions = [node for node in tree.body if isinstance(node, ast.FunctionDef)
+                 and node.name in ('CLOUDINESS_INDEX_TEMP_validator', name)]
     namespace = {'math': math, 'ValidationError': ValueError}
-    exec(compile(ast.Module(body=[function], type_ignores=[]), str(source), 'exec'), namespace)
+    exec(compile(ast.Module(body=functions, type_ignores=[]), str(source), 'exec'), namespace)
     with pytest.raises(ValueError):
         namespace[name](None, SimpleNamespace(data=value))
 
