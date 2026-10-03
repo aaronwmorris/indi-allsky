@@ -209,8 +209,11 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
     clear_delta = clear_ground_temp - clear_sky_temp
     cloudy_delta = cloudy_ground_temp - cloudy_sky_temp
     span = clear_delta - cloudy_delta
-    if not math.isfinite(span) or span <= 0:
-        logger.error('Clear-sky ground-to-sky difference must exceed cloudy-sky difference')
+    if not math.isfinite(span) or span <= 2.0 or math.isclose(span, 2.0, rel_tol=0.0, abs_tol=1e-12):
+        logger.error('Calculated delta between cloudy and clear references is insufficient; '
+                     'the ground-to-sky temperature difference under clear skies must be more than '
+                     '2.0 C greater than under cloudy skies. '
+                     'If these readings are correct, the sensor may be having problems.')
         return None
 
     try:

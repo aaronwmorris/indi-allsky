@@ -1028,6 +1028,12 @@ $('#form_config').on('submit', function() {
                 var $btn = $('[data-tab-target="nav-' + firstErrorTab + '"]');
                 if ($btn.length) $btn[0].click();
             }
+
+            var clearSkyErrors = errors.TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP || [];
+            var calibrationWarning = clearSkyErrors.find(message => message.startsWith('Calculated delta between cloudy and clear references is insufficient;'));
+            if (calibrationWarning) {
+                window.alert(calibrationWarning);
+            }
         },
     });
 

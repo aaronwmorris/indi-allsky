@@ -5700,9 +5700,14 @@ class IndiAllskyConfigForm(FlaskForm):
             if all(isinstance(field.data, (int, float)) for field in calibration_fields):
                 clear_delta = self.TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_GROUND_TEMP.data - self.TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP.data
                 cloudy_delta = self.TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP.data - self.TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_TEMP.data
-                if clear_delta <= cloudy_delta:
-                    self.TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP.errors.append(
-                        'Clear-sky ground-to-sky difference must exceed cloudy-sky difference'
+                span = clear_delta - cloudy_delta
+                minimum_span = 3.6 if self.TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT.data == 'f' else 2.0
+                if not math.isfinite(span) or span <= minimum_span or math.isclose(span, minimum_span, rel_tol=0.0, abs_tol=1e-12):
+                    self.TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP.errors.append(
+                        'Calculated delta between cloudy and clear references is insufficient; '
+                        'the ground-to-sky temperature difference under clear skies must be more than '
+                        '2.0 C (3.6 F) greater than under cloudy skies. '
+                        'If these readings are correct, the sensor may be having problems.'
                     )
                     result = False
 

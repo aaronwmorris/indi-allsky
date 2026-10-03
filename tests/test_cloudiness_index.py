@@ -63,6 +63,83 @@ def test_rejects_equal_calibration_references():
     assert sensors_mapping.calculate_cloudiness_index(config, _values({10: 10.0, 11: -5.0})) is None
 
 
+@pytest.mark.parametrize('unit', ['c', 'f', 'k'])
+@pytest.mark.parametrize('clear_delta,cloudy_delta,valid', [
+    (4.0, 3.9, False), (1.9, 0.0, False), (2.0, 0.0, False),
+    (2.1, 0.0, True), (6.0, 3.9, True), (0.0, 4.0, False),
+])
+def test_calibration_span_must_exceed_two_celsius(clear_delta, cloudy_delta, valid, unit):
+    def reference(temperature):
+        if unit == 'f':
+            return temperature * 9.0 / 5.0 + 32.0
+        if unit == 'k':
+            return temperature + 273.15
+        return temperature
+
+    config = _config(
+        CLOUDINESS_INDEX_TEMP_UNIT=unit,
+        CLOUDINESS_INDEX_CLEAR_TEMP=reference(10.0 - clear_delta),
+        CLOUDINESS_INDEX_CLEAR_GROUND_TEMP=reference(10.0),
+        CLOUDINESS_INDEX_CLOUDY_TEMP=reference(15.0 - cloudy_delta),
+        CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP=reference(15.0),
+    )
+    midpoint = (clear_delta + cloudy_delta) / 2.0
+    result = sensors_mapping.calculate_cloudiness_index(
+        config, _values({10: 10.0, 11: 10.0 - midpoint}))
+
+    if valid:
+        assert result == pytest.approx(50.0)
+    else:
+        assert result is None
+
+
+@pytest.mark.parametrize('unit', ['c', 'f', 'k'])
+@pytest.mark.parametrize('clear_delta,cloudy_delta,valid', [
+    (4.0, 3.9, False), (1.9, 0.0, False), (2.0, 0.0, False),
+    (2.1, 0.0, True), (6.0, 3.9, True), (0.0, 4.0, False),
+])
+def test_form_rejects_weak_calibration_on_clear_sky_field(clear_delta, cloudy_delta, valid, unit):
+    source = Path(__file__).resolve().parents[1] / 'indi_allsky' / 'flask' / 'forms.py'
+    tree = ast.parse(source.read_text(encoding='utf-8'))
+    form_class = next(node for node in tree.body
+                      if isinstance(node, ast.ClassDef) and node.name == 'IndiAllskyConfigForm')
+    validate = next(node for node in form_class.body
+                    if isinstance(node, ast.FunctionDef) and node.name == 'validate')
+    calibration_check = validate.body[1]
+    scale = 1.8 if unit == 'f' else 1.0
+    base = 50.0 if unit == 'f' else 283.15 if unit == 'k' else 10.0
+    settings = _config(
+        CLOUDINESS_INDEX_TEMP_UNIT=unit,
+        CLOUDINESS_INDEX_CLEAR_TEMP=base - clear_delta * scale,
+        CLOUDINESS_INDEX_CLEAR_GROUND_TEMP=base,
+        CLOUDINESS_INDEX_CLOUDY_TEMP=base - cloudy_delta * scale,
+        CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP=base,
+        CLOUDINESS_INDEX_SENSOR='sensor_user_10',
+        CLOUDINESS_INDEX_USE_GROUND_SENSOR=False,
+        CLOUDINESS_INDEX_GROUND_SENSOR='',
+    )['TEMP_SENSOR']
+    form = SimpleNamespace(**{
+        'TEMP_SENSOR__' + key: SimpleNamespace(data=value, errors=[])
+        for key, value in settings.items()
+    })
+    form.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.choices = {
+        'MLX Cloudiness Sensors': [('sensor_user_10', 'MLX')],
+    }
+    form.cloud_sensor_auto_ground_slots = {'sensor_user_10'}
+    namespace = {'self': form, 'math': math, 'result': True}
+    exec(compile(ast.Module(body=[calibration_check], type_ignores=[]), str(source), 'exec'), namespace)
+
+    assert namespace['result'] is valid
+    errors = form.TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP.errors
+    if valid:
+        assert errors == []
+    else:
+        assert 'more than 2.0 C (3.6 F)' in errors[0]
+        assert 'greater than under cloudy skies' in errors[0]
+        assert 'sensor may be having problems' in errors[0]
+    assert form.TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP.errors == []
+
+
 def test_coefficient_and_offset_tune_the_normalized_index():
     cloudiness_index = sensors_mapping.calculate_cloudiness_index(
         _config(CLOUDINESS_INDEX_COEFFICIENT=0.5, CLOUDINESS_INDEX_OFFSET=10.0),
