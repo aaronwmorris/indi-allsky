@@ -102,6 +102,25 @@ def _display_temperature_to_celsius(value: float, temp_display: str) -> float:
     return value
 
 
+def validate_cloudiness_calibration(clear_sky_temp, cloudy_sky_temp,
+                                   clear_ground_temp, cloudy_ground_temp, temp_unit='c'):
+    """Require a finite calibration separation greater than 2 C in any reference unit."""
+    try:
+        references = tuple(_display_temperature_to_celsius(float(value), temp_unit)
+                           for value in (clear_sky_temp, cloudy_sky_temp,
+                                         clear_ground_temp, cloudy_ground_temp))
+    except (TypeError, ValueError, OverflowError):
+        return False
+
+    if not all(math.isfinite(value) for value in references):
+        return False
+
+    clear_sky_c, cloudy_sky_c, clear_ground_c, cloudy_ground_c = references
+    span = (clear_ground_c - clear_sky_c) - (cloudy_ground_c - cloudy_sky_c)
+    return (math.isfinite(span) and span > 2.0
+            and not math.isclose(span, 2.0, rel_tol=0.0, abs_tol=1e-12))
+
+
 def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
     """
     Scans configured TEMP_SENSOR slots (A-F) for an MLX90614/90615/90640
@@ -251,9 +270,8 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
     clear_delta = clear_ground_temp - clear_sky_temp
     cloudy_delta = cloudy_ground_temp - cloudy_sky_temp
     span = clear_delta - cloudy_delta
-    # Require a meaningful difference (> 2 C) between clear and cloudy calibration deltas
-    # so small temperature changes do not cause large cloudiness-index fluctuations.
-    if not math.isfinite(span) or span <= 2.0 or math.isclose(span, 2.0, rel_tol=0.0, abs_tol=1e-12):
+    if not validate_cloudiness_calibration(
+            clear_sky_temp, cloudy_sky_temp, clear_ground_temp, cloudy_ground_temp):
         logger.error('Calculated delta between cloudy and clear references is insufficient; '
                      'the ground-to-sky temperature difference under clear skies must be more than '
                      '2.0 C greater than under cloudy skies. '

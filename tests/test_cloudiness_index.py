@@ -43,7 +43,7 @@ def _validate_cloudiness_form(form):
     validate = next(node for node in form_class.body
                     if isinstance(node, ast.FunctionDef) and node.name == 'validate')
     calibration_check = validate.body[1]
-    namespace = {'self': form, 'math': math, 'result': True}
+    namespace = {'self': form, 'math': math, 'sensors_mapping': sensors_mapping, 'result': True}
     exec(compile(ast.Module(body=[calibration_check], type_ignores=[]), str(source), 'exec'), namespace)
     return namespace['result']
 
@@ -143,6 +143,36 @@ def test_calibration_span_must_exceed_two_celsius(clear_delta, cloudy_delta, val
         assert result == pytest.approx(50.0)
     else:
         assert result is None
+
+
+@pytest.mark.parametrize('unit', ['c', 'f', 'k'])
+@pytest.mark.parametrize('span,valid', [
+    (0.0, False), (-3.0, False), (1.9, False), (2.0, False),
+    (math.nextafter(2.0, math.inf), False), (2.000001, True), (30.0, True),
+])
+def test_shared_cloudiness_calibration_validation_normalizes_units(unit, span, valid):
+    def reference(temperature):
+        if unit == 'f':
+            return temperature * 9.0 / 5.0 + 32.0
+        if unit == 'k':
+            return temperature + 273.15
+        return temperature
+
+    assert sensors_mapping.validate_cloudiness_calibration(
+        reference(10.0 - span), reference(10.0), reference(10.0), reference(10.0),
+        temp_unit=unit) is valid
+
+
+@pytest.mark.parametrize('position', range(4))
+@pytest.mark.parametrize('value', [None, 'invalid', math.nan, math.inf, -math.inf, 10 ** 1000])
+def test_shared_cloudiness_calibration_validation_rejects_invalid_references(position, value):
+    references = [-20.0, 10.0, 10.0, 10.0]
+    references[position] = value
+    assert sensors_mapping.validate_cloudiness_calibration(*references) is False
+
+
+def test_shared_cloudiness_calibration_validation_rejects_overflowing_span():
+    assert sensors_mapping.validate_cloudiness_calibration(-1e308, 0.0, 1e308, 0.0) is False
 
 
 @pytest.mark.parametrize('unit', ['c', 'f', 'k'])
