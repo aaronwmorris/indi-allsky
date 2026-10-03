@@ -313,9 +313,30 @@ def test_disabled_calculation_does_not_access_sensor_values():
         _config(CLOUDINESS_INDEX_ENABLE=False), unavailable) is None
 
 
-@pytest.mark.parametrize('read_time', [0.0, 1.0, 102.0, float('nan'), float('inf')])
+@pytest.mark.parametrize('read_time', [
+    0.0, 1.0, 102.0, float('nan'), float('inf'), -float('inf'), None, '100.0', 10 ** 400,
+])
 def test_uninitialized_expired_or_invalid_read_times_are_unavailable(read_time):
     assert sensors_mapping.get_fresh_sensor_value([0.0], [read_time], 0, now=101.0) is None
+
+
+@pytest.mark.parametrize('index', [1, -2, None, '0', 0.5])
+def test_fresh_sensor_value_rejects_invalid_indices(index):
+    assert sensors_mapping.get_fresh_sensor_value([0.0], [100.0], index, now=101.0) is None
+
+
+@pytest.mark.parametrize('values,read_times', [
+    ([], [100.0]), ([0.0], []), (None, [100.0]), ([0.0], 100.0),
+])
+def test_fresh_sensor_value_rejects_missing_or_mismatched_arrays(values, read_times):
+    assert sensors_mapping.get_fresh_sensor_value(values, read_times, 0, now=101.0) is None
+
+
+@pytest.mark.parametrize('value', [
+    None, '0.0', float('nan'), float('inf'), -float('inf'), 10 ** 400,
+])
+def test_fresh_sensor_value_rejects_invalid_readings(value):
+    assert sensors_mapping.get_fresh_sensor_value([value], [100.0], 0, now=101.0) is None
 
 
 def test_fresh_zero_temperature_is_valid():

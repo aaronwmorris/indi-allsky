@@ -61,11 +61,17 @@ def get_fresh_sensor_value(values, read_times, index, now=None, max_age=60.0):
     if now is None:
         now = time.monotonic()
 
-    read_time = read_times[index]
-    if not math.isfinite(read_time) or read_time <= 0.0 or not 0.0 <= now - read_time <= max_age:
+    try:
+        read_time = read_times[index]
+        value = values[index]
+        if not math.isfinite(read_time) or read_time <= 0.0 or not 0.0 <= now - read_time <= max_age:
+            return None
+        if not math.isfinite(value):
+            return None
+    except (IndexError, TypeError, OverflowError):
         return None
 
-    return values[index]
+    return value
 
 
 def _display_temperature_to_celsius(value: float, temp_display: str) -> float:
