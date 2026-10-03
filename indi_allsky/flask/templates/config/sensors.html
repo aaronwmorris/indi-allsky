@@ -424,14 +424,8 @@
                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Specific Sensor Hardware Adjustments (Heaters & Logic)</span>
 
                 <!-- FC37 & DHT PulseIO -->
-                {% set fc37_sensor_state = namespace(configured=false) %}
-                {% for sensor_slot in ('A', 'B', 'C', 'D', 'E', 'F') %}
-                    {% if (form_config|attr('TEMP_SENSOR__' ~ sensor_slot ~ '_CLASSNAME')).data == 'blinka_rain_sensor_fc37' %}
-                        {% set fc37_sensor_state.configured = true %}
-                    {% endif %}
-                {% endfor %}
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
-                    <div id="fc37-sensor-settings" class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300"{% if not fc37_sensor_state.configured %} style="display: none;"{% endif %}>
+                    <div id="fc37-sensor-settings" class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300" style="display: none;">
                         <div class="tw:flex tw:flex-col">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__FC37_ACTIVE_LOW.label.text }}</span>
                             <span class="tw:text-[0.625rem] tw:text-base-content/40">Invert the digital signal (default: 0 = no rain, 1 = rain). Use {rain_status:s} in overlay templates for text output.</span>
