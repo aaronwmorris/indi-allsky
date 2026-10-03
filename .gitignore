@@ -19,6 +19,9 @@ log/*.log.?
 log/*.log.??
 virtualenv/*
 .venv-test/
+.pytest_cache/
+.pytest-tmp/
+.pytest-temp-*/
 alembic/versions/*.py
 migrations/versions/*.py
 gunicorn-indi-allsky.sock
