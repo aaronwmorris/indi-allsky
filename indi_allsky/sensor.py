@@ -700,9 +700,10 @@ class SensorWorker(Process):
                         self.sensors_user_av[constants.SENSOR_USER_RAIN] = float(sensor_data['rain'])
 
 
-                    for i, v in enumerate(sensor_data['data']):
-                        self.sensors_user_av[sensor.slot + i] = float(v)
-                    read_count = len(sensor_data['data'])
+                    updated_count = 0
+                    for updated_count, value in enumerate(sensor_data['data'], start=1):
+                        self.sensors_user_av[sensor.slot + updated_count - 1] = float(value)
+                    read_count = updated_count
             except SensorReadException as e:
                 logger.error('SensorReadException: {0:s}'.format(str(e)))
             except OSError as e:
@@ -711,8 +712,6 @@ class SensorWorker(Process):
                 logger.error('Sensor IOError: {0:s}'.format(str(e)))
             except IndexError as e:
                 logger.error('Sensor slot error: {0:s}'.format(str(e)))
-            except (TypeError, ValueError, OverflowError) as e:
-                logger.error('Sensor value error: %s', str(e))
             finally:
                 if self.sensors_user_read_time_av is not None:
                     with self.sensors_user_av.get_lock():

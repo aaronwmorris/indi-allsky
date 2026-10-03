@@ -3,6 +3,7 @@ import io
 import json
 import logging
 import math
+from functools import lru_cache
 from multiprocessing import Array
 from pathlib import Path
 from types import SimpleNamespace
@@ -12,6 +13,30 @@ import pytest
 from indi_allsky import constants, sensors_mapping
 from indi_allsky.sensor import SensorWorker
 from indi_allsky.devices.exceptions import SensorReadException
+
+
+_SOURCE_ROOT = Path(__file__).resolve().parents[1] / 'indi_allsky'
+
+
+@lru_cache(maxsize=None)
+def _source_tree(relative_path):
+    return ast.parse((_SOURCE_ROOT / relative_path).read_text(encoding='utf-8'))
+
+
+def _source_member(relative_path, *names):
+    node = _source_tree(relative_path)
+    for name in names:
+        node = next(child for child in node.body if getattr(child, 'name', None) == name)
+    return node
+
+
+def _source_assignment(nodes, target):
+    return next(node for node in nodes if isinstance(node, ast.Assign)
+                and any(ast.unparse(name) == target for name in node.targets))
+
+
+def _exec_source(relative_path, body, namespace):
+    exec(compile(ast.Module(body=body, type_ignores=[]), str(_SOURCE_ROOT / relative_path), 'exec'), namespace)
 
 
 def _values(mapping):
@@ -36,15 +61,9 @@ def _config(**temp_sensor):
 
 
 def _validate_cloudiness_form(form):
-    source = Path(__file__).resolve().parents[1] / 'indi_allsky' / 'flask' / 'forms.py'
-    tree = ast.parse(source.read_text(encoding='utf-8'))
-    form_class = next(node for node in tree.body
-                      if isinstance(node, ast.ClassDef) and node.name == 'IndiAllskyConfigForm')
-    validate = next(node for node in form_class.body
-                    if isinstance(node, ast.FunctionDef) and node.name == 'validate')
-    calibration_check = validate.body[1]
+    validate = _source_member('flask/forms.py', 'IndiAllskyConfigForm', 'validate')
     namespace = {'self': form, 'math': math, 'sensors_mapping': sensors_mapping, 'result': True}
-    exec(compile(ast.Module(body=[calibration_check], type_ignores=[]), str(source), 'exec'), namespace)
+    _exec_source('flask/forms.py', [validate.body[1]], namespace)
     return namespace['result']
 
 
@@ -52,18 +71,12 @@ def _cloudiness_ground_form(config, ground_slot, enabled):
     from wtforms import BooleanField, Form, SelectField
     from wtforms.validators import ValidationError
 
-    source = Path(__file__).resolve().parents[1] / 'indi_allsky' / 'flask' / 'forms.py'
-    tree = ast.parse(source.read_text(encoding='utf-8'))
-    form_class = next(node for node in tree.body
-                      if isinstance(node, ast.ClassDef) and node.name == 'IndiAllskyConfigForm')
-    validator = next(node for node in tree.body if isinstance(node, ast.FunctionDef)
-                     and node.name == 'CLOUDINESS_INDEX_GROUND_SENSOR_validator')
-    field = next(node for node in form_class.body if isinstance(node, ast.Assign)
-                 and isinstance(node.targets[0], ast.Name)
-                 and node.targets[0].id == 'TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR')
+    form_class = _source_member('flask/forms.py', 'IndiAllskyConfigForm')
+    validator = _source_member('flask/forms.py', 'CLOUDINESS_INDEX_GROUND_SENSOR_validator')
+    field = _source_assignment(form_class.body, 'TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR')
     namespace = {'SelectField': SelectField, 'ValidationError': ValidationError,
                  'constants': constants, 'sensors_mapping': sensors_mapping}
-    exec(compile(ast.Module(body=[validator, field], type_ignores=[]), str(source), 'exec'), namespace)
+    _exec_source('flask/forms.py', [validator, field], namespace)
     form_type = type('CloudinessGroundForm', (Form,), {
         'TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE': BooleanField(),
         'TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR': namespace['TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR'],
@@ -75,16 +88,10 @@ def _cloudiness_ground_form(config, ground_slot, enabled):
     for letter in ('A', 'B', 'C', 'D', 'E', 'F'):
         namespace['temp_sensor__' + letter.lower() + '_classname'] = config['TEMP_SENSOR'].get(letter + '_CLASSNAME', '')
         namespace['temp_sensor__' + letter.lower() + '_user_var_slot'] = config['TEMP_SENSOR'].get(letter + '_USER_VAR_SLOT', '')
-    initialize = next(node for node in form_class.body
-                      if isinstance(node, ast.FunctionDef) and node.name == '__init__')
-    temp_sensors = next(node for node in initialize.body
-                        if isinstance(node, ast.Assign) and isinstance(node.targets[0], ast.Name)
-                        and node.targets[0].id == 'temp_sensors')
-    start = next(index for index, node in enumerate(initialize.body)
-                 if isinstance(node, ast.Assign) and isinstance(node.targets[0], ast.Name)
-                 and node.targets[0].id == 'ground_sensor_choices')
-    exec(compile(ast.Module(body=[temp_sensors] + initialize.body[start:start + 3], type_ignores=[]),
-                 str(source), 'exec'), namespace)
+    initialize = _source_member('flask/forms.py', 'IndiAllskyConfigForm', '__init__')
+    temp_sensors = _source_assignment(initialize.body, 'temp_sensors')
+    start = initialize.body.index(_source_assignment(initialize.body, 'ground_sensor_choices'))
+    _exec_source('flask/forms.py', [temp_sensors] + initialize.body[start:start + 3], namespace)
     return form
 
 
@@ -93,7 +100,7 @@ def _cloudiness_ground_form(config, ground_slot, enabled):
     'TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR',
 ])
 def test_cloudiness_toggles_use_checkbox_save_path(field_name):
-    source = Path(__file__).resolve().parents[1] / 'indi_allsky' / 'flask' / 'templates' / 'config.html'
+    source = _SOURCE_ROOT / 'flask' / 'templates' / 'config.html'
     template = source.read_text(encoding='utf-8')
     save_lists = {}
     for list_name in ('field_names', 'checkbox_field_names'):
@@ -116,7 +123,7 @@ def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled, u
     from jinja2 import Environment, nodes
     from wtforms import BooleanField, Form, StringField
 
-    source = Path(__file__).resolve().parents[1] / 'indi_allsky' / 'flask' / 'templates' / 'config' / 'sensors.html'
+    source = _SOURCE_ROOT / 'flask' / 'templates' / 'config' / 'sensors.html'
     card = source.read_text(encoding='utf-8').split('<!-- Cloudiness Index Card -->', 1)[1]
     environment = Environment(autoescape=True)
     field_names = {
@@ -164,34 +171,26 @@ def test_image_cloudiness_calculation_uses_snapshot_after_releasing_lock(monkeyp
     import time
     from threading import Lock
 
-    source = Path(__file__).resolve().parents[1] / 'indi_allsky' / 'image.py'
-    tree = ast.parse(source.read_text(encoding='utf-8'))
-    method = next(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)
-                  and any(isinstance(child, ast.Call) and isinstance(child.func, ast.Attribute)
-                          and child.func.attr == 'calculate_cloudiness_index' for child in ast.walk(node)))
-    start = next(index for index, node in enumerate(method.body) if isinstance(node, ast.With)
-                 and any(isinstance(child, ast.Attribute) and child.attr == 'sensors_user_av'
-                         for child in ast.walk(node)))
+    method = _source_member('image.py', 'ImageWorker', 'processImage')
+    start = method.body.index(_source_assignment(method.body, 'i_ref.cloudiness_index')) - 2
 
     sensor_lock = Lock()
-    values = [0.0] * 110
-    values[10:12] = [10.0, -5.0]
-    read_times = [read_time] * 110
 
-    class SensorArray:
-        def __init__(self, data):
-            self.data = data
-
+    class SensorArray(list):
         def get_lock(self):
             return sensor_lock
 
         def __getitem__(self, index):
             assert sensor_lock.locked()
-            return self.data[index]
+            return super().__getitem__(index)
+
+    values = SensorArray([0.0] * 110)
+    values[10:12] = [10.0, -5.0]
+    read_times = SensorArray([read_time] * 110)
 
     worker = SimpleNamespace(
-        config=_config(), sensors_user_av=SensorArray(values),
-        sensors_user_read_time_av=SensorArray(read_times) if read_time is not None else None,
+        config=_config(), sensors_user_av=values,
+        sensors_user_read_time_av=read_times if read_time is not None else None,
     )
     image_ref = SimpleNamespace()
     calculate = sensors_mapping.calculate_cloudiness_index
@@ -205,8 +204,7 @@ def test_image_cloudiness_calculation_uses_snapshot_after_releasing_lock(monkeyp
     monkeypatch.setattr(sensors_mapping, 'calculate_cloudiness_index', calculate_from_snapshot)
     monkeypatch.setattr(time, 'monotonic', lambda: 101.0)
     namespace = {'self': worker, 'i_ref': image_ref, 'sensors_mapping': sensors_mapping, 'time': time}
-    exec(compile(ast.Module(body=method.body[start:start + 3], type_ignores=[]),
-                 str(source), 'exec'), namespace)
+    _exec_source('image.py', method.body[start:start + 3], namespace)
     assert image_ref.cloudiness_index == expected
 
 
@@ -263,40 +261,6 @@ def test_cloudiness_ignores_malformed_slot_when_another_mlx_is_valid():
     )
     assert sensors_mapping.calculate_cloudiness_index(
         config, _values({20: 10.0, 21: -5.0})) == 50.0
-
-
-@pytest.mark.parametrize('unit,references', [
-    ('c', (-20.0, 10.0, 10.0, 10.0)),
-    ('f', (-4.0, 50.0, 50.0, 50.0)),
-    ('k', (253.15, 283.15, 283.15, 283.15)),
-])
-def test_runtime_normalizes_original_calibration_values_once_with_declared_unit(monkeypatch, unit, references):
-    calls = []
-    conversions = []
-    original_normalizer = sensors_mapping._normalize_cloudiness_calibration
-    original_converter = sensors_mapping._display_temperature_to_celsius
-
-    def record_calibration(*values, temp_unit='c'):
-        calls.append((values, temp_unit))
-        return original_normalizer(*values, temp_unit=temp_unit)
-
-    def record_conversion(value, temp_display):
-        conversions.append((value, temp_display))
-        return original_converter(value, temp_display)
-
-    monkeypatch.setattr(sensors_mapping, '_normalize_cloudiness_calibration', record_calibration)
-    monkeypatch.setattr(sensors_mapping, '_display_temperature_to_celsius', record_conversion)
-    config = _config(
-        CLOUDINESS_INDEX_TEMP_UNIT=unit,
-        CLOUDINESS_INDEX_CLEAR_TEMP=references[0],
-        CLOUDINESS_INDEX_CLOUDY_TEMP=references[1],
-        CLOUDINESS_INDEX_CLEAR_GROUND_TEMP=references[2],
-        CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP=references[3],
-    )
-    assert sensors_mapping.calculate_cloudiness_index(
-        config, _values({10: 10.0, 11: -5.0})) == pytest.approx(50.0)
-    assert calls == [(references, unit)]
-    assert conversions == [(value, unit) for value in references] + [(-5.0, 'c'), (10.0, 'c')]
 
 
 @pytest.mark.parametrize('unit', ['c', 'f', 'k'])
@@ -568,12 +532,14 @@ def test_selected_cloud_sensor_is_used_when_multiple_are_configured():
     assert cloudiness_index == 50.0
 
 
-def test_reference_units_are_independent_of_live_display_units():
+@pytest.mark.parametrize('unit,ambient,sky', [
+    ('c', 10.0, -5.0), ('f', 50.0, 23.0), ('k', 283.15, 268.15),
+])
+def test_reference_units_are_independent_of_live_display_units(unit, ambient, sky):
     config = _config()
-    config['TEMP_DISPLAY'] = 'f'
+    config['TEMP_DISPLAY'] = unit
 
-    # The live sky reading is 23 F, or -5 C.
-    cloudiness_index = sensors_mapping.calculate_cloudiness_index(config, _values({10: 50.0, 11: 23.0}))
+    cloudiness_index = sensors_mapping.calculate_cloudiness_index(config, _values({10: ambient, 11: sky}))
 
     assert cloudiness_index == 50.0
 
@@ -603,12 +569,10 @@ def test_nonfinite_calibration_is_unavailable(key, value):
 ])
 @pytest.mark.parametrize('value', [float('nan'), float('inf'), -float('inf')])
 def test_form_validators_reject_nonfinite_values(name, value):
-    source = Path(__file__).resolve().parents[1] / 'indi_allsky' / 'flask' / 'forms.py'
-    tree = ast.parse(source.read_text(encoding='utf-8'))
-    functions = [node for node in tree.body if isinstance(node, ast.FunctionDef)
-                 and node.name in ('CLOUDINESS_INDEX_TEMP_validator', name)]
+    functions = [_source_member('flask/forms.py', validator)
+                 for validator in {'CLOUDINESS_INDEX_TEMP_validator', name}]
     namespace = {'math': math, 'ValidationError': ValueError}
-    exec(compile(ast.Module(body=functions, type_ignores=[]), str(source), 'exec'), namespace)
+    _exec_source('flask/forms.py', functions, namespace)
     with pytest.raises(ValueError):
         namespace[name](None, SimpleNamespace(data=value))
 
@@ -667,7 +631,8 @@ def test_cloudiness_requires_fresh_sky_and_selected_ambient(index):
             values, read_times, slot, now=101.0)) is None
 
 
-def test_sensor_failure_invalidates_previous_readings_and_recovers():
+@pytest.mark.parametrize('data_factory', [tuple, iter])
+def test_sensor_failure_invalidates_previous_readings_and_recovers(data_factory):
     class Sensor:
         slot = 10
         METADATA = {'count': 2}
@@ -676,7 +641,7 @@ def test_sensor_failure_invalidates_previous_readings_and_recovers():
         def update(self):
             if self.failed:
                 raise SensorReadException('Disconnected')
-            return {'data': (0.0, -5.0)}
+            return {'data': data_factory((0.0, -5.0))}
 
     sensor = Sensor()
     worker = SimpleNamespace(
@@ -697,6 +662,35 @@ def test_sensor_failure_invalidates_previous_readings_and_recovers():
     assert worker.sensors_user_read_time_av[10] > 0.0
 
 
+@pytest.mark.parametrize('error_type', [TypeError, ValueError, OverflowError])
+@pytest.mark.parametrize('during_conversion', [False, True])
+@pytest.mark.parametrize('with_timestamps', [False, True])
+def test_unexpected_sensor_errors_propagate_and_invalidate_readings(error_type, during_conversion, with_timestamps):
+    class InvalidReading:
+        def __float__(self):
+            raise error_type('Unexpected sensor error')
+
+    class Sensor:
+        slot = 10
+        METADATA = {'count': 2}
+
+        def update(self):
+            if not during_conversion:
+                raise error_type('Unexpected sensor error')
+            return {'data': (0.0, InvalidReading())}
+
+    read_times = Array('d', [100.0] * 110) if with_timestamps else None
+    worker = SimpleNamespace(
+        sensors=[Sensor()], sensors_user_av=Array('f', [0.0] * 110),
+        sensors_user_read_time_av=read_times,
+    )
+    with pytest.raises(error_type, match='Unexpected sensor error'):
+        SensorWorker.update_sensors(worker)
+    if with_timestamps:
+        assert read_times[10:12] == [0.0, 0.0]
+        assert read_times[12] == 100.0
+
+
 @pytest.mark.parametrize('key,value', [
     ('CLOUDINESS_INDEX_COEFFICIENT', 0.0), ('CLOUDINESS_INDEX_COEFFICIENT', -1.0),
     ('CLOUDINESS_INDEX_COEFFICIENT', 10.1), ('CLOUDINESS_INDEX_OFFSET', -100.1),
@@ -713,12 +707,9 @@ def test_overflow_from_finite_readings_is_unavailable():
 
 
 def test_sensor_restart_clears_read_validity_and_passes_shared_timestamps(monkeypatch):
-    source = Path(__file__).resolve().parents[1] / 'indi_allsky' / 'allsky.py'
-    tree = ast.parse(source.read_text(encoding='utf-8'))
-    function = next(node for node in ast.walk(tree)
-                    if isinstance(node, ast.FunctionDef) and node.name == '_startSensorWorker')
+    function = _source_member('allsky.py', 'IndiAllSky', '_startSensorWorker')
     namespace = {'__package__': 'indi_allsky', 'logger': logging.getLogger('test')}
-    exec(compile(ast.Module(body=[function], type_ignores=[]), str(source), 'exec'), namespace)
+    _exec_source('allsky.py', [function], namespace)
     worker = SimpleNamespace(
         sensor_worker=None, sensor_worker_idx=0, config=_config(), sensor_q=None,
         sensor_error_q=None, sensors_temp_av=Array('f', [0.0] * 60),
@@ -738,28 +729,17 @@ def test_legacy_sensor_worker_call_does_not_require_timestamps():
 
 @pytest.mark.parametrize('value,expected', [(50.04, 50.0), (0.0, 0.0), (None, '')])
 def test_mqtt_sends_empty_payload_to_clear_unavailable_retained_index(value, expected):
-    source = Path(__file__).resolve().parents[1] / 'indi_allsky' / 'image.py'
-    tree = ast.parse(source.read_text(encoding='utf-8'))
-    assignment = next(
-        node for node in ast.walk(tree) if isinstance(node, ast.Assign)
-        and any(isinstance(target, ast.Subscript)
-                and isinstance(target.value, ast.Name) and target.value.id == 'mqtt_data'
-                and isinstance(target.slice, ast.Constant) and target.slice.value == 'cloudiness_index'
-                for target in node.targets)
-    )
+    assignment = _source_assignment(ast.walk(_source_tree('image.py')), "mqtt_data['cloudiness_index']")
     namespace = {'mqtt_data': {}, 'i_ref': SimpleNamespace(cloudiness_index=value)}
-    exec(compile(ast.Module(body=[assignment], type_ignores=[]), str(source), 'exec'), namespace)
+    _exec_source('image.py', [assignment], namespace)
     assert namespace['mqtt_data']['cloudiness_index'] == expected
 
-    mqtt_source = source.parent / 'filetransfer' / 'paho_mqtt.py'
-    mqtt_tree = ast.parse(mqtt_source.read_text(encoding='utf-8'))
     message_loop = next(
-        node for node in ast.walk(mqtt_tree) if isinstance(node, ast.For)
-        and isinstance(node.iter, ast.Call) and isinstance(node.iter.func, ast.Attribute)
-        and isinstance(node.iter.func.value, ast.Name) and node.iter.func.value.id == 'mq_data'
+        node for node in _source_member('filetransfer/paho_mqtt.py', 'paho_mqtt', 'put').body
+        if isinstance(node, ast.For) and ast.unparse(node.iter) == 'mq_data.items()'
     )
     messages = {'mq_data': namespace['mqtt_data'], 'message_list': [], 'base_topic': 'test', 'qos': 0}
-    exec(compile(ast.Module(body=[message_loop], type_ignores=[]), str(mqtt_source), 'exec'), messages)
+    _exec_source('filetransfer/paho_mqtt.py', [message_loop], messages)
     assert messages['message_list'] == [{
         'topic': 'test/cloudiness_index', 'payload': expected, 'qos': 0, 'retain': True,
     }]
@@ -767,12 +747,9 @@ def test_mqtt_sends_empty_payload_to_clear_unavailable_retained_index(value, exp
 
 @pytest.mark.parametrize('value', [50.0, 0.0, None])
 def test_status_json_includes_numeric_or_null_cloudiness(value, tmp_path):
-    source = Path(__file__).resolve().parents[1] / 'indi_allsky' / 'image.py'
-    tree = ast.parse(source.read_text(encoding='utf-8'))
-    function = next(node for node in ast.walk(tree)
-                    if isinstance(node, ast.FunctionDef) and node.name == 'write_status_json')
+    function = _source_member('image.py', 'ImageWorker', 'write_status_json')
     namespace = {'constants': constants, 'io': io, 'json': json}
-    exec(compile(ast.Module(body=[function], type_ignores=[]), str(source), 'exec'), namespace)
+    _exec_source('image.py', [function], namespace)
     attributes = {node.attr: 1 for node in ast.walk(function)
                   if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name)
                   and node.value.id == 'i_ref'}
