@@ -201,9 +201,14 @@ def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled, u
     for name in ('TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT', 'TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET'):
         assert 'id="' + name + '"' not in before_tuning
         assert 'id="' + name + '"' in tuning
+    coefficient_field = tuning.split('id="TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT"', 1)[1].split('</div>', 1)[0]
+    assert 'Empirical adjustment for signal loss' in coefficient_field
+    assert 'external lenses or waterproof covers' in coefficient_field
     offset_field = tuning.split('id="TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET"', 1)[1].split('</div>', 1)[0]
     assert 'Applied automatically in Celsius after multiplication to raw MLX sky readings (live and calibration).' in offset_field
     assert 'Enter raw sensor readings; do not manually adjust calibration readings.' in offset_field
+    assert 'Brings sky temperatures within this calculation closer to a known true baseline by correcting constant sensor bias.' in offset_field
+    assert 'it cancels out and does not change the cloudiness percentage.' in offset_field
 
 
 @pytest.mark.parametrize('read_time, expected', [(100.0, 50.0), (40.0, None), (0.0, None), (None, None)])
