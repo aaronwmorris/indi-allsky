@@ -851,6 +851,7 @@ const checkbox_field_names = [
     'TEMP_SENSOR__DHT_USE_PULSEIO',
     'TEMP_SENSOR__FC37_ACTIVE_LOW',
     'TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE',
+    'TEMP_SENSOR__CLOUDINESS_INDEX_SHOW_TUNING',
     'TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR',
     'TEMP_SENSOR__SHT3X_HEATER_NIGHT',
     'TEMP_SENSOR__SHT3X_HEATER_DAY',
@@ -921,13 +922,13 @@ function updateCloudinessIndexVisibility() {
         $('#TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE').prop('checked', false);
     }
     $('#cloudiness-index-settings').toggle($('#TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE').prop('checked'));
-    const enabled = $('#cloudiness-index-tuning-toggle').prop('checked');
+    const enabled = $('#TEMP_SENSOR__CLOUDINESS_INDEX_SHOW_TUNING').prop('checked');
     $('#cloudiness-index-tuning').toggle(enabled);
-    $('#cloudiness-index-tuning-toggle').attr('aria-expanded', enabled ? 'true' : 'false');
+    $('#TEMP_SENSOR__CLOUDINESS_INDEX_SHOW_TUNING').attr('aria-expanded', enabled ? 'true' : 'false');
     $('#cloudiness-index-ground-sensor').toggle($('#TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR').prop('checked'));
 }
 
-$('#TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE, #cloudiness-index-tuning-toggle, #TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR').on('change', updateCloudinessIndexVisibility);
+$('#TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE, #TEMP_SENSOR__CLOUDINESS_INDEX_SHOW_TUNING, #TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR').on('change', updateCloudinessIndexVisibility);
 ['A', 'B', 'C', 'D', 'E', 'F'].forEach(sensorSlot => {
     $('#TEMP_SENSOR__' + sensorSlot + '_CLASSNAME').on('change', updateCloudinessIndexVisibility);
 });

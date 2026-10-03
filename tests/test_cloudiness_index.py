@@ -100,6 +100,7 @@ def _cloudiness_ground_form(config, ground_slot, enabled):
 
 @pytest.mark.parametrize('field_name', [
     'TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE',
+    'TEMP_SENSOR__CLOUDINESS_INDEX_SHOW_TUNING',
     'TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR',
 ])
 def test_cloudiness_toggles_use_checkbox_save_path(field_name):
@@ -116,13 +117,40 @@ def test_cloudiness_toggles_use_checkbox_save_path(field_name):
     assert save_lists['checkbox_field_names'].count(field_name) == 1
 
 
+@pytest.mark.parametrize('show_tuning', [False, True, None])
+def test_cloudiness_tuning_preference_survives_save_and_reload(show_tuning):
+    from wtforms import BooleanField, Form
+
+    field_name = 'TEMP_SENSOR__CLOUDINESS_INDEX_SHOW_TUNING'
+    config_view = _source_member('flask/views.py', 'ConfigView')
+    load_value = next(value for node in ast.walk(config_view) if isinstance(node, ast.Dict)
+                      for key, value in zip(node.keys, node.values)
+                      if isinstance(key, ast.Constant) and key.value == field_name)
+    namespace = {'self': SimpleNamespace(indi_allsky_config={'TEMP_SENSOR': {}})}
+    load_expression = compile(ast.Expression(load_value), 'flask/views.py', 'eval')
+    assert eval(load_expression, namespace) is False
+    namespace['request'] = SimpleNamespace(json={} if show_tuning is None else {field_name: show_tuning})
+    save = _source_assignment(ast.walk(_source_member('flask/views.py', 'AjaxConfigView')),
+                              "self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_SHOW_TUNING']")
+    _exec_source('flask/views.py', [save], namespace)
+    restored = eval(load_expression, namespace)
+    assert restored is (show_tuning is True)
+
+    namespace['BooleanField'] = BooleanField
+    field = _source_assignment(_source_member('flask/forms.py', 'IndiAllskyConfigForm').body, field_name)
+    _exec_source('flask/forms.py', [field], namespace)
+    form_type = type('CloudinessTuningForm', (Form,), {field_name: namespace[field_name]})
+    assert getattr(form_type(**{field_name: restored}), field_name).data is restored
+
+
 @pytest.mark.parametrize('enabled', [False, True])
 @pytest.mark.parametrize('use_ground_sensor', [False, True])
+@pytest.mark.parametrize('show_tuning', [False, True])
 @pytest.mark.parametrize('classname', [
     None, *constants.CLOUD_SENSOR_CLASSNAMES,
     'blinka_temp_sensor_dht22', 'temp_api_ecowitt',
 ])
-def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled, use_ground_sensor, classname):
+def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled, use_ground_sensor, show_tuning, classname):
     from jinja2 import Environment, nodes
     from wtforms import BooleanField, Form, StringField
 
@@ -136,11 +164,12 @@ def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled, u
     }
     enable_field = 'TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE'
     external_field = 'TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR'
+    tuning_field = 'TEMP_SENSOR__CLOUDINESS_INDEX_SHOW_TUNING'
     form_type = type('CloudinessVisibilityForm', (Form,), {
-        name: BooleanField() if name in (enable_field, external_field) else StringField()
+        name: BooleanField() if name in (enable_field, external_field, tuning_field) else StringField()
         for name in field_names
     })
-    form = form_type(**{enable_field: enabled, external_field: use_ground_sensor})
+    form = form_type(**{enable_field: enabled, external_field: use_ground_sensor, tuning_field: show_tuning})
     form.cloud_sensor_classnames = constants.CLOUD_SENSOR_CLASSNAMES
     has_cloud_sensor = classname in constants.CLOUD_SENSOR_CLASSNAMES
     form.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.choices = {
@@ -162,11 +191,13 @@ def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled, u
     assert 'id="TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR"' in ground_sensor
 
     before_tuning, tuning = settings.split('<div id="cloudiness-index-tuning"', 1)
-    assert 'id="cloudiness-index-tuning-toggle"' in before_tuning
+    toggle = before_tuning.split('id="' + tuning_field + '"', 1)[0].rsplit('<input', 1)[1]
+    assert ('checked' in toggle) is show_tuning
+    assert 'aria-expanded="' + ('true' if show_tuning else 'false') + '"' in toggle
     assert 'aria-describedby="cloudiness-index-tuning-description"' in before_tuning
     assert 'Corrects raw MLX sky readings (live and calibration references) before calculating cloudiness; ambient readings are unchanged.' in before_tuning
     assert 'Enter raw sensor readings for clear-sky and cloudy-sky calibration; corrections are applied automatically.' in before_tuning
-    assert 'style="display: none;"' in tuning.split('>', 1)[0]
+    assert ('style="display: none;"' in tuning.split('>', 1)[0]) is not show_tuning
     for name in ('TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT', 'TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET'):
         assert 'id="' + name + '"' not in before_tuning
         assert 'id="' + name + '"' in tuning
