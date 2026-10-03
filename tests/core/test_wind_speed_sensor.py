@@ -1,4 +1,5 @@
 import sys
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -90,6 +91,39 @@ def test_first_update_establishes_baseline_and_discards_startup_pulses(gpio_back
     clock[0] = 132.0
     assert sensor.update()['wind_speed'] == pytest.approx(10.0 / 3.0)
     sensor.deinit()
+
+
+@pytest.mark.parametrize('units', ['ms', 'kph', 'mph', 'knots'])
+@pytest.mark.parametrize('sensor_slot, classname', [
+    (None, ''),
+    ('A', 'blinka_temp_sensor_dht22'),
+    ('F', 'temp_api_ecowitt'),
+    *((slot, 'blinka_wind_speed_sensor_wh_sp_ws01') for slot in 'ABCDEF'),
+])
+def test_windspeed_settings_group_visibility_and_units(sensor_slot, classname, units):
+    from jinja2 import Environment
+    from wtforms import Form, SelectField, StringField
+
+    source = Path(__file__).resolve().parents[2] / 'indi_allsky' / 'flask' / 'templates' / 'config' / 'sensors.html'
+    template = source.read_text(encoding='utf-8')
+    section = template.split('<!-- WH-SP-WS01 settings -->', 1)[1].split('<!-- SHT3x', 1)[0]
+    form_fields = {'TEMP_SENSOR__' + slot + '_CLASSNAME': StringField() for slot in 'ABCDEF'}
+    form_fields['WINDSPEED_DISPLAY'] = SelectField('Wind Speed Display', choices=[
+        ('ms', 'm/s'), ('kph', 'km/h'), ('mph', 'mph'), ('knots', 'kn'),
+    ])
+    form_type = type('WindSpeedVisibilityForm', (Form,), form_fields)
+    form_data = {'WINDSPEED_DISPLAY': units}
+    if sensor_slot is not None:
+        form_data['TEMP_SENSOR__' + sensor_slot + '_CLASSNAME'] = classname
+    rendered = Environment(autoescape=True).from_string(section).render(form_config=form_type(**form_data))
+    group = rendered.split('<div id="windspeed-sensor-settings"', 1)[1]
+    has_wind_sensor = classname == 'blinka_wind_speed_sensor_wh_sp_ws01'
+
+    assert ('style="display: none;"' in group.split('>', 1)[0]) is not has_wind_sensor
+    assert 'WH-SP-WS01 Cup Anemometer' in group
+    assert 'id="WINDSPEED_DISPLAY"' in group
+    assert '<option selected value="' + units + '">' in group
+    assert template.count('form_config.WINDSPEED_DISPLAY(') == 1
 
 
 def test_invalid_pin(gpio_backend):

@@ -917,12 +917,23 @@ function updateSensorI2cAddressState(sensorSlot) {
     }
 }
 
+function updateWindSpeedSensorVisibility() {
+    const settings = $('#windspeed-sensor-settings');
+    const sensorClassname = settings.data('sensor-classname');
+    const hasWindSensor = ['A', 'B', 'C', 'D', 'E', 'F'].some(sensorSlot =>
+        $('#TEMP_SENSOR__' + sensorSlot + '_CLASSNAME').val() === sensorClassname
+    );
+    settings.toggle(hasWindSensor);
+}
+
 ['A', 'B', 'C', 'D', 'E', 'F'].forEach(sensorSlot => {
     $('#TEMP_SENSOR__' + sensorSlot + '_CLASSNAME').on('change', function() {
         updateSensorI2cAddressState(sensorSlot);
+        updateWindSpeedSensorVisibility();
     });
     updateSensorI2cAddressState(sensorSlot);
 });
+updateWindSpeedSensorVisibility();
 
 
 

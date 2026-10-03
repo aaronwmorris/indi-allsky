@@ -433,11 +433,6 @@
                         {{ form_config.TEMP_SENSOR__FC37_ACTIVE_LOW(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="TEMP_SENSOR__FC37_ACTIVE_LOW-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
-                        {{ form_config.WINDSPEED_DISPLAY.label(class='tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80') }}
-                        {{ form_config.WINDSPEED_DISPLAY(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="WINDSPEED_DISPLAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                    </div>
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__DHT_USE_PULSEIO.label.text }}</span>
                         {{ form_config.TEMP_SENSOR__DHT_USE_PULSEIO(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -445,10 +440,23 @@
                     </div>
                 </div>
 
-                <div class="tw:grid tw:grid-cols-1 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
-                    <div class="tw:flex tw:flex-col tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                <!-- WH-SP-WS01 settings -->
+                {% set wind_sensor_classname = 'blinka_wind_speed_sensor_wh_sp_ws01' %}
+                {% set wind_sensor_state = namespace(configured=false) %}
+                {% for sensor_slot in ('A', 'B', 'C', 'D', 'E', 'F') %}
+                    {% if (form_config|attr('TEMP_SENSOR__' ~ sensor_slot ~ '_CLASSNAME')).data == wind_sensor_classname %}
+                        {% set wind_sensor_state.configured = true %}
+                    {% endif %}
+                {% endfor %}
+                <div id="windspeed-sensor-settings" data-sensor-classname="{{ wind_sensor_classname }}" class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60"{% if not wind_sensor_state.configured %} style="display: none;"{% endif %}>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">WH-SP-WS01 Cup Anemometer</span>
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Choose the anemometer in a sensor slot and set that slot's Pin/Port 1 to its GPIO pin. Use {windspeed:0.1f} in image-label templates; units follow Wind Speed Display.</span>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        {{ form_config.WINDSPEED_DISPLAY.label(class='tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80') }}
+                        {{ form_config.WINDSPEED_DISPLAY(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                        <div id="WINDSPEED_DISPLAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
 
