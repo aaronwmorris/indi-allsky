@@ -55,6 +55,8 @@ def _config(**temp_sensor):
         'CLOUDINESS_INDEX_CLOUDY_TEMP': 10.0,
         'CLOUDINESS_INDEX_CLEAR_GROUND_TEMP': 10.0,
         'CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP': 10.0,
+        'CLOUDINESS_INDEX_COEFFICIENT': 1.0,
+        'CLOUDINESS_INDEX_OFFSET': 0.0,
     }
     settings.update(temp_sensor)
     return {'TEMP_SENSOR': settings}
@@ -161,6 +163,8 @@ def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled, u
 
     before_tuning, tuning = settings.split('<div id="cloudiness-index-tuning"', 1)
     assert 'id="cloudiness-index-tuning-toggle"' in before_tuning
+    assert 'aria-describedby="cloudiness-index-tuning-description"' in before_tuning
+    assert 'Corrects raw MLX sky readings (live and calibration references) before calculating cloudiness; ambient readings are unchanged.' in before_tuning
     assert 'style="display: none;"' in tuning.split('>', 1)[0]
     for name in ('TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT', 'TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET'):
         assert 'id="' + name + '"' not in before_tuning
@@ -325,15 +329,19 @@ def test_shared_cloudiness_calibration_validation_rejects_overflowing_span():
 
 
 @pytest.mark.parametrize('unit', ['c', 'f', 'k'])
-@pytest.mark.parametrize('clear_delta,cloudy_delta,valid', [
-    (4.0, 3.9, False), (1.9, 0.0, False), (2.0, 0.0, False),
-    (2.1, 0.0, True), (6.0, 3.9, True), (0.0, 4.0, False),
+@pytest.mark.parametrize('clear_delta,cloudy_delta,coefficient,valid', [
+    (4.0, 3.9, 1.0, False), (1.9, 0.0, 1.0, False), (2.0, 0.0, 1.0, False),
+    (2.1, 0.0, 1.0, True), (6.0, 3.9, 1.0, True), (0.0, 4.0, 1.0, False),
+    (2.1, 0.0, 0.5, False), (1.9, 0.0, 2.0, True),
 ])
-def test_form_rejects_weak_calibration_on_clear_sky_field(clear_delta, cloudy_delta, valid, unit):
+@pytest.mark.parametrize('offset', [0.0, 10.0])
+def test_form_rejects_weak_calibration_on_clear_sky_field(clear_delta, cloudy_delta, coefficient, valid, unit, offset):
     scale = 1.8 if unit == 'f' else 1.0
     base = 50.0 if unit == 'f' else 283.15 if unit == 'k' else 10.0
     settings = _config(
         CLOUDINESS_INDEX_TEMP_UNIT=unit,
+        CLOUDINESS_INDEX_COEFFICIENT=coefficient,
+        CLOUDINESS_INDEX_OFFSET=offset,
         CLOUDINESS_INDEX_CLEAR_TEMP=base - clear_delta * scale,
         CLOUDINESS_INDEX_CLEAR_GROUND_TEMP=base,
         CLOUDINESS_INDEX_CLOUDY_TEMP=base - cloudy_delta * scale,
@@ -391,13 +399,27 @@ def test_form_requires_configured_cloud_sensor_when_enabled(enabled, sensor_coun
         [] if expected_error is None else [expected_error])
 
 
-def test_coefficient_and_offset_tune_the_normalized_index():
+@pytest.mark.parametrize('coefficient,ground_temp,expected', [
+    (0.5, 10.0, 50.0), (0.5, 12.0, 100.0 * 5.5 / 15.0),
+    (1.0, 12.0, 100.0 * 13.0 / 30.0), (2.0, 12.0, 100.0 * 28.0 / 60.0),
+])
+@pytest.mark.parametrize('offset', [-10.0, 0.0, 10.0])
+@pytest.mark.parametrize('reference_unit,display_unit', [('c', 'c'), ('f', 'k'), ('k', 'f')])
+def test_coefficient_and_offset_correct_raw_sky_temperatures(coefficient, ground_temp, expected, offset, reference_unit, display_unit):
+    config = _config(CLOUDINESS_INDEX_COEFFICIENT=coefficient, CLOUDINESS_INDEX_OFFSET=offset,
+                     CLOUDINESS_INDEX_TEMP_UNIT=reference_unit)
+    conversions = {'c': (1.0, 0.0), 'f': (1.8, 32.0), 'k': (1.0, 273.15)}
+    scale, shift = conversions[reference_unit]
+    for key in ('CLOUDINESS_INDEX_CLEAR_TEMP', 'CLOUDINESS_INDEX_CLOUDY_TEMP',
+                'CLOUDINESS_INDEX_CLEAR_GROUND_TEMP', 'CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP'):
+        config['TEMP_SENSOR'][key] = config['TEMP_SENSOR'][key] * scale + shift
+    config['TEMP_DISPLAY'] = display_unit
+    scale, shift = conversions[display_unit]
     cloudiness_index = sensors_mapping.calculate_cloudiness_index(
-        _config(CLOUDINESS_INDEX_COEFFICIENT=0.5, CLOUDINESS_INDEX_OFFSET=10.0),
-        _values({10: 10.0, 11: -5.0}),
+        config, _values({10: ground_temp * scale + shift, 11: -5.0 * scale + shift}),
     )
 
-    assert cloudiness_index == 35.0
+    assert cloudiness_index == pytest.approx(expected)
 
 
 def test_selected_ground_sensor_is_used_when_mlx_has_no_ambient_reference():

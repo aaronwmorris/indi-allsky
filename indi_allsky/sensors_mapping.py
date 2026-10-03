@@ -103,19 +103,26 @@ def _display_temperature_to_celsius(value: float, temp_display: str) -> float:
 
 
 def _normalize_cloudiness_calibration(clear_sky_temp, cloudy_sky_temp,
-                                     clear_ground_temp, cloudy_ground_temp, temp_unit='c'):
+                                     clear_ground_temp, cloudy_ground_temp, temp_unit='c',
+                                     coefficient=1.0, offset=0.0):
     """Return the validated clear delta and span in Celsius, or None."""
     try:
+        coefficient = float(coefficient)
+        offset = float(offset)
         references = tuple(_display_temperature_to_celsius(float(value), temp_unit)
                            for value in (clear_sky_temp, cloudy_sky_temp,
                                          clear_ground_temp, cloudy_ground_temp))
     except (TypeError, ValueError, OverflowError):
         return None
 
-    if not all(math.isfinite(value) for value in references):
+    if (not all(math.isfinite(value) for value in references)
+            or not math.isfinite(coefficient) or not 0.0 < coefficient <= 10.0
+            or not math.isfinite(offset) or abs(offset) > 100.0):
         return None
 
     clear_sky_c, cloudy_sky_c, clear_ground_c, cloudy_ground_c = references
+    clear_sky_c = clear_sky_c * coefficient + offset
+    cloudy_sky_c = cloudy_sky_c * coefficient + offset
     clear_delta = clear_ground_c - clear_sky_c
     span = clear_delta - (cloudy_ground_c - cloudy_sky_c)
     if not math.isfinite(span) or span <= 2.0 or math.isclose(span, 2.0, rel_tol=0.0, abs_tol=1e-12):
@@ -125,11 +132,12 @@ def _normalize_cloudiness_calibration(clear_sky_temp, cloudy_sky_temp,
 
 
 def validate_cloudiness_calibration(clear_sky_temp, cloudy_sky_temp,
-                                   clear_ground_temp, cloudy_ground_temp, temp_unit='c'):
+                                   clear_ground_temp, cloudy_ground_temp, temp_unit='c',
+                                   coefficient=1.0, offset=0.0):
     """Require a finite calibration separation greater than 2 C in any reference unit."""
     return _normalize_cloudiness_calibration(
         clear_sky_temp, cloudy_sky_temp, clear_ground_temp, cloudy_ground_temp,
-        temp_unit=temp_unit) is not None
+        temp_unit=temp_unit, coefficient=coefficient, offset=offset) is not None
 
 
 def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
@@ -155,16 +163,19 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
     Equation (all temperatures in Celsius)::
 
         index = clamp(0, 100,
-                      ((D_clear - D_live) / (D_clear - D_cloudy) * 100)
-                      * coefficient + offset)
+                      (D_clear - D_live) / (D_clear - D_cloudy) * 100)
 
-        D = T_ground - T_sky
+        T_sky_corrected = T_sky_raw * coefficient + offset
+        D = T_ground - T_sky_corrected
 
     The two references contain paired sky and ground readings from this
     installation under known clear and overcast conditions. When no ground
     sensor is selected, the paired ambient output of an MLX90614/90615 is used.
     Their unit is declared explicitly via CLOUDINESS_INDEX_TEMP_UNIT rather
-    than assumed to match TEMP_DISPLAY.
+    than assumed to match TEMP_DISPLAY. Sky readings in both references and
+    live data are corrected in Celsius; ambient readings are unchanged.
+    The offset is in Celsius and cancels from the relative index when applied
+    consistently to raw reference and live sky readings.
 
     ``get_sensor_value`` is a callable accepting a sensor_user index and
     returning its current float value, so this works against either the
@@ -261,13 +272,24 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
         return None
 
     try:
+        coefficient = float(temp_sensor_cfg.get('CLOUDINESS_INDEX_COEFFICIENT', 1.0))
+        offset = float(temp_sensor_cfg.get('CLOUDINESS_INDEX_OFFSET', 0.0))
+    except (TypeError, ValueError, OverflowError):
+        logger.error('Sky temperature correction coefficient or offset is invalid')
+        return None
+
+    if (not math.isfinite(coefficient) or not 0.0 < coefficient <= 10.0
+            or not math.isfinite(offset) or abs(offset) > 100.0):
+        return None
+
+    try:
         calibration = _normalize_cloudiness_calibration(
             temp_sensor_cfg['CLOUDINESS_INDEX_CLEAR_TEMP'],
             temp_sensor_cfg['CLOUDINESS_INDEX_CLOUDY_TEMP'],
             temp_sensor_cfg['CLOUDINESS_INDEX_CLEAR_GROUND_TEMP'],
             temp_sensor_cfg['CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP'],
-            temp_unit=ref_unit)
-        sky_temp_c = _display_temperature_to_celsius(float(sky_temp), temp_display)
+            temp_unit=ref_unit, coefficient=coefficient, offset=offset)
+        sky_temp_c = _display_temperature_to_celsius(float(sky_temp), temp_display) * coefficient + offset
         ground_temp_c = _display_temperature_to_celsius(float(ground_temp), temp_display)
     except (KeyError, TypeError, ValueError, OverflowError):
         logger.error('Cloud calibration or live sensor readings are invalid')
@@ -285,19 +307,7 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
 
     clear_delta, span = calibration
 
-    try:
-        coefficient = float(temp_sensor_cfg.get('CLOUDINESS_INDEX_COEFFICIENT', 1.0))
-        offset = float(temp_sensor_cfg.get('CLOUDINESS_INDEX_OFFSET', 0.0))
-    except (TypeError, ValueError, OverflowError):
-        logger.error('Cloud calibration coefficient or offset is invalid')
-        return None
-
-    if (not math.isfinite(coefficient) or not 0.0 < coefficient <= 10.0
-            or not math.isfinite(offset) or abs(offset) > 100.0):
-        return None
-
     cloudiness_index = ((clear_delta - (ground_temp_c - sky_temp_c)) / span) * 100.0
-    cloudiness_index = (cloudiness_index * coefficient) + offset
     if not math.isfinite(cloudiness_index):
         return None
     return max(0.0, min(100.0, cloudiness_index))

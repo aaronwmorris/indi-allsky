@@ -3419,14 +3419,14 @@ def CLOUDINESS_INDEX_COEFFICIENT_validator(form, field):
     CLOUDINESS_INDEX_TEMP_validator(form, field)
 
     if field.data <= 0.0 or field.data > 10.0:
-        raise ValidationError('Calibration coefficient must be greater than 0 and no more than 10')
+        raise ValidationError('Sky temperature coefficient must be greater than 0 and no more than 10')
 
 
 def CLOUDINESS_INDEX_OFFSET_validator(form, field):
     CLOUDINESS_INDEX_TEMP_validator(form, field)
 
     if abs(field.data) > 100.0:
-        raise ValidationError('Calibration offset must be between -100 and 100')
+        raise ValidationError('Sky temperature offset must be between -100 and 100 C')
 
 
 def _cloudiness_sensor_slots(field):
@@ -5279,12 +5279,12 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR = BooleanField('Use External Ambient Sensor')
     TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR = SelectField('Ground Temperature Sensor', choices=[], validate_choice=False, validators=[CLOUDINESS_INDEX_GROUND_SENSOR_validator])
     TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT   = SelectField('Reference Reading Units', choices=TEMP_DISPLAY_choices, validators=[DataRequired(), CLOUDINESS_INDEX_TEMP_UNIT_validator])
-    TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP  = FloatField('Clear-Sky Reference: Sky Reading', validators=[CLOUDINESS_INDEX_TEMP_validator], widget=NumberInput(step=0.1))
-    TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_TEMP = FloatField('Cloudy-Sky Reference: Sky Reading', validators=[CLOUDINESS_INDEX_TEMP_validator], widget=NumberInput(step=0.1))
+    TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP  = FloatField('Clear-Sky Reference: Raw Sky Reading', validators=[CLOUDINESS_INDEX_TEMP_validator], widget=NumberInput(step=0.1))
+    TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_TEMP = FloatField('Cloudy-Sky Reference: Raw Sky Reading', validators=[CLOUDINESS_INDEX_TEMP_validator], widget=NumberInput(step=0.1))
     TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_GROUND_TEMP = FloatField('Clear-Sky Reference: Ground Reading', validators=[CLOUDINESS_INDEX_TEMP_validator], widget=NumberInput(step=0.1))
     TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP = FloatField('Cloudy-Sky Reference: Ground Reading', validators=[CLOUDINESS_INDEX_TEMP_validator], widget=NumberInput(step=0.1))
-    TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT = FloatField('Cloudiness Index Coefficient', validators=[CLOUDINESS_INDEX_COEFFICIENT_validator], widget=NumberInput(step=0.05, min=0.05, max=10))
-    TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET      = FloatField('Cloudiness Index Offset', validators=[CLOUDINESS_INDEX_OFFSET_validator], widget=NumberInput(step=1, min=-100, max=100))
+    TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT = FloatField('Sky Temperature Coefficient', validators=[CLOUDINESS_INDEX_COEFFICIENT_validator], widget=NumberInput(step=0.05, min=0.05, max=10))
+    TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET      = FloatField('Sky Temperature Offset (C)', validators=[CLOUDINESS_INDEX_OFFSET_validator], widget=NumberInput(step=1, min=-100, max=100))
     TEMP_SENSOR__OPENWEATHERMAP_APIKEY = PasswordField('OpenWeatherMap API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__WUNDERGROUND_APIKEY = PasswordField('Weather Underground API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__WUNDERGROUND_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__ASTROSPHERIC_APIKEY = PasswordField('Astrospheric API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__ASTROSPHERIC_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
@@ -5677,13 +5677,17 @@ class IndiAllskyConfigForm(FlaskForm):
                 self.TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_GROUND_TEMP,
                 self.TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP,
             )
-            if all(isinstance(field.data, (int, float)) for field in calibration_fields):
+            if (all(isinstance(field.data, (int, float)) for field in calibration_fields)
+                    and not self.TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT.errors
+                    and not self.TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET.errors):
                 if not sensors_mapping.validate_cloudiness_calibration(
                         *(field.data for field in calibration_fields),
-                        temp_unit=self.TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT.data):
+                        temp_unit=self.TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT.data,
+                        coefficient=self.TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT.data,
+                        offset=self.TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET.data):
                     self.TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP.errors.append(
                         'Calculated delta between cloudy and clear references is insufficient; '
-                        'the ground-to-sky temperature difference under clear skies must be more than '
+                        'the corrected ground-to-sky temperature difference under clear skies must be more than '
                         '2.0 C (3.6 F) greater than under cloudy skies. '
                         'If these readings are correct, the sensor may be having problems.'
                     )
