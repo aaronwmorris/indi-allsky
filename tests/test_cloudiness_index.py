@@ -115,6 +115,57 @@ def test_rejects_equal_calibration_references():
     assert sensors_mapping.calculate_cloudiness_index(config, _values({10: 10.0, 11: -5.0})) is None
 
 
+@pytest.mark.parametrize('slot', ['missing', None, '', 'invalid', 'sensor_user_999', 999])
+def test_cloudiness_does_not_read_slot_ten_for_malformed_cloud_sensor_slot(slot):
+    config = _config(A_USER_VAR_SLOT=slot)
+    if slot == 'missing':
+        del config['TEMP_SENSOR']['A_USER_VAR_SLOT']
+    read_indices = []
+
+    def get_sensor_value(index):
+        read_indices.append(index)
+        return {10: 10.0, 11: -5.0}.get(index)
+
+    assert sensors_mapping.calculate_cloudiness_index(config, get_sensor_value) is None
+    assert read_indices == []
+
+
+def test_cloudiness_ignores_malformed_slot_when_another_mlx_is_valid():
+    config = _config(
+        A_USER_VAR_SLOT='invalid',
+        B_CLASSNAME='blinka_temp_sensor_mlx90615_i2c',
+        B_USER_VAR_SLOT='sensor_user_20',
+    )
+    assert sensors_mapping.calculate_cloudiness_index(
+        config, _values({20: 10.0, 21: -5.0})) == 50.0
+
+
+@pytest.mark.parametrize('unit,references', [
+    ('c', (-20.0, 10.0, 10.0, 10.0)),
+    ('f', (-4.0, 50.0, 50.0, 50.0)),
+    ('k', (253.15, 283.15, 283.15, 283.15)),
+])
+def test_runtime_validates_original_calibration_values_with_declared_unit(monkeypatch, unit, references):
+    calls = []
+    original_validator = sensors_mapping.validate_cloudiness_calibration
+
+    def record_calibration(*values, temp_unit='c'):
+        calls.append((values, temp_unit))
+        return original_validator(*values, temp_unit=temp_unit)
+
+    monkeypatch.setattr(sensors_mapping, 'validate_cloudiness_calibration', record_calibration)
+    config = _config(
+        CLOUDINESS_INDEX_TEMP_UNIT=unit,
+        CLOUDINESS_INDEX_CLEAR_TEMP=references[0],
+        CLOUDINESS_INDEX_CLOUDY_TEMP=references[1],
+        CLOUDINESS_INDEX_CLEAR_GROUND_TEMP=references[2],
+        CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP=references[3],
+    )
+    assert sensors_mapping.calculate_cloudiness_index(
+        config, _values({10: 10.0, 11: -5.0})) == pytest.approx(50.0)
+    assert calls == [(references, unit)]
+
+
 @pytest.mark.parametrize('unit', ['c', 'f', 'k'])
 @pytest.mark.parametrize('clear_delta,cloudy_delta,valid', [
     (4.0, 3.9, False), (1.9, 0.0, False), (2.0, 0.0, False),

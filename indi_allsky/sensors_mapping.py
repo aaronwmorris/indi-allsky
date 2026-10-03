@@ -175,8 +175,10 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
         if classname not in constants.CLOUD_SENSOR_CLASSNAMES:
             continue
 
-        user_var_slot = temp_sensor_cfg.get('{0:s}_USER_VAR_SLOT'.format(letter), 'sensor_user_10')
-        base_index = constants.SENSOR_INDEX_MAP.get(str(user_var_slot), 10)
+        user_var_slot = temp_sensor_cfg.get('{0:s}_USER_VAR_SLOT'.format(letter))
+        base_index = constants.SENSOR_INDEX_MAP.get(str(user_var_slot))
+        if base_index is None:
+            continue
 
         try:
             sensor_cls = getattr(indi_allsky_sensors, classname)
@@ -271,7 +273,11 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
     cloudy_delta = cloudy_ground_temp - cloudy_sky_temp
     span = clear_delta - cloudy_delta
     if not validate_cloudiness_calibration(
-            clear_sky_temp, cloudy_sky_temp, clear_ground_temp, cloudy_ground_temp):
+            temp_sensor_cfg['CLOUDINESS_INDEX_CLEAR_TEMP'],
+            temp_sensor_cfg['CLOUDINESS_INDEX_CLOUDY_TEMP'],
+            temp_sensor_cfg['CLOUDINESS_INDEX_CLEAR_GROUND_TEMP'],
+            temp_sensor_cfg['CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP'],
+            temp_unit=ref_unit):
         logger.error('Calculated delta between cloudy and clear references is insufficient; '
                      'the ground-to-sky temperature difference under clear skies must be more than '
                      '2.0 C greater than under cloudy skies. '
