@@ -785,7 +785,7 @@
                         <span class="tw:text-xs tw:text-base-content">{{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR.label.text }}</span>
                         <div id="TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div id="cloudiness-index-ground-sensor" class="tw:flex tw:flex-col tw:gap-1"{% if not form_config.TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR.data %} style="display: none;"{% endif %}>
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR.label.text }}</span>
                         {{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Used when the external-sensor option is enabled; always required for MLX90640.</span>

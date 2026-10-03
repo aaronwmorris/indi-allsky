@@ -104,11 +104,12 @@ def test_cloudiness_toggles_use_checkbox_save_path(field_name):
 
 
 @pytest.mark.parametrize('enabled', [False, True])
+@pytest.mark.parametrize('use_ground_sensor', [False, True])
 @pytest.mark.parametrize('classname', [
     None, *constants.CLOUD_SENSOR_CLASSNAMES,
     'blinka_temp_sensor_dht22', 'temp_api_ecowitt',
 ])
-def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled, classname):
+def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled, use_ground_sensor, classname):
     from jinja2 import Environment, nodes
     from wtforms import BooleanField, Form, StringField
 
@@ -121,11 +122,12 @@ def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled, c
         and node.attr.startswith('TEMP_SENSOR__')
     }
     enable_field = 'TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE'
+    external_field = 'TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR'
     form_type = type('CloudinessVisibilityForm', (Form,), {
-        name: BooleanField() if name == enable_field else StringField()
+        name: BooleanField() if name in (enable_field, external_field) else StringField()
         for name in field_names
     })
-    form = form_type(**{enable_field: enabled})
+    form = form_type(**{enable_field: enabled, external_field: use_ground_sensor})
     form.cloud_sensor_classnames = constants.CLOUD_SENSOR_CLASSNAMES
     has_cloud_sensor = classname in constants.CLOUD_SENSOR_CLASSNAMES
     form.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.choices = {
@@ -141,6 +143,10 @@ def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled, c
     assert ('style="display: none;"' in settings.split('>', 1)[0]) is not enabled
     for name in field_names - {enable_field}:
         assert 'id="' + name + '"' in settings
+
+    ground_sensor = settings.split('<div id="cloudiness-index-ground-sensor"', 1)[1]
+    assert ('style="display: none;"' in ground_sensor.split('>', 1)[0]) is not use_ground_sensor
+    assert 'id="TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR"' in ground_sensor
 
     before_tuning, tuning = settings.split('<div id="cloudiness-index-tuning"', 1)
     assert 'id="cloudiness-index-tuning-toggle"' in before_tuning

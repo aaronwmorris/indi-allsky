@@ -938,6 +938,13 @@ function updateCloudinessIndexTuningVisibility() {
 $('#cloudiness-index-tuning-toggle').on('change', updateCloudinessIndexTuningVisibility);
 updateCloudinessIndexTuningVisibility();
 
+function updateCloudinessGroundSensorVisibility() {
+    $('#cloudiness-index-ground-sensor').toggle($('#TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR').prop('checked'));
+}
+
+$('#TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR').on('change', updateCloudinessGroundSensorVisibility);
+updateCloudinessGroundSensorVisibility();
+
 
 
 
