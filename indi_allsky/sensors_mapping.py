@@ -54,6 +54,24 @@ TYPE_DEVICE_CLASS_MAP = {
 CLOUD_SKY_TEMP_LABEL = 'Sky Temperature'
 
 
+def get_cloudiness_ground_sensor_offsets(classname):
+    from .devices import sensors as indi_allsky_sensors
+
+    if not isinstance(classname, str) or not classname.startswith(('blinka_', 'cpads_', 'kernel_')):
+        return ()
+
+    try:
+        metadata = getattr(indi_allsky_sensors, classname).METADATA
+    except AttributeError:
+        return ()
+
+    return tuple(
+        offset for offset, (sensor_type, label) in enumerate(zip(
+            metadata.get('types', ()), metadata.get('labels', ())))
+        if sensor_type == constants.SENSOR_TEMPERATURE and label == constants.CLOUD_AMBIENT_TEMP_LABEL
+    )
+
+
 def get_fresh_sensor_value(values, read_times, index, now=None, max_age=60.0):
     if read_times is None:
         return None
@@ -187,6 +205,24 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
     if ground_index is None:
         logger.error('Select a ground temperature sensor for this cloudiness index')
         return None
+
+    if ground_index == candidate['sky_index']:
+        logger.error('The cloudiness ambient reference cannot be the selected sky-temperature channel')
+        return None
+
+    if use_ground_sensor or candidate['ambient_index'] is None:
+        ground_indices = set()
+        for letter in ('A', 'B', 'C', 'D', 'E', 'F'):
+            base_index = constants.SENSOR_INDEX_MAP.get(str(temp_sensor_cfg.get('{0:s}_USER_VAR_SLOT'.format(letter))))
+            if base_index is None:
+                continue
+            for offset in get_cloudiness_ground_sensor_offsets(temp_sensor_cfg.get('{0:s}_CLASSNAME'.format(letter))):
+                ground_indices.add(base_index + offset)
+
+        if ground_index not in ground_indices:
+            logger.error('Cloudiness requires a configured hardware ambient temperature sensor; '
+                         'cached/API and sky-temperature readings are not supported')
+            return None
 
     ground_temp = get_sensor_value(ground_index)
     if ground_temp is None:

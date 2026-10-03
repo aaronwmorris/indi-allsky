@@ -22,6 +22,8 @@ def _config(**temp_sensor):
     settings = {
         'A_CLASSNAME': 'blinka_temp_sensor_mlx90614_i2c',
         'A_USER_VAR_SLOT': 'sensor_user_10',
+        'B_CLASSNAME': 'blinka_temp_sensor_dht22',
+        'B_USER_VAR_SLOT': 'sensor_user_12',
         'CLOUDINESS_INDEX_ENABLE': True,
         'CLOUDINESS_INDEX_TEMP_UNIT': 'c',
         'CLOUDINESS_INDEX_CLEAR_TEMP': -20.0,
@@ -44,6 +46,43 @@ def _validate_cloudiness_form(form):
     namespace = {'self': form, 'math': math, 'result': True}
     exec(compile(ast.Module(body=[calibration_check], type_ignores=[]), str(source), 'exec'), namespace)
     return namespace['result']
+
+
+def _cloudiness_ground_form(config, ground_slot, enabled):
+    from wtforms import BooleanField, Form, SelectField
+    from wtforms.validators import ValidationError
+
+    source = Path(__file__).resolve().parents[1] / 'indi_allsky' / 'flask' / 'forms.py'
+    tree = ast.parse(source.read_text(encoding='utf-8'))
+    form_class = next(node for node in tree.body
+                      if isinstance(node, ast.ClassDef) and node.name == 'IndiAllskyConfigForm')
+    validator = next(node for node in tree.body if isinstance(node, ast.FunctionDef)
+                     and node.name == 'CLOUDINESS_INDEX_GROUND_SENSOR_validator')
+    field = next(node for node in form_class.body if isinstance(node, ast.Assign)
+                 and isinstance(node.targets[0], ast.Name)
+                 and node.targets[0].id == 'TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR')
+    namespace = {'SelectField': SelectField, 'ValidationError': ValidationError,
+                 'constants': constants, 'sensors_mapping': sensors_mapping}
+    exec(compile(ast.Module(body=[validator, field], type_ignores=[]), str(source), 'exec'), namespace)
+    form_type = type('CloudinessGroundForm', (Form,), {
+        'TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE': BooleanField(),
+        'TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR': namespace['TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR'],
+    })
+    form = form_type(TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE=enabled,
+                     TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR=ground_slot)
+    form.SENSOR_SLOT_choices = {'User Sensors': [(str(index), str(index)) for index in range(110)]}
+    namespace['self'] = form
+    for letter in ('A', 'B', 'C', 'D', 'E', 'F'):
+        namespace['temp_sensor__' + letter.lower() + '_classname'] = config['TEMP_SENSOR'].get(letter + '_CLASSNAME', '')
+        namespace['temp_sensor__' + letter.lower() + '_user_var_slot'] = config['TEMP_SENSOR'].get(letter + '_USER_VAR_SLOT', '')
+    initialize = next(node for node in form_class.body
+                      if isinstance(node, ast.FunctionDef) and node.name == '__init__')
+    start = next(index for index, node in enumerate(initialize.body)
+                 if isinstance(node, ast.Assign) and isinstance(node.targets[0], ast.Name)
+                 and node.targets[0].id == 'ground_sensor_choices')
+    exec(compile(ast.Module(body=initialize.body[start:start + 3], type_ignores=[]),
+                 str(source), 'exec'), namespace)
+    return form
 
 
 def test_returns_none_until_calibration_is_enabled():
@@ -187,6 +226,8 @@ def test_selected_ground_sensor_is_used_when_mlx_has_no_ambient_reference():
         'TEMP_SENSOR': {
             'A_CLASSNAME': 'blinka_temp_sensor_mlx90640_i2c',
             'A_USER_VAR_SLOT': 'sensor_user_10',
+            'B_CLASSNAME': 'blinka_temp_sensor_dht22',
+            'B_USER_VAR_SLOT': 'sensor_user_11',
             'CLOUDINESS_INDEX_ENABLE': True,
             'CLOUDINESS_INDEX_CLEAR_TEMP': -20.0,
             'CLOUDINESS_INDEX_CLOUDY_TEMP': 10.0,
@@ -225,6 +266,59 @@ def test_selected_ground_sensor_overrides_paired_mlx_ambient():
     )
 
     assert cloudiness_index == 50.0
+
+
+@pytest.mark.parametrize('classname', [
+    'temp_api_ecowitt', 'temp_api_ambientweather', 'temp_api_astrospheric',
+    'temp_api_openweathermap', 'temp_api_weatherunderground', 'mqtt_broker_sensor',
+])
+def test_cloudiness_rejects_cached_external_ambient_sources(classname):
+    config = _config(
+        B_CLASSNAME=classname,
+        CLOUDINESS_INDEX_USE_GROUND_SENSOR=True,
+        CLOUDINESS_INDEX_GROUND_SENSOR='sensor_user_12',
+    )
+    assert sensors_mapping.calculate_cloudiness_index(
+        config, _values({10: 10.0, 11: -5.0, 12: 10.0})) is None
+
+
+@pytest.mark.parametrize('ground_slot', ['sensor_user_11', 'sensor_user_13', 'sensor_user_20'])
+def test_cloudiness_rejects_sky_nontemperature_and_unconfigured_ambient_slots(ground_slot):
+    config = _config(
+        CLOUDINESS_INDEX_USE_GROUND_SENSOR=True,
+        CLOUDINESS_INDEX_GROUND_SENSOR=ground_slot,
+    )
+    assert sensors_mapping.calculate_cloudiness_index(
+        config, _values({10: 10.0, 11: -5.0, 12: 10.0, 13: 50.0, 20: 10.0})) is None
+
+
+@pytest.mark.parametrize('classname,expected', [
+    ('blinka_temp_sensor_mlx90614_i2c', (0,)),
+    ('blinka_temp_sensor_mlx90615_i2c', (0,)),
+    ('blinka_temp_sensor_mlx90640_i2c', ()),
+    ('blinka_temp_sensor_dht22', (0,)),
+    ('kernel_temp_sensor_ds18x20_w1', (0,)),
+    ('temp_api_ecowitt', ()), ('mqtt_broker_sensor', ()),
+    ('unknown', ()), (None, ()),
+])
+def test_cloudiness_ambient_outputs_are_hardware_temperature_channels(classname, expected):
+    assert sensors_mapping.get_cloudiness_ground_sensor_offsets(classname) == expected
+
+
+@pytest.mark.parametrize('enabled', [True, False])
+@pytest.mark.parametrize('ground_slot,supported', [
+    ('', True), ('sensor_user_10', True), ('sensor_user_11', False),
+    ('sensor_user_12', True), ('sensor_user_13', False),
+    ('sensor_user_14', False), ('sensor_user_20', False),
+])
+def test_cloudiness_form_filters_and_validates_ambient_sources(enabled, ground_slot, supported):
+    config = _config(C_CLASSNAME='temp_api_ecowitt', C_USER_VAR_SLOT='sensor_user_20')
+    form = _cloudiness_ground_form(config, ground_slot, enabled)
+    field = form.TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR
+    assert [slot for slot, label in field.choices['Temperature Sensors']] == ['sensor_user_10', 'sensor_user_12']
+    assert form.validate() is (supported or not enabled)
+    if enabled and not supported:
+        assert 'configured hardware ambient temperature sensor' in field.errors[0]
 
 
 def test_paired_mlx_ambient_is_used_until_external_sensor_is_enabled():
