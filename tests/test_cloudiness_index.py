@@ -72,11 +72,12 @@ def _cloudiness_ground_form(config, ground_slot, enabled):
     from wtforms.validators import ValidationError
 
     form_class = _source_member('flask/forms.py', 'IndiAllskyConfigForm')
+    slots_helper = _source_member('flask/forms.py', '_cloudiness_sensor_slots')
     validator = _source_member('flask/forms.py', 'CLOUDINESS_INDEX_GROUND_SENSOR_validator')
     field = _source_assignment(form_class.body, 'TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR')
     namespace = {'SelectField': SelectField, 'ValidationError': ValidationError,
                  'constants': constants, 'sensors_mapping': sensors_mapping}
-    _exec_source('flask/forms.py', [validator, field], namespace)
+    _exec_source('flask/forms.py', [slots_helper, validator, field], namespace)
     form_type = type('CloudinessGroundForm', (Form,), {
         'TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE': BooleanField(),
         'TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR': namespace['TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR'],

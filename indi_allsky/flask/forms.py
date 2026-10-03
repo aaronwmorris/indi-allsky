@@ -3429,17 +3429,15 @@ def CLOUDINESS_INDEX_OFFSET_validator(form, field):
         raise ValidationError('Calibration offset must be between -100 and 100')
 
 
+def _cloudiness_sensor_slots(field):
+    return [value for choices in field.choices.values() for value, label in choices]
+
+
 def CLOUDINESS_INDEX_SENSOR_validator(form, field):
     if not field.data:
         return
 
-    slots = [
-        value
-        for choices in form.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.choices.values()
-        for value, label in choices
-    ]
-
-    if field.data not in slots:
+    if field.data not in _cloudiness_sensor_slots(field):
         raise ValidationError('Invalid selection')
 
 
@@ -3450,13 +3448,7 @@ def CLOUDINESS_INDEX_GROUND_SENSOR_validator(form, field):
     if not field.data:
         return
 
-    slots = [
-        value
-        for choices in form.TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR.choices.values()
-        for value, label in choices
-    ]
-
-    if field.data not in slots:
+    if field.data not in _cloudiness_sensor_slots(field):
         raise ValidationError(
             'Select a configured hardware ambient temperature sensor; '
             'cached/API and sky-temperature readings are not supported'
@@ -5630,7 +5622,7 @@ class IndiAllskyConfigForm(FlaskForm):
                     user_var_slot,
                 ),
             ))
-            if constants.CLOUD_AMBIENT_TEMP_LABEL in sensor_class.METADATA.get('labels', ()):
+            if sensors_mapping.get_cloudiness_ground_sensor_offsets(classname):
                 cloud_sensor_auto_ground_slots.add(user_var_slot)
 
         self.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.choices = {
