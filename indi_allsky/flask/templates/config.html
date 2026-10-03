@@ -1942,7 +1942,7 @@ $( document ).ready(function() {
     group_on_ready('IMAGE_OVERLAY__ENABLE', group_fields_image_overlay, group_checkbox_fields_image_overlay);
     group_on_ready('CIRCULAR_DISPLAY__ENABLE', group_fields_circular_display, group_checkbox_fields_circular_display);
 
-    // Enable/disable FC-37 Active Low toggle when any sensor slot has FC-37 selected
+    // Show FC-37 settings when any sensor slot has FC-37 selected
     function updateFc37ActiveLowState() {
         const sensorSlotIds = [
             'TEMP_SENSOR__A_CLASSNAME',
@@ -1957,7 +1957,7 @@ $( document ).ready(function() {
         });
         const $toggle = $('#TEMP_SENSOR__FC37_ACTIVE_LOW');
         $toggle.prop('disabled', !fc37Selected);
-        $toggle.parent().css('opacity', fc37Selected ? '' : '0.5');
+        $('#fc37-sensor-settings').toggle(fc37Selected);
     }
 
     $('#TEMP_SENSOR__A_CLASSNAME, #TEMP_SENSOR__B_CLASSNAME, #TEMP_SENSOR__C_CLASSNAME, #TEMP_SENSOR__D_CLASSNAME, #TEMP_SENSOR__E_CLASSNAME, #TEMP_SENSOR__F_CLASSNAME').on('change', updateFc37ActiveLowState);
