@@ -17,10 +17,19 @@ function makeSky(options = {}, asset = 'virtualsky.js') {
         navigator: {language: 'en'}, Date, console,
     });
     vm.runInContext(fs.readFileSync(path.join(__dirname,
-        '../../indi_allsky/flask/static/virtualsky', asset), 'utf8'), context);
+        '../../../indi_allsky/flask/static/virtualsky', asset), 'utf8'), context);
     return S.virtualsky({projection: 'fisheye', width: 1000, height: 1000,
         latitude: 46.51, longitude: 8, clock: new Date(1770000000000),
         az: 180, ...options});
 }
 
-module.exports = {makeSky};
+function loadPlanets(sky) {
+    const S = {virtualsky: {plugins: []}};
+    vm.runInNewContext(fs.readFileSync(path.join(__dirname,
+        '../../../indi_allsky/flask/static/virtualsky/virtualsky-planets.js'), 'utf8'), {S});
+    S.virtualsky.plugins[0].init.call(sky);
+    sky.trigger('loadedPlanets');
+    return sky;
+}
+
+module.exports = {makeSky, loadPlanets};

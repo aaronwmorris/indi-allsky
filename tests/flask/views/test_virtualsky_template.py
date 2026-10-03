@@ -20,7 +20,7 @@ from wtforms.widgets import NumberInput
     (True, True, False, True),
 ])
 def test_calibration_actions_require_config_save_access(login_disabled, authenticated, admin, allowed):
-    root = Path(__file__).resolve().parents[2] / 'indi_allsky/flask'
+    root = Path(__file__).resolve().parents[3] / 'indi_allsky/flask'
     tree = ast.parse((root / 'forms.py').read_text(encoding='utf-8'))
     form_node = next(n for n in tree.body if isinstance(n, ast.ClassDef)
                      and n.name == 'IndiAllskyVirtualSkyHelperForm')
