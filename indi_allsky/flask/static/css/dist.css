@@ -373,6 +373,7 @@
       color: var(--color-neutral-content);
       opacity: 0%;
       font-size: 0.875rem;
+      font-weight: 400;
       line-height: 1.25;
       background-color: var(--tt-bg);
       width: max-content;
@@ -394,6 +395,7 @@
       color: var(--color-neutral-content);
       opacity: 0%;
       font-size: 0.875rem;
+      font-weight: 400;
       line-height: 1.25;
       background-color: var(--tt-bg);
       width: max-content;
@@ -891,15 +893,15 @@
       --tw-content: attr(aria-label);
       content: var(--tw-content);
     }
+    .tw\:btn:where(:checked:not(.tw\:filter [type="radio"].tw\:btn)) {
+      --btn-color: var(--color-primary);
+      --btn-fg: var(--color-primary-content);
+    }
   }
   .tw\:prose :where(a.tw\:btn:not(.tw\:btn-link)):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
     text-decoration-line: none;
   }
   @layer daisyui.l1 {
-    .tw\:btn:where(:checked:not(.tw\:filter [type="radio"].tw\:btn)) {
-      --btn-color: var(--color-primary);
-      --btn-fg: var(--color-primary-content);
-    }
     @media (hover: hover) {
       .tw\:btn:hover {
         --btn-bg: var(--btn-color, var(--color-base-200));
@@ -1021,6 +1023,7 @@
       pointer-events: none;
       display: inline-block;
       aspect-ratio: 1 / 1;
+      flex-shrink: 0;
       background-color: currentcolor;
       vertical-align: middle;
       width: calc(var(--size-selector, 0.25rem) * 6);
@@ -2488,6 +2491,7 @@
     }
     .tw\:checkbox:checked:before {
       clip-path: polygon(20% 100%, 20% 80%, 50% 80%, 50% 0%, 70% 0%, 70% 100%);
+      translate: 3.5% -7%;
       opacity: 100%;
     }
     @media (forced-colors: active) {
@@ -2512,6 +2516,7 @@
     }
     .tw\:checkbox[aria-checked="true"]:before {
       clip-path: polygon(20% 100%, 20% 80%, 50% 80%, 50% 0%, 70% 0%, 70% 100%);
+      translate: 3.5% -7%;
       opacity: 100%;
     }
     @media (forced-colors: active) {
@@ -2541,7 +2546,21 @@
     .tw\:checkbox:indeterminate:before {
       rotate: 0deg;
       opacity: 100%;
-      translate: 0 -35%;
+      translate: 0 -40%;
+      clip-path: polygon(20% 100%, 20% 80%, 50% 80%, 50% 80%, 80% 80%, 80% 100%);
+    }
+    .tw\:checkbox[aria-checked="mixed"] {
+      background-color: var( --input-color, var(--color-base-content) );
+    }
+    @supports (color: color-mix(in lab, red, red)) {
+      .tw\:checkbox[aria-checked="mixed"] {
+        background-color: var( --input-color, color-mix(in oklab, var(--color-base-content) 20%, #0000) );
+      }
+    }
+    .tw\:checkbox[aria-checked="mixed"]:before {
+      rotate: 0deg;
+      opacity: 100%;
+      translate: 0 -40%;
       clip-path: polygon(20% 100%, 20% 80%, 50% 80%, 50% 80%, 80% 80%, 80% 100%);
     }
   }
@@ -3102,6 +3121,8 @@
     --join-se: 0;
     --join-es: 0;
     --join-ee: 0;
+    --join-ml: 0;
+    --join-mt: 0;
     --join-v: 0;
     --join-h: 1;
     @scope (&) {
@@ -3130,6 +3151,10 @@
         --join-se: var(--radius-field);
         --join-es: var(--radius-field);
         --join-ee: var(--radius-field);
+      }
+      :where(:scope > :not(:first-child)) {
+        --join-ml: calc(var(--border, 1px) * -1 * var(--join-h));
+        --join-mt: calc(var(--border, 1px) * -1 * var(--join-v));
       }
     }
   }
@@ -3728,9 +3753,9 @@
     border-start-end-radius: var(--join-se);
     border-end-start-radius: var(--join-es);
     border-end-end-radius: var(--join-ee);
-    &:not(:first-child, :disabled, [disabled], .tw\:btn-disabled) {
-      margin-inline-start: calc(var(--border, 1px) * -1 * var(--join-h));
-      margin-block-start: calc(var(--border, 1px) * -1 * var(--join-v));
+    &:not(:disabled, [disabled], .tw\:btn-disabled) {
+      margin-inline-start: var(--join-ml, 0);
+      margin-block-start: var(--join-mt, 0);
     }
     &:is(:disabled, [disabled], .tw\:btn-disabled) {
       border-width: var(--border, 1px);
@@ -3843,6 +3868,7 @@
   @layer daisyui.l1.l2.l3 {
     .tw\:badge {
       display: inline-flex;
+      flex-shrink: 0;
       align-items: center;
       justify-content: center;
       gap: calc(0.25rem * 2);
@@ -4003,7 +4029,7 @@
     mask-repeat: no-repeat;
     -webkit-mask-size: 100% 100%;
     mask-size: 100% 100%;
-    --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cg fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'%3E%3Cpath d='M8 2v4m8-4v4'/%3E%3Crect width='18' height='18' x='3' y='4' rx='2'/%3E%3Cpath d='M3 10h18'/%3E%3C/g%3E%3C/svg%3E");
+    --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cg fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'%3E%3Cpath d='M8 2v3m8-3v3'/%3E%3Crect width='18' height='18' x='3' y='3' rx='2'/%3E%3Cpath d='M3 9h18'/%3E%3C/g%3E%3C/svg%3E");
   }
   .tw\:icon-\[lucide--camera\] {
     display: inline-block;
@@ -4029,7 +4055,7 @@
     mask-repeat: no-repeat;
     -webkit-mask-size: 100% 100%;
     mask-size: 100% 100%;
-    --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cg fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m9 12l2 2l4-4'/%3E%3C/g%3E%3C/svg%3E");
+    --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cg fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m16 9l-5.5 5.5L8 12'/%3E%3C/g%3E%3C/svg%3E");
   }
   .tw\:icon-\[lucide--check-circle\] {
     display: inline-block;
@@ -4419,7 +4445,7 @@
     mask-repeat: no-repeat;
     -webkit-mask-size: 100% 100%;
     mask-size: 100% 100%;
-    --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cg fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'%3E%3Cpath d='M16 10h2m-2 4h2M6.17 15a3 3 0 0 1 5.66 0'/%3E%3Ccircle cx='9' cy='11' r='2'/%3E%3Crect width='20' height='14' x='2' y='5' rx='2'/%3E%3C/g%3E%3C/svg%3E");
+    --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cg fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'%3E%3Cpath d='M13 19a4 4 0 0 0-8 0m11-9h2m-2 4h2'/%3E%3Ccircle cx='9' cy='12' r='3'/%3E%3Crect width='20' height='14' x='2' y='5' rx='2'/%3E%3C/g%3E%3C/svg%3E");
   }
   .tw\:icon-\[lucide--image-off\] {
     display: inline-block;
@@ -4497,7 +4523,7 @@
     mask-repeat: no-repeat;
     -webkit-mask-size: 100% 100%;
     mask-size: 100% 100%;
-    --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cg fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'%3E%3Cpath d='m15.5 7.5l2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4m2-2l-9.6 9.6'/%3E%3Ccircle cx='7.5' cy='15.5' r='5.5'/%3E%3C/g%3E%3C/svg%3E");
+    --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cg fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'%3E%3Cpath d='m2 21l9.6-9.6m-4.1 4.1l2.3 2.3a1 1 0 0 1 0 1.4l-2.1 2.1a1 1 0 0 1-1.4 0L4 19'/%3E%3Ccircle cx='15.5' cy='7.5' r='5.5'/%3E%3C/g%3E%3C/svg%3E");
   }
   .tw\:icon-\[lucide--keyboard\] {
     display: inline-block;
@@ -5108,7 +5134,7 @@
     mask-repeat: no-repeat;
     -webkit-mask-size: 100% 100%;
     mask-size: 100% 100%;
-    --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cpath fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E");
+    --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cpath fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 11v6m4-6v6m5-11v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E");
   }
   .tw\:icon-\[lucide--triangle-alert\] {
     display: inline-block;
@@ -5310,7 +5336,7 @@
       @supports (color: color-mix(in lab, red, red)) {
         box-shadow: 0 3px 0 -2px oklch(100% 0 0 / calc(var(--depth) * 0.08)) inset, 0 1px color-mix( in oklab, color-mix(in oklab, #000 20%, var(--alert-color, var(--color-base-200))) calc(var(--depth) * 20%), #0000 ), 0 4px 3px -2px oklch(0% 0 0 / calc(var(--depth) * 0.08));
       }
-      &:has(:nth-child(2)) {
+      &:has( > :nth-child(2)) {
         grid-template-columns: auto minmax(auto, 1fr);
       }
     }
@@ -8918,40 +8944,6 @@ calendar-select-month::part(option):disabled, calendar-select-year::part(option)
     --noise: 0;
   }
   :root {
-    --page-scroll-lock: initial;
-    --page-overflow: var(--page-scroll-lock) hidden;
-  }
-  :root:not(span) {
-    overflow: var(--page-overflow);
-  }
-  :root {
-    --fx-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.34' numOctaves='4' stitchTiles='stitch'%3E%3C/feTurbulence%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23a)' opacity='0.2'%3E%3C/rect%3E%3C/svg%3E");
-  }
-  :root, [data-theme] {
-    background-color: var(--root-bg);
-    color: var(--color-base-content);
-  }
-  :root {
-    background-color: var(--page-scroll-bg, var(--root-bg));
-  }
-  :where(:root, [data-theme]) {
-    --root-bg: var(--color-base-100);
-  }
-  @property --radialprogress {
-    syntax: "<percentage>";
-    inherits: true;
-    initial-value: 0%;
-  }
-  @property --aura-angle {
-    syntax: "<angle>";
-    inherits: false;
-    initial-value: 0deg;
-  }
-  :root {
-    scrollbar-color: currentColor #0000;
-    @supports (color: color-mix(in lab, red, red)) {
-      scrollbar-color: color-mix(in oklch, currentColor 35%, #0000) #0000;
-    }
     --page-has-backdrop: var(--page-scroll-lock) 1;
     --page-scroll-bg: var(--page-scroll-lock)
     var(--root-bg, #0000);
@@ -8970,6 +8962,73 @@ calendar-select-month::part(option):disabled, calendar-select-year::part(option)
     0%, to {
       --page-has-scroll:  ;
     }
+  }
+  :root {
+    --fx-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.34' numOctaves='4' stitchTiles='stitch'%3E%3C/feTurbulence%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23a)' opacity='0.2'%3E%3C/rect%3E%3C/svg%3E");
+    scrollbar-color: currentColor #0000;
+    @supports (color: color-mix(in lab, red, red)) {
+      scrollbar-color: color-mix(in oklch, currentColor 35%, #0000) #0000;
+    }
+  }
+  @property --radialprogress {
+    syntax: "<percentage>";
+    inherits: true;
+    initial-value: 0%;
+  }
+  @property --aura-angle {
+    syntax: "<angle>";
+    inherits: false;
+    initial-value: 0deg;
+  }
+  :root, [data-theme] {
+    background-color: var(--root-bg);
+    color: var(--color-base-content);
+  }
+  :root {
+    background-color: var(--page-scroll-bg, var(--root-bg));
+  }
+  :where(:root, [data-theme]) {
+    --root-bg: var(--color-base-100);
+  }
+  :root {
+    --page-scroll-lock: initial;
+    --page-overflow: var(--page-scroll-lock) hidden;
+  }
+  :root:not(span) {
+    overflow: var(--page-overflow);
+  }
+}
+@keyframes skeleton {
+  0% {
+    background-position: 150%;
+  }
+  100% {
+    background-position: -50%;
+  }
+}
+@keyframes radio {
+  0% {
+    padding: 5px;
+  }
+  50% {
+    padding: 3px;
+  }
+}
+@keyframes rotator {
+  89.9999%, 100% {
+    --first-item-position: 0 0%;
+  }
+  90%, 99.9999% {
+    --first-item-position: 0 calc(var(--items) * 100%);
+  }
+  100% {
+    translate: 0 -100%;
+  }
+}
+@keyframes rating {
+  0%, 40% {
+    scale: 1.1;
+    filter: brightness(1.05) contrast(1.05);
   }
 }
 @keyframes dropdown {
@@ -9003,30 +9062,6 @@ calendar-select-month::part(option):disabled, calendar-select-year::part(option)
     filter: blur(1.5rem);
   }
 }
-@keyframes progress {
-  50% {
-    background-position-x: -115%;
-  }
-}
-@keyframes skeleton {
-  0% {
-    background-position: 150%;
-  }
-  100% {
-    background-position: -50%;
-  }
-}
-@keyframes rating {
-  0%, 40% {
-    scale: 1.1;
-    filter: brightness(1.05) contrast(1.05);
-  }
-}
-@keyframes menu {
-  0% {
-    opacity: 0;
-  }
-}
 @keyframes toast {
   0% {
     scale: 0.9;
@@ -9037,23 +9072,14 @@ calendar-select-month::part(option):disabled, calendar-select-year::part(option)
     opacity: 1;
   }
 }
-@keyframes rotator {
-  89.9999%, 100% {
-    --first-item-position: 0 0%;
-  }
-  90%, 99.9999% {
-    --first-item-position: 0 calc(var(--items) * 100%);
-  }
-  100% {
-    translate: 0 -100%;
+@keyframes menu {
+  0% {
+    opacity: 0;
   }
 }
-@keyframes radio {
-  0% {
-    padding: 5px;
-  }
+@keyframes progress {
   50% {
-    padding: 3px;
+    background-position-x: -115%;
   }
 }
 @property --tw-translate-x {
