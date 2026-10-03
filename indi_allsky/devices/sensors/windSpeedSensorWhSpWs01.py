@@ -42,7 +42,7 @@ class WindSpeedSensorWhSpWs01(SensorBase):
 
         self._pulse_lock = Lock()
         self._pulse_count = 0
-        self.last_update = time.monotonic()
+        self.last_update = None
         self.input_device = None
 
         try:
@@ -67,9 +67,13 @@ class WindSpeedSensorWhSpWs01(SensorBase):
     def update(self):
         with self._pulse_lock:
             now = time.monotonic()
-            elapsed = now - self.last_update
+            if self.last_update is None:
+                elapsed = 0.0
+                pulse_count = 0
+            else:
+                elapsed = now - self.last_update
+                pulse_count = self._pulse_count
             self.last_update = now
-            pulse_count = self._pulse_count
             self._pulse_count = 0
 
         if elapsed <= 0:

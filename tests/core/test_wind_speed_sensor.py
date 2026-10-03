@@ -34,6 +34,7 @@ def test_pulse_count_and_units(gpio_backend, monkeypatch, units, expected, pin_n
         {'WINDSPEED_DISPLAY': units}, 'Wind', None, None, pin_1_name=pin_name,
     )
     factory.assert_called_once_with(gpio_number, pull_up=True, bounce_time=0.02)
+    assert sensor.update()['wind_speed'] == 0.0
 
     for pulse_index in range(10):
         device.when_pressed()
@@ -47,6 +48,29 @@ def test_pulse_count_and_units(gpio_backend, monkeypatch, units, expected, pin_n
     assert sensor.update()['wind_speed'] == pytest.approx(expected / 10.0, rel=1e-5)
     sensor.deinit()
     device.close.assert_called_once()
+
+
+def test_first_update_establishes_baseline_and_discards_startup_pulses(gpio_backend, monkeypatch):
+    device, factory = gpio_backend
+    clock = [100.0]
+    monkeypatch.setattr(wind_sensor.time, 'monotonic', lambda: clock[0])
+    sensor = wind_sensor.WindSpeedSensorWhSpWs01(
+        {'WINDSPEED_DISPLAY': 'ms'}, 'Wind', None, None, pin_1_name='D24',
+    )
+
+    for pulse_index in range(5):
+        device.when_pressed()
+    clock[0] = 130.0
+
+    assert sensor.update()['wind_speed'] == 0.0
+    assert sensor.last_update == 130.0
+    assert sensor._pulse_count == 0
+
+    for pulse_index in range(10):
+        device.when_pressed()
+    clock[0] = 132.0
+    assert sensor.update()['wind_speed'] == pytest.approx(10.0 / 3.0)
+    sensor.deinit()
 
 
 def test_invalid_pin(gpio_backend):
