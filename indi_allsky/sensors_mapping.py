@@ -102,23 +102,34 @@ def _display_temperature_to_celsius(value: float, temp_display: str) -> float:
     return value
 
 
-def validate_cloudiness_calibration(clear_sky_temp, cloudy_sky_temp,
-                                   clear_ground_temp, cloudy_ground_temp, temp_unit='c'):
-    """Require a finite calibration separation greater than 2 C in any reference unit."""
+def _normalize_cloudiness_calibration(clear_sky_temp, cloudy_sky_temp,
+                                     clear_ground_temp, cloudy_ground_temp, temp_unit='c'):
+    """Return the validated clear delta and span in Celsius, or None."""
     try:
         references = tuple(_display_temperature_to_celsius(float(value), temp_unit)
                            for value in (clear_sky_temp, cloudy_sky_temp,
                                          clear_ground_temp, cloudy_ground_temp))
     except (TypeError, ValueError, OverflowError):
-        return False
+        return None
 
     if not all(math.isfinite(value) for value in references):
-        return False
+        return None
 
     clear_sky_c, cloudy_sky_c, clear_ground_c, cloudy_ground_c = references
-    span = (clear_ground_c - clear_sky_c) - (cloudy_ground_c - cloudy_sky_c)
-    return (math.isfinite(span) and span > 2.0
-            and not math.isclose(span, 2.0, rel_tol=0.0, abs_tol=1e-12))
+    clear_delta = clear_ground_c - clear_sky_c
+    span = clear_delta - (cloudy_ground_c - cloudy_sky_c)
+    if not math.isfinite(span) or span <= 2.0 or math.isclose(span, 2.0, rel_tol=0.0, abs_tol=1e-12):
+        return None
+
+    return clear_delta, span
+
+
+def validate_cloudiness_calibration(clear_sky_temp, cloudy_sky_temp,
+                                   clear_ground_temp, cloudy_ground_temp, temp_unit='c'):
+    """Require a finite calibration separation greater than 2 C in any reference unit."""
+    return _normalize_cloudiness_calibration(
+        clear_sky_temp, cloudy_sky_temp, clear_ground_temp, cloudy_ground_temp,
+        temp_unit=temp_unit) is not None
 
 
 def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
@@ -250,39 +261,29 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
         return None
 
     try:
-        clear_sky_temp = _display_temperature_to_celsius(
-            float(temp_sensor_cfg['CLOUDINESS_INDEX_CLEAR_TEMP']), ref_unit)
-        cloudy_sky_temp = _display_temperature_to_celsius(
-            float(temp_sensor_cfg['CLOUDINESS_INDEX_CLOUDY_TEMP']), ref_unit)
-        clear_ground_temp = _display_temperature_to_celsius(
-            float(temp_sensor_cfg['CLOUDINESS_INDEX_CLEAR_GROUND_TEMP']), ref_unit)
-        cloudy_ground_temp = _display_temperature_to_celsius(
-            float(temp_sensor_cfg['CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP']), ref_unit)
+        calibration = _normalize_cloudiness_calibration(
+            temp_sensor_cfg['CLOUDINESS_INDEX_CLEAR_TEMP'],
+            temp_sensor_cfg['CLOUDINESS_INDEX_CLOUDY_TEMP'],
+            temp_sensor_cfg['CLOUDINESS_INDEX_CLEAR_GROUND_TEMP'],
+            temp_sensor_cfg['CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP'],
+            temp_unit=ref_unit)
         sky_temp_c = _display_temperature_to_celsius(float(sky_temp), temp_display)
         ground_temp_c = _display_temperature_to_celsius(float(ground_temp), temp_display)
     except (KeyError, TypeError, ValueError, OverflowError):
         logger.error('Cloud calibration or live sensor readings are invalid')
         return None
 
-    if not all(math.isfinite(value) for value in (
-            clear_sky_temp, cloudy_sky_temp, clear_ground_temp,
-            cloudy_ground_temp, sky_temp_c, ground_temp_c)):
+    if not all(math.isfinite(value) for value in (sky_temp_c, ground_temp_c)):
         return None
 
-    clear_delta = clear_ground_temp - clear_sky_temp
-    cloudy_delta = cloudy_ground_temp - cloudy_sky_temp
-    span = clear_delta - cloudy_delta
-    if not validate_cloudiness_calibration(
-            temp_sensor_cfg['CLOUDINESS_INDEX_CLEAR_TEMP'],
-            temp_sensor_cfg['CLOUDINESS_INDEX_CLOUDY_TEMP'],
-            temp_sensor_cfg['CLOUDINESS_INDEX_CLEAR_GROUND_TEMP'],
-            temp_sensor_cfg['CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP'],
-            temp_unit=ref_unit):
+    if calibration is None:
         logger.error('Calculated delta between cloudy and clear references is insufficient; '
                      'the ground-to-sky temperature difference under clear skies must be more than '
                      '2.0 C greater than under cloudy skies. '
                      'If these readings are correct, the sensor may be having problems.')
         return None
+
+    clear_delta, span = calibration
 
     try:
         coefficient = float(temp_sensor_cfg.get('CLOUDINESS_INDEX_COEFFICIENT', 1.0))

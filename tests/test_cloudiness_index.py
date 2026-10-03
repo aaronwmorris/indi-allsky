@@ -145,15 +145,22 @@ def test_cloudiness_ignores_malformed_slot_when_another_mlx_is_valid():
     ('f', (-4.0, 50.0, 50.0, 50.0)),
     ('k', (253.15, 283.15, 283.15, 283.15)),
 ])
-def test_runtime_validates_original_calibration_values_with_declared_unit(monkeypatch, unit, references):
+def test_runtime_normalizes_original_calibration_values_once_with_declared_unit(monkeypatch, unit, references):
     calls = []
-    original_validator = sensors_mapping.validate_cloudiness_calibration
+    conversions = []
+    original_normalizer = sensors_mapping._normalize_cloudiness_calibration
+    original_converter = sensors_mapping._display_temperature_to_celsius
 
     def record_calibration(*values, temp_unit='c'):
         calls.append((values, temp_unit))
-        return original_validator(*values, temp_unit=temp_unit)
+        return original_normalizer(*values, temp_unit=temp_unit)
 
-    monkeypatch.setattr(sensors_mapping, 'validate_cloudiness_calibration', record_calibration)
+    def record_conversion(value, temp_display):
+        conversions.append((value, temp_display))
+        return original_converter(value, temp_display)
+
+    monkeypatch.setattr(sensors_mapping, '_normalize_cloudiness_calibration', record_calibration)
+    monkeypatch.setattr(sensors_mapping, '_display_temperature_to_celsius', record_conversion)
     config = _config(
         CLOUDINESS_INDEX_TEMP_UNIT=unit,
         CLOUDINESS_INDEX_CLEAR_TEMP=references[0],
@@ -164,6 +171,7 @@ def test_runtime_validates_original_calibration_values_with_declared_unit(monkey
     assert sensors_mapping.calculate_cloudiness_index(
         config, _values({10: 10.0, 11: -5.0})) == pytest.approx(50.0)
     assert calls == [(references, unit)]
+    assert conversions == [(value, unit) for value in references] + [(-5.0, 'c'), (10.0, 'c')]
 
 
 @pytest.mark.parametrize('unit', ['c', 'f', 'k'])
