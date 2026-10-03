@@ -409,20 +409,22 @@ class ImageWorker(Process):
             #task.setFailed('Bad Image: {0:s}'.format(str(filename_p)))
             return
 
-        with self.sensors_user_av.get_lock():
-            cloudiness_sensor_values = self.sensors_user_av[:]
-            cloudiness_sensor_read_times = (
-                self.sensors_user_read_time_av[:]
-                if self.sensors_user_read_time_av is not None else None
-            )
+        i_ref.cloudiness_index = None
+        if self.config.get('TEMP_SENSOR', {}).get('CLOUDINESS_INDEX_ENABLE', False):
+            with self.sensors_user_av.get_lock():
+                cloudiness_sensor_values = self.sensors_user_av[:]
+                cloudiness_sensor_read_times = (
+                    self.sensors_user_read_time_av[:]
+                    if self.sensors_user_read_time_av is not None else None
+                )
 
-        cloudiness_snapshot_time = time.monotonic()
-        i_ref.cloudiness_index = sensors_mapping.calculate_cloudiness_index(
-            self.config,
-            lambda idx: sensors_mapping.get_fresh_sensor_value(
-                cloudiness_sensor_values, cloudiness_sensor_read_times, idx,
-                now=cloudiness_snapshot_time),
-        )
+            cloudiness_snapshot_time = time.monotonic()
+            i_ref.cloudiness_index = sensors_mapping.calculate_cloudiness_index(
+                self.config,
+                lambda idx: sensors_mapping.get_fresh_sensor_value(
+                    cloudiness_sensor_values, cloudiness_sensor_read_times, idx,
+                    now=cloudiness_snapshot_time),
+            )
 
         # Purple-frame handling deliberately precedes both pre-dark and
         # post-dark standard FITS saving. In active repair mode those outputs

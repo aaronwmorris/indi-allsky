@@ -183,12 +183,12 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
 
     Returns ``None`` when no matching sensor is configured.
     """
-    from .devices import sensors as indi_allsky_sensors
-
     temp_sensor_cfg = config.get('TEMP_SENSOR', {})
 
     if not temp_sensor_cfg.get('CLOUDINESS_INDEX_ENABLE', False):
         return None
+
+    from .devices import sensors as indi_allsky_sensors
 
     candidates = list()
 

@@ -212,17 +212,19 @@ def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled, u
 
 
 @pytest.mark.parametrize('read_time, expected', [(100.0, 50.0), (40.0, None), (0.0, None), (None, None)])
-def test_image_cloudiness_calculation_uses_snapshot_after_releasing_lock(monkeypatch, read_time, expected):
+@pytest.mark.parametrize('enabled', [True, False, None])
+def test_image_cloudiness_calculation_uses_snapshot_after_releasing_lock(monkeypatch, read_time, expected, enabled):
     import time
     from threading import Lock
 
     method = _source_member('image.py', 'ImageWorker', 'processImage')
-    start = method.body.index(_source_assignment(method.body, 'i_ref.cloudiness_index')) - 2
+    start = method.body.index(_source_assignment(method.body, 'i_ref.cloudiness_index'))
 
     sensor_lock = Lock()
 
     class SensorArray(list):
         def get_lock(self):
+            assert enabled
             return sensor_lock
 
         def __getitem__(self, index):
@@ -234,29 +236,47 @@ def test_image_cloudiness_calculation_uses_snapshot_after_releasing_lock(monkeyp
     read_times = SensorArray([read_time] * 110)
 
     worker = SimpleNamespace(
-        config=_config(), sensors_user_av=values,
+        config=_config(CLOUDINESS_INDEX_ENABLE=enabled), sensors_user_av=values,
         sensors_user_read_time_av=read_times if read_time is not None else None,
     )
-    image_ref = SimpleNamespace()
+    if enabled is None:
+        del worker.config['TEMP_SENSOR']['CLOUDINESS_INDEX_ENABLE']
+    image_ref = SimpleNamespace(cloudiness_index=99.0)
     calculate = sensors_mapping.calculate_cloudiness_index
 
     def calculate_from_snapshot(config, get_sensor_value):
+        assert enabled
         assert not sensor_lock.locked()
         values[10:12] = [40.0, -20.0]
         read_times[:] = [0.0] * 110
         return calculate(config, get_sensor_value)
 
+    def snapshot_time():
+        assert enabled
+        return 101.0
+
     monkeypatch.setattr(sensors_mapping, 'calculate_cloudiness_index', calculate_from_snapshot)
-    monkeypatch.setattr(time, 'monotonic', lambda: 101.0)
+    monkeypatch.setattr(time, 'monotonic', snapshot_time)
     namespace = {'self': worker, 'i_ref': image_ref, 'sensors_mapping': sensors_mapping, 'time': time}
-    _exec_source('image.py', method.body[start:start + 3], namespace)
-    assert image_ref.cloudiness_index == expected
+    _exec_source('image.py', method.body[start:start + 2], namespace)
+    assert image_ref.cloudiness_index == (expected if enabled else None)
 
 
-def test_returns_none_until_calibration_is_enabled():
-    config = _config(CLOUDINESS_INDEX_ENABLE=False)
+@pytest.mark.parametrize('config', [{}, {'TEMP_SENSOR': {}}, _config(CLOUDINESS_INDEX_ENABLE=False)])
+def test_returns_none_until_calibration_is_enabled(monkeypatch, config):
+    import builtins
 
-    assert sensors_mapping.calculate_cloudiness_index(config, _values({10: 10.0, 11: -20.0})) is None
+    original_import = builtins.__import__
+
+    def import_without_sensors(name, *args, **kwargs):
+        assert name != 'devices'
+        return original_import(name, *args, **kwargs)
+
+    def get_sensor_value(index):
+        pytest.fail('Disabled Cloudiness must not read sensor values')
+
+    monkeypatch.setattr(builtins, '__import__', import_without_sensors)
+    assert sensors_mapping.calculate_cloudiness_index(config, get_sensor_value) is None
 
 
 def test_paired_ambient_calibration_interpolates_live_temperature_difference():
