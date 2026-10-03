@@ -133,7 +133,7 @@ See the [`indi-allsky-ctl` documentation](indi-allsky-ctl) for complete command 
 
 * **Purge / Clean Removal**:
   ```bash
-  sudo apt purge indi-allsky indi-allsky-web
+  sudo apt purge indi-allsky
   ```
   * Removes all configuration files, databases, logs, and system users.
   * See [Uninstall indi-allsky](Uninstall-indi-allsky) for complete details.

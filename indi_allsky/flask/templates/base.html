@@ -390,7 +390,11 @@
             }
         });
 
+        var notificationPending = false;
+
         function ackNotification(notice_id, onDone, onError) {
+            if (notificationPending) return;
+            notificationPending = true;
             var postData = {
                 'camera_id': camera_id,
                 'ack_id': notice_id
@@ -402,25 +406,36 @@
                 type: "POST",
                 url: "{{ url_for('indi_allsky.ajax_notification_view') }}",
                 contentType: "application/json",
+                dataType: "json",
                 data: JSON.stringify(postData),
                 success: function (rdata) { onDone(rdata); },
                 error: function (rdata) { onError(rdata); },
+                timeout: 10000,
+                complete: function () { notificationPending = false; },
             });
         }
 
         function loadNotification() {
+            if (notificationPending || document.getElementById('notificationModal').open) return;
+            notificationPending = true;
             var getData = { 'camera_id': camera_id };
             $.ajax({
                 type: "GET",
                 url: "{{ url_for('indi_allsky.ajax_notification_view') }}",
                 contentType: "application/json",
+                dataType: "json",
                 data: getData,
                 success: function (rdata) { showNotification(rdata); },
+                timeout: 10000,
+                complete: function () { notificationPending = false; },
             });
         }
 
         function showNotification(data) {
-            if (!data || data.id == 0) return;
+            if (!data || !Number.isInteger(data.id) || data.id <= 0
+                || typeof data.category !== 'string'
+                || typeof data.createDate !== 'string'
+                || typeof data.notification !== 'string') return;
             $("#ack_button").off().on("click", function () { ackNotification(data.id, showNotification); });
             const modal = document.getElementById("notificationModal");
             document.getElementById('notificationLabel').textContent = data.category;
@@ -446,6 +461,8 @@
                 url: "{{ url_for('indi_allsky.ajax_status_update_view') }}",
                 data: { 'camera_id': camera_id },
                 success: function(rdata) { updateStatus(rdata); },
+                timeout: 10000,
+                complete: function () { setTimeout(getStatusText, 60000); },
             });
         }
 
@@ -457,7 +474,6 @@
                 html = html.replace(/class="text-error"/g, 'class="tw:text-error"');
                 $("#status_text").html(html);
             }
-            setTimeout(getStatusText, 60000);
         }
 
         window.applyAllskyTheme = function() {
@@ -534,6 +550,7 @@
             }
 
             loadNotification();
+            setInterval(loadNotification, 60000);
             getStatusText();
             $("#CAMERA_SELECT").on("change", changeCamera);
         });
