@@ -33,6 +33,19 @@ def _config(**temp_sensor):
     return {'TEMP_SENSOR': settings}
 
 
+def _validate_cloudiness_form(form):
+    source = Path(__file__).resolve().parents[1] / 'indi_allsky' / 'flask' / 'forms.py'
+    tree = ast.parse(source.read_text(encoding='utf-8'))
+    form_class = next(node for node in tree.body
+                      if isinstance(node, ast.ClassDef) and node.name == 'IndiAllskyConfigForm')
+    validate = next(node for node in form_class.body
+                    if isinstance(node, ast.FunctionDef) and node.name == 'validate')
+    calibration_check = validate.body[1]
+    namespace = {'self': form, 'math': math, 'result': True}
+    exec(compile(ast.Module(body=[calibration_check], type_ignores=[]), str(source), 'exec'), namespace)
+    return namespace['result']
+
+
 def test_returns_none_until_calibration_is_enabled():
     config = _config(CLOUDINESS_INDEX_ENABLE=False)
 
@@ -99,13 +112,6 @@ def test_calibration_span_must_exceed_two_celsius(clear_delta, cloudy_delta, val
     (2.1, 0.0, True), (6.0, 3.9, True), (0.0, 4.0, False),
 ])
 def test_form_rejects_weak_calibration_on_clear_sky_field(clear_delta, cloudy_delta, valid, unit):
-    source = Path(__file__).resolve().parents[1] / 'indi_allsky' / 'flask' / 'forms.py'
-    tree = ast.parse(source.read_text(encoding='utf-8'))
-    form_class = next(node for node in tree.body
-                      if isinstance(node, ast.ClassDef) and node.name == 'IndiAllskyConfigForm')
-    validate = next(node for node in form_class.body
-                    if isinstance(node, ast.FunctionDef) and node.name == 'validate')
-    calibration_check = validate.body[1]
     scale = 1.8 if unit == 'f' else 1.0
     base = 50.0 if unit == 'f' else 283.15 if unit == 'k' else 10.0
     settings = _config(
@@ -126,10 +132,8 @@ def test_form_rejects_weak_calibration_on_clear_sky_field(clear_delta, cloudy_de
         'MLX Cloudiness Sensors': [('sensor_user_10', 'MLX')],
     }
     form.cloud_sensor_auto_ground_slots = {'sensor_user_10'}
-    namespace = {'self': form, 'math': math, 'result': True}
-    exec(compile(ast.Module(body=[calibration_check], type_ignores=[]), str(source), 'exec'), namespace)
 
-    assert namespace['result'] is valid
+    assert _validate_cloudiness_form(form) is valid
     errors = form.TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP.errors
     if valid:
         assert errors == []
@@ -138,6 +142,35 @@ def test_form_rejects_weak_calibration_on_clear_sky_field(clear_delta, cloudy_de
         assert 'greater than under cloudy skies' in errors[0]
         assert 'sensor may be having problems' in errors[0]
     assert form.TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP.errors == []
+
+
+@pytest.mark.parametrize('enabled,sensor_count,selected,expected_error', [
+    (True, 0, '', 'Configure an MLX sky-temperature sensor first.'),
+    (True, 0, 'sensor_user_10', 'Configure an MLX sky-temperature sensor first.'),
+    (False, 0, '', None),
+    (True, 1, '', None),
+    (True, 1, 'sensor_user_10', None),
+    (True, 2, '', 'Select the MLX sensor used for this cloudiness index'),
+    (True, 2, 'sensor_user_10', None),
+])
+def test_form_requires_configured_cloud_sensor_when_enabled(enabled, sensor_count, selected, expected_error):
+    settings = _config(
+        CLOUDINESS_INDEX_ENABLE=enabled,
+        CLOUDINESS_INDEX_SENSOR=selected,
+        CLOUDINESS_INDEX_USE_GROUND_SENSOR=False,
+        CLOUDINESS_INDEX_GROUND_SENSOR='',
+    )['TEMP_SENSOR']
+    form = SimpleNamespace(**{
+        'TEMP_SENSOR__' + key: SimpleNamespace(data=value, errors=[])
+        for key, value in settings.items()
+    })
+    choices = [('sensor_user_10', 'MLX A'), ('sensor_user_20', 'MLX B')][:sensor_count]
+    form.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.choices = {'MLX Cloudiness Sensors': choices}
+    form.cloud_sensor_auto_ground_slots = {slot for slot, label in choices}
+
+    assert _validate_cloudiness_form(form) is (expected_error is None)
+    assert form.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.errors == (
+        [] if expected_error is None else [expected_error])
 
 
 def test_coefficient_and_offset_tune_the_normalized_index():

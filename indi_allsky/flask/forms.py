@@ -5701,6 +5701,8 @@ class IndiAllskyConfigForm(FlaskForm):
                 clear_delta = self.TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_GROUND_TEMP.data - self.TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP.data
                 cloudy_delta = self.TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP.data - self.TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_TEMP.data
                 span = clear_delta - cloudy_delta
+                # Require a meaningful difference (> 2 C) between clear and cloudy calibration deltas
+                # so small temperature changes do not cause large cloudiness-index fluctuations.
                 minimum_span = 3.6 if self.TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT.data == 'f' else 2.0
                 if not math.isfinite(span) or span <= minimum_span or math.isclose(span, minimum_span, rel_tol=0.0, abs_tol=1e-12):
                     self.TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP.errors.append(
@@ -5712,7 +5714,12 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
 
             cloud_sensor_choices = self.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.choices.get('MLX Cloudiness Sensors', ())
-            if len(cloud_sensor_choices) > 1 and not self.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.data:
+            if not cloud_sensor_choices:
+                self.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.errors.append(
+                    'Configure an MLX sky-temperature sensor first.'
+                )
+                result = False
+            elif len(cloud_sensor_choices) > 1 and not self.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.data:
                 self.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.errors.append(
                     'Select the MLX sensor used for this cloudiness index'
                 )
