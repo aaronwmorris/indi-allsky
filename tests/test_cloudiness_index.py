@@ -165,10 +165,14 @@ def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled, u
     assert 'id="cloudiness-index-tuning-toggle"' in before_tuning
     assert 'aria-describedby="cloudiness-index-tuning-description"' in before_tuning
     assert 'Corrects raw MLX sky readings (live and calibration references) before calculating cloudiness; ambient readings are unchanged.' in before_tuning
+    assert 'Enter raw sensor readings for clear-sky and cloudy-sky calibration; corrections are applied automatically.' in before_tuning
     assert 'style="display: none;"' in tuning.split('>', 1)[0]
     for name in ('TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT', 'TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET'):
         assert 'id="' + name + '"' not in before_tuning
         assert 'id="' + name + '"' in tuning
+    offset_field = tuning.split('id="TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET"', 1)[1].split('</div>', 1)[0]
+    assert 'Applied automatically in Celsius after multiplication to raw MLX sky readings (live and calibration).' in offset_field
+    assert 'Enter raw sensor readings; do not manually adjust calibration readings.' in offset_field
 
 
 @pytest.mark.parametrize('read_time, expected', [(100.0, 50.0), (40.0, None), (0.0, None), (None, None)])
