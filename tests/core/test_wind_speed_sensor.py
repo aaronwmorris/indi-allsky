@@ -1,0 +1,168 @@
+import sys
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import Mock
+
+import pytest
+
+from indi_allsky.devices.sensors import windSpeedSensorWhSpWs01 as wind_sensor
+from indi_allsky.devices.exceptions import SensorException
+from indi_allsky.sensors_mapping import format_named_sensors
+
+
+@pytest.fixture
+def gpio_backend(monkeypatch):
+    device = Mock()
+    factory = Mock(return_value=device)
+    monkeypatch.setitem(sys.modules, 'board', SimpleNamespace(
+        D24=SimpleNamespace(id=24), D25=SimpleNamespace(id=25),
+    ))
+    monkeypatch.setitem(sys.modules, 'gpiozero', SimpleNamespace(Button=factory))
+    return device, factory
+
+
+@pytest.mark.parametrize('units, expected, expected_unit', [
+    ('ms', 10.0 / 3.0, 'm/s'),
+    ('kph', 12.0, 'km/h'),
+    ('mph', (10.0 / 3.0) * 2.2369362921, 'mph'),
+    ('knots', (10.0 / 3.0) * 1.9438444924, 'kn'),
+    (None, 10.0 / 3.0, 'm/s'),
+    ('invalid', 10.0 / 3.0, 'm/s'),
+])
+@pytest.mark.parametrize('pin_name, gpio_number', [('D24', 24), ('D25', 25)])
+def test_pulse_count_and_units(gpio_backend, monkeypatch, units, expected, expected_unit, pin_name, gpio_number):
+    device, factory = gpio_backend
+    clock = iter([100.0, 102.0, 104.0, 106.0])
+    monkeypatch.setattr(wind_sensor.time, 'monotonic', lambda: next(clock))
+    config = {'TEMP_SENSOR': {
+        'A_CLASSNAME': 'blinka_wind_speed_sensor_wh_sp_ws01',
+        'A_USER_VAR_SLOT': 'sensor_user_10',
+        'A_PIN_1': pin_name,
+    }}
+    if units is not None:
+        config['WINDSPEED_DISPLAY'] = units
+    sensor = wind_sensor.WindSpeedSensorWhSpWs01(
+        config, 'Wind', None, None, pin_1_name=pin_name,
+    )
+    factory.assert_called_once_with(gpio_number, pull_up=True, bounce_time=0.02)
+    assert sensor.update()['wind_speed'] == 0.0
+
+    for pulse_index in range(10):
+        device.when_pressed()
+
+    result = sensor.update()
+    assert result['wind_speed'] == pytest.approx(expected, rel=1e-5)
+    assert result['data'] == (result['wind_speed'],)
+
+    readings = [0.0] * 60
+    readings[10] = result['data'][0]
+    named_sensor = format_named_sensors([], readings, config)['sensor_a_wind_speed']
+    assert named_sensor['value'] == round(result['wind_speed'], 2)
+    assert named_sensor['unit'] == expected_unit
+    assert named_sensor['device_class'] == 'wind_speed'
+    assert named_sensor['slot'] == 10
+
+    assert sensor.update()['wind_speed'] == 0.0
+
+    device.when_pressed()
+    assert sensor.update()['wind_speed'] == pytest.approx(expected / 10.0, rel=1e-5)
+    sensor.deinit()
+    device.close.assert_called_once()
+
+
+def test_first_update_establishes_baseline_and_discards_startup_pulses(gpio_backend, monkeypatch):
+    device, factory = gpio_backend
+    clock = [100.0]
+    monkeypatch.setattr(wind_sensor.time, 'monotonic', lambda: clock[0])
+    sensor = wind_sensor.WindSpeedSensorWhSpWs01(
+        {'WINDSPEED_DISPLAY': 'ms'}, 'Wind', None, None, pin_1_name='D24',
+    )
+
+    for pulse_index in range(5):
+        device.when_pressed()
+    clock[0] = 130.0
+
+    assert sensor.update()['wind_speed'] == 0.0
+    assert sensor.last_update == 130.0
+    assert sensor._pulse_count == 0
+
+    for pulse_index in range(10):
+        device.when_pressed()
+    clock[0] = 132.0
+    assert sensor.update()['wind_speed'] == pytest.approx(10.0 / 3.0)
+    sensor.deinit()
+
+
+@pytest.mark.parametrize('units', ['ms', 'kph', 'mph', 'knots'])
+@pytest.mark.parametrize('sensor_slot, classname', [
+    (None, ''),
+    ('A', 'blinka_temp_sensor_dht22'),
+    ('F', 'temp_api_ecowitt'),
+    *((slot, 'blinka_wind_speed_sensor_wh_sp_ws01') for slot in 'ABCDEF'),
+])
+def test_windspeed_settings_group_visibility_and_units(sensor_slot, classname, units):
+    from jinja2 import Environment
+    from wtforms import Form, SelectField, StringField
+
+    source = Path(__file__).resolve().parents[2] / 'indi_allsky' / 'flask' / 'templates' / 'config' / 'sensors.html'
+    template = source.read_text(encoding='utf-8')
+    section = template.split('<!-- WH-SP-WS01 settings -->', 1)[1].split('<!-- SHT3x', 1)[0]
+    form_fields = {'TEMP_SENSOR__' + slot + '_CLASSNAME': StringField() for slot in 'ABCDEF'}
+    form_fields['WINDSPEED_DISPLAY'] = SelectField('Wind Speed Display', choices=[
+        ('ms', 'm/s'), ('kph', 'km/h'), ('mph', 'mph'), ('knots', 'kn'),
+    ])
+    form_type = type('WindSpeedVisibilityForm', (Form,), form_fields)
+    form_data = {'WINDSPEED_DISPLAY': units}
+    if sensor_slot is not None:
+        form_data['TEMP_SENSOR__' + sensor_slot + '_CLASSNAME'] = classname
+    rendered = Environment(autoescape=True).from_string(section).render(form_config=form_type(**form_data))
+    group = rendered.split('<div id="windspeed-sensor-settings"', 1)[1]
+    camera_template = (source.parent / 'camera.html').read_text(encoding='utf-8')
+    display_units = camera_template.split('<!-- Display Units', 1)[1].split('<!-- Advanced Queue', 1)[0]
+    windspeed_control = display_units.split('<div class="tw:flex tw:flex-col tw:gap-1">')[3].split('</div>', 1)[0]
+    rendered_control = Environment(autoescape=True).from_string(windspeed_control).render(form_config=form_type(**form_data))
+
+    assert 'style="display: none;"' in group.split('>', 1)[0]
+    assert 'data-sensor-classname="blinka_wind_speed_sensor_wh_sp_ws01"' in group.split('>', 1)[0]
+    assert 'WH-SP-WS01 Cup Anemometer' in group
+    assert 'global Wind Speed Display setting' in group
+    assert 'form_config.WINDSPEED_DISPLAY' not in template
+    assert 'style="display: none;"' not in rendered_control.split('<div id="WINDSPEED_DISPLAY-error"', 1)[0]
+    assert 'id="WINDSPEED_DISPLAY"' in rendered_control
+    assert '<option selected value="' + units + '">' in rendered_control
+    assert camera_template.count('form_config.WINDSPEED_DISPLAY(') == 1
+
+
+def test_invalid_pin(gpio_backend):
+    device, factory = gpio_backend
+    with pytest.raises(SensorException, match='not valid'):
+        wind_sensor.WindSpeedSensorWhSpWs01({}, 'Wind', None, None, pin_1_name='D99')
+    factory.assert_not_called()
+
+
+def test_initialization_failure(gpio_backend):
+    device, factory = gpio_backend
+    factory.side_effect = RuntimeError('GPIO unavailable')
+    with pytest.raises(SensorException, match='GPIO unavailable'):
+        wind_sensor.WindSpeedSensorWhSpWs01({}, 'Wind', None, None, pin_1_name='D25')
+
+
+def test_callback_setup_failure_closes_device(gpio_backend):
+    device, factory = gpio_backend
+
+    class FailingDevice:
+        close = Mock()
+
+        @property
+        def when_pressed(self):
+            return None
+
+        @when_pressed.setter
+        def when_pressed(self, callback):
+            raise RuntimeError('Edge detection unavailable')
+
+    failing_device = FailingDevice()
+    factory.return_value = failing_device
+    with pytest.raises(SensorException, match='Edge detection unavailable'):
+        wind_sensor.WindSpeedSensorWhSpWs01({}, 'Wind', None, None, pin_1_name='D25')
+    failing_device.close.assert_called_once()

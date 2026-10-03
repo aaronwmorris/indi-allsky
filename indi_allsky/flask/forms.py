@@ -982,6 +982,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'dew_heater_status' : '',
         'fan_status' : '',
         'wind_dir' : '',
+        'windspeed' : 0.0,
         'rain_status' : '',
         'custom_1' : '',
         'custom_2' : '',
@@ -3332,6 +3333,22 @@ def I2C_ADDRESS_validator(form, field):
         raise ValidationError('I2C address must be 0x7f or less')
 
 
+def TEMP_SENSOR__I2C_ADDRESS_validator(form, field):
+    sensor_class_field_name = field.name.replace('_I2C_ADDRESS', '_CLASSNAME')
+    sensor_class = getattr(form, sensor_class_field_name).data
+
+    if sensor_class in (
+        'blinka_wind_speed_sensor_wh_sp_ws01',
+        'blinka_rain_sensor_fc37',
+    ):
+        return
+
+    if not field.data:
+        raise ValidationError('This field is required.')
+
+    I2C_ADDRESS_validator(form, field)
+
+
 def TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator(form, field):
     pass
 
@@ -3799,10 +3816,10 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
     WINDSPEED_DISPLAY_choices = (
-        ('ms', 'Meters/second (m/s)'),
-        ('knots', 'Knots'),
-        ('mph', 'Miles/hour (mph)'),
         ('kph', 'Kilometers/hour (km/h)'),
+        ('mph', 'Miles/hour (mph)'),
+        ('knots', 'Knots'),
+        ('ms', 'Meters/second (m/s)'),
     )
 
     IMAGE_FILE_TYPE_choices = (
@@ -4228,6 +4245,9 @@ class IndiAllskyConfigForm(FlaskForm):
         ),
         'Rain Sensors' : (
             ('blinka_rain_sensor_fc37', 'FC-37 Rain Sensor - digital (1 slot)'),
+        ),
+        'Wind Sensors' : (
+            ('blinka_wind_speed_sensor_wh_sp_ws01', 'WH-SP-WS01 Cup Anemometer - pulse output (1 slot)'),
         ),
         'Remote' : (
             ('mqtt_broker_sensor', 'MQTT Broker Sensor - (10 slots)'),
@@ -5180,42 +5200,42 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__A_PIN_1             = StringField('Pin/Port 1', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__A_PIN_2             = StringField('Pin/Port 2', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__A_USER_VAR_SLOT     = SelectField('Sensor A Initial Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
-    TEMP_SENSOR__A_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
+    TEMP_SENSOR__A_I2C_ADDRESS       = StringField('I2C Address', validators=[TEMP_SENSOR__I2C_ADDRESS_validator])
     TEMP_SENSOR__A_TITLE_TEMPLATE    = StringField('Chart Title Template', validators=[DataRequired(), TEMP_SENSOR__TITLE_TEMPLATE_validator])
     TEMP_SENSOR__B_CLASSNAME         = SelectField('Sensor B', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__B_LABEL             = StringField('Label', validators=[DataRequired(), TEMP_SENSOR__LABEL_validator])
     TEMP_SENSOR__B_PIN_1             = StringField('Pin/Port 1', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__B_PIN_2             = StringField('Pin/Port 2', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__B_USER_VAR_SLOT     = SelectField('Sensor B Initial Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
-    TEMP_SENSOR__B_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
+    TEMP_SENSOR__B_I2C_ADDRESS       = StringField('I2C Address', validators=[TEMP_SENSOR__I2C_ADDRESS_validator])
     TEMP_SENSOR__B_TITLE_TEMPLATE    = StringField('Chart Title Template', validators=[DataRequired(), TEMP_SENSOR__TITLE_TEMPLATE_validator])
     TEMP_SENSOR__C_CLASSNAME         = SelectField('Sensor C', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__C_LABEL             = StringField('Label', validators=[DataRequired(), TEMP_SENSOR__LABEL_validator])
     TEMP_SENSOR__C_PIN_1             = StringField('Pin/Port 1', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__C_PIN_2             = StringField('Pin/Port 2', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__C_USER_VAR_SLOT     = SelectField('Sensor C Initial Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
-    TEMP_SENSOR__C_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
+    TEMP_SENSOR__C_I2C_ADDRESS       = StringField('I2C Address', validators=[TEMP_SENSOR__I2C_ADDRESS_validator])
     TEMP_SENSOR__C_TITLE_TEMPLATE    = StringField('Chart Title Template', validators=[DataRequired(), TEMP_SENSOR__TITLE_TEMPLATE_validator])
     TEMP_SENSOR__D_CLASSNAME         = SelectField('Sensor D', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__D_LABEL             = StringField('Label', validators=[DataRequired(), TEMP_SENSOR__LABEL_validator])
     TEMP_SENSOR__D_PIN_1             = StringField('Pin/Port 1', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__D_PIN_2             = StringField('Pin/Port 2', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__D_USER_VAR_SLOT     = SelectField('Sensor D Initial Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
-    TEMP_SENSOR__D_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
+    TEMP_SENSOR__D_I2C_ADDRESS       = StringField('I2C Address', validators=[TEMP_SENSOR__I2C_ADDRESS_validator])
     TEMP_SENSOR__D_TITLE_TEMPLATE    = StringField('Chart Title Template', validators=[DataRequired(), TEMP_SENSOR__TITLE_TEMPLATE_validator])
     TEMP_SENSOR__E_CLASSNAME         = SelectField('Sensor E', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__E_LABEL             = StringField('Label', validators=[DataRequired(), TEMP_SENSOR__LABEL_validator])
     TEMP_SENSOR__E_PIN_1             = StringField('Pin/Port 1', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__E_PIN_2             = StringField('Pin/Port 2', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__E_USER_VAR_SLOT     = SelectField('Sensor E Initial Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
-    TEMP_SENSOR__E_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
+    TEMP_SENSOR__E_I2C_ADDRESS       = StringField('I2C Address', validators=[TEMP_SENSOR__I2C_ADDRESS_validator])
     TEMP_SENSOR__E_TITLE_TEMPLATE    = StringField('Chart Title Template', validators=[DataRequired(), TEMP_SENSOR__TITLE_TEMPLATE_validator])
     TEMP_SENSOR__F_CLASSNAME         = SelectField('Sensor F', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__F_LABEL             = StringField('Label', validators=[DataRequired(), TEMP_SENSOR__LABEL_validator])
     TEMP_SENSOR__F_PIN_1             = StringField('Pin/Port 1', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__F_PIN_2             = StringField('Pin/Port 2', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__F_USER_VAR_SLOT     = SelectField('Sensor F Initial Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
-    TEMP_SENSOR__F_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
+    TEMP_SENSOR__F_I2C_ADDRESS       = StringField('I2C Address', validators=[TEMP_SENSOR__I2C_ADDRESS_validator])
     TEMP_SENSOR__F_TITLE_TEMPLATE    = StringField('Chart Title Template', validators=[DataRequired(), TEMP_SENSOR__TITLE_TEMPLATE_validator])
     TEMP_SENSOR__FC37_ACTIVE_LOW     = BooleanField('Rain Sensor FC-37 - Invert logic')
     TEMP_SENSOR__OPENWEATHERMAP_APIKEY = PasswordField('OpenWeatherMap API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
