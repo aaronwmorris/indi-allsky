@@ -85,6 +85,58 @@ def _cloudiness_ground_form(config, ground_slot, enabled):
     return form
 
 
+@pytest.mark.parametrize('field_name', [
+    'TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE',
+    'TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR',
+])
+def test_cloudiness_toggles_use_checkbox_save_path(field_name):
+    source = Path(__file__).resolve().parents[1] / 'indi_allsky' / 'flask' / 'templates' / 'config.html'
+    template = source.read_text(encoding='utf-8')
+    save_lists = {}
+    for list_name in ('field_names', 'checkbox_field_names'):
+        array_source = template.split('const ' + list_name + ' = ', 1)[1].split(';', 1)[0]
+        array_source = '\n'.join(line for line in array_source.splitlines()
+                                 if not line.lstrip().startswith('//'))
+        save_lists[list_name] = ast.literal_eval(array_source)
+
+    assert field_name not in save_lists['field_names']
+    assert save_lists['checkbox_field_names'].count(field_name) == 1
+
+
+@pytest.mark.parametrize('enabled', [False, True])
+def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled):
+    from jinja2 import Environment, nodes
+    from wtforms import BooleanField, Form, StringField
+
+    source = Path(__file__).resolve().parents[1] / 'indi_allsky' / 'flask' / 'templates' / 'config' / 'sensors.html'
+    card = source.read_text(encoding='utf-8').split('<!-- Cloudiness Index Card -->', 1)[1]
+    environment = Environment(autoescape=True)
+    field_names = {
+        node.attr for node in environment.parse(card).find_all(nodes.Getattr)
+        if isinstance(node.node, nodes.Name) and node.node.name == 'form_config'
+    }
+    enable_field = 'TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE'
+    form_type = type('CloudinessVisibilityForm', (Form,), {
+        name: BooleanField() if name == enable_field else StringField()
+        for name in field_names
+    })
+    form = form_type(**{enable_field: enabled})
+    rendered = environment.from_string(card).render(form_config=form)
+    before_settings, settings = rendered.split('<div id="cloudiness-index-settings"', 1)
+
+    assert 'id="' + enable_field + '"' in before_settings
+    assert ('style="display: none;"' in settings.split('>', 1)[0]) is not enabled
+    for name in field_names - {enable_field}:
+        assert 'id="' + name + '"' in settings
+
+    before_tuning, tuning = settings.split('<div id="cloudiness-index-tuning"', 1)
+    assert 'id="cloudiness-index-tuning-toggle"' in before_tuning
+    assert 'style="display: none;"' in tuning.split('>', 1)[0]
+    for name in ('TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT', 'TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET'):
+        assert 'id="' + name + '"' not in before_tuning
+        assert 'id="' + name + '"' in tuning
+
+
 def test_returns_none_until_calibration_is_enabled():
     config = _config(CLOUDINESS_INDEX_ENABLE=False)
 
