@@ -640,6 +640,15 @@ const field_names = [
     'TEMP_SENSOR__F_USER_VAR_SLOT',
     'TEMP_SENSOR__F_I2C_ADDRESS',
     'TEMP_SENSOR__F_TITLE_TEMPLATE',
+    'TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR',
+    'TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR',
+    'TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT',
+    'TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP',
+    'TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_TEMP',
+    'TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_GROUND_TEMP',
+    'TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP',
+    'TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT',
+    'TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET',
     'TEMP_SENSOR__OPENWEATHERMAP_APIKEY',
     'TEMP_SENSOR__WUNDERGROUND_APIKEY',
     'TEMP_SENSOR__ASTROSPHERIC_APIKEY',
@@ -841,6 +850,9 @@ const checkbox_field_names = [
     'VIRTUALSKY__SHOWPLANETLABELS',
     'TEMP_SENSOR__DHT_USE_PULSEIO',
     'TEMP_SENSOR__FC37_ACTIVE_LOW',
+    'TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE',
+    'TEMP_SENSOR__CLOUDINESS_INDEX_SHOW_TUNING',
+    'TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR',
     'TEMP_SENSOR__SHT3X_HEATER_NIGHT',
     'TEMP_SENSOR__SHT3X_HEATER_DAY',
     'TEMP_SENSOR__HTU31D_HEATER_NIGHT',
@@ -898,6 +910,29 @@ checkbox_field_names.forEach(item => {
         'error' : $('#' + item + '-error'),
     };
 });
+
+function updateCloudinessIndexVisibility() {
+    const panel = $('#cloudiness-index-panel');
+    const sensorClassnames = panel.data('sensor-classnames');
+    const hasCloudSensor = ['A', 'B', 'C', 'D', 'E', 'F'].some(sensorSlot =>
+        sensorClassnames.includes($('#TEMP_SENSOR__' + sensorSlot + '_CLASSNAME').val())
+    );
+    panel.toggle(hasCloudSensor);
+    if (!hasCloudSensor) {
+        $('#TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE').prop('checked', false);
+    }
+    $('#cloudiness-index-settings').toggle($('#TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE').prop('checked'));
+    const enabled = $('#TEMP_SENSOR__CLOUDINESS_INDEX_SHOW_TUNING').prop('checked');
+    $('#cloudiness-index-tuning').toggle(enabled);
+    $('#TEMP_SENSOR__CLOUDINESS_INDEX_SHOW_TUNING').attr('aria-expanded', enabled ? 'true' : 'false');
+    $('#cloudiness-index-ground-sensor').toggle($('#TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR').prop('checked'));
+}
+
+$('#TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE, #TEMP_SENSOR__CLOUDINESS_INDEX_SHOW_TUNING, #TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR').on('change', updateCloudinessIndexVisibility);
+['A', 'B', 'C', 'D', 'E', 'F'].forEach(sensorSlot => {
+    $('#TEMP_SENSOR__' + sensorSlot + '_CLASSNAME').on('change', updateCloudinessIndexVisibility);
+});
+updateCloudinessIndexVisibility();
 
 
 
