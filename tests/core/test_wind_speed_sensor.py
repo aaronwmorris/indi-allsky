@@ -117,13 +117,20 @@ def test_windspeed_settings_group_visibility_and_units(sensor_slot, classname, u
         form_data['TEMP_SENSOR__' + sensor_slot + '_CLASSNAME'] = classname
     rendered = Environment(autoescape=True).from_string(section).render(form_config=form_type(**form_data))
     group = rendered.split('<div id="windspeed-sensor-settings"', 1)[1]
+    camera_template = (source.parent / 'camera.html').read_text(encoding='utf-8')
+    display_units = camera_template.split('<!-- Display Units', 1)[1].split('<!-- Advanced Queue', 1)[0]
+    windspeed_control = display_units.split('<div class="tw:flex tw:flex-col tw:gap-1">')[3].split('</div>', 1)[0]
+    rendered_control = Environment(autoescape=True).from_string(windspeed_control).render(form_config=form_type(**form_data))
 
     assert 'style="display: none;"' in group.split('>', 1)[0]
     assert 'data-sensor-classname="blinka_wind_speed_sensor_wh_sp_ws01"' in group.split('>', 1)[0]
     assert 'WH-SP-WS01 Cup Anemometer' in group
-    assert 'id="WINDSPEED_DISPLAY"' in group
-    assert '<option selected value="' + units + '">' in group
-    assert template.count('form_config.WINDSPEED_DISPLAY(') == 1
+    assert 'global Wind Speed Display setting' in group
+    assert 'form_config.WINDSPEED_DISPLAY' not in template
+    assert 'style="display: none;"' not in rendered_control.split('<div id="WINDSPEED_DISPLAY-error"', 1)[0]
+    assert 'id="WINDSPEED_DISPLAY"' in rendered_control
+    assert '<option selected value="' + units + '">' in rendered_control
+    assert camera_template.count('form_config.WINDSPEED_DISPLAY(') == 1
 
 
 def test_invalid_pin(gpio_backend):
