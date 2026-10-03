@@ -911,10 +911,22 @@ checkbox_field_names.forEach(item => {
 });
 
 function updateCloudinessIndexVisibility() {
+    const panel = $('#cloudiness-index-panel');
+    const sensorClassnames = panel.data('sensor-classnames');
+    const hasCloudSensor = ['A', 'B', 'C', 'D', 'E', 'F'].some(sensorSlot =>
+        sensorClassnames.includes($('#TEMP_SENSOR__' + sensorSlot + '_CLASSNAME').val())
+    );
+    panel.toggle(hasCloudSensor);
+    if (!hasCloudSensor) {
+        $('#TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE').prop('checked', false);
+    }
     $('#cloudiness-index-settings').toggle($('#TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE').prop('checked'));
 }
 
 $('#TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE').on('change', updateCloudinessIndexVisibility);
+['A', 'B', 'C', 'D', 'E', 'F'].forEach(sensorSlot => {
+    $('#TEMP_SENSOR__' + sensorSlot + '_CLASSNAME').on('change', updateCloudinessIndexVisibility);
+});
 updateCloudinessIndexVisibility();
 
 function updateCloudinessIndexTuningVisibility() {

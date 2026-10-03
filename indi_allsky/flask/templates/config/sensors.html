@@ -746,7 +746,7 @@
         </div>
 
         <!-- Cloudiness Index Card -->
-        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+        <div id="cloudiness-index-panel" data-sensor-classnames='{{ form_config.cloud_sensor_classnames|tojson }}' class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm"{% if not form_config.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.choices.get('MLX Cloudiness Sensors') %} style="display: none;"{% endif %}>
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:flex-col">
                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Cloudiness Index (MLX90614 / MLX90615 / MLX90640)</span>

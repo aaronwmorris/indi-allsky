@@ -104,7 +104,11 @@ def test_cloudiness_toggles_use_checkbox_save_path(field_name):
 
 
 @pytest.mark.parametrize('enabled', [False, True])
-def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled):
+@pytest.mark.parametrize('classname', [
+    None, *constants.CLOUD_SENSOR_CLASSNAMES,
+    'blinka_temp_sensor_dht22', 'temp_api_ecowitt',
+])
+def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled, classname):
     from jinja2 import Environment, nodes
     from wtforms import BooleanField, Form, StringField
 
@@ -114,6 +118,7 @@ def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled):
     field_names = {
         node.attr for node in environment.parse(card).find_all(nodes.Getattr)
         if isinstance(node.node, nodes.Name) and node.node.name == 'form_config'
+        and node.attr.startswith('TEMP_SENSOR__')
     }
     enable_field = 'TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE'
     form_type = type('CloudinessVisibilityForm', (Form,), {
@@ -121,7 +126,14 @@ def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled):
         for name in field_names
     })
     form = form_type(**{enable_field: enabled})
+    form.cloud_sensor_classnames = constants.CLOUD_SENSOR_CLASSNAMES
+    has_cloud_sensor = classname in constants.CLOUD_SENSOR_CLASSNAMES
+    form.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.choices = {
+        'MLX Cloudiness Sensors': [('sensor_user_10', classname)] if has_cloud_sensor else [],
+    }
     rendered = environment.from_string(card).render(form_config=form)
+    panel = rendered.split('<div id="cloudiness-index-panel"', 1)[1]
+    assert ('style="display: none;"' in panel.split('>', 1)[0]) is not has_cloud_sensor
     before_settings, settings = rendered.split('<div id="cloudiness-index-settings"', 1)
 
     assert 'id="' + enable_field + '"' in before_settings

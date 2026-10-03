@@ -5613,6 +5613,7 @@ class IndiAllskyConfigForm(FlaskForm):
         self.DEW_HEATER__DEWPOINT_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
         self.FAN__TEMP_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
 
+        self.cloud_sensor_classnames = constants.CLOUD_SENSOR_CLASSNAMES
         cloud_sensor_choices = []
         cloud_sensor_auto_ground_slots = set()
 
