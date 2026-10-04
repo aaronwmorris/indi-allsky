@@ -132,7 +132,7 @@ def validate_chart_configuration(settings):
         ('SAVED_IMAGE_HISTORY_SECONDS', settings.get('OVERLAY_HISTORY_SECONDS', 900), 60, 86400),
         ('OVERLAY_TOP', 120, 0, 600),
         ('OVERLAY_WIDTH', 260, 180, 400),
-        ('OVERLAY_OPACITY', 80, 20, 100),
+        ('OVERLAY_OPACITY', 30, 20, 100),
     ):
         value = settings.get(key, default)
         if key == 'SAVED_IMAGE_HISTORY_SECONDS' and value is None:
@@ -168,7 +168,7 @@ def chart_configuration(config, camera_data=None, is_local=True):
     return validate_chart_configuration(settings)
 
 
-def build_chart_data(readings, definitions, temperature_display='c', selected_ids=None):
+def build_chart_data(readings, definitions, temperature_display='c', selected_ids=None, include_timestamp=False):
     definitions = [definition for definition in definitions
                    if selected_ids is None or definition['id'] in selected_ids]
     result = {definition['id']: [] for definition in definitions}
@@ -188,7 +188,10 @@ def build_chart_data(readings, definitions, temperature_display='c', selected_id
         for definition in definitions:
             source = definition['source']
             value = values.get(source) if source in values else metadata.get(source)
-            result[definition['id']].append({'x': timestamp, 'y': chart_value(value)})
+            point = {'x': timestamp, 'y': chart_value(value)}
+            if include_timestamp:
+                point['timestamp'] = reading.createDate.timestamp()
+            result[definition['id']].append(point)
     return result
 
 
@@ -199,6 +202,7 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
     import logging
     import textwrap
     import numpy
+    from datetime import datetime, timedelta
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from matplotlib.figure import Figure
     from matplotlib.ticker import LinearLocator
@@ -206,7 +210,12 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
     settings = chart_configuration(config)
     definitions = [definition for definition in chart_definitions(config, camera_data, is_local=True)
                    if definition['id'] in settings['SAVED_IMAGE_IDS']]
+    readings = list(readings)
     data = build_chart_data(readings, definitions, config.get('TEMP_DISPLAY'))
+    history = settings['SAVED_IMAGE_HISTORY_SECONDS']
+    end = readings[-1].createDate if readings else datetime.now()
+    start = end - timedelta(seconds=history)
+    positions = [(reading.createDate - start).total_seconds() for reading in readings]
     if image.ndim == 2:
         image = numpy.repeat(image[:, :, None], 3, axis=2)
     image_height, image_width = image.shape[:2]
@@ -255,9 +264,10 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
                     plot_left = max(.17, 66 / width)
                     axes = figure.add_axes((plot_left, .17, .96 - plot_left, .55), facecolor='none')
                     if definition['id'] == 'detection':
-                        axes.bar(range(len(points)), values, color='#38bdf8', width=.8)
+                        interval = min((second - first for first, second in zip(positions, positions[1:]) if second > first), default=1)
+                        axes.bar(positions, values, color='#38bdf8', width=interval * .8)
                     else:
-                        axes.plot(range(len(points)), values, color='#38bdf8', linewidth=1.8,
+                        axes.plot(positions, values, color='#38bdf8', linewidth=1.8,
                                   marker='o', markersize=2.7)
                     axes.yaxis.set_major_locator(LinearLocator(numticks=3))
                     axes.ticklabel_format(axis='y', style='sci', scilimits=(-3, 4), useOffset=False)
@@ -281,11 +291,11 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
                     axes.tick_params(colors='#b9c4c4', labelsize=11, length=3, width=.6, pad=3)
                     axis_label_width = max(text.get_window_extent(renderer).width for text in axes.get_yticklabels())
                     plot_left = max(plot_left, (axis_label_width + 14) / width)
-                    axes.set_xlim((0, len(points) - 1) if len(points) > 1 else (-.5, .5))
-                    tick_count = min(len(points), max(2, int(width * (.96 - plot_left) // 72)))
-                    ticks = numpy.linspace(0, len(points) - 1, tick_count, dtype=int).tolist() if points else []
+                    axes.set_xlim(0, history)
+                    tick_count = max(2, int(width * (.96 - plot_left) // 72))
+                    ticks = numpy.linspace(0, history, tick_count).tolist()
                     axes.set_xticks(ticks)
-                    axes.set_xticklabels([points[index]['x'][:5] for index in ticks], rotation=0, ha='center')
+                    axes.set_xticklabels([(start + timedelta(seconds=offset)).strftime('%H:%M') for offset in ticks], rotation=0, ha='center')
                     if len(ticks) > 1:
                         axes.get_xticklabels()[0].set_horizontalalignment('left')
                         axes.get_xticklabels()[-1].set_horizontalalignment('right')

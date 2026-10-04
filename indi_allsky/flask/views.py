@@ -1873,7 +1873,8 @@ class JsonChartView(JsonView):
         definitions = chart_definitions(self.indi_allsky_config, self.camera.data, is_local=self.camera.local)
         selected = request.args.get('series')
         selected_ids = set(selected.split(',')) if selected is not None else None
-        chart_data = build_chart_data(chart_query, definitions, self.indi_allsky_config.get('TEMP_DISPLAY'), selected_ids)
+        chart_data = build_chart_data(chart_query, definitions, self.indi_allsky_config.get('TEMP_DISPLAY'), selected_ids,
+                          include_timestamp=request.args.get('image_chart') == '1')
         if selected is None:
             chart_data['jsqm_d'] = []
         chart_data['histogram'] = {'red': [], 'green': [], 'blue': [], 'gray': []}

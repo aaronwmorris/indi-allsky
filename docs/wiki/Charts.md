@@ -35,7 +35,10 @@ Histogram scaling is unchanged.
 Browser history and Saved image history are separate dropdowns in the image-chart
 settings, from one minute to 24 hours. Saved history inherits the previous shared
 history duration until configured separately. Save with Reload on Save selected
-to apply a saved-history change to subsequent captures. Charts use stored
+to apply a saved-history change to subsequent captures. Both image destinations
+show the full selected time window ending at the latest capture reading, with
+points positioned by their capture times. Periods without captured history stay
+blank rather than stretching recent samples across the whole window. Charts use stored
 per-frame sensor readings for that camera, followed by the current frame once;
 they do not repeat the latest sensor value over older timestamps. Older frames
 without a selected sensor value appear as gaps. A zero minimum can make small

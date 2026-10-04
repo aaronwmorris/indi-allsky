@@ -142,6 +142,7 @@
                     const color = this.options.compact ? '#38bdf8' : colors[index % colors.length];
                     const datasets = identifier === 'histogram' ? ['red', 'green', 'blue', 'gray'].map((label, colorIndex) => ({label, data: [], borderColor: ['#df827b', '#84b96b', '#69addb', '#a6b1b6'][colorIndex], pointRadius: 0})) : [{label: definition.label, data: [], borderColor: color, backgroundColor: color, fill: false, pointRadius: this.options.compact ? 2.7 * 100 / 72 / 2 : 3, pointBorderWidth: this.options.compact ? 1.8 * 100 / 72 : undefined, pointHitRadius: 8, borderWidth: this.options.compact ? 1.8 * 100 / 72 : undefined, tension: this.options.compact ? 0 : .1, spanGaps: false}];
                     const foreground = this.options.compact ? '#b9c4c4' : getComputedStyle(document.body).color;
+                    const temporal = this.options.compact && identifier !== 'histogram';
                     const axisFont = this.options.compact ? {size: 11 * 100 / 72} : undefined;
                     const chart = new Chart(canvas, {type: identifier === 'detection' ? 'bar' : 'line', data: {datasets},
                         plugins: this.options.compact ? [{id: 'imageChartScale', beforeUpdate: chart => {
@@ -158,14 +159,11 @@
                         interaction: {mode: 'index', intersect: false},
                         plugins: {legend: {display: identifier === 'histogram', labels: {color: foreground, boxWidth: 10}}},
                         scales: {
-                            x: {display: true, afterBuildTicks: this.options.compact ? axis => {
+                            x: {display: true, type: temporal ? 'linear' : undefined, min: temporal ? 0 : undefined, max: temporal ? (this.options.historySeconds || 900) : undefined, afterBuildTicks: temporal ? axis => {
                                 const scale = parseFloat(this.root.style.getPropertyValue('--chart-overlay-scale')) || 1;
                                 const count = Math.max(2, Math.floor(axis.width / (80 * scale)) + 1);
-                                if (axis.ticks.length > count) {
-                                    const ticks = axis.ticks;
-                                    axis.ticks = Array.from({length: count}, (_, index) => ticks[Math.round(index * (ticks.length - 1) / (count - 1))]);
-                                }
-                            } : undefined, border: this.options.compact ? {color: '#536564', width: .4 * 100 / 72} : undefined, grid: {display: !this.options.compact, drawTicks: false, color: 'rgba(128,128,128,.12)'}, ticks: {color: foreground, autoSkip: !this.options.compact, minRotation: this.options.compact ? 0 : undefined, maxRotation: this.options.compact ? 0 : undefined, callback: this.options.compact ? function(value) { return this.getLabelForValue(value).slice(0, 5); } : undefined, font: axisFont}},
+                                axis.ticks = Array.from({length: count}, (_, index) => ({value: index * axis.max / (count - 1)}));
+                            } : undefined, border: this.options.compact ? {color: '#536564', width: .4 * 100 / 72} : undefined, grid: {display: !this.options.compact, drawTicks: false, color: 'rgba(128,128,128,.12)'}, ticks: {color: foreground, autoSkip: !this.options.compact, minRotation: this.options.compact ? 0 : undefined, maxRotation: this.options.compact ? 0 : undefined, callback: temporal ? function(value) { return new Date((this.chart.$historyClock || 0) - (this.max - value) * 1000).toISOString().slice(11, 16); } : undefined, font: axisFont}},
                             y: {display: true, beginAtZero: !this.options.compact && ['jsqm', 'stars', 'temp', 'exp', 'gain', 'histogram'].includes(identifier), suggestedMin: definition.min ?? undefined, suggestedMax: identifier === 'detection' ? 1 : undefined, min: bounds.min ?? undefined, max: bounds.max ?? undefined,
                                 bounds: this.options.compact ? 'data' : undefined,
                                 afterDataLimits: this.options.compact && identifier !== 'histogram' ? axis => {
@@ -213,6 +211,7 @@
             const generation = ++this.generation; this.controller = new AbortController();
             this.status.textContent = this.options.compact ? '' : 'Updating'; this.root.setAttribute('aria-busy', 'true');
             const parameters = new URLSearchParams({camera_id: this.options.cameraId, limit_s: this.history?.value || this.options.historySeconds || 900, timestamp: this.options.timestamp || 0, series: this.options.ids.filter(identifier => identifier !== 'histogram').join(','), histogram: this.options.ids.includes('histogram') ? '1' : '0'});
+            if (this.options.compact) parameters.set('image_chart', '1');
             try {
                 const response = await fetch(this.options.url + '?' + parameters, {signal: this.controller.signal, headers: {Accept: 'application/json'}});
                 if (!response.ok) throw new Error('Chart request failed');
@@ -224,7 +223,18 @@
                         panel.chart.data.datasets.forEach(dataset => { dataset.data = data.chart_data.histogram?.[dataset.label] || []; });
                         panel.element.dataset.empty = String(!panel.chart.data.datasets.some(dataset => dataset.data.length)); panel.value.textContent = '';
                     } else {
-                        panel.chart.data.datasets[0].data = points;
+                        if (this.options.compact) {
+                            const history = Number(parameters.get('limit_s'));
+                            const latest = points.at(-1);
+                            const clock = value => value.split(':').map(Number).reduce((seconds, part) => seconds * 60 + part, 0);
+                            const endClock = latest ? clock(latest.x) : 0;
+                            panel.chart.$historyClock = endClock * 1000;
+                            panel.chart.options.scales.x.max = history;
+                            panel.chart.data.datasets[0].data = points.map(point => ({
+                                x: history - (latest.timestamp - point.timestamp),
+                                y: point.y,
+                            }));
+                        } else panel.chart.data.datasets[0].data = points;
                         const reading = points.at(-1)?.y;
                         panel.value.textContent = Number.isFinite(reading) ? new Intl.NumberFormat(undefined, this.options.compact ? {maximumSignificantDigits: 4, useGrouping: false} : {maximumFractionDigits: 1}).format(reading) : this.options.compact ? '---' : '--';
                         panel.element.dataset.empty = String(!points.some(point => Number.isFinite(point.y)));

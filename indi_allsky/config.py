@@ -898,7 +898,7 @@ class IndiAllSkyConfigBase(object):
             "SAVED_IMAGE_HISTORY_SECONDS" : None,
             "OVERLAY_TOP"           : 120,
             "OVERLAY_WIDTH"         : 260,
-            "OVERLAY_OPACITY"       : 80,
+            "OVERLAY_OPACITY"       : 30,
             "CUSTOM_SLOT_1"          : "sensor_user_10",
             "CUSTOM_SLOT_1_MIN"      : 0.0,
             "CUSTOM_SLOT_2"          : "sensor_user_11",

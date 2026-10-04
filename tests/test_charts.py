@@ -41,6 +41,12 @@ def production_chart_handler(config, readings, args, camera=None, latest_image=N
     return namespace['get_objects'](handler), query
 
 
+def test_chart_opacity_defaults_to_thirty_percent_and_preserves_saved_values():
+    assert chart_configuration({})['OVERLAY_OPACITY'] == 30
+    assert validate_chart_configuration({})['OVERLAY_OPACITY'] == 30
+    assert chart_configuration({'CHARTS': {'OVERLAY_OPACITY': 80}})['OVERLAY_OPACITY'] == 80
+
+
 def test_legacy_chart_settings_and_remote_labels_are_preserved():
     config = {'CHARTS': {'CUSTOM_SLOT_1': 'sensor_user_25', 'CUSTOM_SLOT_1_MIN': -20}}
     definitions = chart_definitions(config, {'sensor_user_25': 'Sky temperature'})
@@ -103,6 +109,26 @@ def test_missing_or_nonfinite_readings_are_gaps_not_zero(value):
 def test_valid_zero_and_negative_readings_are_preserved():
     assert chart_value(0) == 0
     assert chart_value(-27.3) == -27.3
+
+
+@pytest.mark.parametrize('include_timestamp', [False, True])
+def test_chart_timestamps_preserve_dates_values_gaps_and_legacy_format(include_timestamp):
+    from datetime import datetime
+    from types import SimpleNamespace
+
+    dates = [datetime(2026, 10, 4, 23, 59, 10), datetime(2026, 10, 5, 0, 0, 5), datetime(2026, 10, 6, 0, 0, 5)]
+    values = [20.4, None, 20.47]
+    readings = [SimpleNamespace(createDate=date, temp=0, stars_rolling=0, jsqm=0, gain=0, exposure=0,
+                                detections=0, data={'sensor_user_0': value}) for date, value in zip(dates, values)]
+    points = build_chart_data(readings, [{'id': 'sky', 'source': 'sensor_user_0'}],
+                              include_timestamp=include_timestamp)['sky']
+    assert [point['y'] for point in points] == values
+    assert [point['x'] for point in points] == ['23:59:10', '00:00:05', '00:00:05']
+    if include_timestamp:
+        assert points[1]['timestamp'] - points[0]['timestamp'] == 55
+        assert points[2]['timestamp'] - points[1]['timestamp'] == 86400
+    else:
+        assert all(set(point) == {'x', 'y'} for point in points)
 
 
 def test_legacy_aurora_sources_are_preserved():
@@ -272,7 +298,8 @@ def test_saved_chart_names_are_literal_and_timestamp_labels_stay_inside_panel(mo
         axes = canvas.figure.axes[0]
         labels = axes.get_xticklabels()
         assert all(text.get_rotation() == 0 and text.get_fontsize() == 11 for text in labels)
-        assert labels[0].get_text() == '20:30'
+        end = datetime(2026, 10, 4, 20, 30) + timedelta(minutes=point_count - 1)
+        assert labels[0].get_text() == (end - timedelta(seconds=900)).strftime('%H:%M')
         assert labels[-1].get_text() == (datetime(2026, 10, 4, 20, 30) + timedelta(minutes=point_count - 1)).strftime('%H:%M')
         text_bounds.extend(text.get_window_extent(renderer) for text in labels)
     monkeypatch.setattr(FigureCanvasAgg, 'draw', record_draw)
@@ -283,7 +310,7 @@ def test_saved_chart_names_are_literal_and_timestamp_labels_stay_inside_panel(mo
                 data={'sensor_user_0': -27}) for index in range(point_count)]
     render_saved_charts(numpy.zeros((480, image_width, 3), dtype=numpy.uint8), config, readings)
     width = min(585, image_width - 32)
-    assert len(text_bounds) == min(point_count, 6 if image_width == 960 else 2)
+    assert len(text_bounds) == (6 if image_width == 960 else 2)
     assert all(0 <= bounds.x0 < bounds.x1 <= width and 0 <= bounds.y0 < bounds.y1 <= 336 for bounds in text_bounds)
     assert all(first.x1 < second.x0 for first, second in zip(text_bounds, text_bounds[1:]))
 
@@ -440,6 +467,28 @@ def test_capture_saved_charts_query_only_camera_history_and_include_current_fram
     worker.logger.exception.assert_not_called()
 
 
+@pytest.mark.parametrize('history', [900, 3600])
+def test_saved_chart_sparse_history_uses_selected_time_window(monkeypatch, history):
+    import numpy
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    end = datetime(2026, 10, 4, 22, 56)
+    readings = [SimpleNamespace(createDate=end - timedelta(seconds=age), temp=None, stars_rolling=None,
+                jsqm=None, exposure=None, gain=None, detections=None, data={'sensor_user_0': value})
+                for age, value in [(120, 20.4), (60, 20.6), (0, 20.47)]]
+    draw = FigureCanvasAgg.draw
+    plotted = []
+    def record_draw(canvas):
+        axes = canvas.figure.axes[0]
+        plotted.append((axes.get_xlim(), axes.lines[0].get_xdata().tolist(), axes.lines[0].get_ydata().tolist()))
+        draw(canvas)
+    monkeypatch.setattr(FigureCanvasAgg, 'draw', record_draw)
+    render_saved_charts(numpy.zeros((480, 960, 3), dtype=numpy.uint8), {'CHARTS': {
+        'CUSTOM': [{'id': 'ambient', 'source': 'sensor_user_0', 'min': None}],
+        'SAVED_IMAGE_IDS': ['ambient'], 'SAVED_IMAGE_HISTORY_SECONDS': history}}, readings)
+    assert plotted == [((0, history), [history - 120, history - 60, history], [20.4, 20.6, 20.47])]
+
+
 def test_capture_saved_sensor_chart_plots_distinct_historical_values(saved_chart_worker, monkeypatch):
     from matplotlib.backends.backend_agg import FigureCanvasAgg
 
@@ -460,6 +509,18 @@ def test_capture_saved_sensor_chart_plots_distinct_historical_values(saved_chart
     worker.apply_saved_charts()
     assert plotted == [[20.0, 21.0, 19.5, 22.2]]
     worker.logger.exception.assert_not_called()
+
+
+def test_capture_sensor_metadata_is_an_independent_per_frame_snapshot(saved_chart_worker):
+    worker = saved_chart_worker
+    worker.config = {}
+    worker.sensors_user_av[0] = 20.4
+    earlier = worker.get_chart_metadata(worker.ref)
+    worker.sensors_user_av[0] = 20.47
+    latest = worker.get_chart_metadata(worker.ref)
+    assert earlier['sensor_user_0'] == 20.4
+    assert latest['sensor_user_0'] == 20.47
+    assert earlier is not latest
 
 
 @pytest.mark.parametrize('history', [60, 900, 3600, 86400])
@@ -986,7 +1047,8 @@ def create_chart_preview(login_disabled=True, save_error=None, csrf_enabled=Fals
         return render_template('index_canvas.html', **context())
 
     def preview_readings():
-        return [SimpleNamespace(createDate=datetime(2026, 10, 4, 20, 0) + timedelta(seconds=index * 25),
+        start = application.extensions.get('chart_preview_reading_start', datetime(2026, 10, 4, 20, 0))
+        return [SimpleNamespace(createDate=start + timedelta(seconds=index * 25),
                     temp=12 + index / 50, stars_rolling=40 + index % 12, jsqm=100 + index % 7, gain=50,
                     exposure=15, detections=index % 6 == 0,
                     data={'sensor_user_{0}'.format(source): -27 + index / 20 if source == 0 else source * 2 + index % 7 for source in range(11)})
@@ -1096,13 +1158,13 @@ def test_editor_selects_reload_for_saved_chart_edits_and_preserves_opt_out(saved
             reload.uncheck()
             opacity = page.locator('[data-chart-preference=OVERLAY_OPACITY]')
             opacity_value = page.locator('[data-chart-opacity-value]')
-            assert opacity_value.inner_text() == '80%'
+            assert opacity_value.inner_text() == '30%'
             opacity.focus()
             opacity.press('ArrowRight')
-            assert opacity.input_value() == '81'
-            assert opacity_value.inner_text() == '81%'
-            assert opacity.get_attribute('title') == '81%'
-            assert opacity.get_attribute('aria-valuetext') == '81%'
+            assert opacity.input_value() == '31'
+            assert opacity_value.inner_text() == '31%'
+            assert opacity.get_attribute('title') == '31%'
+            assert opacity.get_attribute('aria-valuetext') == '31%'
             assert reload.is_checked() is saved_enabled
             reload.uncheck()
             with page.expect_navigation(wait_until='networkidle'):
@@ -1112,8 +1174,8 @@ def test_editor_selects_reload_for_saved_chart_edits_and_preserves_opt_out(saved
             assert application.extensions['chart_preview_config']['CHARTS']['SAVED_IMAGE_HISTORY_SECONDS'] == 3600
             page.wait_for_function("document.querySelector('[data-chart-preference=SAVED_IMAGE_HISTORY_SECONDS]').value === '3600'")
             assert saved_history.input_value() == '3600'
-            assert application.extensions['chart_preview_config']['CHARTS']['OVERLAY_OPACITY'] == 81
-            assert opacity_value.inner_text() == '81%'
+            assert application.extensions['chart_preview_config']['CHARTS']['OVERLAY_OPACITY'] == 31
+            assert opacity_value.inner_text() == '31%'
             assert not reload.is_checked()
             saved = page.locator('.chart-editor-row[data-chart-id=custom_0] label').filter(has_text='Saved image').locator('input')
             saved.click()
@@ -1136,6 +1198,11 @@ def test_browser_image_charts_show_larger_horizontal_minute_labels(view, viewpor
     playwright = pytest.importorskip('playwright.sync_api')
     application = create_chart_preview()
     application.extensions['chart_preview_config']['CHARTS']['OVERLAY_IDS'] = ['custom_0', 'stars', 'temp', 'exp'][:chart_count]
+    browser_history = 3600 if chart_count == 3 else 900
+    application.extensions['chart_preview_config']['CHARTS']['OVERLAY_HISTORY_SECONDS'] = browser_history
+    if chart_count == 3:
+        from datetime import datetime
+        application.extensions['chart_preview_reading_start'] = datetime(2026, 10, 4, 23, 50)
     client = application.test_client()
     with playwright.sync_playwright() as driver:
         try:
@@ -1161,6 +1228,7 @@ def test_browser_image_charts_show_larger_horizontal_minute_labels(view, viewpor
                 const chart = Chart.getChart(canvas);
                 return {rotation: chart.scales.x.labelRotation, labels: chart.scales.x.ticks.map(tick => tick.label), font:chart.options.scales.x.ticks.font.size,
                     scale: parseFloat(canvas.closest('.latest-chart-overlays').style.getPropertyValue('--chart-overlay-scale')) || 1,
+                        xMin:chart.scales.x.min, xMax:chart.scales.x.max, positions:chart.data.datasets[0].data.map(point=>point.x),
                     yTicks: chart.scales.y.ticks.map(tick => tick.value), yMin: chart.scales.y.min, yMax: chart.scales.y.max,
                         values: chart.data.datasets[0].data.map(point => point.y), suggestedMin: chart.options.scales.y.suggestedMin ?? null,
                     yFont: chart.options.scales.y.ticks.font.size, lineWidth: chart.data.datasets[0].borderWidth, radius: chart.data.datasets[0].pointRadius,
@@ -1186,8 +1254,12 @@ def test_browser_image_charts_show_larger_horizontal_minute_labels(view, viewpor
                 assert chart['lineWidth'] == pytest.approx(1.8 * 100 / 72 * chart['scale'])
                 assert chart['radius'] == pytest.approx(2.7 * 100 / 72 / 2 * chart['scale'])
                 assert len(set(chart['labels'])) == len(chart['labels'])
-                assert chart['labels'][0] == '20:00'
-                assert chart['labels'][-1] == '20:14'
+                assert chart['xMin'] == 0
+                assert chart['xMax'] == browser_history
+                assert chart['positions'][0] == browser_history - 875
+                assert chart['positions'][-1] == browser_history
+                assert chart['labels'][0] == ('23:04' if browser_history == 3600 else '19:59')
+                assert chart['labels'][-1] == ('00:04' if browser_history == 3600 else '20:14')
                 assert chart['points'] == 36
                 assert chart['painted']
             assert not page.evaluate('document.documentElement.scrollWidth > document.documentElement.clientWidth')
