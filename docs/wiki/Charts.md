@@ -19,12 +19,15 @@ supported as a safety bound.
 ## Axes
 
 The existing time-history choices, time labels, line/point behavior, and detection
-bars are retained. Existing custom-chart minima remain suggested lower bounds,
-not hard cutoffs. Missing readings appear as gaps rather than fabricated zeroes.
+bars are retained. Standard and custom charts automatically scale to their
+actual readings with range padding, rather than forcing zero or inherited
+legacy minima into the range. Detection retains its binary baseline and
+histogram scaling is unchanged. Missing readings appear as gaps rather than
+fabricated zeroes. History labels show capture times, not sample numbers.
 
 Each standard or custom chart has a sliders icon in the chart settings.
 Its **Y-axis limits** control accepts an optional minimum and maximum. Blank
-values retain existing automatic/suggested scaling. Explicit values set a fixed
+values use automatic data-based scaling. Explicit values set a fixed
 bound; if both are entered, the minimum must be below the maximum. Clearing both
 restores the default behavior. Limits apply to history, browser and saved-image
 charts, and remain attached to the chart when it is renamed or reordered.
@@ -41,7 +44,7 @@ points positioned by their capture times. Periods without captured history stay
 blank rather than stretching recent samples across the whole window. Charts use stored
 per-frame sensor readings for that camera, followed by the current frame once;
 they do not repeat the latest sensor value over older timestamps. Older frames
-without a selected sensor value appear as gaps. A zero minimum can make small
+without a selected sensor value appear as gaps. An explicit zero minimum can make small
 temperature or humidity changes appear flat; set tighter Y-axis limits to inspect
 those variations. Top offset, width, and opacity remain shared by both image destinations.
 The opacity slider displays its current percentage while adjusting, also available
@@ -77,7 +80,7 @@ extend beyond the image-label text block; width is limited only by the image's
 available space for saved images; Browser grids scroll rather than shrink.
 Browser rendering mirrors saved images with square, unblurred panels, bold
 two-line titles, four-significant-digit readings, matching cyan line and marker
-weights, and three Y-axis values including both endpoints. Both show clearance below
+weights, and five evenly spaced Y-axis values including both endpoints. Both show clearance below
 the title and use the same data-range padding and configured Y-axis limits.
 Browser cells, text, and strokes follow the displayed photo's source-pixel scale,
 so they match baked charts when the image is resized or shown in fullscreen.
@@ -85,7 +88,8 @@ The close control retains its normal size and the block remains draggable.
 Both use evenly spaced horizontal time labels showing hours and minutes
 without seconds. Both axes use the saved-image Y-axis's 11-point font size;
 Browser axes use the equivalent raster size before image scaling (15.28 CSS pixels), with fewer ticks
-on narrow charts to keep labels readable. The main History page retains its existing axes.
+on narrow charts to keep labels readable. The main History page uses its existing
+axis fonts with capture-time labels and the same data-based Y-axis scaling.
 
 Saved-image charts are rendered with Matplotlib's headless Agg backend after
 image labels and before compression. They sit below upper-left labels in up to

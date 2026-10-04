@@ -261,6 +261,35 @@ def test_four_saved_charts_fill_two_rows_without_gaps_in_row_major_order(monkeyp
     assert numpy.all(image[:, 1186:] == 120)
 
 
+@pytest.mark.parametrize('limits', [{}, {'min': 0, 'max': 100}])
+def test_saved_humidity_chart_autoscales_despite_legacy_zero_minimum(monkeypatch, limits):
+    import numpy
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    drawn = []
+    draw = FigureCanvasAgg.draw
+    def record_draw(canvas):
+        axes = canvas.figure.axes[0]
+        drawn.append((axes.get_ylim(), axes.lines[0].get_ydata().tolist()))
+        draw(canvas)
+    monkeypatch.setattr(FigureCanvasAgg, 'draw', record_draw)
+    config = {'CHARTS': {'CUSTOM': [{'id': 'humidity', 'source': 'sensor_user_0', 'min': 0}],
+                        'SAVED_IMAGE_IDS': ['humidity'], 'AXIS_LIMITS': {'humidity': limits}}}
+    values = [86.0, 86.1, 86.05]
+    readings = [SimpleNamespace(createDate=datetime(2026, 10, 4, 23, 20) + timedelta(seconds=index * 30),
+                temp=None, stars_rolling=None, jsqm=None, exposure=None, gain=None, detections=None,
+                data={'sensor_user_0': value}) for index, value in enumerate(values)]
+    render_saved_charts(numpy.zeros((480, 960, 3), dtype=numpy.uint8), config, readings)
+    (lower, upper), plotted = drawn[0]
+    assert plotted == values
+    if limits:
+        assert (lower, upper) == (0, 100)
+    else:
+        assert 85 < lower < 86
+        assert 86.1 < upper < 87
+        assert upper - lower < 1
+
+
 def test_saved_charts_honor_axis_limits_and_preserve_gaps_and_negative_values(monkeypatch):
     import numpy
     from matplotlib.backends.backend_agg import FigureCanvasAgg
@@ -350,6 +379,7 @@ def test_saved_chart_text_is_large_and_fits_the_expanded_plot(monkeypatch, image
         assert axes.bbox.width >= canvas.get_width_height()[0] * .65
         assert axes.get_position().height >= .45
         lower, upper = axes.get_ylim()
+        assert axes.get_yticks() == pytest.approx([lower + (upper - lower) * index / 4 for index in range(5)])
         assert axes.get_yticks()[0] == pytest.approx(lower)
         assert axes.get_yticks()[-1] == pytest.approx(upper)
         top_label = axes.get_yticklabels()[-1]
@@ -1051,7 +1081,7 @@ def create_chart_preview(login_disabled=True, save_error=None, csrf_enabled=Fals
         return [SimpleNamespace(createDate=start + timedelta(seconds=index * 25),
                     temp=12 + index / 50, stars_rolling=40 + index % 12, jsqm=100 + index % 7, gain=50,
                     exposure=15, detections=index % 6 == 0,
-                    data={'sensor_user_{0}'.format(source): -27 + index / 20 if source == 0 else source * 2 + index % 7 for source in range(11)})
+                    data={'sensor_user_{0}'.format(source): application.extensions.get('chart_preview_sensor_user_0_values', {}).get(index, -27 + index / 20) if source == 0 else source * 2 + index % 7 for source in range(11)})
                     for index in range(36)]
 
     @blueprint.route('/js/charts', endpoint='js_chart_view')
@@ -1188,6 +1218,64 @@ def test_editor_selects_reload_for_saved_chart_edits_and_preserves_opt_out(saved
             browser.close()
 
 
+@pytest.mark.parametrize('viewport', [(1440, 1000), (390, 844)])
+@pytest.mark.parametrize('fixed_limits', [False, True])
+def test_history_page_autoscales_all_series_and_uses_capture_time_labels(viewport, fixed_limits):
+    import re
+    from urllib.parse import urlsplit
+
+    playwright = pytest.importorskip('playwright.sync_api')
+    application = create_chart_preview()
+    config = application.extensions['chart_preview_config']
+    definitions = custom_charts(config)
+    next(definition for definition in definitions if definition['id'] == 'custom_0')['min'] = 0
+    config['CHARTS']['CUSTOM'] = definitions
+    config['CHARTS']['VISIBLE_IDS'] = ['jsqm', 'stars', 'temp', 'exp', 'gain', 'detection', 'custom_0', 'histogram']
+    config['CHARTS']['AXIS_LIMITS'] = {'custom_0': {'min': 0, 'max': 100}} if fixed_limits else {}
+    application.extensions['chart_preview_sensor_user_0_values'] = {index: 86.0 + (index % 3) * .05 for index in range(36)}
+    client = application.test_client()
+    with playwright.sync_playwright() as driver:
+        try:
+            browser = driver.chromium.launch(headless=True)
+        except playwright.Error:
+            try:
+                browser = driver.chromium.launch(channel='msedge', headless=True)
+            except playwright.Error:
+                pytest.skip('No Chromium or Edge available for history chart browser checks')
+        try:
+            page = browser.new_page(viewport={'width': viewport[0], 'height': viewport[1]})
+            errors = []
+            page.on('pageerror', lambda error: errors.append(str(error)))
+            def serve_preview(route):
+                url = urlsplit(route.request.url)
+                response = client.get(url.path + ('?' + url.query if url.query else ''))
+                route.fulfill(status=response.status_code, headers=dict(response.headers), body=response.data)
+            page.route('**/*', serve_preview)
+            page.goto('http://chart.test/charts', wait_until='networkidle')
+            page.wait_for_function("Chart.getChart(document.querySelector('[data-chart-id=custom_0] canvas'))?.data.datasets[0].data.length === 36")
+            charts = page.evaluate('''() => Object.fromEntries([...document.querySelectorAll('.chart-panel')].map(panel => {
+                const chart = Chart.getChart(panel.querySelector('canvas'));
+                return [panel.dataset.chartId, {min:chart.scales.y.min, max:chart.scales.y.max,
+                    values:chart.data.datasets[0].data.map(point=>point.y), labels:chart.scales.x.ticks.map(tick=>tick.label)}];
+            }))''')
+            for identifier in ('jsqm', 'stars', 'temp', 'exp', 'gain', 'custom_0'):
+                chart = charts[identifier]
+                assert chart['labels'] and all(re.fullmatch(r'\d{2}:\d{2}:\d{2}', str(label)) for label in chart['labels'])
+                assert chart['min'] <= min(chart['values']) <= max(chart['values']) <= chart['max']
+                if identifier == 'custom_0' and fixed_limits:
+                    assert (chart['min'], chart['max']) == (0, 100)
+                else:
+                    assert chart['min'] > 0
+            if not fixed_limits:
+                assert charts['custom_0']['max'] - charts['custom_0']['min'] < 1
+            assert charts['detection']['min'] == 0
+            assert charts['detection']['max'] >= 1
+            assert charts['histogram']['min'] == 0
+            assert not errors
+        finally:
+            browser.close()
+
+
 @pytest.mark.parametrize('view', ['latest', 'canvas'])
 @pytest.mark.parametrize('viewport', [(1440, 1000), (390, 844)])
 @pytest.mark.parametrize('chart_count', [1, 2, 3, 4])
@@ -1203,6 +1291,10 @@ def test_browser_image_charts_show_larger_horizontal_minute_labels(view, viewpor
     if chart_count == 3:
         from datetime import datetime
         application.extensions['chart_preview_reading_start'] = datetime(2026, 10, 4, 23, 50)
+        definitions = custom_charts(application.extensions['chart_preview_config'])
+        next(definition for definition in definitions if definition['id'] == 'custom_0')['min'] = 0
+        application.extensions['chart_preview_config']['CHARTS']['CUSTOM'] = definitions
+        application.extensions['chart_preview_sensor_user_0_values'] = {index: 86.0 + (index % 3) * .05 for index in range(36)}
     client = application.test_client()
     with playwright.sync_playwright() as driver:
         try:
@@ -1226,7 +1318,7 @@ def test_browser_image_charts_show_larger_horizontal_minute_labels(view, viewpor
             page.wait_for_function("getComputedStyle(document.querySelector('#latest-image-stage > img, #latest-image-stage > canvas')).opacity === '1'")
             charts = page.evaluate('''() => [...document.querySelectorAll('.latest-chart-overlays canvas')].map(canvas => {
                 const chart = Chart.getChart(canvas);
-                return {rotation: chart.scales.x.labelRotation, labels: chart.scales.x.ticks.map(tick => tick.label), font:chart.options.scales.x.ticks.font.size,
+                return {identifier:canvas.closest('.chart-panel').dataset.chartId, rotation: chart.scales.x.labelRotation, labels: chart.scales.x.ticks.map(tick => tick.label), font:chart.options.scales.x.ticks.font.size,
                     scale: parseFloat(canvas.closest('.latest-chart-overlays').style.getPropertyValue('--chart-overlay-scale')) || 1,
                         xMin:chart.scales.x.min, xMax:chart.scales.x.max, positions:chart.data.datasets[0].data.map(point=>point.x),
                     yTicks: chart.scales.y.ticks.map(tick => tick.value), yMin: chart.scales.y.min, yMax: chart.scales.y.max,
@@ -1241,7 +1333,7 @@ def test_browser_image_charts_show_larger_horizontal_minute_labels(view, viewpor
                 assert chart['scale'] > 0
                 assert chart['font'] == chart['yFont'] == pytest.approx(11 * 100 / 72 * chart['scale'])
                 assert 2 <= len(chart['labels']) <= 7
-                assert chart['yTicks'] == pytest.approx([chart['yMin'], (chart['yMin'] + chart['yMax']) / 2, chart['yMax']])
+                assert chart['yTicks'] == pytest.approx([chart['yMin'] + (chart['yMax'] - chart['yMin']) * index / 4 for index in range(5)])
                 reference = Figure()
                 axes = reference.add_subplot()
                 axes.plot(chart['values'])
@@ -1249,6 +1341,11 @@ def test_browser_image_charts_show_larger_horizontal_minute_labels(view, viewpor
                 if chart['suggestedMin'] is not None:
                     lower = min(lower, chart['suggestedMin'])
                 assert [chart['yMin'], chart['yMax']] == pytest.approx([lower, upper])
+                if chart_count == 3 and chart['identifier'] == 'custom_0':
+                    assert chart['suggestedMin'] is None
+                    assert 85 < chart['yMin'] < 86
+                    assert 86.1 < chart['yMax'] < 87
+                    assert chart['yMax'] - chart['yMin'] < 1
                 reference.clear()
                 assert chart['yFont'] == pytest.approx(11 * 100 / 72 * chart['scale'])
                 assert chart['lineWidth'] == pytest.approx(1.8 * 100 / 72 * chart['scale'])

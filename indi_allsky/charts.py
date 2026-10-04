@@ -269,15 +269,16 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
                     else:
                         axes.plot(positions, values, color='#38bdf8', linewidth=1.8,
                                   marker='o', markersize=2.7)
-                    axes.yaxis.set_major_locator(LinearLocator(numticks=3))
+                    axes.yaxis.set_major_locator(LinearLocator(numticks=5))
                     axes.ticklabel_format(axis='y', style='sci', scilimits=(-3, 4), useOffset=False)
                     axes.yaxis.get_offset_text().set_fontsize(11)
                     axes.yaxis.get_offset_text().set_color('#b9c4c4')
                     axes.yaxis.get_offset_text().set_horizontalalignment('right')
                     axes.yaxis.get_offset_text().set_x(1)
                     lower, upper = axes.get_ylim()
-                    if definition['min'] is not None:
-                        lower = min(lower, definition['min'])
+                    if definition['id'] == 'detection':
+                        lower = 0
+                        upper = max(upper, 1.05)
                     bounds = settings['AXIS_LIMITS'].get(definition['id'], {})
                     if bounds.get('min') is not None:
                         lower = bounds['min']
