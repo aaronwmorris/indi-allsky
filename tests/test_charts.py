@@ -1173,7 +1173,8 @@ def create_chart_preview(login_disabled=True, save_error=None, csrf_enabled=Fals
 
 def test_manage_charts_targets_settings_below_the_charts_without_a_configuration_tab():
     page = create_chart_preview().test_client().get('/charts').get_data(as_text=True)
-    assert 'href="#chart-settings"' in page
+    assert 'data-chart-manage aria-controls="chart-settings" aria-expanded="false"' in page
+    assert 'autocomplete="off" hidden' in page
     assert page.index('data-chart-grid') < page.index('id="chart-settings"')
     assert 'data-chart-editor' in page
     assert page.index('Save Configuration') < page.index('data-chart-editor')
@@ -1183,7 +1184,8 @@ def test_manage_charts_targets_settings_below_the_charts_without_a_configuration
 
 
 @pytest.mark.parametrize('saved_enabled', [False, True])
-def test_editor_preserves_manual_reload_choice_for_chart_edits(saved_enabled):
+@pytest.mark.parametrize('viewport', [(1440, 1000), (390, 844)])
+def test_editor_preserves_manual_reload_choice_for_chart_edits(saved_enabled, viewport):
     from urllib.parse import urlsplit
 
     playwright = pytest.importorskip('playwright.sync_api')
@@ -1199,7 +1201,7 @@ def test_editor_preserves_manual_reload_choice_for_chart_edits(saved_enabled):
             except playwright.Error:
                 pytest.skip('No Chromium or Edge available for chart editor browser checks')
         try:
-            page = browser.new_page()
+            page = browser.new_page(viewport={'width': viewport[0], 'height': viewport[1]})
             def serve_preview(route):
                 request = route.request
                 url = urlsplit(request.url)
@@ -1208,6 +1210,21 @@ def test_editor_preserves_manual_reload_choice_for_chart_edits(saved_enabled):
                 route.fulfill(status=response.status_code, headers=dict(response.headers), body=response.data)
             page.route('**/*', serve_preview)
             page.goto('http://chart.test/charts', wait_until='networkidle')
+            settings = page.locator('#chart-settings')
+            manage = page.get_by_role('button', name='Manage charts', exact=True)
+            assert not settings.is_visible()
+            manage.click()
+            assert settings.is_visible()
+            assert manage.get_attribute('aria-expanded') == 'true'
+            page.goto('http://chart.test/latest', wait_until='networkidle')
+            page.go_back(wait_until='networkidle')
+            assert not settings.is_visible()
+            assert manage.get_attribute('aria-expanded') == 'false'
+            manage.click()
+            page.evaluate("window.dispatchEvent(new PageTransitionEvent('pageshow', {persisted:true}))")
+            assert not settings.is_visible()
+            assert manage.get_attribute('aria-expanded') == 'false'
+            manage.click()
             reload = page.locator('#RELOAD_ON_SAVE')
             assert not reload.is_checked()
             row = page.locator('.chart-editor-row[data-chart-id=custom_0]')
@@ -1258,6 +1275,9 @@ def test_editor_preserves_manual_reload_choice_for_chart_edits(saved_enabled):
             assert application.extensions['chart_preview_config']['CHARTS']['OVERLAY_OPACITY'] == 31
             assert opacity_value.inner_text() == '31%'
             assert not reload.is_checked()
+            assert not settings.is_visible()
+            assert manage.get_attribute('aria-expanded') == 'false'
+            manage.click()
             saved = page.locator('.chart-editor-row[data-chart-id=custom_0] label').filter(has_text='Saved image').locator('input')
             saved.click()
             assert not reload.is_checked()

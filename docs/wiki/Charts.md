@@ -1,6 +1,8 @@
 # Charts
 
-Open **Charts > Manage charts** to jump to the settings below the chart grid.
+Select **Charts > Manage charts** to open the settings below the chart grid.
+Settings start closed when entering or returning to the Charts page, including
+after saving; select **Manage charts** again to reopen them.
 Add, remove, or reorder custom charts, then select **Save Configuration** at the
 top of the settings. **Reload on Save** defaults to unchecked and chart edits
 leave your choice unchanged. Select it to restart capture and apply saved-image

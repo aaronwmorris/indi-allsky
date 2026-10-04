@@ -14,9 +14,9 @@
             {{ form_history.HISTORY_SELECT(class='tw:select tw:select-bordered tw:select-sm tw:bg-base-100') }}
         </div>
         {% if can_manage_charts %}
-        <a href="#chart-settings" class="tw:btn tw:btn-sm tw:btn-ghost">
+        <button type="button" data-chart-manage aria-controls="chart-settings" aria-expanded="false" class="tw:btn tw:btn-sm tw:btn-ghost">
             <i class="tw:icon-[lucide--settings] tw:w-4 tw:h-4"></i> Manage charts
-        </a>
+        </button>
         {% endif %}
     </div>
     <div class="chart-status" data-chart-status role="status" aria-live="polite"></div>
@@ -24,7 +24,7 @@
     <script id="chart-page-options" type="application/json">{{ {'url': url_for('indi_allsky.js_chart_view'), 'cameraId': camera_id, 'ids': chart_settings.VISIBLE_IDS, 'definitions': chart_definitions, 'axisLimits': chart_settings.AXIS_LIMITS, 'historySelect': 'HISTORY_SELECT', 'timestamp': timestamp, 'refreshInterval': refreshInterval, 'compact': false}|tojson }}</script>
 </div>
 {% if can_manage_charts %}
-<form id="chart-settings" class="tw:container tw:mx-auto" data-chart-save-url="{{ url_for('indi_allsky.ajax_chart_config_view') }}" autocomplete="off">
+<form id="chart-settings" class="tw:container tw:mx-auto" data-chart-save-url="{{ url_for('indi_allsky.ajax_chart_config_view') }}" autocomplete="off" hidden>
     {{ form_config.csrf_token }}
     <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-4 tw:bg-base-200 tw:p-4 tw:mb-4">
         <button type="submit" class="tw:btn tw:btn-primary tw:btn-md tw:gap-2 tw:font-bold tw:uppercase">

@@ -99,6 +99,22 @@
         }, true);
         const form = root.closest('form');
         if (form?.dataset.chartSaveUrl) {
+            const manage = document.querySelector('[data-chart-manage]');
+            const closeSettings = () => {
+                form.hidden = true;
+                manage?.setAttribute('aria-expanded', 'false');
+                if (window.location.hash === '#chart-settings') {
+                    window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search);
+                }
+            };
+            closeSettings();
+            manage?.addEventListener('click', () => {
+                form.hidden = !form.hidden;
+                manage.setAttribute('aria-expanded', String(!form.hidden));
+                if (!form.hidden) form.scrollIntoView({block: 'start'});
+            });
+            window.addEventListener('pagehide', closeSettings);
+            window.addEventListener('pageshow', event => { if (event.persisted) closeSettings(); });
             form.addEventListener('submit', async event => {
                 event.preventDefault();
                 const submit = form.querySelector('[type="submit"]');
@@ -113,7 +129,7 @@
                     if (response.redirected) { window.location.assign(response.url); return; }
                     const result = await response.json();
                     if (!response.ok) throw new Error(Object.values(result).flat().join(' '));
-                    window.location.hash = 'chart-settings'; window.location.reload();
+                    window.location.reload();
                 } catch (failure) {
                     error.textContent = failure.message || 'Unable to save chart settings.'; error.style.display = 'block';
                 } finally { submit.disabled = false; }
