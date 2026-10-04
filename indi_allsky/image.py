@@ -106,6 +106,7 @@ class ImageWorker(Process):
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av
         self.sensors_user_read_time_av = sensors_user_read_time_av
+        self.cloudiness_index_history = {}
         self.night_av = night_av
         self.astro_av = astro_av
 
@@ -425,6 +426,15 @@ class ImageWorker(Process):
                     cloudiness_sensor_values, cloudiness_sensor_read_times, idx,
                     now=cloudiness_snapshot_time),
             )
+            if self.config.get('TEMP_SENSOR', {}).get('CLOUDINESS_INDEX_HYSTERESIS', False):
+                history = self.cloudiness_index_history.setdefault(camera.id, [])
+                raw_index = i_ref.cloudiness_index
+                i_ref.cloudiness_index = sensors_mapping.apply_cloudiness_hysteresis(raw_index, history)
+                if raw_index is not None:
+                    history.append(raw_index)
+                    del history[:-3]
+            else:
+                self.cloudiness_index_history.pop(camera.id, None)
 
         # Purple-frame handling deliberately precedes both pre-dark and
         # post-dark standard FITS saving. In active repair mode those outputs

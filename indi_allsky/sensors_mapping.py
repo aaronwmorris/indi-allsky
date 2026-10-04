@@ -313,6 +313,14 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
     return max(0.0, min(100.0, cloudiness_index))
 
 
+def apply_cloudiness_hysteresis(cloudiness_index, history):
+    """Blend 80% current index with 20% of up to three prior valid raw indices."""
+    if cloudiness_index is None or not history:
+        return cloudiness_index
+    previous = history[-3:]
+    return 0.8 * cloudiness_index + 0.2 * (sum(previous) / len(previous))
+
+
 def build_slot_label_map(config: Dict[str, Any]) -> Dict[int, Dict[str, Any]]:
     """
     Builds a map of slot_index -> {name, unit, device_class, key} by inspecting TEMP_SENSOR configuration.
