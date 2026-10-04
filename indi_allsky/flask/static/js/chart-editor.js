@@ -9,6 +9,7 @@
         const selectClasses = 'tw:select tw:select-bordered tw:select-sm tw:bg-base-100';
         const checkboxClasses = 'tw:checkbox tw:checkbox-sm tw:checkbox-primary';
         settings.AXIS_LIMITS ||= {};
+        settings.SAVED_IMAGE_IDS ||= [];
         function save() {
             field.value = JSON.stringify(settings);
             root.querySelector('[data-chart-count]').textContent = settings.CUSTOM.length + ' custom charts';
@@ -96,7 +97,8 @@
                     const csrfToken = form.querySelector('[name="csrf_token"]')?.value || '';
                     const response = await fetch(form.dataset.chartSaveUrl, {
                         method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfToken},
-                        body: JSON.stringify({CHARTS__CONFIG: field.value, csrf_token: csrfToken})
+                        body: JSON.stringify({CHARTS__CONFIG: field.value, csrf_token: csrfToken,
+                            RELOAD_ON_SAVE: form.querySelector('[name="RELOAD_ON_SAVE"]').checked})
                     });
                     if (response.redirected) { window.location.assign(response.url); return; }
                     const result = await response.json();
@@ -136,11 +138,13 @@
                         settings.CUSTOM.splice(index, 1);
                         settings.VISIBLE_IDS = settings.VISIBLE_IDS.filter(value => value !== definition.id);
                         settings.OVERLAY_IDS = settings.OVERLAY_IDS.filter(value => value !== definition.id);
+                        settings.SAVED_IMAGE_IDS = settings.SAVED_IMAGE_IDS.filter(value => value !== definition.id);
                         delete settings.AXIS_LIMITS[definition.id];
                         render(); save();
                     }));
                 row.append(label('Name', name), label('Source', source, 'chart-source'), axisControl(definition.id, definition.label || definition.source),
-                    check('History', 'VISIBLE_IDS', definition.id), check('On image', 'OVERLAY_IDS', definition.id), actions);
+                    check('History', 'VISIBLE_IDS', definition.id), check('Browser', 'OVERLAY_IDS', definition.id),
+                    check('Saved image', 'SAVED_IMAGE_IDS', definition.id), actions);
                 list.append(row);
             });
         }
@@ -149,7 +153,8 @@
             const row = document.createElement('div'); row.className = 'chart-builtin-row';
             const name = document.createElement('span'); name.textContent = definition.label;
             row.append(name, check('History', 'VISIBLE_IDS', definition.id));
-            if (definition.id !== 'histogram') row.append(check('On image', 'OVERLAY_IDS', definition.id), axisControl(definition.id, definition.label));
+            if (definition.id !== 'histogram') row.append(check('Browser', 'OVERLAY_IDS', definition.id),
+                check('Saved image', 'SAVED_IMAGE_IDS', definition.id), axisControl(definition.id, definition.label));
             builtinList.append(row);
         });
         root.querySelector('[data-chart-add]').addEventListener('click', () => {

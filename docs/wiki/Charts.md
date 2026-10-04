@@ -1,10 +1,14 @@
 # Charts
 
 Open **Charts > Manage charts** to jump to the settings below the chart grid.
-Add, remove, or reorder custom charts, then select **Save charts**.
-**History** selects charts on the Charts page; **On image** independently selects
-compact charts on the latest-image view. Existing nine-slot configurations load
-automatically, and image overlays default to off. Up to 64 custom charts are
+Add, remove, or reorder custom charts, then select **Save Configuration** at the
+top of the settings. **Reload on Save** applies capture-side changes immediately;
+without it, saved-image changes take effect after the next capture service reload.
+**History** selects charts on the Charts page. **Browser** independently selects
+live charts over the latest-image view; **Saved image** writes charts into new
+capture images. Select either destination or both, including different charts for
+each. Existing nine-slot configurations load automatically, and both image
+destinations default to off. Up to 64 custom charts are
 supported as a safety bound.
 
 ## Axes
@@ -17,16 +21,29 @@ Each standard or custom chart has a sliders icon in the chart settings.
 Its **Y-axis limits** control accepts an optional minimum and maximum. Blank
 values retain existing automatic/suggested scaling. Explicit values set a fixed
 bound; if both are entered, the minimum must be below the maximum. Clearing both
-restores the default behavior. Limits apply to the history chart and its image
-overlay, and remain attached to the chart when it is renamed or reordered.
+restores the default behavior. Limits apply to history, browser and saved-image
+charts, and remain attached to the chart when it is renamed or reordered.
 Histogram scaling is unchanged.
 
 ## Image Overlays
 
-Overlay history, top offset, width, and opacity are configurable. The top offset
-positions charts below text baked into the image; charts also avoid the browser's
-status message. Multiple charts scroll within the image area. Fullscreen includes
-the overlays. Captured images and timelapses are not modified.
+History, top offset, width, and opacity are shared by both image destinations.
+Browser charts avoid the status message, scroll within the image area and are
+included in fullscreen. They appear on the right when saved-image charts are
+also configured. Browser-only charts do not modify image files.
+
+Saved-image charts are rendered with Matplotlib's headless Agg backend after
+image labels and before compression. They sit below upper-left labels and flow
+into additional columns as needed, without resizing the image. Charts that cannot
+fit are skipped with a capture-log warning. They include camera-specific history
+and the current frame, and are disabled in focus mode. New latest images, saved
+images, thumbnails, uploads and timelapses built from those images contain the
+charts. Existing files, raw/FITS images, keograms, panoramas and circular-display
+outputs are not changed, and measurements occur before chart compositing.
+
+Existing capture installations must install `matplotlib>=3.5.3` in their capture
+virtual environment, or rerun the normal dependency setup. A missing renderer is
+logged without stopping capture. Web-only installations do not need Matplotlib.
 
 ## Future Sources
 
@@ -39,12 +56,14 @@ This implementation does not depend on those pending sensor PRs.
 
 Capture publishes dynamic definitions for synced cameras. Local cameras use
 current settings; remote selections match IDs, falling back to source keys.
-`AXIS_LIMITS` stores optional viewer-side bounds by chart ID.
+`AXIS_LIMITS` stores optional bounds by chart ID. `OVERLAY_IDS` retains its existing
+browser-only meaning; `SAVED_IMAGE_IDS` stores the independent capture selections.
 
 ## Validation
 
 Run `python -m pytest tests/test_charts.py`. Tests cover the shared model and
-isolated production handler, validator, persistence, metadata, and template paths.
-The preview at `http://127.0.0.1:5067/settings` uses production scripts/templates
-with sample data and memory-only settings. It is not a full Linux Flask/camera
-integration test.
+isolated production handler, validator, persistence, reload queue, metadata and
+template paths, plus real SQLite history and decoded raster output.
+The preview at `http://127.0.0.1:5068/charts` uses production scripts/templates and
+the raster compositor with sample data and memory-only settings. It is not a full
+Linux Flask/camera integration test.

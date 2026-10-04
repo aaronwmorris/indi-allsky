@@ -24,12 +24,18 @@
     <script id="chart-page-options" type="application/json">{{ {'url': url_for('indi_allsky.js_chart_view'), 'cameraId': camera_id, 'ids': chart_settings.VISIBLE_IDS, 'definitions': chart_definitions, 'axisLimits': chart_settings.AXIS_LIMITS, 'historySelect': 'HISTORY_SELECT', 'timestamp': timestamp, 'refreshInterval': refreshInterval, 'compact': false}|tojson }}</script>
 </div>
 {% if can_manage_charts %}
-<form class="tw:container tw:mx-auto" data-chart-save-url="{{ url_for('indi_allsky.ajax_chart_config_view') }}" autocomplete="off">
+<form id="chart-settings" class="tw:container tw:mx-auto" data-chart-save-url="{{ url_for('indi_allsky.ajax_chart_config_view') }}" autocomplete="off">
     {{ form_config.csrf_token }}
+    <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-4 tw:bg-base-200 tw:p-4 tw:mb-4">
+        <button type="submit" class="tw:btn tw:btn-primary tw:btn-md tw:gap-2 tw:font-bold tw:uppercase">
+            <i class="tw:icon-[lucide--save] tw:w-4 tw:h-4"></i> Save Configuration
+        </button>
+        <label class="tw:flex tw:items-center tw:gap-2 tw:cursor-pointer">
+            {{ form_config.RELOAD_ON_SAVE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+            <span class="tw:text-xs tw:font-bold tw:uppercase" title="Restart capture after saving. The restart can take 1–3 minutes.">{{ form_config.RELOAD_ON_SAVE.label.text }}</span>
+        </label>
+    </div>
     {% include 'config/charts.html' %}
-    <button type="submit" class="tw:btn tw:btn-primary tw:btn-sm">
-        <i class="tw:icon-[lucide--save] tw:w-4 tw:h-4"></i> Save charts
-    </button>
 </form>
 {% endif %}
 {% endblock %}

@@ -1769,6 +1769,9 @@ class AjaxChartConfigView(BaseView):
         payload = request.get_json(silent=True)
         if not isinstance(payload, dict):
             return jsonify({'form_global': ['Invalid chart configuration']}), 400
+        reload_on_save = payload.get('RELOAD_ON_SAVE', False)
+        if not isinstance(reload_on_save, bool):
+            return jsonify({'RELOAD_ON_SAVE': ['Reload on Save must be a boolean']}), 400
         form_config = IndiAllskyChartConfigForm(data=payload)
         if not form_config.validate():
             return jsonify(form_config.errors), 400
@@ -1784,7 +1787,18 @@ class AjaxChartConfigView(BaseView):
         except ConfigSaveException as error:
             self.indi_allsky_config['CHARTS'] = previous
             return jsonify({'form_global': [str(error)]}), 400
-        return jsonify({'success-message': 'Saved chart settings'})
+        if reload_on_save:
+            self._miscDb.setState('STATUS', constants.STATUS_RELOADING)
+            task_reload = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.MAIN,
+                state=TaskQueueState.MANUAL,
+                priority=100,
+                data={'action': 'reload'},
+            )
+            db.session.add(task_reload)
+            db.session.commit()
+            return jsonify({'success-message': 'Saved new config. Reloading indi-allsky service.'})
+        return jsonify({'success-message': 'Saved new config.'})
 
 
 class JsonChartView(JsonView):

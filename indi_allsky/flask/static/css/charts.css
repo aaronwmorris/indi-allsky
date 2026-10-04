@@ -3,7 +3,7 @@
 .chart-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .chart-toolbar h2 { margin: 0; font-size: 1.125rem; font-weight: 650; }
 .chart-editor-list { margin-top: 1rem; }
-.chart-editor-row { display: grid; grid-template-columns: minmax(9rem, 1fr) minmax(10rem, 1.4fr) 6rem 5rem 5rem 6.5rem; align-items: end; gap: .75rem; padding: 1rem 0; border-bottom: 1px solid var(--color-base-300); }
+.chart-editor-row { display: grid; grid-template-columns: minmax(9rem, 1fr) minmax(10rem, 1.4fr) 2rem 4rem 4rem 5rem 6.5rem; align-items: end; gap: .75rem; padding: 1rem 0; border-bottom: 1px solid var(--color-base-300); }
 .chart-editor-row label, .chart-overlay-controls label { display: flex; flex-direction: column; gap: .375rem; font-size: .75rem; min-width: 0; }
 .chart-editor-row input:not([type=checkbox]), .chart-editor-row select, .chart-overlay-controls select, .chart-overlay-controls input { width: 100%; min-width: 0; }
 .chart-editor-row .chart-check { align-items: center; justify-content: center; height: 4rem; }
@@ -21,9 +21,9 @@
 .chart-builtin-row .chart-axis-inputs label { display: flex; flex-direction: column; align-items: stretch; gap: .375rem; }
 .chart-axis-inputs input { width: 100%; min-width: 0; }
 .chart-builtin-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 2rem; margin-top: 1rem; }
-.chart-builtin-row { display: flex; align-items: center; gap: 1rem; border-bottom: 1px solid var(--color-base-300); padding: .75rem 0; font-size: .8rem; }
+.chart-builtin-row { display: grid; grid-template-columns: minmax(0, 1fr) repeat(3, max-content) 2rem; align-items: center; gap: .75rem; border-bottom: 1px solid var(--color-base-300); padding: .75rem 0; font-size: .8rem; }
 .chart-builtin-row > span { flex: 1; min-width: 0; }
-.chart-builtin-row label { display: inline-flex; align-items: center; gap: .375rem; white-space: nowrap; }
+.chart-builtin-row label { display: inline-flex; align-items: center; gap: .375rem; }
 .chart-overlay-controls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
 .chart-settings h3 { margin: 1.5rem 0 .5rem; font-size: .9rem; font-weight: 650; }
 .chart-count { font-size: .8rem; opacity: .7; }
@@ -38,6 +38,7 @@
 .chart-status { min-height: 1.25rem; font-size: .75rem; opacity: .8; }
 .chart-stream-empty { padding: 2rem 0; font-size: .875rem; }
 .latest-chart-overlays { position: absolute; z-index: 25; left: 1rem; top: var(--chart-overlay-top, 120px); width: min(var(--chart-overlay-width, 260px), calc(100% - 2rem)); max-height: calc(100% - var(--chart-overlay-top, 120px) - 1rem); overflow: auto; scrollbar-width: thin; }
+.latest-chart-overlays[data-saved-charts=true] { left: auto; right: 1rem; width: min(var(--chart-overlay-width, 260px), calc(50% - 1.5rem)); }
 .latest-chart-overlays .chart-grid { grid-template-columns: minmax(0, 1fr); gap: .5rem; }
 .latest-chart-overlays .chart-panel { padding: .625rem .75rem; background: rgba(12, 18, 20, var(--chart-overlay-opacity, .8)); color: #f4f7f6; border-color: rgba(255,255,255,.16); backdrop-filter: blur(8px); }
 .latest-chart-overlays .chart-panel-header { margin-bottom: .25rem; }
@@ -48,12 +49,17 @@
 #latest-image-stage:fullscreen { width: 100vw; height: 100vh; background: #080b0d; border-radius: 0; }
 #latest-image-stage:fullscreen > img, #latest-image-stage:fullscreen > canvas { max-height: 100vh; max-width: 100vw; }
 @media (max-width: 900px) {
+    .chart-builtin-list { grid-template-columns: minmax(0, 1fr); }
     .chart-editor-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 5rem; }
     .chart-editor-row .chart-check { align-items: flex-start; height: auto; flex-direction: row; padding: .5rem 0; }
     .chart-row-actions { justify-content: flex-end; }
 }
 @media (max-width: 600px) {
     .chart-grid, .chart-builtin-list { grid-template-columns: minmax(0, 1fr); }
+    .chart-builtin-row { grid-template-columns: repeat(3, minmax(0, 1fr)) 2rem; gap: .5rem; }
+    .chart-builtin-row > span { grid-column: 1 / 4; grid-row: 1; }
+    .chart-builtin-row > .chart-axis-control { grid-column: 4; grid-row: 1; }
+    .chart-builtin-row > label { grid-row: 2; }
     .chart-editor-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
     .chart-editor-row .chart-source { grid-column: 1 / -1; }
     .chart-overlay-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }

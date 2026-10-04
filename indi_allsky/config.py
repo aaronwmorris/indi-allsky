@@ -893,6 +893,7 @@ class IndiAllSkyConfigBase(object):
             "CUSTOM"                : None,
             "VISIBLE_IDS"           : None,
             "OVERLAY_IDS"           : [],
+            "SAVED_IMAGE_IDS"       : [],
             "OVERLAY_HISTORY_SECONDS" : 900,
             "OVERLAY_TOP"           : 120,
             "OVERLAY_WIDTH"         : 260,
@@ -1284,6 +1285,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                             valid_types = (dict, type(None))
                         elif key == 'CHARTS' and key_l2 in ('CUSTOM', 'VISIBLE_IDS'):
                             valid_types = (list, type(None))
+                        elif key == 'CHARTS' and key_l2 == 'SAVED_IMAGE_IDS':
+                            valid_types = list
                         elif isinstance(self.config[key][key_l2], int):
                             # jq will convert floats that end in .0 to ints
                             valid_types = (int, float)

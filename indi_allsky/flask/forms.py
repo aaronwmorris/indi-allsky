@@ -3720,6 +3720,7 @@ def INDI_CONFIG_DAY_validator(*args):
 
 class IndiAllskyChartConfigForm(FlaskForm):
     CHARTS__CONFIG = HiddenField(validators=[DataRequired(), CHARTS__CONFIG_validator])
+    RELOAD_ON_SAVE = BooleanField('Reload on Save')
 
 
 class IndiAllskyConfigForm(FlaskForm):

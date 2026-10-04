@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 
 from indi_allsky.charts import chart_definitions, chart_value, custom_charts, validate_custom_charts
 from indi_allsky.charts import chart_configuration, validate_chart_configuration
-from indi_allsky.charts import build_chart_data
+from indi_allsky.charts import build_chart_data, render_saved_charts
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -68,11 +68,12 @@ def test_local_definitions_override_stale_published_metadata():
 
 def test_remote_visibility_is_mapped_by_source():
     config = {'CHARTS': {'CUSTOM': [{'id': 'local_sky', 'source': 'sensor_user_12'}],
-                         'OVERLAY_IDS': ['local_sky'], 'VISIBLE_IDS': ['temp', 'local_sky'],
+                         'OVERLAY_IDS': ['local_sky'], 'VISIBLE_IDS': ['temp', 'local_sky'], 'SAVED_IMAGE_IDS': ['local_sky'],
                          'AXIS_LIMITS': {'local_sky': {'min': -50, 'max': 10}}}}
     metadata = {'chart_definitions': [{'id': 'remote_sky', 'source': 'sensor_user_12'}]}
     settings = chart_configuration(config, metadata, is_local=False)
     assert settings['OVERLAY_IDS'] == ['remote_sky']
+    assert settings['SAVED_IMAGE_IDS'] == ['remote_sky']
     assert settings['VISIBLE_IDS'] == ['temp', 'remote_sky']
     assert settings['AXIS_LIMITS'] == {'remote_sky': {'min': -50.0, 'max': 10.0}}
 
@@ -112,12 +113,286 @@ def test_default_preferences_preserve_existing_charts_and_disable_overlays():
     settings = chart_configuration({})
     assert len(settings['VISIBLE_IDS']) == 16
     assert settings['OVERLAY_IDS'] == []
+    assert settings['SAVED_IMAGE_IDS'] == []
+
+
+def test_saved_charts_disabled_leave_pixels_and_readings_untouched():
+    import numpy
+
+    image = numpy.full((480, 640, 3), 120, dtype=numpy.uint8)
+    readings = MagicMock()
+    assert render_saved_charts(image, {'CHARTS': {'OVERLAY_IDS': ['temp']}}, readings) is image
+    readings.__iter__.assert_not_called()
+    assert numpy.all(image == 120)
+
+
+@pytest.mark.parametrize('selected', [['temp'], ['detection'], ['temp', 'detection']])
+def test_saved_charts_change_real_raster_pixels_only_in_the_selected_regions(selected):
+    import numpy
+    import cv2
+
+    readings = [SimpleNamespace(createDate=datetime(2026, 10, 4, 20, 30) + timedelta(seconds=index),
+                temp=-27 + index, stars_rolling=0, jsqm=None, exposure=15, gain=50,
+                detections=index % 2, data={}) for index in range(8)]
+    config = {'CHARTS': {'CUSTOM': [], 'SAVED_IMAGE_IDS': selected}}
+    image = numpy.full((480, 640, 3), 120, dtype=numpy.uint8)
+    original = image.copy()
+    result = render_saved_charts(image, config, readings, label_bounds=[(10, 10, 300, 190)])
+    assert result is image
+    assert numpy.array_equal(image[:198], original[:198])
+    assert numpy.array_equal(image[:, :16], original[:, :16])
+    assert numpy.array_equal(image[:, 276:], original[:, 276:])
+    assert numpy.any(image[198:310, 16:276] != 120)
+    assert numpy.any(image[198:310, 16:276, 0] > image[198:310, 16:276, 2])
+    end = 310 if len(selected) == 1 else 430
+    assert numpy.array_equal(image[end:], original[end:])
+    success, encoded = cv2.imencode('.png', result)
+    assert success
+    assert numpy.array_equal(cv2.imdecode(encoded, cv2.IMREAD_COLOR), result)
+
+
+def test_saved_charts_honor_axis_limits_and_preserve_gaps_and_negative_values(monkeypatch):
+    import numpy
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    draws = []
+    draw = FigureCanvasAgg.draw
+    def record_draw(canvas):
+        axes = canvas.figure.axes[0]
+        draws.append((axes.get_ylim(), axes.lines[0].get_ydata().copy()))
+        draw(canvas)
+    monkeypatch.setattr(FigureCanvasAgg, 'draw', record_draw)
+    config = {'CHARTS': {'CUSTOM': [{'id': 'sky', 'source': 'sensor_user_10', 'min': 0}],
+                        'SAVED_IMAGE_IDS': ['sky'], 'AXIS_LIMITS': {'sky': {'min': -40, 'max': 10}}}}
+    readings = [SimpleNamespace(createDate=datetime(2026, 10, 4, 20, 30), temp=None, stars_rolling=None,
+                jsqm=None, exposure=None, gain=None, detections=None, data={'sensor_user_10': value})
+                for value in (-27, None, 0)]
+    render_saved_charts(numpy.zeros((480, 640, 3), dtype=numpy.uint8), config, readings)
+    assert draws[0][0] == (-40, 10)
+    assert draws[0][1][0] == -27
+    assert numpy.isnan(draws[0][1][1])
+    assert draws[0][1][2] == 0
+
+
+def test_saved_chart_names_are_literal_and_timestamp_labels_stay_inside_panel(monkeypatch):
+    import numpy
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    draw = FigureCanvasAgg.draw
+    text_bounds = []
+    def record_draw(canvas):
+        draw(canvas)
+        renderer = canvas.get_renderer()
+        text_bounds.extend(text.get_window_extent(renderer) for text in canvas.figure.axes[0].get_xticklabels())
+    monkeypatch.setattr(FigureCanvasAgg, 'draw', record_draw)
+    config = {'CHARTS': {'CUSTOM': [{'id': 'sky', 'source': 'sensor_user_0', 'label': r'Sky $\bad$'}],
+                        'SAVED_IMAGE_IDS': ['sky']}}
+    readings = [SimpleNamespace(createDate=datetime(2026, 10, 4, 20, 30) + timedelta(seconds=index),
+                temp=None, stars_rolling=None, jsqm=None, exposure=None, gain=None, detections=None,
+                data={'sensor_user_0': -27}) for index in range(2)]
+    render_saved_charts(numpy.zeros((480, 640, 3), dtype=numpy.uint8), config, readings)
+    assert len(text_bounds) == 2
+    assert all(0 <= bounds.x0 < bounds.x1 <= 260 and 0 <= bounds.y0 < bounds.y1 <= 112 for bounds in text_bounds)
+
+
+def test_saved_charts_that_cannot_fit_do_not_overwrite_labels_or_resize_image():
+    import numpy
+
+    image = numpy.full((150, 240, 3), 120, dtype=numpy.uint8)
+    result = render_saved_charts(image, {'CHARTS': {'CUSTOM': [], 'SAVED_IMAGE_IDS': ['temp']}}, [],
+                                label_bounds=[(0, 0, 240, 130)])
+    assert result.shape == (150, 240, 3)
+    assert numpy.all(result == 120)
+
+
+@pytest.fixture
+def saved_chart_worker():
+    import cv2
+    import numpy
+    import tempfile
+    import shutil
+    from PIL import Image
+    from sqlalchemy import create_engine, Table, MetaData, Column, DateTime, Float, Integer, JSON, func
+    from sqlalchemy.orm import Session
+    from indi_allsky import constants
+
+    engine = create_engine('sqlite://')
+    table = Table('images', MetaData(), Column('camera_id', Integer), Column('createDate', DateTime),
+                  Column('sqm', Float), Column('stars', Integer), Column('temp', Float), Column('gain', Float),
+                  Column('exposure', Float), Column('detections', Integer), Column('data', JSON))
+    table.metadata.create_all(engine)
+    session = Session(engine)
+    image_table = SimpleNamespace(query=session.query(table), **{column.name: column for column in table.columns})
+    renderer = MagicMock(wraps=render_saved_charts)
+    namespace = {'IndiAllSkyDbImageTable': image_table, 'func': func, 'timedelta': timedelta,
+                 'SimpleNamespace': SimpleNamespace, 'constants': constants, 'logger': MagicMock(),
+                 'chart_configuration': chart_configuration, 'render_saved_charts': renderer,
+                 'cv2': cv2, 'tempfile': tempfile, 'shutil': shutil, 'Path': Path, 'Image': Image}
+    tree = ast.parse((ROOT / 'indi_allsky/image.py').read_text(encoding='utf-8'))
+    owner = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == 'ImageWorker')
+    methods = [node for node in owner.body if isinstance(node, ast.FunctionDef)
+               and node.name in ('get_chart_metadata', 'apply_saved_charts', 'write_img')]
+    exec(compile(ast.Module(body=methods, type_ignores=[]), 'production-saved-chart-worker', 'exec'), namespace)
+    ref = SimpleNamespace(exp_date=datetime(2026, 10, 4, 20, 30), camera_id=1, sqm_value=100,
+                          stars=list(range(10)), lines=[], gain=50, exposure=15,
+                          **{key: 0 for key in ('uptime', 'kpindex', 'ovation_max', 'aurora_mag_bt',
+                            'aurora_mag_gsm_bz', 'aurora_plasma_density', 'aurora_plasma_speed',
+                            'aurora_plasma_temp', 'aurora_n_hemi_gw', 'aurora_s_hemi_gw')})
+    worker = SimpleNamespace(config={}, sensors_temp_av=[10.0] * 60, sensors_user_av=list(range(110)),
+                             image_processor=SimpleNamespace(image=numpy.full((480, 640, 3), 120, dtype=numpy.uint8),
+                                                             camera_sqm_raw_mag=21.3, chart_label_bounds=[]),
+                             ref=ref, image_table=image_table, table=table, session=session, renderer=renderer,
+                             logger=namespace['logger'])
+    worker.get_chart_metadata = lambda ref: namespace['get_chart_metadata'](worker, ref)
+    worker.apply_saved_charts = lambda: namespace['apply_saved_charts'](worker, ref, SimpleNamespace(data={}))
+    worker.write_img = lambda: namespace['write_img'](worker, worker.image_processor.image, ref,
+                                                    SimpleNamespace(data={}), jpeg_exif=b'')
+    yield worker
+    session.close()
+    engine.dispose()
+
+
+@pytest.mark.parametrize('configuration', [{}, {'CHARTS': {'OVERLAY_IDS': ['temp']}},
+    {'CHARTS': {'SAVED_IMAGE_IDS': ['temp']}, 'FOCUS_MODE': True}])
+def test_capture_skips_chart_queries_and_rendering_when_not_requested(saved_chart_worker, configuration):
+    worker = saved_chart_worker
+    worker.config = configuration
+    worker.image_table.query = MagicMock()
+    worker.apply_saved_charts()
+    worker.image_table.query.with_entities.assert_not_called()
+    worker.renderer.assert_not_called()
+
+
+def test_capture_saved_charts_query_only_camera_history_and_include_current_frame(saved_chart_worker):
+    import numpy
+
+    worker = saved_chart_worker
+    worker.config = {'TEMP_DISPLAY': 'f', 'CHARTS': {
+        'CUSTOM': [{'id': 'sky', 'source': 'sensor_temp_0'}], 'SAVED_IMAGE_IDS': ['sky', 'stars']}}
+    records = [{'camera_id': 1, 'createDate': worker.ref.exp_date - timedelta(minutes=6 - index),
+                'sqm': 90, 'stars': index + 1, 'temp': -10, 'gain': 50, 'exposure': 15, 'detections': 0,
+                'data': {'sensor_temp_0': 14.0}} for index in range(5)]
+    records.extend([dict(records[0], camera_id=2),
+                    dict(records[0], createDate=worker.ref.exp_date - timedelta(seconds=900)),
+                    dict(records[0], createDate=worker.ref.exp_date),
+                    dict(records[0], createDate=worker.ref.exp_date + timedelta(seconds=1))])
+    worker.session.execute(worker.table.insert(), records)
+    worker.apply_saved_charts()
+    worker.renderer.assert_called_once()
+    readings = worker.renderer.call_args.args[2]
+    assert len(readings) == 6
+    assert readings[0].stars_rolling == 1
+    assert readings[4].stars_rolling == 3
+    assert readings[-1].createDate == worker.ref.exp_date
+    assert readings[-1].stars_rolling == pytest.approx(25 / 6)
+    assert readings[-1].temp == 10
+    assert readings[-1].data['sensor_temp_0'] == 50
+    assert readings[-1].data['sensor_user_109'] == 109
+    assert numpy.any(worker.image_processor.image != 120)
+    worker.logger.exception.assert_not_called()
+
+
+def test_capture_keeps_saving_when_optional_raster_renderer_is_unavailable(saved_chart_worker):
+    import numpy
+
+    worker = saved_chart_worker
+    worker.config = {'CHARTS': {'CUSTOM': [], 'SAVED_IMAGE_IDS': ['temp']}}
+    worker.renderer.side_effect = ImportError('matplotlib is not installed')
+    worker.apply_saved_charts()
+    worker.logger.exception.assert_called_once()
+    assert numpy.all(worker.image_processor.image == 120)
+
+
+@pytest.mark.parametrize('file_type', ['png', 'jpg'])
+def test_capture_writer_saves_identical_composited_latest_and_archive_images(saved_chart_worker, tmp_path, file_type):
+    import cv2
+    import numpy
+    from indi_allsky import constants
+
+    worker = saved_chart_worker
+    worker.config = {'CHARTS': {'CUSTOM': [], 'SAVED_IMAGE_IDS': ['temp']},
+                     'IMAGE_FILE_TYPE': file_type, 'IMAGE_FILE_COMPRESSION': {'png': 3, 'jpg': 95}}
+    worker.image_dir = tmp_path
+    worker.filename_t = 'image_{0}_{1}.{2}'
+    worker.ref.day_date = worker.ref.exp_date.date()
+    worker.night_av = {constants.NIGHT_NIGHT: True}
+    folder = tmp_path / 'exposures'
+    folder.mkdir()
+    worker._getImageFolder = lambda *args: folder
+    worker.apply_saved_charts()
+    latest, saved = worker.write_img()
+    assert saved is not None
+    assert latest.read_bytes() == saved.read_bytes()
+    decoded = cv2.imread(str(saved))
+    assert decoded.shape == worker.image_processor.image.shape
+    assert numpy.mean(decoded[120:232, 16:276]) < 100
+    if file_type == 'png':
+        assert numpy.array_equal(decoded, worker.image_processor.image)
+
+
+@pytest.mark.parametrize('display, expected', [('c', 10), ('f', 50), ('k', 283.15)])
+def test_shared_chart_metadata_preserves_capture_sensor_values_and_units(saved_chart_worker, display, expected):
+    worker = saved_chart_worker
+    worker.config = {'TEMP_DISPLAY': display}
+    metadata = worker.get_chart_metadata(worker.ref)
+    for index in range(60):
+        assert metadata['sensor_temp_{0}'.format(index)] == expected
+        assert metadata['sensor_user_{0}'.format(index)] == index
+    for index in range(100, 110):
+        assert metadata['sensor_user_{0}'.format(index)] == index
+    assert 'sensor_user_60' not in metadata
+    assert metadata['camera_sqm_raw_mag'] == 21.3
+
+
+@pytest.mark.parametrize('backend', ['opencv', 'pillow'])
+def test_real_image_label_bounds_keep_saved_charts_below_text(backend):
+    import cv2
+    import numpy
+    from PIL import Image, ImageDraw, ImageFont
+    from matplotlib import get_data_path
+
+    tree = ast.parse((ROOT / 'indi_allsky/processing.py').read_text(encoding='utf-8'))
+    method = next(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == 'drawText_' + backend)
+    namespace = {'cv2': cv2, 'ImageFont': ImageFont}
+    exec(compile(ast.Module(body=[method], type_ignores=[]), 'production-image-label-bounds', 'exec'), namespace)
+    config = {'CHARTS': {'CUSTOM': [], 'SAVED_IMAGE_IDS': ['temp']}, 'TEXT_PROPERTIES': {
+        'FONT_FACE': 'FONT_HERSHEY_SIMPLEX', 'FONT_AA': 'LINE_AA', 'FONT_SCALE': .5,
+        'FONT_THICKNESS': 1, 'FONT_OUTLINE': True}}
+    processor = SimpleNamespace(config=config, chart_label_bounds=[])
+    image = numpy.zeros((480, 640, 3), dtype=numpy.uint8)
+    if backend == 'opencv':
+        namespace[method.name](processor, image, 'Exposure 15s', (10, 160), (255, 255, 255))
+    else:
+        pillow_image = Image.fromarray(image)
+        font = Path(get_data_path()) / 'fonts/ttf/DejaVuSans.ttf'
+        namespace[method.name](processor, ImageDraw.Draw(pillow_image), 'Exposure 15s', font, 16,
+                               (10, 160), (255, 255, 255))
+        image = numpy.array(pillow_image)
+    assert len(processor.chart_label_bounds) == 1
+    bottom = processor.chart_label_bounds[0][3]
+    assert bottom >= 160
+    original = image.copy()
+    render_saved_charts(image, config, [], label_bounds=processor.chart_label_bounds)
+    assert numpy.array_equal(image[:bottom + 8], original[:bottom + 8])
+    assert not numpy.array_equal(image, original)
+
+
+def test_capture_composites_saved_charts_after_labels_and_before_final_image_write():
+    tree = ast.parse((ROOT / 'indi_allsky/image.py').read_text(encoding='utf-8'))
+    owner = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == 'ImageWorker')
+    method = next(node for node in owner.body if isinstance(node, ast.FunctionDef) and node.name == 'processImage')
+    calls = {node.func.attr: node.lineno for node in ast.walk(method)
+             if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+             and node.func.attr in ('label_image', 'apply_saved_charts', 'write_img', 'save_longterm_keogram_data')}
+    assert calls['save_longterm_keogram_data'] < calls['label_image'] < calls['apply_saved_charts'] < calls['write_img']
 
 
 def test_chart_and_image_visibility_are_independent():
-    settings = validate_chart_configuration({'CUSTOM': [], 'VISIBLE_IDS': [], 'OVERLAY_IDS': ['stars', 'temp']})
+    settings = validate_chart_configuration({'CUSTOM': [], 'VISIBLE_IDS': [], 'OVERLAY_IDS': ['stars', 'temp'],
+                                            'SAVED_IMAGE_IDS': ['gain', 'temp']})
     assert settings['VISIBLE_IDS'] == []
     assert settings['OVERLAY_IDS'] == ['stars', 'temp']
+    assert settings['SAVED_IMAGE_IDS'] == ['gain', 'temp']
 
 
 def test_y_axis_defaults_preserve_suggested_legacy_scaling():
@@ -142,6 +417,7 @@ def test_invalid_axis_limits_are_rejected(limits):
 
 @pytest.mark.parametrize('settings', [
     {'OVERLAY_IDS': ['histogram']}, {'OVERLAY_IDS': ['stars', 'stars']},
+    {'SAVED_IMAGE_IDS': ['histogram']}, {'SAVED_IMAGE_IDS': ['unknown']},
     {'VISIBLE_IDS': ['unknown']}, {'OVERLAY_WIDTH': 999}, {'OVERLAY_TOP': -1},
     {'OVERLAY_HISTORY_SECONDS': 86401}, {'OVERLAY_OPACITY': True},
 ])
@@ -332,7 +608,7 @@ def test_persistence_accepts_legacy_and_empty_chart_selections(value):
     production_config_validation({'CHARTS': {'CUSTOM': value, 'VISIBLE_IDS': value}})
 
 
-@pytest.mark.parametrize('key', ['CUSTOM', 'VISIBLE_IDS'])
+@pytest.mark.parametrize('key', ['CUSTOM', 'VISIBLE_IDS', 'SAVED_IMAGE_IDS'])
 @pytest.mark.parametrize('value', ['invalid', {}, 1, True])
 def test_persistence_rejects_incorrect_chart_collection_types(key, value):
     from indi_allsky.exceptions import ConfigSaveException
@@ -341,13 +617,21 @@ def test_persistence_rejects_incorrect_chart_collection_types(key, value):
         production_config_validation({'CHARTS': {key: value}})
 
 
+def test_saved_image_selection_requires_a_list_in_persistence():
+    from indi_allsky.exceptions import ConfigSaveException
+
+    production_config_validation({'CHARTS': {'SAVED_IMAGE_IDS': []}})
+    with pytest.raises(ConfigSaveException):
+        production_config_validation({'CHARTS': {'SAVED_IMAGE_IDS': None}})
+
+
 def production_chart_settings_view(application, configuration, save):
     from indi_allsky.exceptions import ConfigSaveException
     from flask import request, jsonify
     from flask.views import View
     from flask_login import LoginManager, UserMixin, current_user, login_required
     from flask_wtf import FlaskForm
-    from wtforms import HiddenField
+    from wtforms import HiddenField, BooleanField
     from wtforms.validators import DataRequired, ValidationError
 
     login = LoginManager(application)
@@ -366,15 +650,23 @@ def production_chart_settings_view(application, configuration, save):
         def __init__(self, **kwargs):
             self.indi_allsky_config = configuration
             self._indi_allsky_config_obj = SimpleNamespace(save=save)
+            self._miscDb = application.extensions['chart_preview_state']
 
+    session = MagicMock()
+    task_factory = MagicMock(side_effect=lambda **values: SimpleNamespace(**values))
+    application.extensions['chart_preview_db_session'] = session
+    application.extensions['chart_preview_tasks'] = task_factory
+    application.extensions['chart_preview_state'] = SimpleNamespace(setState=MagicMock())
     forms = ast.parse((ROOT / 'indi_allsky/flask/forms.py').read_text(encoding='utf-8'))
     validator = next(node for node in forms.body if isinstance(node, ast.FunctionDef) and node.name == 'CHARTS__CONFIG_validator')
     form = next(node for node in forms.body if isinstance(node, ast.ClassDef) and node.name == 'IndiAllskyChartConfigForm')
-    namespace = {'json': json, 'FlaskForm': FlaskForm, 'HiddenField': HiddenField, 'DataRequired': DataRequired,
+    namespace = {'json': json, 'FlaskForm': FlaskForm, 'HiddenField': HiddenField, 'BooleanField': BooleanField, 'DataRequired': DataRequired,
                  'ValidationError': ValidationError, '__package__': 'indi_allsky.flask', 'app': application,
                  'request': request, 'jsonify': jsonify, 'current_user': current_user, 'login_required': login_required,
                  'BaseView': PreviewBaseView, 'validate_chart_configuration': validate_chart_configuration,
-                 'ConfigSaveException': ConfigSaveException}
+                 'ConfigSaveException': ConfigSaveException, 'db': SimpleNamespace(session=session),
+                 'IndiAllSkyDbTaskQueueTable': task_factory, 'TaskQueueQueue': SimpleNamespace(MAIN='main'),
+                 'TaskQueueState': SimpleNamespace(MANUAL='manual'), 'constants': SimpleNamespace(STATUS_RELOADING='reloading')}
     exec(compile(ast.Module(body=[validator, form], type_ignores=[]), 'production-chart-settings-form', 'exec'), namespace)
     views = ast.parse((ROOT / 'indi_allsky/flask/views.py').read_text(encoding='utf-8'))
     owner = next(node for node in views.body if isinstance(node, ast.ClassDef) and node.name == 'AjaxChartConfigView')
@@ -457,13 +749,16 @@ def create_chart_preview(login_disabled=True, save_error=None, csrf_enabled=Fals
     def canvas_page():
         return render_template('index_canvas.html', **context())
 
-    @blueprint.route('/js/charts', endpoint='js_chart_view')
-    def chart_response():
-        readings = [SimpleNamespace(createDate=datetime(2026, 10, 4, 20, 0) + timedelta(seconds=index * 25),
+    def preview_readings():
+        return [SimpleNamespace(createDate=datetime(2026, 10, 4, 20, 0) + timedelta(seconds=index * 25),
                     temp=12 + index / 50, stars_rolling=40 + index % 12, jsqm=100 + index % 7, gain=50,
                     exposure=15, detections=index % 6 == 0,
                     data={'sensor_user_{0}'.format(source): -27 + index / 20 if source == 0 else source * 2 + index % 7 for source in range(11)})
                     for index in range(36)]
+
+    @blueprint.route('/js/charts', endpoint='js_chart_view')
+    def chart_response():
+        readings = preview_readings()
         response, query = production_chart_handler(configuration, readings, dict(request.args))
         if request.args.get('histogram', '1') == '1':
             response['chart_data']['histogram']['gray'] = [{'x': str(index), 'y': 100 - abs(index - 70)} for index in range(100)]
@@ -475,6 +770,15 @@ def create_chart_preview(login_disabled=True, save_error=None, csrf_enabled=Fals
 
     @blueprint.route('/image.jpg')
     def image_response():
+        if configuration['CHARTS']['SAVED_IMAGE_IDS']:
+            import cv2
+            from io import BytesIO
+
+            image = cv2.imread(str(ROOT / 'content/20210421_043940.jpg'))
+            image = render_saved_charts(image, configuration, preview_readings(), label_bounds=[(10, 10, 360, 128)])
+            success, encoded = cv2.imencode('.jpg', image)
+            assert success
+            return send_file(BytesIO(encoded.tobytes()), mimetype='image/jpeg')
         return send_file(ROOT / 'content/20210421_043940.jpg')
 
     application.register_blueprint(blueprint)
@@ -486,6 +790,9 @@ def test_manage_charts_targets_settings_below_the_charts_without_a_configuration
     assert 'href="#chart-settings"' in page
     assert page.index('data-chart-grid') < page.index('id="chart-settings"')
     assert 'data-chart-editor' in page
+    assert page.index('Save Configuration') < page.index('data-chart-editor')
+    assert page.index('name="RELOAD_ON_SAVE"') < page.index('data-chart-editor')
+    assert 'Save charts' not in page
     assert 'nav-charts-tab' not in (ROOT / 'indi_allsky/flask/templates/config.html').read_text(encoding='utf-8')
 
 
@@ -592,18 +899,74 @@ def test_chart_only_save_restores_previous_settings_when_persistence_fails():
     assert application.extensions['chart_preview_config'] == previous
 
 
-def test_on_image_chart_save_passes_actual_persistence_validation():
+@pytest.mark.parametrize('browser, saved', [(True, False), (False, True), (True, True), (False, False)])
+def test_on_image_chart_save_passes_actual_persistence_validation(browser, saved):
     application = create_chart_preview()
     configuration = application.extensions['chart_preview_config']
     save = application.extensions['chart_preview_save']
     settings = chart_configuration({'CHARTS': {'CUSTOM': [{'id': 'sky', 'source': 'sensor_user_0'}],
-                                               'VISIBLE_IDS': ['sky'], 'OVERLAY_IDS': ['sky']}})
+                                               'VISIBLE_IDS': ['sky'], 'OVERLAY_IDS': ['sky'] if browser else [],
+                                               'SAVED_IMAGE_IDS': ['sky'] if saved else []}})
     response = application.test_client().post('/ajax/charts', json={'CHARTS__CONFIG': json.dumps(settings)})
     assert response.status_code == 200, response.get_data(as_text=True)
     assert configuration['CHARTS']['CUSTOM'] == settings['CUSTOM']
     assert configuration['CHARTS']['VISIBLE_IDS'] == ['sky']
-    assert configuration['CHARTS']['OVERLAY_IDS'] == ['sky']
+    assert configuration['CHARTS']['OVERLAY_IDS'] == (['sky'] if browser else [])
+    assert configuration['CHARTS']['SAVED_IMAGE_IDS'] == (['sky'] if saved else [])
     save.assert_called_once_with('system', 'Updated chart settings')
+    latest = application.test_client().get('/latest').get_data(as_text=True)
+    assert ('data-chart-options="chart-overlay-options"' in latest) is browser
+    if browser:
+        assert 'data-saved-charts="{0}"'.format('true' if saved else 'false') in latest
+    image = application.test_client().get('/image.jpg')
+    assert image.status_code == 200
+    assert (image.data != (ROOT / 'content/20210421_043940.jpg').read_bytes()) is saved
+
+
+@pytest.mark.parametrize('reload', [None, False, True])
+def test_chart_save_reloads_capture_only_when_requested(reload):
+    application = create_chart_preview()
+    payload = {'CHARTS__CONFIG': json.dumps(chart_configuration({'CHARTS': {'CUSTOM': []}}))}
+    if reload is not None:
+        payload['RELOAD_ON_SAVE'] = reload
+    response = application.test_client().post('/ajax/charts', json=payload)
+    assert response.status_code == 200
+    session = application.extensions['chart_preview_db_session']
+    tasks = application.extensions['chart_preview_tasks']
+    state = application.extensions['chart_preview_state']
+    if reload:
+        state.setState.assert_called_once_with('STATUS', 'reloading')
+        tasks.assert_called_once_with(queue='main', state='manual', priority=100, data={'action': 'reload'})
+        session.add.assert_called_once()
+        assert session.add.call_args.args[0].data == {'action': 'reload'}
+        session.commit.assert_called_once()
+        assert 'Reloading indi-allsky service' in response.json['success-message']
+    else:
+        state.setState.assert_not_called()
+        tasks.assert_not_called()
+        session.commit.assert_not_called()
+
+
+@pytest.mark.parametrize('reload', ['false', 1, None, {}])
+def test_chart_save_rejects_non_boolean_reload_values(reload):
+    application = create_chart_preview()
+    response = application.test_client().post('/ajax/charts', json={
+        'CHARTS__CONFIG': json.dumps(chart_configuration({})), 'RELOAD_ON_SAVE': reload})
+    assert response.status_code == 400
+    assert 'RELOAD_ON_SAVE' in response.json
+    application.extensions['chart_preview_save'].assert_not_called()
+    application.extensions['chart_preview_tasks'].assert_not_called()
+
+
+def test_failed_chart_save_does_not_reload_capture():
+    from indi_allsky.exceptions import ConfigSaveException
+
+    application = create_chart_preview(save_error=ConfigSaveException('Save failed'))
+    response = application.test_client().post('/ajax/charts', json={
+        'CHARTS__CONFIG': json.dumps(chart_configuration({})), 'RELOAD_ON_SAVE': True})
+    assert response.status_code == 400
+    application.extensions['chart_preview_tasks'].assert_not_called()
+    application.extensions['chart_preview_state'].setState.assert_not_called()
 
 
 def test_real_chart_templates_render_and_preview_settings_round_trip():

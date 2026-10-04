@@ -3,6 +3,7 @@ import io
 import json
 import re
 from pathlib import Path
+from types import SimpleNamespace
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -31,6 +32,7 @@ from fractions import Fraction
 
 from . import constants
 from . import asi676mc
+from .charts import chart_configuration, render_saved_charts
 
 from .processing import ImageProcessor
 from .panorama import panoramaSourceCircleClipped
@@ -784,6 +786,8 @@ class ImageWorker(Process):
 
         self.image_processor.label_image(adsb_aircraft_list=self.adsb_aircraft_list, custom_hook_data=custom_hook_data)
 
+        self.apply_saved_charts(i_ref, camera)
+
 
         processing_elapsed_s = time.time() - processing_start
         logger.info('Image processed in %0.4f s', processing_elapsed_s)
@@ -840,19 +844,7 @@ class ImageWorker(Process):
             }
 
 
-            image_add_data = {
-                'uptime'            : i_ref.uptime,
-                'kpindex'           : i_ref.kpindex,
-                'ovation_max'       : i_ref.ovation_max,
-                'aurora_mag_bt'     : i_ref.aurora_mag_bt,
-                'aurora_mag_gsm_bz' : i_ref.aurora_mag_gsm_bz,
-                'aurora_plasma_density' : i_ref.aurora_plasma_density,
-                'aurora_plasma_speed'   : i_ref.aurora_plasma_speed,
-                'aurora_plasma_temp'    : i_ref.aurora_plasma_temp,
-                'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
-                'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
-                'camera_sqm_raw_mag' : self.image_processor.camera_sqm_raw_mag,
-            }
+            image_add_data = self.get_chart_metadata(i_ref)
 
             asi676mc_repair_result = i_ref.asi676mc_repair_result
             if (
@@ -884,26 +876,6 @@ class ImageWorker(Process):
             ):
                 image_add_data['asi676mc_repair_status'] = asi676mc_repair_result['status']
                 image_add_data['asi676mc_repair'] = dict(asi676mc_repair_result)
-
-
-            for i in range(60):
-                v = self.sensors_temp_av[i]
-
-                if self.config.get('TEMP_DISPLAY') == 'f':
-                    v_temp = (v * 9.0 / 5.0) + 32
-                elif self.config.get('TEMP_DISPLAY') == 'k':
-                    v_temp = v + 273.15
-                else:
-                    v_temp = v
-
-                image_add_data['sensor_temp_{0:d}'.format(i)] = v_temp
-
-
-            for i in range(60):
-                image_add_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
-
-            for i in range(100, 110):
-                image_add_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
 
 
             if self.adsb_aircraft_list:
@@ -1288,6 +1260,61 @@ class ImageWorker(Process):
         db.session.commit()
 
         self.upload_q.put({'task_id' : upload_task.id})
+
+
+    def get_chart_metadata(self, i_ref):
+        metadata = {key: getattr(i_ref, key) for key in (
+            'uptime', 'kpindex', 'ovation_max', 'aurora_mag_bt', 'aurora_mag_gsm_bz',
+            'aurora_plasma_density', 'aurora_plasma_speed', 'aurora_plasma_temp',
+            'aurora_n_hemi_gw', 'aurora_s_hemi_gw',
+        )}
+        metadata['camera_sqm_raw_mag'] = self.image_processor.camera_sqm_raw_mag
+        for index in range(60):
+            temperature = self.sensors_temp_av[index]
+            if self.config.get('TEMP_DISPLAY') == 'f':
+                temperature = temperature * 9.0 / 5.0 + 32
+            elif self.config.get('TEMP_DISPLAY') == 'k':
+                temperature += 273.15
+            metadata['sensor_temp_{0}'.format(index)] = temperature
+            metadata['sensor_user_{0}'.format(index)] = self.sensors_user_av[index]
+        for index in range(100, 110):
+            metadata['sensor_user_{0}'.format(index)] = self.sensors_user_av[index]
+        return metadata
+
+
+    def apply_saved_charts(self, i_ref, camera):
+        if not self.config.get('CHARTS', {}).get('SAVED_IMAGE_IDS') or self.config.get('FOCUS_MODE', False):
+            return
+        try:
+            settings = chart_configuration(self.config)
+            readings = list(IndiAllSkyDbImageTable.query.with_entities(
+                IndiAllSkyDbImageTable.createDate,
+                IndiAllSkyDbImageTable.sqm.label('jsqm'),
+                func.avg(IndiAllSkyDbImageTable.stars).over(
+                    order_by=IndiAllSkyDbImageTable.createDate, rows=(-5, 0)).label('stars_rolling'),
+                IndiAllSkyDbImageTable.stars,
+                IndiAllSkyDbImageTable.temp,
+                IndiAllSkyDbImageTable.gain,
+                IndiAllSkyDbImageTable.exposure,
+                IndiAllSkyDbImageTable.detections,
+                IndiAllSkyDbImageTable.data,
+            ).filter(
+                IndiAllSkyDbImageTable.camera_id == i_ref.camera_id,
+                IndiAllSkyDbImageTable.createDate > i_ref.exp_date - timedelta(seconds=settings['OVERLAY_HISTORY_SECONDS']),
+                IndiAllSkyDbImageTable.createDate < i_ref.exp_date,
+            ).order_by(IndiAllSkyDbImageTable.createDate.asc()))
+            stars = [reading.stars for reading in readings[-5:] if reading.stars is not None] + [len(i_ref.stars)]
+            readings.append(SimpleNamespace(
+                createDate=i_ref.exp_date, jsqm=i_ref.sqm_value, stars_rolling=sum(stars) / len(stars),
+                temp=self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP], gain=i_ref.gain,
+                exposure=i_ref.exposure, detections=len(i_ref.lines), data=self.get_chart_metadata(i_ref),
+            ))
+            self.image_processor.image = render_saved_charts(
+                self.image_processor.image, self.config, readings, camera.data,
+                label_bounds=getattr(self.image_processor, 'chart_label_bounds', ()),
+            )
+        except Exception:
+            logger.exception('Unable to render saved-image charts; retaining the capture image')
 
 
     def getSqmData(self, camera_id):

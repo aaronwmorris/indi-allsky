@@ -114,6 +114,7 @@ def validate_chart_configuration(settings):
     for key, available, default in (
         ('VISIBLE_IDS', identifiers + ['histogram'], identifiers + ['histogram']),
         ('OVERLAY_IDS', identifiers, []),
+        ('SAVED_IMAGE_IDS', identifiers, []),
     ):
         selected = settings.get(key, default)
         if selected is None and key == 'VISIBLE_IDS':
@@ -150,7 +151,7 @@ def chart_configuration(config, camera_data=None, is_local=True):
                 identifiers[definition['id']] = definition['id']
             elif match:
                 identifiers[definition['id']] = match['id']
-        for key in ('VISIBLE_IDS', 'OVERLAY_IDS'):
+        for key in ('VISIBLE_IDS', 'OVERLAY_IDS', 'SAVED_IMAGE_IDS'):
             if settings.get(key) is not None:
                 settings[key] = list(dict.fromkeys(identifiers[identifier] for identifier in settings[key] if identifier in identifiers))
         settings['AXIS_LIMITS'] = {
@@ -183,3 +184,102 @@ def build_chart_data(readings, definitions, temperature_display='c', selected_id
             value = values.get(source) if source in values else metadata.get(source)
             result[definition['id']].append({'x': timestamp, 'y': chart_value(value)})
     return result
+
+
+def render_saved_charts(image, config, readings, camera_data=None, label_bounds=()):
+    if not config.get('CHARTS', {}).get('SAVED_IMAGE_IDS'):
+        return image
+
+    import logging
+    import textwrap
+    import numpy
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+    from matplotlib.figure import Figure
+    from matplotlib.ticker import MaxNLocator
+
+    settings = chart_configuration(config)
+    definitions = [definition for definition in chart_definitions(config, camera_data, is_local=True)
+                   if definition['id'] in settings['SAVED_IMAGE_IDS']]
+    data = build_chart_data(readings, definitions, config.get('TEMP_DISPLAY'))
+    if image.ndim == 2:
+        image = numpy.repeat(image[:, :, None], 3, axis=2)
+    image_height, image_width = image.shape[:2]
+    width = min(settings['OVERLAY_WIDTH'], image_width - 32)
+    height = 112
+    remaining = iter(definitions)
+    definition = next(remaining, None)
+    if width >= 160:
+        for left in range(16, image_width - width + 1, width + 8):
+            labels = sorted((bounds for bounds in label_bounds
+                             if bounds[0] < left + width and bounds[2] > left), key=lambda bounds: bounds[1])
+            top = max(16, settings['OVERLAY_TOP'])
+            for bounds in labels:
+                if bounds[1] < max(top, image_height // 2):
+                    top = max(top, bounds[3] + 8)
+            bottom = min([image_height - 16] + [bounds[1] - 8 for bounds in labels if bounds[1] >= top])
+            while definition is not None and top + height <= bottom:
+                figure = Figure(figsize=(width / 100, height / 100), dpi=100,
+                                facecolor=(12 / 255, 18 / 255, 20 / 255, settings['OVERLAY_OPACITY'] / 100))
+                canvas = FigureCanvasAgg(figure)
+                try:
+                    points = data[definition['id']]
+                    values = [point['y'] if point['y'] is not None else numpy.nan for point in points]
+                    latest = points[-1]['y'] if points else None
+                    caption = textwrap.shorten(definition['label'], width=max(8, (width - 112) // 6), placeholder='...')
+                    figure.text(.045, .86, caption, color='#f4f7f6', fontsize=8, parse_math=False)
+                    figure.text(.96, .86, format(latest, '.4g') if latest is not None else '---',
+                                color='#f4f7f6', fontsize=9, ha='right')
+                    axes = figure.add_axes((.20, .25, .74, .42), facecolor='none')
+                    if definition['id'] == 'detection':
+                        axes.bar(range(len(points)), values, color='#38bdf8', width=.8)
+                    else:
+                        axes.plot(range(len(points)), values, color='#38bdf8', linewidth=1,
+                                  marker='o', markersize=1.8)
+                    axes.yaxis.set_major_locator(MaxNLocator(nbins=2))
+                    axes.ticklabel_format(axis='y', style='sci', scilimits=(-3, 4), useOffset=False)
+                    axes.yaxis.get_offset_text().set_fontsize(6)
+                    axes.yaxis.get_offset_text().set_color('#b9c4c4')
+                    lower, upper = axes.get_ylim()
+                    if definition['min'] is not None:
+                        lower = min(lower, definition['min'])
+                    bounds = settings['AXIS_LIMITS'].get(definition['id'], {})
+                    if bounds.get('min') is not None:
+                        lower = bounds['min']
+                        if bounds.get('max') is None and upper <= lower:
+                            upper = lower + max(abs(lower) * .05, 1)
+                    if bounds.get('max') is not None:
+                        upper = bounds['max']
+                        if bounds.get('min') is None and lower >= upper:
+                            lower = upper - max(abs(upper) * .05, 1)
+                    axes.set_ylim(lower, upper)
+                    axes.set_xlim(-.5, max(len(points) - .5, .5))
+                    ticks = list(dict.fromkeys((0, len(points) - 1))) if points else []
+                    axes.set_xticks(ticks)
+                    axes.set_xticklabels([points[index]['x'] for index in ticks])
+                    if len(ticks) > 1:
+                        axes.get_xticklabels()[0].set_horizontalalignment('left')
+                        axes.get_xticklabels()[-1].set_horizontalalignment('right')
+                    axes.tick_params(colors='#b9c4c4', labelsize=6.5, length=2, width=.4, pad=2)
+                    axes.set_axisbelow(True)
+                    axes.grid(axis='y', color='#cbd5d3', alpha=.17, linewidth=.5)
+                    for name, spine in axes.spines.items():
+                        spine.set_visible(name in ('left', 'bottom'))
+                        spine.set_color('#536564')
+                        spine.set_linewidth(.4)
+                    if not any(point['y'] is not None for point in points):
+                        axes.text(.5, .5, 'No data', transform=axes.transAxes, ha='center', va='center',
+                                  fontsize=7, color='#b9c4c4')
+                    canvas.draw()
+                    rgba = numpy.asarray(canvas.buffer_rgba())
+                    alpha = rgba[:, :, 3:4].astype(numpy.float32) / 255
+                    region = image[top:top + height, left:left + width]
+                    region[:] = numpy.rint(rgba[:, :, :3][:, :, ::-1] * alpha + region * (1 - alpha)).astype(numpy.uint8)
+                finally:
+                    figure.clear()
+                top += height + 8
+                definition = next(remaining, None)
+            if definition is None:
+                break
+    if definition is not None:
+        logging.getLogger('indi_allsky').warning('Not all saved-image charts fit; reduce chart width or top offset')
+    return image
