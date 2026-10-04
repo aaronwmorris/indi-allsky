@@ -5276,7 +5276,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__FC37_ACTIVE_LOW     = BooleanField('Rain Sensor FC-37 - Invert logic')
     TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE      = BooleanField('Enable Cloudiness Index')
     TEMP_SENSOR__CLOUDINESS_INDEX_SHOW_TUNING = BooleanField('Optional Index Tuning')
-    TEMP_SENSOR__CLOUDINESS_INDEX_HYSTERESIS  = BooleanField('Hysteresis (20% History)', default=False)
+    TEMP_SENSOR__CLOUDINESS_INDEX_HYSTERESIS  = BooleanField('Index Smoothing (20% History)', default=False)
     TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR      = SelectField('Cloudiness Sensor', choices=[], validators=[CLOUDINESS_INDEX_SENSOR_validator])
     TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR = BooleanField('Use External Ambient Sensor')
     TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR = SelectField('Ground Temperature Sensor', choices=[], validate_choice=False, validators=[CLOUDINESS_INDEX_GROUND_SENSOR_validator])

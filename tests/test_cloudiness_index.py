@@ -71,6 +71,7 @@ def test_cloudiness_hysteresis_configuration_and_form_default_to_off():
     _exec_source('flask/forms.py', [field], namespace)
     form_type = type('CloudinessHysteresisForm', (Form,), {field_name: namespace[field_name]})
     assert getattr(form_type(), field_name).data is False
+    assert getattr(form_type(), field_name).label.text == 'Index Smoothing (20% History)'
 
 
 def _config(**temp_sensor):
