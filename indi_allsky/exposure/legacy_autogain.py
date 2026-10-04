@@ -1,4 +1,4 @@
-#import math
+import math
 import logging
 
 from .. import constants
@@ -70,7 +70,12 @@ class IndiAllSky_Exposure_Legacy_AutoGain(IndiAllSky_Exposure_Base):
 
 
         try:
-            auto_gain_idx = self.auto_gain_step_list.index(current_gain)
+            # Shared gain storage has 0.001 precision and can lose the last unit
+            # to floating-point truncation. Match that precision, not exact floats.
+            auto_gain_idx = min(range(len(self.auto_gain_step_list)),
+                                key=lambda i: abs(self.auto_gain_step_list[i] - current_gain))
+            if not math.isclose(self.auto_gain_step_list[auto_gain_idx], current_gain, rel_tol=0, abs_tol=.001000001):
+                raise ValueError('Gain is outside the ladder precision')
         except ValueError:
             # fallback to min if gain does not match
             logger.error('Current gain not found in list, reset to minimum gain')
@@ -85,7 +90,7 @@ class IndiAllSky_Exposure_Legacy_AutoGain(IndiAllSky_Exposure_Base):
             gain_delta = 0.0
         elif next_exposure > current_exposure:
             # exposure/gain needs to increase
-            if current_gain == self.auto_gain_step_list[-1]:
+            if auto_gain_idx == len(self.auto_gain_step_list) - 1:
                 # already at max gain, increase exposure
                 next_gain = current_gain
                 exposure_delta = next_exposure - current_exposure
@@ -109,7 +114,7 @@ class IndiAllSky_Exposure_Legacy_AutoGain(IndiAllSky_Exposure_Base):
 
         else:
             # exposure/gain needs to decrease
-            if current_gain == self.auto_gain_step_list[0]:
+            if auto_gain_idx == 0:
                 # already at minimum gain, decrease exposure
                 next_gain = current_gain
                 exposure_delta = next_exposure - current_exposure
@@ -158,6 +163,8 @@ class IndiAllSky_Exposure_Legacy_AutoGain(IndiAllSky_Exposure_Base):
             self._expUtils.GAIN_MAX_NIGHT,
             auto_gain_levels,
         )
+        # Rounded steps must be recognised on the next captured frame.
+        self.auto_gain_step_list = sorted(set(self._dark_gain(gain) for gain in self.auto_gain_step_list))
 
 
         self.auto_gain_exposure_cutoff_high = self._expUtils.EXPOSURE_MAX - 0.5

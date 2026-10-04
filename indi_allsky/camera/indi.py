@@ -1301,6 +1301,14 @@ class IndiClient(PyIndi.BaseClient):
             'max'     : gain_ctl[index].max,
             'step'    : gain_ctl[index].step,
             'format'  : gain_ctl[index].format,
+            # SDK command precision; INDI's numeric step can be a GUI increment.
+            'quantum' : 1.0 if indi_exec in (
+                'indi_asi_ccd', 'indi_asi_single_ccd',
+                'indi_playerone_ccd', 'indi_playerone_single_ccd',
+                'indi_svbony_ccd', 'indi_svbonycam_ccd', 'indi_sv305_ccd',
+                'indi_toupcam_ccd', 'indi_altair_ccd', 'indi_altaircam_ccd',
+                'indi_nncam_ccd', 'indi_tscam_ccd', 'indi_ogmacam_ccd', 'indi_omegonprocam_ccd',
+            ) else 0.0,
             'values'  : [],
         }
 

@@ -1363,6 +1363,11 @@ class CaptureWorker(Process):
             gain_sqm = config_sqm_gain
 
 
+        gain_normalizer = CameraCapabilities.from_ccd_info(ccd_info).snap_gain
+        gain_night, gain_moonmode, gain_day, gain_sqm = map(
+            gain_normalizer, (gain_night, gain_moonmode, gain_day, gain_sqm),
+        )
+
         # Validate binning settings
         ccd_min_binning = int(ccd_info['BINNING_INFO']['min'])
         ccd_max_binning = int(ccd_info['BINNING_INFO']['max'])
@@ -1527,6 +1532,7 @@ class CaptureWorker(Process):
         logger.info('Default CCD exposure: %0.6f', ccd_exposure_default)
 
 
+        ccd_gain_default = gain_normalizer(ccd_gain_default)
         self._expUtils.GAIN_CURRENT = ccd_gain_default
         self._expUtils.GAIN_NEXT = ccd_gain_default
 

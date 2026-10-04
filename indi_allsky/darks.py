@@ -823,6 +823,7 @@ class IndiAllSkyDarks(object):
 
 
     def shoot(self, exposure, gain, binning, sync=True, timeout=None):
+        gain = CameraCapabilities.from_ccd_info(self.ccd_info or {}).snap_gain(gain)
         logger.info('Taking %0.6fs exposure (gain %0.3f / bin %d)', exposure, gain, binning)
 
         self.indiclient.setCcdExposure(exposure, gain, binning, sync=sync, timeout=timeout)

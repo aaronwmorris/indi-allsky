@@ -105,12 +105,13 @@ class CameraCapabilities:
         exposure_info = ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}) or {}
         ccd_frame = ccd_info.get('CCD_FRAME', {}) or {}
         ccd_sensor_info = ccd_info.get('CCD_INFO', {}) or {}
+        gain_quantum = _positive_optional_float(gain_info.get('quantum'))
 
         return cls(
             gain_min=_optional_float(gain_info.get('min')),
             gain_max=_optional_float(gain_info.get('max')),
-            gain_step=_positive_optional_float(gain_info.get('step')),
-            gain_step_is_quantum=bool(gain_info.get('step_is_quantum', False)),
+            gain_step=gain_quantum or _positive_optional_float(gain_info.get('step')),
+            gain_step_is_quantum=bool(gain_quantum or gain_info.get('step_is_quantum', False)),
             gain_format=_optional_string(gain_info.get('format')),
             gain_values=_normalise_float_values(gain_info.get('values', ())),
             gain_values_known='values' in gain_info,
