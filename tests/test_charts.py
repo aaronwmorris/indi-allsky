@@ -1126,7 +1126,7 @@ def test_manage_charts_targets_settings_below_the_charts_without_a_configuration
 
 
 @pytest.mark.parametrize('saved_enabled', [False, True])
-def test_editor_selects_reload_for_saved_chart_edits_and_preserves_opt_out(saved_enabled):
+def test_editor_preserves_manual_reload_choice_for_chart_edits(saved_enabled):
     from urllib.parse import urlsplit
 
     playwright = pytest.importorskip('playwright.sync_api')
@@ -1155,37 +1155,32 @@ def test_editor_selects_reload_for_saved_chart_edits_and_preserves_opt_out(saved
             assert not reload.is_checked()
             row = page.locator('.chart-editor-row[data-chart-id=custom_0]')
             row.locator('input[type=text]').fill('Renamed saved chart')
-            assert reload.is_checked() is saved_enabled
-            reload.uncheck()
+            assert not reload.is_checked()
+            reload.check()
             source = row.locator('select')
             alternative = source.evaluate('(select) => [...select.options].find(option => option.value !== select.value).value')
             source.select_option(alternative)
-            assert reload.is_checked() is saved_enabled
+            assert reload.is_checked()
             reload.uncheck()
             row.locator('summary').click()
             row.locator('[data-axis-limit=min]').fill('-40')
-            assert reload.is_checked() is saved_enabled
-            reload.uncheck()
+            assert not reload.is_checked()
             row.locator('summary').click()
             row.get_by_role('button', name='Move chart down', exact=True).click()
-            assert reload.is_checked() is saved_enabled
-            reload.uncheck()
+            assert not reload.is_checked()
             for destination in ('Browser', 'History'):
                 row.locator('label').filter(has_text=destination).locator('input').click()
-                assert reload.is_checked() is saved_enabled
-                reload.uncheck()
+                assert not reload.is_checked()
             preference = page.locator('[data-chart-preference=OVERLAY_WIDTH]')
             preference.fill('300')
             preference.press('Tab')
-            assert reload.is_checked() is saved_enabled
-            reload.uncheck()
+            assert not reload.is_checked()
             browser_history = page.locator('[data-chart-preference=OVERLAY_HISTORY_SECONDS]')
             saved_history = page.locator('[data-chart-preference=SAVED_IMAGE_HISTORY_SECONDS]')
             assert browser_history.input_value() == '900'
             saved_history.select_option('3600')
             assert browser_history.input_value() == '900'
-            assert reload.is_checked() is saved_enabled
-            reload.uncheck()
+            assert not reload.is_checked()
             opacity = page.locator('[data-chart-preference=OVERLAY_OPACITY]')
             opacity_value = page.locator('[data-chart-opacity-value]')
             assert opacity_value.inner_text() == '30%'
@@ -1195,8 +1190,7 @@ def test_editor_selects_reload_for_saved_chart_edits_and_preserves_opt_out(saved
             assert opacity_value.inner_text() == '31%'
             assert opacity.get_attribute('title') == '31%'
             assert opacity.get_attribute('aria-valuetext') == '31%'
-            assert reload.is_checked() is saved_enabled
-            reload.uncheck()
+            assert not reload.is_checked()
             with page.expect_navigation(wait_until='networkidle'):
                 page.get_by_role('button', name='Save Configuration', exact=True).click()
             application.extensions['chart_preview_tasks'].assert_not_called()
@@ -1209,11 +1203,10 @@ def test_editor_selects_reload_for_saved_chart_edits_and_preserves_opt_out(saved
             assert not reload.is_checked()
             saved = page.locator('.chart-editor-row[data-chart-id=custom_0] label').filter(has_text='Saved image').locator('input')
             saved.click()
+            assert not reload.is_checked()
+            reload.check()
+            saved.click()
             assert reload.is_checked()
-            if not saved_enabled:
-                reload.uncheck()
-                saved.click()
-                assert reload.is_checked()
         finally:
             browser.close()
 

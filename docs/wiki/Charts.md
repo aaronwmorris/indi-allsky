@@ -2,11 +2,10 @@
 
 Open **Charts > Manage charts** to jump to the settings below the chart grid.
 Add, remove, or reorder custom charts, then select **Save Configuration** at the
-top of the settings. Changing saved-image selections, or any chart setting while
-saved-image charts are enabled, automatically checks **Reload on Save** so the
-capture worker applies changes to names, sources, axes, ordering and preferences.
-Opening the settings alone does not select reload. Uncheck it to defer
-capture-side changes until the next service reload. After disabling saved-image
+top of the settings. **Reload on Save** defaults to unchecked and chart edits
+leave your choice unchanged. Select it to restart capture and apply saved-image
+chart changes; otherwise capture-side changes wait until the next service reload.
+After disabling saved-image
 charts, the existing latest image retains its baked charts until a new frame is
 captured; existing files are not rewritten.
 **History** selects charts on the Charts page. **Browser** independently selects
