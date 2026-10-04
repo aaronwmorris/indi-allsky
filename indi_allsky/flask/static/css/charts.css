@@ -1,0 +1,53 @@
+.chart-settings { padding: 1.5rem 0; border-block: 1px solid var(--color-base-300); }
+.chart-add-icon { transform: rotate(45deg); }
+.chart-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.chart-toolbar h2 { margin: 0; font-size: 1.125rem; font-weight: 650; }
+.chart-editor-list { margin-top: 1rem; }
+.chart-editor-row { display: grid; grid-template-columns: minmax(9rem, 1fr) minmax(10rem, 1.4fr) 6rem 5rem 5rem 6.5rem; align-items: end; gap: .75rem; padding: 1rem 0; border-bottom: 1px solid var(--color-base-300); }
+.chart-editor-row label, .chart-overlay-controls label { display: flex; flex-direction: column; gap: .375rem; font-size: .75rem; min-width: 0; }
+.chart-editor-row input:not([type=checkbox]), .chart-editor-row select, .chart-overlay-controls select, .chart-overlay-controls input { width: 100%; min-width: 0; }
+.chart-editor-row .chart-check { align-items: center; justify-content: center; height: 4rem; }
+.chart-row-actions { display: flex; align-items: center; gap: .25rem; height: 2.5rem; }
+.chart-icon-button { width: 2rem; height: 2rem; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--color-base-300); border-radius: 4px; background: var(--color-base-100); color: var(--color-base-content); cursor: pointer; }
+.chart-icon-button:hover { background: var(--color-base-300); }
+.chart-icon-button:disabled { opacity: .35; cursor: default; }
+.chart-icon-button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.chart-builtin-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 2rem; margin-top: 1rem; }
+.chart-builtin-row { display: flex; align-items: center; gap: 1rem; border-bottom: 1px solid var(--color-base-300); padding: .75rem 0; font-size: .8rem; }
+.chart-builtin-row > span { flex: 1; min-width: 0; }
+.chart-builtin-row label { display: inline-flex; align-items: center; gap: .375rem; white-space: nowrap; }
+.chart-overlay-controls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
+.chart-settings h3 { margin: 1.5rem 0 .5rem; font-size: .9rem; font-weight: 650; }
+.chart-count { font-size: .8rem; opacity: .7; }
+.chart-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.chart-panel { min-width: 0; border: 1px solid var(--color-base-300); border-radius: 6px; background: var(--color-base-200); padding: 1rem; }
+.chart-panel-header { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; margin-bottom: .75rem; }
+.chart-panel-header h2 { font-size: .875rem; font-weight: 600; min-width: 0; overflow-wrap: anywhere; margin: 0; }
+.chart-value { font-size: 1.125rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.chart-plot { position: relative; height: 210px; width: 100%; }
+.chart-no-data { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; font-size: .8rem; opacity: .65; pointer-events: none; }
+.chart-panel[data-empty=true] .chart-no-data { display: flex; }
+.chart-status { min-height: 1.25rem; font-size: .75rem; opacity: .8; }
+.chart-stream-empty { padding: 2rem 0; font-size: .875rem; }
+.latest-chart-overlays { position: absolute; z-index: 25; left: 1rem; top: var(--chart-overlay-top, 120px); width: min(var(--chart-overlay-width, 260px), calc(100% - 2rem)); max-height: calc(100% - var(--chart-overlay-top, 120px) - 1rem); overflow: auto; scrollbar-width: thin; }
+.latest-chart-overlays .chart-grid { grid-template-columns: minmax(0, 1fr); gap: .5rem; }
+.latest-chart-overlays .chart-panel { padding: .625rem .75rem; background: rgba(12, 18, 20, var(--chart-overlay-opacity, .8)); color: #f4f7f6; border-color: rgba(255,255,255,.16); backdrop-filter: blur(8px); }
+.latest-chart-overlays .chart-panel-header { margin-bottom: .25rem; }
+.latest-chart-overlays .chart-panel-header h2 { font-size: .6875rem; }
+.latest-chart-overlays .chart-value { font-size: .875rem; }
+.latest-chart-overlays .chart-plot { height: 58px; }
+.latest-chart-overlays .chart-status { color: white; text-shadow: 0 1px 3px black; }
+#latest-image-stage:fullscreen { width: 100vw; height: 100vh; background: #080b0d; border-radius: 0; }
+#latest-image-stage:fullscreen > img, #latest-image-stage:fullscreen > canvas { max-height: 100vh; max-width: 100vw; }
+@media (max-width: 900px) {
+    .chart-editor-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 5rem; }
+    .chart-editor-row .chart-check { align-items: flex-start; height: auto; flex-direction: row; padding: .5rem 0; }
+    .chart-row-actions { justify-content: flex-end; }
+}
+@media (max-width: 600px) {
+    .chart-grid, .chart-builtin-list { grid-template-columns: minmax(0, 1fr); }
+    .chart-editor-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .chart-editor-row .chart-source { grid-column: 1 / -1; }
+    .chart-overlay-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .chart-plot { height: 180px; }
+}

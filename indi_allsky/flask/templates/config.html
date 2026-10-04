@@ -4,6 +4,8 @@
 
 {% block head %}
 <link href="{{ url_for('indi_allsky.static', filename='css/style.css') }}" rel="stylesheet">
+<link href="{{ url_for('indi_allsky.static', filename='css/charts.css') }}" rel="stylesheet">
+<script defer src="{{ url_for('indi_allsky.static', filename='js/chart-editor.js') }}"></script>
 <script src="{{ url_for('indi_allsky.static', filename='js/indi-allsky-tabs.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
@@ -24,6 +26,7 @@ var camera_id = {{ camera_id }};
     <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-timelapse-tab" data-tab-target="nav-timelapse" type="button" role="tab"><i class="tw:icon-[lucide--video] tw:w-3.5 tw:h-3.5"></i> Timelapse</button>
     <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-location-tab" data-tab-target="nav-location" type="button" role="tab"><i class="tw:icon-[lucide--map-pin] tw:w-3.5 tw:h-3.5"></i> Location</button>
     <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-admin-tab" data-tab-target="nav-admin" type="button" role="tab"><i class="tw:icon-[lucide--shield] tw:w-3.5 tw:h-3.5"></i> Admin</button>
+    <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost" id="nav-charts-tab" data-tab-target="nav-charts" type="button" role="tab"><i class="tw:icon-[lucide--activity] tw:w-3.5 tw:h-3.5"></i> Charts</button>
     <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-filetransfer-tab" data-tab-target="nav-filetransfer" type="button" role="tab"><i class="tw:icon-[lucide--arrow-right-left] tw:w-3.5 tw:h-3.5"></i> File Transfer</button>
     <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-mqtt-tab" data-tab-target="nav-mqtt" type="button" role="tab"><i class="tw:icon-[lucide--radio] tw:w-3.5 tw:h-3.5"></i> MQTT</button>
     <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-youtube-tab" data-tab-target="nav-youtube" type="button" role="tab"><i class="tw:icon-[lucide--youtube] tw:w-3.5 tw:h-3.5"></i> YouTube</button>
@@ -94,6 +97,9 @@ var camera_id = {{ camera_id }};
     {% include 'config/processing.html' %}
     {% include 'config/location.html' %}
     {% include 'config/admin.html' %}
+    <div class="tab-pane fade" id="nav-charts" role="tabpanel" aria-labelledby="nav-charts-tab">
+        {% include 'config/charts.html' %}
+    </div>
     {% include 'config/filetransfer.html' %}
     {% include 'config/mqtt.html' %}
     {% include 'config/youtube.html' %}
@@ -223,6 +229,7 @@ const field_names = [
     'WEB_EXTRA_TEXT',
     'WEBSOCKET_API_KEY',
     'CHARTS__CUSTOM_SLOT_1',
+    'CHARTS__CONFIG',
     'CHARTS__CUSTOM_SLOT_1_MIN',
     'CHARTS__CUSTOM_SLOT_2',
     'CHARTS__CUSTOM_SLOT_2_MIN',

@@ -890,6 +890,13 @@ class IndiAllSkyConfigBase(object):
             "FC37_ACTIVE_LOW"        : True,
         },
         "CHARTS" : {
+            "CUSTOM"                : None,
+            "VISIBLE_IDS"           : None,
+            "OVERLAY_IDS"           : [],
+            "OVERLAY_HISTORY_SECONDS" : 900,
+            "OVERLAY_TOP"           : 120,
+            "OVERLAY_WIDTH"         : 260,
+            "OVERLAY_OPACITY"       : 80,
             "CUSTOM_SLOT_1"          : "sensor_user_10",
             "CUSTOM_SLOT_1_MIN"      : 0.0,
             "CUSTOM_SLOT_2"          : "sensor_user_11",

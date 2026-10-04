@@ -1255,6 +1255,17 @@ def IMAGE_STRETCH__MODE3_HIGHLIGHTS_validator(form, field):
         raise ValidationError('Value must be 1.0 or less')
 
 
+def CHARTS__CONFIG_validator(form, field):
+    if not field.data:
+        return
+    from ..charts import validate_chart_configuration
+
+    try:
+        validate_chart_configuration(json.loads(field.data))
+    except (ValueError, TypeError) as error:
+        raise ValidationError(str(error))
+
+
 def IMAGE_ROTATE_validator(form, field):
     import cv2
 
@@ -5278,6 +5289,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__AS3935_NOISE_LEVEL     = IntegerField('AS3935 Noise Level Threshold', validators=[DataRequired(), TEMP_SENSOR__AS3935_NOISE_LEVEL_validator])
     TEMP_SENSOR__AS3935_SPIKE_REJECTION = IntegerField('AS3935 Spike Rejection', validators=[DataRequired(), TEMP_SENSOR__AS3935_SPIKE_REJECTION_validator])
     TEMP_SENSOR__LUX_MAGNITUDE_OFFSET   = FloatField('Lux Magnitude Offset', validators=[SQM_MAGNITUDE_OFFSET_validator])
+    CHARTS__CONFIG                   = HiddenField('Charts', validators=[CHARTS__CONFIG_validator])
     CHARTS__CUSTOM_SLOT_1            = SelectField('Extra Chart Slot 1', choices=[], validators=[CUSTOM_CHART_validator])
     CHARTS__CUSTOM_SLOT_1_MIN        = FloatField('Chart 1 Minimum', validators=[CUSTOM_CHART_MIN_validator])
     CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=[], validators=[CUSTOM_CHART_validator])

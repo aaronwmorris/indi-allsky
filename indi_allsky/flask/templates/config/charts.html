@@ -1,0 +1,29 @@
+<section id="chart-settings" class="chart-settings" data-chart-editor>
+    <div class="chart-toolbar">
+        <h2>Charts</h2>
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <span class="chart-count" data-chart-count></span>
+            <button type="button" class="tw:btn tw:btn-primary tw:btn-sm" data-chart-add>
+                <i class="tw:icon-[lucide--x] tw:w-4 tw:h-4 chart-add-icon"></i> Add chart
+            </button>
+        </div>
+    </div>
+    {{ form_config.CHARTS__CONFIG() }}
+    <div id="CHARTS__CONFIG-error" class="tw:text-error tw:text-sm" role="alert" style="display: none;"></div>
+    <div class="chart-editor-list" data-chart-list></div>
+    <h3>Standard charts</h3>
+    <div class="chart-builtin-list" data-builtin-charts></div>
+    <h3>Latest image</h3>
+    <div class="chart-overlay-controls">
+        <label>History
+            <select class="tw:select tw:select-bordered tw:select-sm tw:bg-base-100" data-chart-preference="OVERLAY_HISTORY_SECONDS">
+                <option value="900">15 minutes</option><option value="3600">1 hour</option>
+                <option value="7200">2 hours</option><option value="21600">6 hours</option><option value="86400">24 hours</option>
+            </select>
+        </label>
+        <label>Top offset (px)<input class="tw:input tw:input-bordered tw:input-sm tw:bg-base-100" type="number" min="0" max="600" step="1" data-chart-preference="OVERLAY_TOP"></label>
+        <label>Width (px)<input class="tw:input tw:input-bordered tw:input-sm tw:bg-base-100" type="number" min="180" max="400" step="1" data-chart-preference="OVERLAY_WIDTH"></label>
+        <label>Opacity (%)<input type="range" class="tw:range tw:range-sm" min="20" max="100" step="1" data-chart-preference="OVERLAY_OPACITY"></label>
+    </div>
+    <script type="application/json" id="chart-editor-options">{{ {'sources': form_config.CHARTS__CUSTOM_SLOT_1.choices, 'builtins': chart_builtin_definitions, 'maximum': chart_maximum}|tojson }}</script>
+</section>

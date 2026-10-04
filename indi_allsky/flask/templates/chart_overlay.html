@@ -1,0 +1,8 @@
+{% if chart_overlays.OVERLAY_IDS %}
+<div class="latest-chart-overlays" data-chart-stream data-chart-options="chart-overlay-options"
+     style="--chart-overlay-top: {{ chart_overlays.OVERLAY_TOP }}px; --chart-overlay-width: {{ chart_overlays.OVERLAY_WIDTH }}px; --chart-overlay-opacity: {{ chart_overlays.OVERLAY_OPACITY / 100 }};">
+    <div class="chart-grid" data-chart-grid></div>
+    <div class="chart-status" data-chart-status role="status" aria-live="polite"></div>
+    <script id="chart-overlay-options" type="application/json">{{ {'url': url_for('indi_allsky.js_chart_view'), 'cameraId': camera_id, 'ids': chart_overlays.OVERLAY_IDS, 'definitions': chart_overlays.definitions, 'historySeconds': chart_overlays.OVERLAY_HISTORY_SECONDS, 'refreshInterval': refreshInterval, 'compact': true}|tojson }}</script>
+</div>
+{% endif %}
