@@ -35,6 +35,14 @@ Browser charts avoid the status message, scroll within the image area and are
 included in fullscreen. They appear on the right when saved-image charts are
 also configured. Browser-only charts do not modify image files.
 
+Browser charts start below the recorded image-label bounds and status message.
+Drag any chart header with a mouse or touch to move the browser chart group;
+its position is remembered per camera in this browser. Double-click a header to
+restore automatic placement. Focus a header and use arrow keys to move it,
+or Shift plus arrow keys for fine adjustment. Placement follows image scaling,
+window resizing, and fullscreen. Older images without label-bound metadata use
+the configured top offset until a new capture supplies the bounds.
+
 One selected saved-image chart uses 1.5 times the configured width and a height
 of 224 px (390 x 224 px at the default width). Multiple saved-image charts retain
 the configured width and compact 112 px height. Width is limited to the image's

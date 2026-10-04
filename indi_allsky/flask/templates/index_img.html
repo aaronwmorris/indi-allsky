@@ -35,6 +35,12 @@ async function loop() {
 
     img = new Image();
     img.onload = function() {
+        const entry = this.chartEntry;
+        document.getElementById('latest-image').addEventListener('load', function() {
+            document.getElementById('latest-image-stage').dispatchEvent(new CustomEvent('chart-image-loaded', {
+                detail: {...entry, width: this.naturalWidth, height: this.naturalHeight}
+            }));
+        }, {once: true});
         $('#latest-image').attr({
             'src': this.src,
         });
@@ -45,6 +51,7 @@ async function loop() {
 }
 
 function showImage(entry) {
+    img.chartEntry = entry;
     img.src = entry["url"];
 }
 

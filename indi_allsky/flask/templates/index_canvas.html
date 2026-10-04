@@ -58,6 +58,9 @@ function showImage(entry) {
 
         context.drawImage(this, 0, 0, this.width, this.height,
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+        document.getElementById('latest-image-stage').dispatchEvent(new CustomEvent('chart-image-loaded', {
+            detail: {...entry, width: this.width, height: this.height}
+        }));
     };
 
     img.src = entry["url"];

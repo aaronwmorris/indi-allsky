@@ -1279,6 +1279,9 @@ class ImageWorker(Process):
             metadata['sensor_user_{0}'.format(index)] = self.sensors_user_av[index]
         for index in range(100, 110):
             metadata['sensor_user_{0}'.format(index)] = self.sensors_user_av[index]
+        bounds = getattr(self.image_processor, 'chart_label_bounds', ())
+        if bounds:
+            metadata['chart_label_bounds'] = [list(bound) for bound in bounds]
         return metadata
 
 

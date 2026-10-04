@@ -371,7 +371,8 @@ def test_shared_chart_metadata_preserves_capture_sensor_values_and_units(saved_c
 
 
 @pytest.mark.parametrize('backend', ['opencv', 'pillow'])
-def test_real_image_label_bounds_keep_saved_charts_below_text(backend):
+@pytest.mark.parametrize('selected', [[], ['temp']])
+def test_real_image_label_bounds_keep_saved_charts_below_text(backend, selected):
     import cv2
     import numpy
     from PIL import Image, ImageDraw, ImageFont
@@ -381,7 +382,7 @@ def test_real_image_label_bounds_keep_saved_charts_below_text(backend):
     method = next(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == 'drawText_' + backend)
     namespace = {'cv2': cv2, 'ImageFont': ImageFont}
     exec(compile(ast.Module(body=[method], type_ignores=[]), 'production-image-label-bounds', 'exec'), namespace)
-    config = {'CHARTS': {'CUSTOM': [], 'SAVED_IMAGE_IDS': ['temp']}, 'TEXT_PROPERTIES': {
+    config = {'CHARTS': {'CUSTOM': [], 'SAVED_IMAGE_IDS': selected}, 'TEXT_PROPERTIES': {
         'FONT_FACE': 'FONT_HERSHEY_SIMPLEX', 'FONT_AA': 'LINE_AA', 'FONT_SCALE': .5,
         'FONT_THICKNESS': 1, 'FONT_OUTLINE': True}}
     processor = SimpleNamespace(config=config, chart_label_bounds=[])
@@ -400,7 +401,41 @@ def test_real_image_label_bounds_keep_saved_charts_below_text(backend):
     original = image.copy()
     render_saved_charts(image, config, [], label_bounds=processor.chart_label_bounds)
     assert numpy.array_equal(image[:bottom + 8], original[:bottom + 8])
-    assert not numpy.array_equal(image, original)
+    assert (not numpy.array_equal(image, original)) is bool(selected)
+
+
+def test_capture_metadata_copies_label_bounds_for_browser_only_charts(saved_chart_worker):
+    worker = saved_chart_worker
+    worker.config = {'CHARTS': {'SAVED_IMAGE_IDS': []}}
+    worker.image_processor.chart_label_bounds = [(10, 10, 300, 188)]
+    metadata = worker.get_chart_metadata(worker.ref)
+    assert metadata['chart_label_bounds'] == [[10, 10, 300, 188]]
+    worker.image_processor.chart_label_bounds.clear()
+    assert metadata['chart_label_bounds'] == [[10, 10, 300, 188]]
+
+
+@pytest.mark.parametrize('bounds', [None, [[10, 10, 300, 188]]])
+def test_latest_image_response_exposes_recorded_label_bounds_without_changing_legacy_payload(bounds):
+    from sqlalchemy import and_, column
+
+    tree = ast.parse((ROOT / 'indi_allsky/flask/views.py').read_text(encoding='utf-8'))
+    owner = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == 'JsonLatestImageView')
+    methods = [node for node in owner.body if isinstance(node, ast.FunctionDef) and node.name in ('getLatestImage', 'get_objects')]
+    namespace = {'timedelta': timedelta, 'and_': and_, 'request': SimpleNamespace(args={'camera_id': '1'}),
+                 'IndiAllSkyDbCameraTable': SimpleNamespace(id=column('id'))}
+    exec(compile(ast.Module(body=methods, type_ignores=[]), 'production-latest-image-bounds', 'exec'), namespace)
+    query = MagicMock()
+    image = SimpleNamespace(width=640, height=480, data={'chart_label_bounds': bounds}, getUrl=lambda **kwargs: '/image.jpg')
+    query.join.return_value.filter.return_value.order_by.return_value.first.return_value = image
+    view = SimpleNamespace(camera_now=datetime(2026, 10, 4), web_nonlocal_images=False, s3_prefix=None,
+                           model=SimpleNamespace(query=query, camera=object(), createDate=column('createDate')),
+                           history_seconds=900, cameraSetup=MagicMock(), indi_allsky_config={}, capture_pause=False)
+    view.getLatestImage = lambda camera_id, history: namespace['getLatestImage'](view, camera_id, history)
+    result = namespace['get_objects'](view)['latest_image']
+    expected = {'url': '/image.jpg', 'width': 640, 'height': 480, 'message': ''}
+    if bounds:
+        expected['label_bounds'] = bounds
+    assert result == expected
 
 
 def test_capture_composites_saved_charts_after_labels_and_before_final_image_write():
@@ -792,7 +827,8 @@ def create_chart_preview(login_disabled=True, save_error=None, csrf_enabled=Fals
 
     @blueprint.route('/js/latest', endpoint='js_latest_image_view')
     def latest_response():
-        return jsonify(latest_image={'url': '/image.jpg', 'message': '2026-10-04 20:45 | Exposure 15s | Gain 50'})
+        return jsonify(latest_image={'url': '/image.jpg', 'message': '2026-10-04 20:45 | Exposure 15s | Gain 50',
+                                     'label_bounds': [[10, 10, 360, 128]]})
 
     @blueprint.route('/image.jpg')
     def image_response():
@@ -1024,6 +1060,10 @@ def test_real_chart_templates_render_and_preview_settings_round_trip():
         response = client.get(path)
         assert response.status_code == 200, response.data
         assert b'CHARTS__CONFIG' in response.data if path == '/settings' else b'data-chart-stream' in response.data
+        if path == '/latest':
+            assert b"onload=\"this.style.opacity='1';\"" in response.data
+            assert b"addEventListener('load'," in response.data
+            assert b"document.getElementById('latest-image').onload" not in response.data
     settings = chart_configuration({'CHARTS': {'CUSTOM': [], 'OVERLAY_IDS': ['temp'], 'VISIBLE_IDS': []}})
     assert client.post('/settings', json={'CHARTS__CONFIG': json.dumps(settings)}).status_code == 200
     assert b'"OVERLAY_IDS": ["temp"]' in client.get('/settings').data.replace(b'&#34;', b'"')

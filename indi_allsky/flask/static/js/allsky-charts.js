@@ -16,20 +16,7 @@
                 });
             }
             this.reconcile(options.definitions);
-            if (options.compact) {
-                const stage = document.getElementById('latest-image-stage');
-                const message = document.getElementById('status-overlay');
-                const requestedTop = parseFloat(root.style.getPropertyValue('--chart-overlay-top')) || 0;
-                const position = () => {
-                    const messageBottom = message && getComputedStyle(message).display !== 'none' ? message.offsetTop + message.offsetHeight + 8 : 0;
-                    const panelHeight = root.querySelector('.chart-panel')?.offsetHeight || 110;
-                    const top = Math.min(Math.max(requestedTop, messageBottom), Math.max(0, stage.clientHeight - panelHeight - 16));
-                    root.style.setProperty('--chart-overlay-top', top + 'px');
-                };
-                new ResizeObserver(position).observe(stage);
-                if (message) new MutationObserver(position).observe(message, {attributes: true, childList: true, subtree: true});
-                position();
-            }
+            if (options.compact) this.positionOverlay();
             document.addEventListener('visibilitychange', () => {
                 if (document.hidden) { clearTimeout(this.timer); this.controller?.abort(); }
                 else this.refresh();
@@ -37,6 +24,79 @@
             window.addEventListener('pagehide', () => { clearTimeout(this.timer); this.controller?.abort(); });
             window.addEventListener('pageshow', event => { if (event.persisted) this.refresh(); });
             this.refresh();
+        }
+        positionOverlay() {
+            const root = this.root;
+            const stage = document.getElementById('latest-image-stage');
+            const message = document.getElementById('status-overlay');
+            const media = stage.querySelector('#latest-image, #canvas');
+            const requestedTop = parseFloat(root.style.getPropertyValue('--chart-overlay-top')) || 0;
+            const storageKey = 'chart-overlay-position:' + this.options.cameraId;
+            let manual = null, drag = null, image = null;
+            try {
+                const saved = JSON.parse(localStorage.getItem(storageKey));
+                if (saved && ['left', 'top'].every(key => Number.isFinite(saved[key]) && saved[key] >= 0 && saved[key] <= 1)) manual = saved;
+            } catch (error) {}
+            const limits = () => ({left: Math.max(0, stage.clientWidth - root.offsetWidth - 16), top: Math.max(0, stage.clientHeight - (root.querySelector('.chart-panel')?.offsetHeight || 110) - 16)});
+            const position = () => {
+                if (manual) {
+                    const space = limits();
+                    root.style.left = manual.left * space.left + 'px'; root.style.right = 'auto';
+                    root.style.setProperty('--chart-overlay-top', manual.top * space.top + 'px');
+                    return;
+                }
+                const messageBottom = message && getComputedStyle(message).display !== 'none' ? message.offsetTop + message.offsetHeight + 8 : 0;
+                let labelBottom = 0;
+                if (image && image.width > 0 && image.height > 0 && media) {
+                    const rect = media.getBoundingClientRect(), stageRect = stage.getBoundingClientRect();
+                    const scale = Math.min(rect.width / image.width, rect.height / image.height);
+                    const bounds = (image.label_bounds || []).filter(bound => Array.isArray(bound) && bound.length === 4 && bound.every(Number.isFinite));
+                    if (bounds.length) labelBottom = rect.top - stageRect.top - stage.clientTop + (rect.height - image.height * scale) / 2 + Math.max(...bounds.map(bound => bound[3])) * scale + 8;
+                }
+                root.style.setProperty('--chart-overlay-top', Math.min(Math.max(requestedTop, messageBottom, labelBottom), Math.max(0, stage.clientHeight - 48)) + 'px');
+            };
+            const move = (left, top) => {
+                const space = limits();
+                manual = {left: space.left ? Math.max(0, Math.min(left, space.left)) / space.left : 0, top: space.top ? Math.max(0, Math.min(top, space.top)) / space.top : 0};
+                position();
+            };
+            const remember = () => { try { localStorage.setItem(storageKey, JSON.stringify(manual)); } catch (error) {} };
+            root.addEventListener('pointerdown', event => {
+                const handle = event.target.closest('.chart-panel-header');
+                if (event.button !== 0 || !handle) return;
+                event.preventDefault();
+                drag = {id: event.pointerId, handle, x: event.clientX, y: event.clientY, left: root.offsetLeft, top: root.offsetTop};
+                handle.setPointerCapture(event.pointerId); root.classList.add('is-dragging');
+            });
+            root.addEventListener('pointermove', event => {
+                if (drag && event.pointerId === drag.id) move(drag.left + event.clientX - drag.x, drag.top + event.clientY - drag.y);
+            });
+            const finish = event => {
+                if (!drag || event.pointerId !== drag.id) return;
+                const handle = drag.handle;
+                drag = null; root.classList.remove('is-dragging');
+                if (handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId);
+                if (manual) remember();
+            };
+            ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(name => root.addEventListener(name, finish));
+            root.addEventListener('dblclick', event => {
+                if (!event.target.closest('.chart-panel-header')) return;
+                manual = null; root.style.removeProperty('left'); root.style.removeProperty('right');
+                try { localStorage.removeItem(storageKey); } catch (error) {}
+                position();
+            });
+            root.addEventListener('keydown', event => {
+                if (!event.target.closest('.chart-panel-header') || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+                event.preventDefault();
+                const step = event.shiftKey ? 1 : 10;
+                move(root.offsetLeft + (event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0), root.offsetTop + (event.key === 'ArrowDown' ? step : event.key === 'ArrowUp' ? -step : 0));
+                remember();
+            });
+            stage.addEventListener('chart-image-loaded', event => { image = event.detail; position(); });
+            new ResizeObserver(position).observe(stage);
+            if (media) new ResizeObserver(position).observe(media);
+            if (message) new MutationObserver(position).observe(message, {attributes: true, childList: true, subtree: true});
+            position();
         }
         reconcile(definitions) {
             const wanted = [...definitions.map(definition => definition.id), 'histogram'].filter(identifier => this.options.ids.includes(identifier));
@@ -50,6 +110,7 @@
                 if (!panel) {
                     const element = document.createElement('article'); element.className = 'chart-panel'; element.dataset.chartId = identifier;
                     const header = document.createElement('div'); header.className = 'chart-panel-header';
+                    if (this.options.compact) { header.tabIndex = 0; header.title = 'Drag to move charts; double-click to reset'; }
                     const title = document.createElement('h2'); const value = document.createElement('span'); value.className = 'chart-value'; value.textContent = '--';
                     header.append(title, value);
                     const plot = document.createElement('div'); plot.className = 'chart-plot';

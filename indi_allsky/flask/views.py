@@ -428,6 +428,8 @@ class JsonLatestImageView(JsonView):
             data['latest_image']['width'] = latest_image_data['width']
             data['latest_image']['height'] = latest_image_data['height']
             data['latest_image']['message'] = ''
+            if 'label_bounds' in latest_image_data:
+                data['latest_image']['label_bounds'] = latest_image_data['label_bounds']
 
 
         return data
@@ -484,6 +486,9 @@ class JsonLatestImageView(JsonView):
             'width' : latest_image.width,
             'height' : latest_image.height,
         }
+        bounds = (latest_image.data or {}).get('chart_label_bounds')
+        if bounds:
+            image_data['label_bounds'] = bounds
 
         return image_data
 

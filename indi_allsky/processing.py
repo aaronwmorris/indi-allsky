@@ -3563,7 +3563,7 @@ class ImageProcessor(object):
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
 
-        if self.config.get('CHARTS', {}).get('SAVED_IMAGE_IDS') and text:
+        if text:
             (width, height), baseline = cv2.getTextSize(
                 text, fontFace, self.config['TEXT_PROPERTIES']['FONT_SCALE'],
                 self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + int(self.config['TEXT_PROPERTIES']['FONT_OUTLINE']))
@@ -3673,7 +3673,7 @@ class ImageProcessor(object):
         else:
             stroke_width = 0
 
-        if self.config.get('CHARTS', {}).get('SAVED_IMAGE_IDS') and text:
+        if text:
             self.chart_label_bounds.append(draw.textbbox(pt, text, font=font, stroke_width=stroke_width, anchor=anchor))
 
         draw.text(

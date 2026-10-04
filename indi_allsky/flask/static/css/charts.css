@@ -42,6 +42,8 @@
 .latest-chart-overlays .chart-grid { grid-template-columns: minmax(0, 1fr); gap: .5rem; }
 .latest-chart-overlays .chart-panel { padding: .625rem .75rem; background: rgba(12, 18, 20, var(--chart-overlay-opacity, .8)); color: #f4f7f6; border-color: rgba(255,255,255,.16); backdrop-filter: blur(8px); }
 .latest-chart-overlays .chart-panel-header { margin-bottom: .25rem; }
+.latest-chart-overlays .chart-panel-header { cursor: grab; touch-action: none; user-select: none; }
+.latest-chart-overlays.is-dragging .chart-panel-header { cursor: grabbing; }
 .latest-chart-overlays .chart-panel-header h2 { font-size: .6875rem; }
 .latest-chart-overlays .chart-value { font-size: .875rem; }
 .latest-chart-overlays .chart-plot { height: 112px; }
