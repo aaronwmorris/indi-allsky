@@ -232,16 +232,16 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
         if bounds[1] < max(top, image_height // 2):
             top = max(top, bounds[3] + 8)
     bottom = min([image_height - 16] + [bounds[1] - 8 for bounds in labels if bounds[1] >= top])
-    if width >= 160:
+    if width >= 160 and top + height <= bottom and definition is not None:
+        figure = Figure(figsize=(width / 100, height / 100), dpi=100,
+                        facecolor=(12 / 255, 18 / 255, 20 / 255, settings['OVERLAY_OPACITY'] / 100))
+        canvas = FigureCanvasAgg(figure)
         for row in range(2 if columns == 2 else 4):
             if top + height > bottom:
                 break
             for left in range(16, 16 + columns * width, width):
                 if definition is None:
                     break
-                figure = Figure(figsize=(width / 100, height / 100), dpi=100,
-                                facecolor=(12 / 255, 18 / 255, 20 / 255, settings['OVERLAY_OPACITY'] / 100))
-                canvas = FigureCanvasAgg(figure)
                 try:
                     points = data[definition['id']]
                     values = [point['y'] if point['y'] is not None else numpy.nan for point in points]

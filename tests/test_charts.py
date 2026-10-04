@@ -234,13 +234,20 @@ def test_saved_charts_keep_enlarged_dimensions_for_every_selection(monkeypatch, 
 
     draw = FigureCanvasAgg.draw
     sizes = []
+    canvases = []
     def record_draw(canvas):
         sizes.append(canvas.get_width_height())
+        canvases.append(canvas)
+        assert len(canvas.figure.axes) == 1
+        assert len(canvas.figure.texts) == 2
         draw(canvas)
     monkeypatch.setattr(FigureCanvasAgg, 'draw', record_draw)
     config = {'CHARTS': {'CUSTOM': [], 'SAVED_IMAGE_IDS': selected, 'OVERLAY_WIDTH': base_width}}
     render_saved_charts(numpy.zeros((1600, image_width, 3), dtype=numpy.uint8), config, [])
     assert sizes == [expected] * len(selected)
+    assert all(canvas is canvases[0] for canvas in canvases)
+    assert not canvases[0].figure.axes
+    assert not canvases[0].figure.texts
     assert chart_configuration(config)['OVERLAY_WIDTH'] == base_width
 
 
