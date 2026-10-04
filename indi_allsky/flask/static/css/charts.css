@@ -44,7 +44,7 @@
 .latest-chart-overlays .chart-panel-header { margin-bottom: .25rem; }
 .latest-chart-overlays .chart-panel-header h2 { font-size: .6875rem; }
 .latest-chart-overlays .chart-value { font-size: .875rem; }
-.latest-chart-overlays .chart-plot { height: 58px; }
+.latest-chart-overlays .chart-plot { height: 112px; }
 .latest-chart-overlays .chart-status { color: white; text-shadow: 0 1px 3px black; }
 #latest-image-stage:fullscreen { width: 100vw; height: 100vh; background: #080b0d; border-radius: 0; }
 #latest-image-stage:fullscreen > img, #latest-image-stage:fullscreen > canvas { max-height: 100vh; max-width: 100vw; }

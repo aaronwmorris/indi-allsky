@@ -204,8 +204,9 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
     if image.ndim == 2:
         image = numpy.repeat(image[:, :, None], 3, axis=2)
     image_height, image_width = image.shape[:2]
-    width = min(settings['OVERLAY_WIDTH'], image_width - 32)
-    height = 112
+    single_chart = len(definitions) == 1
+    width = min(int(settings['OVERLAY_WIDTH'] * (1.5 if single_chart else 1)), image_width - 32)
+    height = 224 if single_chart else 112
     remaining = iter(definitions)
     definition = next(remaining, None)
     if width >= 160:

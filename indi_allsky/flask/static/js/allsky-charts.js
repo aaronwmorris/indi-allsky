@@ -22,7 +22,8 @@
                 const requestedTop = parseFloat(root.style.getPropertyValue('--chart-overlay-top')) || 0;
                 const position = () => {
                     const messageBottom = message && getComputedStyle(message).display !== 'none' ? message.offsetTop + message.offsetHeight + 8 : 0;
-                    const top = Math.min(Math.max(requestedTop, messageBottom), Math.max(0, stage.clientHeight - 110));
+                    const panelHeight = root.querySelector('.chart-panel')?.offsetHeight || 110;
+                    const top = Math.min(Math.max(requestedTop, messageBottom), Math.max(0, stage.clientHeight - panelHeight - 16));
                     root.style.setProperty('--chart-overlay-top', top + 'px');
                 };
                 new ResizeObserver(position).observe(stage);
@@ -55,16 +56,16 @@
                     const canvas = document.createElement('canvas'); canvas.setAttribute('role', 'img');
                     const empty = document.createElement('span'); empty.className = 'chart-no-data'; empty.textContent = 'No readings';
                     plot.append(canvas, empty); element.append(header, plot); this.grid.append(element);
-                    const color = colors[index % colors.length];
-                    const datasets = identifier === 'histogram' ? ['red', 'green', 'blue', 'gray'].map((label, colorIndex) => ({label, data: [], borderColor: ['#df827b', '#84b96b', '#69addb', '#a6b1b6'][colorIndex], pointRadius: 0})) : [{label: definition.label, data: [], borderColor: color, backgroundColor: color, fill: false, pointRadius: this.options.compact ? 0 : 3, pointHitRadius: 8, tension: .1, spanGaps: false}];
+                    const color = this.options.compact ? '#38bdf8' : colors[index % colors.length];
+                    const datasets = identifier === 'histogram' ? ['red', 'green', 'blue', 'gray'].map((label, colorIndex) => ({label, data: [], borderColor: ['#df827b', '#84b96b', '#69addb', '#a6b1b6'][colorIndex], pointRadius: 0})) : [{label: definition.label, data: [], borderColor: color, backgroundColor: color, fill: false, pointRadius: this.options.compact ? 1.8 : 3, pointHitRadius: 8, borderWidth: this.options.compact ? 1 : undefined, tension: this.options.compact ? 0 : .1, spanGaps: false}];
                     const foreground = this.options.compact ? '#bccdcc' : getComputedStyle(document.body).color;
                     const chart = new Chart(canvas, {type: identifier === 'detection' ? 'bar' : 'line', data: {datasets}, options: {
                         responsive: true, maintainAspectRatio: false, animation: false,
                         interaction: {mode: 'index', intersect: false},
                         plugins: {legend: {display: identifier === 'histogram', labels: {color: foreground, boxWidth: 10}}},
                         scales: {
-                            x: {display: !this.options.compact, grid: {display: true, drawTicks: false, color: 'rgba(128,128,128,.12)'}, ticks: {color: foreground}},
-                            y: {display: !this.options.compact, beginAtZero: ['jsqm', 'stars', 'temp', 'exp', 'gain', 'histogram'].includes(identifier), suggestedMin: definition.min ?? undefined, suggestedMax: identifier === 'detection' ? 1 : undefined, min: bounds.min ?? undefined, max: bounds.max ?? undefined, grid: {color: 'rgba(128,128,128,.12)'}, ticks: {color: foreground}}
+                            x: {display: true, afterBuildTicks: this.options.compact ? axis => { if (axis.ticks.length > 1) axis.ticks = [axis.ticks[0], axis.ticks.at(-1)]; } : undefined, grid: {display: !this.options.compact, drawTicks: false, color: 'rgba(128,128,128,.12)'}, ticks: {color: foreground, maxTicksLimit: this.options.compact ? 2 : undefined, maxRotation: this.options.compact ? 0 : undefined, font: this.options.compact ? {size: 9} : undefined}},
+                            y: {display: true, beginAtZero: !this.options.compact && ['jsqm', 'stars', 'temp', 'exp', 'gain', 'histogram'].includes(identifier), suggestedMin: definition.min ?? undefined, suggestedMax: identifier === 'detection' ? 1 : undefined, min: bounds.min ?? undefined, max: bounds.max ?? undefined, grid: {color: 'rgba(128,128,128,.12)'}, ticks: {color: foreground, maxTicksLimit: this.options.compact ? 3 : undefined, font: this.options.compact ? {size: 9} : undefined}}
                         }
                     }});
                     panel = {element, title, value, chart, canvas}; this.panels.set(identifier, panel);

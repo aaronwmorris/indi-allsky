@@ -138,17 +138,43 @@ def test_saved_charts_change_real_raster_pixels_only_in_the_selected_regions(sel
     image = numpy.full((480, 640, 3), 120, dtype=numpy.uint8)
     original = image.copy()
     result = render_saved_charts(image, config, readings, label_bounds=[(10, 10, 300, 190)])
+    width = 390 if len(selected) == 1 else 260
+    height = 224 if len(selected) == 1 else 112
+    right = 16 + width
+    first_end = 198 + height
     assert result is image
     assert numpy.array_equal(image[:198], original[:198])
     assert numpy.array_equal(image[:, :16], original[:, :16])
-    assert numpy.array_equal(image[:, 276:], original[:, 276:])
-    assert numpy.any(image[198:310, 16:276] != 120)
-    assert numpy.any(image[198:310, 16:276, 0] > image[198:310, 16:276, 2])
-    end = 310 if len(selected) == 1 else 430
+    assert numpy.array_equal(image[:, right:], original[:, right:])
+    assert numpy.any(image[198:first_end, 16:right] != 120)
+    assert numpy.any(image[198:first_end, 16:right, 0] > image[198:first_end, 16:right, 2])
+    end = first_end if len(selected) == 1 else first_end + height + 8
     assert numpy.array_equal(image[end:], original[end:])
     success, encoded = cv2.imencode('.png', result)
     assert success
     assert numpy.array_equal(cv2.imdecode(encoded, cv2.IMREAD_COLOR), result)
+
+
+@pytest.mark.parametrize('selected, image_width, base_width, expected', [
+    (['temp'], 640, 260, (390, 224)),
+    (['temp'], 640, 300, (450, 224)),
+    (['temp'], 320, 260, (288, 224)),
+    (['temp', 'gain'], 640, 260, (260, 112)),
+])
+def test_single_saved_chart_is_larger_without_changing_compact_multi_chart_sizes(monkeypatch, selected, image_width, base_width, expected):
+    import numpy
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    draw = FigureCanvasAgg.draw
+    sizes = []
+    def record_draw(canvas):
+        sizes.append(canvas.get_width_height())
+        draw(canvas)
+    monkeypatch.setattr(FigureCanvasAgg, 'draw', record_draw)
+    config = {'CHARTS': {'CUSTOM': [], 'SAVED_IMAGE_IDS': selected, 'OVERLAY_WIDTH': base_width}}
+    render_saved_charts(numpy.zeros((480, image_width, 3), dtype=numpy.uint8), config, [])
+    assert sizes == [expected] * len(selected)
+    assert chart_configuration(config)['OVERLAY_WIDTH'] == base_width
 
 
 def test_saved_charts_honor_axis_limits_and_preserve_gaps_and_negative_values(monkeypatch):
@@ -192,7 +218,7 @@ def test_saved_chart_names_are_literal_and_timestamp_labels_stay_inside_panel(mo
                 data={'sensor_user_0': -27}) for index in range(2)]
     render_saved_charts(numpy.zeros((480, 640, 3), dtype=numpy.uint8), config, readings)
     assert len(text_bounds) == 2
-    assert all(0 <= bounds.x0 < bounds.x1 <= 260 and 0 <= bounds.y0 < bounds.y1 <= 112 for bounds in text_bounds)
+    assert all(0 <= bounds.x0 < bounds.x1 <= 390 and 0 <= bounds.y0 < bounds.y1 <= 224 for bounds in text_bounds)
 
 
 def test_saved_charts_that_cannot_fit_do_not_overwrite_labels_or_resize_image():
@@ -325,7 +351,7 @@ def test_capture_writer_saves_identical_composited_latest_and_archive_images(sav
     assert latest.read_bytes() == saved.read_bytes()
     decoded = cv2.imread(str(saved))
     assert decoded.shape == worker.image_processor.image.shape
-    assert numpy.mean(decoded[120:232, 16:276]) < 100
+    assert numpy.mean(decoded[120:344, 16:406]) < 100
     if file_type == 'png':
         assert numpy.array_equal(decoded, worker.image_processor.image)
 
@@ -956,6 +982,29 @@ def test_chart_save_rejects_non_boolean_reload_values(reload):
     assert 'RELOAD_ON_SAVE' in response.json
     application.extensions['chart_preview_save'].assert_not_called()
     application.extensions['chart_preview_tasks'].assert_not_called()
+
+
+def test_disabling_saved_charts_reloads_capture_and_keeps_browser_chart():
+    application = create_chart_preview()
+    client = application.test_client()
+    settings = chart_configuration(application.extensions['chart_preview_config'])
+    settings['OVERLAY_IDS'] = ['custom_0']
+    settings['SAVED_IMAGE_IDS'] = ['custom_0']
+    response = client.post('/ajax/charts', json={'CHARTS__CONFIG': json.dumps(settings)})
+    assert response.status_code == 200
+    original = (ROOT / 'content/20210421_043940.jpg').read_bytes()
+    assert client.get('/image.jpg').data != original
+
+    settings['SAVED_IMAGE_IDS'] = []
+    response = client.post('/ajax/charts', json={
+        'CHARTS__CONFIG': json.dumps(settings), 'RELOAD_ON_SAVE': True})
+    assert response.status_code == 200
+    application.extensions['chart_preview_tasks'].assert_called_once_with(
+        queue='main', state='manual', priority=100, data={'action': 'reload'})
+    assert client.get('/image.jpg').data == original
+    latest = client.get('/latest').get_data(as_text=True)
+    assert 'data-saved-charts="false"' in latest
+    assert 'data-chart-options="chart-overlay-options"' in latest
 
 
 def test_failed_chart_save_does_not_reload_capture():

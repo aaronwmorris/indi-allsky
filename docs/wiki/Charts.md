@@ -2,8 +2,11 @@
 
 Open **Charts > Manage charts** to jump to the settings below the chart grid.
 Add, remove, or reorder custom charts, then select **Save Configuration** at the
-top of the settings. **Reload on Save** applies capture-side changes immediately;
-without it, saved-image changes take effect after the next capture service reload.
+top of the settings. Changing saved-image selections automatically checks
+**Reload on Save** so the capture worker applies them. Uncheck it to defer
+capture-side changes until the next service reload. After disabling saved-image
+charts, the existing latest image retains its baked charts until a new frame is
+captured; existing files are not rewritten.
 **History** selects charts on the Charts page. **Browser** independently selects
 live charts over the latest-image view; **Saved image** writes charts into new
 capture images. Select either destination or both, including different charts for
@@ -31,6 +34,12 @@ History, top offset, width, and opacity are shared by both image destinations.
 Browser charts avoid the status message, scroll within the image area and are
 included in fullscreen. They appear on the right when saved-image charts are
 also configured. Browser-only charts do not modify image files.
+
+One selected saved-image chart uses 1.5 times the configured width and a height
+of 224 px (390 x 224 px at the default width). Multiple saved-image charts retain
+the configured width and compact 112 px height. Width is limited to the image's
+available space. Browser charts show numeric and first/last time axes with the
+same line styling and scaling as saved-image charts.
 
 Saved-image charts are rendered with Matplotlib's headless Agg backend after
 image labels and before compression. They sit below upper-left labels and flow

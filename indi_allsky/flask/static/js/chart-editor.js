@@ -10,7 +10,13 @@
         const checkboxClasses = 'tw:checkbox tw:checkbox-sm tw:checkbox-primary';
         settings.AXIS_LIMITS ||= {};
         settings.SAVED_IMAGE_IDS ||= [];
+        let savedImageIds = JSON.stringify(settings.SAVED_IMAGE_IDS);
         function save() {
+            const currentSavedImageIds = JSON.stringify(settings.SAVED_IMAGE_IDS);
+            if (currentSavedImageIds !== savedImageIds) {
+                document.getElementById('RELOAD_ON_SAVE').checked = true;
+                savedImageIds = currentSavedImageIds;
+            }
             field.value = JSON.stringify(settings);
             root.querySelector('[data-chart-count]').textContent = settings.CUSTOM.length + ' custom charts';
             root.querySelector('[data-chart-add]').disabled = settings.CUSTOM.length >= options.maximum;
