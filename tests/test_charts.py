@@ -271,7 +271,7 @@ def test_saved_chart_names_are_literal_and_timestamp_labels_stay_inside_panel(mo
         renderer = canvas.get_renderer()
         axes = canvas.figure.axes[0]
         labels = axes.get_xticklabels()
-        assert all(text.get_rotation() == 0 and text.get_fontsize() == 14 for text in labels)
+        assert all(text.get_rotation() == 0 and text.get_fontsize() == 11 for text in labels)
         assert labels[0].get_text() == '20:30'
         assert labels[-1].get_text() == (datetime(2026, 10, 4, 20, 30) + timedelta(minutes=point_count - 1)).strftime('%H:%M')
         text_bounds.extend(text.get_window_extent(renderer) for text in labels)
@@ -340,7 +340,7 @@ def test_saved_chart_text_is_large_and_fits_the_expanded_plot(monkeypatch, image
             bounds = text.get_window_extent(renderer)
             assert 0 <= bounds.x0 < bounds.x1 <= canvas.get_width_height()[0]
             assert 0 <= bounds.y0 < bounds.y1 <= 336
-        assert all(text.get_fontsize() == 14 for text in axes.get_xticklabels())
+        assert all(text.get_fontsize() == 11 for text in axes.get_xticklabels() + axes.get_yticklabels())
         offset_bounds = axes.yaxis.get_offset_text().get_window_extent(renderer)
         if axes.yaxis.get_offset_text().get_text():
             assert not title_bounds.overlaps(offset_bounds)
@@ -1131,6 +1131,7 @@ def test_editor_selects_reload_for_saved_chart_edits_and_preserves_opt_out(saved
 @pytest.mark.parametrize('chart_count', [1, 2, 3, 4])
 def test_browser_image_charts_show_larger_horizontal_minute_labels(view, viewport, chart_count):
     from urllib.parse import urlsplit
+    from matplotlib.figure import Figure
 
     playwright = pytest.importorskip('playwright.sync_api')
     application = create_chart_preview()
@@ -1159,14 +1160,31 @@ def test_browser_image_charts_show_larger_horizontal_minute_labels(view, viewpor
             charts = page.evaluate('''() => [...document.querySelectorAll('.latest-chart-overlays canvas')].map(canvas => {
                 const chart = Chart.getChart(canvas);
                 return {rotation: chart.scales.x.labelRotation, labels: chart.scales.x.ticks.map(tick => tick.label), font:chart.options.scales.x.ticks.font.size,
+                    scale: parseFloat(canvas.closest('.latest-chart-overlays').style.getPropertyValue('--chart-overlay-scale')) || 1,
+                    yTicks: chart.scales.y.ticks.map(tick => tick.value), yMin: chart.scales.y.min, yMax: chart.scales.y.max,
+                        values: chart.data.datasets[0].data.map(point => point.y), suggestedMin: chart.options.scales.y.suggestedMin ?? null,
+                    yFont: chart.options.scales.y.ticks.font.size, lineWidth: chart.data.datasets[0].borderWidth, radius: chart.data.datasets[0].pointRadius,
                         points: chart.data.datasets[0].data.length,
                         painted: [...canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data].some(value => value !== 0)};
             })''')
             assert len(charts) == chart_count
             for chart in charts:
                 assert chart['rotation'] == 0
-                assert chart['font'] == pytest.approx(16 * 96 / 72)
-                assert 2 <= len(chart['labels']) <= 4
+                assert chart['scale'] > 0
+                assert chart['font'] == chart['yFont'] == pytest.approx(11 * 100 / 72 * chart['scale'])
+                assert 2 <= len(chart['labels']) <= 7
+                assert chart['yTicks'] == pytest.approx([chart['yMin'], (chart['yMin'] + chart['yMax']) / 2, chart['yMax']])
+                reference = Figure()
+                axes = reference.add_subplot()
+                axes.plot(chart['values'])
+                lower, upper = axes.get_ylim()
+                if chart['suggestedMin'] is not None:
+                    lower = min(lower, chart['suggestedMin'])
+                assert [chart['yMin'], chart['yMax']] == pytest.approx([lower, upper])
+                reference.clear()
+                assert chart['yFont'] == pytest.approx(11 * 100 / 72 * chart['scale'])
+                assert chart['lineWidth'] == pytest.approx(1.8 * 100 / 72 * chart['scale'])
+                assert chart['radius'] == pytest.approx(2.7 * 100 / 72 / 2 * chart['scale'])
                 assert len(set(chart['labels'])) == len(chart['labels'])
                 assert chart['labels'][0] == '20:00'
                 assert chart['labels'][-1] == '20:14'
@@ -1178,9 +1196,13 @@ def test_browser_image_charts_show_larger_horizontal_minute_labels(view, viewpor
             assert not root.locator('[data-chart-status]').is_visible()
             original_settings = json.loads(json.dumps(application.extensions['chart_preview_config']['CHARTS']))
             positions = root.locator('.chart-panel').evaluate_all('panels => panels.map(panel => {const rect=panel.getBoundingClientRect(); return {x:rect.x,y:rect.y,width:rect.width,height:rect.height};})')
-            assert all(panel['width'] == 260 for panel in positions)
+            scale = charts[0]['scale']
+            if view == 'latest':
+                displayed_scale = page.locator('#latest-image').evaluate('media => Math.min(media.getBoundingClientRect().width / media.naturalWidth, media.getBoundingClientRect().height / media.naturalHeight)')
+                assert scale == pytest.approx(displayed_scale)
+            assert all(panel['width'] == pytest.approx(585 * scale, abs=.02) and panel['height'] == pytest.approx(336 * scale, abs=.02) for panel in positions)
             if chart_count > 1:
-                assert positions[1]['x'] == positions[0]['x'] + 260
+                assert positions[1]['x'] == pytest.approx(positions[0]['x'] + 585 * scale, abs=.02)
                 assert positions[1]['y'] == positions[0]['y']
             if chart_count > 2:
                 assert positions[2]['x'] == positions[0]['x']

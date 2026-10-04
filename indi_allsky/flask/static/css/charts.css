@@ -37,19 +37,20 @@
 .chart-panel[data-empty=true] .chart-no-data { display: flex; }
 .chart-status { min-height: 1.25rem; font-size: .75rem; opacity: .8; }
 .chart-stream-empty { padding: 2rem 0; font-size: .875rem; }
-.latest-chart-overlays { position: absolute; z-index: 25; left: 1rem; top: var(--chart-overlay-top, 120px); width: min(calc(var(--chart-overlay-width, 260px) * var(--chart-overlay-columns, 1)), calc(100% - 2rem)); max-height: calc(100% - var(--chart-overlay-top, 120px) - 1rem); overflow: auto; scrollbar-width: thin; }
+.latest-chart-overlays { position: absolute; z-index: 25; left: 1rem; top: var(--chart-overlay-top, 120px); width: min(calc(var(--chart-overlay-cell-width, calc(var(--chart-overlay-width, 260px) * 2.25)) * var(--chart-overlay-scale, 1) * var(--chart-overlay-columns, 1)), calc(100% - 2rem)); max-height: calc(100% - var(--chart-overlay-top, 120px) - 1rem); overflow: auto; scrollbar-width: thin; }
 .latest-chart-overlays[data-saved-charts=true] { left: auto; right: 1rem; }
-.latest-chart-overlays .chart-grid { grid-template-columns: repeat(var(--chart-overlay-columns, 1), var(--chart-overlay-width, 260px)); gap: 0; }
-.latest-chart-overlays .chart-panel { padding: .625rem .75rem; background: rgba(12, 18, 20, var(--chart-overlay-opacity, .8)); color: #f4f7f6; border-color: rgba(255,255,255,.16); backdrop-filter: blur(8px); }
-.latest-chart-overlays .chart-panel-header { margin-bottom: .25rem; }
-.chart-overlay-close { position: sticky; z-index: 2; top: .375rem; left: calc(100% - 1.875rem); width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 4px; background: rgba(12,18,20,.8); color: #f4f7f6; cursor: pointer; touch-action: manipulation; }
+.latest-chart-overlays .chart-grid { grid-template-columns: repeat(var(--chart-overlay-columns, 1), calc(var(--chart-overlay-cell-width, calc(var(--chart-overlay-width, 260px) * 2.25)) * var(--chart-overlay-scale, 1))); gap: 0; }
+.latest-chart-overlays .chart-panel { height: calc(336px * var(--chart-overlay-scale, 1)); display: flex; flex-direction: column; padding: calc(16.8px * var(--chart-overlay-scale, 1)) calc(var(--chart-overlay-cell-width, calc(var(--chart-overlay-width, 260px) * 2.25)) * var(--chart-overlay-scale, 1) * .04); border: 0; border-radius: 0; background: rgba(12, 18, 20, var(--chart-overlay-opacity, .8)); color: #f4f7f6; }
+.latest-chart-overlays .chart-panel-header { align-items: flex-start; margin-bottom: calc(26px * var(--chart-overlay-scale, 1)); gap: calc(12px * var(--chart-overlay-scale, 1)); }
+.chart-overlay-close { position: sticky; z-index: 2; top: 0; left: calc(100% - 1.875rem); width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 4px; background: rgba(12,18,20,.8); color: #f4f7f6; cursor: pointer; touch-action: manipulation; }
 .chart-overlay-close:hover { background: rgba(255,255,255,.16); }
 .chart-overlay-close:focus-visible { outline: 2px solid #38bdf8; outline-offset: 1px; }
 .latest-chart-overlays .chart-panel-header { cursor: grab; touch-action: none; user-select: none; }
 .latest-chart-overlays.is-dragging .chart-panel-header { cursor: grabbing; }
-.latest-chart-overlays .chart-panel-header h2 { font-size: .6875rem; }
-.latest-chart-overlays .chart-value { font-size: .875rem; }
-.latest-chart-overlays .chart-plot { height: 112px; }
+.latest-chart-overlays .chart-panel-header h2 { flex: 1; font-size: calc(19.444px * var(--chart-overlay-scale, 1)); font-weight: 700; line-height: 1.1; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.latest-chart-overlays .chart-value { font-size: calc(22.222px * var(--chart-overlay-scale, 1)); line-height: 1; }
+.latest-chart-overlays .chart-plot { height: auto; flex: 1; min-height: 0; }
+.latest-chart-overlays .chart-no-data { font-size: calc(16.667px * var(--chart-overlay-scale, 1)); color: #b9c4c4; opacity: 1; }
 .latest-chart-overlays .chart-status { color: white; text-shadow: 0 1px 3px black; }
 .latest-chart-overlays .chart-status:empty { display: none; }
 #latest-image-stage:fullscreen { width: 100vw; height: 100vh; background: #080b0d; border-radius: 0; }

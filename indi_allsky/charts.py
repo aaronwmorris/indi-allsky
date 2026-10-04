@@ -286,7 +286,6 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
                     ticks = numpy.linspace(0, len(points) - 1, tick_count, dtype=int).tolist() if points else []
                     axes.set_xticks(ticks)
                     axes.set_xticklabels([points[index]['x'][:5] for index in ticks], rotation=0, ha='center')
-                    axes.tick_params(axis='x', labelsize=14)
                     if len(ticks) > 1:
                         axes.get_xticklabels()[0].set_horizontalalignment('left')
                         axes.get_xticklabels()[-1].set_horizontalalignment('right')

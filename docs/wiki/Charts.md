@@ -67,15 +67,22 @@ or Shift plus arrow keys for fine adjustment. Placement follows image scaling,
 window resizing, and fullscreen. Older images without label-bound metadata use
 the configured top offset until a new capture supplies the bounds.
 
-Every selected saved-image chart uses 2.25 times the configured width and a height
+Browser and saved-image charts use 2.25 times the configured width and a height
 of 336 px (585 x 336 px at the default width). All four cells have those same
 dimensions; the full default 2x2 box is 1170 x 672 px, with no gaps. Charts may
 extend beyond the image-label text block; width is limited only by the image's
-available space. Saved charts show both Y-axis endpoints with clearance below
-the title, and evenly spaced horizontal time labels showing hours and minutes
-without seconds. Saved-image time labels use a 14-point font; Browser image
-charts use a 16-point font (21.33 CSS pixels), with fewer ticks on narrow charts
-to keep labels readable. The main History page retains its existing axes.
+available space for saved images; Browser grids scroll rather than shrink.
+Browser rendering mirrors saved images with square, unblurred panels, bold
+two-line titles, four-significant-digit readings, matching cyan line and marker
+weights, and three Y-axis values including both endpoints. Both show clearance below
+the title and use the same data-range padding and configured Y-axis limits.
+Browser cells, text, and strokes follow the displayed photo's source-pixel scale,
+so they match baked charts when the image is resized or shown in fullscreen.
+The close control retains its normal size and the block remains draggable.
+Both use evenly spaced horizontal time labels showing hours and minutes
+without seconds. Both axes use the saved-image Y-axis's 11-point font size;
+Browser axes use the equivalent raster size before image scaling (15.28 CSS pixels), with fewer ticks
+on narrow charts to keep labels readable. The main History page retains its existing axes.
 
 Saved-image charts are rendered with Matplotlib's headless Agg backend after
 image labels and before compression. They sit below upper-left labels in up to

@@ -49,6 +49,16 @@
             } catch (error) {}
             const limits = () => ({left: Math.max(0, stage.clientWidth - root.offsetWidth - 16), top: Math.max(0, stage.clientHeight - (root.querySelector('.chart-panel')?.offsetHeight || 110) - 16)});
             const position = () => {
+                if (image && image.width > 0 && image.height > 0 && media) {
+                    const rect = media.getBoundingClientRect();
+                    const scale = Math.min(rect.width / image.width, rect.height / image.height);
+                    const width = Math.min((parseFloat(root.style.getPropertyValue('--chart-overlay-width')) || 260) * 2.25, image.width - 32);
+                    if (scale > 0 && (root.style.getPropertyValue('--chart-overlay-scale') !== String(scale) || root.style.getPropertyValue('--chart-overlay-cell-width') !== width + 'px')) {
+                        root.style.setProperty('--chart-overlay-scale', scale);
+                        root.style.setProperty('--chart-overlay-cell-width', width + 'px');
+                        this.panels.forEach(panel => panel.chart.resize());
+                    }
+                }
                 if (manual) {
                     const space = limits();
                     root.style.left = manual.left * space.left + 'px'; root.style.right = 'auto';
@@ -127,29 +137,68 @@
                     header.append(title, value);
                     const plot = document.createElement('div'); plot.className = 'chart-plot';
                     const canvas = document.createElement('canvas'); canvas.setAttribute('role', 'img');
-                    const empty = document.createElement('span'); empty.className = 'chart-no-data'; empty.textContent = 'No readings';
+                    const empty = document.createElement('span'); empty.className = 'chart-no-data'; empty.textContent = this.options.compact ? 'No data' : 'No readings';
                     plot.append(canvas, empty); element.append(header, plot); this.grid.append(element);
                     const color = this.options.compact ? '#38bdf8' : colors[index % colors.length];
-                    const datasets = identifier === 'histogram' ? ['red', 'green', 'blue', 'gray'].map((label, colorIndex) => ({label, data: [], borderColor: ['#df827b', '#84b96b', '#69addb', '#a6b1b6'][colorIndex], pointRadius: 0})) : [{label: definition.label, data: [], borderColor: color, backgroundColor: color, fill: false, pointRadius: this.options.compact ? 1.8 : 3, pointHitRadius: 8, borderWidth: this.options.compact ? 1 : undefined, tension: this.options.compact ? 0 : .1, spanGaps: false}];
-                    const foreground = this.options.compact ? '#bccdcc' : getComputedStyle(document.body).color;
-                    const chart = new Chart(canvas, {type: identifier === 'detection' ? 'bar' : 'line', data: {datasets}, options: {
+                    const datasets = identifier === 'histogram' ? ['red', 'green', 'blue', 'gray'].map((label, colorIndex) => ({label, data: [], borderColor: ['#df827b', '#84b96b', '#69addb', '#a6b1b6'][colorIndex], pointRadius: 0})) : [{label: definition.label, data: [], borderColor: color, backgroundColor: color, fill: false, pointRadius: this.options.compact ? 2.7 * 100 / 72 / 2 : 3, pointBorderWidth: this.options.compact ? 1.8 * 100 / 72 : undefined, pointHitRadius: 8, borderWidth: this.options.compact ? 1.8 * 100 / 72 : undefined, tension: this.options.compact ? 0 : .1, spanGaps: false}];
+                    const foreground = this.options.compact ? '#b9c4c4' : getComputedStyle(document.body).color;
+                    const axisFont = this.options.compact ? {size: 11 * 100 / 72} : undefined;
+                    const chart = new Chart(canvas, {type: identifier === 'detection' ? 'bar' : 'line', data: {datasets},
+                        plugins: this.options.compact ? [{id: 'imageChartScale', beforeUpdate: chart => {
+                            const scale = parseFloat(this.root.style.getPropertyValue('--chart-overlay-scale')) || 1;
+                            chart.options.scales.x.ticks.font.size = chart.options.scales.y.ticks.font.size = 11 * 100 / 72 * scale;
+                            chart.options.scales.x.border.width = chart.options.scales.y.border.width = .4 * 100 / 72 * scale;
+                            chart.options.scales.y.grid.lineWidth = .5 * 100 / 72 * scale;
+                            if (identifier !== 'histogram') chart.data.datasets.forEach(dataset => {
+                                dataset.borderWidth = dataset.pointBorderWidth = 1.8 * 100 / 72 * scale;
+                                dataset.pointRadius = 2.7 * 100 / 72 / 2 * scale;
+                            });
+                        }}] : [], options: {
                         responsive: true, maintainAspectRatio: false, animation: false,
                         interaction: {mode: 'index', intersect: false},
                         plugins: {legend: {display: identifier === 'histogram', labels: {color: foreground, boxWidth: 10}}},
                         scales: {
                             x: {display: true, afterBuildTicks: this.options.compact ? axis => {
-                                const count = Math.min(4, Math.max(2, Math.floor(axis.width / 80) + 1));
+                                const scale = parseFloat(this.root.style.getPropertyValue('--chart-overlay-scale')) || 1;
+                                const count = Math.max(2, Math.floor(axis.width / (80 * scale)) + 1);
                                 if (axis.ticks.length > count) {
                                     const ticks = axis.ticks;
                                     axis.ticks = Array.from({length: count}, (_, index) => ticks[Math.round(index * (ticks.length - 1) / (count - 1))]);
                                 }
-                            } : undefined, grid: {display: !this.options.compact, drawTicks: false, color: 'rgba(128,128,128,.12)'}, ticks: {color: foreground, autoSkip: !this.options.compact, maxTicksLimit: this.options.compact ? 4 : undefined, minRotation: this.options.compact ? 0 : undefined, maxRotation: this.options.compact ? 0 : undefined, callback: this.options.compact ? function(value) { return this.getLabelForValue(value).slice(0, 5); } : undefined, font: this.options.compact ? {size: 16 * 96 / 72} : undefined}},
-                            y: {display: true, beginAtZero: !this.options.compact && ['jsqm', 'stars', 'temp', 'exp', 'gain', 'histogram'].includes(identifier), suggestedMin: definition.min ?? undefined, suggestedMax: identifier === 'detection' ? 1 : undefined, min: bounds.min ?? undefined, max: bounds.max ?? undefined, grid: {color: 'rgba(128,128,128,.12)'}, ticks: {color: foreground, maxTicksLimit: this.options.compact ? 3 : undefined, font: this.options.compact ? {size: 9} : undefined}}
+                            } : undefined, border: this.options.compact ? {color: '#536564', width: .4 * 100 / 72} : undefined, grid: {display: !this.options.compact, drawTicks: false, color: 'rgba(128,128,128,.12)'}, ticks: {color: foreground, autoSkip: !this.options.compact, minRotation: this.options.compact ? 0 : undefined, maxRotation: this.options.compact ? 0 : undefined, callback: this.options.compact ? function(value) { return this.getLabelForValue(value).slice(0, 5); } : undefined, font: axisFont}},
+                            y: {display: true, beginAtZero: !this.options.compact && ['jsqm', 'stars', 'temp', 'exp', 'gain', 'histogram'].includes(identifier), suggestedMin: definition.min ?? undefined, suggestedMax: identifier === 'detection' ? 1 : undefined, min: bounds.min ?? undefined, max: bounds.max ?? undefined,
+                                bounds: this.options.compact ? 'data' : undefined,
+                                afterDataLimits: this.options.compact && identifier !== 'histogram' ? axis => {
+                                    let lower = Infinity, upper = -Infinity;
+                                    axis.chart.data.datasets.forEach(dataset => dataset.data.forEach(point => {
+                                        if (Number.isFinite(point?.y)) { lower = Math.min(lower, point.y); upper = Math.max(upper, point.y); }
+                                    }));
+                                    if (!Number.isFinite(lower)) return;
+                                    if (identifier === 'detection') { lower = Math.min(lower, 0); upper = Math.max(upper, 0); }
+                                    const stickyZero = identifier === 'detection' && lower === 0 && upper > 0;
+                                    if (lower === upper) { const span = Math.abs(lower) * .05 || .05; lower -= span; upper += span; }
+                                    const padding = (upper - lower) * .05;
+                                    lower -= padding; upper += padding;
+                                    if (stickyZero) lower = 0;
+                                    if (Number.isFinite(axis.options.suggestedMin)) lower = Math.min(lower, axis.options.suggestedMin);
+                                    if (Number.isFinite(axis.options.min)) {
+                                        lower = axis.options.min;
+                                        if (!Number.isFinite(axis.options.max) && upper <= lower) upper = lower + Math.max(Math.abs(lower) * .05, 1);
+                                    }
+                                    if (Number.isFinite(axis.options.max)) {
+                                        upper = axis.options.max;
+                                        if (!Number.isFinite(axis.options.min) && lower >= upper) lower = upper - Math.max(Math.abs(upper) * .05, 1);
+                                    }
+                                    axis.min = lower; axis.max = upper;
+                                } : undefined,
+                                afterBuildTicks: this.options.compact ? axis => { axis.ticks = [{value: axis.min}, {value: (axis.min + axis.max) / 2}, {value: axis.max}]; } : undefined,
+                                border: this.options.compact ? {color: '#536564', width: .4 * 100 / 72} : undefined,
+                                grid: {color: this.options.compact ? 'rgba(203,213,211,.17)' : 'rgba(128,128,128,.12)', lineWidth: this.options.compact ? .5 * 100 / 72 : undefined}, ticks: {color: foreground, autoSkip: !this.options.compact, maxTicksLimit: this.options.compact ? 3 : undefined, font: axisFont}}
                         }
                     }});
                     panel = {element, title, value, chart, canvas}; this.panels.set(identifier, panel);
                 }
-                panel.title.textContent = definition.label; panel.canvas.setAttribute('aria-label', definition.label + ' history');
+                panel.title.textContent = definition.label; panel.title.title = definition.label; panel.canvas.setAttribute('aria-label', definition.label + ' history');
                 panel.chart.options.scales.y.suggestedMin = definition.min ?? undefined;
                 panel.chart.options.scales.y.min = bounds.min ?? undefined; panel.chart.options.scales.y.max = bounds.max ?? undefined;
                 this.grid.append(panel.element);
@@ -177,7 +226,7 @@
                     } else {
                         panel.chart.data.datasets[0].data = points;
                         const reading = points.at(-1)?.y;
-                        panel.value.textContent = Number.isFinite(reading) ? new Intl.NumberFormat(undefined, {maximumFractionDigits: 1}).format(reading) : '--';
+                        panel.value.textContent = Number.isFinite(reading) ? new Intl.NumberFormat(undefined, this.options.compact ? {maximumSignificantDigits: 4, useGrouping: false} : {maximumFractionDigits: 1}).format(reading) : this.options.compact ? '---' : '--';
                         panel.element.dataset.empty = String(!points.some(point => Number.isFinite(point.y)));
                     }
                     panel.chart.update('none');
