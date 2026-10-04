@@ -169,20 +169,28 @@ def chart_configuration(config, camera_data=None, is_local=True):
 
 
 def _chart_values_for_reading(reading, definitions, temperature_display):
-    temperature = chart_value(reading.temp)
-    if temperature is not None:
-        if temperature_display == 'f':
-            temperature = temperature * 9.0 / 5.0 + 32
-        elif temperature_display == 'k':
-            temperature += 273.15
-    stars = chart_value(reading.stars_rolling)
-    values = {'jsqm': reading.jsqm, 'stars': int(stars) if stars is not None else None,
-              'temp': temperature, 'exp': reading.exposure, 'gain': reading.gain,
-              'detection': int(reading.detections > 0) if reading.detections is not None else None}
-    metadata = reading.data or {}
     for definition in definitions:
         source = definition['source']
-        value = values.get(source) if source in values else metadata.get(source)
+        if source == 'temp':
+            value = chart_value(reading.temp)
+            if value is not None:
+                if temperature_display == 'f':
+                    value = value * 9.0 / 5.0 + 32
+                elif temperature_display == 'k':
+                    value += 273.15
+        elif source == 'stars':
+            stars = chart_value(reading.stars_rolling)
+            value = int(stars) if stars is not None else None
+        elif source == 'jsqm':
+            value = reading.jsqm
+        elif source == 'exp':
+            value = reading.exposure
+        elif source == 'gain':
+            value = reading.gain
+        elif source == 'detection':
+            value = int(reading.detections > 0) if reading.detections is not None else None
+        else:
+            value = (reading.data or {}).get(source)
         yield chart_value(value)
 
 

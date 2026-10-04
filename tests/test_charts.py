@@ -210,6 +210,27 @@ def test_saved_chart_values_match_points_without_formatting_timestamps(temperatu
     assert build_chart_values([], definitions) == {definition['id']: [] for definition in definitions}
 
 
+@pytest.mark.parametrize('builder', [build_chart_values, build_chart_data])
+@pytest.mark.parametrize('source, fields, expected', [
+    ('sensor_user_0', {'data': {'sensor_user_0': 87.5}}, 87.5),
+    ('sensor_user_0', {'data': None}, None),
+    ('temp', {'temp': -5}, 23),
+    ('stars', {'stars_rolling': 10.5}, 10),
+    ('jsqm', {'jsqm': 20.5}, 20.5),
+    ('exp', {'exposure': 40.5}, 40.5),
+    ('gain', {'gain': 200}, 200),
+    ('detection', {'detections': 2}, 1),
+    ('detection', {'detections': None}, None),
+])
+def test_chart_builders_only_read_selected_sources(builder, source, fields, expected):
+    reading = SimpleNamespace(createDate=datetime(2026, 10, 4, 20, 30), **fields)
+    result = builder([reading], [{'id': 'selected', 'source': source}], 'f')
+    if builder is build_chart_data:
+        assert result == {'selected': [{'x': '20:30:00', 'y': expected}]}
+    else:
+        assert result == {'selected': [expected]}
+
+
 def test_saved_charts_disabled_leave_pixels_and_readings_untouched():
     import numpy
 
