@@ -168,27 +168,40 @@ def chart_configuration(config, camera_data=None, is_local=True):
     return validate_chart_configuration(settings)
 
 
+def _chart_values_for_reading(reading, definitions, temperature_display):
+    temperature = chart_value(reading.temp)
+    if temperature is not None:
+        if temperature_display == 'f':
+            temperature = temperature * 9.0 / 5.0 + 32
+        elif temperature_display == 'k':
+            temperature += 273.15
+    stars = chart_value(reading.stars_rolling)
+    values = {'jsqm': reading.jsqm, 'stars': int(stars) if stars is not None else None,
+              'temp': temperature, 'exp': reading.exposure, 'gain': reading.gain,
+              'detection': int(reading.detections > 0) if reading.detections is not None else None}
+    metadata = reading.data or {}
+    for definition in definitions:
+        source = definition['source']
+        value = values.get(source) if source in values else metadata.get(source)
+        yield chart_value(value)
+
+
+def build_chart_values(readings, definitions, temperature_display='c'):
+    result = {definition['id']: [] for definition in definitions}
+    for reading in readings:
+        for definition, value in zip(definitions, _chart_values_for_reading(reading, definitions, temperature_display)):
+            result[definition['id']].append(value)
+    return result
+
+
 def build_chart_data(readings, definitions, temperature_display='c', selected_ids=None, include_timestamp=False):
     definitions = [definition for definition in definitions
                    if selected_ids is None or definition['id'] in selected_ids]
     result = {definition['id']: [] for definition in definitions}
     for reading in readings:
         timestamp = reading.createDate.strftime('%H:%M:%S')
-        temperature = chart_value(reading.temp)
-        if temperature is not None:
-            if temperature_display == 'f':
-                temperature = temperature * 9.0 / 5.0 + 32
-            elif temperature_display == 'k':
-                temperature += 273.15
-        stars = chart_value(reading.stars_rolling)
-        values = {'jsqm': reading.jsqm, 'stars': int(stars) if stars is not None else None,
-                  'temp': temperature, 'exp': reading.exposure, 'gain': reading.gain,
-                  'detection': int(reading.detections > 0) if reading.detections is not None else None}
-        metadata = reading.data or {}
-        for definition in definitions:
-            source = definition['source']
-            value = values.get(source) if source in values else metadata.get(source)
-            point = {'x': timestamp, 'y': chart_value(value)}
+        for definition, value in zip(definitions, _chart_values_for_reading(reading, definitions, temperature_display)):
+            point = {'x': timestamp, 'y': value}
             if include_timestamp:
                 point['timestamp'] = reading.createDate.timestamp()
             result[definition['id']].append(point)
@@ -211,7 +224,7 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
     definitions = [definition for definition in chart_definitions(config, camera_data, is_local=True)
                    if definition['id'] in settings['SAVED_IMAGE_IDS']]
     readings = list(readings)
-    data = build_chart_data(readings, definitions, config.get('TEMP_DISPLAY'))
+    data = build_chart_values(readings, definitions, config.get('TEMP_DISPLAY'))
     history = settings['SAVED_IMAGE_HISTORY_SECONDS']
     end = readings[-1].createDate if readings else datetime.now()
     start = end - timedelta(seconds=history)
@@ -243,9 +256,9 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
                 if definition is None:
                     break
                 try:
-                    points = data[definition['id']]
-                    values = [point['y'] if point['y'] is not None else numpy.nan for point in points]
-                    latest = points[-1]['y'] if points else None
+                    chart_values = data[definition['id']]
+                    values = [value if value is not None else numpy.nan for value in chart_values]
+                    latest = chart_values[-1] if chart_values else None
                     value_text = figure.text(.96, .95, format(latest, '.4g') if latest is not None else '---',
                                              color='#f4f7f6', fontsize=16, ha='right', va='top')
                     title_text = figure.text(.04, .95, '', color='#f4f7f6', fontsize=14,
@@ -313,7 +326,7 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
                         spine.set_visible(name in ('left', 'bottom'))
                         spine.set_color('#536564')
                         spine.set_linewidth(.4)
-                    if not any(point['y'] is not None for point in points):
+                    if not any(value is not None for value in chart_values):
                         axes.text(.5, .5, 'No data', transform=axes.transAxes, ha='center', va='center',
                                   fontsize=12, color='#b9c4c4')
                     canvas.draw()

@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 
 from indi_allsky.charts import chart_definitions, chart_value, custom_charts, validate_custom_charts
 from indi_allsky.charts import chart_configuration, validate_chart_configuration
-from indi_allsky.charts import build_chart_data, render_saved_charts
+from indi_allsky.charts import build_chart_data, build_chart_values, render_saved_charts
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -179,6 +179,35 @@ def test_chart_save_enforces_image_chart_limits_without_overwriting_settings(key
         application.extensions['chart_preview_save'].assert_not_called()
     else:
         assert configuration['CHARTS'][key] == settings[key]
+
+
+@pytest.mark.parametrize('temperature_display, expected_temperature', [('c', -5), ('f', 23), ('k', 268.15)])
+def test_saved_chart_values_match_points_without_formatting_timestamps(temperature_display, expected_temperature):
+    definitions = chart_definitions({'CHARTS': {'CUSTOM': []}}) + [
+        {'id': 'humidity', 'source': 'sensor_user_0'},
+        {'id': 'sky', 'source': 'sensor_temp_0'},
+    ]
+    readings = [SimpleNamespace(createDate=datetime(2026, 10, 4, 20, 30) + timedelta(seconds=index),
+                temp=temperature, stars_rolling=10.5 if index == 0 else None, jsqm=20,
+                exposure=40, gain=200, detections=index if index == 0 else None,
+                data=metadata) for index, (temperature, metadata) in enumerate([
+                    (-5, {'sensor_user_0': 87.5, 'sensor_temp_0': -20}),
+                    (None, {'sensor_user_0': float('nan'), 'sensor_temp_0': 'invalid'}),
+                    (float('inf'), None),
+                ])]
+    points = build_chart_data(readings, definitions, temperature_display)
+    expected = {identifier: [point['y'] for point in series] for identifier, series in points.items()}
+    for reading in readings:
+        reading.createDate = MagicMock(spec=datetime)
+        reading.createDate.strftime.side_effect = AssertionError('Saved values must not format timestamps')
+        reading.createDate.timestamp.side_effect = AssertionError('Saved values must not convert timestamps')
+    values = build_chart_values(iter(readings), definitions, temperature_display)
+    assert values == expected
+    assert values['temp'] == [expected_temperature, None, None]
+    assert values['humidity'] == [87.5, None, None]
+    assert values['stars'] == [10, None, None]
+    assert values['detection'] == [0, None, None]
+    assert build_chart_values([], definitions) == {definition['id']: [] for definition in definitions}
 
 
 def test_saved_charts_disabled_leave_pixels_and_readings_untouched():
