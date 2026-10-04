@@ -23,9 +23,19 @@
             field.dispatchEvent(new Event('change', {bubbles: true}));
         }
         function selection(key, identifier, checked) {
+            if (checked && key !== 'VISIBLE_IDS' && !settings[key].includes(identifier) && settings[key].length >= 4) {
+                error.textContent = 'Only 4 charts are allowed for ' + (key === 'OVERLAY_IDS' ? 'Browser' : 'Saved image') + '.';
+                error.dataset.selectionLimit = 'true'; error.style.display = 'block';
+                error.scrollIntoView({block: 'nearest'});
+                return false;
+            }
+            if (error.dataset.selectionLimit) {
+                error.style.display = 'none'; delete error.dataset.selectionLimit;
+            }
             settings[key] = settings[key].filter(value => value !== identifier);
             if (checked) settings[key].push(identifier);
             save();
+            return true;
         }
         function label(text, input, className = '') {
             const wrapper = document.createElement('label');
@@ -37,7 +47,7 @@
             const input = document.createElement('input');
             input.type = 'checkbox'; input.className = checkboxClasses;
             input.checked = settings[key].includes(identifier);
-            input.addEventListener('change', () => selection(key, identifier, input.checked));
+            input.addEventListener('change', () => { if (!selection(key, identifier, input.checked)) input.checked = false; });
             return label(text, input, 'chart-check');
         }
         function button(title, icon, callback, disabled = false) {

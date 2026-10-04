@@ -100,6 +100,7 @@
         }
         reconcile(definitions) {
             const wanted = [...definitions.map(definition => definition.id), 'histogram'].filter(identifier => this.options.ids.includes(identifier));
+            if (this.options.compact) this.root.style.setProperty('--chart-overlay-columns', wanted.length > 1 ? '2' : '1');
             this.panels.forEach((panel, identifier) => {
                 if (!wanted.includes(identifier)) { panel.chart.destroy(); panel.element.remove(); this.panels.delete(identifier); }
             });

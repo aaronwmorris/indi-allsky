@@ -123,6 +123,9 @@ def validate_chart_configuration(settings):
             raise ValueError('Invalid chart selection')
         if len(selected) != len(set(selected)):
             raise ValueError('Select each chart only once')
+        if key != 'VISIBLE_IDS' and len(selected) > 4:
+            destination = 'Browser' if key == 'OVERLAY_IDS' else 'Saved image'
+            raise ValueError('Only 4 charts are allowed for {0}.'.format(destination))
         result[key] = selected
     for key, default, minimum, maximum in (
         ('OVERLAY_HISTORY_SECONDS', 900, 60, 86400),
@@ -205,20 +208,25 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
         image = numpy.repeat(image[:, :, None], 3, axis=2)
     image_height, image_width = image.shape[:2]
     single_chart = len(definitions) == 1
-    width = min(int(settings['OVERLAY_WIDTH'] * (1.5 if single_chart else 1)), image_width - 32)
-    height = 224 if single_chart else 112
+    width = min(int(settings['OVERLAY_WIDTH'] * 1.5), image_width - 32)
+    height = 224
     remaining = iter(definitions)
     definition = next(remaining, None)
+    columns = 2 if not single_chart and width * 2 <= image_width - 32 else 1
+    labels = sorted((bounds for bounds in label_bounds
+                     if bounds[0] < 16 + columns * width and bounds[2] > 16), key=lambda bounds: bounds[1])
+    top = max(16, settings['OVERLAY_TOP'])
+    for bounds in labels:
+        if bounds[1] < max(top, image_height // 2):
+            top = max(top, bounds[3] + 8)
+    bottom = min([image_height - 16] + [bounds[1] - 8 for bounds in labels if bounds[1] >= top])
     if width >= 160:
-        for left in range(16, image_width - width + 1, width + 8):
-            labels = sorted((bounds for bounds in label_bounds
-                             if bounds[0] < left + width and bounds[2] > left), key=lambda bounds: bounds[1])
-            top = max(16, settings['OVERLAY_TOP'])
-            for bounds in labels:
-                if bounds[1] < max(top, image_height // 2):
-                    top = max(top, bounds[3] + 8)
-            bottom = min([image_height - 16] + [bounds[1] - 8 for bounds in labels if bounds[1] >= top])
-            while definition is not None and top + height <= bottom:
+        for row in range(2 if columns == 2 else 4):
+            if top + height > bottom:
+                break
+            for left in range(16, 16 + columns * width, width):
+                if definition is None:
+                    break
                 figure = Figure(figsize=(width / 100, height / 100), dpi=100,
                                 facecolor=(12 / 255, 18 / 255, 20 / 255, settings['OVERLAY_OPACITY'] / 100))
                 canvas = FigureCanvasAgg(figure)
@@ -226,20 +234,34 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
                     points = data[definition['id']]
                     values = [point['y'] if point['y'] is not None else numpy.nan for point in points]
                     latest = points[-1]['y'] if points else None
-                    caption = textwrap.shorten(definition['label'], width=max(8, (width - 112) // 6), placeholder='...')
-                    figure.text(.045, .86, caption, color='#f4f7f6', fontsize=8, parse_math=False)
-                    figure.text(.96, .86, format(latest, '.4g') if latest is not None else '---',
-                                color='#f4f7f6', fontsize=9, ha='right')
-                    axes = figure.add_axes((.20, .25, .74, .42), facecolor='none')
+                    value_text = figure.text(.96, .95, format(latest, '.4g') if latest is not None else '---',
+                                             color='#f4f7f6', fontsize=16, ha='right', va='top')
+                    title_text = figure.text(.04, .95, '', color='#f4f7f6', fontsize=14,
+                                             fontweight='bold', va='top', parse_math=False, linespacing=1.1)
+                    renderer = canvas.get_renderer()
+                    title_right = value_text.get_window_extent(renderer).x0 - 12
+                    for caption_width in range(max(1, int(width / 8)), 0, -1):
+                        lines = textwrap.wrap(definition['label'], width=caption_width)
+                        caption = '\n'.join(lines[:2])
+                        if len(lines) > 2:
+                            caption = lines[0] + '\n' + textwrap.shorten(' '.join(lines[1:]),
+                                                                        width=max(3, caption_width), placeholder='...')
+                        title_text.set_text(caption)
+                        if title_text.get_window_extent(renderer).x1 <= title_right:
+                            break
+                    plot_left = max(.17, 66 / width)
+                    axes = figure.add_axes((plot_left, .17, .96 - plot_left, .55), facecolor='none')
                     if definition['id'] == 'detection':
                         axes.bar(range(len(points)), values, color='#38bdf8', width=.8)
                     else:
-                        axes.plot(range(len(points)), values, color='#38bdf8', linewidth=1,
-                                  marker='o', markersize=1.8)
+                        axes.plot(range(len(points)), values, color='#38bdf8', linewidth=1.8,
+                                  marker='o', markersize=2.7)
                     axes.yaxis.set_major_locator(MaxNLocator(nbins=2))
                     axes.ticklabel_format(axis='y', style='sci', scilimits=(-3, 4), useOffset=False)
-                    axes.yaxis.get_offset_text().set_fontsize(6)
+                    axes.yaxis.get_offset_text().set_fontsize(11)
                     axes.yaxis.get_offset_text().set_color('#b9c4c4')
+                    axes.yaxis.get_offset_text().set_horizontalalignment('right')
+                    axes.yaxis.get_offset_text().set_x(1)
                     lower, upper = axes.get_ylim()
                     if definition['min'] is not None:
                         lower = min(lower, definition['min'])
@@ -254,13 +276,15 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
                             lower = upper - max(abs(upper) * .05, 1)
                     axes.set_ylim(lower, upper)
                     axes.set_xlim(-.5, max(len(points) - .5, .5))
-                    ticks = list(dict.fromkeys((0, len(points) - 1))) if points else []
+                    tick_count = min(len(points), max(2, int(width * (.96 - plot_left) // 72)))
+                    ticks = numpy.linspace(0, len(points) - 1, tick_count, dtype=int).tolist() if points else []
                     axes.set_xticks(ticks)
-                    axes.set_xticklabels([points[index]['x'] for index in ticks])
-                    if len(ticks) > 1:
-                        axes.get_xticklabels()[0].set_horizontalalignment('left')
-                        axes.get_xticklabels()[-1].set_horizontalalignment('right')
-                    axes.tick_params(colors='#b9c4c4', labelsize=6.5, length=2, width=.4, pad=2)
+                    axes.set_xticklabels([points[index]['x'] for index in ticks], rotation=45, ha='right')
+                    axes.tick_params(colors='#b9c4c4', labelsize=11, length=3, width=.6, pad=3)
+                    label_depth = max((text.get_window_extent(renderer).height for text in axes.get_xticklabels()),
+                                      default=0)
+                    plot_bottom = max(.17, (label_depth + 14) / height)
+                    axes.set_position((plot_left, plot_bottom, .96 - plot_left, .72 - plot_bottom))
                     axes.set_axisbelow(True)
                     axes.grid(axis='y', color='#cbd5d3', alpha=.17, linewidth=.5)
                     for name, spine in axes.spines.items():
@@ -269,7 +293,7 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
                         spine.set_linewidth(.4)
                     if not any(point['y'] is not None for point in points):
                         axes.text(.5, .5, 'No data', transform=axes.transAxes, ha='center', va='center',
-                                  fontsize=7, color='#b9c4c4')
+                                  fontsize=12, color='#b9c4c4')
                     canvas.draw()
                     rgba = numpy.asarray(canvas.buffer_rgba())
                     alpha = rgba[:, :, 3:4].astype(numpy.float32) / 255
@@ -277,8 +301,8 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
                     region[:] = numpy.rint(rgba[:, :, :3][:, :, ::-1] * alpha + region * (1 - alpha)).astype(numpy.uint8)
                 finally:
                     figure.clear()
-                top += height + 8
                 definition = next(remaining, None)
+            top += height
             if definition is None:
                 break
     if definition is not None:

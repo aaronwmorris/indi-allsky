@@ -116,6 +116,45 @@ def test_default_preferences_preserve_existing_charts_and_disable_overlays():
     assert settings['SAVED_IMAGE_IDS'] == []
 
 
+@pytest.mark.parametrize('key, destination', [('OVERLAY_IDS', 'Browser'), ('SAVED_IMAGE_IDS', 'Saved image')])
+@pytest.mark.parametrize('count', [4, 5])
+def test_image_chart_selection_limit_is_four(key, destination, count):
+    selected = ['jsqm', 'stars', 'temp', 'exp', 'gain'][:count]
+    config = {'CUSTOM': [], key: selected}
+    if count == 5:
+        with pytest.raises(ValueError, match='Only 4 charts are allowed for ' + destination):
+            validate_chart_configuration(config)
+    else:
+        assert validate_chart_configuration(config)[key] == selected
+
+
+def test_image_chart_limits_are_independent_and_history_is_unrestricted():
+    selected = ['jsqm', 'stars', 'temp', 'exp', 'gain', 'detection']
+    settings = validate_chart_configuration({'CUSTOM': [], 'VISIBLE_IDS': selected,
+                                            'OVERLAY_IDS': selected[:4], 'SAVED_IMAGE_IDS': selected[-4:]})
+    assert settings['VISIBLE_IDS'] == selected
+    assert settings['OVERLAY_IDS'] == selected[:4]
+    assert settings['SAVED_IMAGE_IDS'] == selected[-4:]
+
+
+@pytest.mark.parametrize('key', ['OVERLAY_IDS', 'SAVED_IMAGE_IDS'])
+@pytest.mark.parametrize('count', [4, 5])
+def test_chart_save_enforces_image_chart_limits_without_overwriting_settings(key, count):
+    application = create_chart_preview()
+    configuration = application.extensions['chart_preview_config']
+    previous = json.loads(json.dumps(configuration))
+    settings = chart_configuration(configuration)
+    settings[key] = ['jsqm', 'stars', 'temp', 'exp', 'gain'][:count]
+    response = application.test_client().post('/ajax/charts', json={'CHARTS__CONFIG': json.dumps(settings)})
+    assert response.status_code == (200 if count == 4 else 400)
+    if count == 5:
+        assert 'Only 4 charts are allowed' in response.json['CHARTS__CONFIG'][0]
+        assert configuration == previous
+        application.extensions['chart_preview_save'].assert_not_called()
+    else:
+        assert configuration['CHARTS'][key] == settings[key]
+
+
 def test_saved_charts_disabled_leave_pixels_and_readings_untouched():
     import numpy
 
@@ -126,7 +165,7 @@ def test_saved_charts_disabled_leave_pixels_and_readings_untouched():
     assert numpy.all(image == 120)
 
 
-@pytest.mark.parametrize('selected', [['temp'], ['detection'], ['temp', 'detection']])
+@pytest.mark.parametrize('selected', [['temp'], ['detection'], ['temp', 'detection'], ['jsqm', 'stars', 'temp', 'detection']])
 def test_saved_charts_change_real_raster_pixels_only_in_the_selected_regions(selected):
     import numpy
     import cv2
@@ -135,12 +174,12 @@ def test_saved_charts_change_real_raster_pixels_only_in_the_selected_regions(sel
                 temp=-27 + index, stars_rolling=0, jsqm=None, exposure=15, gain=50,
                 detections=index % 2, data={}) for index in range(8)]
     config = {'CHARTS': {'CUSTOM': [], 'SAVED_IMAGE_IDS': selected}}
-    image = numpy.full((480, 640, 3), 120, dtype=numpy.uint8)
+    image = numpy.full((800, 960, 3), 120, dtype=numpy.uint8)
     original = image.copy()
     result = render_saved_charts(image, config, readings, label_bounds=[(10, 10, 300, 190)])
-    width = 390 if len(selected) == 1 else 260
-    height = 224 if len(selected) == 1 else 112
-    right = 16 + width
+    width = 390
+    height = 224
+    right = 16 + width * (1 if len(selected) == 1 else 2)
     first_end = 198 + height
     assert result is image
     assert numpy.array_equal(image[:198], original[:198])
@@ -148,7 +187,7 @@ def test_saved_charts_change_real_raster_pixels_only_in_the_selected_regions(sel
     assert numpy.array_equal(image[:, right:], original[:, right:])
     assert numpy.any(image[198:first_end, 16:right] != 120)
     assert numpy.any(image[198:first_end, 16:right, 0] > image[198:first_end, 16:right, 2])
-    end = first_end if len(selected) == 1 else first_end + height + 8
+    end = 198 + height * (1 if len(selected) <= 2 else 2)
     assert numpy.array_equal(image[end:], original[end:])
     success, encoded = cv2.imencode('.png', result)
     assert success
@@ -159,9 +198,11 @@ def test_saved_charts_change_real_raster_pixels_only_in_the_selected_regions(sel
     (['temp'], 640, 260, (390, 224)),
     (['temp'], 640, 300, (450, 224)),
     (['temp'], 320, 260, (288, 224)),
-    (['temp', 'gain'], 640, 260, (260, 112)),
+    (['temp', 'gain'], 640, 260, (390, 224)),
+    (['temp', 'gain', 'stars'], 960, 260, (390, 224)),
+    (['jsqm', 'stars', 'temp', 'exp'], 960, 260, (390, 224)),
 ])
-def test_single_saved_chart_is_larger_without_changing_compact_multi_chart_sizes(monkeypatch, selected, image_width, base_width, expected):
+def test_saved_charts_keep_enlarged_dimensions_for_every_selection(monkeypatch, selected, image_width, base_width, expected):
     import numpy
     from matplotlib.backends.backend_agg import FigureCanvasAgg
 
@@ -172,9 +213,26 @@ def test_single_saved_chart_is_larger_without_changing_compact_multi_chart_sizes
         draw(canvas)
     monkeypatch.setattr(FigureCanvasAgg, 'draw', record_draw)
     config = {'CHARTS': {'CUSTOM': [], 'SAVED_IMAGE_IDS': selected, 'OVERLAY_WIDTH': base_width}}
-    render_saved_charts(numpy.zeros((480, image_width, 3), dtype=numpy.uint8), config, [])
+    render_saved_charts(numpy.zeros((1100, image_width, 3), dtype=numpy.uint8), config, [])
     assert sizes == [expected] * len(selected)
     assert chart_configuration(config)['OVERLAY_WIDTH'] == base_width
+
+
+def test_four_saved_charts_fill_two_rows_without_gaps_in_row_major_order(monkeypatch):
+    import numpy
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    colors = iter([10, 20, 30, 40])
+    monkeypatch.setattr(FigureCanvasAgg, 'buffer_rgba',
+                        lambda canvas: numpy.full((224, 390, 4), [next(colors), 0, 0, 255], dtype=numpy.uint8))
+    image = numpy.full((800, 960, 3), 120, dtype=numpy.uint8)
+    render_saved_charts(image, {'CHARTS': {'CUSTOM': [], 'SAVED_IMAGE_IDS': ['jsqm', 'stars', 'temp', 'exp']}}, [])
+    for index, color in enumerate([10, 20, 30, 40]):
+        top = 120 + (index // 2) * 224
+        left = 16 + (index % 2) * 390
+        assert numpy.all(image[top:top + 224, left:left + 390, 2] == color)
+    assert numpy.all(image[568:] == 120)
+    assert numpy.all(image[:, 796:] == 120)
 
 
 def test_saved_charts_honor_axis_limits_and_preserve_gaps_and_negative_values(monkeypatch):
@@ -200,7 +258,9 @@ def test_saved_charts_honor_axis_limits_and_preserve_gaps_and_negative_values(mo
     assert draws[0][1][2] == 0
 
 
-def test_saved_chart_names_are_literal_and_timestamp_labels_stay_inside_panel(monkeypatch):
+@pytest.mark.parametrize('image_width', [320, 960])
+@pytest.mark.parametrize('point_count', [1, 2, 5, 60])
+def test_saved_chart_names_are_literal_and_timestamp_labels_stay_inside_panel(monkeypatch, image_width, point_count):
     import numpy
     from matplotlib.backends.backend_agg import FigureCanvasAgg
 
@@ -209,16 +269,23 @@ def test_saved_chart_names_are_literal_and_timestamp_labels_stay_inside_panel(mo
     def record_draw(canvas):
         draw(canvas)
         renderer = canvas.get_renderer()
-        text_bounds.extend(text.get_window_extent(renderer) for text in canvas.figure.axes[0].get_xticklabels())
+        axes = canvas.figure.axes[0]
+        labels = axes.get_xticklabels()
+        assert all(text.get_rotation() == 45 and text.get_fontsize() == 11 for text in labels)
+        assert labels[0].get_text() == '20:30:00'
+        assert labels[-1].get_text() == (datetime(2026, 10, 4, 20, 30) + timedelta(seconds=point_count - 1)).strftime('%H:%M:%S')
+        text_bounds.extend(text.get_window_extent(renderer) for text in labels)
     monkeypatch.setattr(FigureCanvasAgg, 'draw', record_draw)
     config = {'CHARTS': {'CUSTOM': [{'id': 'sky', 'source': 'sensor_user_0', 'label': r'Sky $\bad$'}],
                         'SAVED_IMAGE_IDS': ['sky']}}
     readings = [SimpleNamespace(createDate=datetime(2026, 10, 4, 20, 30) + timedelta(seconds=index),
                 temp=None, stars_rolling=None, jsqm=None, exposure=None, gain=None, detections=None,
-                data={'sensor_user_0': -27}) for index in range(2)]
-    render_saved_charts(numpy.zeros((480, 640, 3), dtype=numpy.uint8), config, readings)
-    assert len(text_bounds) == 2
-    assert all(0 <= bounds.x0 < bounds.x1 <= 390 and 0 <= bounds.y0 < bounds.y1 <= 224 for bounds in text_bounds)
+                data={'sensor_user_0': -27}) for index in range(point_count)]
+    render_saved_charts(numpy.zeros((480, image_width, 3), dtype=numpy.uint8), config, readings)
+    width = min(390, image_width - 32)
+    assert len(text_bounds) == min(point_count, 4 if image_width == 960 else 2)
+    assert all(0 <= bounds.x0 < bounds.x1 <= width and 0 <= bounds.y0 < bounds.y1 <= 224 for bounds in text_bounds)
+    assert all(first.x1 < second.x0 for first, second in zip(text_bounds, text_bounds[1:]))
 
 
 def test_saved_charts_that_cannot_fit_do_not_overwrite_labels_or_resize_image():
@@ -229,6 +296,52 @@ def test_saved_charts_that_cannot_fit_do_not_overwrite_labels_or_resize_image():
                                 label_bounds=[(0, 0, 240, 130)])
     assert result.shape == (150, 240, 3)
     assert numpy.all(result == 120)
+
+
+@pytest.mark.parametrize('image_width, label, value', [
+    (960, 'SHT31 (i2c) - SHT31D - Temperature', 20.49),
+    (320, 'MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM', -123456),
+    (960, 'Temperature', None),
+])
+def test_saved_chart_text_is_large_and_fits_the_expanded_plot(monkeypatch, image_width, label, value):
+    import numpy
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    draw = FigureCanvasAgg.draw
+    def record_draw(canvas):
+        draw(canvas)
+        renderer = canvas.get_renderer()
+        value_text, title_text = canvas.figure.texts
+        assert title_text.get_fontsize() == 14
+        assert value_text.get_fontsize() == 16
+        title_bounds = title_text.get_window_extent(renderer)
+        value_bounds = value_text.get_window_extent(renderer)
+        assert title_bounds.x1 <= value_bounds.x0 - 12
+        axes = canvas.figure.axes[0]
+        assert axes.bbox.width >= canvas.get_width_height()[0] - 82
+        assert axes.get_position().y1 == pytest.approx(.72)
+        assert axes.get_position().height >= .38
+        lower, upper = axes.get_ylim()
+        y_labels = [text for tick, text in zip(axes.get_yticks(), axes.get_yticklabels()) if lower <= tick <= upper]
+        texts = [title_text, value_text, *axes.get_xticklabels(), *y_labels,
+                 axes.yaxis.get_offset_text(), *axes.texts]
+        for text in texts:
+            if not text.get_text() or not text.get_visible():
+                continue
+            bounds = text.get_window_extent(renderer)
+            assert 0 <= bounds.x0 < bounds.x1 <= canvas.get_width_height()[0]
+            assert 0 <= bounds.y0 < bounds.y1 <= 224
+        assert all(text.get_fontsize() == 11 for text in axes.get_xticklabels())
+        offset_bounds = axes.yaxis.get_offset_text().get_window_extent(renderer)
+        if axes.yaxis.get_offset_text().get_text():
+            assert not title_bounds.overlaps(offset_bounds)
+    monkeypatch.setattr(FigureCanvasAgg, 'draw', record_draw)
+    config = {'CHARTS': {'CUSTOM': [{'id': 'sky', 'source': 'sensor_user_0', 'label': label}],
+                        'SAVED_IMAGE_IDS': ['sky']}}
+    readings = [SimpleNamespace(createDate=datetime(2026, 10, 4, 20, 30) + timedelta(seconds=index),
+                temp=None, stars_rolling=None, jsqm=None, exposure=None, gain=None, detections=None,
+                data={'sensor_user_0': value}) for index in range(2)]
+    render_saved_charts(numpy.zeros((480, image_width, 3), dtype=numpy.uint8), config, readings)
 
 
 @pytest.fixture

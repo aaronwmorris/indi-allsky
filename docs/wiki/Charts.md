@@ -35,6 +35,13 @@ Browser charts avoid the status message, scroll within the image area and are
 included in fullscreen. They appear on the right when saved-image charts are
 also configured. Browser-only charts do not modify image files.
 
+Each image destination allows up to four selected charts, independently of the
+History page. Selecting a fifth displays the inline validation error. Image
+charts use two columns, with charts three and four directly below the first row
+and no gap between panels. Browser grids scroll on narrow displays rather than
+shrinking individual charts. Saved images too narrow for two columns retain one
+column; charts that cannot fit are still skipped rather than resized.
+
 Browser charts start below the recorded image-label bounds and status message.
 Drag any chart header with a mouse or touch to move the browser chart group;
 its position is remembered per camera in this browser. Double-click a header to
@@ -43,15 +50,15 @@ or Shift plus arrow keys for fine adjustment. Placement follows image scaling,
 window resizing, and fullscreen. Older images without label-bound metadata use
 the configured top offset until a new capture supplies the bounds.
 
-One selected saved-image chart uses 1.5 times the configured width and a height
-of 224 px (390 x 224 px at the default width). Multiple saved-image charts retain
-the configured width and compact 112 px height. Width is limited to the image's
-available space. Browser charts show numeric and first/last time axes with the
+Every selected saved-image chart uses 1.5 times the configured width and a height
+of 224 px (390 x 224 px at the default width). All four cells have those same
+dimensions; the full default 2x2 box is 780 x 448 px, with no gaps. Width is
+limited to the image's available space. Browser charts show numeric and first/last time axes with the
 same line styling and scaling as saved-image charts.
 
 Saved-image charts are rendered with Matplotlib's headless Agg backend after
-image labels and before compression. They sit below upper-left labels and flow
-into additional columns as needed, without resizing the image. Charts that cannot
+image labels and before compression. They sit below upper-left labels in up to
+two rows and two columns, without resizing the image. Charts that cannot
 fit are skipped with a capture-log warning. They include camera-specific history
 and the current frame, and are disabled in focus mode. New latest images, saved
 images, thumbnails, uploads and timelapses built from those images contain the

@@ -37,9 +37,9 @@
 .chart-panel[data-empty=true] .chart-no-data { display: flex; }
 .chart-status { min-height: 1.25rem; font-size: .75rem; opacity: .8; }
 .chart-stream-empty { padding: 2rem 0; font-size: .875rem; }
-.latest-chart-overlays { position: absolute; z-index: 25; left: 1rem; top: var(--chart-overlay-top, 120px); width: min(var(--chart-overlay-width, 260px), calc(100% - 2rem)); max-height: calc(100% - var(--chart-overlay-top, 120px) - 1rem); overflow: auto; scrollbar-width: thin; }
-.latest-chart-overlays[data-saved-charts=true] { left: auto; right: 1rem; width: min(var(--chart-overlay-width, 260px), calc(50% - 1.5rem)); }
-.latest-chart-overlays .chart-grid { grid-template-columns: minmax(0, 1fr); gap: .5rem; }
+.latest-chart-overlays { position: absolute; z-index: 25; left: 1rem; top: var(--chart-overlay-top, 120px); width: min(calc(var(--chart-overlay-width, 260px) * var(--chart-overlay-columns, 1)), calc(100% - 2rem)); max-height: calc(100% - var(--chart-overlay-top, 120px) - 1rem); overflow: auto; scrollbar-width: thin; }
+.latest-chart-overlays[data-saved-charts=true] { left: auto; right: 1rem; }
+.latest-chart-overlays .chart-grid { grid-template-columns: repeat(var(--chart-overlay-columns, 1), var(--chart-overlay-width, 260px)); gap: 0; }
 .latest-chart-overlays .chart-panel { padding: .625rem .75rem; background: rgba(12, 18, 20, var(--chart-overlay-opacity, .8)); color: #f4f7f6; border-color: rgba(255,255,255,.16); backdrop-filter: blur(8px); }
 .latest-chart-overlays .chart-panel-header { margin-bottom: .25rem; }
 .latest-chart-overlays .chart-panel-header { cursor: grab; touch-action: none; user-select: none; }
