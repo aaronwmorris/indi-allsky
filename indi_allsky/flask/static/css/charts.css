@@ -42,12 +42,16 @@
 .latest-chart-overlays .chart-grid { grid-template-columns: repeat(var(--chart-overlay-columns, 1), var(--chart-overlay-width, 260px)); gap: 0; }
 .latest-chart-overlays .chart-panel { padding: .625rem .75rem; background: rgba(12, 18, 20, var(--chart-overlay-opacity, .8)); color: #f4f7f6; border-color: rgba(255,255,255,.16); backdrop-filter: blur(8px); }
 .latest-chart-overlays .chart-panel-header { margin-bottom: .25rem; }
+.chart-overlay-close { position: sticky; z-index: 2; top: .375rem; left: calc(100% - 1.875rem); width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 4px; background: rgba(12,18,20,.8); color: #f4f7f6; cursor: pointer; touch-action: manipulation; }
+.chart-overlay-close:hover { background: rgba(255,255,255,.16); }
+.chart-overlay-close:focus-visible { outline: 2px solid #38bdf8; outline-offset: 1px; }
 .latest-chart-overlays .chart-panel-header { cursor: grab; touch-action: none; user-select: none; }
 .latest-chart-overlays.is-dragging .chart-panel-header { cursor: grabbing; }
 .latest-chart-overlays .chart-panel-header h2 { font-size: .6875rem; }
 .latest-chart-overlays .chart-value { font-size: .875rem; }
 .latest-chart-overlays .chart-plot { height: 112px; }
 .latest-chart-overlays .chart-status { color: white; text-shadow: 0 1px 3px black; }
+.latest-chart-overlays .chart-status:empty { display: none; }
 #latest-image-stage:fullscreen { width: 100vw; height: 100vh; background: #080b0d; border-radius: 0; }
 #latest-image-stage:fullscreen > img, #latest-image-stage:fullscreen > canvas { max-height: 100vh; max-width: 100vw; }
 @media (max-width: 900px) {

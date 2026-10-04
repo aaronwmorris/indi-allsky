@@ -27,6 +27,16 @@
         }
         positionOverlay() {
             const root = this.root;
+            const close = document.createElement('button'); close.type = 'button'; close.className = 'chart-overlay-close';
+            close.title = 'Dismiss charts'; close.setAttribute('aria-label', 'Dismiss browser chart block');
+            const icon = document.createElement('i'); icon.className = 'tw:icon-[lucide--x] tw:w-4 tw:h-4'; icon.setAttribute('aria-hidden', 'true');
+            close.append(icon);
+            close.addEventListener('click', () => {
+                this.dismissed = true; root.hidden = true; clearTimeout(this.timer); this.controller?.abort(); ++this.generation;
+                this.panels.forEach(panel => { panel.chart.destroy(); panel.element.remove(); });
+                this.panels.clear(); root.setAttribute('aria-busy', 'false');
+            });
+            root.prepend(close);
             const stage = document.getElementById('latest-image-stage');
             const message = document.getElementById('status-overlay');
             const media = stage.querySelector('#latest-image, #canvas');
@@ -63,7 +73,7 @@
             const remember = () => { try { localStorage.setItem(storageKey, JSON.stringify(manual)); } catch (error) {} };
             root.addEventListener('pointerdown', event => {
                 const handle = event.target.closest('.chart-panel-header');
-                if (event.button !== 0 || !handle) return;
+                if (event.button !== 0 || !handle || event.target.closest('button')) return;
                 event.preventDefault();
                 drag = {id: event.pointerId, handle, x: event.clientX, y: event.clientY, left: root.offsetLeft, top: root.offsetTop};
                 handle.setPointerCapture(event.pointerId); root.classList.add('is-dragging');
@@ -80,13 +90,13 @@
             };
             ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(name => root.addEventListener(name, finish));
             root.addEventListener('dblclick', event => {
-                if (!event.target.closest('.chart-panel-header')) return;
+                if (!event.target.closest('.chart-panel-header') || event.target.closest('button')) return;
                 manual = null; root.style.removeProperty('left'); root.style.removeProperty('right');
                 try { localStorage.removeItem(storageKey); } catch (error) {}
                 position();
             });
             root.addEventListener('keydown', event => {
-                if (!event.target.closest('.chart-panel-header') || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+                if (!event.target.closest('.chart-panel-header') || event.target.closest('button') || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
                 event.preventDefault();
                 const step = event.shiftKey ? 1 : 10;
                 move(root.offsetLeft + (event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0), root.offsetTop + (event.key === 'ArrowDown' ? step : event.key === 'ArrowUp' ? -step : 0));
@@ -99,6 +109,7 @@
             position();
         }
         reconcile(definitions) {
+            this.options.definitions = definitions;
             const wanted = [...definitions.map(definition => definition.id), 'histogram'].filter(identifier => this.options.ids.includes(identifier));
             if (this.options.compact) this.root.style.setProperty('--chart-overlay-columns', wanted.length > 1 ? '2' : '1');
             this.panels.forEach((panel, identifier) => {
@@ -126,7 +137,13 @@
                         interaction: {mode: 'index', intersect: false},
                         plugins: {legend: {display: identifier === 'histogram', labels: {color: foreground, boxWidth: 10}}},
                         scales: {
-                            x: {display: true, afterBuildTicks: this.options.compact ? axis => { if (axis.ticks.length > 1) axis.ticks = [axis.ticks[0], axis.ticks.at(-1)]; } : undefined, grid: {display: !this.options.compact, drawTicks: false, color: 'rgba(128,128,128,.12)'}, ticks: {color: foreground, maxTicksLimit: this.options.compact ? 2 : undefined, maxRotation: this.options.compact ? 0 : undefined, font: this.options.compact ? {size: 9} : undefined}},
+                            x: {display: true, afterBuildTicks: this.options.compact ? axis => {
+                                const count = Math.min(4, Math.max(2, Math.floor(axis.width / 80) + 1));
+                                if (axis.ticks.length > count) {
+                                    const ticks = axis.ticks;
+                                    axis.ticks = Array.from({length: count}, (_, index) => ticks[Math.round(index * (ticks.length - 1) / (count - 1))]);
+                                }
+                            } : undefined, grid: {display: !this.options.compact, drawTicks: false, color: 'rgba(128,128,128,.12)'}, ticks: {color: foreground, autoSkip: !this.options.compact, maxTicksLimit: this.options.compact ? 4 : undefined, minRotation: this.options.compact ? 0 : undefined, maxRotation: this.options.compact ? 0 : undefined, callback: this.options.compact ? function(value) { return this.getLabelForValue(value).slice(0, 5); } : undefined, font: this.options.compact ? {size: 16 * 96 / 72} : undefined}},
                             y: {display: true, beginAtZero: !this.options.compact && ['jsqm', 'stars', 'temp', 'exp', 'gain', 'histogram'].includes(identifier), suggestedMin: definition.min ?? undefined, suggestedMax: identifier === 'detection' ? 1 : undefined, min: bounds.min ?? undefined, max: bounds.max ?? undefined, grid: {color: 'rgba(128,128,128,.12)'}, ticks: {color: foreground, maxTicksLimit: this.options.compact ? 3 : undefined, font: this.options.compact ? {size: 9} : undefined}}
                         }
                     }});
@@ -143,9 +160,9 @@
         }
         async refresh() {
             clearTimeout(this.timer); this.controller?.abort();
-            if (document.hidden || !this.panels.size) return;
+            if (document.hidden || this.dismissed || !this.panels.size) return;
             const generation = ++this.generation; this.controller = new AbortController();
-            this.status.textContent = 'Updating'; this.root.setAttribute('aria-busy', 'true');
+            this.status.textContent = this.options.compact ? '' : 'Updating'; this.root.setAttribute('aria-busy', 'true');
             const parameters = new URLSearchParams({camera_id: this.options.cameraId, limit_s: this.history?.value || this.options.historySeconds || 900, timestamp: this.options.timestamp || 0, series: this.options.ids.filter(identifier => identifier !== 'histogram').join(','), histogram: this.options.ids.includes('histogram') ? '1' : '0'});
             try {
                 const response = await fetch(this.options.url + '?' + parameters, {signal: this.controller.signal, headers: {Accept: 'application/json'}});
@@ -165,7 +182,7 @@
                     }
                     panel.chart.update('none');
                 });
-                this.status.textContent = data.message || 'Updated ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}); this.root.dataset.state = 'ready';
+                this.status.textContent = data.message || (this.options.compact ? '' : 'Updated ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})); this.root.dataset.state = 'ready';
             } catch (error) {
                 if (error.name !== 'AbortError') { this.status.textContent = 'Charts unavailable'; this.root.dataset.state = 'error'; }
             } finally {

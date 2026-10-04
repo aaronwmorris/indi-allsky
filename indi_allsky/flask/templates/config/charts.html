@@ -15,15 +15,23 @@
     <div class="chart-builtin-list" data-builtin-charts></div>
     <h3>Image charts</h3>
     <div class="chart-overlay-controls">
-        <label>History
+        <label>Browser history
             <select class="tw:select tw:select-bordered tw:select-sm tw:bg-base-100" data-chart-preference="OVERLAY_HISTORY_SECONDS">
-                <option value="900">15 minutes</option><option value="3600">1 hour</option>
+                <option value="60">1 minute</option><option value="300">5 minutes</option>
+                <option value="900">15 minutes</option><option value="1800">30 minutes</option><option value="3600">1 hour</option>
+                <option value="7200">2 hours</option><option value="21600">6 hours</option><option value="86400">24 hours</option>
+            </select>
+        </label>
+        <label>Saved image history
+            <select class="tw:select tw:select-bordered tw:select-sm tw:bg-base-100" data-chart-preference="SAVED_IMAGE_HISTORY_SECONDS">
+                <option value="60">1 minute</option><option value="300">5 minutes</option>
+                <option value="900">15 minutes</option><option value="1800">30 minutes</option><option value="3600">1 hour</option>
                 <option value="7200">2 hours</option><option value="21600">6 hours</option><option value="86400">24 hours</option>
             </select>
         </label>
         <label>Top offset (px)<input class="tw:input tw:input-bordered tw:input-sm tw:bg-base-100" type="number" min="0" max="600" step="1" data-chart-preference="OVERLAY_TOP"></label>
         <label>Width (px)<input class="tw:input tw:input-bordered tw:input-sm tw:bg-base-100" type="number" min="180" max="400" step="1" data-chart-preference="OVERLAY_WIDTH"></label>
-        <label>Opacity (%)<input type="range" class="tw:range tw:range-sm" min="20" max="100" step="1" data-chart-preference="OVERLAY_OPACITY"></label>
+        <label><span>Opacity <output for="chart-overlay-opacity" data-chart-opacity-value></output></span><input id="chart-overlay-opacity" type="range" class="tw:range tw:range-sm" min="20" max="100" step="1" data-chart-preference="OVERLAY_OPACITY"></label>
     </div>
     <script type="application/json" id="chart-editor-options">{{ {'sources': chart_source_choices, 'builtins': chart_builtin_definitions, 'maximum': chart_maximum}|tojson }}</script>
 </section>

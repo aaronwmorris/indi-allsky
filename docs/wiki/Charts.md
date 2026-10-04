@@ -32,7 +32,17 @@ Histogram scaling is unchanged.
 
 ## Image Overlays
 
-History, top offset, width, and opacity are shared by both image destinations.
+Browser history and Saved image history are separate dropdowns in the image-chart
+settings, from one minute to 24 hours. Saved history inherits the previous shared
+history duration until configured separately. Save with Reload on Save selected
+to apply a saved-history change to subsequent captures. Charts use stored
+per-frame sensor readings for that camera, followed by the current frame once;
+they do not repeat the latest sensor value over older timestamps. Older frames
+without a selected sensor value appear as gaps. A zero minimum can make small
+temperature or humidity changes appear flat; set tighter Y-axis limits to inspect
+those variations. Top offset, width, and opacity remain shared by both image destinations.
+The opacity slider displays its current percentage while adjusting, also available
+on hover and to assistive technology.
 Browser charts avoid the status message, scroll within the image area and are
 included in fullscreen. They appear on the right when saved-image charts are
 also configured. Browser-only charts do not modify image files.
@@ -46,7 +56,12 @@ column; charts that cannot fit are still skipped rather than resized.
 
 Browser charts start below the recorded image-label bounds and status message.
 Drag any chart header with a mouse or touch to move the browser chart group;
-its position is remembered per camera in this browser. Double-click a header to
+its position is remembered per camera in this browser. All browser charts form
+one block: three charts use two in the first row and one in the second; four use
+two per row. One X at the block's upper-right corner dismisses the entire block
+for the current page, without changing saved-image charts or configuration.
+The block stays hidden through data refreshes; reloading the page restores it.
+Double-click a header to
 restore automatic placement. Focus a header and use arrow keys to move it,
 or Shift plus arrow keys for fine adjustment. Placement follows image scaling,
 window resizing, and fullscreen. Older images without label-bound metadata use
@@ -57,8 +72,10 @@ of 336 px (585 x 336 px at the default width). All four cells have those same
 dimensions; the full default 2x2 box is 1170 x 672 px, with no gaps. Charts may
 extend beyond the image-label text block; width is limited only by the image's
 available space. Saved charts show both Y-axis endpoints with clearance below
-the title, and evenly spaced 45-degree time labels. Browser charts show numeric and first/last time axes with the
-same line styling and scaling as saved-image charts.
+the title, and evenly spaced horizontal time labels showing hours and minutes
+without seconds. Saved-image time labels use a 14-point font; Browser image
+charts use a 16-point font (21.33 CSS pixels), with fewer ticks on narrow charts
+to keep labels readable. The main History page retains its existing axes.
 
 Saved-image charts are rendered with Matplotlib's headless Agg backend after
 image labels and before compression. They sit below upper-left labels in up to

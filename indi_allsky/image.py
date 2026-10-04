@@ -1303,7 +1303,7 @@ class ImageWorker(Process):
                 IndiAllSkyDbImageTable.data,
             ).filter(
                 IndiAllSkyDbImageTable.camera_id == i_ref.camera_id,
-                IndiAllSkyDbImageTable.createDate > i_ref.exp_date - timedelta(seconds=settings['OVERLAY_HISTORY_SECONDS']),
+                IndiAllSkyDbImageTable.createDate > i_ref.exp_date - timedelta(seconds=settings['SAVED_IMAGE_HISTORY_SECONDS']),
                 IndiAllSkyDbImageTable.createDate < i_ref.exp_date,
             ).order_by(IndiAllSkyDbImageTable.createDate.asc()))
             stars = [reading.stars for reading in readings[-5:] if reading.stars is not None] + [len(i_ref.stars)]

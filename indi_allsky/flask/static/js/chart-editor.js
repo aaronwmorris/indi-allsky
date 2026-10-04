@@ -188,7 +188,16 @@
             if (input.tagName === 'SELECT' && input.value === '') {
                 const choice = new Option(settings[key] + ' seconds', settings[key], true, true); input.append(choice);
             }
-            input.addEventListener('change', () => { settings[key] = Number(input.value); save(); });
+            const displayValue = () => {
+                if (key !== 'OVERLAY_OPACITY') return;
+                const value = input.value + '%';
+                root.querySelector('[data-chart-opacity-value]').value = value;
+                input.title = value; input.setAttribute('aria-valuetext', value);
+            };
+            const change = () => { settings[key] = Number(input.value); displayValue(); save(); };
+            input.addEventListener('change', change);
+            if (input.type === 'range') input.addEventListener('input', change);
+            displayValue();
         });
         render(); save();
     }

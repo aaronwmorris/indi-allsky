@@ -271,14 +271,14 @@ def test_saved_chart_names_are_literal_and_timestamp_labels_stay_inside_panel(mo
         renderer = canvas.get_renderer()
         axes = canvas.figure.axes[0]
         labels = axes.get_xticklabels()
-        assert all(text.get_rotation() == 45 and text.get_fontsize() == 11 for text in labels)
-        assert labels[0].get_text() == '20:30:00'
-        assert labels[-1].get_text() == (datetime(2026, 10, 4, 20, 30) + timedelta(seconds=point_count - 1)).strftime('%H:%M:%S')
+        assert all(text.get_rotation() == 0 and text.get_fontsize() == 14 for text in labels)
+        assert labels[0].get_text() == '20:30'
+        assert labels[-1].get_text() == (datetime(2026, 10, 4, 20, 30) + timedelta(minutes=point_count - 1)).strftime('%H:%M')
         text_bounds.extend(text.get_window_extent(renderer) for text in labels)
     monkeypatch.setattr(FigureCanvasAgg, 'draw', record_draw)
     config = {'CHARTS': {'CUSTOM': [{'id': 'sky', 'source': 'sensor_user_0', 'label': r'Sky $\bad$'}],
                         'SAVED_IMAGE_IDS': ['sky']}}
-    readings = [SimpleNamespace(createDate=datetime(2026, 10, 4, 20, 30) + timedelta(seconds=index),
+    readings = [SimpleNamespace(createDate=datetime(2026, 10, 4, 20, 30) + timedelta(minutes=index),
                 temp=None, stars_rolling=None, jsqm=None, exposure=None, gain=None, detections=None,
                 data={'sensor_user_0': -27}) for index in range(point_count)]
     render_saved_charts(numpy.zeros((480, image_width, 3), dtype=numpy.uint8), config, readings)
@@ -340,7 +340,7 @@ def test_saved_chart_text_is_large_and_fits_the_expanded_plot(monkeypatch, image
             bounds = text.get_window_extent(renderer)
             assert 0 <= bounds.x0 < bounds.x1 <= canvas.get_width_height()[0]
             assert 0 <= bounds.y0 < bounds.y1 <= 336
-        assert all(text.get_fontsize() == 11 for text in axes.get_xticklabels())
+        assert all(text.get_fontsize() == 14 for text in axes.get_xticklabels())
         offset_bounds = axes.yaxis.get_offset_text().get_window_extent(renderer)
         if axes.yaxis.get_offset_text().get_text():
             assert not title_bounds.overlaps(offset_bounds)
@@ -437,6 +437,48 @@ def test_capture_saved_charts_query_only_camera_history_and_include_current_fram
     assert readings[-1].data['sensor_temp_0'] == 50
     assert readings[-1].data['sensor_user_109'] == 109
     assert numpy.any(worker.image_processor.image != 120)
+    worker.logger.exception.assert_not_called()
+
+
+def test_capture_saved_sensor_chart_plots_distinct_historical_values(saved_chart_worker, monkeypatch):
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    worker = saved_chart_worker
+    worker.config = {'CHARTS': {'CUSTOM': [{'id': 'ambient', 'source': 'sensor_user_0', 'min': None}],
+                               'SAVED_IMAGE_IDS': ['ambient']}}
+    worker.sensors_user_av[0] = 22.2
+    records = [{'camera_id': 1, 'createDate': worker.ref.exp_date - timedelta(minutes=3 - index),
+                'sqm': 90, 'stars': 10, 'temp': 40, 'gain': 50, 'exposure': 15, 'detections': 0,
+                'data': {'sensor_user_0': value}} for index, value in enumerate([20.0, 21.0, 19.5])]
+    worker.session.execute(worker.table.insert(), records)
+    draw = FigureCanvasAgg.draw
+    plotted = []
+    def record_draw(canvas):
+        plotted.append(canvas.figure.axes[0].lines[0].get_ydata().tolist())
+        draw(canvas)
+    monkeypatch.setattr(FigureCanvasAgg, 'draw', record_draw)
+    worker.apply_saved_charts()
+    assert plotted == [[20.0, 21.0, 19.5, 22.2]]
+    worker.logger.exception.assert_not_called()
+
+
+@pytest.mark.parametrize('history', [60, 900, 3600, 86400])
+def test_capture_saved_history_selection_controls_database_window(saved_chart_worker, history):
+    worker = saved_chart_worker
+    worker.config = {'CHARTS': {'CUSTOM': [{'id': 'ambient', 'source': 'sensor_user_0'}],
+                               'SAVED_IMAGE_IDS': ['ambient'], 'OVERLAY_HISTORY_SECONDS': 60,
+                               'SAVED_IMAGE_HISTORY_SECONDS': history}}
+    ages = [7200, 1800, 600, 30]
+    records = [{'camera_id': 1, 'createDate': worker.ref.exp_date - timedelta(seconds=age),
+                'sqm': 90, 'stars': 10, 'temp': 40, 'gain': 50, 'exposure': 15, 'detections': 0,
+                'data': {'sensor_user_0': 20 + age / 3600}} for age in ages]
+    worker.session.execute(worker.table.insert(), records)
+    worker.apply_saved_charts()
+    readings = worker.renderer.call_args.args[2]
+    assert [reading.createDate for reading in readings] == [
+        worker.ref.exp_date - timedelta(seconds=age) for age in ages if age < history] + [worker.ref.exp_date]
+    assert [reading.data['sensor_user_0'] for reading in readings[:-1]] == [
+        20 + age / 3600 for age in ages if age < history]
     worker.logger.exception.assert_not_called()
 
 
@@ -603,10 +645,21 @@ def test_invalid_axis_limits_are_rejected(limits):
     {'SAVED_IMAGE_IDS': ['histogram']}, {'SAVED_IMAGE_IDS': ['unknown']},
     {'VISIBLE_IDS': ['unknown']}, {'OVERLAY_WIDTH': 999}, {'OVERLAY_TOP': -1},
     {'OVERLAY_HISTORY_SECONDS': 86401}, {'OVERLAY_OPACITY': True},
+    {'SAVED_IMAGE_HISTORY_SECONDS': 59}, {'SAVED_IMAGE_HISTORY_SECONDS': 86401},
+    {'SAVED_IMAGE_HISTORY_SECONDS': True}, {'SAVED_IMAGE_HISTORY_SECONDS': '3600'},
 ])
 def test_invalid_preferences_are_rejected(settings):
     with pytest.raises(ValueError):
         validate_chart_configuration(settings)
+
+
+@pytest.mark.parametrize('saved_history', [None, 60, 3600, 86400])
+def test_saved_history_is_independent_and_defaults_to_existing_browser_history(saved_history):
+    settings = validate_chart_configuration({'OVERLAY_HISTORY_SECONDS': 1800,
+                                             'SAVED_IMAGE_HISTORY_SECONDS': saved_history})
+    assert settings['OVERLAY_HISTORY_SECONDS'] == 1800
+    assert settings['SAVED_IMAGE_HISTORY_SECONDS'] == (1800 if saved_history is None else saved_history)
+    assert validate_chart_configuration({'OVERLAY_HISTORY_SECONDS': 3600})['SAVED_IMAGE_HISTORY_SECONDS'] == 3600
 
 
 def test_series_builder_supports_more_than_ten_charts_and_missing_values():
@@ -1034,10 +1087,33 @@ def test_editor_selects_reload_for_saved_chart_edits_and_preserves_opt_out(saved
             preference.press('Tab')
             assert reload.is_checked() is saved_enabled
             reload.uncheck()
+            browser_history = page.locator('[data-chart-preference=OVERLAY_HISTORY_SECONDS]')
+            saved_history = page.locator('[data-chart-preference=SAVED_IMAGE_HISTORY_SECONDS]')
+            assert browser_history.input_value() == '900'
+            saved_history.select_option('3600')
+            assert browser_history.input_value() == '900'
+            assert reload.is_checked() is saved_enabled
+            reload.uncheck()
+            opacity = page.locator('[data-chart-preference=OVERLAY_OPACITY]')
+            opacity_value = page.locator('[data-chart-opacity-value]')
+            assert opacity_value.inner_text() == '80%'
+            opacity.focus()
+            opacity.press('ArrowRight')
+            assert opacity.input_value() == '81'
+            assert opacity_value.inner_text() == '81%'
+            assert opacity.get_attribute('title') == '81%'
+            assert opacity.get_attribute('aria-valuetext') == '81%'
+            assert reload.is_checked() is saved_enabled
+            reload.uncheck()
             with page.expect_navigation(wait_until='networkidle'):
                 page.get_by_role('button', name='Save Configuration', exact=True).click()
             application.extensions['chart_preview_tasks'].assert_not_called()
             assert application.extensions['chart_preview_config']['CHARTS']['OVERLAY_WIDTH'] == 300
+            assert application.extensions['chart_preview_config']['CHARTS']['SAVED_IMAGE_HISTORY_SECONDS'] == 3600
+            page.wait_for_function("document.querySelector('[data-chart-preference=SAVED_IMAGE_HISTORY_SECONDS]').value === '3600'")
+            assert saved_history.input_value() == '3600'
+            assert application.extensions['chart_preview_config']['CHARTS']['OVERLAY_OPACITY'] == 81
+            assert opacity_value.inner_text() == '81%'
             assert not reload.is_checked()
             saved = page.locator('.chart-editor-row[data-chart-id=custom_0] label').filter(has_text='Saved image').locator('input')
             saved.click()
@@ -1046,6 +1122,109 @@ def test_editor_selects_reload_for_saved_chart_edits_and_preserves_opt_out(saved
                 reload.uncheck()
                 saved.click()
                 assert reload.is_checked()
+        finally:
+            browser.close()
+
+
+@pytest.mark.parametrize('view', ['latest', 'canvas'])
+@pytest.mark.parametrize('viewport', [(1440, 1000), (390, 844)])
+@pytest.mark.parametrize('chart_count', [1, 2, 3, 4])
+def test_browser_image_charts_show_larger_horizontal_minute_labels(view, viewport, chart_count):
+    from urllib.parse import urlsplit
+
+    playwright = pytest.importorskip('playwright.sync_api')
+    application = create_chart_preview()
+    application.extensions['chart_preview_config']['CHARTS']['OVERLAY_IDS'] = ['custom_0', 'stars', 'temp', 'exp'][:chart_count]
+    client = application.test_client()
+    with playwright.sync_playwright() as driver:
+        try:
+            browser = driver.chromium.launch(headless=True)
+        except playwright.Error:
+            try:
+                browser = driver.chromium.launch(channel='msedge', headless=True)
+            except playwright.Error:
+                pytest.skip('No Chromium or Edge available for chart overlay browser checks')
+        try:
+            page = browser.new_page(viewport={'width': viewport[0], 'height': viewport[1]})
+            errors = []
+            page.on('pageerror', lambda error: errors.append(str(error)))
+            def serve_preview(route):
+                url = urlsplit(route.request.url)
+                response = client.get(url.path + ('?' + url.query if url.query else ''))
+                route.fulfill(status=response.status_code, headers=dict(response.headers), body=response.data)
+            page.route('**/*', serve_preview)
+            page.goto('http://chart.test/' + view, wait_until='networkidle')
+            page.wait_for_function("Chart.getChart(document.querySelector('.latest-chart-overlays canvas'))?.data.datasets[0].data.length > 0")
+            page.wait_for_function("getComputedStyle(document.querySelector('#latest-image-stage > img, #latest-image-stage > canvas')).opacity === '1'")
+            charts = page.evaluate('''() => [...document.querySelectorAll('.latest-chart-overlays canvas')].map(canvas => {
+                const chart = Chart.getChart(canvas);
+                return {rotation: chart.scales.x.labelRotation, labels: chart.scales.x.ticks.map(tick => tick.label), font:chart.options.scales.x.ticks.font.size,
+                        points: chart.data.datasets[0].data.length,
+                        painted: [...canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data].some(value => value !== 0)};
+            })''')
+            assert len(charts) == chart_count
+            for chart in charts:
+                assert chart['rotation'] == 0
+                assert chart['font'] == pytest.approx(16 * 96 / 72)
+                assert 2 <= len(chart['labels']) <= 4
+                assert len(set(chart['labels'])) == len(chart['labels'])
+                assert chart['labels'][0] == '20:00'
+                assert chart['labels'][-1] == '20:14'
+                assert chart['points'] == 36
+                assert chart['painted']
+            assert not page.evaluate('document.documentElement.scrollWidth > document.documentElement.clientWidth')
+            root = page.locator('.latest-chart-overlays')
+            assert root.locator('[data-chart-status]').inner_text() == ''
+            assert not root.locator('[data-chart-status]').is_visible()
+            original_settings = json.loads(json.dumps(application.extensions['chart_preview_config']['CHARTS']))
+            positions = root.locator('.chart-panel').evaluate_all('panels => panels.map(panel => {const rect=panel.getBoundingClientRect(); return {x:rect.x,y:rect.y,width:rect.width,height:rect.height};})')
+            assert all(panel['width'] == 260 for panel in positions)
+            if chart_count > 1:
+                assert positions[1]['x'] == positions[0]['x'] + 260
+                assert positions[1]['y'] == positions[0]['y']
+            if chart_count > 2:
+                assert positions[2]['x'] == positions[0]['x']
+                assert positions[2]['y'] == positions[0]['y'] + positions[0]['height']
+            if chart_count > 3:
+                assert positions[3]['x'] == positions[1]['x']
+                assert positions[3]['y'] == positions[2]['y']
+            chart_ids = root.locator('canvas').evaluate_all('canvases => canvases.map(canvas => Chart.getChart(canvas).id)')
+            close = root.locator('.chart-overlay-close')
+            assert close.count() == 1
+            assert root.locator('.chart-panel .chart-overlay-close').count() == 0
+            assert close.get_attribute('aria-label') == 'Dismiss browser chart block'
+            assert close.get_attribute('title') == 'Dismiss charts'
+            button_bounds = close.bounding_box()
+            root_bounds = root.bounding_box()
+            assert root_bounds['x'] <= button_bounds['x'] and button_bounds['x'] + button_bounds['width'] <= root_bounds['x'] + root_bounds['width']
+            assert 0 <= button_bounds['y'] - root_bounds['y'] <= 8
+            assert root.evaluate('''root => {
+                const button = root.querySelector('.chart-overlay-close').getBoundingClientRect();
+                return [...root.querySelectorAll('.chart-panel-header h2, .chart-value')].every(element => {
+                    const text = element.getBoundingClientRect();
+                    return text.right <= button.left || text.left >= button.right || text.bottom <= button.top || text.top >= button.bottom;
+                });
+            }''')
+            if view == 'latest':
+                close.click()
+            else:
+                close.press('Enter')
+            assert not root.is_visible()
+            assert root.locator('.chart-panel').count() == 0
+            assert page.evaluate('(identifiers) => identifiers.every(identifier => !Chart.instances[identifier])', chart_ids)
+            assert not root.evaluate("root => root.classList.contains('is-dragging')")
+            assert page.evaluate("localStorage.getItem('chart-overlay-position:1')") is None
+            page.evaluate("document.dispatchEvent(new Event('visibilitychange'))")
+            assert not root.is_visible()
+            assert root.locator('.chart-panel').count() == 0
+            assert application.extensions['chart_preview_config']['CHARTS'] == original_settings
+            page.reload(wait_until='networkidle')
+            page.wait_for_function("Chart.getChart(document.querySelector('.latest-chart-overlays canvas'))?.data.datasets[0].data.length > 0")
+            assert root.locator('.chart-panel').count() == chart_count
+            assert root.locator('.chart-overlay-close').count() == 1
+            page.goto('http://chart.test/charts', wait_until='networkidle')
+            assert page.locator('.chart-overlay-close').count() == 0
+            assert not errors
         finally:
             browser.close()
 

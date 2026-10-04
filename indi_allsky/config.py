@@ -895,6 +895,7 @@ class IndiAllSkyConfigBase(object):
             "OVERLAY_IDS"           : [],
             "SAVED_IMAGE_IDS"       : [],
             "OVERLAY_HISTORY_SECONDS" : 900,
+            "SAVED_IMAGE_HISTORY_SECONDS" : None,
             "OVERLAY_TOP"           : 120,
             "OVERLAY_WIDTH"         : 260,
             "OVERLAY_OPACITY"       : 80,

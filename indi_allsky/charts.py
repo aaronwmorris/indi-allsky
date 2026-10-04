@@ -129,11 +129,14 @@ def validate_chart_configuration(settings):
         result[key] = selected
     for key, default, minimum, maximum in (
         ('OVERLAY_HISTORY_SECONDS', 900, 60, 86400),
+        ('SAVED_IMAGE_HISTORY_SECONDS', settings.get('OVERLAY_HISTORY_SECONDS', 900), 60, 86400),
         ('OVERLAY_TOP', 120, 0, 600),
         ('OVERLAY_WIDTH', 260, 180, 400),
         ('OVERLAY_OPACITY', 80, 20, 100),
     ):
         value = settings.get(key, default)
+        if key == 'SAVED_IMAGE_HISTORY_SECONDS' and value is None:
+            value = default
         if isinstance(value, bool) or not isinstance(value, int) or not minimum <= value <= maximum:
             raise ValueError('Invalid {0}'.format(key.lower().replace('_', ' ')))
         result[key] = value
@@ -278,11 +281,15 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
                     axes.tick_params(colors='#b9c4c4', labelsize=11, length=3, width=.6, pad=3)
                     axis_label_width = max(text.get_window_extent(renderer).width for text in axes.get_yticklabels())
                     plot_left = max(plot_left, (axis_label_width + 14) / width)
-                    axes.set_xlim(-.5, max(len(points) - .5, .5))
+                    axes.set_xlim((0, len(points) - 1) if len(points) > 1 else (-.5, .5))
                     tick_count = min(len(points), max(2, int(width * (.96 - plot_left) // 72)))
                     ticks = numpy.linspace(0, len(points) - 1, tick_count, dtype=int).tolist() if points else []
                     axes.set_xticks(ticks)
-                    axes.set_xticklabels([points[index]['x'] for index in ticks], rotation=45, ha='right')
+                    axes.set_xticklabels([points[index]['x'][:5] for index in ticks], rotation=0, ha='center')
+                    axes.tick_params(axis='x', labelsize=14)
+                    if len(ticks) > 1:
+                        axes.get_xticklabels()[0].set_horizontalalignment('left')
+                        axes.get_xticklabels()[-1].set_horizontalalignment('right')
                     label_depth = max((text.get_window_extent(renderer).height for text in axes.get_xticklabels()),
                                       default=0)
                     plot_bottom = max(.17, (label_depth + 14) / height)
