@@ -23,7 +23,8 @@ bars are retained. Standard and custom charts automatically scale to their
 actual readings with range padding, rather than forcing zero or inherited
 legacy minima into the range. Detection retains its binary baseline and
 histogram scaling is unchanged. Missing readings appear as gaps rather than
-fabricated zeroes. History labels show capture times, not sample numbers.
+fabricated zeroes. History labels show capture times as HH:MM, not sample
+numbers; point tooltips retain HH:MM:SS precision.
 
 Each standard or custom chart has a sliders icon in the chart settings.
 Its **Y-axis limits** control accepts an optional minimum and maximum. Blank

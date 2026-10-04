@@ -1255,12 +1255,20 @@ def test_history_page_autoscales_all_series_and_uses_capture_time_labels(viewpor
             page.wait_for_function("Chart.getChart(document.querySelector('[data-chart-id=custom_0] canvas'))?.data.datasets[0].data.length === 36")
             charts = page.evaluate('''() => Object.fromEntries([...document.querySelectorAll('.chart-panel')].map(panel => {
                 const chart = Chart.getChart(panel.querySelector('canvas'));
+                if (chart.data.datasets[0].data.length > 1) {
+                    const point = chart.getDatasetMeta(0).data[1];
+                    chart.tooltip.setActiveElements([{datasetIndex:0,index:1}], {x:point.x,y:point.y});
+                    chart.update('none');
+                }
                 return [panel.dataset.chartId, {min:chart.scales.y.min, max:chart.scales.y.max,
-                    values:chart.data.datasets[0].data.map(point=>point.y), labels:chart.scales.x.ticks.map(tick=>tick.label)}];
+                    values:chart.data.datasets[0].data.map(point=>point.y), labels:chart.scales.x.ticks.map(tick=>tick.label),
+                    tooltipTitle:chart.tooltip.title, timestamp:chart.data.datasets[0].data[1]?.x}];
             }))''')
             for identifier in ('jsqm', 'stars', 'temp', 'exp', 'gain', 'custom_0'):
                 chart = charts[identifier]
-                assert chart['labels'] and all(re.fullmatch(r'\d{2}:\d{2}:\d{2}', str(label)) for label in chart['labels'])
+                assert chart['labels'] and all(re.fullmatch(r'\d{2}:\d{2}', str(label)) for label in chart['labels'])
+                assert chart['tooltipTitle'] == [chart['timestamp']]
+                assert re.fullmatch(r'\d{2}:\d{2}:\d{2}', chart['tooltipTitle'][0])
                 assert chart['min'] <= min(chart['values']) <= max(chart['values']) <= chart['max']
                 if identifier == 'custom_0' and fixed_limits:
                     assert (chart['min'], chart['max']) == (0, 100)
@@ -1271,6 +1279,7 @@ def test_history_page_autoscales_all_series_and_uses_capture_time_labels(viewpor
             assert charts['detection']['min'] == 0
             assert charts['detection']['max'] >= 1
             assert charts['histogram']['min'] == 0
+            assert charts['histogram']['labels'] and all(re.fullmatch(r'\d+', str(label)) for label in charts['histogram']['labels'])
             assert not errors
         finally:
             browser.close()
