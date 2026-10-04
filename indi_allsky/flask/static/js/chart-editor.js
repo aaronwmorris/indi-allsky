@@ -11,13 +11,17 @@
         settings.AXIS_LIMITS ||= {};
         settings.SAVED_IMAGE_IDS ||= [];
         let savedImageIds = JSON.stringify(settings.SAVED_IMAGE_IDS);
+        let savedSettings = JSON.stringify(settings);
         function save() {
             const currentSavedImageIds = JSON.stringify(settings.SAVED_IMAGE_IDS);
-            if (currentSavedImageIds !== savedImageIds) {
+            const currentSettings = JSON.stringify(settings);
+            if (currentSavedImageIds !== savedImageIds ||
+                (settings.SAVED_IMAGE_IDS.length > 0 && currentSettings !== savedSettings)) {
                 document.getElementById('RELOAD_ON_SAVE').checked = true;
-                savedImageIds = currentSavedImageIds;
             }
-            field.value = JSON.stringify(settings);
+            savedImageIds = currentSavedImageIds;
+            savedSettings = currentSettings;
+            field.value = currentSettings;
             root.querySelector('[data-chart-count]').textContent = settings.CUSTOM.length + ' custom charts';
             root.querySelector('[data-chart-add]').disabled = settings.CUSTOM.length >= options.maximum;
             field.dispatchEvent(new Event('change', {bubbles: true}));

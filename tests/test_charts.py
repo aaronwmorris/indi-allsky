@@ -174,11 +174,11 @@ def test_saved_charts_change_real_raster_pixels_only_in_the_selected_regions(sel
                 temp=-27 + index, stars_rolling=0, jsqm=None, exposure=15, gain=50,
                 detections=index % 2, data={}) for index in range(8)]
     config = {'CHARTS': {'CUSTOM': [], 'SAVED_IMAGE_IDS': selected}}
-    image = numpy.full((800, 960, 3), 120, dtype=numpy.uint8)
+    image = numpy.full((1000, 1280, 3), 120, dtype=numpy.uint8)
     original = image.copy()
     result = render_saved_charts(image, config, readings, label_bounds=[(10, 10, 300, 190)])
-    width = 390
-    height = 224
+    width = 585
+    height = 336
     right = 16 + width * (1 if len(selected) == 1 else 2)
     first_end = 198 + height
     assert result is image
@@ -195,12 +195,12 @@ def test_saved_charts_change_real_raster_pixels_only_in_the_selected_regions(sel
 
 
 @pytest.mark.parametrize('selected, image_width, base_width, expected', [
-    (['temp'], 640, 260, (390, 224)),
-    (['temp'], 640, 300, (450, 224)),
-    (['temp'], 320, 260, (288, 224)),
-    (['temp', 'gain'], 640, 260, (390, 224)),
-    (['temp', 'gain', 'stars'], 960, 260, (390, 224)),
-    (['jsqm', 'stars', 'temp', 'exp'], 960, 260, (390, 224)),
+    (['temp'], 640, 260, (585, 336)),
+    (['temp'], 960, 300, (675, 336)),
+    (['temp'], 320, 260, (288, 336)),
+    (['temp', 'gain'], 640, 260, (585, 336)),
+    (['temp', 'gain', 'stars'], 1280, 260, (585, 336)),
+    (['jsqm', 'stars', 'temp', 'exp'], 1280, 260, (585, 336)),
 ])
 def test_saved_charts_keep_enlarged_dimensions_for_every_selection(monkeypatch, selected, image_width, base_width, expected):
     import numpy
@@ -213,7 +213,7 @@ def test_saved_charts_keep_enlarged_dimensions_for_every_selection(monkeypatch, 
         draw(canvas)
     monkeypatch.setattr(FigureCanvasAgg, 'draw', record_draw)
     config = {'CHARTS': {'CUSTOM': [], 'SAVED_IMAGE_IDS': selected, 'OVERLAY_WIDTH': base_width}}
-    render_saved_charts(numpy.zeros((1100, image_width, 3), dtype=numpy.uint8), config, [])
+    render_saved_charts(numpy.zeros((1600, image_width, 3), dtype=numpy.uint8), config, [])
     assert sizes == [expected] * len(selected)
     assert chart_configuration(config)['OVERLAY_WIDTH'] == base_width
 
@@ -224,15 +224,15 @@ def test_four_saved_charts_fill_two_rows_without_gaps_in_row_major_order(monkeyp
 
     colors = iter([10, 20, 30, 40])
     monkeypatch.setattr(FigureCanvasAgg, 'buffer_rgba',
-                        lambda canvas: numpy.full((224, 390, 4), [next(colors), 0, 0, 255], dtype=numpy.uint8))
-    image = numpy.full((800, 960, 3), 120, dtype=numpy.uint8)
+                        lambda canvas: numpy.full((336, 585, 4), [next(colors), 0, 0, 255], dtype=numpy.uint8))
+    image = numpy.full((1000, 1280, 3), 120, dtype=numpy.uint8)
     render_saved_charts(image, {'CHARTS': {'CUSTOM': [], 'SAVED_IMAGE_IDS': ['jsqm', 'stars', 'temp', 'exp']}}, [])
     for index, color in enumerate([10, 20, 30, 40]):
-        top = 120 + (index // 2) * 224
-        left = 16 + (index % 2) * 390
-        assert numpy.all(image[top:top + 224, left:left + 390, 2] == color)
-    assert numpy.all(image[568:] == 120)
-    assert numpy.all(image[:, 796:] == 120)
+        top = 120 + (index // 2) * 336
+        left = 16 + (index % 2) * 585
+        assert numpy.all(image[top:top + 336, left:left + 585, 2] == color)
+    assert numpy.all(image[792:] == 120)
+    assert numpy.all(image[:, 1186:] == 120)
 
 
 def test_saved_charts_honor_axis_limits_and_preserve_gaps_and_negative_values(monkeypatch):
@@ -282,9 +282,9 @@ def test_saved_chart_names_are_literal_and_timestamp_labels_stay_inside_panel(mo
                 temp=None, stars_rolling=None, jsqm=None, exposure=None, gain=None, detections=None,
                 data={'sensor_user_0': -27}) for index in range(point_count)]
     render_saved_charts(numpy.zeros((480, image_width, 3), dtype=numpy.uint8), config, readings)
-    width = min(390, image_width - 32)
-    assert len(text_bounds) == min(point_count, 4 if image_width == 960 else 2)
-    assert all(0 <= bounds.x0 < bounds.x1 <= width and 0 <= bounds.y0 < bounds.y1 <= 224 for bounds in text_bounds)
+    width = min(585, image_width - 32)
+    assert len(text_bounds) == min(point_count, 6 if image_width == 960 else 2)
+    assert all(0 <= bounds.x0 < bounds.x1 <= width and 0 <= bounds.y0 < bounds.y1 <= 336 for bounds in text_bounds)
     assert all(first.x1 < second.x0 for first, second in zip(text_bounds, text_bounds[1:]))
 
 
@@ -302,6 +302,8 @@ def test_saved_charts_that_cannot_fit_do_not_overwrite_labels_or_resize_image():
     (960, 'SHT31 (i2c) - SHT31D - Temperature', 20.49),
     (320, 'MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM', -123456),
     (960, 'Temperature', None),
+    (960, 'Temperature', -27),
+    (320, 'SHT31 (i2c) - SHT31D - Temperature', 20.43),
 ])
 def test_saved_chart_text_is_large_and_fits_the_expanded_plot(monkeypatch, image_width, label, value):
     import numpy
@@ -318,10 +320,17 @@ def test_saved_chart_text_is_large_and_fits_the_expanded_plot(monkeypatch, image
         value_bounds = value_text.get_window_extent(renderer)
         assert title_bounds.x1 <= value_bounds.x0 - 12
         axes = canvas.figure.axes[0]
-        assert axes.bbox.width >= canvas.get_width_height()[0] - 82
-        assert axes.get_position().y1 == pytest.approx(.72)
-        assert axes.get_position().height >= .38
+        assert axes.bbox.width >= canvas.get_width_height()[0] * .65
+        assert axes.get_position().height >= .45
         lower, upper = axes.get_ylim()
+        assert axes.get_yticks()[0] == pytest.approx(lower)
+        assert axes.get_yticks()[-1] == pytest.approx(upper)
+        top_label = axes.get_yticklabels()[-1]
+        assert top_label.get_visible() and top_label.get_text()
+        top_bounds = top_label.get_window_extent(renderer)
+        assert top_bounds.y1 < min(title_bounds.y0, value_bounds.y0)
+        if value is not None:
+            assert upper > value
         y_labels = [text for tick, text in zip(axes.get_yticks(), axes.get_yticklabels()) if lower <= tick <= upper]
         texts = [title_text, value_text, *axes.get_xticklabels(), *y_labels,
                  axes.yaxis.get_offset_text(), *axes.texts]
@@ -330,7 +339,7 @@ def test_saved_chart_text_is_large_and_fits_the_expanded_plot(monkeypatch, image
                 continue
             bounds = text.get_window_extent(renderer)
             assert 0 <= bounds.x0 < bounds.x1 <= canvas.get_width_height()[0]
-            assert 0 <= bounds.y0 < bounds.y1 <= 224
+            assert 0 <= bounds.y0 < bounds.y1 <= 336
         assert all(text.get_fontsize() == 11 for text in axes.get_xticklabels())
         offset_bounds = axes.yaxis.get_offset_text().get_window_extent(renderer)
         if axes.yaxis.get_offset_text().get_text():
@@ -464,7 +473,7 @@ def test_capture_writer_saves_identical_composited_latest_and_archive_images(sav
     assert latest.read_bytes() == saved.read_bytes()
     decoded = cv2.imread(str(saved))
     assert decoded.shape == worker.image_processor.image.shape
-    assert numpy.mean(decoded[120:344, 16:406]) < 100
+    assert numpy.mean(decoded[120:456, 16:601]) < 100
     if file_type == 'png':
         assert numpy.array_equal(decoded, worker.image_processor.image)
 
@@ -499,7 +508,7 @@ def test_real_image_label_bounds_keep_saved_charts_below_text(backend, selected)
         'FONT_FACE': 'FONT_HERSHEY_SIMPLEX', 'FONT_AA': 'LINE_AA', 'FONT_SCALE': .5,
         'FONT_THICKNESS': 1, 'FONT_OUTLINE': True}}
     processor = SimpleNamespace(config=config, chart_label_bounds=[])
-    image = numpy.zeros((480, 640, 3), dtype=numpy.uint8)
+    image = numpy.zeros((640, 640, 3), dtype=numpy.uint8)
     if backend == 'opencv':
         namespace[method.name](processor, image, 'Exposure 15s', (10, 160), (255, 255, 255))
     else:
@@ -969,6 +978,76 @@ def test_manage_charts_targets_settings_below_the_charts_without_a_configuration
     assert page.index('name="RELOAD_ON_SAVE"') < page.index('data-chart-editor')
     assert 'Save charts' not in page
     assert 'nav-charts-tab' not in (ROOT / 'indi_allsky/flask/templates/config.html').read_text(encoding='utf-8')
+
+
+@pytest.mark.parametrize('saved_enabled', [False, True])
+def test_editor_selects_reload_for_saved_chart_edits_and_preserves_opt_out(saved_enabled):
+    from urllib.parse import urlsplit
+
+    playwright = pytest.importorskip('playwright.sync_api')
+    application = create_chart_preview(csrf_enabled=True)
+    application.extensions['chart_preview_config']['CHARTS']['SAVED_IMAGE_IDS'] = ['custom_0'] if saved_enabled else []
+    client = application.test_client()
+    with playwright.sync_playwright() as driver:
+        try:
+            browser = driver.chromium.launch(headless=True)
+        except playwright.Error:
+            try:
+                browser = driver.chromium.launch(channel='msedge', headless=True)
+            except playwright.Error:
+                pytest.skip('No Chromium or Edge available for chart editor browser checks')
+        try:
+            page = browser.new_page()
+            def serve_preview(route):
+                request = route.request
+                url = urlsplit(request.url)
+                response = client.open(url.path + ('?' + url.query if url.query else ''), method=request.method,
+                                       data=request.post_data, headers=dict(request.headers))
+                route.fulfill(status=response.status_code, headers=dict(response.headers), body=response.data)
+            page.route('**/*', serve_preview)
+            page.goto('http://chart.test/charts', wait_until='networkidle')
+            reload = page.locator('#RELOAD_ON_SAVE')
+            assert not reload.is_checked()
+            row = page.locator('.chart-editor-row[data-chart-id=custom_0]')
+            row.locator('input[type=text]').fill('Renamed saved chart')
+            assert reload.is_checked() is saved_enabled
+            reload.uncheck()
+            source = row.locator('select')
+            alternative = source.evaluate('(select) => [...select.options].find(option => option.value !== select.value).value')
+            source.select_option(alternative)
+            assert reload.is_checked() is saved_enabled
+            reload.uncheck()
+            row.locator('summary').click()
+            row.locator('[data-axis-limit=min]').fill('-40')
+            assert reload.is_checked() is saved_enabled
+            reload.uncheck()
+            row.locator('summary').click()
+            row.get_by_role('button', name='Move chart down', exact=True).click()
+            assert reload.is_checked() is saved_enabled
+            reload.uncheck()
+            for destination in ('Browser', 'History'):
+                row.locator('label').filter(has_text=destination).locator('input').click()
+                assert reload.is_checked() is saved_enabled
+                reload.uncheck()
+            preference = page.locator('[data-chart-preference=OVERLAY_WIDTH]')
+            preference.fill('300')
+            preference.press('Tab')
+            assert reload.is_checked() is saved_enabled
+            reload.uncheck()
+            with page.expect_navigation(wait_until='networkidle'):
+                page.get_by_role('button', name='Save Configuration', exact=True).click()
+            application.extensions['chart_preview_tasks'].assert_not_called()
+            assert application.extensions['chart_preview_config']['CHARTS']['OVERLAY_WIDTH'] == 300
+            assert not reload.is_checked()
+            saved = page.locator('.chart-editor-row[data-chart-id=custom_0] label').filter(has_text='Saved image').locator('input')
+            saved.click()
+            assert reload.is_checked()
+            if not saved_enabled:
+                reload.uncheck()
+                saved.click()
+                assert reload.is_checked()
+        finally:
+            browser.close()
 
 
 @pytest.mark.parametrize('authenticated, admin, disabled, expected', [

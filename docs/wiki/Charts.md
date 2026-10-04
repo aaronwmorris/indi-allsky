@@ -2,8 +2,10 @@
 
 Open **Charts > Manage charts** to jump to the settings below the chart grid.
 Add, remove, or reorder custom charts, then select **Save Configuration** at the
-top of the settings. Changing saved-image selections automatically checks
-**Reload on Save** so the capture worker applies them. Uncheck it to defer
+top of the settings. Changing saved-image selections, or any chart setting while
+saved-image charts are enabled, automatically checks **Reload on Save** so the
+capture worker applies changes to names, sources, axes, ordering and preferences.
+Opening the settings alone does not select reload. Uncheck it to defer
 capture-side changes until the next service reload. After disabling saved-image
 charts, the existing latest image retains its baked charts until a new frame is
 captured; existing files are not rewritten.
@@ -50,10 +52,12 @@ or Shift plus arrow keys for fine adjustment. Placement follows image scaling,
 window resizing, and fullscreen. Older images without label-bound metadata use
 the configured top offset until a new capture supplies the bounds.
 
-Every selected saved-image chart uses 1.5 times the configured width and a height
-of 224 px (390 x 224 px at the default width). All four cells have those same
-dimensions; the full default 2x2 box is 780 x 448 px, with no gaps. Width is
-limited to the image's available space. Browser charts show numeric and first/last time axes with the
+Every selected saved-image chart uses 2.25 times the configured width and a height
+of 336 px (585 x 336 px at the default width). All four cells have those same
+dimensions; the full default 2x2 box is 1170 x 672 px, with no gaps. Charts may
+extend beyond the image-label text block; width is limited only by the image's
+available space. Saved charts show both Y-axis endpoints with clearance below
+the title, and evenly spaced 45-degree time labels. Browser charts show numeric and first/last time axes with the
 same line styling and scaling as saved-image charts.
 
 Saved-image charts are rendered with Matplotlib's headless Agg backend after

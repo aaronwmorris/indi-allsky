@@ -198,7 +198,7 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
     import numpy
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from matplotlib.figure import Figure
-    from matplotlib.ticker import MaxNLocator
+    from matplotlib.ticker import LinearLocator
 
     settings = chart_configuration(config)
     definitions = [definition for definition in chart_definitions(config, camera_data, is_local=True)
@@ -208,8 +208,8 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
         image = numpy.repeat(image[:, :, None], 3, axis=2)
     image_height, image_width = image.shape[:2]
     single_chart = len(definitions) == 1
-    width = min(int(settings['OVERLAY_WIDTH'] * 1.5), image_width - 32)
-    height = 224
+    width = min(int(settings['OVERLAY_WIDTH'] * 2.25), image_width - 32)
+    height = 336
     remaining = iter(definitions)
     definition = next(remaining, None)
     columns = 2 if not single_chart and width * 2 <= image_width - 32 else 1
@@ -256,7 +256,7 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
                     else:
                         axes.plot(range(len(points)), values, color='#38bdf8', linewidth=1.8,
                                   marker='o', markersize=2.7)
-                    axes.yaxis.set_major_locator(MaxNLocator(nbins=2))
+                    axes.yaxis.set_major_locator(LinearLocator(numticks=3))
                     axes.ticklabel_format(axis='y', style='sci', scilimits=(-3, 4), useOffset=False)
                     axes.yaxis.get_offset_text().set_fontsize(11)
                     axes.yaxis.get_offset_text().set_color('#b9c4c4')
@@ -275,16 +275,21 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
                         if bounds.get('min') is None and lower >= upper:
                             lower = upper - max(abs(upper) * .05, 1)
                     axes.set_ylim(lower, upper)
+                    axes.tick_params(colors='#b9c4c4', labelsize=11, length=3, width=.6, pad=3)
+                    axis_label_width = max(text.get_window_extent(renderer).width for text in axes.get_yticklabels())
+                    plot_left = max(plot_left, (axis_label_width + 14) / width)
                     axes.set_xlim(-.5, max(len(points) - .5, .5))
                     tick_count = min(len(points), max(2, int(width * (.96 - plot_left) // 72)))
                     ticks = numpy.linspace(0, len(points) - 1, tick_count, dtype=int).tolist() if points else []
                     axes.set_xticks(ticks)
                     axes.set_xticklabels([points[index]['x'] for index in ticks], rotation=45, ha='right')
-                    axes.tick_params(colors='#b9c4c4', labelsize=11, length=3, width=.6, pad=3)
                     label_depth = max((text.get_window_extent(renderer).height for text in axes.get_xticklabels()),
                                       default=0)
                     plot_bottom = max(.17, (label_depth + 14) / height)
-                    axes.set_position((plot_left, plot_bottom, .96 - plot_left, .72 - plot_bottom))
+                    header_bottom = min(title_text.get_window_extent(renderer).y0,
+                                        value_text.get_window_extent(renderer).y0)
+                    plot_top = (header_bottom - 26) / height
+                    axes.set_position((plot_left, plot_bottom, .96 - plot_left, plot_top - plot_bottom))
                     axes.set_axisbelow(True)
                     axes.grid(axis='y', color='#cbd5d3', alpha=.17, linewidth=.5)
                     for name, spine in axes.spines.items():
