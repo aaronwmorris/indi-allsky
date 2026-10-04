@@ -12,6 +12,14 @@
 .chart-icon-button:hover { background: var(--color-base-300); }
 .chart-icon-button:disabled { opacity: .35; cursor: default; }
 .chart-icon-button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.chart-axis-control { align-self: center; }
+.chart-axis-control summary { list-style: none; }
+.chart-axis-control summary::-webkit-details-marker { display: none; }
+.chart-axis-control summary[data-custom=true] { border-color: var(--color-primary); color: var(--color-primary); }
+.chart-axis-popup { position: fixed; z-index: 100; width: 250px; max-width: calc(100vw - 2rem); padding: 1rem; border-radius: 6px; border: 1px solid var(--color-base-300); background: var(--color-base-100); box-shadow: 0 6px 24px rgba(0,0,0,.2); font-size: .8rem; }
+.chart-axis-inputs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin-top: .75rem; }
+.chart-builtin-row .chart-axis-inputs label { display: flex; flex-direction: column; align-items: stretch; gap: .375rem; }
+.chart-axis-inputs input { width: 100%; min-width: 0; }
 .chart-builtin-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 2rem; margin-top: 1rem; }
 .chart-builtin-row { display: flex; align-items: center; gap: 1rem; border-bottom: 1px solid var(--color-base-300); padding: .75rem 0; font-size: .8rem; }
 .chart-builtin-row > span { flex: 1; min-width: 0; }

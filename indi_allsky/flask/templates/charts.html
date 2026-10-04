@@ -18,6 +18,6 @@
     </div>
     <div class="chart-status" data-chart-status role="status" aria-live="polite"></div>
     <div class="chart-grid" data-chart-grid></div>
-    <script id="chart-page-options" type="application/json">{{ {'url': url_for('indi_allsky.js_chart_view'), 'cameraId': camera_id, 'ids': chart_settings.VISIBLE_IDS, 'definitions': chart_definitions, 'historySelect': 'HISTORY_SELECT', 'timestamp': timestamp, 'refreshInterval': refreshInterval, 'compact': false}|tojson }}</script>
+    <script id="chart-page-options" type="application/json">{{ {'url': url_for('indi_allsky.js_chart_view'), 'cameraId': camera_id, 'ids': chart_settings.VISIBLE_IDS, 'definitions': chart_definitions, 'axisLimits': chart_settings.AXIS_LIMITS, 'historySelect': 'HISTORY_SELECT', 'timestamp': timestamp, 'refreshInterval': refreshInterval, 'compact': false}|tojson }}</script>
 </div>
 {% endblock %}

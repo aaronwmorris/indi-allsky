@@ -44,6 +44,7 @@
             });
             wanted.forEach((identifier, index) => {
                 const definition = definitions.find(item => item.id === identifier) || {id: 'histogram', label: 'Image histogram', min: 0};
+                const bounds = this.options.axisLimits?.[identifier] || {};
                 let panel = this.panels.get(identifier);
                 if (!panel) {
                     const element = document.createElement('article'); element.className = 'chart-panel'; element.dataset.chartId = identifier;
@@ -55,21 +56,23 @@
                     const empty = document.createElement('span'); empty.className = 'chart-no-data'; empty.textContent = 'No readings';
                     plot.append(canvas, empty); element.append(header, plot); this.grid.append(element);
                     const color = colors[index % colors.length];
-                    const datasets = identifier === 'histogram' ? ['red', 'green', 'blue', 'gray'].map((label, colorIndex) => ({label, data: [], borderColor: ['#df827b', '#84b96b', '#69addb', '#a6b1b6'][colorIndex], pointRadius: 0})) : [{label: definition.label, data: [], borderColor: color, backgroundColor: color + '18', fill: true, pointRadius: 0, pointHitRadius: 8, tension: .15, spanGaps: false}];
+                    const datasets = identifier === 'histogram' ? ['red', 'green', 'blue', 'gray'].map((label, colorIndex) => ({label, data: [], borderColor: ['#df827b', '#84b96b', '#69addb', '#a6b1b6'][colorIndex], pointRadius: 0})) : [{label: definition.label, data: [], borderColor: color, backgroundColor: color, fill: false, pointRadius: this.options.compact ? 0 : 3, pointHitRadius: 8, tension: .1, spanGaps: false}];
                     const foreground = this.options.compact ? '#bccdcc' : getComputedStyle(document.body).color;
-                    const chart = new Chart(canvas, {type: 'line', data: {datasets}, options: {
+                    const chart = new Chart(canvas, {type: identifier === 'detection' ? 'bar' : 'line', data: {datasets}, options: {
                         responsive: true, maintainAspectRatio: false, animation: false,
                         interaction: {mode: 'index', intersect: false},
                         plugins: {legend: {display: identifier === 'histogram', labels: {color: foreground, boxWidth: 10}}},
                         scales: {
-                            x: {display: !this.options.compact, grid: {display: false}, ticks: {color: foreground, maxTicksLimit: 5, maxRotation: 0}},
-                            y: {display: !this.options.compact, min: definition.min ?? undefined, grid: {color: 'rgba(128,128,128,.12)'}, ticks: {color: foreground, maxTicksLimit: 4}}
+                            x: {display: !this.options.compact, grid: {display: true, drawTicks: false, color: 'rgba(128,128,128,.12)'}, ticks: {color: foreground}},
+                            y: {display: !this.options.compact, beginAtZero: ['jsqm', 'stars', 'temp', 'exp', 'gain', 'histogram'].includes(identifier), suggestedMin: definition.min ?? undefined, suggestedMax: identifier === 'detection' ? 1 : undefined, min: bounds.min ?? undefined, max: bounds.max ?? undefined, grid: {color: 'rgba(128,128,128,.12)'}, ticks: {color: foreground}}
                         }
                     }});
                     panel = {element, title, value, chart, canvas}; this.panels.set(identifier, panel);
                 }
                 panel.title.textContent = definition.label; panel.canvas.setAttribute('aria-label', definition.label + ' history');
-                panel.chart.options.scales.y.min = definition.min ?? undefined; this.grid.append(panel.element);
+                panel.chart.options.scales.y.suggestedMin = definition.min ?? undefined;
+                panel.chart.options.scales.y.min = bounds.min ?? undefined; panel.chart.options.scales.y.max = bounds.max ?? undefined;
+                this.grid.append(panel.element);
             });
             let empty = this.root.querySelector('.chart-stream-empty');
             if (!wanted.length && !empty) { empty = document.createElement('p'); empty.className = 'chart-stream-empty'; empty.textContent = 'No charts selected'; this.grid.append(empty); }

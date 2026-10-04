@@ -6,12 +6,12 @@ import re
 
 MAX_CUSTOM_CHARTS = 64
 BUILTIN_CHARTS = (
-    {'id': 'jsqm', 'source': 'jsqm', 'label': 'Sky brightness', 'min': None},
+    {'id': 'jsqm', 'source': 'jsqm', 'label': 'jSQM', 'min': None},
     {'id': 'stars', 'source': 'stars', 'label': 'Stars', 'min': 0.0},
     {'id': 'temp', 'source': 'temp', 'label': 'Camera temperature', 'min': None},
     {'id': 'exp', 'source': 'exp', 'label': 'Exposure', 'min': 0.0},
     {'id': 'gain', 'source': 'gain', 'label': 'Gain', 'min': 0.0},
-    {'id': 'detection', 'source': 'detection', 'label': 'Detections', 'min': 0.0},
+    {'id': 'detection', 'source': 'detection', 'label': 'Detection', 'min': 0.0},
 )
 SENSOR_SOURCES = tuple('sensor_user_{0}'.format(index) for index in range(110)) + tuple(
     'sensor_temp_{0}'.format(index) for index in range(60))
@@ -87,6 +87,30 @@ def validate_chart_configuration(settings):
     definitions = validate_custom_charts(settings.get('CUSTOM', []))
     identifiers = [definition['id'] for definition in BUILTIN_CHARTS + tuple(definitions)]
     result = {'CUSTOM': definitions}
+    limits = settings.get('AXIS_LIMITS', {})
+    if not isinstance(limits, dict) or any(identifier not in identifiers for identifier in limits):
+        raise ValueError('Invalid chart axis selection')
+    result['AXIS_LIMITS'] = {}
+    for identifier, bounds in limits.items():
+        if not isinstance(bounds, dict):
+            raise ValueError('Invalid chart axis limits')
+        normalized = {}
+        for key in ('min', 'max'):
+            value = bounds.get(key)
+            if value is not None:
+                if isinstance(value, bool) or not isinstance(value, (int, float)):
+                    raise ValueError('Chart axis limits must be finite numbers or automatic')
+                try:
+                    value = float(value)
+                except OverflowError:
+                    raise ValueError('Chart axis limits must be finite numbers or automatic')
+                if not math.isfinite(value):
+                    raise ValueError('Chart axis limits must be finite numbers or automatic')
+            normalized[key] = value
+        if normalized['min'] is not None and normalized['max'] is not None and normalized['min'] >= normalized['max']:
+            raise ValueError('Chart axis minimum must be below its maximum')
+        if any(value is not None for value in normalized.values()):
+            result['AXIS_LIMITS'][identifier] = normalized
     for key, available, default in (
         ('VISIBLE_IDS', identifiers + ['histogram'], identifiers + ['histogram']),
         ('OVERLAY_IDS', identifiers, []),
@@ -129,6 +153,11 @@ def chart_configuration(config, camera_data=None, is_local=True):
         for key in ('VISIBLE_IDS', 'OVERLAY_IDS'):
             if settings.get(key) is not None:
                 settings[key] = list(dict.fromkeys(identifiers[identifier] for identifier in settings[key] if identifier in identifiers))
+        settings['AXIS_LIMITS'] = {
+            identifiers[identifier]: bounds
+            for identifier, bounds in settings.get('AXIS_LIMITS', {}).items()
+            if identifier in identifiers
+        }
     return validate_chart_configuration(settings)
 
 

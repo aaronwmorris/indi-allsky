@@ -65,11 +65,13 @@ def test_local_definitions_override_stale_published_metadata():
 
 def test_remote_visibility_is_mapped_by_source():
     config = {'CHARTS': {'CUSTOM': [{'id': 'local_sky', 'source': 'sensor_user_12'}],
-                         'OVERLAY_IDS': ['local_sky'], 'VISIBLE_IDS': ['temp', 'local_sky']}}
+                         'OVERLAY_IDS': ['local_sky'], 'VISIBLE_IDS': ['temp', 'local_sky'],
+                         'AXIS_LIMITS': {'local_sky': {'min': -50, 'max': 10}}}}
     metadata = {'chart_definitions': [{'id': 'remote_sky', 'source': 'sensor_user_12'}]}
     settings = chart_configuration(config, metadata, is_local=False)
     assert settings['OVERLAY_IDS'] == ['remote_sky']
     assert settings['VISIBLE_IDS'] == ['temp', 'remote_sky']
+    assert settings['AXIS_LIMITS'] == {'remote_sky': {'min': -50.0, 'max': 10.0}}
 
 
 @pytest.mark.parametrize('definition', [
@@ -113,6 +115,26 @@ def test_chart_and_image_visibility_are_independent():
     settings = validate_chart_configuration({'CUSTOM': [], 'VISIBLE_IDS': [], 'OVERLAY_IDS': ['stars', 'temp']})
     assert settings['VISIBLE_IDS'] == []
     assert settings['OVERLAY_IDS'] == ['stars', 'temp']
+
+
+def test_y_axis_defaults_preserve_suggested_legacy_scaling():
+    settings = chart_configuration({})
+    assert settings['AXIS_LIMITS'] == {}
+    assert settings['CUSTOM'][0]['min'] == 0
+
+
+def test_optional_axis_limits_apply_to_custom_and_standard_charts():
+    settings = validate_chart_configuration({'CUSTOM': [{'id': 'sky', 'source': 'sensor_user_0'}],
+        'AXIS_LIMITS': {'sky': {'min': -50, 'max': 10}, 'stars': {'max': 100}, 'temp': {'min': None, 'max': None}}})
+    assert settings['AXIS_LIMITS'] == {'sky': {'min': -50.0, 'max': 10.0}, 'stars': {'min': None, 'max': 100.0}}
+
+
+@pytest.mark.parametrize('limits', [None, {'unknown': {}}, {'histogram': {}}, {'stars': []},
+    {'stars': {'min': 10, 'max': 5}}, {'stars': {'min': 5, 'max': 5}}, {'stars': {'max': float('nan')}},
+    {'stars': {'max': True}}, {'stars': {'min': 10 ** 1000}}])
+def test_invalid_axis_limits_are_rejected(limits):
+    with pytest.raises(ValueError):
+        validate_chart_configuration({'AXIS_LIMITS': limits})
 
 
 @pytest.mark.parametrize('settings', [

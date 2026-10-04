@@ -8,6 +8,7 @@
         const inputClasses = 'tw:input tw:input-bordered tw:input-sm tw:bg-base-100';
         const selectClasses = 'tw:select tw:select-bordered tw:select-sm tw:bg-base-100';
         const checkboxClasses = 'tw:checkbox tw:checkbox-sm tw:checkbox-primary';
+        settings.AXIS_LIMITS ||= {};
         function save() {
             field.value = JSON.stringify(settings);
             root.querySelector('[data-chart-count]').textContent = settings.CUSTOM.length + ' custom charts';
@@ -39,6 +40,52 @@
             const glyph = document.createElement('i'); glyph.className = 'tw:icon-[lucide--' + icon + '] tw:w-4 tw:h-4';
             element.append(glyph); element.addEventListener('click', callback); return element;
         }
+        function axisControl(identifier, name) {
+            const details = document.createElement('details'); details.className = 'chart-axis-control';
+            details.dataset.axisId = identifier;
+            const summary = document.createElement('summary'); summary.className = 'chart-icon-button';
+            summary.title = 'Y-axis limits'; summary.setAttribute('aria-label', 'Y-axis limits for ' + name);
+            const icon = document.createElement('i'); icon.className = 'tw:icon-[lucide--sliders] tw:w-4 tw:h-4'; summary.append(icon);
+            const popup = document.createElement('div'); popup.className = 'chart-axis-popup';
+            const heading = document.createElement('strong'); heading.textContent = 'Y-axis limits'; popup.append(heading);
+            const inputs = document.createElement('div'); inputs.className = 'chart-axis-inputs';
+            ['min', 'max'].forEach(key => {
+                const input = document.createElement('input'); input.type = 'number'; input.step = 'any';
+                input.className = inputClasses; input.placeholder = 'Auto'; input.dataset.axisLimit = key;
+                input.value = settings.AXIS_LIMITS[identifier]?.[key] ?? '';
+                input.addEventListener('input', () => {
+                    if (input.validity.badInput) return;
+                    const bounds = settings.AXIS_LIMITS[identifier] || {min: null, max: null};
+                    bounds[key] = input.value === '' ? null : input.valueAsNumber;
+                    if (bounds.min === null && bounds.max === null) delete settings.AXIS_LIMITS[identifier];
+                    else settings.AXIS_LIMITS[identifier] = bounds;
+                    summary.dataset.custom = String(Boolean(settings.AXIS_LIMITS[identifier])); save();
+                });
+                inputs.append(label(key === 'min' ? 'Minimum' : 'Maximum', input));
+            });
+            popup.append(inputs); details.append(summary, popup);
+            summary.dataset.custom = String(Boolean(settings.AXIS_LIMITS[identifier]));
+            details.addEventListener('toggle', () => {
+                if (!details.open) return;
+                root.querySelectorAll('.chart-axis-control[open]').forEach(other => { if (other !== details) other.open = false; });
+                const anchor = summary.getBoundingClientRect();
+                popup.style.left = Math.max(16, Math.min(anchor.left, innerWidth - popup.offsetWidth - 16)) + 'px';
+                popup.style.top = Math.max(16, Math.min(anchor.bottom + 6, innerHeight - popup.offsetHeight - 16)) + 'px';
+            });
+            details.addEventListener('keydown', event => { if (event.key === 'Escape') { details.open = false; summary.focus(); } });
+            return details;
+        }
+        root.addEventListener('click', event => {
+            root.querySelectorAll('.chart-axis-control[open]').forEach(details => { if (!details.contains(event.target)) details.open = false; });
+        });
+        root.closest('form')?.addEventListener('submit', event => {
+            const invalid = [...root.querySelectorAll('[data-axis-limit]')].find(input => input.validity.badInput);
+            if (invalid) {
+                event.preventDefault(); event.stopImmediatePropagation();
+                invalid.closest('details').open = true; invalid.focus();
+                error.textContent = 'Enter a numeric chart axis limit or leave it automatic.'; error.style.display = 'block';
+            }
+        }, true);
         function render() {
             list.replaceChildren();
             settings.CUSTOM.forEach((definition, index) => {
@@ -56,15 +103,6 @@
                 });
                 source.value = definition.source;
                 source.addEventListener('change', () => { definition.source = source.value; save(); });
-                const minimum = document.createElement('input');
-                minimum.type = 'number'; minimum.step = 'any'; minimum.placeholder = 'Auto'; minimum.className = inputClasses;
-                minimum.value = definition.min === null ? '' : definition.min;
-                minimum.addEventListener('input', () => {
-                    if (minimum.value !== '' && !Number.isFinite(minimum.valueAsNumber)) {
-                        error.textContent = 'Enter a numeric chart minimum.'; error.style.display = 'block'; return;
-                    }
-                    error.style.display = 'none'; definition.min = minimum.value === '' ? null : minimum.valueAsNumber; save();
-                });
                 const actions = document.createElement('div'); actions.className = 'chart-row-actions';
                 function move(direction) {
                     const destination = index + direction;
@@ -77,9 +115,10 @@
                         settings.CUSTOM.splice(index, 1);
                         settings.VISIBLE_IDS = settings.VISIBLE_IDS.filter(value => value !== definition.id);
                         settings.OVERLAY_IDS = settings.OVERLAY_IDS.filter(value => value !== definition.id);
+                        delete settings.AXIS_LIMITS[definition.id];
                         render(); save();
                     }));
-                row.append(label('Name', name), label('Source', source, 'chart-source'), label('Minimum', minimum),
+                row.append(label('Name', name), label('Source', source, 'chart-source'), axisControl(definition.id, definition.label || definition.source),
                     check('History', 'VISIBLE_IDS', definition.id), check('On image', 'OVERLAY_IDS', definition.id), actions);
                 list.append(row);
             });
@@ -89,7 +128,7 @@
             const row = document.createElement('div'); row.className = 'chart-builtin-row';
             const name = document.createElement('span'); name.textContent = definition.label;
             row.append(name, check('History', 'VISIBLE_IDS', definition.id));
-            if (definition.id !== 'histogram') row.append(check('On image', 'OVERLAY_IDS', definition.id));
+            if (definition.id !== 'histogram') row.append(check('On image', 'OVERLAY_IDS', definition.id), axisControl(definition.id, definition.label));
             builtinList.append(row);
         });
         root.querySelector('[data-chart-add]').addEventListener('click', () => {
