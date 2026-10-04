@@ -1766,7 +1766,7 @@ class JsonChartView(JsonView):
         ts_dt = datetime.fromtimestamp(timestamp + 3)  # allow some jitter
 
         # safety, limit history to 1 day
-        history_seconds = max(60, min(history_seconds, 86400))
+        history_seconds = min(history_seconds, 86400)
 
         data = {
             'chart_data' : self.getChartData(camera_id, ts_dt, history_seconds),
@@ -1775,7 +1775,7 @@ class JsonChartView(JsonView):
         }
 
 
-        if not any(points for key, points in data['chart_data'].items() if key != 'histogram'):
+        if not any(points for key, points in data['chart_data'].items() if key != 'histogram') and not any(data['chart_data']['histogram'].values()):
             data['message'] = 'No chart data in history range'
 
 
@@ -1814,6 +1814,8 @@ class JsonChartView(JsonView):
         selected = request.args.get('series')
         selected_ids = set(selected.split(',')) if selected is not None else None
         chart_data = build_chart_data(chart_query, definitions, self.indi_allsky_config.get('TEMP_DISPLAY'), selected_ids)
+        if selected is None:
+            chart_data['jsqm_d'] = []
         chart_data['histogram'] = {'red': [], 'green': [], 'blue': [], 'gray': []}
         if request.args.get('histogram', '1') != '1':
             return chart_data

@@ -15,7 +15,7 @@ from indi_allsky.charts import build_chart_data
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def production_chart_handler(config, readings, args):
+def production_chart_handler(config, readings, args, camera=None, latest_image=None, detection_mask=None):
     from sqlalchemy import and_, column, func
 
     tree = ast.parse((ROOT / 'indi_allsky/flask/views.py').read_text(encoding='utf-8'))
@@ -25,15 +25,18 @@ def production_chart_handler(config, readings, args):
     for name in ('add_columns', 'join', 'filter', 'order_by'):
         getattr(query, name).return_value = query
     query.__iter__.side_effect = lambda: iter(readings)
-    query.first.return_value = None
+    query.first.return_value = latest_image
+    query.camera_setup = MagicMock()
     image = SimpleNamespace(query=query, **{name: column(name) for name in (
         'createDate', 'sqm', 'stars', 'temp', 'gain', 'exposure', 'detections', 'data', 'camera')})
     namespace = {'request': SimpleNamespace(args=args), 'datetime': datetime, 'timedelta': timedelta,
                  'IndiAllSkyDbImageTable': image, 'IndiAllSkyDbCameraTable': SimpleNamespace(id=column('camera_id')),
-                 'and_': and_, 'func': func, 'build_chart_data': build_chart_data, 'chart_definitions': chart_definitions}
+                 'and_': and_, 'func': func, 'build_chart_data': build_chart_data, 'chart_definitions': chart_definitions,
+                 'app': SimpleNamespace(logger=MagicMock())}
     exec(compile(ast.Module(body=methods, type_ignores=[]), 'production-chart-handler', 'exec'), namespace)
-    handler = SimpleNamespace(indi_allsky_config=config, camera=SimpleNamespace(local=True, data={'sensor_user_0': 'Sky temperature'}),
-                              chart_history_seconds=900, camera_now=datetime(2026, 10, 4, 20, 45), cameraSetup=lambda **kwargs: None)
+    handler = SimpleNamespace(indi_allsky_config=config, camera=camera or SimpleNamespace(local=True, data={'sensor_user_0': 'Sky temperature'}),
+                              chart_history_seconds=900, camera_now=datetime(2026, 10, 4, 20, 45), cameraSetup=query.camera_setup,
+                              _load_detection_mask=lambda binmode: detection_mask)
     handler.getChartData = lambda *values: namespace['getChartData'](handler, *values)
     return namespace['get_objects'](handler), query
 
@@ -180,9 +183,97 @@ def test_production_endpoint_handles_dynamic_series_and_optional_histogram(histo
 
 def test_production_endpoint_preserves_legacy_series_and_empty_history():
     response, query = production_chart_handler({}, [], {'camera_id': '1', 'histogram': '0', 'limit_s': '-1'})
-    assert len(response['chart_data']) == 16
+    assert set(response['chart_data']) == {'jsqm', 'jsqm_d', 'stars', 'temp', 'gain', 'exp', 'detection',
+                                         'custom_1', 'custom_2', 'custom_3', 'custom_4', 'custom_5',
+                                         'custom_6', 'custom_7', 'custom_8', 'custom_9', 'histogram'}
+    assert response['chart_data']['jsqm_d'] == []
     assert response['message'] == 'No chart data in history range'
     query.first.assert_not_called()
+
+
+@pytest.mark.parametrize('requested, expected', [(None, 900), ('5', 5), ('0', 0), ('-1', -1), ('100000', 86400)])
+def test_production_endpoint_preserves_history_parameters_and_timestamp_jitter(requested, expected):
+    timestamp = int(datetime(2026, 10, 4, 20, 30).timestamp())
+    arguments = {'camera_id': '7', 'histogram': '0', 'timestamp': str(timestamp)}
+    if requested is not None:
+        arguments['limit_s'] = requested
+    response, query = production_chart_handler({}, [], arguments)
+    parameters = query.filter.call_args.args[0].compile().params
+    assert parameters['camera_id_1'] == 7
+    assert parameters['createDate_2'] == datetime.fromtimestamp(timestamp + 3)
+    assert parameters['createDate_1'] == datetime.fromtimestamp(timestamp + 3) - timedelta(seconds=expected)
+    assert response['message'] == 'No chart data in history range'
+    query.camera_setup.assert_called_once_with(camera_id=7)
+
+
+@pytest.mark.parametrize('display, expected', [('c', 10), ('f', 50), ('k', 283.15)])
+def test_legacy_endpoint_builtin_values_units_and_camera_relative_default_time(display, expected):
+    reading = SimpleNamespace(createDate=datetime(2026, 10, 4, 20, 30), temp=10, stars_rolling=20.9,
+                              jsqm=100, exposure=15, gain=50, detections=2,
+                              data={'sensor_user_10': 3, 'sensor_user_11': -2})
+    response, query = production_chart_handler({'TEMP_DISPLAY': display}, [reading], {'camera_id': '3', 'histogram': '0'})
+    values = {identifier: points[0]['y'] for identifier, points in response['chart_data'].items()
+              if identifier not in ('histogram', 'jsqm_d')}
+    assert values['temp'] == pytest.approx(expected)
+    assert {identifier: values[identifier] for identifier in ('jsqm', 'stars', 'exp', 'gain', 'detection')} == {
+        'jsqm': 100, 'stars': 20, 'exp': 15, 'gain': 50, 'detection': 1}
+    assert values['custom_1'] == 3
+    assert values['custom_2'] == -2
+    assert response['chart_data']['stars'][0]['x'] == '20:30:00'
+    assert query.filter.call_args.args[0].compile().params['createDate_2'] == datetime(2026, 10, 4, 20, 45, 3)
+    query.camera_setup.assert_called_once_with(camera_id=3)
+
+
+def test_production_endpoint_uses_selected_remote_camera_metadata():
+    reading = SimpleNamespace(createDate=datetime(2026, 10, 4, 20, 30), temp=10, stars_rolling=20,
+                              jsqm=100, exposure=15, gain=50, detections=0, data={'sensor_user_42': -17.5})
+    camera = SimpleNamespace(local=False, data={'custom_chart_1_key': 'sensor_user_42',
+                                               'custom_chart_1_min': -40, 'sensor_user_42': 'Remote sky'})
+    response, query = production_chart_handler({}, [reading], {'camera_id': '9', 'histogram': '0'}, camera=camera)
+    assert response['chart_data']['custom_1'][0]['y'] == -17.5
+    assert response['chart_definitions'][6]['label'] == 'Remote sky'
+    assert response['chart_definitions'][6]['min'] == -40
+    query.camera_setup.assert_called_once_with(camera_id=9)
+    assert query.filter.call_args.args[0].compile().params['camera_id_1'] == 9
+
+
+@pytest.mark.parametrize('mode', ['L', 'RGB'])
+@pytest.mark.parametrize('use_mask', [False, True])
+def test_production_histogram_calculates_real_image_channels_and_roi(tmp_path, mode, use_mask):
+    import numpy
+    from PIL import Image
+
+    path = tmp_path / 'histogram.png'
+    Image.new(mode, (8, 8), 37 if mode == 'L' else (11, 22, 33)).save(path)
+    latest = SimpleNamespace(binmode=2, getFilesystemPath=lambda: path)
+    mask = numpy.zeros((8, 8), dtype=numpy.uint8) if use_mask else None
+    if use_mask:
+        mask[0:2, 0:3] = 255
+    config = {'SQM_ROI': [0, 0, 8, 8]}
+    reading = SimpleNamespace(createDate=datetime(2026, 10, 4, 20, 30), temp=10, stars_rolling=20,
+                              jsqm=100, exposure=15, gain=50, detections=0, data={})
+    response, query = production_chart_handler(config, [reading], {'camera_id': '4', 'series': ''},
+                                               latest_image=latest, detection_mask=mask)
+    assert response['message'] == ''
+    histogram = response['chart_data']['histogram']
+    expected_count = 6 if use_mask else 16
+    channels = {'gray': 37} if mode == 'L' else {'red': 11, 'green': 22, 'blue': 33}
+    for channel, intensity in channels.items():
+        assert len(histogram[channel]) == 256
+        assert histogram[channel][intensity] == {'x': str(intensity), 'y': expected_count}
+        assert sum(point['y'] for point in histogram[channel]) == expected_count
+    for channel in set(histogram) - set(channels):
+        assert histogram[channel] == []
+    assert len(query.filter.call_args_list) == 2
+    assert all(call.args[0].compile().params['camera_id_1'] == 4 for call in query.filter.call_args_list)
+
+
+def test_overlay_request_skips_real_image_histogram_work(tmp_path):
+    latest = SimpleNamespace(binmode=1, getFilesystemPath=MagicMock(return_value=tmp_path / 'absent.png'))
+    response, query = production_chart_handler({}, [], {'camera_id': '1', 'histogram': '0'}, latest_image=latest)
+    assert response['chart_data']['histogram'] == {'red': [], 'green': [], 'blue': [], 'gray': []}
+    query.first.assert_not_called()
+    latest.getFilesystemPath.assert_not_called()
 
 
 def test_production_config_field_validates_and_persists_the_normalized_settings():
