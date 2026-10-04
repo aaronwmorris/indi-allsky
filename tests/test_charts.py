@@ -313,15 +313,88 @@ def test_capture_publishes_dynamic_definitions_for_remote_cameras():
     assert len(custom_charts({}, metadata['data'])) == 12
 
 
-def create_chart_preview():
+def production_config_validation(configuration):
+    from indi_allsky.exceptions import ConfigSaveException
+
+    tree = ast.parse((ROOT / 'indi_allsky/config.py').read_text(encoding='utf-8'))
+    defaults = next(node for node in ast.walk(tree) if isinstance(node, ast.Assign)
+                    and any(isinstance(target, ast.Name) and target.id == '_base_config' for target in node.targets))
+    chart_defaults = next(value for key, value in zip(defaults.value.args[0].keys, defaults.value.args[0].values)
+                          if isinstance(key, ast.Constant) and key.value == 'CHARTS')
+    validator = next(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == '_validateConfig')
+    namespace = {'app': SimpleNamespace(logger=MagicMock()), 'ConfigSaveException': ConfigSaveException}
+    exec(compile(ast.Module(body=[validator], type_ignores=[]), 'production-config-validation', 'exec'), namespace)
+    namespace['_validateConfig'](SimpleNamespace(config=configuration, base_config={'CHARTS': ast.literal_eval(chart_defaults)}))
+
+
+@pytest.mark.parametrize('value', [None, []])
+def test_persistence_accepts_legacy_and_empty_chart_selections(value):
+    production_config_validation({'CHARTS': {'CUSTOM': value, 'VISIBLE_IDS': value}})
+
+
+@pytest.mark.parametrize('key', ['CUSTOM', 'VISIBLE_IDS'])
+@pytest.mark.parametrize('value', ['invalid', {}, 1, True])
+def test_persistence_rejects_incorrect_chart_collection_types(key, value):
+    from indi_allsky.exceptions import ConfigSaveException
+
+    with pytest.raises(ConfigSaveException):
+        production_config_validation({'CHARTS': {key: value}})
+
+
+def production_chart_settings_view(application, configuration, save):
+    from indi_allsky.exceptions import ConfigSaveException
+    from flask import request, jsonify
+    from flask.views import View
+    from flask_login import LoginManager, UserMixin, current_user, login_required
+    from flask_wtf import FlaskForm
+    from wtforms import HiddenField
+    from wtforms.validators import DataRequired, ValidationError
+
+    login = LoginManager(application)
+
+    class PreviewUser(UserMixin):
+        def __init__(self, identifier):
+            self.id = identifier
+            self.username = identifier
+            self.is_admin = identifier == 'admin'
+
+    @login.user_loader
+    def load_user(identifier):
+        return PreviewUser(identifier) if identifier in ('admin', 'reader') else None
+
+    class PreviewBaseView(View):
+        def __init__(self, **kwargs):
+            self.indi_allsky_config = configuration
+            self._indi_allsky_config_obj = SimpleNamespace(save=save)
+
+    forms = ast.parse((ROOT / 'indi_allsky/flask/forms.py').read_text(encoding='utf-8'))
+    validator = next(node for node in forms.body if isinstance(node, ast.FunctionDef) and node.name == 'CHARTS__CONFIG_validator')
+    form = next(node for node in forms.body if isinstance(node, ast.ClassDef) and node.name == 'IndiAllskyChartConfigForm')
+    namespace = {'json': json, 'FlaskForm': FlaskForm, 'HiddenField': HiddenField, 'DataRequired': DataRequired,
+                 'ValidationError': ValidationError, '__package__': 'indi_allsky.flask', 'app': application,
+                 'request': request, 'jsonify': jsonify, 'current_user': current_user, 'login_required': login_required,
+                 'BaseView': PreviewBaseView, 'validate_chart_configuration': validate_chart_configuration,
+                 'ConfigSaveException': ConfigSaveException}
+    exec(compile(ast.Module(body=[validator, form], type_ignores=[]), 'production-chart-settings-form', 'exec'), namespace)
+    views = ast.parse((ROOT / 'indi_allsky/flask/views.py').read_text(encoding='utf-8'))
+    owner = next(node for node in views.body if isinstance(node, ast.ClassDef) and node.name == 'AjaxChartConfigView')
+    exec(compile(ast.Module(body=[owner], type_ignores=[]), 'production-chart-settings-view', 'exec'), namespace)
+    return namespace['IndiAllskyChartConfigForm'], namespace['AjaxChartConfigView']
+
+
+def create_chart_preview(login_disabled=True, save_error=None, csrf_enabled=False):
     from flask import Blueprint, Flask, jsonify, render_template, render_template_string, request, send_file
     from jinja2 import ChoiceLoader, DictLoader
-    from wtforms import Form, HiddenField, SelectField
+    from wtforms import Form, SelectField
     from indi_allsky.charts import BUILTIN_CHARTS, MAX_CUSTOM_CHARTS
 
     templates = ROOT / 'indi_allsky/flask/templates'
     static = ROOT / 'indi_allsky/flask/static'
     application = Flask('chart-preview', template_folder=str(templates), static_folder=None)
+    application.config.update(SECRET_KEY='chart-preview-tests', LOGIN_DISABLED=login_disabled, WTF_CSRF_ENABLED=csrf_enabled)
+    if csrf_enabled:
+        from flask_wtf.csrf import CSRFProtect
+        CSRFProtect(application)
     blueprint = Blueprint('indi_allsky', __name__, static_folder=str(static), static_url_path='/assets')
     base = '''<!doctype html><html data-theme="dark"><head><meta name="viewport" content="width=device-width,initial-scale=1">
         <title>{% block title %}Chart preview{% endblock %}</title><link rel="stylesheet" href="/assets/css/dist.css">
@@ -334,10 +407,13 @@ def create_chart_preview():
                'label': 'Sky temperature' if index == 0 else 'Sensor {0}'.format(index), 'min': None} for index in range(12)]
     configuration = {'CHARTS': chart_configuration({'CHARTS': {'CUSTOM': custom, 'OVERLAY_IDS': ['custom_0', 'stars']}})}
     choices = {'Sensors': [('sensor_user_{0}'.format(index), 'Sensor {0}'.format(index)) for index in range(110)]}
-
-    class EditorForm(Form):
-        CHARTS__CONFIG = HiddenField()
-        CHARTS__CUSTOM_SLOT_1 = SelectField(choices=choices)
+    save = MagicMock(side_effect=save_error)
+    if save_error is None:
+        save.side_effect = lambda username, note: production_config_validation(configuration)
+    application.extensions['chart_preview_config'] = configuration
+    application.extensions['chart_preview_save'] = save
+    EditorForm, save_view = production_chart_settings_view(application, configuration, save)
+    blueprint.add_url_rule('/ajax/charts', view_func=save_view.as_view('ajax_chart_config_view'))
 
     class HistoryForm(Form):
         HISTORY_SELECT = SelectField('History', choices=[('900', '15 Minutes'), ('1800', '30 Minutes'), ('3600', '1 Hour'), ('86400', '24 Hours')], default='900')
@@ -350,6 +426,7 @@ def create_chart_preview():
                 'chart_settings': settings, 'chart_definitions': definitions,
                 'chart_overlays': dict(settings, definitions=definitions), 'form_history': HistoryForm(),
                 'form_config': EditorForm(data={'CHARTS__CONFIG': json.dumps(settings)}),
+                'can_manage_charts': True, 'chart_source_choices': choices,
                 'chart_builtin_definitions': BUILTIN_CHARTS, 'chart_maximum': MAX_CUSTOM_CHARTS}
 
     @blueprint.route('/settings', endpoint='config_view', methods=['GET', 'POST'])
@@ -402,6 +479,131 @@ def create_chart_preview():
 
     application.register_blueprint(blueprint)
     return application
+
+
+def test_manage_charts_targets_settings_below_the_charts_without_a_configuration_tab():
+    page = create_chart_preview().test_client().get('/charts').get_data(as_text=True)
+    assert 'href="#chart-settings"' in page
+    assert page.index('data-chart-grid') < page.index('id="chart-settings"')
+    assert 'data-chart-editor' in page
+    assert 'nav-charts-tab' not in (ROOT / 'indi_allsky/flask/templates/config.html').read_text(encoding='utf-8')
+
+
+@pytest.mark.parametrize('authenticated, admin, disabled, expected', [
+    (False, False, False, False), (True, False, False, False),
+    (True, True, False, True), (False, False, True, True)])
+def test_production_chart_page_exposes_editor_only_to_configuration_administrators(authenticated, admin, disabled, expected):
+    import math
+    from flask import request
+    from indi_allsky.charts import BUILTIN_CHARTS, MAX_CUSTOM_CHARTS
+
+    application = create_chart_preview(login_disabled=disabled)
+    save_view = application.view_functions['indi_allsky.ajax_chart_config_view'].view_class
+    form_type = save_view.dispatch_request.__globals__['IndiAllskyChartConfigForm']
+    template_view = type('PreviewTemplateView', (), {'get_context': lambda self: {'camera_id': 9}})
+    choices = {'Sensors': [('sensor_user_0', 'User slot 0')]}
+    namespace = {'TemplateView': template_view, 'request': request, 'math': math, 'json': json, 'app': application,
+                 'current_user': SimpleNamespace(is_authenticated=authenticated, is_admin=admin),
+                 'chart_configuration': chart_configuration, 'chart_definitions': chart_definitions,
+                 'BUILTIN_CHARTS': BUILTIN_CHARTS, 'MAX_CUSTOM_CHARTS': MAX_CUSTOM_CHARTS,
+                 'IndiAllskyChartHistoryForm': lambda: None, 'IndiAllskyChartConfigForm': form_type,
+                 'IndiAllskyConfigForm': SimpleNamespace(CUSTOM_CHART_choices={}, SENSOR_SLOT_choices=choices)}
+    tree = ast.parse((ROOT / 'indi_allsky/flask/views.py').read_text(encoding='utf-8'))
+    owner = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == 'ChartView')
+    exec(compile(ast.Module(body=[owner], type_ignores=[]), 'production-chart-page-context', 'exec'), namespace)
+    view = namespace['ChartView']()
+    view.indi_allsky_config = application.extensions['chart_preview_config']
+    view.camera = SimpleNamespace(local=True, data={'sensor_user_0': 'Sky temperature'})
+    with application.test_request_context('/charts?timestamp=123'):
+        context = view.get_context()
+        assert context['can_manage_charts'] is expected
+        assert context['timestamp'] == 123
+        assert ('form_config' in context) is expected
+        if expected:
+            assert context['chart_source_choices']['Sensors'] == [('sensor_user_0', 'Sky temperature')]
+            assert json.loads(context['form_config'].CHARTS__CONFIG.data)['CUSTOM'] == view.indi_allsky_config['CHARTS']['CUSTOM']
+    assert choices == {'Sensors': [('sensor_user_0', 'User slot 0')]}
+
+
+@pytest.mark.parametrize('user, expected', [(None, 401), ('reader', 400), ('admin', 200)])
+def test_chart_only_save_preserves_configuration_and_requires_admin(user, expected):
+    application = create_chart_preview(login_disabled=False)
+    configuration = application.extensions['chart_preview_config']
+    configuration['CCD_EXPOSURE_MAX'] = 42
+    configuration['CHARTS']['CUSTOM_SLOT_1'] = 'sensor_user_10'
+    previous = json.loads(json.dumps(configuration))
+    client = application.test_client()
+    if user:
+        with client.session_transaction() as session:
+            session['_user_id'] = user
+            session['_fresh'] = True
+    settings = chart_configuration({'CHARTS': {'CUSTOM': [], 'OVERLAY_IDS': ['temp']}})
+    response = client.post('/ajax/charts', json={'CHARTS__CONFIG': json.dumps(settings)})
+    assert response.status_code == expected
+    save = application.extensions['chart_preview_save']
+    if user == 'admin':
+        assert configuration['CHARTS']['CUSTOM'] == []
+        assert configuration['CHARTS']['OVERLAY_IDS'] == ['temp']
+        assert configuration['CHARTS']['CUSTOM_SLOT_1'] == 'sensor_user_10'
+        assert configuration['CCD_EXPOSURE_MAX'] == 42
+        save.assert_called_once_with('admin', 'Updated chart settings')
+    else:
+        assert configuration == previous
+        save.assert_not_called()
+
+
+@pytest.mark.parametrize('payload', [None, [], {}, {'CHARTS__CONFIG': '{broken'},
+    {'CHARTS__CONFIG': json.dumps({'OVERLAY_IDS': ['histogram']})}])
+def test_chart_only_save_rejects_invalid_payloads_without_mutating_configuration(payload):
+    application = create_chart_preview()
+    previous = json.loads(json.dumps(application.extensions['chart_preview_config']))
+    response = application.test_client().post('/ajax/charts', json=payload)
+    assert response.status_code == 400
+    assert application.extensions['chart_preview_config'] == previous
+    application.extensions['chart_preview_save'].assert_not_called()
+
+
+def test_chart_only_save_keeps_csrf_protection_and_supports_login_disabled_installations():
+    from itsdangerous import URLSafeTimedSerializer
+
+    application = create_chart_preview(csrf_enabled=True)
+    client = application.test_client()
+    settings = json.dumps(chart_configuration({'CHARTS': {'CUSTOM': []}}))
+    assert client.post('/ajax/charts', json={'CHARTS__CONFIG': settings}).status_code == 400
+    application.extensions['chart_preview_save'].assert_not_called()
+    with client.session_transaction() as session:
+        session['csrf_token'] = 'chart-session-token'
+    token = URLSafeTimedSerializer(application.secret_key, salt='wtf-csrf-token').dumps('chart-session-token')
+    assert client.post('/ajax/charts', json={'CHARTS__CONFIG': settings, 'csrf_token': token}).status_code == 400
+    assert client.post('/ajax/charts', json={'CHARTS__CONFIG': settings, 'csrf_token': token},
+                       headers={'X-CSRFToken': token}).status_code == 200
+    application.extensions['chart_preview_save'].assert_called_once_with('system', 'Updated chart settings')
+
+
+def test_chart_only_save_restores_previous_settings_when_persistence_fails():
+    from indi_allsky.exceptions import ConfigSaveException
+
+    application = create_chart_preview(save_error=ConfigSaveException('Save failed'))
+    previous = json.loads(json.dumps(application.extensions['chart_preview_config']))
+    settings = json.dumps(chart_configuration({'CHARTS': {'CUSTOM': []}}))
+    response = application.test_client().post('/ajax/charts', json={'CHARTS__CONFIG': settings})
+    assert response.status_code == 400
+    assert response.json == {'form_global': ['Save failed']}
+    assert application.extensions['chart_preview_config'] == previous
+
+
+def test_on_image_chart_save_passes_actual_persistence_validation():
+    application = create_chart_preview()
+    configuration = application.extensions['chart_preview_config']
+    save = application.extensions['chart_preview_save']
+    settings = chart_configuration({'CHARTS': {'CUSTOM': [{'id': 'sky', 'source': 'sensor_user_0'}],
+                                               'VISIBLE_IDS': ['sky'], 'OVERLAY_IDS': ['sky']}})
+    response = application.test_client().post('/ajax/charts', json={'CHARTS__CONFIG': json.dumps(settings)})
+    assert response.status_code == 200, response.get_data(as_text=True)
+    assert configuration['CHARTS']['CUSTOM'] == settings['CUSTOM']
+    assert configuration['CHARTS']['VISIBLE_IDS'] == ['sky']
+    assert configuration['CHARTS']['OVERLAY_IDS'] == ['sky']
+    save.assert_called_once_with('system', 'Updated chart settings')
 
 
 def test_real_chart_templates_render_and_preview_settings_round_trip():

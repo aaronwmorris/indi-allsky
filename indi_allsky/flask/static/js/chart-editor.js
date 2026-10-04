@@ -86,6 +86,27 @@
                 error.textContent = 'Enter a numeric chart axis limit or leave it automatic.'; error.style.display = 'block';
             }
         }, true);
+        const form = root.closest('form');
+        if (form?.dataset.chartSaveUrl) {
+            form.addEventListener('submit', async event => {
+                event.preventDefault();
+                const submit = form.querySelector('[type="submit"]');
+                submit.disabled = true; error.style.display = 'none';
+                try {
+                    const csrfToken = form.querySelector('[name="csrf_token"]')?.value || '';
+                    const response = await fetch(form.dataset.chartSaveUrl, {
+                        method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfToken},
+                        body: JSON.stringify({CHARTS__CONFIG: field.value, csrf_token: csrfToken})
+                    });
+                    if (response.redirected) { window.location.assign(response.url); return; }
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(Object.values(result).flat().join(' '));
+                    window.location.hash = 'chart-settings'; window.location.reload();
+                } catch (failure) {
+                    error.textContent = failure.message || 'Unable to save chart settings.'; error.style.display = 'block';
+                } finally { submit.disabled = false; }
+            });
+        }
         function render() {
             list.replaceChildren();
             settings.CUSTOM.forEach((definition, index) => {

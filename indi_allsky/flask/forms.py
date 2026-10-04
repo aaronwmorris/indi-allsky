@@ -3718,6 +3718,10 @@ def INDI_CONFIG_DAY_validator(*args):
     INDI_CONFIG_DEFAULTS_validator(*args)
 
 
+class IndiAllskyChartConfigForm(FlaskForm):
+    CHARTS__CONFIG = HiddenField(validators=[DataRequired(), CHARTS__CONFIG_validator])
+
+
 class IndiAllskyConfigForm(FlaskForm):
     CAMERA_INTERFACE_choices = {
         'INDI' : (

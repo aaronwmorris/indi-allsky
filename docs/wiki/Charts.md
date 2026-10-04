@@ -1,6 +1,7 @@
 # Charts
 
-Open **Configuration > Charts** to add, remove, or reorder custom charts.
+Open **Charts > Manage charts** to jump to the settings below the chart grid.
+Add, remove, or reorder custom charts, then select **Save charts**.
 **History** selects charts on the Charts page; **On image** independently selects
 compact charts on the latest-image view. Existing nine-slot configurations load
 automatically, and image overlays default to off. Up to 64 custom charts are
@@ -12,7 +13,7 @@ The existing time-history choices, time labels, line/point behavior, and detecti
 bars are retained. Existing custom-chart minima remain suggested lower bounds,
 not hard cutoffs. Missing readings appear as gaps rather than fabricated zeroes.
 
-Each standard or custom chart has a sliders icon in Configuration > Charts.
+Each standard or custom chart has a sliders icon in the chart settings.
 Its **Y-axis limits** control accepts an optional minimum and maximum. Blank
 values retain existing automatic/suggested scaling. Explicit values set a fixed
 bound; if both are entered, the minimum must be below the maximum. Clearing both

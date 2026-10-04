@@ -96,6 +96,7 @@ from sqlalchemy.sql.expression import false as sa_false
 from sqlalchemy.sql.expression import null as sa_null
 
 from .forms import IndiAllskyConfigForm
+from .forms import IndiAllskyChartConfigForm
 from .forms import IndiAllskyImageViewer
 from .forms import IndiAllskyImageViewerPreload
 from .forms import IndiAllskyFitsImageViewer
@@ -1742,8 +1743,48 @@ class ChartView(TemplateView):
         context['chart_definitions'] = chart_definitions(
             self.indi_allsky_config, self.camera.data, is_local=self.camera.local)
 
+        context['can_manage_charts'] = app.config['LOGIN_DISABLED'] or (current_user.is_authenticated and current_user.is_admin)
+        if context['can_manage_charts']:
+            context['form_config'] = IndiAllskyChartConfigForm(data={
+                'CHARTS__CONFIG': json.dumps(chart_configuration(self.indi_allsky_config))})
+            metadata = self.camera.data or {}
+            choices = dict(IndiAllskyConfigForm.CUSTOM_CHART_choices, **IndiAllskyConfigForm.SENSOR_SLOT_choices)
+            context['chart_source_choices'] = {
+                group: [(source, metadata.get(source, label)) for source, label in sources]
+                for group, sources in choices.items()}
+            context['chart_builtin_definitions'] = BUILTIN_CHARTS
+            context['chart_maximum'] = MAX_CUSTOM_CHARTS
 
         return context
+
+
+class AjaxChartConfigView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def dispatch_request(self):
+        if not app.config['LOGIN_DISABLED'] and not current_user.is_admin:
+            return jsonify({'form_global': ['You do not have permission to make configuration changes']}), 400
+
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return jsonify({'form_global': ['Invalid chart configuration']}), 400
+        form_config = IndiAllskyChartConfigForm(data=payload)
+        if not form_config.validate():
+            return jsonify(form_config.errors), 400
+        if not self.indi_allsky_config:
+            return jsonify({'form_global': ['Configuration is unavailable']}), 400
+
+        settings = validate_chart_configuration(json.loads(form_config.CHARTS__CONFIG.data))
+        previous = self.indi_allsky_config.get('CHARTS', {})
+        self.indi_allsky_config['CHARTS'] = dict(previous, **settings)
+        username = 'system' if app.config['LOGIN_DISABLED'] else current_user.username
+        try:
+            self._indi_allsky_config_obj.save(username, 'Updated chart settings')
+        except ConfigSaveException as error:
+            self.indi_allsky_config['CHARTS'] = previous
+            return jsonify({'form_global': [str(error)]}), 400
+        return jsonify({'success-message': 'Saved chart settings'})
 
 
 class JsonChartView(JsonView):
@@ -14558,6 +14599,7 @@ bp_allsky.add_url_rule('/js/loopraw', view_func=JsonRawImageLoopView.as_view('js
 bp_allsky.add_url_rule('/sqm', view_func=SqmView.as_view('sqm_view', template_name='sqm.html'))
 
 bp_allsky.add_url_rule('/charts', view_func=ChartView.as_view('chart_view', template_name='charts.html'))
+bp_allsky.add_url_rule('/ajax/charts', view_func=AjaxChartConfigView.as_view('ajax_chart_config_view'))
 bp_allsky.add_url_rule('/js/charts', view_func=JsonChartView.as_view('js_chart_view'))
 
 bp_allsky.add_url_rule('/imageviewer', view_func=ImageViewerView.as_view('imageviewer_view', template_name='imageviewer.html'))

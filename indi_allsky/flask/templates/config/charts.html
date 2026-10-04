@@ -25,5 +25,5 @@
         <label>Width (px)<input class="tw:input tw:input-bordered tw:input-sm tw:bg-base-100" type="number" min="180" max="400" step="1" data-chart-preference="OVERLAY_WIDTH"></label>
         <label>Opacity (%)<input type="range" class="tw:range tw:range-sm" min="20" max="100" step="1" data-chart-preference="OVERLAY_OPACITY"></label>
     </div>
-    <script type="application/json" id="chart-editor-options">{{ {'sources': form_config.CHARTS__CUSTOM_SLOT_1.choices, 'builtins': chart_builtin_definitions, 'maximum': chart_maximum}|tojson }}</script>
+    <script type="application/json" id="chart-editor-options">{{ {'sources': chart_source_choices, 'builtins': chart_builtin_definitions, 'maximum': chart_maximum}|tojson }}</script>
 </section>
