@@ -76,7 +76,7 @@ class TempSensorSi7021(SensorBase):
             if self.heater_level_night >= 0:
                 logger.info('[%s] Switching SI7021 to night mode - Heater level %d', self.name, self.heater_level_night)
                 self.si7021.heater_enable = True
-                self.si7021.heater_level = self.heater_level_day
+                self.si7021.heater_level = self.heater_level_night
             else:
                 logger.info('[%s] Switching SI7021 to night mode - Heater OFF', self.name)
                 self.si7021.heater_enable = False
