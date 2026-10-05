@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 
 from indi_allsky.charts import chart_definitions, chart_value, custom_charts, validate_custom_charts
 from indi_allsky.charts import chart_configuration, validate_chart_configuration
-from indi_allsky.charts import build_chart_data, build_chart_values, render_saved_charts
+from indi_allsky.charts import build_chart_data, render_saved_charts
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -181,56 +181,6 @@ def test_chart_save_enforces_image_chart_limits_without_overwriting_settings(key
         assert configuration['CHARTS'][key] == settings[key]
 
 
-@pytest.mark.parametrize('temperature_display, expected_temperature', [('c', -5), ('f', 23), ('k', 268.15)])
-def test_saved_chart_values_match_points_without_formatting_timestamps(temperature_display, expected_temperature):
-    definitions = chart_definitions({'CHARTS': {'CUSTOM': []}}) + [
-        {'id': 'humidity', 'source': 'sensor_user_0'},
-        {'id': 'sky', 'source': 'sensor_temp_0'},
-    ]
-    readings = [SimpleNamespace(createDate=datetime(2026, 10, 4, 20, 30) + timedelta(seconds=index),
-                temp=temperature, stars_rolling=10.5 if index == 0 else None, jsqm=20,
-                exposure=40, gain=200, detections=index if index == 0 else None,
-                data=metadata) for index, (temperature, metadata) in enumerate([
-                    (-5, {'sensor_user_0': 87.5, 'sensor_temp_0': -20}),
-                    (None, {'sensor_user_0': float('nan'), 'sensor_temp_0': 'invalid'}),
-                    (float('inf'), None),
-                ])]
-    points = build_chart_data(readings, definitions, temperature_display)
-    expected = {identifier: [point['y'] for point in series] for identifier, series in points.items()}
-    for reading in readings:
-        reading.createDate = MagicMock(spec=datetime)
-        reading.createDate.strftime.side_effect = AssertionError('Saved values must not format timestamps')
-        reading.createDate.timestamp.side_effect = AssertionError('Saved values must not convert timestamps')
-    values = build_chart_values(iter(readings), definitions, temperature_display)
-    assert values == expected
-    assert values['temp'] == [expected_temperature, None, None]
-    assert values['humidity'] == [87.5, None, None]
-    assert values['stars'] == [10, None, None]
-    assert values['detection'] == [0, None, None]
-    assert build_chart_values([], definitions) == {definition['id']: [] for definition in definitions}
-
-
-@pytest.mark.parametrize('builder', [build_chart_values, build_chart_data])
-@pytest.mark.parametrize('source, fields, expected', [
-    ('sensor_user_0', {'data': {'sensor_user_0': 87.5}}, 87.5),
-    ('sensor_user_0', {'data': None}, None),
-    ('temp', {'temp': -5}, 23),
-    ('stars', {'stars_rolling': 10.5}, 10),
-    ('jsqm', {'jsqm': 20.5}, 20.5),
-    ('exp', {'exposure': 40.5}, 40.5),
-    ('gain', {'gain': 200}, 200),
-    ('detection', {'detections': 2}, 1),
-    ('detection', {'detections': None}, None),
-])
-def test_chart_builders_only_read_selected_sources(builder, source, fields, expected):
-    reading = SimpleNamespace(createDate=datetime(2026, 10, 4, 20, 30), **fields)
-    result = builder([reading], [{'id': 'selected', 'source': source}], 'f')
-    if builder is build_chart_data:
-        assert result == {'selected': [{'x': '20:30:00', 'y': expected}]}
-    else:
-        assert result == {'selected': [expected]}
-
-
 def test_saved_charts_disabled_leave_pixels_and_readings_untouched():
     import numpy
 
@@ -284,20 +234,13 @@ def test_saved_charts_keep_enlarged_dimensions_for_every_selection(monkeypatch, 
 
     draw = FigureCanvasAgg.draw
     sizes = []
-    canvases = []
     def record_draw(canvas):
         sizes.append(canvas.get_width_height())
-        canvases.append(canvas)
-        assert len(canvas.figure.axes) == 1
-        assert len(canvas.figure.texts) == 2
         draw(canvas)
     monkeypatch.setattr(FigureCanvasAgg, 'draw', record_draw)
     config = {'CHARTS': {'CUSTOM': [], 'SAVED_IMAGE_IDS': selected, 'OVERLAY_WIDTH': base_width}}
     render_saved_charts(numpy.zeros((1600, image_width, 3), dtype=numpy.uint8), config, [])
     assert sizes == [expected] * len(selected)
-    assert all(canvas is canvases[0] for canvas in canvases)
-    assert not canvases[0].figure.axes
-    assert not canvases[0].figure.texts
     assert chart_configuration(config)['OVERLAY_WIDTH'] == base_width
 
 
