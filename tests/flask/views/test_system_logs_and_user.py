@@ -5,7 +5,7 @@ import pytest
 import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import patch, MagicMock, PropertyMock, mock_open
 
 from indi_allsky import constants
 from indi_allsky.config import IndiAllSkyConfig

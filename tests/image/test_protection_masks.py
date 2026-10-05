@@ -6,7 +6,6 @@ from indi_allsky.protection_masks import (
     star_mask,
     fast_star_mask,
     async_star_mask,
-    set_cache_size,
     get_last_star_profile,
 )
 
@@ -35,8 +34,7 @@ def test_star_mask_basic(test_star_field):
     assert isinstance(profile, dict)
 
 
-def test_fast_star_mask_and_cache(test_star_field):
-    set_cache_size(16)
+def test_fast_star_mask(test_star_field):
 
     # Grayscale
     mask_fast = fast_star_mask(test_star_field, downsample=2, patch_size=16, expand_radius=2)

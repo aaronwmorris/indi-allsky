@@ -32,6 +32,7 @@ def test_si7021_heater_uses_current_mode(monkeypatch, day_level, night_level):
 @pytest.mark.parametrize('day_range_high', [False, True])
 def test_si1145_log_matches_applied_ir_settings(monkeypatch, caplog, day_range_high):
     monkeypatch.setattr(lightSensorSi1145.time, 'sleep', lambda _: None)
+    monkeypatch.setattr(lightSensorSi1145.logger, 'propagate', True)
     caplog.set_level(logging.INFO, logger='indi_allsky')
     sensor = lightSensorSi1145.LightSensorSi1145({}, 'test', [], [])
     sensor.vis_gain_day, sensor.vis_gain_night = 1, 2

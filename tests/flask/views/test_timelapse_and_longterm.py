@@ -1,4 +1,4 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, mock_open
 from pathlib import Path
 from datetime import datetime
 import pytest
@@ -97,7 +97,8 @@ def test_mini_timelapse_and_custom_css_views(flask_app, system_db):
 
     with patch.dict(flask_app.config, {"LOGIN_DISABLED": True}), \
          patch("indi_allsky.flask.views.current_user", mock_user):
-        with patch("subprocess.run") as mock_sub:
+        with patch("subprocess.run") as mock_sub, \
+             patch("builtins.open", mock_open()):
             mock_sub.return_value.returncode = 0
             res_css = client.post("/indi-allsky/ajax/custom_css", json={"custom_css": "body { color: red; }"})
             assert res_css.status_code in (200, 500)

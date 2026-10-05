@@ -341,6 +341,9 @@ def test_white_balance_and_adjustments(ss_processor):
     ip.config['WBB_MTF_MIDTONES'] = 0.5
     ip.config['WBG_MTF_MIDTONES'] = 0.5
     ip.config['WBR_MTF_MIDTONES'] = 0.5
+    ip.config['WBB_MTF_MIDTONES_DAY'] = 0.5
+    ip.config['WBG_MTF_MIDTONES_DAY'] = 0.5
+    ip.config['WBR_MTF_MIDTONES_DAY'] = 0.5
     assert ip.white_balance_mtf() is None  # no action
 
     ip.night_av[constants.NIGHT_NIGHT] = 1
@@ -350,6 +353,9 @@ def test_white_balance_and_adjustments(ss_processor):
     # First call builds LUTs
     assert ip.white_balance_mtf() is True
     # Change night mode triggers recalculate LUT
+    ip.config['WBB_MTF_MIDTONES_DAY'] = 0.4
+    ip.config['WBG_MTF_MIDTONES_DAY'] = 0.6
+    ip.config['WBR_MTF_MIDTONES_DAY'] = 0.3
     ip.night_av[constants.NIGHT_NIGHT] = 0
     assert ip.white_balance_mtf() is True
 
