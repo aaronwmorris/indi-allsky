@@ -57,7 +57,7 @@
         if (!el) return;
 
         // Open any collapsed accordion section that contains this field
-        const collapse = el.closest('.tw:collapse, .collapse');
+        const collapse = el.closest('.tw\\:collapse, .collapse');
         if (collapse) {
             const checkbox = collapse.querySelector('input[type="checkbox"]');
             if (checkbox) {
@@ -66,7 +66,7 @@
         }
 
         // Highlight the field container
-        const row = el.closest('.tw:flex, .tw:grid, .form-group') || el;
+        const row = el.closest('.tw\\:flex, .tw\\:grid, .form-group') || el;
         row.classList.add('field-highlight');
 
         setTimeout(function() {

@@ -22,10 +22,10 @@
     "test:lens_solver": ".venv/bin/python -m pytest tests/lens_solver/"
   },
   "devDependencies": {
-    "@iconify-json/lucide": "^1.2.131",
+    "@iconify-json/lucide": "^1.2.137",
     "@iconify/tailwind4": "^1.1.4",
     "@tailwindcss/cli": "^4.3.3",
-    "daisyui": "^5.7.36",
+    "daisyui": "^5.7.46",
     "tailwindcss": "^4.3.3"
   },
   "dependencies": {

@@ -4,9 +4,15 @@ on:
   schedule:
     - cron: '20 4 1 * *'
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Custom release tag (e.g. indi_v2026.10.01). Leave blank to auto-generate based on current UTC date.'
+        required: false
+        type: string
+        default: ''
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   bump-version:
@@ -14,20 +20,20 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: app-token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ secrets.RELEASE_APP_ID }}
+          client-id: ${{ secrets.RELEASE_APP_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: 'npm'
@@ -42,8 +48,12 @@ jobs:
 
       - name: Bump version, tag, and push
         run: |
-          # Generate version string based on current UTC date: indi_vYYYY.MM.01
-          RELEASE_TAG="indi_v$(date -u +'%Y.%m.01')"
+          # Generate version string based on current UTC date: indi_vYYYY.MM.01 (or use manual input if provided)
+          if [ -n "${{ inputs.release_tag }}" ]; then
+            RELEASE_TAG="${{ inputs.release_tag }}"
+          else
+            RELEASE_TAG="indi_v$(date -u +'%Y.%m.01')"
+          fi
           echo "Bumping to version: ${RELEASE_TAG}"
 
           # 1. Run version bump script
