@@ -51,7 +51,12 @@ Database & Storage:
   flush-16min-images       Purge images taken within last 16 minutes from DB
   merge-cameras            Migrate records and images from one camera ID to another
   optimize-mysql           Optimize MySQL / MariaDB database tables
+  darks / capture-darks    Capture and generate master dark frames (sigmaclip, average)
+  flush-darks              Delete all master dark frames from storage and database
   import-darks             Interactively import dark frames and bad pixel maps
+  config                   Manage camera configuration (bootstrap, dump, edit, load)
+  reset-config             Reset camera configuration to default values
+  dump-config              Export active camera configuration to JSON
   retry-uploads            Manually sync / retry pending uploads (images/videos/API)
   notify                   Inject an alert notification into the database
 
@@ -164,11 +169,14 @@ fix_permissions() {
     fi
 
     # 5. Image storage folder (Recursive matching setup.sh)
+    [ ! -d "$IMAGE_FOLDER" ] && mkdir -p "$IMAGE_FOLDER"
     if [ -d "$IMAGE_FOLDER" ]; then
         chmod 775 "$IMAGE_FOLDER"
         chown -R "${ALLSKY_USER}:${WWW_GROUP}" "$IMAGE_FOLDER" 2>/dev/null || true
-        [ -d "${IMAGE_FOLDER}/darks" ] && chmod 775 "${IMAGE_FOLDER}/darks" 2>/dev/null || true
-        [ -d "${IMAGE_FOLDER}/export" ] && chmod 775 "${IMAGE_FOLDER}/export" 2>/dev/null || true
+        [ ! -d "${IMAGE_FOLDER}/darks" ] && mkdir -p "${IMAGE_FOLDER}/darks"
+        [ ! -d "${IMAGE_FOLDER}/export" ] && mkdir -p "${IMAGE_FOLDER}/export"
+        chmod 775 "${IMAGE_FOLDER}/darks" "${IMAGE_FOLDER}/export" 2>/dev/null || true
+        chown "${ALLSKY_USER}:${WWW_GROUP}" "${IMAGE_FOLDER}/darks" "${IMAGE_FOLDER}/export" 2>/dev/null || true
     fi
 
     # 6. Varlib folder
@@ -296,7 +304,9 @@ case "$COMMAND" in
     passwd|reset-pass|user-add|user-list|user-del|\
     backup-db|expire-images|rebuild-thumbnails|convert-db|validate-db|\
     flush-images|purge-images|flush-16min-images|flush-recent-images|\
-    merge-cameras|import-darks|retry-uploads|upload-sync|sync-uploads|\
+    merge-cameras|darks|generate-darks|capture-darks|flush-darks|\
+    import-darks|config|reset-config|flush-config|dump-config|\
+    retry-uploads|upload-sync|sync-uploads|\
     notify|add-notification|test-camera|test-linearity|camera-linearity|\
     test-sensors|test-devices|test-hardware|test-fans|test-upload|test-transfers|\
     test-adsb|test-oci|test-websocket|test-ws|ha-discovery|setup-ha-discovery)
@@ -350,8 +360,29 @@ case "$COMMAND" in
     optimize-mysql|mysql-optimize)
         exec bash "${APP_DIR}/misc/mysql_optimize.sh" "$@"
         ;;
+    darks|generate-darks|capture-darks)
+        exec "$PYTHON_BIN" "${APP_DIR}/darks.py" "$@"
+        ;;
+    flush-darks)
+        exec "$PYTHON_BIN" "${APP_DIR}/darks.py" flush "$@"
+        ;;
     import-darks)
         exec "$PYTHON_BIN" "${APP_DIR}/misc/import_darks_frames.py" "$@"
+        ;;
+    config)
+        exec "$PYTHON_BIN" "${APP_DIR}/config.py" "$@"
+        ;;
+    reset-config)
+        echo "indi-allsky: Resetting configuration to default values..."
+        "$PYTHON_BIN" "${APP_DIR}/config.py" flush --force "$@"
+        "$PYTHON_BIN" "${APP_DIR}/config.py" bootstrap
+        echo "indi-allsky: Configuration has been reset to defaults."
+        ;;
+    flush-config)
+        exec "$PYTHON_BIN" "${APP_DIR}/config.py" flush "$@"
+        ;;
+    dump-config)
+        exec "$PYTHON_BIN" "${APP_DIR}/config.py" dump "$@"
         ;;
     retry-uploads|upload-sync|sync-uploads)
         exec "$PYTHON_BIN" "${APP_DIR}/misc/upload_sync.py" "$@"
