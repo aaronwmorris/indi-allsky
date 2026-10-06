@@ -18,10 +18,6 @@ SENSOR_SOURCES = tuple('sensor_user_{0}'.format(index) for index in range(110)) 
 METADATA_SOURCES = ('kpindex', 'ovation_max', 'aurora_mag_bt', 'aurora_mag_gsm_bz',
                     'aurora_plasma_density', 'aurora_plasma_speed', 'aurora_plasma_temp',
                     'aurora_n_hemi_gw', 'aurora_s_hemi_gw', 'camera_sqm_raw_mag')
-NONNEGATIVE_SOURCES = {'stars', 'exp', 'detection', 'kpindex', 'ovation_max', 'aurora_mag_bt',
-                       'aurora_plasma_density', 'aurora_plasma_speed', 'aurora_plasma_temp',
-                       'aurora_n_hemi_gw', 'aurora_s_hemi_gw'}
-NONNEGATIVE_SENSOR_UNITS = {'%', 'hPa', 'm/s', 'mm', 'lx', 'rpm', 'ADU'}
 
 
 def validate_custom_charts(definitions):
@@ -70,25 +66,12 @@ def custom_charts(config, camera_data=None):
 
 
 def chart_definitions(config, camera_data=None, is_local=False):
-    from .sensors_mapping import DEFAULT_FIXED_SLOTS, build_slot_label_map
-
     metadata = camera_data or {}
     definitions = [dict(definition) for definition in BUILTIN_CHARTS]
     for definition in custom_charts(config, None if is_local else metadata):
         definition = dict(definition)
         definition['label'] = definition['label'] or metadata.get(definition['source'], definition['source'])
         definitions.append(definition)
-    slot_map = {sensor['slot']: sensor for sensor in DEFAULT_FIXED_SLOTS}
-    if is_local and config.get('TEMP_SENSOR'):
-        slot_map.update(build_slot_label_map(config))
-    published = {definition['id']: definition.get('nonnegative') is True
-                 for definition in metadata.get('chart_definitions', []) or []}
-    for definition in definitions:
-        source = definition['source']
-        sensor = slot_map.get(int(source.rsplit('_', 1)[1]), {}) if source.startswith('sensor_user_') else {}
-        if (source in NONNEGATIVE_SOURCES or sensor.get('unit') in NONNEGATIVE_SENSOR_UNITS
-                or not is_local and published.get(definition['id'], False)):
-            definition['nonnegative'] = True
     return definitions
 
 
@@ -296,10 +279,6 @@ def render_saved_charts(image, config, readings, camera_data=None, label_bounds=
                     if definition['id'] == 'detection':
                         lower = 0
                         upper = max(upper, 1.05)
-                    if definition.get('nonnegative'):
-                        lower = max(0, lower)
-                        if upper <= lower:
-                            upper = lower + max(abs(lower) * .05, .05)
                     bounds = settings['AXIS_LIMITS'].get(definition['id'], {})
                     if bounds.get('min') is not None:
                         lower = bounds['min']
