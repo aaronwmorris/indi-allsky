@@ -12,15 +12,15 @@ on:
       indi_core_tag:
         description: 'Pinned INDI Core Git Tag'
         required: false
-        default: 'v2.2.4.2'
+        default: 'v2.2.5'
       indi_3rdparty_tag:
         description: 'Pinned INDI 3rd-Party Git Tag'
         required: false
-        default: 'v2.2.4.1'
+        default: 'v2.2.5'
 
 env:
-  INDI_CORE_TAG: 'v2.2.4.2'
-  INDI_3RDPARTY_TAG: 'v2.2.4.1'
+  INDI_CORE_TAG: 'v2.2.5'
+  INDI_3RDPARTY_TAG: 'v2.2.5'
 
 jobs:
   check-changes:
