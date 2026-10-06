@@ -290,6 +290,43 @@ def test_saved_humidity_chart_autoscales_despite_legacy_zero_minimum(monkeypatch
         assert upper - lower < 1
 
 
+@pytest.mark.parametrize('values', [[0.0, 0.1, 0.0], [0.0, 0.001, 0.0], [0.0, 0.0, 0.0], [5.0, 5.1, 5.0]])
+@pytest.mark.parametrize('limits', [{}, {'min': -1, 'max': 10}])
+def test_saved_wind_chart_does_not_pad_below_zero(monkeypatch, values, limits):
+    import numpy
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+    from indi_allsky import sensors_mapping
+
+    monkeypatch.setattr(sensors_mapping, 'build_slot_label_map',
+                        lambda config: {10: {'unit': 'm/s', 'device_class': 'wind_speed'}})
+    config = {'TEMP_SENSOR': {'A_CLASSNAME': 'wind_sensor'},
+              'CHARTS': {'CUSTOM': [{'id': 'wind', 'source': 'sensor_user_10'}],
+                         'SAVED_IMAGE_IDS': ['wind'], 'AXIS_LIMITS': {'wind': limits}}}
+    readings = [SimpleNamespace(createDate=datetime(2026, 10, 4, 23, 20) + timedelta(seconds=index * 30),
+                temp=None, stars_rolling=None, jsqm=None, exposure=None, gain=None, detections=None,
+                data={'sensor_user_10': value}) for index, value in enumerate(values)]
+    drawn = []
+    draw = FigureCanvasAgg.draw
+    def record_draw(canvas):
+        axes = canvas.figure.axes[0]
+        drawn.append((axes.get_ylim(), axes.lines[0].get_ydata().tolist()))
+        draw(canvas)
+    monkeypatch.setattr(FigureCanvasAgg, 'draw', record_draw)
+
+    render_saved_charts(numpy.zeros((480, 960, 3), dtype=numpy.uint8), config, readings)
+
+    (lower, upper), plotted = drawn[0]
+    assert plotted == values
+    if limits:
+        assert (lower, upper) == (-1, 10)
+    elif min(values) == 0:
+        assert lower == 0
+        assert max(values) < upper <= (max(values) * 1.1 if max(values) else .1)
+    else:
+        assert 4.9 < lower < 5.0
+        assert 5.1 < upper < 5.2
+
+
 def test_saved_charts_honor_axis_limits_and_preserve_gaps_and_negative_values(monkeypatch):
     import numpy
     from matplotlib.backends.backend_agg import FigureCanvasAgg
@@ -905,15 +942,51 @@ def test_production_config_field_validates_and_persists_the_normalized_settings(
     assert config['CHARTS']['CUSTOM_SLOT_1'] == 'sensor_user_10'
 
 
-def test_capture_publishes_dynamic_definitions_for_remote_cameras():
+@pytest.mark.parametrize('unit, nonnegative', [
+    ('m/s', True), ('hPa', True), ('%', True), ('mm', True), ('lx', True), ('rpm', True), ('ADU', True),
+    ('C', False), ('mag/arcsec2', False), ('', False),
+])
+def test_chart_domains_use_sensor_units_not_editable_names(monkeypatch, unit, nonnegative):
+    from indi_allsky import sensors_mapping
+
+    monkeypatch.setattr(sensors_mapping, 'build_slot_label_map',
+                        lambda config: {10: {'unit': unit}})
+    config = {'TEMP_SENSOR': {'A_CLASSNAME': 'configured_sensor'},
+              'CHARTS': {'CUSTOM': [{'id': 'metric', 'source': 'sensor_user_10', 'label': 'Editable name'}]}}
+    definition = chart_definitions(config, is_local=True)[6]
+    assert definition.get('nonnegative', False) is nonnegative
+
+
+def test_remote_chart_domains_do_not_use_local_sensor_configuration(monkeypatch):
+    from indi_allsky import sensors_mapping
+
+    build_slots = MagicMock(return_value={10: {'unit': 'm/s'}})
+    monkeypatch.setattr(sensors_mapping, 'build_slot_label_map', build_slots)
+    local_config = {'TEMP_SENSOR': {'A_CLASSNAME': 'local_wind_sensor'}}
+    metadata = {'chart_definitions': [{'id': 'remote', 'source': 'sensor_user_10'}]}
+    assert not chart_definitions(local_config, metadata, is_local=False)[6].get('nonnegative', False)
+    metadata['chart_definitions'][0]['nonnegative'] = True
+    assert chart_definitions(local_config, metadata, is_local=False)[6]['nonnegative'] is True
+    build_slots.assert_not_called()
+
+
+def test_capture_publishes_dynamic_definitions_for_remote_cameras(monkeypatch):
+    from indi_allsky import sensors_mapping
+    from indi_allsky.charts import BUILTIN_CHARTS
+
+    monkeypatch.setattr(sensors_mapping, 'build_slot_label_map',
+                        lambda config: {10: {'unit': 'm/s'}})
     tree = ast.parse((ROOT / 'indi_allsky/capture.py').read_text(encoding='utf-8'))
     statement = next(node for node in ast.walk(tree) if isinstance(node, ast.Assign)
                      and ast.unparse(node.targets[0]) == "camera_metadata['data']['chart_definitions']")
     custom = [{'id': 'custom_{0}'.format(index), 'source': 'sensor_user_{0}'.format(index)} for index in range(12)]
     metadata = {'data': {}}
     exec(compile(ast.Module(body=[statement], type_ignores=[]), 'production-camera-metadata', 'exec'),
-         {'self': SimpleNamespace(config={'CHARTS': {'CUSTOM': custom}}), 'camera_metadata': metadata, 'custom_charts': custom_charts})
+            {'self': SimpleNamespace(config={'TEMP_SENSOR': {'A_CLASSNAME': 'wind_sensor'}, 'CHARTS': {'CUSTOM': custom}}),
+            'camera_metadata': metadata, 'chart_definitions': chart_definitions, 'BUILTIN_CHARTS': BUILTIN_CHARTS})
     assert len(custom_charts({}, metadata['data'])) == 12
+    remote_definitions = chart_definitions({}, metadata['data'], is_local=False)
+    assert next(definition for definition in remote_definitions if definition['id'] == 'custom_10')['nonnegative'] is True
 
 
 def production_config_validation(configuration):
@@ -1081,7 +1154,9 @@ def create_chart_preview(login_disabled=True, save_error=None, csrf_enabled=Fals
         return [SimpleNamespace(createDate=start + timedelta(seconds=index * 25),
                     temp=12 + index / 50, stars_rolling=40 + index % 12, jsqm=100 + index % 7, gain=50,
                     exposure=15, detections=index % 6 == 0,
-                    data={'sensor_user_{0}'.format(source): application.extensions.get('chart_preview_sensor_user_0_values', {}).get(index, -27 + index / 20) if source == 0 else source * 2 + index % 7 for source in range(11)})
+                    data={'sensor_user_{0}'.format(source): application.extensions.get('chart_preview_sensor_values', {}).get(source, {}).get(index,
+                        application.extensions.get('chart_preview_sensor_user_0_values', {}).get(index, -27 + index / 20)
+                        if source == 0 else source * 2 + index % 7) for source in range(11)})
                     for index in range(36)]
 
     @blueprint.route('/js/charts', endpoint='js_chart_view')
@@ -1293,6 +1368,65 @@ def test_history_page_autoscales_all_series_and_uses_capture_time_labels(viewpor
             assert charts['detection']['max'] >= 1
             assert charts['histogram']['min'] == 0
             assert charts['histogram']['labels'] and all(re.fullmatch(r'\d+', str(label)) for label in charts['histogram']['labels'])
+            assert not errors
+        finally:
+            browser.close()
+
+
+@pytest.mark.parametrize('view', ['charts', 'latest'])
+@pytest.mark.parametrize('viewport', [(1440, 1000), (390, 844)])
+@pytest.mark.parametrize('fixed_limits', [False, True])
+def test_web_charts_floor_wind_at_zero_without_clamping_temperature(monkeypatch, view, viewport, fixed_limits):
+    from urllib.parse import urlsplit
+    from indi_allsky import sensors_mapping
+
+    playwright = pytest.importorskip('playwright.sync_api')
+    monkeypatch.setattr(sensors_mapping, 'build_slot_label_map',
+                        lambda config: {10: {'unit': 'm/s', 'device_class': 'wind_speed'}})
+    application = create_chart_preview()
+    config = application.extensions['chart_preview_config']
+    config['TEMP_SENSOR'] = {'A_CLASSNAME': 'wind_sensor'}
+    config['CHARTS']['CUSTOM'].append({'id': 'wind', 'source': 'sensor_user_10', 'label': 'Wind speed'})
+    config['CHARTS']['VISIBLE_IDS'] = ['wind', 'custom_0']
+    config['CHARTS']['OVERLAY_IDS'] = ['wind', 'custom_0']
+    config['CHARTS']['AXIS_LIMITS'] = {'wind': {'min': -1}} if fixed_limits else {}
+    wind_values = {index: (index % 2) * .1 for index in range(36)}
+    application.extensions['chart_preview_sensor_values'] = {10: wind_values}
+    client = application.test_client()
+    with playwright.sync_playwright() as driver:
+        try:
+            browser = driver.chromium.launch(headless=True)
+        except playwright.Error:
+            try:
+                browser = driver.chromium.launch(channel='msedge', headless=True)
+            except playwright.Error:
+                pytest.skip('No Chromium or Edge available for chart axis checks')
+        try:
+            page = browser.new_page(viewport={'width': viewport[0], 'height': viewport[1]})
+            errors = []
+            page.on('pageerror', lambda error: errors.append(str(error)))
+            def serve_preview(route):
+                url = urlsplit(route.request.url)
+                response = client.get(url.path + ('?' + url.query if url.query else ''))
+                route.fulfill(status=response.status_code, headers=dict(response.headers), body=response.data)
+            page.route('**/*', serve_preview)
+            page.goto('http://chart.test/' + view, wait_until='networkidle')
+            page.wait_for_function("Chart.getChart(document.querySelector('[data-chart-id=wind] canvas'))?.data.datasets[0].data.length === 36")
+            charts = page.evaluate('''() => Object.fromEntries([...document.querySelectorAll('.chart-panel')].map(panel => {
+                const chart = Chart.getChart(panel.querySelector('canvas'));
+                return [panel.dataset.chartId, {min:chart.scales.y.min, max:chart.scales.y.max,
+                    values:chart.data.datasets[0].data.map(point=>point.y),
+                    ticks:chart.scales.y.ticks.map(tick=>tick.value)}];
+            }))''')
+            assert charts['wind']['values'] == list(wind_values.values())
+            assert charts['wind']['min'] == (-1 if fixed_limits else 0)
+            assert .1 < charts['wind']['max'] < .2
+            assert charts['custom_0']['min'] < min(charts['custom_0']['values']) < 0
+            assert charts['custom_0']['max'] - charts['custom_0']['min'] < 3
+            if view == 'latest':
+                assert len(charts['wind']['ticks']) == 5
+                if not fixed_limits:
+                    assert min(charts['wind']['ticks']) == 0
             assert not errors
         finally:
             browser.close()

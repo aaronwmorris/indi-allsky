@@ -1115,9 +1115,10 @@ class CaptureWorker(Process):
 
 
         # Charts
-        from .charts import custom_charts
+        from .charts import BUILTIN_CHARTS, chart_definitions
 
-        camera_metadata['data']['chart_definitions'] = custom_charts(self.config)
+        camera_metadata['data']['chart_definitions'] = chart_definitions(
+            self.config, camera_metadata['data'], is_local=True)[len(BUILTIN_CHARTS):]
         camera_metadata['data']['custom_chart_1_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 'sensor_user_10')
         camera_metadata['data']['custom_chart_1_min'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_1_MIN', 0.0)
         camera_metadata['data']['custom_chart_2_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 'sensor_user_11')

@@ -22,7 +22,12 @@ supported as a safety bound.
 The existing time-history choices, time labels, line/point behavior, and detection
 bars are retained. Standard and custom charts automatically scale to their
 actual readings with range padding, rather than forcing zero or inherited
-legacy minima into the range. Detection retains its binary baseline and
+legacy minima into the range. Known nonnegative metrics, such as wind speed,
+humidity, pressure, rainfall, light levels and fan speed, keep their automatic
+lower bound at or above zero. Positive readings still use a tight data-based
+range; zero is not forced into every chart. Temperature, signed magnetic-field
+readings and unknown sensor types can still extend below zero. Explicit Y-axis
+limits override this automatic floor. Detection retains its binary baseline and
 histogram scaling is unchanged. Missing readings appear as gaps rather than
 fabricated zeroes. History labels show capture times as HH:MM, not sample
 numbers; point tooltips retain HH:MM:SS precision.

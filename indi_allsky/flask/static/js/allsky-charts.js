@@ -180,6 +180,10 @@
                                     lower -= padding; upper += padding;
                                     if (stickyZero) lower = 0;
                                     if (Number.isFinite(axis.options.suggestedMin)) lower = Math.min(lower, axis.options.suggestedMin);
+                                    if (axis.chart.$nonnegative) {
+                                        lower = Math.max(0, lower);
+                                        if (upper <= lower) upper = lower + Math.max(Math.abs(lower) * .05, .05);
+                                    }
                                     if (Number.isFinite(axis.options.min)) {
                                         lower = axis.options.min;
                                         if (!Number.isFinite(axis.options.max) && upper <= lower) upper = lower + Math.max(Math.abs(lower) * .05, 1);
@@ -198,6 +202,7 @@
                     panel = {element, title, value, chart, canvas}; this.panels.set(identifier, panel);
                 }
                 panel.title.textContent = definition.label; panel.title.title = definition.label; panel.canvas.setAttribute('aria-label', definition.label + ' history');
+                panel.chart.$nonnegative = definition.nonnegative === true;
                 panel.chart.options.scales.y.suggestedMin = suggestedMin;
                 panel.chart.options.scales.y.min = bounds.min ?? undefined; panel.chart.options.scales.y.max = bounds.max ?? undefined;
                 this.grid.append(panel.element);
