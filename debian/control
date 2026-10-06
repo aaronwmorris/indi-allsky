@@ -49,8 +49,8 @@ Suggests: mosquitto,
  gpsd,
  udiskie,
  gsc
-Breaks: indi-allsky-web (<< 2026.08.3~)
-Replaces: indi-allsky-web (<< 2026.08.3~)
+Breaks: indi-allsky-web (<< ${binary:Version})
+Replaces: indi-allsky-web (<< ${binary:Version})
 Provides: indi-allsky-web (= ${binary:Version})
 Description: Allsky camera software using INDI framework and Flask web UI
  indi-allsky is a complete solution for operating an allsky camera using the
