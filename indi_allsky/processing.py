@@ -3321,7 +3321,7 @@ class ImageProcessor(object):
 
         label_data['rain_status'] = rain_sensor_status
 
-        label_data['windspeed'] = self.sensors_user_av[constants.SENSOR_USER_WIND_SPEED]
+        label_data['wind_speed'] = self.sensors_user_av[constants.SENSOR_USER_WIND_SPEED]
 
 
         # dew heater

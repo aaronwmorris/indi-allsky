@@ -148,7 +148,7 @@ class IndiAllSkyConfigBase(object):
         "CCD_TEMP_DAY"     : 35.0,
         "TEMP_DISPLAY"     : "c",  # c = celsius, f = fahrenheit, k = kelvin",
         "PRESSURE_DISPLAY" : "hPa",  # hPa = hectoPascals/millibars, psi = psi, inHg = inches of mercury, mmHg = mm of mercury
-        "WINDSPEED_DISPLAY": "kph",  # ms = meters/s, mph = miles/hour, knots = knots, kph = km/hour
+        "WINDSPEED_DISPLAY": "ms",  # ms = meters/s, mph = miles/hour, knots = knots, kph = km/hour
         "CCD_TEMP_SCRIPT"  : "",
         "GPS_ENABLE"       : False,
         "TARGET_ADU"         : 75,

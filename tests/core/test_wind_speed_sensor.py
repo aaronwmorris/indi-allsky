@@ -125,7 +125,9 @@ def test_windspeed_settings_group_visibility_and_units(sensor_slot, classname, u
     assert 'style="display: none;"' in group.split('>', 1)[0]
     assert 'data-sensor-classname="blinka_wind_speed_sensor_wh_sp_ws01"' in group.split('>', 1)[0]
     assert 'WH-SP-WS01 Cup Anemometer' in group
-    assert 'global Wind Speed Display setting' in group
+    assert 'global Wind Speed Display setting' in Environment().filters['striptags'](group)
+    assert '{wind_speed:0.1f}' in group
+    assert '{windspeed' not in group
     assert 'form_config.WINDSPEED_DISPLAY' not in template
     assert 'style="display: none;"' not in rendered_control.split('<div id="WINDSPEED_DISPLAY-error"', 1)[0]
     assert 'id="WINDSPEED_DISPLAY"' in rendered_control

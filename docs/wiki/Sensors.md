@@ -86,7 +86,7 @@ There are 60 (0-59) sensor slots for user data.
 
 Select **WH-SP-WS01 Cup Anemometer** in any sensor slot and set that slot's **Pin/Port 1** to the GPIO input connected to the anemometer pulse wire. The sensor counts switch closures continuously with 20 ms debounce and converts them using the WH-SP-WS01 rate of 2.4 km/h per pulse per second. The reported value follows the global Wind Speed Display setting.
 
-Use `{windspeed:0.1f}` in an image-label template to show the current wind speed. The selected slot also records the numeric value in its normal user-sensor slot.
+Use `{wind_speed:0.1f}` in an image-label template to show the current wind speed. The selected slot also records the numeric value in its normal user-sensor slot.
 
 #### Wiring and units
 
@@ -94,7 +94,7 @@ The counter enables an internal pull-up. Connect the passive reed switch/dry con
 
 Use Blinka pin names, for example `D24` for BCM GPIO24 (physical header pin 18), or `D25` for BCM GPIO25 (physical header pin 22). The I2C address is not used.
 
-The overlay contains only the numeric speed. Add a suffix matching Wind Speed Display, for example `Wind {windspeed:0.1f} km/h`. Update the suffix if the setting changes.
+The overlay contains only the numeric speed. Add a suffix matching Wind Speed Display, for example `Wind {wind_speed:0.1f} km/h`. Update the suffix if the setting changes.
 
 ## Chart Titles
 Chart titles may be customized by updating the title template

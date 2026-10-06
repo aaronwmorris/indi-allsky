@@ -982,7 +982,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'dew_heater_status' : '',
         'fan_status' : '',
         'wind_dir' : '',
-        'windspeed' : 0.0,
+        'wind_speed' : 0.0,
         'rain_status' : '',
         'custom_1' : '',
         'custom_2' : '',
@@ -3816,10 +3816,10 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
     WINDSPEED_DISPLAY_choices = (
-        ('kph', 'Kilometers/hour (km/h)'),
-        ('mph', 'Miles/hour (mph)'),
-        ('knots', 'Knots'),
         ('ms', 'Meters/second (m/s)'),
+        ('knots', 'Knots'),
+        ('mph', 'Miles/hour (mph)'),
+        ('kph', 'Kilometers/hour (km/h)'),
     )
 
     IMAGE_FILE_TYPE_choices = (
