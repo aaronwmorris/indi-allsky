@@ -233,7 +233,6 @@ OpenCV only supports ASCII characters and limited internal fonts.  Pillow is muc
 | sensor_user_8  | float        | Feb 2026   | Camera SQM Magnitude |
 | sensor_user_9  | float        | Feb 2026   | Camera SQM ADU |
 | sensor_user_10<br>sensor_user_11<br>...<br>sensor_user_59  | float        | May 2024   | Temperature, Humidity, etc data |
-| sensor_user_101 | float       | Sept 2026  | WH-SP-WS01 wind speed; units follow Wind Speed Display |
 
 ## Custom slots
 Use these slots to add custom values to the overlay (in `indi-allsky/processing.py`)
