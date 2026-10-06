@@ -830,11 +830,11 @@
                 <span id="cloudiness-index-tuning-description" class="tw:text-xs tw:text-base-content/60">Corrects raw MLX sky readings (live and calibration references) before calculating cloudiness; ambient readings are unchanged.</span>
                 <div id="cloudiness-index-tuning" class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:py-3"{% if not form_config.TEMP_SENSOR__CLOUDINESS_INDEX_SHOW_TUNING.data %} style="display: none;"{% endif %}>
                     <div class="tw:flex tw:flex-col tw:gap-1">
-                        <label class="tw:flex tw:items-center tw:gap-3" for="TEMP_SENSOR__CLOUDINESS_INDEX_HYSTERESIS">
-                            {{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_HYSTERESIS(class='tw:toggle tw:toggle-primary tw:toggle-sm', title='80% current cloudiness index + 20% average of up to three previous valid raw indices. History resets on capture-worker restart.') }}
-                            <span class="tw:text-xs tw:text-base-content">{{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_HYSTERESIS.label.text }}</span>
+                        <label class="tw:flex tw:items-center tw:gap-3" for="TEMP_SENSOR__CLOUDINESS_INDEX_SMOOTHING">
+                            {{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_SMOOTHING(class='tw:toggle tw:toggle-primary tw:toggle-sm', title='Temporal smoothing: 80% of the current raw cloudiness index and 20% of the mean of up to three preceding valid raw indices. This reduces short-term fluctuations without recursively filtering the result. History resets on capture-worker restart.') }}
+                            <span class="tw:text-xs tw:text-base-content">{{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_SMOOTHING.label.text }}</span>
                         </label>
-                        <div id="TEMP_SENSOR__CLOUDINESS_INDEX_HYSTERESIS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <div id="TEMP_SENSOR__CLOUDINESS_INDEX_SMOOTHING-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT.label.text }}</span>

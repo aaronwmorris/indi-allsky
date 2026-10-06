@@ -313,8 +313,13 @@ def calculate_cloudiness_index(config: Dict[str, Any], get_sensor_value) -> Any:
     return max(0.0, min(100.0, cloudiness_index))
 
 
-def apply_cloudiness_hysteresis(cloudiness_index, history):
-    """Blend 80% current index with 20% of up to three prior valid raw indices."""
+def apply_cloudiness_smoothing(cloudiness_index, history):
+    """Apply temporal smoothing to the current raw cloudiness index.
+
+    Weight the current raw index by 80% and the mean of up to three preceding
+    valid raw indices by 20%. History contains raw values, never smoothed results,
+    so the result is not recursively filtered. Leave None or no-history values unchanged.
+    """
     if cloudiness_index is None or not history:
         return cloudiness_index
     previous = history[-3:]

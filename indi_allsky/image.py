@@ -426,10 +426,10 @@ class ImageWorker(Process):
                     cloudiness_sensor_values, cloudiness_sensor_read_times, idx,
                     now=cloudiness_snapshot_time),
             )
-            if self.config.get('TEMP_SENSOR', {}).get('CLOUDINESS_INDEX_HYSTERESIS', False):
+            if self.config.get('TEMP_SENSOR', {}).get('CLOUDINESS_INDEX_SMOOTHING', False):
                 history = self.cloudiness_index_history.setdefault(camera.id, [])
                 raw_index = i_ref.cloudiness_index
-                i_ref.cloudiness_index = sensors_mapping.apply_cloudiness_hysteresis(raw_index, history)
+                i_ref.cloudiness_index = sensors_mapping.apply_cloudiness_smoothing(raw_index, history)
                 if raw_index is not None:
                     history.append(raw_index)
                     del history[:-3]

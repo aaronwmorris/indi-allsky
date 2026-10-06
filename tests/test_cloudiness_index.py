@@ -46,30 +46,31 @@ def _values(mapping):
 @pytest.mark.parametrize('current, history, expected', [
     (100.0, [], 100.0),
     (100.0, [10.0], 82.0),
+    (100.0, [10.0, 20.0], 83.0),
     (100.0, [10.0, 20.0, 30.0], 84.0),
     (100.0, [90.0, 10.0, 20.0, 30.0], 84.0),
     (0.0, [100.0, 100.0, 100.0], 20.0),
     (None, [10.0, 20.0, 30.0], None),
 ])
-def test_cloudiness_hysteresis_weights_only_the_previous_three_values(current, history, expected):
+def test_cloudiness_smoothing_weights_only_the_previous_three_values(current, history, expected):
     original = history[:]
-    result = sensors_mapping.apply_cloudiness_hysteresis(current, history)
+    result = sensors_mapping.apply_cloudiness_smoothing(current, history)
     assert result == pytest.approx(expected) if expected is not None else result is None
     assert history == original
 
 
-def test_cloudiness_hysteresis_configuration_and_form_default_to_off():
+def test_cloudiness_smoothing_configuration_and_form_default_to_off():
     from wtforms import BooleanField, Form
 
     default = next(value for node in ast.walk(_source_tree('config.py')) if isinstance(node, ast.Dict)
                    for key, value in zip(node.keys, node.values)
-                   if isinstance(key, ast.Constant) and key.value == 'CLOUDINESS_INDEX_HYSTERESIS')
+                   if isinstance(key, ast.Constant) and key.value == 'CLOUDINESS_INDEX_SMOOTHING')
     assert ast.literal_eval(default) is False
-    field_name = 'TEMP_SENSOR__CLOUDINESS_INDEX_HYSTERESIS'
+    field_name = 'TEMP_SENSOR__CLOUDINESS_INDEX_SMOOTHING'
     field = _source_assignment(_source_member('flask/forms.py', 'IndiAllskyConfigForm').body, field_name)
     namespace = {'BooleanField': BooleanField}
     _exec_source('flask/forms.py', [field], namespace)
-    form_type = type('CloudinessHysteresisForm', (Form,), {field_name: namespace[field_name]})
+    form_type = type('CloudinessSmoothingForm', (Form,), {field_name: namespace[field_name]})
     assert getattr(form_type(), field_name).data is False
     assert getattr(form_type(), field_name).label.text == 'Index Smoothing (20% History)'
 
@@ -132,7 +133,7 @@ def _cloudiness_ground_form(config, ground_slot, enabled):
 @pytest.mark.parametrize('field_name', [
     'TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE',
     'TEMP_SENSOR__CLOUDINESS_INDEX_SHOW_TUNING',
-    'TEMP_SENSOR__CLOUDINESS_INDEX_HYSTERESIS',
+    'TEMP_SENSOR__CLOUDINESS_INDEX_SMOOTHING',
     'TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR',
 ])
 def test_cloudiness_toggles_use_checkbox_save_path(field_name):
@@ -150,7 +151,7 @@ def test_cloudiness_toggles_use_checkbox_save_path(field_name):
 
 
 @pytest.mark.parametrize('show_tuning', [False, True, None])
-@pytest.mark.parametrize('field_name', ['TEMP_SENSOR__CLOUDINESS_INDEX_SHOW_TUNING', 'TEMP_SENSOR__CLOUDINESS_INDEX_HYSTERESIS'])
+@pytest.mark.parametrize('field_name', ['TEMP_SENSOR__CLOUDINESS_INDEX_SHOW_TUNING', 'TEMP_SENSOR__CLOUDINESS_INDEX_SMOOTHING'])
 def test_cloudiness_tuning_preference_survives_save_and_reload(show_tuning, field_name):
     from wtforms import BooleanField, Form
 
@@ -231,9 +232,11 @@ def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled, u
     assert 'Corrects raw MLX sky readings (live and calibration references) before calculating cloudiness; ambient readings are unchanged.' in before_tuning
     assert 'Enter raw sensor readings for clear-sky and cloudy-sky calibration; corrections are applied automatically.' in before_tuning
     assert ('style="display: none;"' in tuning.split('>', 1)[0]) is not show_tuning
-    for name in ('TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT', 'TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET', 'TEMP_SENSOR__CLOUDINESS_INDEX_HYSTERESIS'):
+    for name in ('TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT', 'TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET', 'TEMP_SENSOR__CLOUDINESS_INDEX_SMOOTHING'):
         assert 'id="' + name + '"' not in before_tuning
         assert 'id="' + name + '"' in tuning
+    assert 'Temporal smoothing: 80% of the current raw cloudiness index and 20% of the mean of up to three preceding valid raw indices.' in tuning
+    assert 'This reduces short-term fluctuations without recursively filtering the result.' in tuning
     coefficient_field = tuning.split('id="TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT"', 1)[1].split('</div>', 1)[0]
     assert 'Empirical adjustment for signal loss' in coefficient_field
     assert 'external lenses or waterproof covers' in coefficient_field
@@ -246,8 +249,8 @@ def test_cloudiness_settings_initial_visibility_follows_enable_toggle(enabled, u
 
 @pytest.mark.parametrize('read_time, expected', [(100.0, 50.0), (40.0, None), (0.0, None), (None, None)])
 @pytest.mark.parametrize('enabled', [True, False, None])
-@pytest.mark.parametrize('hysteresis', [False, True, None])
-def test_image_cloudiness_calculation_uses_snapshot_after_releasing_lock(monkeypatch, read_time, expected, enabled, hysteresis):
+@pytest.mark.parametrize('smoothing', [False, True, None])
+def test_image_cloudiness_calculation_uses_snapshot_after_releasing_lock(monkeypatch, read_time, expected, enabled, smoothing):
     import time
     from threading import Lock
 
@@ -270,14 +273,14 @@ def test_image_cloudiness_calculation_uses_snapshot_after_releasing_lock(monkeyp
     read_times = SensorArray([read_time] * 110)
 
     worker = SimpleNamespace(
-        config=_config(CLOUDINESS_INDEX_ENABLE=enabled, CLOUDINESS_INDEX_HYSTERESIS=hysteresis), sensors_user_av=values,
+        config=_config(CLOUDINESS_INDEX_ENABLE=enabled, CLOUDINESS_INDEX_SMOOTHING=smoothing), sensors_user_av=values,
         sensors_user_read_time_av=read_times if read_time is not None else None,
         cloudiness_index_history={17: [10.0, 20.0, 30.0], 18: [90.0, 90.0, 90.0]},
     )
     if enabled is None:
         del worker.config['TEMP_SENSOR']['CLOUDINESS_INDEX_ENABLE']
-    if hysteresis is None:
-        del worker.config['TEMP_SENSOR']['CLOUDINESS_INDEX_HYSTERESIS']
+    if smoothing is None:
+        del worker.config['TEMP_SENSOR']['CLOUDINESS_INDEX_SMOOTHING']
     image_ref = SimpleNamespace(cloudiness_index=99.0)
     calculate = sensors_mapping.calculate_cloudiness_index
 
@@ -297,10 +300,10 @@ def test_image_cloudiness_calculation_uses_snapshot_after_releasing_lock(monkeyp
     namespace = {'self': worker, 'i_ref': image_ref, 'sensors_mapping': sensors_mapping, 'time': time,
                  'camera': SimpleNamespace(id=17)}
     _exec_source('image.py', method.body[start:start + 2], namespace)
-    result = 0.8 * expected + 0.2 * 20.0 if enabled and hysteresis and expected is not None else expected
+    result = 0.8 * expected + 0.2 * 20.0 if enabled and smoothing and expected is not None else expected
     assert image_ref.cloudiness_index == (result if enabled else None)
     assert worker.cloudiness_index_history[18] == [90.0, 90.0, 90.0]
-    if enabled and hysteresis:
+    if enabled and smoothing:
         assert worker.cloudiness_index_history[17] == ([20.0, 30.0, expected] if expected is not None else [10.0, 20.0, 30.0])
     elif enabled:
         assert 17 not in worker.cloudiness_index_history
