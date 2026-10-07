@@ -13,7 +13,7 @@ BUILTIN_CHARTS = (
     {'id': 'gain', 'source': 'gain', 'label': 'Gain', 'min': 0.0},
     {'id': 'detection', 'source': 'detection', 'label': 'Detection', 'min': 0.0},
 )
-SENSOR_SOURCES = tuple('sensor_user_{0}'.format(index) for index in range(110)) + tuple(
+SENSOR_SOURCES = tuple('sensor_user_{0}'.format(index) for index in (*range(60), *range(100, 110))) + tuple(
     'sensor_temp_{0}'.format(index) for index in range(60))
 METADATA_SOURCES = ('kpindex', 'ovation_max', 'aurora_mag_bt', 'aurora_mag_gsm_bz',
                     'aurora_plasma_density', 'aurora_plasma_speed', 'aurora_plasma_temp',

@@ -1826,7 +1826,8 @@ class JsonChartView(JsonView):
         ts_dt = datetime.fromtimestamp(timestamp + 3)  # allow some jitter
 
         # safety, limit history to 1 day
-        history_seconds = min(history_seconds, 86400)
+        if history_seconds > 86400:
+            history_seconds = 86400
 
         data = {
             'chart_data' : self.getChartData(camera_id, ts_dt, history_seconds),

@@ -55,6 +55,29 @@ def test_legacy_chart_settings_and_remote_labels_are_preserved():
     assert definitions[6] == {'id': 'custom_1', 'source': 'sensor_user_25', 'label': 'Sky temperature', 'min': -20}
 
 
+def test_old_camera_metadata_normalizes_and_builds_all_nine_charts():
+    metadata = {}
+    for index in range(1, 10):
+        source = 'sensor_user_{0}'.format(index + 9)
+        metadata['custom_chart_{0}_key'.format(index)] = source
+        metadata['custom_chart_{0}_min'.format(index)] = 0.0
+        metadata[source] = 'Legacy sensor {0}'.format(index)
+    settings = chart_configuration({}, metadata, is_local=False)
+    definitions = chart_definitions({'CHARTS': settings}, metadata, is_local=False)
+    for index, definition in enumerate(settings['CUSTOM'], start=1):
+        assert definition == {'id': 'custom_{0}'.format(index), 'source': 'sensor_user_{0}'.format(index + 9),
+                              'label': '', 'min': 0.0}
+        assert definitions[index + 5] == dict(definition, label='Legacy sensor {0}'.format(index))
+    reading = SimpleNamespace(createDate=datetime(2026, 10, 4, 20, 44), temp=0, stars_rolling=0,
+                              jsqm=0, gain=0, exposure=0, detections=0,
+                              data={'sensor_user_{0}'.format(index + 9): index for index in range(1, 10)})
+    payload, _ = production_chart_handler({'CHARTS': settings}, [reading], {'camera_id': '1'},
+                                         camera=SimpleNamespace(local=False, data=metadata))
+    assert payload['chart_definitions'] == definitions
+    for index in range(1, 10):
+        assert payload['chart_data']['custom_{0}'.format(index)] == [{'x': '20:44:00', 'y': index}]
+
+
 @pytest.mark.parametrize('custom', [None, [], [{'id': 'sky', 'source': 'sensor_user_25'}]])
 def test_chart_migration_preserves_preferences_and_is_idempotent(custom):
     settings = {'CUSTOM': custom, 'CUSTOM_SLOT_1': 'sensor_user_25', 'CUSTOM_SLOT_1_MIN': -20,
@@ -156,6 +179,19 @@ def test_remote_visibility_is_mapped_by_source():
 def test_invalid_chart_definitions_are_rejected(definition):
     with pytest.raises(ValueError):
         validate_custom_charts([definition])
+
+
+def test_chart_sensor_sources_match_captured_metadata(saved_chart_worker):
+    from indi_allsky.charts import SENSOR_SOURCES
+
+    worker = saved_chart_worker
+    metadata = worker.get_image_metadata(worker.ref)
+    assert set(SENSOR_SOURCES) == {key for key in metadata if key.startswith(('sensor_user_', 'sensor_temp_'))}
+    for source in SENSOR_SOURCES:
+        assert validate_custom_charts([{'id': 'sensor', 'source': source}])[0]['source'] == source
+    for index in range(60, 100):
+        with pytest.raises(ValueError, match='available sensor source'):
+            validate_chart_configuration({'CUSTOM': [{'id': 'sensor', 'source': 'sensor_user_{0}'.format(index)}]})
 
 
 def test_duplicate_chart_identifiers_are_rejected():
