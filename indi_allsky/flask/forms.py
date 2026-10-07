@@ -6863,6 +6863,28 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
 
 
+        ### ensure sensor slots are unique
+        ### (disabled, let them be duplicate)
+        #custom_charts = (
+        #    self.CHARTS__CUSTOM_SLOT_1,
+        #    self.CHARTS__CUSTOM_SLOT_2,
+        #    self.CHARTS__CUSTOM_SLOT_3,
+        #    self.CHARTS__CUSTOM_SLOT_4,
+        #    self.CHARTS__CUSTOM_SLOT_5,
+        #    self.CHARTS__CUSTOM_SLOT_6,
+        #    self.CHARTS__CUSTOM_SLOT_7,
+        #    self.CHARTS__CUSTOM_SLOT_8,
+        #    self.CHARTS__CUSTOM_SLOT_9,
+        #)
+
+        #for chart1, chart2 in itertools.combinations(custom_charts, 2):
+        #    if chart1.data == chart2.data:
+        #        chart1.errors.append('Duplicate chart defined')
+        #        chart2.errors.append('Duplicate chart defined')
+        #        result = False
+
+
+
         from ..devices import sensors as indi_allsky_sensors
 
         check_sensor_slots = list()
