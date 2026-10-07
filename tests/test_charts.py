@@ -498,7 +498,7 @@ def saved_chart_worker():
     tree = ast.parse((ROOT / 'indi_allsky/image.py').read_text(encoding='utf-8'))
     owner = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == 'ImageWorker')
     methods = [node for node in owner.body if isinstance(node, ast.FunctionDef)
-               and node.name in ('get_chart_metadata', 'apply_saved_charts', 'write_img')]
+               and node.name in ('get_image_metadata', 'apply_saved_charts', 'write_img')]
     exec(compile(ast.Module(body=methods, type_ignores=[]), 'production-saved-chart-worker', 'exec'), namespace)
     ref = SimpleNamespace(exp_date=datetime(2026, 10, 4, 20, 30), camera_id=1, sqm_value=100,
                           stars=list(range(10)), lines=[], gain=50, exposure=15,
@@ -510,7 +510,7 @@ def saved_chart_worker():
                                                              camera_sqm_raw_mag=21.3, chart_label_bounds=[]),
                              ref=ref, image_table=image_table, table=table, session=session, renderer=renderer,
                              logger=namespace['logger'])
-    worker.get_chart_metadata = lambda ref: namespace['get_chart_metadata'](worker, ref)
+    worker.get_image_metadata = lambda ref: namespace['get_image_metadata'](worker, ref)
     worker.apply_saved_charts = lambda: namespace['apply_saved_charts'](worker, ref, SimpleNamespace(data={}))
     worker.write_img = lambda: namespace['write_img'](worker, worker.image_processor.image, ref,
                                                     SimpleNamespace(data={}), jpeg_exif=b'')
@@ -607,9 +607,9 @@ def test_capture_sensor_metadata_is_an_independent_per_frame_snapshot(saved_char
     worker = saved_chart_worker
     worker.config = {}
     worker.sensors_user_av[0] = 20.4
-    earlier = worker.get_chart_metadata(worker.ref)
+    earlier = worker.get_image_metadata(worker.ref)
     worker.sensors_user_av[0] = 20.47
-    latest = worker.get_chart_metadata(worker.ref)
+    latest = worker.get_image_metadata(worker.ref)
     assert earlier['sensor_user_0'] == 20.4
     assert latest['sensor_user_0'] == 20.47
     assert earlier is not latest
@@ -674,10 +674,10 @@ def test_capture_writer_saves_identical_composited_latest_and_archive_images(sav
 
 
 @pytest.mark.parametrize('display, expected', [('c', 10), ('f', 50), ('k', 283.15)])
-def test_shared_chart_metadata_preserves_capture_sensor_values_and_units(saved_chart_worker, display, expected):
+def test_shared_image_metadata_preserves_capture_sensor_values_and_units(saved_chart_worker, display, expected):
     worker = saved_chart_worker
     worker.config = {'TEMP_DISPLAY': display}
-    metadata = worker.get_chart_metadata(worker.ref)
+    metadata = worker.get_image_metadata(worker.ref)
     for index in range(60):
         assert metadata['sensor_temp_{0}'.format(index)] == expected
         assert metadata['sensor_user_{0}'.format(index)] == index
@@ -725,7 +725,7 @@ def test_capture_metadata_copies_label_bounds_for_browser_only_charts(saved_char
     worker = saved_chart_worker
     worker.config = {'CHARTS': {'SAVED_IMAGE_IDS': []}}
     worker.image_processor.chart_label_bounds = [(10, 10, 300, 188)]
-    metadata = worker.get_chart_metadata(worker.ref)
+    metadata = worker.get_image_metadata(worker.ref)
     assert metadata['chart_label_bounds'] == [[10, 10, 300, 188]]
     worker.image_processor.chart_label_bounds.clear()
     assert metadata['chart_label_bounds'] == [[10, 10, 300, 188]]

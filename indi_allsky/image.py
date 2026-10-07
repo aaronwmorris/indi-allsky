@@ -844,7 +844,7 @@ class ImageWorker(Process):
             }
 
 
-            image_add_data = self.get_chart_metadata(i_ref)
+            image_add_data = self.get_image_metadata(i_ref)
 
             asi676mc_repair_result = i_ref.asi676mc_repair_result
             if (
@@ -1262,7 +1262,7 @@ class ImageWorker(Process):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def get_chart_metadata(self, i_ref):
+    def get_image_metadata(self, i_ref):
         metadata = {key: getattr(i_ref, key) for key in (
             'uptime', 'kpindex', 'ovation_max', 'aurora_mag_bt', 'aurora_mag_gsm_bz',
             'aurora_plasma_density', 'aurora_plasma_speed', 'aurora_plasma_temp',
@@ -1310,7 +1310,7 @@ class ImageWorker(Process):
             readings.append(SimpleNamespace(
                 createDate=i_ref.exp_date, jsqm=i_ref.sqm_value, stars_rolling=sum(stars) / len(stars),
                 temp=self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP], gain=i_ref.gain,
-                exposure=i_ref.exposure, detections=len(i_ref.lines), data=self.get_chart_metadata(i_ref),
+                exposure=i_ref.exposure, detections=len(i_ref.lines), data=self.get_image_metadata(i_ref),
             ))
             self.image_processor.image = render_saved_charts(
                 self.image_processor.image, self.config, readings, camera.data,
