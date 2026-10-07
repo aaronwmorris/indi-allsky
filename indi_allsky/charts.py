@@ -53,6 +53,8 @@ def custom_charts(config, camera_data=None):
     settings = config.get('CHARTS', {})
     metadata = camera_data or {}
     definitions = metadata.get('chart_definitions', settings.get('CUSTOM'))
+    if 'chart_definitions' not in metadata and any('custom_chart_{0}_key'.format(index) in metadata for index in range(1, 10)):
+        definitions = None
     if definitions is not None:
         return validate_custom_charts(definitions)
     return [
@@ -63,6 +65,27 @@ def custom_charts(config, camera_data=None):
          'min': metadata.get('custom_chart_{0}_min'.format(index), settings.get('CUSTOM_SLOT_{0}_MIN'.format(index), 0.0))}
         for index in range(1, 10)
     ]
+
+
+def migrate_chart_configuration(config):
+    settings = dict(config.get('CHARTS', {}))
+    if settings.get('CUSTOM') is None:
+        settings['CUSTOM'] = validate_custom_charts(custom_charts(config))
+    for index in range(1, 10):
+        settings.pop('CUSTOM_SLOT_{0}'.format(index), None)
+        settings.pop('CUSTOM_SLOT_{0}_MIN'.format(index), None)
+    return settings
+
+
+def chart_metadata(config):
+    definitions = custom_charts(config)
+    metadata = {'chart_definitions': definitions}
+    for index in range(1, 10):
+        definition = definitions[index - 1] if index <= len(definitions) else {}
+        metadata['custom_chart_{0}_key'.format(index)] = definition.get('source')
+        minimum = definition.get('min')
+        metadata['custom_chart_{0}_min'.format(index)] = minimum if minimum is not None else 0.0
+    return metadata
 
 
 def chart_definitions(config, camera_data=None, is_local=False):

@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 
 from indi_allsky.charts import chart_definitions, chart_value, custom_charts, validate_custom_charts
 from indi_allsky.charts import chart_configuration, validate_chart_configuration
+from indi_allsky.charts import migrate_chart_configuration, chart_metadata
 from indi_allsky.charts import build_chart_data, render_saved_charts
 
 
@@ -54,6 +55,53 @@ def test_legacy_chart_settings_and_remote_labels_are_preserved():
     assert definitions[6] == {'id': 'custom_1', 'source': 'sensor_user_25', 'label': 'Sky temperature', 'min': -20}
 
 
+@pytest.mark.parametrize('custom', [None, [], [{'id': 'sky', 'source': 'sensor_user_25'}]])
+def test_chart_migration_preserves_preferences_and_is_idempotent(custom):
+    settings = {'CUSTOM': custom, 'CUSTOM_SLOT_1': 'sensor_user_25', 'CUSTOM_SLOT_1_MIN': -20,
+                'VISIBLE_IDS': [], 'OVERLAY_IDS': [], 'SAVED_IMAGE_IDS': [],
+                'AXIS_LIMITS': {'temp': {'min': -50, 'max': 10}},
+                'OVERLAY_HISTORY_SECONDS': 600, 'SAVED_IMAGE_HISTORY_SECONDS': 3600}
+    configuration = {'CHARTS': settings}
+    before = json.loads(json.dumps(configuration))
+    migrated = migrate_chart_configuration(configuration)
+    assert configuration == before
+    assert not any(key.startswith('CUSTOM_SLOT_') for key in migrated)
+    assert {key: value for key, value in migrated.items() if key != 'CUSTOM'} == {
+        key: value for key, value in settings.items() if key != 'CUSTOM' and not key.startswith('CUSTOM_SLOT_')}
+    if custom is None:
+        assert len(migrated['CUSTOM']) == 9
+        assert migrated['CUSTOM'][0] == {'id': 'custom_1', 'source': 'sensor_user_25', 'label': '', 'min': -20.0}
+    else:
+        assert migrated['CUSTOM'] == custom
+    assert migrate_chart_configuration({'CHARTS': migrated}) == migrated
+
+
+def test_production_config_load_and_save_migrate_legacy_charts():
+    tree = ast.parse((ROOT / 'indi_allsky/config.py').read_text(encoding='utf-8'))
+    owner = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == 'IndiAllSkyConfig')
+    methods = [node for node in owner.body if isinstance(node, ast.FunctionDef) and node.name in ('__init__', 'save')]
+    database = MagicMock()
+    namespace = {'__name__': 'indi_allsky.config', 'Path': Path, 'IndiAllSkyDbUserTable': database}
+    exec(compile(ast.Module(body=methods, type_ignores=[]), 'production-chart-migration', 'exec'), namespace)
+    legacy = {'CHARTS': {'CUSTOM_SLOT_1': 'sensor_user_25', 'VISIBLE_IDS': ['custom_1'],
+                         'OVERLAY_IDS': ['custom_1'], 'SAVED_IMAGE_IDS': ['custom_1']}}
+    entry = SimpleNamespace(id=1, level=1, createDate=datetime.now(), data=legacy)
+    configuration = SimpleNamespace(base_config={}, _getConfigEntry=lambda: entry)
+    configuration._decrypt_passwords = lambda: configuration._config
+    namespace['__init__'](configuration)
+    assert configuration._config['CHARTS'] == migrate_chart_configuration(legacy)
+    assert configuration._config['CHARTS']['VISIBLE_IDS'] == ['custom_1']
+    configuration.config = legacy
+    configuration._validateConfig = lambda: production_config_validation(configuration.config)
+    configuration._encryptPasswords = lambda: (configuration.config, False)
+    configuration._setConfigEntry = MagicMock(return_value=entry)
+    assert namespace['save'](configuration, 'admin', 'Migration') is entry
+    saved = configuration._setConfigEntry.call_args.args[0]['CHARTS']
+    assert saved == configuration._config['CHARTS']
+    assert not any(key.startswith('CUSTOM_SLOT_') for key in saved)
+    assert len(migrate_chart_configuration({})['CUSTOM']) == 9
+
+
 def test_custom_chart_count_is_not_fixed_to_ten():
     definitions = [{'id': 'custom_{0}'.format(index), 'source': 'sensor_user_{0}'.format(index), 'min': None}
                    for index in range(12)]
@@ -64,6 +112,20 @@ def test_custom_chart_count_is_not_fixed_to_ten():
 def test_remote_chart_definitions_use_the_camera_configuration():
     metadata = {'chart_definitions': [{'id': 'sky', 'source': 'sensor_user_12', 'label': 'Sky'}]}
     assert custom_charts({'CHARTS': {'CUSTOM': []}}, metadata)[0]['id'] == 'sky'
+
+
+def test_remote_legacy_metadata_overrides_migrated_local_definitions():
+    config = {'CHARTS': {'CUSTOM': [{'id': 'sky', 'source': 'sensor_user_25'}],
+                         'VISIBLE_IDS': ['sky'], 'OVERLAY_IDS': ['sky'], 'SAVED_IMAGE_IDS': ['sky']}}
+    metadata = {'custom_chart_1_key': 'sensor_user_25', 'custom_chart_1_min': -20,
+                'sensor_user_25': 'Remote sky temperature'}
+    definitions = chart_definitions(config, metadata)
+    assert definitions[6] == {'id': 'custom_1', 'source': 'sensor_user_25', 'label': 'Remote sky temperature', 'min': -20}
+    settings = chart_configuration(config, metadata, is_local=False)
+    for destination in ('VISIBLE_IDS', 'OVERLAY_IDS', 'SAVED_IMAGE_IDS'):
+        assert settings[destination] == ['custom_1']
+    assert custom_charts(config, dict(metadata, chart_definitions=[])) == []
+    assert chart_definitions(config, metadata, is_local=True)[6]['id'] == 'sky'
 
 
 def test_local_definitions_override_stale_published_metadata():
@@ -895,25 +957,40 @@ def test_production_config_field_validates_and_persists_the_normalized_settings(
     assert not form_type(data={'CHARTS__CONFIG': json.dumps({'OVERLAY_IDS': ['histogram']})}).validate()
     views = ast.parse((ROOT / 'indi_allsky/flask/views.py').read_text(encoding='utf-8'))
     owner = next(node for node in views.body if isinstance(node, ast.ClassDef) and node.name == 'AjaxConfigView')
-    save = next(node for node in ast.walk(owner) if isinstance(node, ast.If) and ast.unparse(node.test) == "request.json.get('CHARTS__CONFIG')")
-    config = {'CHARTS': {'CUSTOM_SLOT_1': 'sensor_user_10'}}
-    exec(compile(ast.Module(body=[save], type_ignores=[]), 'production-chart-save', 'exec'),
-         {'self': SimpleNamespace(indi_allsky_config=config), 'request': SimpleNamespace(json={'CHARTS__CONFIG': form.CHARTS__CONFIG.data}),
-          'json': json, 'validate_chart_configuration': validate_chart_configuration})
+    assert 'CHARTS__CONFIG' not in ast.unparse(owner)
+    assert "self.indi_allsky_config['CHARTS']" not in ast.unparse(owner)
+    global_form = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == 'IndiAllskyConfigForm')
+    assert 'CHARTS__CONFIG' not in ast.unparse(global_form)
+    assert 'CHARTS__CUSTOM_SLOT' not in ast.unparse(global_form)
+    for template in ('config.html', 'config/admin.html'):
+        source = (ROOT / 'indi_allsky/flask/templates' / template).read_text(encoding='utf-8')
+        assert 'CHARTS__CONFIG' not in source
+        assert 'CHARTS__CUSTOM_SLOT' not in source
+    application = create_chart_preview()
+    config = application.extensions['chart_preview_config']
+    response = application.test_client().post('/ajax/charts', json={'CHARTS__CONFIG': form.CHARTS__CONFIG.data})
+    assert response.status_code == 200
     assert config['CHARTS']['CUSTOM'] == settings['CUSTOM']
     assert config['CHARTS']['OVERLAY_IDS'] == ['sky']
-    assert config['CHARTS']['CUSTOM_SLOT_1'] == 'sensor_user_10'
 
 
-def test_capture_publishes_dynamic_definitions_for_remote_cameras():
+@pytest.mark.parametrize('count', [0, 1, 9, 12])
+def test_capture_publishes_dynamic_definitions_for_remote_cameras(count):
     tree = ast.parse((ROOT / 'indi_allsky/capture.py').read_text(encoding='utf-8'))
-    statement = next(node for node in ast.walk(tree) if isinstance(node, ast.Assign)
-                     and ast.unparse(node.targets[0]) == "camera_metadata['data']['chart_definitions']")
-    custom = [{'id': 'custom_{0}'.format(index), 'source': 'sensor_user_{0}'.format(index)} for index in range(12)]
+    statement = next(node for node in ast.walk(tree) if isinstance(node, ast.Expr)
+                     and ast.unparse(node) == "camera_metadata['data'].update(chart_metadata(self.config))")
+    custom = [{'id': 'sky_{0}'.format(index), 'source': 'sensor_user_{0}'.format(index),
+               'min': -20 if index == 0 else None} for index in range(count)]
     metadata = {'data': {}}
     exec(compile(ast.Module(body=[statement], type_ignores=[]), 'production-camera-metadata', 'exec'),
-         {'self': SimpleNamespace(config={'CHARTS': {'CUSTOM': custom}}), 'camera_metadata': metadata, 'custom_charts': custom_charts})
-    assert len(custom_charts({}, metadata['data'])) == 12
+         {'self': SimpleNamespace(config={'CHARTS': {'CUSTOM': custom, 'CUSTOM_SLOT_1': 'sensor_user_109'}}),
+          'camera_metadata': metadata, 'chart_metadata': chart_metadata})
+    definitions = custom_charts({}, metadata['data'])
+    assert definitions == validate_custom_charts(custom)
+    for index in range(1, 10):
+        source = definitions[index - 1]['source'] if index <= count else None
+        assert metadata['data']['custom_chart_{0}_key'.format(index)] == source
+        assert metadata['data']['custom_chart_{0}_min'.format(index)] == (-20 if index == 1 and count else 0.0)
 
 
 def production_config_validation(configuration):
@@ -1051,18 +1128,10 @@ def create_chart_preview(login_disabled=True, save_error=None, csrf_enabled=Fals
     @blueprint.route('/settings', endpoint='config_view', methods=['GET', 'POST'])
     def settings_page():
         if request.method == 'POST':
-            try:
-                configuration['CHARTS'] = validate_chart_configuration(json.loads(request.json['CHARTS__CONFIG']))
-            except (ValueError, TypeError, KeyError) as error:
-                return jsonify(error=str(error)), 400
             return jsonify(saved=True)
-        return render_template_string('''{% extends 'base.html' %}{% block head %}<link rel="stylesheet" href="/assets/css/charts.css">
-            <script defer src="/assets/js/chart-editor.js"></script>{% endblock %}{% block content %}
-            <form id="preview-config">{% include 'config/charts.html' %}<button class="tw:btn tw:btn-primary" type="submit">Save configuration</button>
-            <span id="saved" role="status"></span></form><script>document.getElementById('preview-config').addEventListener('submit',async event=>{
-                event.preventDefault(); const response=await fetch('/settings',{method:'POST',headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify({CHARTS__CONFIG:document.getElementById('CHARTS__CONFIG').value})});
-                document.getElementById('saved').textContent=response.ok?'Saved':'Invalid settings';});</script>{% endblock %}''', **context())
+        return render_template_string('''{% extends 'base.html' %}{% block content %}
+            <a href="{{ url_for('indi_allsky.chart_view') }}#chart-settings">Manage Charts</a>
+            {% endblock %}''', **context())
 
     @blueprint.route('/charts', endpoint='chart_view')
     def charts_page():
@@ -1497,7 +1566,7 @@ def test_chart_only_save_preserves_configuration_and_requires_admin(user, expect
     if user == 'admin':
         assert configuration['CHARTS']['CUSTOM'] == []
         assert configuration['CHARTS']['OVERLAY_IDS'] == ['temp']
-        assert configuration['CHARTS']['CUSTOM_SLOT_1'] == 'sensor_user_10'
+        assert configuration['CHARTS'] == settings
         assert configuration['CCD_EXPOSURE_MAX'] == 42
         save.assert_called_once_with('admin', 'Updated chart settings')
     else:
@@ -1638,17 +1707,20 @@ def test_failed_chart_save_does_not_reload_capture():
     application.extensions['chart_preview_state'].setState.assert_not_called()
 
 
-def test_real_chart_templates_render_and_preview_settings_round_trip():
-    client = create_chart_preview().test_client()
+def test_real_chart_templates_render_and_dedicated_settings_round_trip():
+    application = create_chart_preview()
+    client = application.test_client()
     for path in ('/settings', '/charts', '/latest', '/canvas'):
         response = client.get(path)
         assert response.status_code == 200, response.data
-        assert b'CHARTS__CONFIG' in response.data if path == '/settings' else b'data-chart-stream' in response.data
+        assert b'CHARTS__CONFIG' not in response.data if path == '/settings' else b'data-chart-stream' in response.data
         if path == '/latest':
             assert b"onload=\"this.style.opacity='1';\"" in response.data
             assert b"addEventListener('load'," in response.data
             assert b"document.getElementById('latest-image').onload" not in response.data
     settings = chart_configuration({'CHARTS': {'CUSTOM': [], 'OVERLAY_IDS': ['temp'], 'VISIBLE_IDS': []}})
-    assert client.post('/settings', json={'CHARTS__CONFIG': json.dumps(settings)}).status_code == 200
-    assert b'"OVERLAY_IDS": ["temp"]' in client.get('/settings').data.replace(b'&#34;', b'"')
-    assert client.post('/settings', json={'CHARTS__CONFIG': '{broken'}).status_code == 400
+    assert client.post('/ajax/charts', json={'CHARTS__CONFIG': json.dumps(settings)}).status_code == 200
+    assert b'"OVERLAY_IDS": ["temp"]' in client.get('/charts').data.replace(b'&#34;', b'"')
+    assert client.post('/settings', json={'CHARTS__CONFIG': '{broken'}).status_code == 200
+    assert application.extensions['chart_preview_config']['CHARTS'] == settings
+    assert client.post('/ajax/charts', json={'CHARTS__CONFIG': '{broken'}).status_code == 400

@@ -17,6 +17,12 @@ each. Existing nine-slot configurations load automatically, and both image
 destinations default to off. Up to 64 custom charts are
 supported as a safety bound.
 
+Chart settings are saved only from Manage charts; the general Settings form does
+not submit chart settings. Legacy nine-slot settings are converted to custom
+definitions when loaded and stored in that format on the next configuration
+save. Their IDs, sources, minima and destination preferences are retained.
+Removing every custom chart leaves an empty list rather than restoring the old slots.
+
 ## Axes
 
 The existing time-history choices, time labels, line/point behavior, and detection
@@ -117,6 +123,11 @@ This implementation does not depend on those pending sensor PRs.
 
 Capture publishes dynamic definitions for synced cameras. Local cameras use
 current settings; remote selections match IDs, falling back to source keys.
+Older cameras' nine-slot metadata remains readable. For older receiving servers,
+capture also derives nine compatibility slots from the first nine custom
+definitions in their configured order. Unused slots are marked Unset; automatic
+minima use the older format's zero default. Older servers cannot display more
+than nine custom charts or custom names and may show empty slots as zeroes.
 `AXIS_LIMITS` stores optional bounds by chart ID. `OVERLAY_IDS` retains its existing
 browser-only meaning; `SAVED_IMAGE_IDS` stores the independent capture selections.
 
