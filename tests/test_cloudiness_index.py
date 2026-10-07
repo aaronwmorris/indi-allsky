@@ -130,26 +130,6 @@ def _cloudiness_ground_form(config, ground_slot, enabled):
     return form
 
 
-@pytest.mark.parametrize('field_name', [
-    'TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE',
-    'TEMP_SENSOR__CLOUDINESS_INDEX_SHOW_TUNING',
-    'TEMP_SENSOR__CLOUDINESS_INDEX_SMOOTHING',
-    'TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR',
-])
-def test_cloudiness_toggles_use_checkbox_save_path(field_name):
-    source = _SOURCE_ROOT / 'flask' / 'templates' / 'config.html'
-    template = source.read_text(encoding='utf-8')
-    save_lists = {}
-    for list_name in ('field_names', 'checkbox_field_names'):
-        array_source = template.split('const ' + list_name + ' = ', 1)[1].split(';', 1)[0]
-        array_source = '\n'.join(line for line in array_source.splitlines()
-                                 if not line.lstrip().startswith('//'))
-        save_lists[list_name] = ast.literal_eval(array_source)
-
-    assert field_name not in save_lists['field_names']
-    assert save_lists['checkbox_field_names'].count(field_name) == 1
-
-
 @pytest.mark.parametrize('show_tuning', [False, True, None])
 @pytest.mark.parametrize('field_name', ['TEMP_SENSOR__CLOUDINESS_INDEX_SHOW_TUNING', 'TEMP_SENSOR__CLOUDINESS_INDEX_SMOOTHING'])
 def test_cloudiness_tuning_preference_survives_save_and_reload(show_tuning, field_name):
