@@ -692,6 +692,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             'max'     : self.ccd_device.max_gain,
             'step'    : None,
             'format'  : None,
+            'values'  : [],
         }
 
         ccdinfo['BINNING_INFO'] = {
