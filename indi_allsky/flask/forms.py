@@ -8050,11 +8050,23 @@ class IndiAllskyGalleryViewer(FlaskForm):
 
 
     def getImages(self, year, month, day, hour):
+        # Keep panorama availability in the outer join so missing or inaccessible
+        # panoramas never filter out the corresponding normal images.
         images_query = db.session.query(
             IndiAllSkyDbImageTable,
             IndiAllSkyDbThumbnailTable,
+            IndiAllSkyDbPanoramaImageTable,
         )\
             .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
+            .outerjoin(IndiAllSkyDbPanoramaImageTable, and_(
+                IndiAllSkyDbPanoramaImageTable.camera_id == IndiAllSkyDbImageTable.camera_id,
+                IndiAllSkyDbPanoramaImageTable.createDate == IndiAllSkyDbImageTable.createDate,
+                or_(
+                    self.local,
+                    IndiAllSkyDbPanoramaImageTable.remote_url != sa_null(),
+                    IndiAllSkyDbPanoramaImageTable.s3_key != sa_null(),
+                ),
+            ))\
             .filter(
                 and_(
                     IndiAllSkyDbImageTable.camera_id == self.camera_id,
@@ -8088,7 +8100,7 @@ class IndiAllskyGalleryViewer(FlaskForm):
         app.logger.info('Found %d images for gallery', len(image_rows))
 
         images_data = list()
-        for img, thumb in image_rows:
+        for img, thumb, panorama in image_rows:
             try:
                 image_url = img.getUrl(s3_prefix=self.s3_prefix, local=self.local)
                 thumbnail_url = thumb.getUrl(s3_prefix=self.s3_prefix, local=self.local)
@@ -8108,6 +8120,10 @@ class IndiAllskyGalleryViewer(FlaskForm):
             image_dict['thumbnail_url'] = str(thumbnail_url)
             image_dict['thumbnail_width'] = thumb.width
             image_dict['thumbnail_height'] = thumb.height
+            image_dict['panorama_id'] = panorama.id if panorama else None
+            image_dict['panorama_url'] = str(panorama.getUrl(s3_prefix=self.s3_prefix, local=self.local)) if panorama else None
+            image_dict['panorama_width'] = panorama.width if panorama else None
+            image_dict['panorama_height'] = panorama.height if panorama else None
 
             image_metadata = img.data or {}
             repair_metadata = image_metadata.get('asi676mc_repair', {})
