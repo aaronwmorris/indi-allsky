@@ -2299,9 +2299,9 @@ class ImageProcessor(object):
                 WBR_MTF_MIDTONES = float(self.config.get('WBR_MTF_MIDTONES', 0.5))
             else:
                 # day
-                WBB_MTF_MIDTONES = float(self.config.get('WBB_MTF_MIDTONES', 0.5))
-                WBG_MTF_MIDTONES = float(self.config.get('WBG_MTF_MIDTONES', 0.5))
-                WBR_MTF_MIDTONES = float(self.config.get('WBR_MTF_MIDTONES', 0.5))
+                WBB_MTF_MIDTONES = float(self.config.get('WBB_MTF_MIDTONES_DAY', 0.5))
+                WBG_MTF_MIDTONES = float(self.config.get('WBG_MTF_MIDTONES_DAY', 0.5))
+                WBR_MTF_MIDTONES = float(self.config.get('WBR_MTF_MIDTONES_DAY', 0.5))
 
 
         if WBB_MTF_MIDTONES == 0.5 and WBG_MTF_MIDTONES == 0.5 and WBR_MTF_MIDTONES == 0.5:

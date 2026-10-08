@@ -211,6 +211,110 @@
 }
 @layer utilities {
   @layer daisyui.l1.l2.l3 {
+    .tw\:range {
+      appearance: none;
+      webkit-appearance: none;
+      --range-thumb: var(--color-base-100);
+      --range-thumb-size: calc(var(--size-selector, 0.25rem) * 6);
+      --range-progress: currentColor;
+      --range-fill: 1;
+      --range-p: 0.25rem;
+      --range-bg: currentColor;
+    }
+    @supports (color: color-mix(in lab, red, red)) {
+      .tw\:range {
+        --range-bg: color-mix(in oklab, currentColor 10%, #0000);
+      }
+    }
+    .tw\:range {
+      --range-fill-x: calc(
+      (var(--range-dir, 1) * -100cqw) - (var(--range-dir, 1) * var(--range-thumb-size) / 2)
+    );
+      --range-fill-y: 0;
+      --range-fill-spread: calc(100cqw * var(--range-fill));
+      container-type: inline-size;
+      cursor: pointer;
+      overflow: hidden;
+      background-color: transparent;
+      vertical-align: middle;
+      width: clamp(3rem, 20rem, 100%);
+      --radius-selector-max: calc(
+      var(--radius-selector) + var(--radius-selector) + var(--radius-selector)
+    );
+      border-radius: calc(var(--radius-selector) + min(var(--range-p), var(--radius-selector-max)));
+      border: none;
+      height: var(--range-thumb-size);
+    }
+    [dir="rtl"] .tw\:range {
+      --range-dir: -1;
+    }
+    .tw\:range:focus {
+      outline: none;
+    }
+    .tw\:range:focus-visible {
+      outline: 2px solid;
+      outline-offset: 2px;
+    }
+    .tw\:range::-webkit-slider-runnable-track {
+      width: 100%;
+      background-color: var(--range-bg);
+      border-radius: var(--radius-selector);
+      height: calc(var(--range-thumb-size) * 0.5);
+    }
+    @media (forced-colors: active) {
+      .tw\:range::-webkit-slider-runnable-track {
+        border: 1px solid;
+      }
+      .tw\:range::-moz-range-track {
+        border: 1px solid;
+      }
+    }
+    .tw\:range::-moz-range-track {
+      width: 100%;
+      background-color: var(--range-bg);
+      border-radius: var(--radius-selector);
+      height: calc(var(--range-thumb-size) * 0.5);
+    }
+    .tw\:range::-webkit-slider-thumb {
+      position: relative;
+      box-sizing: border-box;
+      border-radius: calc(var(--radius-selector) + min(var(--range-p), var(--radius-selector-max)));
+      background-color: var(--range-thumb);
+      height: var(--range-thumb-size);
+      width: var(--range-thumb-size);
+      border: var(--range-p) solid;
+      appearance: none;
+      webkit-appearance: none;
+      inset-block-start: 50%;
+      color: var(--range-progress);
+      transform: translateY(-50%);
+      box-shadow: 0 -1px oklch(0% 0 0 / calc(var(--depth) * 0.1)) inset, 0 8px 0 -4px oklch(100% 0 0 / calc(var(--depth) * 0.1)) inset, 0 1px currentColor, 0 0 0 2rem var(--range-thumb) inset, var(--range-fill-x) var(--range-fill-y) 0 var(--range-fill-spread);
+    }
+    @supports (color: color-mix(in lab, red, red)) {
+      .tw\:range::-webkit-slider-thumb {
+        box-shadow: 0 -1px oklch(0% 0 0 / calc(var(--depth) * 0.1)) inset, 0 8px 0 -4px oklch(100% 0 0 / calc(var(--depth) * 0.1)) inset, 0 1px color-mix(in oklab, currentColor calc(var(--depth) * 10%), #0000), 0 0 0 2rem var(--range-thumb) inset, var(--range-fill-x) var(--range-fill-y) 0 var(--range-fill-spread);
+      }
+    }
+    .tw\:range::-moz-range-thumb {
+      position: relative;
+      box-sizing: border-box;
+      border-radius: calc(var(--radius-selector) + min(var(--range-p), var(--radius-selector-max)));
+      background-color: currentColor;
+      height: var(--range-thumb-size);
+      width: var(--range-thumb-size);
+      border: var(--range-p) solid;
+      color: var(--range-progress);
+      box-shadow: 0 -1px oklch(0% 0 0 / calc(var(--depth) * 0.1)) inset, 0 8px 0 -4px oklch(100% 0 0 / calc(var(--depth) * 0.1)) inset, 0 1px currentColor, 0 0 0 2rem var(--range-thumb) inset, var(--range-fill-x) var(--range-fill-y) 0 var(--range-fill-spread);
+    }
+    @supports (color: color-mix(in lab, red, red)) {
+      .tw\:range::-moz-range-thumb {
+        box-shadow: 0 -1px oklch(0% 0 0 / calc(var(--depth) * 0.1)) inset, 0 8px 0 -4px oklch(100% 0 0 / calc(var(--depth) * 0.1)) inset, 0 1px color-mix(in oklab, currentColor calc(var(--depth) * 10%), #0000), 0 0 0 2rem var(--range-thumb) inset, var(--range-fill-x) var(--range-fill-y) 0 var(--range-fill-spread);
+      }
+    }
+    .tw\:range:disabled {
+      cursor: not-allowed;
+      opacity: 30%;
+    }
     .tw\:modal {
       pointer-events: none;
       visibility: hidden;
@@ -359,8 +463,10 @@
       display: inline-block;
       --tt-bg: var(--color-neutral);
       --tt-off: calc(100% + 0.5rem);
-      --tt-tail: calc(100% + 1px + 0.25rem);
-      --tt-tail-off: 0.5rem;
+      --tt-radius: min(var(--radius-field), 0.8rem);
+      --tt-overlap: clamp(1px, calc(var(--radius-field) / 8), 2px);
+      --tt-tail: calc(100% + var(--tt-overlap) + 0.25rem);
+      --tt-tail-off: max(0.5rem, var(--tt-radius));
     }
     .tw\:tooltip > .tw\:tooltip-content {
       position: absolute;
@@ -628,66 +734,66 @@
       rotate: 45deg;
       translate: 0 1px;
     }
-    .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title), li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title) ):not(.tw\:menu-active, :active, .tw\:btn).tw\:menu-focus {
+    .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title), li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title) ):not(.tw\:menu-active, :active, .tw\:btn, [aria-current]:not([aria-current="false"], [aria-current=""]) ).tw\:menu-focus {
       cursor: pointer;
       background-color: var(--color-base-content);
     }
     @supports (color: color-mix(in lab, red, red)) {
-      .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title), li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title) ):not(.tw\:menu-active, :active, .tw\:btn).tw\:menu-focus {
+      .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title), li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title) ):not(.tw\:menu-active, :active, .tw\:btn, [aria-current]:not([aria-current="false"], [aria-current=""]) ).tw\:menu-focus {
         background-color: color-mix(in oklab, var(--color-base-content) 10%, transparent);
       }
     }
-    .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title), li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title) ):not(.tw\:menu-active, :active, .tw\:btn).tw\:menu-focus {
+    .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title), li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title) ):not(.tw\:menu-active, :active, .tw\:btn, [aria-current]:not([aria-current="false"], [aria-current=""]) ).tw\:menu-focus {
       color: var(--color-base-content);
       --tw-outline-style: none;
       outline-style: none;
     }
     @media (forced-colors: active) {
-      .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title), li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title) ):not(.tw\:menu-active, :active, .tw\:btn).tw\:menu-focus {
+      .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title), li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title) ):not(.tw\:menu-active, :active, .tw\:btn, [aria-current]:not([aria-current="false"], [aria-current=""]) ).tw\:menu-focus {
         outline: 2px solid transparent;
         outline-offset: 2px;
       }
     }
-    .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title), li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title) ):not(.tw\:menu-active, :active, .tw\:btn):focus-visible {
+    .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title), li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title) ):not(.tw\:menu-active, :active, .tw\:btn, [aria-current]:not([aria-current="false"], [aria-current=""]) ):focus-visible {
       cursor: pointer;
       background-color: var(--color-base-content);
     }
     @supports (color: color-mix(in lab, red, red)) {
-      .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title), li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title) ):not(.tw\:menu-active, :active, .tw\:btn):focus-visible {
+      .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title), li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title) ):not(.tw\:menu-active, :active, .tw\:btn, [aria-current]:not([aria-current="false"], [aria-current=""]) ):focus-visible {
         background-color: color-mix(in oklab, var(--color-base-content) 10%, transparent);
       }
     }
-    .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title), li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title) ):not(.tw\:menu-active, :active, .tw\:btn):focus-visible {
+    .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title), li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title) ):not(.tw\:menu-active, :active, .tw\:btn, [aria-current]:not([aria-current="false"], [aria-current=""]) ):focus-visible {
       color: var(--color-base-content);
       --tw-outline-style: none;
       outline-style: none;
     }
     @media (forced-colors: active) {
-      .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title), li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title) ):not(.tw\:menu-active, :active, .tw\:btn):focus-visible {
+      .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title), li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title) ):not(.tw\:menu-active, :active, .tw\:btn, [aria-current]:not([aria-current="false"], [aria-current=""]) ):focus-visible {
         outline: 2px solid transparent;
         outline-offset: 2px;
       }
     }
-    .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn):hover, li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn):hover ) {
+    .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn, [aria-current]:not([aria-current="false"], [aria-current=""]) ):hover, li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn, [aria-current]:not([aria-current="false"], [aria-current=""]) ):hover ) {
       cursor: pointer;
       background-color: var(--color-base-content);
     }
     @supports (color: color-mix(in lab, red, red)) {
-      .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn):hover, li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn):hover ) {
+      .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn, [aria-current]:not([aria-current="false"], [aria-current=""]) ):hover, li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn, [aria-current]:not([aria-current="false"], [aria-current=""]) ):hover ) {
         background-color: color-mix(in oklab, var(--color-base-content) 10%, transparent);
       }
     }
-    .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn):hover, li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn):hover ) {
+    .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn, [aria-current]:not([aria-current="false"], [aria-current=""]) ):hover, li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn, [aria-current]:not([aria-current="false"], [aria-current=""]) ):hover ) {
       --tw-outline-style: none;
       outline-style: none;
     }
     @media (forced-colors: active) {
-      .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn):hover, li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn):hover ) {
+      .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn, [aria-current]:not([aria-current="false"], [aria-current=""]) ):hover, li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn, [aria-current]:not([aria-current="false"], [aria-current=""]) ):hover ) {
         outline: 2px solid transparent;
         outline-offset: 2px;
       }
     }
-    .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn):hover, li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn):hover ) {
+    .tw\:menu :where(li:not(.tw\:menu-title, .tw\:disabled) > :not(ul, menu, details, .tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn, [aria-current]:not([aria-current="false"], [aria-current=""]) ):hover, li:not(.tw\:menu-title, .tw\:disabled) > details > summary:not(.tw\:menu-title):not(.tw\:menu-active, :active, .tw\:btn, [aria-current]:not([aria-current="false"], [aria-current=""]) ):hover ) {
       box-shadow: 0 1px oklch(0% 0 0 / 0.01) inset, 0 -1px oklch(100% 0 0 / 0.01) inset;
     }
     .tw\:menu :where(li:empty) {
@@ -707,7 +813,7 @@
     .tw\:menu :where(li) .tw\:badge {
       justify-self: flex-end;
     }
-    .tw\:menu :where(li) > :not(ul, menu, .tw\:menu-title, details, .tw\:btn):active, .tw\:menu :where(li) > :not(ul, menu, .tw\:menu-title, details, .tw\:btn).tw\:menu-active, .tw\:menu :where(li) > details > summary:active {
+    .tw\:menu :where(li) > :not(ul, menu, .tw\:menu-title, details, .tw\:btn):active, .tw\:menu :where(li) > :not(ul, menu, .tw\:menu-title, details, .tw\:btn).tw\:menu-active, .tw\:menu :where(li) > :not(ul, menu, .tw\:menu-title, details, .tw\:btn):is([aria-current]:not([aria-current="false"], [aria-current=""]) ), .tw\:menu :where(li) > details > summary:active {
       --tw-outline-style: none;
       outline-style: none;
       @media (forced-colors: active) {
@@ -933,25 +1039,25 @@
         }
       }
     }
-    .tw\:btn:active:not(.tw\:btn-active) {
+    .tw\:btn:active:not(.tw\:btn-active, [aria-pressed="true"], [aria-checked="true"], [aria-current]:not([aria-current="false"], [aria-current=""]) ) {
       translate: 0 0.5px;
       --btn-bg: var(--btn-color, var(--color-base-200));
     }
     @supports (color: color-mix(in lab, red, red)) {
-      .tw\:btn:active:not(.tw\:btn-active) {
+      .tw\:btn:active:not(.tw\:btn-active, [aria-pressed="true"], [aria-checked="true"], [aria-current]:not([aria-current="false"], [aria-current=""]) ) {
         --btn-bg: color-mix(in oklab, var(--btn-color, var(--color-base-200)), #000 5%);
       }
     }
-    .tw\:btn:active:not(.tw\:btn-active) {
+    .tw\:btn:active:not(.tw\:btn-active, [aria-pressed="true"], [aria-checked="true"], [aria-current]:not([aria-current="false"], [aria-current=""]) ) {
       color: var(--btn-fg, var(--color-base-content));
       --btn-border: var(--btn-color, var(--color-base-200));
     }
     @supports (color: color-mix(in lab, red, red)) {
-      .tw\:btn:active:not(.tw\:btn-active) {
+      .tw\:btn:active:not(.tw\:btn-active, [aria-pressed="true"], [aria-checked="true"], [aria-current]:not([aria-current="false"], [aria-current=""]) ) {
         --btn-border: color-mix(in oklab, var(--btn-color, var(--color-base-200)), #000 7%);
       }
     }
-    .tw\:btn:active:not(.tw\:btn-active) {
+    .tw\:btn:active:not(.tw\:btn-active, [aria-pressed="true"], [aria-checked="true"], [aria-current]:not([aria-current="false"], [aria-current=""]) ) {
       --btn-border-style: solid;
       --btn-inset: 0 0 0 0 oklch(0% 0 0/0);
       --btn-shadow: 0 0 0 0 oklch(0% 0 0/0);
@@ -989,6 +1095,31 @@
     .tw\:btn:has(:focus-visible) {
       outline-width: 2px;
       outline-style: solid;
+      isolation: isolate;
+    }
+  }
+  @layer daisyui.l1.l2 {
+    .tw\:btn:is([aria-pressed="true"], [aria-checked="true"], [aria-current]:not([aria-current="false"], [aria-current=""]) ) {
+      --btn-bg: var(--btn-color, var(--color-base-200));
+    }
+    @supports (color: color-mix(in lab, red, red)) {
+      .tw\:btn:is([aria-pressed="true"], [aria-checked="true"], [aria-current]:not([aria-current="false"], [aria-current=""]) ) {
+        --btn-bg: color-mix(in oklab, var(--btn-color, var(--color-base-200)), #000 5%);
+      }
+    }
+    .tw\:btn:is([aria-pressed="true"], [aria-checked="true"], [aria-current]:not([aria-current="false"], [aria-current=""]) ) {
+      color: var(--btn-fg, var(--color-base-content));
+      --btn-border: var(--btn-color, var(--color-base-200));
+    }
+    @supports (color: color-mix(in lab, red, red)) {
+      .tw\:btn:is([aria-pressed="true"], [aria-checked="true"], [aria-current]:not([aria-current="false"], [aria-current=""]) ) {
+        --btn-border: color-mix(in oklab, var(--btn-color, var(--color-base-200)), #000 7%);
+      }
+    }
+    .tw\:btn:is([aria-pressed="true"], [aria-checked="true"], [aria-current]:not([aria-current="false"], [aria-current=""]) ) {
+      --btn-border-style: solid;
+      --btn-inset: 0 0 0 0 oklch(0% 0 0/0);
+      --btn-shadow: 0 0 0 0 oklch(0% 0 0/0);
       isolation: isolate;
     }
   }
@@ -1585,6 +1716,8 @@
         }
       }
     }
+  }
+  @layer daisyui.l1.l2 {
     .tw\:input:has( > input[disabled]) {
       cursor: not-allowed;
       border-color: var(--color-base-200);
@@ -1650,109 +1783,6 @@
     border-end-end-radius: var(--join-es, var(--radius-field));
   }
   @layer daisyui.l1.l2.l3 {
-    .tw\:range {
-      appearance: none;
-      webkit-appearance: none;
-      --range-thumb: var(--color-base-100);
-      --range-thumb-size: calc(var(--size-selector, 0.25rem) * 6);
-      --range-progress: currentColor;
-      --range-fill: 1;
-      --range-p: 0.25rem;
-      --range-bg: currentColor;
-    }
-    @supports (color: color-mix(in lab, red, red)) {
-      .tw\:range {
-        --range-bg: color-mix(in oklab, currentColor 10%, #0000);
-      }
-    }
-    .tw\:range {
-      --range-fill-x: calc(
-      (var(--range-dir, 1) * -100cqw) - (var(--range-dir, 1) * var(--range-thumb-size) / 2)
-    );
-      --range-fill-y: 0;
-      --range-fill-spread: calc(100cqw * var(--range-fill));
-      cursor: pointer;
-      overflow: hidden;
-      background-color: transparent;
-      vertical-align: middle;
-      width: clamp(3rem, 20rem, 100%);
-      --radius-selector-max: calc(
-      var(--radius-selector) + var(--radius-selector) + var(--radius-selector)
-    );
-      border-radius: calc(var(--radius-selector) + min(var(--range-p), var(--radius-selector-max)));
-      border: none;
-      height: var(--range-thumb-size);
-    }
-    [dir="rtl"] .tw\:range {
-      --range-dir: -1;
-    }
-    .tw\:range:focus {
-      outline: none;
-    }
-    .tw\:range:focus-visible {
-      outline: 2px solid;
-      outline-offset: 2px;
-    }
-    .tw\:range::-webkit-slider-runnable-track {
-      width: 100%;
-      background-color: var(--range-bg);
-      border-radius: var(--radius-selector);
-      height: calc(var(--range-thumb-size) * 0.5);
-    }
-    @media (forced-colors: active) {
-      .tw\:range::-webkit-slider-runnable-track {
-        border: 1px solid;
-      }
-      .tw\:range::-moz-range-track {
-        border: 1px solid;
-      }
-    }
-    .tw\:range::-moz-range-track {
-      width: 100%;
-      background-color: var(--range-bg);
-      border-radius: var(--radius-selector);
-      height: calc(var(--range-thumb-size) * 0.5);
-    }
-    .tw\:range::-webkit-slider-thumb {
-      position: relative;
-      box-sizing: border-box;
-      border-radius: calc(var(--radius-selector) + min(var(--range-p), var(--radius-selector-max)));
-      background-color: var(--range-thumb);
-      height: var(--range-thumb-size);
-      width: var(--range-thumb-size);
-      border: var(--range-p) solid;
-      appearance: none;
-      webkit-appearance: none;
-      inset-block-start: 50%;
-      color: var(--range-progress);
-      transform: translateY(-50%);
-      box-shadow: 0 -1px oklch(0% 0 0 / calc(var(--depth) * 0.1)) inset, 0 8px 0 -4px oklch(100% 0 0 / calc(var(--depth) * 0.1)) inset, 0 1px currentColor, 0 0 0 2rem var(--range-thumb) inset, var(--range-fill-x) var(--range-fill-y) 0 var(--range-fill-spread);
-    }
-    @supports (color: color-mix(in lab, red, red)) {
-      .tw\:range::-webkit-slider-thumb {
-        box-shadow: 0 -1px oklch(0% 0 0 / calc(var(--depth) * 0.1)) inset, 0 8px 0 -4px oklch(100% 0 0 / calc(var(--depth) * 0.1)) inset, 0 1px color-mix(in oklab, currentColor calc(var(--depth) * 10%), #0000), 0 0 0 2rem var(--range-thumb) inset, var(--range-fill-x) var(--range-fill-y) 0 var(--range-fill-spread);
-      }
-    }
-    .tw\:range::-moz-range-thumb {
-      position: relative;
-      box-sizing: border-box;
-      border-radius: calc(var(--radius-selector) + min(var(--range-p), var(--radius-selector-max)));
-      background-color: currentColor;
-      height: var(--range-thumb-size);
-      width: var(--range-thumb-size);
-      border: var(--range-p) solid;
-      color: var(--range-progress);
-      box-shadow: 0 -1px oklch(0% 0 0 / calc(var(--depth) * 0.1)) inset, 0 8px 0 -4px oklch(100% 0 0 / calc(var(--depth) * 0.1)) inset, 0 1px currentColor, 0 0 0 2rem var(--range-thumb) inset, var(--range-fill-x) var(--range-fill-y) 0 var(--range-fill-spread);
-    }
-    @supports (color: color-mix(in lab, red, red)) {
-      .tw\:range::-moz-range-thumb {
-        box-shadow: 0 -1px oklch(0% 0 0 / calc(var(--depth) * 0.1)) inset, 0 8px 0 -4px oklch(100% 0 0 / calc(var(--depth) * 0.1)) inset, 0 1px color-mix(in oklab, currentColor calc(var(--depth) * 10%), #0000), 0 0 0 2rem var(--range-thumb) inset, var(--range-fill-x) var(--range-fill-y) 0 var(--range-fill-spread);
-      }
-    }
-    .tw\:range:disabled {
-      cursor: not-allowed;
-      opacity: 30%;
-    }
     .tw\:table {
       font-size: 0.875rem;
       position: relative;
@@ -2280,63 +2310,6 @@
       outline-offset: 2px;
       background-image: linear-gradient(135deg, #0000 50%, currentColor 50%), linear-gradient(45deg, currentColor 50%, #0000 50%);
     }
-    .tw\:select:has( > select[disabled]) {
-      cursor: not-allowed;
-      border-color: var(--color-base-200);
-      background-color: var(--color-base-200);
-    }
-    .tw\:select:has( > select[disabled]):is(select), .tw\:select:has( > select[disabled])  :is(select) {
-      color: var(--color-base-content);
-      @supports (color: color-mix(in lab, red, red)) {
-        color: color-mix(in oklab, var(--color-base-content) 40%, transparent);
-      }
-    }
-    .tw\:select:has( > select[disabled]) {
-      box-shadow: none;
-    }
-    .tw\:select:has( > select[disabled])::placeholder, .tw\:select:has( > select[disabled])  ::placeholder {
-      color: var(--color-base-content);
-      opacity: 20%;
-    }
-    .tw\:select:is(:disabled, [disabled]) {
-      cursor: not-allowed;
-      border-color: var(--color-base-200);
-      background-color: var(--color-base-200);
-    }
-    .tw\:select:is(:disabled, [disabled]):is(select), .tw\:select:is(:disabled, [disabled])  :is(select) {
-      color: var(--color-base-content);
-      @supports (color: color-mix(in lab, red, red)) {
-        color: color-mix(in oklab, var(--color-base-content) 40%, transparent);
-      }
-    }
-    .tw\:select:is(:disabled, [disabled]) {
-      box-shadow: none;
-    }
-    .tw\:select:is(:disabled, [disabled])::placeholder, .tw\:select:is(:disabled, [disabled])  ::placeholder {
-      color: var(--color-base-content);
-      opacity: 20%;
-    }
-    fieldset:disabled .tw\:select {
-      cursor: not-allowed;
-      border-color: var(--color-base-200);
-      background-color: var(--color-base-200);
-    }
-    fieldset:disabled .tw\:select:is(select), fieldset:disabled .tw\:select  :is(select) {
-      color: var(--color-base-content);
-      @supports (color: color-mix(in lab, red, red)) {
-        color: color-mix(in oklab, var(--color-base-content) 40%, transparent);
-      }
-    }
-    fieldset:disabled .tw\:select {
-      box-shadow: none;
-    }
-    fieldset:disabled .tw\:select::placeholder, fieldset:disabled .tw\:select  ::placeholder {
-      color: var(--color-base-content);
-      opacity: 20%;
-    }
-    .tw\:select:has( > select[disabled]) > select[disabled] {
-      cursor: not-allowed;
-    }
     @supports (appearance: base-select) {
       :is(:is(.tw\:select), .tw\:select select) {
         appearance: base-select;
@@ -2439,6 +2412,67 @@
     [dir="rtl"] .tw\:select select::picker(select) {
       translate: 0.5rem 0;
     }
+  }
+  @layer daisyui.l1.l2 {
+    .tw\:select:has( > select[disabled]) {
+      cursor: not-allowed;
+      border-color: var(--color-base-200);
+      background-color: var(--color-base-200);
+    }
+    .tw\:select:has( > select[disabled]):is(select), .tw\:select:has( > select[disabled])  :is(select) {
+      color: var(--color-base-content);
+      @supports (color: color-mix(in lab, red, red)) {
+        color: color-mix(in oklab, var(--color-base-content) 40%, transparent);
+      }
+    }
+    .tw\:select:has( > select[disabled]) {
+      box-shadow: none;
+    }
+    .tw\:select:has( > select[disabled])::placeholder, .tw\:select:has( > select[disabled])  ::placeholder {
+      color: var(--color-base-content);
+      opacity: 20%;
+    }
+    .tw\:select:is(:disabled, [disabled]) {
+      cursor: not-allowed;
+      border-color: var(--color-base-200);
+      background-color: var(--color-base-200);
+    }
+    .tw\:select:is(:disabled, [disabled]):is(select), .tw\:select:is(:disabled, [disabled])  :is(select) {
+      color: var(--color-base-content);
+      @supports (color: color-mix(in lab, red, red)) {
+        color: color-mix(in oklab, var(--color-base-content) 40%, transparent);
+      }
+    }
+    .tw\:select:is(:disabled, [disabled]) {
+      box-shadow: none;
+    }
+    .tw\:select:is(:disabled, [disabled])::placeholder, .tw\:select:is(:disabled, [disabled])  ::placeholder {
+      color: var(--color-base-content);
+      opacity: 20%;
+    }
+    fieldset:disabled .tw\:select {
+      cursor: not-allowed;
+      border-color: var(--color-base-200);
+      background-color: var(--color-base-200);
+    }
+    fieldset:disabled .tw\:select:is(select), fieldset:disabled .tw\:select  :is(select) {
+      color: var(--color-base-content);
+      @supports (color: color-mix(in lab, red, red)) {
+        color: color-mix(in oklab, var(--color-base-content) 40%, transparent);
+      }
+    }
+    fieldset:disabled .tw\:select {
+      box-shadow: none;
+    }
+    fieldset:disabled .tw\:select::placeholder, fieldset:disabled .tw\:select  ::placeholder {
+      color: var(--color-base-content);
+      opacity: 20%;
+    }
+    .tw\:select:has( > select[disabled]) > select[disabled] {
+      cursor: not-allowed;
+    }
+  }
+  @layer daisyui.l1.l2.l3 {
     .tw\:checkbox {
       border: var(--border) solid var(--input-color, var(--color-base-content));
     }
@@ -2755,6 +2789,9 @@
     inset: 0px;
   }
   @layer daisyui.l1.l2 {
+    .tw\:tooltip-right {
+      --tt-tail-off: clamp(0.5rem, var(--tt-radius) + 3px, 0.8rem - 2px);
+    }
     .tw\:tooltip-right > .tw\:tooltip-content {
       transform: translateX(calc(var(--tt-pos, -0.25rem) + 0.25rem)) translateY(var(--tt-trans, -50%));
       left: var(--tt-off);
@@ -2913,6 +2950,8 @@
       outline-offset: 2px;
       isolation: isolate;
     }
+  }
+  @layer daisyui.l1.l2 {
     .tw\:file-input:has( > input[disabled]) {
       cursor: not-allowed;
       border-color: var(--color-base-200);
@@ -2975,6 +3014,8 @@
         --btn-fg: color-mix(in oklch, var(--color-base-content) 20%, #0000);
       }
     }
+  }
+  @layer daisyui.l1.l2.l3 {
     .tw\:textarea {
       min-height: calc(0.25rem * 20);
       flex-shrink: 1;
@@ -3062,6 +3103,8 @@
         }
       }
     }
+  }
+  @layer daisyui.l1.l2 {
     .tw\:textarea:has( > textarea[disabled]) {
       cursor: not-allowed;
       border-color: var(--color-base-200);
@@ -8943,7 +8986,18 @@ calendar-select-month::part(option):disabled, calendar-select-year::part(option)
     --depth: 1;
     --noise: 0;
   }
+  :root, [data-theme] {
+    background-color: var(--root-bg);
+    color: var(--color-base-content);
+  }
   :root {
+    background-color: var(--page-scroll-bg, var(--root-bg));
+  }
+  :where(:root, [data-theme]) {
+    --root-bg: var(--color-base-100);
+  }
+  :root {
+    --fx-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.34' numOctaves='4' stitchTiles='stitch'%3E%3C/feTurbulence%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23a)' opacity='0.2'%3E%3C/rect%3E%3C/svg%3E");
     --page-has-backdrop: var(--page-scroll-lock) 1;
     --page-scroll-bg: var(--page-scroll-lock)
     var(--root-bg, #0000);
@@ -8963,13 +9017,6 @@ calendar-select-month::part(option):disabled, calendar-select-year::part(option)
       --page-has-scroll:  ;
     }
   }
-  :root {
-    --fx-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.34' numOctaves='4' stitchTiles='stitch'%3E%3C/feTurbulence%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23a)' opacity='0.2'%3E%3C/rect%3E%3C/svg%3E");
-    scrollbar-color: currentColor #0000;
-    @supports (color: color-mix(in lab, red, red)) {
-      scrollbar-color: color-mix(in oklch, currentColor 35%, #0000) #0000;
-    }
-  }
   @property --radialprogress {
     syntax: "<percentage>";
     inherits: true;
@@ -8980,38 +9027,16 @@ calendar-select-month::part(option):disabled, calendar-select-year::part(option)
     inherits: false;
     initial-value: 0deg;
   }
-  :root, [data-theme] {
-    background-color: var(--root-bg);
-    color: var(--color-base-content);
-  }
   :root {
-    background-color: var(--page-scroll-bg, var(--root-bg));
-  }
-  :where(:root, [data-theme]) {
-    --root-bg: var(--color-base-100);
-  }
-  :root {
+    scrollbar-color: currentColor #0000;
+    @supports (color: color-mix(in lab, red, red)) {
+      scrollbar-color: color-mix(in oklch, currentColor 35%, #0000) #0000;
+    }
     --page-scroll-lock: initial;
     --page-overflow: var(--page-scroll-lock) hidden;
   }
   :root:not(span) {
     overflow: var(--page-overflow);
-  }
-}
-@keyframes skeleton {
-  0% {
-    background-position: 150%;
-  }
-  100% {
-    background-position: -50%;
-  }
-}
-@keyframes radio {
-  0% {
-    padding: 5px;
-  }
-  50% {
-    padding: 3px;
   }
 }
 @keyframes rotator {
@@ -9025,15 +9050,51 @@ calendar-select-month::part(option):disabled, calendar-select-year::part(option)
     translate: 0 -100%;
   }
 }
+@keyframes skeleton {
+  0% {
+    background-position: 150%;
+  }
+  100% {
+    background-position: -50%;
+  }
+}
+@keyframes menu {
+  0% {
+    opacity: 0;
+  }
+}
+@keyframes dropdown {
+  0% {
+    opacity: 0;
+  }
+}
+@keyframes toast {
+  0% {
+    scale: 0.9;
+    opacity: 0;
+  }
+  100% {
+    scale: 1;
+    opacity: 1;
+  }
+}
+@keyframes radio {
+  0% {
+    padding: 5px;
+  }
+  50% {
+    padding: 3px;
+  }
+}
 @keyframes rating {
   0%, 40% {
     scale: 1.1;
     filter: brightness(1.05) contrast(1.05);
   }
 }
-@keyframes dropdown {
-  0% {
-    opacity: 0;
+@keyframes progress {
+  50% {
+    background-position-x: -115%;
   }
 }
 @keyframes aura {
@@ -9060,26 +9121,6 @@ calendar-select-month::part(option):disabled, calendar-select-year::part(option)
   50% {
     opacity: 0.6;
     filter: blur(1.5rem);
-  }
-}
-@keyframes toast {
-  0% {
-    scale: 0.9;
-    opacity: 0;
-  }
-  100% {
-    scale: 1;
-    opacity: 1;
-  }
-}
-@keyframes menu {
-  0% {
-    opacity: 0;
-  }
-}
-@keyframes progress {
-  50% {
-    background-position-x: -115%;
   }
 }
 @property --tw-translate-x {
