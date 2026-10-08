@@ -2,6 +2,10 @@
 
 import math
 import re
+import logging
+
+
+logger = logging.getLogger('indi_allsky')
 
 
 MAX_CUSTOM_CHARTS = 64
@@ -216,6 +220,52 @@ def build_chart_data(readings, definitions, temperature_display='c', selected_id
                 point['timestamp'] = reading.createDate.timestamp()
             result[definition['id']].append(point)
     return result
+
+
+def capture_chart_metadata(config, i_ref, camera_sqm_raw_mag, sensors_temp, sensors_user):
+    metadata = {source: getattr(i_ref, source) for source in METADATA_SOURCES if source != 'camera_sqm_raw_mag'}
+    metadata.update(uptime=i_ref.uptime, camera_sqm_raw_mag=camera_sqm_raw_mag)
+    for index, temperature in enumerate(sensors_temp):
+        if config.get('TEMP_DISPLAY') == 'f':
+            temperature = temperature * 9.0 / 5.0 + 32
+        elif config.get('TEMP_DISPLAY') == 'k':
+            temperature += 273.15
+        metadata['sensor_temp_{0}'.format(index)] = temperature
+    metadata.update(('sensor_user_{0}'.format(index), sensors_user[index]) for index in (*range(60), *range(100, 110)))
+    return metadata
+
+
+def render_capture_charts(image_processor, config, i_ref, camera_data, sensors_temp, sensors_user, image_model, label_bounds=()):
+    if not config.get('CHARTS', {}).get('SAVED_IMAGE_IDS') or config.get('FOCUS_MODE', False):
+        return image_processor.image
+    from datetime import timedelta
+    from types import SimpleNamespace
+    from sqlalchemy import func
+    from . import constants
+
+    try:
+        settings = chart_configuration(config)
+        readings = list(image_model.query.with_entities(
+            image_model.createDate, image_model.sqm.label('jsqm'),
+            func.avg(image_model.stars).over(order_by=image_model.createDate, rows=(-5, 0)).label('stars_rolling'),
+            image_model.stars, image_model.temp, image_model.gain,
+            image_model.exposure, image_model.detections, image_model.data,
+        ).filter(
+            image_model.camera_id == i_ref.camera_id,
+            image_model.createDate > i_ref.exp_date - timedelta(seconds=settings['SAVED_IMAGE_HISTORY_SECONDS']),
+            image_model.createDate < i_ref.exp_date,
+        ).order_by(image_model.createDate.asc()))
+        stars = [reading.stars for reading in readings[-5:] if reading.stars is not None] + [len(i_ref.stars)]
+        readings.append(SimpleNamespace(
+            createDate=i_ref.exp_date, jsqm=i_ref.sqm_value, stars_rolling=sum(stars) / len(stars),
+            temp=sensors_temp[constants.SENSOR_TEMP_CCD_TEMP], gain=i_ref.gain,
+            exposure=i_ref.exposure, detections=len(i_ref.lines),
+            data=capture_chart_metadata(config, i_ref, image_processor.camera_sqm_raw_mag, sensors_temp, sensors_user),
+        ))
+        return render_saved_charts(image_processor.image, config, readings, camera_data, label_bounds=label_bounds)
+    except Exception:
+        logger.exception('Unable to render saved-image charts; retaining the capture image')
+        return image_processor.image
 
 
 def render_saved_charts(image, config, readings, camera_data=None, label_bounds=()):

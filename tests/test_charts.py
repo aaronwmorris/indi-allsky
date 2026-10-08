@@ -10,7 +10,7 @@ from unittest.mock import MagicMock
 from indi_allsky.charts import chart_definitions, chart_value, custom_charts, validate_custom_charts
 from indi_allsky.charts import chart_configuration, validate_chart_configuration
 from indi_allsky.charts import migrate_chart_configuration, chart_metadata
-from indi_allsky.charts import build_chart_data, render_saved_charts
+from indi_allsky.charts import build_chart_data, capture_chart_metadata, render_saved_charts
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -179,19 +179,6 @@ def test_remote_visibility_is_mapped_by_source():
 def test_invalid_chart_definitions_are_rejected(definition):
     with pytest.raises(ValueError):
         validate_custom_charts([definition])
-
-
-def test_chart_sensor_sources_match_captured_metadata(saved_chart_worker):
-    from indi_allsky.charts import SENSOR_SOURCES
-
-    worker = saved_chart_worker
-    metadata = worker.get_image_metadata(worker.ref)
-    assert set(SENSOR_SOURCES) == {key for key in metadata if key.startswith(('sensor_user_', 'sensor_temp_'))}
-    for source in SENSOR_SOURCES:
-        assert validate_custom_charts([{'id': 'sensor', 'source': source}])[0]['source'] == source
-    for index in range(60, 100):
-        with pytest.raises(ValueError, match='available sensor source'):
-            validate_chart_configuration({'CUSTOM': [{'id': 'sensor', 'source': 'sensor_user_{0}'.format(index)}]})
 
 
 def test_duplicate_chart_identifiers_are_rejected():
@@ -528,14 +515,29 @@ def saved_chart_worker():
     image_table = SimpleNamespace(query=session.query(table), **{column.name: column for column in table.columns})
     renderer = MagicMock(wraps=render_saved_charts)
     namespace = {'IndiAllSkyDbImageTable': image_table, 'func': func, 'timedelta': timedelta,
-                 'SimpleNamespace': SimpleNamespace, 'constants': constants, 'logger': MagicMock(),
+                 '__package__': 'indi_allsky', 'capture_chart_metadata': capture_chart_metadata,
+                 'constants': constants, 'logger': MagicMock(),
                  'chart_configuration': chart_configuration, 'render_saved_charts': renderer,
                  'cv2': cv2, 'tempfile': tempfile, 'shutil': shutil, 'Path': Path, 'Image': Image}
     tree = ast.parse((ROOT / 'indi_allsky/image.py').read_text(encoding='utf-8'))
     owner = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == 'ImageWorker')
     methods = [node for node in owner.body if isinstance(node, ast.FunctionDef)
-               and node.name in ('get_image_metadata', 'apply_saved_charts', 'write_img')]
+               and node.name == 'write_img']
+    charts = ast.parse((ROOT / 'indi_allsky/charts.py').read_text(encoding='utf-8'))
+    methods += [node for node in charts.body if isinstance(node, ast.FunctionDef) and node.name == 'render_capture_charts']
     exec(compile(ast.Module(body=methods, type_ignores=[]), 'production-saved-chart-worker', 'exec'), namespace)
+    process_image = next(node for node in owner.body if isinstance(node, ast.FunctionDef) and node.name == 'processImage')
+    calls = {(node.func.id if isinstance(node.func, ast.Name) else node.func.attr): node.lineno
+             for node in ast.walk(process_image) if isinstance(node, ast.Call) and (
+                 isinstance(node.func, ast.Name) and node.func.id == 'render_capture_charts' or
+                 isinstance(node.func, ast.Attribute) and node.func.attr in ('label_image', 'write_img', 'save_longterm_keogram_data'))}
+    assert calls['save_longterm_keogram_data'] < calls['label_image'] < calls['render_capture_charts'] < calls['write_img']
+    statements = next(node.body for node in ast.walk(process_image) if isinstance(node, ast.If)
+                      and isinstance(node.test, ast.Name) and node.test.id == 'new_filename')
+    metadata_statements = [node for node in statements if isinstance(node, ast.For) or (
+        isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == 'image_add_data' for target in node.targets)
+    ) or (isinstance(node, ast.If) and isinstance(node.test, ast.Attribute) and node.test.attr == 'chart_label_bounds')]
+    metadata_code = compile(ast.Module(body=metadata_statements, type_ignores=[]), 'production-capture-metadata', 'exec')
     ref = SimpleNamespace(exp_date=datetime(2026, 10, 4, 20, 30), camera_id=1, sqm_value=100,
                           stars=list(range(10)), lines=[], gain=50, exposure=15,
                           **{key: 0 for key in ('uptime', 'kpindex', 'ovation_max', 'aurora_mag_bt',
@@ -543,11 +545,21 @@ def saved_chart_worker():
                             'aurora_plasma_temp', 'aurora_n_hemi_gw', 'aurora_s_hemi_gw')})
     worker = SimpleNamespace(config={}, sensors_temp_av=[10.0] * 60, sensors_user_av=list(range(110)),
                              image_processor=SimpleNamespace(image=numpy.full((480, 640, 3), 120, dtype=numpy.uint8),
-                                                             camera_sqm_raw_mag=21.3, chart_label_bounds=[]),
+                                                             camera_sqm_raw_mag=21.3),
+                             label_bounds=[],
                              ref=ref, image_table=image_table, table=table, session=session, renderer=renderer,
                              logger=namespace['logger'])
-    worker.get_image_metadata = lambda ref: namespace['get_image_metadata'](worker, ref)
-    worker.apply_saved_charts = lambda: namespace['apply_saved_charts'](worker, ref, SimpleNamespace(data={}))
+    def capture_metadata(ref):
+        worker.image_processor.chart_label_bounds = worker.label_bounds
+        values = {'self': worker, 'i_ref': ref, 'label_bounds': worker.label_bounds}
+        exec(metadata_code, values)
+        return values['image_add_data']
+    worker.get_image_metadata = capture_metadata
+    def apply_saved_charts():
+        worker.image_processor.image = namespace['render_capture_charts'](
+            worker.image_processor, worker.config, ref, {}, worker.sensors_temp_av,
+            worker.sensors_user_av, image_table, worker.label_bounds)
+    worker.apply_saved_charts = apply_saved_charts
     worker.write_img = lambda: namespace['write_img'](worker, worker.image_processor.image, ref,
                                                     SimpleNamespace(data={}), jpeg_exif=b'')
     yield worker
@@ -639,18 +651,6 @@ def test_capture_saved_sensor_chart_plots_distinct_historical_values(saved_chart
     worker.logger.exception.assert_not_called()
 
 
-def test_capture_sensor_metadata_is_an_independent_per_frame_snapshot(saved_chart_worker):
-    worker = saved_chart_worker
-    worker.config = {}
-    worker.sensors_user_av[0] = 20.4
-    earlier = worker.get_image_metadata(worker.ref)
-    worker.sensors_user_av[0] = 20.47
-    latest = worker.get_image_metadata(worker.ref)
-    assert earlier['sensor_user_0'] == 20.4
-    assert latest['sensor_user_0'] == 20.47
-    assert earlier is not latest
-
-
 @pytest.mark.parametrize('history', [60, 900, 3600, 86400])
 def test_capture_saved_history_selection_controls_database_window(saved_chart_worker, history):
     worker = saved_chart_worker
@@ -711,9 +711,22 @@ def test_capture_writer_saves_identical_composited_latest_and_archive_images(sav
 
 @pytest.mark.parametrize('display, expected', [('c', 10), ('f', 50), ('k', 283.15)])
 def test_shared_image_metadata_preserves_capture_sensor_values_and_units(saved_chart_worker, display, expected):
+    from indi_allsky.charts import SENSOR_SOURCES
+
     worker = saved_chart_worker
     worker.config = {'TEMP_DISPLAY': display}
+    worker.label_bounds = [(10, 10, 300, 188)]
     metadata = worker.get_image_metadata(worker.ref)
+    bounds = metadata.pop('chart_label_bounds')
+    worker.label_bounds.clear()
+    assert bounds == [[10, 10, 300, 188]]
+    assert 'chart_label_bounds' not in worker.get_image_metadata(worker.ref)
+    assert set(SENSOR_SOURCES) == {key for key in metadata if key.startswith(('sensor_user_', 'sensor_temp_'))}
+    for source in SENSOR_SOURCES:
+        assert validate_custom_charts([{'id': 'sensor', 'source': source}])[0]['source'] == source
+    for index in range(60, 100):
+        with pytest.raises(ValueError, match='available sensor source'):
+            validate_chart_configuration({'CUSTOM': [{'id': 'sensor', 'source': 'sensor_user_{0}'.format(index)}]})
     for index in range(60):
         assert metadata['sensor_temp_{0}'.format(index)] == expected
         assert metadata['sensor_user_{0}'.format(index)] == index
@@ -721,6 +734,11 @@ def test_shared_image_metadata_preserves_capture_sensor_values_and_units(saved_c
         assert metadata['sensor_user_{0}'.format(index)] == index
     assert 'sensor_user_60' not in metadata
     assert metadata['camera_sqm_raw_mag'] == 21.3
+    assert capture_chart_metadata(worker.config, worker.ref, worker.image_processor.camera_sqm_raw_mag,
+                                  worker.sensors_temp_av, worker.sensors_user_av) == metadata
+    worker.sensors_user_av[0] = 20.47
+    assert metadata['sensor_user_0'] == 0
+    assert worker.get_image_metadata(worker.ref)['sensor_user_0'] == 20.47
 
 
 @pytest.mark.parametrize('backend', ['opencv', 'pillow'])
@@ -757,16 +775,6 @@ def test_real_image_label_bounds_keep_saved_charts_below_text(backend, selected)
     assert (not numpy.array_equal(image, original)) is bool(selected)
 
 
-def test_capture_metadata_copies_label_bounds_for_browser_only_charts(saved_chart_worker):
-    worker = saved_chart_worker
-    worker.config = {'CHARTS': {'SAVED_IMAGE_IDS': []}}
-    worker.image_processor.chart_label_bounds = [(10, 10, 300, 188)]
-    metadata = worker.get_image_metadata(worker.ref)
-    assert metadata['chart_label_bounds'] == [[10, 10, 300, 188]]
-    worker.image_processor.chart_label_bounds.clear()
-    assert metadata['chart_label_bounds'] == [[10, 10, 300, 188]]
-
-
 @pytest.mark.parametrize('bounds', [None, [[10, 10, 300, 188]]])
 def test_latest_image_response_exposes_recorded_label_bounds_without_changing_legacy_payload(bounds):
     from sqlalchemy import and_, column
@@ -789,16 +797,6 @@ def test_latest_image_response_exposes_recorded_label_bounds_without_changing_le
     if bounds:
         expected['label_bounds'] = bounds
     assert result == expected
-
-
-def test_capture_composites_saved_charts_after_labels_and_before_final_image_write():
-    tree = ast.parse((ROOT / 'indi_allsky/image.py').read_text(encoding='utf-8'))
-    owner = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == 'ImageWorker')
-    method = next(node for node in owner.body if isinstance(node, ast.FunctionDef) and node.name == 'processImage')
-    calls = {node.func.attr: node.lineno for node in ast.walk(method)
-             if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
-             and node.func.attr in ('label_image', 'apply_saved_charts', 'write_img', 'save_longterm_keogram_data')}
-    assert calls['save_longterm_keogram_data'] < calls['label_image'] < calls['apply_saved_charts'] < calls['write_img']
 
 
 def test_chart_and_image_visibility_are_independent():

@@ -107,6 +107,7 @@ and the current frame, and are disabled in focus mode. New latest images, saved
 images, thumbnails, uploads and timelapses built from those images contain the
 charts. Existing files, raw/FITS images, keograms, panoramas and circular-display
 outputs are not changed, and measurements occur before chart compositing.
+The chart subsystem owns the capture adapter and its camera-history query.
 
 Existing capture installations must install `matplotlib>=3.5.3` in their capture
 virtual environment, or rerun the normal dependency setup. A missing renderer is
