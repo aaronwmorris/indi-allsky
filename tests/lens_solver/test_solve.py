@@ -129,10 +129,12 @@ def test_response_contract_success(tmp_path):
         'success', 'values', 'geometry', 'quality', 'partial', 'message', 'timing'}
     assert set(result['values'].keys()) == {
         'AZIMUTH_ANGLE', 'LATITUDE_OFFSET', 'LONGITUDE_OFFSET',
-        'IMAGE_CIRCLE_DIAMETER', 'OFFSET_X', 'OFFSET_Y'}
+        'IMAGE_CIRCLE_DIAMETER', 'OFFSET_X', 'OFFSET_Y', 'FLIP_H', 'FLIP_V'}
     assert set(result['geometry'].keys()) == {
         'zenith_x', 'zenith_y', 'rotation_deg', 'horizon_diameter_px',
-        'tilt_ns_deg', 'tilt_ew_deg'}
+        'tilt_ns_deg', 'tilt_ew_deg', 'flip_h', 'flip_v'}
+    assert result['values']['FLIP_H'] is result['geometry']['flip_h'] is False
+    assert result['values']['FLIP_V'] is result['geometry']['flip_v'] is False
     assert set(result['quality'].keys()) == QUALITY_KEYS
     assert set(result['timing'].keys()) == TIMING_KEYS
 

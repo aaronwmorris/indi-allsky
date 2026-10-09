@@ -155,10 +155,11 @@ def test_unsuccessful_recovery_preserves_partial_fit(tmp_path, monkeypatch):
     solver = IndiAllSkyLensSolver({})
     _, detections, _, _ = star_field(54, 0)
     monkeypatch.setattr(solver, 'detectStars', lambda image: detections)
-    monkeypatch.setattr(solver, 'fitParameters', lambda *args: dict(
+    monkeypatch.setattr(solver, 'fitParameters', lambda *args, **kwargs: (dict(
+        success=False, reason="chirality_mismatch", stars_matched=0) if kwargs["flip_h"] else dict(
         success=True, partial=True, params=PARAMS.copy(), stars_matched=45, rms_px=2,
-        final_match_radius=6))
-    monkeypatch.setattr(solver_mod, 'recoverOrientation', lambda *args: None)
+        final_match_radius=6)))
+    monkeypatch.setattr(solver_mod, 'recoverOrientation', lambda *args, **kwargs: None)
     result = solver.solve(image_file, 46.51, 8, 1770000000, dict(zip(KEYS, PARAMS)))
     assert result['success'] and result['partial']
-    assert set(result['values']) == set(KEYS)
+    assert set(result['values']) == set(KEYS) | {'FLIP_H', 'FLIP_V'}
