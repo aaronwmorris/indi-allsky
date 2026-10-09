@@ -5,6 +5,7 @@
 {% block head %}
 <link href="{{ url_for('indi_allsky.static', filename='css/style.css') }}" rel="stylesheet">
 <script src="{{ url_for('indi_allsky.static', filename='js/indi-allsky-tabs.js') }}"></script>
+<script defer src="{{ url_for('indi_allsky.static', filename='js/syncapi-archive.js', v='availability-7') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
@@ -488,6 +489,7 @@ const field_names = [
     'MQTTPUBLISH__BASE_TOPIC',
     'MQTTPUBLISH__QOS',
     'SYNCAPI__BASEURL',
+    'SYNCAPI__MODE',
     'SYNCAPI__USERNAME',
     'SYNCAPI__APIKEY',
     'SYNCAPI__UPLOAD_IMAGE',
@@ -902,6 +904,13 @@ checkbox_field_names.forEach(item => {
 
 
 
+// Schedule validation uses the same error display and tab navigation as the
+// other configuration fields; its payload includes the current media choices.
+fields['syncapi-run-schedule-controls'] = {
+    input: $('#syncapi-run-schedule-controls'),
+    error: $('#syncapi-run-schedule-controls-error'),
+};
+
 $('#form_config').on('submit', function() {
     const defaultSaveBtnClass = "tw:btn tw:btn-primary tw:btn-md tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider tw:flex-shrink-0 shadow-sm";
     const defaultSaveBtnHtml = '<i class="tw:icon-[lucide--save] tw:w-4 tw:h-4"></i> Save Configuration';
@@ -934,6 +943,7 @@ $('#form_config').on('submit', function() {
     checkbox_field_names.forEach(item => {
         json_data[item] = fields[item].input.prop('checked');
     });
+    json_data.SYNCAPI_SCHEDULE = window.indiAllskySync.schedulePayload(document);
 
     // reset option
     $("#RELOAD_ON_SAVE").prop('checked', false);
@@ -945,6 +955,7 @@ $('#form_config').on('submit', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
+            document.dispatchEvent(new Event('indi-allsky:config-saved'));
             $("#save-button").attr("class", "tw:btn tw:btn-success tw:btn-md tw:gap-2 tw:font-bold tw:uppercase tw:tracking-wider tw:flex-shrink-0 shadow-sm");
             $("#save-button").html(
                 '<i class="tw:icon-[lucide--check] tw:w-4 tw:h-4"></i> Saved'

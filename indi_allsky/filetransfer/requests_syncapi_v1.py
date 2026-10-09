@@ -1,5 +1,5 @@
 from .generic import GenericFileTransfer
-#from .exceptions import AuthenticationFailure
+from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
 from .exceptions import CertificateValidationFailure
 from .exceptions import TransferFailure
@@ -7,7 +7,7 @@ from .exceptions import TransferFailure
 
 from pathlib import Path
 import requests
-from requests_toolbelt import MultipartEncoder
+from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 import io
 import time
 import math
@@ -37,6 +37,7 @@ class requests_syncapi_v1(GenericFileTransfer):
         self._port = 443
         self.url = None
         self.apikey = None
+        self.quiet = kwargs.get('quiet', False)
 
 
     def connect(self, *args, **kwargs):
@@ -72,7 +73,11 @@ class requests_syncapi_v1(GenericFileTransfer):
 
 
     def put(self, *args, **kwargs):
-        super(requests_syncapi_v1, self).put(*args, **kwargs)
+        # Quiet archive logging is specific to SyncAPI, not other protocols.
+        if self.quiet and not self.delete:
+            logger.debug('Uploading %s', kwargs['local_file'])
+        else:
+            super(requests_syncapi_v1, self).put(*args, **kwargs)
 
         metadata = kwargs['metadata']
         local_file = kwargs['local_file']
@@ -81,8 +86,9 @@ class requests_syncapi_v1(GenericFileTransfer):
 
         #logger.info('requests URL: %s', self.url)
 
-        # cameras do not have files
-        if str(local_file) == 'camera':
+        # Lookups use the same signed multipart metadata as uploads, but do not
+        # open/send the local media. Cameras also have no media payload.
+        if kwargs.get('lookup') or str(local_file) == 'camera':
             local_file_p = Path('bogus.ext')
             local_file_size = 1024  # fake
             f_media = io.BytesIO(b'')  # no data
@@ -116,6 +122,11 @@ class requests_syncapi_v1(GenericFileTransfer):
                 f_media,
                 'application/octet-stream',
             ),
+            # Werkzeug 3.1.6-3.1.8 can append a CR to the last part when the
+            # closing delimiter crosses a parser read boundary. Keep both
+            # signed metadata and media before an unused final form field.
+            # This avoids relying on a particular boundary or read size.
+            'syncapi_end': '',
         }
 
 
@@ -144,13 +155,41 @@ class requests_syncapi_v1(GenericFileTransfer):
         start = time.time()
 
         try:
-            # put allows overwrites
-            r = self.client.put(
-                self.url,
+            # Archive runs opt into pacing/progress. Leave camera updates,
+            # lookups and the original automatic-upload path unchanged.
+            if metadata['file_size'] and (kwargs.get('upload_limit') or kwargs.get('progress_callback')):
+                rate = kwargs.get('upload_limit', 0) * 1024
+                if rate and mp_enc.len / rate > self.time_skew * 4:
+                    raise TransferFailure('The upload speed limit would make "{0}" take more than 20 minutes, '
+                                          'exceeding the receiver authentication window. Increase the speed limit '
+                                          'and start synchronization again.'.format(local_file_p.name))
+                previous_read = 0
+
+                def monitor_upload(monitor):
+                    nonlocal previous_read
+                    # Pace each block before requests writes it to the socket.
+                    # Charging all multipart bytes prevents short files or slow
+                    # socket writes from accumulating credit for a later burst.
+                    count = monitor.bytes_read - previous_read
+                    previous_read = monitor.bytes_read
+                    if rate and count:
+                        kwargs.get('upload_wait', time.sleep)(count / rate)
+                    if kwargs.get('progress_callback'):
+                        kwargs['progress_callback'](f_media.tell(), metadata['file_size'])
+
+                mp_enc = MultipartEncoderMonitor(mp_enc, monitor_upload)
+            # POST lookup bodies pass through proxies that reject GET bodies.
+            # Use a dedicated read-only route; POST on the upload route writes.
+            request_method = self.client.post if kwargs.get('lookup') else self.client.put
+            request_url = self.url.rstrip('/') + '/lookup' if kwargs.get('lookup') else self.url
+            request_options = {'allow_redirects': False} if kwargs.get('lookup') else {}
+            r = request_method(
+                request_url,
                 data=mp_enc,
                 headers=headers,
                 verify=self.verify,
-                timeout=(self.connect_timeout, self.timeout)
+                timeout=(self.connect_timeout, self.timeout),
+                **request_options,
             )
         except socket.gaierror as e:
             raise ConnectionFailure(str(e)) from e
@@ -158,26 +197,68 @@ class requests_syncapi_v1(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except requests.exceptions.ConnectTimeout as e:
             raise ConnectionFailure(str(e)) from e
+        except requests.exceptions.SSLError as e:
+            raise CertificateValidationFailure(str(e)) from e
         except requests.exceptions.ConnectionError as e:
+            raise ConnectionFailure(str(e)) from e
+        except requests.exceptions.ChunkedEncodingError as e:
+            # A lost response is not proof that the upload failed. Archive
+            # retries check the receiver's size/hash before sending it again.
             raise ConnectionFailure(str(e)) from e
         except requests.exceptions.ReadTimeout as e:
             raise ConnectionFailure(str(e)) from e
         except ssl.SSLCertVerificationError as e:
-            raise CertificateValidationFailure(str(e)) from e
-        except requests.exceptions.SSLError as e:
             raise CertificateValidationFailure(str(e)) from e
         finally:
             f_metadata.close()
             f_media.close()
 
 
+        # A receiver/proxy can restart between a successful probe and an upload.
+        # Use the archive worker's bounded retries and lookup-before-resend path
+        # for these responses too. Keep legacy automatic-upload handling intact.
+        if (self.quiet or kwargs.get('availability_probe')) and r.status_code in (429, 500, 502, 503, 504):
+            raise ConnectionFailure('Receiver is temporarily unavailable (HTTP {0:d}).'.format(r.status_code))
+
+        if kwargs.get('availability_probe'):
+            try:
+                response = r.json()
+            except ValueError:
+                response = None
+            if r.status_code in (401, 403):
+                raise AuthenticationFailure('Receiver authentication failed')
+            if isinstance(response, dict):
+                if r.status_code == 200 and type(response.get('id')) is int and response['id'] > 0:
+                    return response
+                if r.status_code == 400 and response.get('error') == 'camera_missing':
+                    return response
+                if response.get('error') == 'authentication failed':
+                    raise AuthenticationFailure('Receiver authentication failed')
+            raise TransferFailure('Unexpected receiver readiness response (HTTP {0:d}).'.format(r.status_code))
+
         if r.status_code >= 400:
+            try:
+                error = r.json().get('error')
+            except (ValueError, AttributeError):
+                error = None
+            if r.status_code == 400 and error == 'media_size_mismatch':
+                raise TransferFailure('Receiver rejected "{0}": media size does not match the signed metadata. Check the receiver logs.'.format(local_file_p.name))
+            if self.quiet:
+                if r.status_code in (401, 403) or error == 'authentication failed':
+                    raise AuthenticationFailure('Receiver authentication failed')
+                if kwargs.get('lookup'):
+                    raise TransferFailure('Receiver lookup failed (HTTP {0:d}). Update the receiver to a version supporting archive synchronization and check its logs.'.format(r.status_code))
+                raise TransferFailure('Receiver rejected the transfer (HTTP {0:d}). Check its storage and service logs.'.format(r.status_code))
             raise TransferFailure('Sync error: {0:d}'.format(r.status_code))
 
 
         upload_elapsed_s = time.time() - start
-        logger.info('File transferred in %0.4f s (%0.2f kB/s)', upload_elapsed_s, local_file_size / upload_elapsed_s / 1024)
+        log = logger.debug if self.quiet else logger.info
+        log('File transferred in %0.4f s (%0.2f kB/s)', upload_elapsed_s, local_file_size / max(upload_elapsed_s, 0.000001) / 1024)
 
 
-        return json.loads(r.text)
+        try:
+            return json.loads(r.text)
+        except ValueError as e:
+            raise TransferFailure('Receiver returned an invalid transfer acknowledgement.') from e
 
