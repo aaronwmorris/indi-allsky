@@ -39,17 +39,20 @@ def initialize_sensors(config, night_av, astro_av):
         classname = settings.get(letter + '_CLASSNAME')
         if not classname and letter > 'F':
             continue
-        sensor_class = getattr(sensors, classname) if classname else sensors.sensor_simulator
-        try:
-            sensor = sensor_class(
-                config, settings.get(letter + '_LABEL', defaults['LABEL']), night_av, astro_av,
-                pin_1_name=settings.get(letter + '_PIN_1', 'notdefined'),
-                pin_2_name=settings.get(letter + '_PIN_2', 'notdefined'),
-                i2c_address=settings.get(letter + '_I2C_ADDRESS', defaults['I2C_ADDRESS']),
-            )
-        except (DeviceControlException, SensorException) as e:
-            logging.getLogger('indi_allsky').error('Error initializing sensor %s: %s', letter, str(e))
+        if not classname:
             sensor = sensors.sensor_simulator(config, defaults['LABEL'], night_av, astro_av)
+        else:
+            sensor_class = getattr(sensors, classname)
+            try:
+                sensor = sensor_class(
+                    config, settings.get(letter + '_LABEL', defaults['LABEL']), night_av, astro_av,
+                    pin_1_name=settings.get(letter + '_PIN_1', 'notdefined'),
+                    pin_2_name=settings.get(letter + '_PIN_2', 'notdefined'),
+                    i2c_address=settings.get(letter + '_I2C_ADDRESS', defaults['I2C_ADDRESS']),
+                )
+            except (DeviceControlException, SensorException) as e:
+                logging.getLogger('indi_allsky').error('Error initializing sensor %s: %s', letter, str(e))
+                sensor = sensors.sensor_simulator(config, defaults['LABEL'], night_av, astro_av)
         sensor.slot = constants.SENSOR_INDEX_MAP[settings.get(letter + '_USER_VAR_SLOT', defaults['USER_VAR_SLOT'])]
         devices.append(sensor)
     return devices

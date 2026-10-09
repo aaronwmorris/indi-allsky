@@ -61,19 +61,16 @@ def build_slot_label_map(config: Dict[str, Any]) -> Dict[int, Dict[str, Any]]:
 
     from .devices import sensors as indi_allsky_sensors
 
-    sensor_letters = SENSOR_DEFAULTS
     temp_sensor_cfg = config.get('TEMP_SENSOR', {})
 
-    for letter in sensor_letters:
+    for letter, defaults in SENSOR_DEFAULTS.items():
         classname = temp_sensor_cfg.get(f'{letter}_CLASSNAME')
         if not classname:
             continue
 
-        label = temp_sensor_cfg.get(f'{letter}_LABEL', f'Sensor {letter}')
-        default_slot = (SENSOR_DEFAULTS[letter]['USER_VAR_SLOT'] if letter > 'F'
-                        else f'sensor_user_{10 if letter == "A" else 20}')
-        user_var_slot = temp_sensor_cfg.get(f'{letter}_USER_VAR_SLOT', default_slot)
-        title_template = temp_sensor_cfg.get(f'{letter}_TITLE_TEMPLATE', '{label:s} ({probe:s})')
+        label = temp_sensor_cfg.get(f'{letter}_LABEL', defaults['LABEL'])
+        user_var_slot = temp_sensor_cfg.get(f'{letter}_USER_VAR_SLOT', defaults['USER_VAR_SLOT'])
+        title_template = temp_sensor_cfg.get(f'{letter}_TITLE_TEMPLATE', defaults['TITLE_TEMPLATE'])
         pin_1_name = temp_sensor_cfg.get(f'{letter}_PIN_1', '')
 
         try:

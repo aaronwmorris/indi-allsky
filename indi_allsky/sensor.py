@@ -51,7 +51,7 @@ class SensorWorker(Process):
         self.gpio = None
         self.dew_heater = None
         self.fan = None
-        self.sensors = []
+        self.sensors = [None, None, None, None, None, None]
 
         self.next_run = time.time()  # run immediately
         self.next_run_offset = 15

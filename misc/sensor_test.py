@@ -74,7 +74,7 @@ class TestSensors(object):
 
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
 
-        self.sensors = []
+        self.sensors = [None, None, None, None, None, None]
 
         self._count = 1
         self._interval = 5
@@ -161,6 +161,10 @@ class TestSensors(object):
 
     def init_sensors(self):
         from indi_allsky.sensor_slots import initialize_sensors
+
+        for letter in 'ABCDEF':
+            if not self.config.get('TEMP_SENSOR', {}).get(letter + '_CLASSNAME'):
+                logger.warning('No sensor %s - Initializing sensor simulator', letter)
 
         self.sensors = initialize_sensors(self.config, self.night_av, self.astro_av)
 

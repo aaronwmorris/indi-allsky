@@ -3475,7 +3475,11 @@ class AjaxConfigView(BaseView):
     decorators = [login_required]
 
     def dispatch_request(self):
-        form_config = IndiAllskyConfigForm(data=request.json)
+        from ..sensor_slots import sensor_form_data
+
+        form_data = sensor_form_data(self.indi_allsky_config)
+        form_data.update(request.json)
+        form_config = IndiAllskyConfigForm(data=form_data)
 
 
         if not app.config['LOGIN_DISABLED']:
@@ -14932,4 +14936,3 @@ def manifest():
     response = jsonify(manifest_data)
     response.headers['Content-Type'] = 'application/manifest+json'
     return response
-

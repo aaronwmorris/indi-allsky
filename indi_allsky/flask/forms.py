@@ -6,6 +6,7 @@ import json
 import math
 import time
 from collections import OrderedDict
+from copy import deepcopy
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -5300,6 +5301,9 @@ class IndiAllskyConfigForm(FlaskForm):
         data.update(kwargs.get('data', {}))
         kwargs['data'] = data
         super(IndiAllskyConfigForm, self).__init__(*args, **kwargs)
+
+        self.SENSOR_SLOT_choices = deepcopy(self.SENSOR_SLOT_choices)
+        self.CUSTOM_CHART_choices = deepcopy(self.CUSTOM_CHART_choices)
 
         from ..devices import sensors as indi_allsky_sensors
 
