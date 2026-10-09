@@ -222,6 +222,15 @@ RAIN_MAP_STR = {
 }
 
 
+CLOUD_SENSOR_CLASSNAMES = (
+    'blinka_temp_sensor_mlx90614_i2c',
+    'blinka_temp_sensor_mlx90615_i2c',
+    'blinka_temp_sensor_mlx90640_i2c',
+)
+
+CLOUD_AMBIENT_TEMP_LABEL = 'Temperature'
+
+
 SENSOR_INDEX_MAP = {
     'sensor_user_0'     : 0,
     'sensor_user_1'     : 1,

@@ -19,6 +19,7 @@ import dbus
 from passlib.hash import argon2
 
 from .. import constants
+from .. import sensors_mapping
 from .. import asi676mc
 from .. import asi676mc_calibration
 
@@ -39,6 +40,7 @@ from wtforms.validators import DataRequired
 from wtforms.validators import NumberRange
 #from wtforms.validators import regexp as validator_regexp
 from wtforms.validators import ValidationError
+from wtforms.validators import StopValidation
 from markupsafe import Markup
 
 from sqlalchemy import extract
@@ -983,6 +985,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'fan_status' : '',
         'wind_dir' : '',
         'rain_status' : '',
+        'cloudiness_index' : '',
         'custom_1' : '',
         'custom_2' : '',
         'custom_3' : '',
@@ -1090,6 +1093,7 @@ def WEB_STATUS_TEMPLATE_validator(form, field):
         'fan_status'        : '',
         'wind_dir'          : '',
         'rain_status'       : '',
+        'cloudiness_index'  : '',
     }
 
 
@@ -3402,6 +3406,63 @@ def SENSOR_USER_VAR_SLOT_validator(form, field):
         raise ValidationError('Invalid selection')
 
 
+def CLOUDINESS_INDEX_TEMP_validator(form, field):
+    if (field.data in (None, '')
+            and (not field.raw_data or all(value == '' for value in field.raw_data))
+            and not form.TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE.data):
+        field.data = None
+        field.errors = []
+        raise StopValidation()
+
+    if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
+        raise ValidationError('Please enter a valid number')
+
+
+def CLOUDINESS_INDEX_TEMP_UNIT_validator(form, field):
+    if field.data not in list(zip(*form.TEMP_DISPLAY_choices))[0]:
+        raise ValidationError('Invalid selection')
+
+
+def CLOUDINESS_INDEX_COEFFICIENT_validator(form, field):
+    CLOUDINESS_INDEX_TEMP_validator(form, field)
+
+    if field.data <= 0.0 or field.data > 10.0:
+        raise ValidationError('Sky temperature coefficient must be greater than 0 and no more than 10')
+
+
+def CLOUDINESS_INDEX_OFFSET_validator(form, field):
+    CLOUDINESS_INDEX_TEMP_validator(form, field)
+
+    if abs(field.data) > 100.0:
+        raise ValidationError('Sky temperature offset must be between -100 and 100 C')
+
+
+def _cloudiness_sensor_slots(field):
+    return [value for choices in field.choices.values() for value, label in choices]
+
+
+def CLOUDINESS_INDEX_SENSOR_validator(form, field):
+    if not field.data:
+        return
+
+    if field.data not in _cloudiness_sensor_slots(field):
+        raise ValidationError('Invalid selection')
+
+
+def CLOUDINESS_INDEX_GROUND_SENSOR_validator(form, field):
+    if not form.TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE.data:
+        return
+
+    if not field.data:
+        return
+
+    if field.data not in _cloudiness_sensor_slots(field):
+        raise ValidationError(
+            'Select a configured hardware ambient temperature sensor; '
+            'cached/API and sky-temperature readings are not supported'
+        )
+
+
 def DEVICE_PIN_NAME_validator(form, field):
     if not field.data:
         return
@@ -4306,6 +4367,9 @@ class IndiAllskyConfigForm(FlaskForm):
         ),
         'SQM' : (
             ['camera_sqm_raw_mag', 'Camera SQM - Raw Magnitude'],
+        ),
+        'Cloud' : (
+            ['cloudiness_index', 'Cloudiness Index'],
         ),
     }
 
@@ -5218,6 +5282,19 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__F_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
     TEMP_SENSOR__F_TITLE_TEMPLATE    = StringField('Chart Title Template', validators=[DataRequired(), TEMP_SENSOR__TITLE_TEMPLATE_validator])
     TEMP_SENSOR__FC37_ACTIVE_LOW     = BooleanField('Rain Sensor FC-37 - Invert logic')
+    TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE      = BooleanField('Enable Cloudiness Index')
+    TEMP_SENSOR__CLOUDINESS_INDEX_SHOW_TUNING = BooleanField('Optional Index Tuning')
+    TEMP_SENSOR__CLOUDINESS_INDEX_SMOOTHING  = BooleanField('Index Smoothing (20% History)', default=False)
+    TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR      = SelectField('Cloudiness Sensor', choices=[], validators=[CLOUDINESS_INDEX_SENSOR_validator])
+    TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR = BooleanField('Use External Ambient Sensor')
+    TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR = SelectField('Ground Temperature Sensor', choices=[], validate_choice=False, validators=[CLOUDINESS_INDEX_GROUND_SENSOR_validator])
+    TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT   = SelectField('Reference Reading Units', choices=TEMP_DISPLAY_choices, validators=[DataRequired(), CLOUDINESS_INDEX_TEMP_UNIT_validator])
+    TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP  = FloatField('Clear-Sky Reference: Raw MLX Sky Reading', validators=[CLOUDINESS_INDEX_TEMP_validator], widget=NumberInput(step=0.1))
+    TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_TEMP = FloatField('Cloudy-Sky Reference: Raw MLX Sky Reading', validators=[CLOUDINESS_INDEX_TEMP_validator], widget=NumberInput(step=0.1))
+    TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_GROUND_TEMP = FloatField('Clear-Sky Reference: Ground Reading', validators=[CLOUDINESS_INDEX_TEMP_validator], widget=NumberInput(step=0.1))
+    TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP = FloatField('Cloudy-Sky Reference: Ground Reading', validators=[CLOUDINESS_INDEX_TEMP_validator], widget=NumberInput(step=0.1))
+    TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT = FloatField('Sky Temperature Coefficient', validators=[CLOUDINESS_INDEX_COEFFICIENT_validator], widget=NumberInput(step=0.05, min=0.05, max=10))
+    TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET      = FloatField('Sky Temperature Offset (C)', validators=[CLOUDINESS_INDEX_OFFSET_validator], widget=NumberInput(step=1, min=-100, max=100))
     TEMP_SENSOR__OPENWEATHERMAP_APIKEY = PasswordField('OpenWeatherMap API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__WUNDERGROUND_APIKEY = PasswordField('Weather Underground API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__WUNDERGROUND_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__ASTROSPHERIC_APIKEY = PasswordField('Astrospheric API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__ASTROSPHERIC_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
@@ -5526,6 +5603,67 @@ class IndiAllskyConfigForm(FlaskForm):
         self.DEW_HEATER__DEWPOINT_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
         self.FAN__TEMP_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
 
+        self.cloud_sensor_classnames = constants.CLOUD_SENSOR_CLASSNAMES
+        cloud_sensor_choices = []
+        cloud_sensor_auto_ground_slots = set()
+
+        temp_sensors = (
+            (temp_sensor__a_classname, temp_sensor__a_user_var_slot),
+            (temp_sensor__b_classname, temp_sensor__b_user_var_slot),
+            (temp_sensor__c_classname, temp_sensor__c_user_var_slot),
+            (temp_sensor__d_classname, temp_sensor__d_user_var_slot),
+            (temp_sensor__e_classname, temp_sensor__e_user_var_slot),
+            (temp_sensor__f_classname, temp_sensor__f_user_var_slot),
+        )
+        for classname, user_var_slot in temp_sensors:
+            if classname not in constants.CLOUD_SENSOR_CLASSNAMES:
+                continue
+
+            try:
+                sensor_class = getattr(indi_allsky_sensors, classname)
+            except AttributeError:
+                app.logger.error('Unable to identify temperature outputs for sensor class: %s', classname)
+                continue
+
+            cloud_sensor_choices.append((
+                user_var_slot,
+                '{0:s} ({1:s})'.format(
+                    sensor_class.METADATA.get('name', classname),
+                    user_var_slot,
+                ),
+            ))
+            if sensors_mapping.get_cloudiness_ground_sensor_offsets(classname):
+                cloud_sensor_auto_ground_slots.add(user_var_slot)
+
+        self.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.choices = {
+            'Auto' : (
+                ['', 'Auto'],
+            ),
+            'MLX Cloudiness Sensors' : tuple(cloud_sensor_choices),
+        }
+        self.cloud_sensor_auto_ground_slots = cloud_sensor_auto_ground_slots
+
+        ground_sensor_choices = []
+        for classname, user_var_slot in temp_sensors:
+            if not classname:
+                continue
+
+            try:
+                base_index = constants.SENSOR_INDEX_MAP[user_var_slot]
+                for offset in sensors_mapping.get_cloudiness_ground_sensor_offsets(classname):
+                    slot = 'sensor_user_{0:d}'.format(base_index + offset)
+                    label = self.SENSOR_SLOT_choices['User Sensors'][base_index + offset][1]
+                    ground_sensor_choices.append((slot, label))
+            except (AttributeError, KeyError, IndexError):
+                app.logger.error('Unable to identify temperature outputs for sensor class: %s', classname)
+
+        self.TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR.choices = {
+            'Auto' : (
+                ['', 'Paired MLX Ambient Temperature'],
+            ),
+            'Temperature Sensors' : tuple(ground_sensor_choices),
+        }
+
         # Merge dictionaries
         self.CUSTOM_CHART_choices.update(self.SENSOR_SLOT_choices)
         self.CHARTS__CUSTOM_SLOT_1.choices = self.CUSTOM_CHART_choices
@@ -5541,6 +5679,52 @@ class IndiAllskyConfigForm(FlaskForm):
 
     def validate(self):
         result = super(IndiAllskyConfigForm, self).validate()
+
+        if self.TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE.data:
+            calibration_fields = (
+                self.TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP,
+                self.TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_TEMP,
+                self.TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_GROUND_TEMP,
+                self.TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP,
+            )
+            if (all(isinstance(field.data, (int, float)) for field in calibration_fields)
+                    and not self.TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT.errors
+                    and not self.TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET.errors):
+                if not sensors_mapping.validate_cloudiness_calibration(
+                        *(field.data for field in calibration_fields),
+                        temp_unit=self.TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT.data,
+                        coefficient=self.TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT.data,
+                        offset=self.TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET.data):
+                    self.TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP.errors.append(
+                        'Calculated delta between cloudy and clear references is insufficient; '
+                        'the corrected ground-to-sky temperature difference under clear skies must be more than '
+                        '2.0 C (3.6 F) greater than under cloudy skies. '
+                        'If these readings are correct, the sensor may be having problems.'
+                    )
+                    result = False
+
+            cloud_sensor_choices = self.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.choices.get('MLX Cloudiness Sensors', ())
+            if not cloud_sensor_choices:
+                self.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.errors.append(
+                    'Configure an MLX sky-temperature sensor first.'
+                )
+                result = False
+            elif len(cloud_sensor_choices) > 1 and not self.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.data:
+                self.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.errors.append(
+                    'Select the MLX sensor used for this cloudiness index'
+                )
+                result = False
+
+            selected_cloud_sensor = self.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR.data or (
+                cloud_sensor_choices[0][0] if len(cloud_sensor_choices) == 1 else None
+            )
+
+            requires_ground_sensor = self.TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR.data or selected_cloud_sensor not in self.cloud_sensor_auto_ground_slots
+            if selected_cloud_sensor and requires_ground_sensor and not self.TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR.data:
+                self.TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR.errors.append(
+                    'Select an external ambient sensor'
+                )
+                result = False
 
         # exposure checking
         if self.CCD_EXPOSURE_DEF.data > self.CCD_EXPOSURE_MAX.data:
