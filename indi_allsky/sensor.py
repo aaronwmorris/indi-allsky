@@ -696,6 +696,9 @@ class SensorWorker(Process):
                     if not isinstance(sensor_data.get('rain'), type(None)):
                         self.sensors_user_av[constants.SENSOR_USER_RAIN] = float(sensor_data['rain'])
 
+                    if not isinstance(sensor_data.get('wind_speed'), type(None)):
+                        self.sensors_user_av[constants.SENSOR_USER_WIND_SPEED] = float(sensor_data['wind_speed'])
+
 
                     for i, v in enumerate(sensor_data['data']):
                         self.sensors_user_av[sensor.slot + i] = float(v)

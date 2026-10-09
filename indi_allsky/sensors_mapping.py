@@ -93,11 +93,20 @@ def build_slot_label_map(config: Dict[str, Any]) -> Dict[int, Dict[str, Any]]:
                 display_name = title_template.format(**sensor_label_data) if '{' in title_template else f"{label} {probe_label}"
                 sensor_key = f"sensor_{letter.lower()}_{probe_label.lower().replace(' ', '_')}"
 
+                unit = TYPE_UNIT_MAP.get(stype, "")
+                if stype == constants.SENSOR_WIND_SPEED:
+                    unit = {
+                        'ms': 'm/s',
+                        'kph': 'km/h',
+                        'mph': 'mph',
+                        'knots': 'kn',
+                    }.get(config.get('WINDSPEED_DISPLAY'), 'm/s')
+
                 slot_map[slot_idx] = {
                     "key": sensor_key,
                     "slot": slot_idx,
                     "name": display_name,
-                    "unit": TYPE_UNIT_MAP.get(stype, ""),
+                    "unit": unit,
                     "device_class": TYPE_DEVICE_CLASS_MAP.get(stype),
                 }
         except Exception as e:
