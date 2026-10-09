@@ -40,6 +40,7 @@ from wtforms.validators import DataRequired
 from wtforms.validators import NumberRange
 #from wtforms.validators import regexp as validator_regexp
 from wtforms.validators import ValidationError
+from wtforms.validators import StopValidation
 from markupsafe import Markup
 
 from sqlalchemy import extract
@@ -3406,6 +3407,13 @@ def SENSOR_USER_VAR_SLOT_validator(form, field):
 
 
 def CLOUDINESS_INDEX_TEMP_validator(form, field):
+    if (field.data in (None, '')
+            and (not field.raw_data or all(value == '' for value in field.raw_data))
+            and not form.TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE.data):
+        field.data = None
+        field.errors = []
+        raise StopValidation()
+
     if not isinstance(field.data, (int, float)) or not math.isfinite(field.data):
         raise ValidationError('Please enter a valid number')
 

@@ -4277,12 +4277,14 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_USE_GROUND_SENSOR'] = bool(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_USE_GROUND_SENSOR'])
         self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_GROUND_SENSOR'] = str(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR'])
         self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_TEMP_UNIT']    = str(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT'])
-        self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_CLEAR_TEMP']   = float(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_TEMP'])
-        self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_CLOUDY_TEMP']  = float(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_TEMP'])
-        self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_CLEAR_GROUND_TEMP'] = float(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_CLEAR_GROUND_TEMP'])
-        self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP'] = float(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP'])
-        self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_COEFFICIENT']  = float(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT'])
-        self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_OFFSET']       = float(request.json['TEMP_SENSOR__CLOUDINESS_INDEX_OFFSET'])
+        for key in (
+            'CLOUDINESS_INDEX_CLEAR_TEMP', 'CLOUDINESS_INDEX_CLOUDY_TEMP',
+            'CLOUDINESS_INDEX_CLEAR_GROUND_TEMP', 'CLOUDINESS_INDEX_CLOUDY_GROUND_TEMP',
+            'CLOUDINESS_INDEX_COEFFICIENT', 'CLOUDINESS_INDEX_OFFSET',
+        ):
+            field = getattr(form_config, 'TEMP_SENSOR__' + key)
+            if field.data is not None:
+                self.indi_allsky_config['TEMP_SENSOR'][key] = float(field.data)
         self.indi_allsky_config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'] = str(request.json['TEMP_SENSOR__OPENWEATHERMAP_APIKEY'])
         self.indi_allsky_config['TEMP_SENSOR']['WUNDERGROUND_APIKEY']   = str(request.json['TEMP_SENSOR__WUNDERGROUND_APIKEY'])
         self.indi_allsky_config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY']   = str(request.json['TEMP_SENSOR__ASTROSPHERIC_APIKEY'])
@@ -15034,4 +15036,3 @@ def manifest():
     response = jsonify(manifest_data)
     response.headers['Content-Type'] = 'application/manifest+json'
     return response
-

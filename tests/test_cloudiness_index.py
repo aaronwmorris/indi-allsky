@@ -687,6 +687,92 @@ def test_form_validators_reject_nonfinite_values(name, value):
         namespace[name](None, SimpleNamespace(data=value))
 
 
+_CLOUDINESS_NUMBER_FIELDS = (
+    'CLEAR_TEMP', 'CLOUDY_TEMP', 'CLEAR_GROUND_TEMP', 'CLOUDY_GROUND_TEMP',
+    'COEFFICIENT', 'OFFSET',
+)
+
+
+def _cloudiness_number_form(enabled, value, formdata):
+    from werkzeug.datastructures import MultiDict
+    from wtforms import BooleanField, FloatField, Form
+    from wtforms.validators import StopValidation, ValidationError
+    from wtforms.widgets import NumberInput
+
+    namespace = {'math': math, 'FloatField': FloatField, 'NumberInput': NumberInput,
+                 'ValidationError': ValidationError, 'StopValidation': StopValidation}
+    functions = [_source_member('flask/forms.py', name) for name in (
+        'CLOUDINESS_INDEX_TEMP_validator', 'CLOUDINESS_INDEX_COEFFICIENT_validator',
+        'CLOUDINESS_INDEX_OFFSET_validator',
+    )]
+    fields = [_source_assignment(_source_member('flask/forms.py', 'IndiAllskyConfigForm').body,
+                                 'TEMP_SENSOR__CLOUDINESS_INDEX_' + name)
+              for name in _CLOUDINESS_NUMBER_FIELDS]
+    _exec_source('flask/forms.py', functions + fields, namespace)
+    form_type = type('CloudinessNumberForm', (Form,), {
+        'TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE': BooleanField(),
+        **{field.targets[0].id: namespace[field.targets[0].id] for field in fields},
+    })
+    data = {'TEMP_SENSOR__CLOUDINESS_INDEX_' + name: value
+            for name in _CLOUDINESS_NUMBER_FIELDS}
+    data['TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE'] = enabled
+    if formdata:
+        data.pop('TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE')
+        if enabled:
+            data['TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE'] = 'on'
+        return form_type(formdata=MultiDict(data))
+    return form_type(data=data)
+
+
+@pytest.mark.parametrize('formdata, value', [(False, ''), (False, None), (True, '')])
+@pytest.mark.parametrize('enabled', [False, True])
+def test_cloudiness_blank_numbers_are_optional_only_when_disabled(formdata, enabled, value):
+    form = _cloudiness_number_form(enabled, value, formdata)
+    assert form.validate() is (not enabled)
+    if not enabled:
+        assert all(getattr(form, 'TEMP_SENSOR__CLOUDINESS_INDEX_' + name).data is None
+                   for name in _CLOUDINESS_NUMBER_FIELDS)
+
+
+@pytest.mark.parametrize('enabled', [False, True])
+@pytest.mark.parametrize('value', ['invalid', 'nan', 'inf'])
+def test_cloudiness_invalid_numbers_are_rejected_even_when_disabled(enabled, value):
+    assert not _cloudiness_number_form(enabled, value, True).validate()
+
+
+@pytest.mark.parametrize('value', ['', None, 0.0, 2.5])
+def test_cloudiness_number_save_preserves_blanks_and_saves_valid_values(value):
+    view = _source_member('flask/views.py', 'AjaxConfigView', 'dispatch_request')
+    start = next(index for index, node in enumerate(view.body)
+                 if isinstance(node, ast.Assign) and any(
+                     ast.unparse(target) == "self.indi_allsky_config['TEMP_SENSOR']['CLOUDINESS_INDEX_TEMP_UNIT']"
+                     for target in node.targets))
+    end = next(index for index, node in enumerate(view.body) if isinstance(node, ast.Assign)
+               and any(ast.unparse(target) == "self.indi_allsky_config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY']"
+                       for target in node.targets))
+    config = _config()
+    previous = config['TEMP_SENSOR'].copy()
+    form = _cloudiness_number_form(False, value, value == '')
+    # Zero is valid for reference temperatures and offset, but not coefficient.
+    if value == 0.0:
+        form.TEMP_SENSOR__CLOUDINESS_INDEX_COEFFICIENT.data = 1.0
+    assert form.validate()
+    payload = {field.name: field.data for field in form}
+    for name in _CLOUDINESS_NUMBER_FIELDS:
+        field_name = 'TEMP_SENSOR__CLOUDINESS_INDEX_' + name
+        payload[field_name] = value if value in ('', None) else str(getattr(form, field_name).data)
+    payload['TEMP_SENSOR__CLOUDINESS_INDEX_TEMP_UNIT'] = 'c'
+    _exec_source('flask/views.py', view.body[start:end], {
+        'self': SimpleNamespace(indi_allsky_config=config),
+        'request': SimpleNamespace(json=payload), 'form_config': form,
+    })
+    for name in _CLOUDINESS_NUMBER_FIELDS:
+        key = 'CLOUDINESS_INDEX_' + name
+        expected = previous[key] if value in ('', None) else getattr(form, 'TEMP_SENSOR__' + key).data
+        assert config['TEMP_SENSOR'][key] == expected
+        assert isinstance(config['TEMP_SENSOR'][key], float)
+
+
 def test_disabled_calculation_does_not_access_sensor_values():
     def unavailable(index):
         raise AssertionError('Disabled cloudiness must not access live sensors')
