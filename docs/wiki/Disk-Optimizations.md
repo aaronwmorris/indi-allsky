@@ -47,3 +47,38 @@ Utilize a memory backed filesystem for /tmp to reduce writes
 tmpfs /tmp tmpfs defaults,nosuid,size=512m 0 0
 ...
 ```
+
+## Relocating the Image Directory to External Storage
+
+To eliminate image capture writes to the SD card, you can move the image directory to an attached SSD, hard drive, or USB flash drive:
+
+1. **Stop services:**
+   ```bash
+   sudo systemctl stop indi-allsky.service gunicorn-indi-allsky.service
+   ```
+
+2. **Create target directory & copy existing images:**
+   ```bash
+   sudo mkdir -p /mnt/storage/allsky/images
+   sudo rsync -av /var/www/html/allsky/images/ /mnt/storage/allsky/images/
+   ```
+
+3. **Update Flask configuration (`/etc/indi-allsky/flask.json`):**
+   Set `INDI_ALLSKY_IMAGE_FOLDER` to your new path:
+   ```json
+   "INDI_ALLSKY_IMAGE_FOLDER": "/mnt/storage/allsky/images",
+   ```
+
+4. **Update Camera configuration:**
+   In the Web UI under **Configuration &rarr; Camera Settings**, set **`IMAGE_FOLDER`** to `/mnt/storage/allsky/images` (or via CLI with `indi-allsky-ctl config`).
+
+5. **Repair and apply directory permissions with `indi-allsky-ctl`:**
+   ```bash
+   sudo indi-allsky-ctl fix-perms
+   ```
+   *`fix-perms` inspects `/etc/indi-allsky/flask.json` and the database, automatically creating `darks/` and `export/` subdirectories and applying `chown -R indi-allsky:www-data` and `chmod 775` permissions.*
+
+6. **Restart services:**
+   ```bash
+   sudo systemctl start indi-allsky.service gunicorn-indi-allsky.service
+   ```
