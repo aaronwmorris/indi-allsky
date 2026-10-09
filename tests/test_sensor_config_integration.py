@@ -243,7 +243,7 @@ def test_incomplete_sensor_defaults_match_runtime_capture_and_named_data(letter,
     assert named[index]['name'] == worker.SENSOR_SLOTS[index][1]
 
 
-@pytest.mark.parametrize('exception', [DeviceControlException, SensorException])
+@pytest.mark.parametrize('exception', [AttributeError, DeviceControlException, SensorException])
 def test_initialization_failure_keeps_configured_slot_and_reports_error(monkeypatch, caplog, exception):
     def fail(*args, **kwargs):
         raise exception('disconnected')
@@ -257,6 +257,27 @@ def test_initialization_failure_keeps_configured_slot_and_reports_error(monkeypa
     assert devices[-1].slot == 59
     assert devices[-1].name == 'Sensor Z'
     assert 'Error initializing sensor Z: disconnected' in caplog.text
+
+
+@pytest.mark.parametrize('letter', ['A', 'G', 'Z'])
+def test_worker_falls_back_for_missing_driver_without_stopping_other_devices(monkeypatch, caplog, letter):
+    monkeypatch.setattr(sensors, 'kernel_temp_sensor_ds18x20_w1',
+                        lambda config, label, night, astro, **kwargs: SimpleNamespace(name=label))
+    namespace = {'__package__': 'indi_allsky'}
+    execute([method('indi_allsky/sensor.py', 'init_sensors', 'SensorWorker')], namespace)
+    worker = SimpleNamespace(config={'TEMP_SENSOR': {
+        letter + '_CLASSNAME': 'driver_removed_after_upgrade',
+        letter + '_USER_VAR_SLOT': 'sensor_user_59',
+        'H_CLASSNAME': 'kernel_temp_sensor_ds18x20_w1', 'H_LABEL': 'Working probe',
+        'H_USER_VAR_SLOT': 'sensor_user_40'}}, sensors=[None] * 6, night_av=[], astro_av=[])
+    with caplog.at_level(logging.ERROR, logger='indi_allsky'):
+        namespace['init_sensors'](worker)
+    fallback = next(device for device in worker.sensors if device.slot == 59)
+    assert isinstance(fallback, sensors.sensor_simulator)
+    assert fallback.name == 'Sensor ' + letter
+    assert any(device.name == 'Working probe' and device.slot == 40 for device in worker.sensors)
+    assert 'Error initializing sensor ' + letter in caplog.text
+    assert 'driver_removed_after_upgrade' in caplog.text
 
 
 def test_inactive_legacy_simulators_keep_original_constructor_arguments(monkeypatch):
