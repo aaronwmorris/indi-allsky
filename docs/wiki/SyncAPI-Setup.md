@@ -55,6 +55,8 @@ sudo apt install -y indi-allsky
 ## Generate API key
 On the remote indi-allsky server, after the web server is deployed, generate an API key for the remote user.  You may create a dedicated user account for the sync activity.
 
+The receiver account must be active. Deactivating it also blocks SyncAPI access with its existing key.
+
 * Create user
 
         source virtualenv/indi-allsky/bin/activate
@@ -84,8 +86,11 @@ Navigate to the config URL in the local server and enable the SyncAPI and add th
 
 Save and restart
 
+### Synchronization mode
+`Live sync` is the default and sends new captures and generated media as they become ready. Choose `Archive sync` for an incremental archive run, started manually or by an optional receiver-availability schedule. See [Archive sync](SyncAPI-Archive) for setup, receiver requirements, speed limits and recovery behaviour.
+
 ### Enable multiple upload workers (optional)
-You may also enable multiple upload workers so that a single transfer does not halt all upload activities.  More workers requires more memory to support the additional processes.  2GB of memory is recommended for additional workers.
+You may also enable multiple upload workers so that a single transfer does not halt all upload activities.  More workers requires more memory to support the additional processes.  2GB of memory is recommended for additional workers. These workers handle `Live sync` uploads; an `Archive sync` run uses one archive worker.
 
 
 ## Timestamps and Timezones
@@ -144,8 +149,8 @@ Normally, in a REST service, data is added using a JSON request, however in orde
 | PANORAMA_IMAGE   | sync/v1/panoramaimage   |      |
 | PANORAMA_VIDEO   | sync/v1/panoramavideo   |      |
 | THUMBNAIL        | sync/v1/thumbnail       |      |
-| RAW_IMAGE        | sync/v1/rawimage        | not currently used |
-| FITS_IMAGE       | sync/v1/fitsimage       | not currently used |
+| RAW_IMAGE        | sync/v1/rawimage        | optional in `Archive sync` mode |
+| FITS_IMAGE       | sync/v1/fitsimage       | optional in `Archive sync` mode |
 
 ## Methods
 * GET - returns file ID and URI
@@ -153,3 +158,4 @@ Normally, in a REST service, data is added using a JSON request, however in orde
 * PUT - upload and add/overwrite file
 * DELETE - delete file
 
+Archive sync uses `POST` on each endpoint's `/lookup` path (for example, `sync/v1/image/lookup`) for authenticated checks without uploading or changing media. This avoids `GET` request bodies that some proxies reject. `sync/v1/camera/lookup` checks receiver readiness; media lookups compare file size and SHA-256. Update both installations to use these endpoints.
