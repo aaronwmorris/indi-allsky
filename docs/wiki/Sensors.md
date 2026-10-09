@@ -23,6 +23,20 @@ pip install --upgrade rpi.lgpio
 Sensor values may be reported in either Celcius or Fahrenheit depending on the setting for `Temperature Display` on the Camera tab under configuration.
 
 ## Slots/Probes
+Sensor devices are configured alphabetically from **A through Z** on the Sensors
+tab. Only configured devices are shown initially. **Add sensor** reveals the
+next unused letter, pre-named `Sensor A`, `Sensor B`, and so on. Select its driver
+and save the configuration to enable it. **Remove** disables that device when
+the configuration is saved; it does not rename other devices.
+
+Existing A-F configuration keys, pin/address defaults, and reading assignments
+are preserved. Added devices use the same `TEMP_SENSOR` keys, for example
+`G_CLASSNAME`, `G_LABEL`, and `G_USER_VAR_SLOT`. There is no database migration.
+The editor suggests a free initial reading slot when a driver is selected.
+Device slots A-Z are distinct from the shared reading slots: readings still use
+slots 10-59, and multi-probe devices consume consecutive slots. Overlap and
+capacity checks apply to all 26 devices.
+
 Data is shared between the indi-allsky processes using a [multiprocessing Array](https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Array).  **Each sensor module supports a different number of sensor probes.**  Some sensors only support a single probe, others support multiple eg temperature, humidity, pressure, etc.  The code will populate multiple slots of data based on each sensor probe.
 
 **All data from probes are floating point values.**
