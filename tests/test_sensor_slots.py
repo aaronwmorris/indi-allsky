@@ -47,7 +47,8 @@ def sensor_form():
                   and isinstance(node.iter, ast.Name) and node.iter.id == 'SENSOR_LETTERS'
                   for name in (part.id for part in ast.walk(node) if isinstance(part, ast.Name))
                   if name.endswith('_validator')}
-    definitions = [node for node in source.body if isinstance(node, ast.FunctionDef) and node.name in validators]
+    definitions = [node for node in source.body if isinstance(node, ast.FunctionDef)
+                   and (node.name in validators or node.name == '_sensor_reading_count')]
     choices = {'TEMP_SENSOR__CLASSNAME_choices', 'SENSOR_USER_VAR_SLOT_choices', 'SENSOR_SLOT_choices'}
     attrs = [copy.deepcopy(node) for node in cls.body if (
         isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id in choices for target in node.targets)

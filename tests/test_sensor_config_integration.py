@@ -4,6 +4,7 @@ import ipaddress
 import json
 import logging
 import socket
+import sys
 from collections import OrderedDict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -187,6 +188,105 @@ def test_invalid_new_driver_does_not_create_saved_configuration(config_endpoint)
     payload['TEMP_SENSOR__Z_CLASSNAME'] = 'unknown'
     previous_id = Config().config_id
     response = client.post('/config', json=payload)
+    assert response.status_code == 400, response.get_json()
+    assert response.get_json()['TEMP_SENSOR__Z_CLASSNAME']
+    assert Config().config_id == previous_id
+
+
+@pytest.mark.parametrize('metadata', [
+    'absent', None, [], {}, {'name': 'Probe'},
+    {'name': 'Probe', 'count': None}, {'name': 'Probe', 'count': '1'},
+    {'name': 'Probe', 'count': 1.0}, {'name': 'Probe', 'count': True},
+    {'name': 'Probe', 'count': -1}, {'name': 'Probe', 'count': 10**9},
+    {'count': 1}, {'name': None, 'count': 1},
+])
+def test_malformed_driver_metadata_is_a_form_error_not_a_crash(config_endpoint, monkeypatch, metadata):
+    client, Config, _, _ = config_endpoint
+    payload = client.get('/config').get_json()
+
+    class Driver:
+        METADATA = metadata
+
+        @classmethod
+        def get_labels(cls, pin):
+            return ('Temperature',)
+
+    if metadata == 'absent':
+        monkeypatch.delattr(Driver, 'METADATA')
+    monkeypatch.setattr(sensors, 'kernel_temp_sensor_ds18x20_w1', Driver)
+    assert client.get('/config').status_code == 200
+    payload['TEMP_SENSOR__Z_CLASSNAME'] = 'kernel_temp_sensor_ds18x20_w1'
+    previous_id = Config().config_id
+    response = client.post('/config', json=payload)
+    assert response.status_code == 400, response.get_json()
+    assert any('metadata' in error.lower() for error in response.get_json()['TEMP_SENSOR__Z_CLASSNAME'])
+    assert Config().config_id == previous_id
+
+
+@pytest.mark.parametrize('count', [0, 1, 50])
+def test_valid_metadata_counts_preserve_existing_reading_capacity(config_endpoint, monkeypatch, count):
+    client, Config, _, _ = config_endpoint
+    payload = client.get('/config').get_json()
+
+    class Driver:
+        METADATA = {'name': 'Probe', 'count': count}
+
+        @classmethod
+        def get_labels(cls, pin):
+            return tuple('Reading ' + str(index) for index in range(count))
+
+    monkeypatch.setattr(sensors, 'kernel_temp_sensor_ds18x20_w1', Driver)
+    payload.update(TEMP_SENSOR__Z_CLASSNAME='kernel_temp_sensor_ds18x20_w1',
+                   TEMP_SENSOR__Z_USER_VAR_SLOT='sensor_user_10')
+    response = client.post('/config', json=payload)
+    assert response.status_code == 200, response.get_json()
+    assert Config().config['TEMP_SENSOR']['Z_CLASSNAME'] == 'kernel_temp_sensor_ds18x20_w1'
+
+
+def test_invalid_slot_is_rejected_before_malformed_metadata(config_endpoint, monkeypatch):
+    client, Config, _, _ = config_endpoint
+    payload = client.get('/config').get_json()
+    monkeypatch.setattr(sensors, 'kernel_temp_sensor_ds18x20_w1', SimpleNamespace(METADATA=None))
+    payload.update(TEMP_SENSOR__Z_CLASSNAME='kernel_temp_sensor_ds18x20_w1',
+                   TEMP_SENSOR__Z_USER_VAR_SLOT='sensor_user_60')
+    previous_id = Config().config_id
+    response = client.post('/config', json=payload)
+    assert response.status_code == 400, response.get_json()
+    assert response.get_json()['TEMP_SENSOR__Z_USER_VAR_SLOT']
+    assert Config().config_id == previous_id
+
+
+def test_metadata_error_is_not_obscured_by_gpio_setup(config_endpoint, monkeypatch):
+    client, _, _, _ = config_endpoint
+    payload = client.get('/config').get_json()
+    monkeypatch.setattr(sensors, 'blinka_temp_sensor_dht22', SimpleNamespace(METADATA=None))
+    monkeypatch.setitem(sys.modules, 'board', SimpleNamespace())
+    payload.update(TEMP_SENSOR__Z_CLASSNAME='blinka_temp_sensor_dht22', TEMP_SENSOR__Z_PIN_1='D5')
+    response = client.post('/config', json=payload)
+    assert response.status_code == 400, response.get_json()
+    assert any('metadata' in error.lower() for error in response.get_json()['TEMP_SENSOR__Z_CLASSNAME'])
+    assert 'TEMP_SENSOR__Z_PIN_1' not in response.get_json()
+
+
+@pytest.mark.parametrize('labels', [None, 'Temperature', (), (123,)])
+def test_bad_labels_in_saved_driver_configuration_leave_editor_accessible(config_endpoint, monkeypatch, labels):
+    client, Config, _, _ = config_endpoint
+
+    class Driver:
+        METADATA = {'name': 'Probe', 'count': 1}
+
+        @classmethod
+        def get_labels(cls, pin):
+            return labels
+
+    config = Config()
+    config.config['TEMP_SENSOR']['Z_CLASSNAME'] = 'kernel_temp_sensor_ds18x20_w1'
+    config.save('system', 'legacy sensor configuration')
+    monkeypatch.setattr(sensors, 'kernel_temp_sensor_ds18x20_w1', Driver)
+    response = client.get('/config')
+    assert response.status_code == 200
+    previous_id = Config().config_id
+    response = client.post('/config', json=response.get_json())
     assert response.status_code == 400, response.get_json()
     assert response.get_json()['TEMP_SENSOR__Z_CLASSNAME']
     assert Config().config_id == previous_id

@@ -3291,6 +3291,16 @@ def MANUAL_GPIO__CLASSNAME_validator(form, field):
         raise ValidationError('Invalid selection')
 
 
+def _sensor_reading_count(sensor_class):
+    metadata = getattr(sensor_class, 'METADATA', None)
+    if not isinstance(metadata, dict) or not isinstance(metadata.get('name'), str):
+        raise ValueError('Driver metadata must include a text name')
+    count = metadata.get('count')
+    if isinstance(count, bool) or not isinstance(count, int) or not 0 <= count <= 50:
+        raise ValueError('Driver reading count must be an integer between 0 and 50')
+    return count
+
+
 def TEMP_SENSOR__CLASSNAME_validator(form, field):
     sensors = list()
     for v in form.TEMP_SENSOR__CLASSNAME_choices.values():
@@ -5307,10 +5317,15 @@ class IndiAllskyConfigForm(FlaskForm):
 
         from ..devices import sensors as indi_allsky_sensors
 
-        self.sensor_counts = {
-            classname: getattr(indi_allsky_sensors, classname).METADATA['count']
-            for choices in self.TEMP_SENSOR__CLASSNAME_choices.values() for classname, label in choices if classname
-        }
+        self.sensor_counts = {}
+        for choices in self.TEMP_SENSOR__CLASSNAME_choices.values():
+            for classname, label in choices:
+                if not classname:
+                    continue
+                try:
+                    self.sensor_counts[classname] = _sensor_reading_count(getattr(indi_allsky_sensors, classname))
+                except (AttributeError, KeyError, TypeError, ValueError) as e:
+                    app.logger.error('Invalid sensor driver metadata (%s): %s', classname, str(e))
 
         data = kwargs['data']
 
@@ -5325,9 +5340,12 @@ class IndiAllskyConfigForm(FlaskForm):
                 continue
             try:
                 sensor_class = getattr(indi_allsky_sensors, classname)
+                count = _sensor_reading_count(sensor_class)
                 slot_index = constants.SENSOR_INDEX_MAP[str(data[prefix + 'USER_VAR_SLOT'])]
                 labels = sensor_class.get_labels(str(data[prefix + 'PIN_1']))
-                for x in range(sensor_class.METADATA['count']):
+                if not isinstance(labels, (tuple, list)) or len(labels) < count:
+                    raise ValueError('Driver labels must cover each reading')
+                for x in range(count):
                     try:
                         label_data = {
                             'index': slot_index + x,
@@ -5338,8 +5356,9 @@ class IndiAllskyConfigForm(FlaskForm):
                         self.SENSOR_SLOT_choices['User Sensors'][slot_index + x][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**label_data)
                     except IndexError:
                         app.logger.error('Not enough slots for sensor values')
-            except AttributeError:
-                app.logger.error('Unknown sensor class: %s', classname)
+            except (AttributeError, KeyError, TypeError, ValueError) as e:
+                self[prefix + 'CLASSNAME'].process_errors.append('Invalid sensor metadata: {0:s}'.format(str(e)))
+                app.logger.error('Invalid metadata for sensor %s (%s): %s', letter, classname, str(e))
 
 
         # Set system temp names
@@ -6266,12 +6285,18 @@ class IndiAllskyConfigForm(FlaskForm):
             slot = getattr(self, 'TEMP_SENSOR__' + letter + '_USER_VAR_SLOT')
             if not classname.data or classname.errors or slot.errors:
                 continue
-            sensor_class = getattr(indi_allsky_sensors, classname.data)
-            slot_index = constants.SENSOR_INDEX_MAP[slot.data]
+            try:
+                count = _sensor_reading_count(getattr(indi_allsky_sensors, classname.data))
+                slot_index = constants.SENSOR_INDEX_MAP[slot.data]
+            except (AttributeError, KeyError, TypeError, ValueError) as e:
+                classname.errors.append('Invalid sensor metadata: {0:s}'.format(str(e)))
+                app.logger.error('Invalid metadata for sensor %s (%s): %s', letter, classname.data, str(e))
+                result = False
+                continue
             check_sensor_slots.append({
                 'name': 'Sensor ' + letter,
                 'slot': slot,
-                'set': set(range(slot_index, slot_index + sensor_class.METADATA['count'])),
+                'set': set(range(slot_index, slot_index + count)),
             })
 
 
