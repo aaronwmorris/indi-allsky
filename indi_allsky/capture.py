@@ -2363,7 +2363,7 @@ class CaptureWorker(Process):
         import psutil
         from .devices import sensors as indi_allsky_sensors
 
-        from .sensor_slots import SENSOR_DEFAULTS
+        from .sensor_slots import SENSOR_DEFAULTS, sensor_reading_count
 
         settings = self.config.get('TEMP_SENSOR', {})
         for letter, defaults in SENSOR_DEFAULTS.items():
@@ -2372,9 +2372,12 @@ class CaptureWorker(Process):
                 continue
             try:
                 sensor_class = getattr(indi_allsky_sensors, classname)
-                sensor_index = constants.SENSOR_INDEX_MAP[settings.get(letter + '_USER_VAR_SLOT', defaults['USER_VAR_SLOT'])]
+                count = sensor_reading_count(sensor_class)
+                sensor_index = constants.SENSOR_INDEX_MAP[str(settings.get(letter + '_USER_VAR_SLOT', defaults['USER_VAR_SLOT']))]
                 labels = sensor_class.get_labels(settings.get(letter + '_PIN_1', ''))
-                for x in range(sensor_class.METADATA['count']):
+                if not isinstance(labels, (tuple, list)) or len(labels) < count:
+                    raise ValueError('Driver labels must cover each reading')
+                for x in range(count):
                     try:
                         label_data = {
                             'name': sensor_class.METADATA['name'],
@@ -2384,8 +2387,8 @@ class CaptureWorker(Process):
                         self.SENSOR_SLOTS[sensor_index + x][1] = settings.get(letter + '_TITLE_TEMPLATE', defaults['TITLE_TEMPLATE']).format(**label_data)
                     except IndexError:
                         logger.error('Not enough slots for sensor values')
-            except AttributeError:
-                logger.error('Unknown sensor class: %s', classname)
+            except (AttributeError, KeyError, TypeError, ValueError) as e:
+                logger.error('Error building labels for sensor %s (%s): %s', letter, classname, str(e))
 
 
         # Set system temp names
@@ -2407,4 +2410,3 @@ class CaptureWorker(Process):
 
         for x, label in enumerate(temp_label_list[:50]):  # limit to 50
             self.SENSOR_SLOTS[x + 80][1] = '{0:s}'.format(label)
-

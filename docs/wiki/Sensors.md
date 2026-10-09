@@ -45,6 +45,9 @@ Missing drivers and supported initialization failures are logged and fall back
 to a simulator at the configured slot, allowing other devices to initialize.
 Malformed driver metadata is logged and reported as a configuration field
 error rather than preventing the editor from loading.
+Capture also logs invalid metadata, slot keys, or label templates and continues
+labeling other devices and system temperatures. Zero-reading no-op simulators
+remain supported.
 
 Data is shared between the indi-allsky processes using a [multiprocessing Array](https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Array).  **Each sensor module supports a different number of sensor probes.**  Some sensors only support a single probe, others support multiple eg temperature, humidity, pressure, etc.  The code will populate multiple slots of data based on each sensor probe.
 

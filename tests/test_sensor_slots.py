@@ -48,7 +48,7 @@ def sensor_form():
                   for name in (part.id for part in ast.walk(node) if isinstance(part, ast.Name))
                   if name.endswith('_validator')}
     definitions = [node for node in source.body if isinstance(node, ast.FunctionDef)
-                   and (node.name in validators or node.name == '_sensor_reading_count')]
+                   and node.name in validators]
     choices = {'TEMP_SENSOR__CLASSNAME_choices', 'SENSOR_USER_VAR_SLOT_choices', 'SENSOR_SLOT_choices'}
     attrs = [copy.deepcopy(node) for node in cls.body if (
         isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id in choices for target in node.targets)
@@ -65,7 +65,8 @@ def sensor_form():
     cls.body = attrs + [validate]
     namespace = {'__package__': 'indi_allsky.flask', 'Form': Form, 'SelectField': SelectField,
                  'StringField': StringField, 'DataRequired': DataRequired, 'ValidationError': ValidationError,
-                 'constants': constants, 're': re, 'itertools': itertools, 'SENSOR_LETTERS': sensor_slots.SENSOR_LETTERS}
+                 'constants': constants, 're': re, 'itertools': itertools, 'SENSOR_LETTERS': sensor_slots.SENSOR_LETTERS,
+                 '_sensor_reading_count': sensor_slots.sensor_reading_count}
     execute(definitions + [cls], namespace)
     return namespace['IndiAllskyConfigForm']
 
@@ -208,6 +209,123 @@ def test_capture_and_named_labels_include_z(monkeypatch):
     assert label.startswith('Roof:')
     assert build_slot_label_map(config)[59]['name'] == label
     assert build_slot_label_map(config)[59]['key'].startswith('sensor_z_')
+
+
+@pytest.fixture
+def capture_labels(monkeypatch):
+    import psutil
+
+    monkeypatch.setattr(psutil, 'sensors_temperatures',
+                        lambda: {'cpu': [SimpleNamespace(label='CPU')]}, raising=False)
+    namespace = {'__package__': 'indi_allsky', 'constants': constants,
+                 'logger': logging.getLogger('indi_allsky')}
+    execute([method('indi_allsky/capture.py', 'update_sensor_slot_labels', 'CaptureWorker')], namespace)
+    cls = owner('indi_allsky/capture.py', 'CaptureWorker')
+    slots = next(node.value for node in cls.body if isinstance(node, ast.Assign)
+                 and any(isinstance(target, ast.Name) and target.id == 'SENSOR_SLOTS' for target in node.targets))
+
+    def update(settings):
+        worker = SimpleNamespace(config={'TEMP_SENSOR': settings}, SENSOR_SLOTS=ast.literal_eval(slots))
+        original = copy.deepcopy(worker.SENSOR_SLOTS)
+        namespace['update_sensor_slot_labels'](worker)
+        return worker.SENSOR_SLOTS, original
+
+    return update
+
+
+@pytest.mark.parametrize('slot', [10, '10', 'sensor_user_10'])
+def test_capture_preserves_legacy_slot_key_types(capture_labels, slot):
+    labels, _ = capture_labels({'G_CLASSNAME': 'sensor_data_generator', 'G_USER_VAR_SLOT': slot,
+                               'G_LABEL': 'Legacy', 'G_TITLE_TEMPLATE': '{label:s}: {probe:s}'})
+    assert labels[10][1] == 'Legacy: Add'
+
+
+@pytest.mark.parametrize('metadata', [
+    'absent', None, [], {}, {'name': 'Probe'}, {'count': 1},
+    {'name': None, 'count': 1}, {'name': 'Probe', 'count': None},
+    {'name': 'Probe', 'count': '1'}, {'name': 'Probe', 'count': 1.0},
+    {'name': 'Probe', 'count': True}, {'name': 'Probe', 'count': -1},
+    {'name': 'Probe', 'count': 51}, {'name': 'Probe', 'count': 10**9},
+])
+def test_capture_logs_bad_metadata_and_continues(capture_labels, monkeypatch, caplog, metadata):
+    class Driver:
+        METADATA = metadata
+
+        @classmethod
+        def get_labels(cls, pin):
+            return ('Temperature',)
+
+    if metadata == 'absent':
+        monkeypatch.delattr(Driver, 'METADATA')
+    monkeypatch.setattr(sensors, 'kernel_temp_sensor_ds18x20_w1', Driver)
+    with caplog.at_level(logging.ERROR, logger='indi_allsky'):
+        labels, original = capture_labels({
+            'G_CLASSNAME': 'kernel_temp_sensor_ds18x20_w1', 'G_USER_VAR_SLOT': 'sensor_user_10',
+            'H_CLASSNAME': 'sensor_data_generator', 'H_USER_VAR_SLOT': 'sensor_user_40',
+            'H_LABEL': 'Working', 'H_TITLE_TEMPLATE': '{label:s}: {probe:s}',
+        })
+    assert labels[10:40] == original[10:40]
+    assert labels[40][1] == 'Working: Add'
+    assert labels[80][1] == 'cpu/CPU'
+    assert 'sensor G' in caplog.text
+    assert 'kernel_temp_sensor_ds18x20_w1' in caplog.text
+
+
+@pytest.mark.parametrize('bad_labels', [None, 'Temperature', (), (123,)])
+def test_capture_logs_bad_labels(capture_labels, monkeypatch, caplog, bad_labels):
+    class Driver:
+        METADATA = {'name': 'Probe', 'count': 1}
+
+        @classmethod
+        def get_labels(cls, pin):
+            return bad_labels
+
+    monkeypatch.setattr(sensors, 'kernel_temp_sensor_ds18x20_w1', Driver)
+    with caplog.at_level(logging.ERROR, logger='indi_allsky'):
+        labels, original = capture_labels({'Z_CLASSNAME': 'kernel_temp_sensor_ds18x20_w1',
+                                          'Z_USER_VAR_SLOT': 'sensor_user_59'})
+    assert labels[59] == original[59]
+    assert labels[80][1] == 'cpu/CPU'
+    assert 'sensor Z' in caplog.text
+
+
+@pytest.mark.parametrize('settings', [
+    {'Z_CLASSNAME': 'removed_driver'},
+    {'Z_USER_VAR_SLOT': 'invalid'},
+    {'Z_USER_VAR_SLOT': None},
+    {'Z_TITLE_TEMPLATE': '{missing}'},
+    {'Z_TITLE_TEMPLATE': '{probe:z}'},
+])
+def test_capture_logs_invalid_configuration(capture_labels, caplog, settings):
+    with caplog.at_level(logging.ERROR, logger='indi_allsky'):
+        labels, original = capture_labels({
+            'Z_CLASSNAME': 'sensor_data_generator', 'Z_USER_VAR_SLOT': 'sensor_user_10', **settings})
+    assert labels[:60] == original[:60]
+    assert labels[80][1] == 'cpu/CPU'
+    assert 'sensor Z' in caplog.text
+
+
+def test_capture_zero_reading_simulator_keeps_labels_unchanged(capture_labels):
+    labels, original = capture_labels({'Z_CLASSNAME': 'sensor_simulator', 'Z_USER_VAR_SLOT': 'sensor_user_59'})
+    assert labels[:80] == original[:80]
+    assert labels[80][1] == 'cpu/CPU'
+
+
+@pytest.mark.parametrize('count', [1, 50])
+def test_capture_accepts_valid_reading_count_limits(capture_labels, monkeypatch, count):
+    class Driver:
+        METADATA = {'name': 'Probe', 'count': count}
+
+        @classmethod
+        def get_labels(cls, pin):
+            return tuple('Reading ' + str(index) for index in range(count))
+
+    monkeypatch.setattr(sensors, 'kernel_temp_sensor_ds18x20_w1', Driver)
+    labels, original = capture_labels({'G_CLASSNAME': 'kernel_temp_sensor_ds18x20_w1',
+                                      'G_USER_VAR_SLOT': 'sensor_user_10', 'G_TITLE_TEMPLATE': '{probe:s}'})
+    assert [label for _, label in labels[10:10 + count]] == list(Driver.get_labels(''))
+    assert labels[:10] == original[:10]
+    assert labels[10 + count:80] == original[10 + count:80]
 
 
 def test_ajax_save_uses_validated_values_and_preserves_omitted_slots(sensor_form):

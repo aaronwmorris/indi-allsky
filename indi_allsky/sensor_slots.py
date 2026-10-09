@@ -19,6 +19,16 @@ SENSOR_DEFAULTS = {
 }
 
 
+def sensor_reading_count(sensor_class):
+    metadata = getattr(sensor_class, 'METADATA', None)
+    if not isinstance(metadata, dict) or not isinstance(metadata.get('name'), str):
+        raise ValueError('Driver metadata must include a text name')
+    count = metadata.get('count')
+    if isinstance(count, bool) or not isinstance(count, int) or not 0 <= count <= 50:
+        raise ValueError('Driver reading count must be an integer between 0 and 50')
+    return count
+
+
 def sensor_form_data(config):
     settings = config.get('TEMP_SENSOR', {})
     return {

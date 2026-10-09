@@ -3291,16 +3291,6 @@ def MANUAL_GPIO__CLASSNAME_validator(form, field):
         raise ValidationError('Invalid selection')
 
 
-def _sensor_reading_count(sensor_class):
-    metadata = getattr(sensor_class, 'METADATA', None)
-    if not isinstance(metadata, dict) or not isinstance(metadata.get('name'), str):
-        raise ValueError('Driver metadata must include a text name')
-    count = metadata.get('count')
-    if isinstance(count, bool) or not isinstance(count, int) or not 0 <= count <= 50:
-        raise ValueError('Driver reading count must be an integer between 0 and 50')
-    return count
-
-
 def TEMP_SENSOR__CLASSNAME_validator(form, field):
     sensors = list()
     for v in form.TEMP_SENSOR__CLASSNAME_choices.values():
@@ -3718,7 +3708,7 @@ def INDI_CONFIG_DAY_validator(*args):
     INDI_CONFIG_DEFAULTS_validator(*args)
 
 
-from ..sensor_slots import SENSOR_LETTERS, sensor_form_data
+from ..sensor_slots import SENSOR_LETTERS, sensor_form_data, sensor_reading_count as _sensor_reading_count
 
 
 class IndiAllskyConfigForm(FlaskForm):
