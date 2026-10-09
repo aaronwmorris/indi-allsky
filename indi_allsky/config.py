@@ -890,24 +890,15 @@ class IndiAllSkyConfigBase(object):
             "FC37_ACTIVE_LOW"        : True,
         },
         "CHARTS" : {
-            "CUSTOM_SLOT_1"          : "sensor_user_10",
-            "CUSTOM_SLOT_1_MIN"      : 0.0,
-            "CUSTOM_SLOT_2"          : "sensor_user_11",
-            "CUSTOM_SLOT_2_MIN"      : 0.0,
-            "CUSTOM_SLOT_3"          : "sensor_user_12",
-            "CUSTOM_SLOT_3_MIN"      : 0.0,
-            "CUSTOM_SLOT_4"          : "sensor_user_13",
-            "CUSTOM_SLOT_4_MIN"      : 0.0,
-            "CUSTOM_SLOT_5"          : "sensor_user_14",
-            "CUSTOM_SLOT_5_MIN"      : 0.0,
-            "CUSTOM_SLOT_6"          : "sensor_user_15",
-            "CUSTOM_SLOT_6_MIN"      : 0.0,
-            "CUSTOM_SLOT_7"          : "sensor_user_16",
-            "CUSTOM_SLOT_7_MIN"      : 0.0,
-            "CUSTOM_SLOT_8"          : "sensor_user_17",
-            "CUSTOM_SLOT_8_MIN"      : 0.0,
-            "CUSTOM_SLOT_9"          : "sensor_user_18",
-            "CUSTOM_SLOT_9_MIN"      : 0.0,
+            "CUSTOM"                : None,
+            "VISIBLE_IDS"           : None,
+            "OVERLAY_IDS"           : [],
+            "SAVED_IMAGE_IDS"       : [],
+            "OVERLAY_HISTORY_SECONDS" : 900,
+            "SAVED_IMAGE_HISTORY_SECONDS" : None,
+            "OVERLAY_TOP"           : 120,
+            "OVERLAY_WIDTH"         : 260,
+            "OVERLAY_OPACITY"       : 30,
         },
         "ADSB" : {
             "ENABLE"                 : False,
@@ -942,6 +933,8 @@ class IndiAllSkyConfigBase(object):
 class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
     def __init__(self):
+        from .charts import migrate_chart_configuration
+
         self._config = self.base_config.copy()  # populate initial values
 
         # fetch latest config
@@ -954,6 +947,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         self._config.update(config_entry.data)
 
         self._config = self._decrypt_passwords()
+        self._config['CHARTS'] = migrate_chart_configuration(self._config)
         self._image_folder = Path('/var/www/html/allsky/images')
 
 
@@ -1227,12 +1221,15 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
 
     def save(self, username, note):
+        from .charts import migrate_chart_configuration
+
         user_entry = IndiAllSkyDbUserTable.query\
             .filter(IndiAllSkyDbUserTable.username == str(username))\
             .one()
 
 
         self._validateConfig()
+        self.config['CHARTS'] = migrate_chart_configuration(self.config)
 
 
         config, encrypted = self._encryptPasswords()
@@ -1275,6 +1272,10 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                         if (key, key_l2) == ('VIRTUALSKY', 'CALIBRATION'):
                             # An absent correction is null; a learned model is an object.
                             valid_types = (dict, type(None))
+                        elif key == 'CHARTS' and key_l2 in ('CUSTOM', 'VISIBLE_IDS'):
+                            valid_types = (list, type(None))
+                        elif key == 'CHARTS' and key_l2 == 'SAVED_IMAGE_IDS':
+                            valid_types = list
                         elif isinstance(self.config[key][key_l2], int):
                             # jq will convert floats that end in .0 to ints
                             valid_types = (int, float)

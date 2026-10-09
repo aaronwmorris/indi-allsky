@@ -1255,6 +1255,17 @@ def IMAGE_STRETCH__MODE3_HIGHLIGHTS_validator(form, field):
         raise ValidationError('Value must be 1.0 or less')
 
 
+def CHARTS__CONFIG_validator(form, field):
+    if not field.data:
+        return
+    from ..charts import validate_chart_configuration
+
+    try:
+        validate_chart_configuration(json.loads(field.data))
+    except (ValueError, TypeError) as error:
+        raise ValidationError(str(error))
+
+
 def IMAGE_ROTATE_validator(form, field):
     import cv2
 
@@ -3379,24 +3390,6 @@ def SENSOR_SLOT_validator(form, field):
         raise ValidationError('Invalid selection')
 
 
-def CUSTOM_CHART_validator(form, field):
-    slots = list()
-    for v in form.CUSTOM_CHART_choices.values():
-        slots.extend(list(zip(*v))[0])
-
-    for v in form.SENSOR_SLOT_choices.values():
-        slots.extend(list(zip(*v))[0])
-
-
-    if field.data not in slots:
-        raise ValidationError('Invalid selection')
-
-
-def CUSTOM_CHART_MIN_validator(form, field):
-    if not isinstance(field.data, (int, float)):
-        raise ValidationError('Please enter a valid number')
-
-
 def SENSOR_USER_VAR_SLOT_validator(form, field):
     if field.data not in list(zip(*form.SENSOR_USER_VAR_SLOT_choices))[0]:
         raise ValidationError('Invalid selection')
@@ -3705,6 +3698,11 @@ def INDI_CONFIG_DEFAULTS_validator(form, field):
 
 def INDI_CONFIG_DAY_validator(*args):
     INDI_CONFIG_DEFAULTS_validator(*args)
+
+
+class IndiAllskyChartConfigForm(FlaskForm):
+    CHARTS__CONFIG = HiddenField(validators=[DataRequired(), CHARTS__CONFIG_validator])
+    RELOAD_ON_SAVE = BooleanField('Reload on Save')
 
 
 class IndiAllskyConfigForm(FlaskForm):
@@ -5278,24 +5276,6 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__AS3935_NOISE_LEVEL     = IntegerField('AS3935 Noise Level Threshold', validators=[DataRequired(), TEMP_SENSOR__AS3935_NOISE_LEVEL_validator])
     TEMP_SENSOR__AS3935_SPIKE_REJECTION = IntegerField('AS3935 Spike Rejection', validators=[DataRequired(), TEMP_SENSOR__AS3935_SPIKE_REJECTION_validator])
     TEMP_SENSOR__LUX_MAGNITUDE_OFFSET   = FloatField('Lux Magnitude Offset', validators=[SQM_MAGNITUDE_OFFSET_validator])
-    CHARTS__CUSTOM_SLOT_1            = SelectField('Extra Chart Slot 1', choices=[], validators=[CUSTOM_CHART_validator])
-    CHARTS__CUSTOM_SLOT_1_MIN        = FloatField('Chart 1 Minimum', validators=[CUSTOM_CHART_MIN_validator])
-    CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=[], validators=[CUSTOM_CHART_validator])
-    CHARTS__CUSTOM_SLOT_2_MIN        = FloatField('Chart 2 Minimum', validators=[CUSTOM_CHART_MIN_validator])
-    CHARTS__CUSTOM_SLOT_3            = SelectField('Extra Chart Slot 3', choices=[], validators=[CUSTOM_CHART_validator])
-    CHARTS__CUSTOM_SLOT_3_MIN        = FloatField('Chart 3 Minimum', validators=[CUSTOM_CHART_MIN_validator])
-    CHARTS__CUSTOM_SLOT_4            = SelectField('Extra Chart Slot 4', choices=[], validators=[CUSTOM_CHART_validator])
-    CHARTS__CUSTOM_SLOT_4_MIN        = FloatField('Chart 4 Minimum', validators=[CUSTOM_CHART_MIN_validator])
-    CHARTS__CUSTOM_SLOT_5            = SelectField('Extra Chart Slot 5', choices=[], validators=[CUSTOM_CHART_validator])
-    CHARTS__CUSTOM_SLOT_5_MIN        = FloatField('Chart 5 Minimum', validators=[CUSTOM_CHART_MIN_validator])
-    CHARTS__CUSTOM_SLOT_6            = SelectField('Extra Chart Slot 6', choices=[], validators=[CUSTOM_CHART_validator])
-    CHARTS__CUSTOM_SLOT_6_MIN        = FloatField('Chart 6 Minimum', validators=[CUSTOM_CHART_MIN_validator])
-    CHARTS__CUSTOM_SLOT_7            = SelectField('Extra Chart Slot 7', choices=[], validators=[CUSTOM_CHART_validator])
-    CHARTS__CUSTOM_SLOT_7_MIN        = FloatField('Chart 7 Minimum', validators=[CUSTOM_CHART_MIN_validator])
-    CHARTS__CUSTOM_SLOT_8            = SelectField('Extra Chart Slot 8', choices=[], validators=[CUSTOM_CHART_validator])
-    CHARTS__CUSTOM_SLOT_8_MIN        = FloatField('Chart 8 Minimum', validators=[CUSTOM_CHART_MIN_validator])
-    CHARTS__CUSTOM_SLOT_9            = SelectField('Extra Chart Slot 9', choices=[], validators=[CUSTOM_CHART_validator])
-    CHARTS__CUSTOM_SLOT_9_MIN        = FloatField('Chart 9 Minimum', validators=[CUSTOM_CHART_MIN_validator])
     ADSB__ENABLE                     = BooleanField('Enable ADS-B Tracking')
     ADSB__DUMP1090_URL               = StringField('Dump1090 URL', validators=[ADSB__DUMP1090_URL_validator])
     ADSB__USERNAME                   = StringField('Username', validators=[ADSB__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
@@ -5526,17 +5506,6 @@ class IndiAllskyConfigForm(FlaskForm):
         self.DEW_HEATER__DEWPOINT_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
         self.FAN__TEMP_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
 
-        # Merge dictionaries
-        self.CUSTOM_CHART_choices.update(self.SENSOR_SLOT_choices)
-        self.CHARTS__CUSTOM_SLOT_1.choices = self.CUSTOM_CHART_choices
-        self.CHARTS__CUSTOM_SLOT_2.choices = self.CUSTOM_CHART_choices
-        self.CHARTS__CUSTOM_SLOT_3.choices = self.CUSTOM_CHART_choices
-        self.CHARTS__CUSTOM_SLOT_4.choices = self.CUSTOM_CHART_choices
-        self.CHARTS__CUSTOM_SLOT_5.choices = self.CUSTOM_CHART_choices
-        self.CHARTS__CUSTOM_SLOT_6.choices = self.CUSTOM_CHART_choices
-        self.CHARTS__CUSTOM_SLOT_7.choices = self.CUSTOM_CHART_choices
-        self.CHARTS__CUSTOM_SLOT_8.choices = self.CUSTOM_CHART_choices
-        self.CHARTS__CUSTOM_SLOT_9.choices = self.CUSTOM_CHART_choices
 
 
     def validate(self):

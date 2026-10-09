@@ -31,6 +31,7 @@ from fractions import Fraction
 
 from . import constants
 from . import asi676mc
+from .charts import render_capture_charts
 
 from .processing import ImageProcessor
 from .panorama import panoramaSourceCircleClipped
@@ -784,6 +785,11 @@ class ImageWorker(Process):
 
         self.image_processor.label_image(adsb_aircraft_list=self.adsb_aircraft_list, custom_hook_data=custom_hook_data)
 
+        self.image_processor.image = render_capture_charts(
+            self.image_processor, self.config, i_ref, camera.data, self.sensors_temp_av,
+            self.sensors_user_av, IndiAllSkyDbImageTable, self.image_processor.chart_label_bounds,
+        )
+
 
         processing_elapsed_s = time.time() - processing_start
         logger.info('Image processed in %0.4f s', processing_elapsed_s)
@@ -904,6 +910,10 @@ class ImageWorker(Process):
 
             for i in range(100, 110):
                 image_add_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
+
+
+            if self.image_processor.chart_label_bounds:
+                image_add_data['chart_label_bounds'] = [list(bound) for bound in self.image_processor.chart_label_bounds]
 
 
             if self.adsb_aircraft_list:
@@ -3126,4 +3136,3 @@ class ImageWorker(Process):
         with self.sensors_user_av.get_lock():
             self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM_MAG] = float(mag_sqm)
             self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM_ADU] = float(raw_adu)
-
