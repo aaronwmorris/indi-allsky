@@ -449,6 +449,7 @@ with app.app_context():
             chmod 775 "$WORKING_DIR"
             chmod 775 "$WORKING_DIR/indi-allsky"
             chmod 775 "$WORKING_DIR/indiserver"
+            chown -R "${ALLSKY_USER}":www-data "$WORKING_DIR/gunicorn" 2>/dev/null || true
             chmod 775 "$WORKING_DIR/gunicorn"
         fi
 
