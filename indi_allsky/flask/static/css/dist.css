@@ -8783,12 +8783,10 @@ calendar-select-month::part(option):disabled, calendar-select-year::part(option)
 }
 @keyframes radio {
   0% {
-    opacity: 0;
+    padding: 5px;
   }
-}
-@keyframes progress {
   50% {
-    background-position-x: -115%;
+    padding: 3px;
   }
 }
 @keyframes rating {

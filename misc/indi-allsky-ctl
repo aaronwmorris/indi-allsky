@@ -175,6 +175,10 @@ fix_permissions() {
     if [ -d "$VARLIB_FOLDER" ]; then
         chmod 775 "$VARLIB_FOLDER"
         chown -R "${ALLSKY_USER}:${ALLSKY_GROUP}" "$VARLIB_FOLDER" 2>/dev/null || true
+        if [ -d "${VARLIB_FOLDER}/working/gunicorn" ]; then
+            chown -R "${ALLSKY_USER}:${WWW_GROUP}" "${VARLIB_FOLDER}/working/gunicorn" 2>/dev/null || true
+            chmod 775 "${VARLIB_FOLDER}/working/gunicorn" 2>/dev/null || true
+        fi
     fi
 
     echo "indi-allsky: Directory permissions and ownership successfully restored."
