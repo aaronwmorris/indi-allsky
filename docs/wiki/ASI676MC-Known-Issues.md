@@ -84,12 +84,28 @@ offers a camera selector.
 
 Choose **Use saved FITS** to search the camera's retained FITS files. Leave
 the target at **20 purple-frame groups** for a first attempt. The tool finds
-suitable purple frames and nearby normal references automatically and reports
-missing or unsuitable evidence. Seven usable groups is the minimum.
+suitable purple frames and nearby normal references automatically. The target
+is the desired number of groups used in the result; the tool can check more
+groups from the retained archive to find suitable evidence. Seven usable
+groups is the minimum.
 
-Wait for analysis to finish. The progress view shows the current stage, and
-you can cancel if needed. Searching and calibration leave the original saved
-FITS files untouched.
+The search prefers complete normal/purple/normal groups, then newer captures.
+Groups with only one compatible normal reference remain eligible when needed
+to reach the target or provide required exposure or highlight evidence. Every
+selected group still has to pass validation.
+
+Missing or unsuitable groups are set aside and replaced when possible. If
+recent frames lack useful bright areas, the search can use older groups or
+combine evidence from different batches. It can continue beyond the three
+initial reserve groups. Every accepted group must still pass the same quality
+checks; unsafe overall fits and changes to normal frames still stop calibration.
+
+Wait for analysis to finish. **Progress is an estimate:** the bar may move
+backwards and stages may repeat when additional groups are checked. The
+**Checking more saved frames** stage explains whether the tool needs different
+groups or more useful bright areas. This is normal; it does not mean the run
+has restarted or its quality checks have been relaxed. You can still cancel.
+Searching and calibration leave the original saved FITS files untouched.
 
 ### Upload a FITS collection
 
@@ -105,7 +121,10 @@ remain in their original location.
 ## Understand the result
 
 Analysis does not change your settings automatically. Use **Download details**
-to keep a report of the result and any warnings.
+to keep a report of the result and any warnings. Saved-FITS reports distinguish
+the initial reserves from additional groups selected later and list the groups
+set aside with their reasons. A successful result may use fewer groups than
+requested if no further suitable groups are available, but never fewer than seven.
 
 | Result | What to do |
 | --- | --- |
@@ -113,8 +132,16 @@ to keep a report of the result and any warnings.
 | **Detection settings need adjustment** | This is a preliminary result, not a repair calibration. Check that the likely-purple files show the actual camera failure, using the previews when available and the filenames and capture times. Confirm this, choose **Save detection settings**, then **Start over** and run calibration again. Keep **Detect and exclude only** on. |
 | **Analysis failed** | Read the retained explanation, correct the problem or collect more suitable frames, then choose **Try again**. No calibration settings were applied. |
 
-If the tool recommends more complete normal/purple/normal groups or more varied
-evidence, collect those before relying on the result. Do not change thresholds
+A successful calibration can include groups with a normal reference on only
+one side. The other reference may be unavailable (not saved or no longer
+retained) or unusable (for example, different exposure or gain); the coverage
+count alone does not distinguish these causes. If diagnostic and preceding
+FITS saving are already enabled, no capture-setting change is needed. Those
+options cannot guarantee complete groups or fill gaps around older events.
+For manual uploads, include compatible normal FITS from both sides when available.
+
+If a separate detection-threshold warning recommends more varied evidence,
+collect that before changing detection thresholds. Do not change thresholds
 just to make an unsuccessful analysis pass.
 
 ## Enable repair and check the results
@@ -164,6 +191,12 @@ Untouched diagnostic FITS are suitable. Standard FITS from successfully repaired
 frames contain the corrected image and cannot serve as purple originals.
 **Save FITS Pre-Calibration** refers to dark-frame calibration; purple-frame
 handling still runs before that save point.
+
+**Does `bad` in a diagnostic filename mean calibration should skip it?**
+
+No. It identifies an untouched purple-frame input, which calibration needs.
+Suitability is decided from its data and compatible normal references. Already
+repaired FITS remain unsuitable as purple originals.
 
 **Does each camera get its own calibration?**
 

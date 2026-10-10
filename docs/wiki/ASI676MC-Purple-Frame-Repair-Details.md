@@ -183,6 +183,13 @@ the database FITS rather than retaining a duplicate byte string. The cache
 advances after each normal frame and is discarded after a purple, skipped, or
 incompatible frame.
 
+Both saving options are conditional: an exposure or gain change, consecutive
+purple frames, or a worker restart can leave a group without a usable normal
+on one side. Calibration also requires references within the configured time
+gap (90 seconds by default). Periodic FITS saving every ten minutes does not
+guarantee a replacement within that gap. Enabling the options does not fill
+gaps around older events.
+
 Each diagnostic FITS is a normal database-managed FITS asset with role
 metadata:
 
@@ -259,14 +266,31 @@ that the user selected manually.
 
 Choose a target of 7 to 30 purple-frame groups. The background job enumerates
 the complete configured FITS retention period, inspects every eligible row,
-and stages up to the requested number of usable groups. If fewer than seven
+and stages an initial working selection plus up to three reserve groups. The
+target controls how many groups the result should use, not how many candidates
+the search may inspect. If fewer than seven
 groups exist, it reports that the retained archive was exhausted. Progress
 covers catalog enumeration, current-detector checks, missed-purple population
-discovery, fitting, and validation. **Cancel search** remains available during
-inspection and staging.
+discovery, fitting, and validation. The cancel button remains available during
+inspection, staging, and analysis.
+
+Selection prefers complete normal/purple/normal groups over newer one-sided
+groups, while preserving the required exposure and normal-reference diversity.
+One-sided groups remain eligible when needed. During highlight recovery,
+finding and retaining useful highlight evidence takes priority over this
+preference. A complete group must still pass every sampling and repair check;
+having two references alone does not make it usable.
+
+The progress percentage is an estimate based on the current stage. Replacing
+groups or finding additional highlight evidence repeats fitting and validation,
+so the bar can move backwards or revisit a stage. The page explains this next
+to the bar and shows **Checking more saved frames** while preparing additional
+evidence. A repeated stage is normal and does not relax the acceptance checks.
 
 Existing diagnostic roles and purple-frame database flags provide context but
-do not decide admission or inferred populations. This allows discovery to find
+do not decide admission or inferred populations. In particular, `bad` in a
+diagnostic filename identifies the original purple frame; it is not a reason
+to exclude that file from calibration. This allows discovery to find
 failures outside the configured detector thresholds. Untouched diagnostic RAW
 FITS and standard FITS from **Detect and exclude only** remain eligible and can
 be mixed as pairs or triplets. A standard FITS associated with a successfully
@@ -289,18 +313,37 @@ silently shortening the search horizon.
 The 200-FITS and 2.5-GiB limits apply to the final purple/reference evidence
 set, not to catalog discovery. Only selected evidence enters the private
 session. The saved-FITS path stages up to three groups beyond the requested
-count as validation reserves. If a group passes the main repair checks, but the
-complete repair is less than ten percent better than a simple colour-only
-correction, that inconclusive group is set aside, a reserve is promoted, and the
-fit is repeated. The complete repair must still outperform colour-only
-correction; otherwise calibration fails. The group count is reduced only when
-no reserve remains, and never below the seven-group minimum.
+count as validation reserves. Unreadable groups, groups unable to supply needed
+stable gain samples, and groups failing an individual repair check are set aside.
+This includes a complete repair less than ten percent better than a simple
+colour-only correction, even with zero or negative improvement.
+The worker refills the bounded evidence set from the remaining matched groups
+in the retained catalog, preserving exposure and normal-reference diversity,
+and repeats the fit and validation. Three reserves limit the initial batch, not
+the total number of replacements. Every accepted group must still pass all
+repair checks. Unsafe changes to normal frames and unsafe overall gain or
+highlight fits still stop calibration; replacement does not relax those checks.
+If the selected groups lack enough stable clipped highlights, the worker searches
+older groups and can combine useful highlight evidence across batches. Dimmer
+groups remain eligible for the other evidence requirements. Sample minima and
+highlight-fit quality limits remain unchanged; a repeated unsuccessful selection
+ends the search instead of retrying indefinitely.
+The group count is reduced only when no further suitable groups are available,
+and never below the seven-group minimum. Success and failure reports record the
+candidate, selected, rejected, replacement, and remaining group counts.
+The initial staging and reserve counts are labelled separately from later
+replacement selections. Result-page notes summarize recovery; **Download
+details** lists each rejected group once, with its reason and any comparison
+errors together. These errors measure the difference from the nearby normal
+reference; lower values are better. A percentage reduction or increase is
+relative to the error after colour-only correction. Normal-frame
+safety failures and unsafe overall fits may still stop the run before every
+catalog candidate has been fitted.
 
 A hard link keeps staged evidence stable without a second copy; where hard
 links are unavailable, the tool makes a private copy. It never uses a symbolic
 link whose target could change after selection. If a selected source disappears
-during staging, that file is skipped and the remaining evidence is still
-evaluated.
+during staging, its group is skipped and another is selected from the catalog.
 
 Cancellation removes only private links, copies, or partial copies. Source
 FITS pixels and headers are never changed. The only durable discovery update
@@ -421,10 +464,18 @@ purple and normal counts, pair/triplet and exposure coverage, signature ranges,
 unused or rejected evidence, warnings, and whether the result effectively
 matches the configuration within a small tolerance.
 
-Two-sided evidence is considered complete enough when at least 90 percent of
-matched purple frames belong to normal/purple/normal triplets. Below that
-guideline, the result recommends gathering more complete groups. Reused normal
-references remain a separate confidence warning.
+The result shows a coverage note when fewer than 90 percent of matched purple
+frames belong to normal/purple/normal triplets. This is a reporting guideline,
+not an acceptance threshold. The note explains that a second reference may be
+unavailable (not saved or no longer retained) or unusable (for example,
+different exposure or gain). The coverage count does not identify the cause
+for individual groups.
+This is an evidence-coverage note, not a requirement to collect more data for
+an already valid calibration. If diagnostic and preceding FITS saving are
+already enabled, no capture-setting change is needed; complete groups cannot
+be guaranteed. For manual uploads, include compatible normal FITS from both
+sides when available. Reused normal references remain a separate confidence
+warning. All calibration acceptance checks still apply.
 
 A calibration remains successful when a configured detection threshold sits
 within fifteen percent of either edge of its observed safe gap. A dedicated
@@ -604,19 +655,26 @@ warning.
 | `indi_allsky/flask/templates/asi676mc_calibration.html` | Calibration setup/progress/result transitions, population previews, cancellation, reports, reset, and browser capability checks. |
 | `indi_allsky/flask/templates/gallery.html` | Optional repair/exclusion badges, outlines, and status-specific filtering. |
 | `indi_allsky/flask/templates/imageviewer.html` | Diagnostic preceding/purple/following FITS downloads. |
-| `testing/image/test_asi676mc_repair.py` | Detection, repair, validation, metadata, and diagnostic helper coverage. |
-| `testing/image/test_asi676mc_calibration_engine.py` | FITS inspection, matching, fitting, evidence policy, and shared-runtime coverage. |
-| `testing/image/test_asi676mc_web_calibration.py` | Sessions, cleanup, discovery, guidance, reports, and web workflow coverage. |
+| `tests/image/test_asi676mc_repair.py` | Detection, repair, validation, metadata, and diagnostic helper coverage. |
+| `tests/core/test_asi676mc_calibration_engine.py` | FITS inspection, matching, fitting, evidence policy, and shared-runtime coverage. |
+| `tests/flask/views/test_asi676mc_web_calibration.py` | Sessions, cleanup, discovery, guidance, reports, and web workflow coverage. |
+| `tests/image/test_asi676mc_calibration_backlog.py` | Saved-FITS archive replacement, exhaustion, and safety checks. |
+| `tests/flask/views/test_asi676mc_calibration_progress.py` | Runs the adjacent JavaScript progress and retry tests through pytest. |
 
 Activate the project's Python environment, then run the focused tests from
 the repository root:
 
 ```text
 python -m pytest \
-    testing/image/test_asi676mc_repair.py \
-    testing/image/test_asi676mc_calibration_engine.py \
-    testing/image/test_asi676mc_web_calibration.py
+    tests/image/test_asi676mc_repair.py \
+    tests/core/test_asi676mc_calibration_engine.py \
+    tests/flask/views/test_asi676mc_web_calibration.py \
+    tests/image/test_asi676mc_calibration_backlog.py \
+    tests/flask/views/test_asi676mc_calibration_progress.py
 ```
+
+These tests are also discovered by `npm test`; the web and progress tests are
+included in `npm run test:flask`. All use the shared pytest suite.
 
 When changing correction math, update `indi_allsky/asi676mc.py` first. The
 calibration engine must continue to call that implementation for classification

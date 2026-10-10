@@ -382,8 +382,11 @@
                 </div>
                 <div class="calibration-card-body tw:card-body tw:p-6 tw:pt-3">
                     <p class="calibration-help">
-                        Search the FITS already saved for this camera. The tool
-                        finds suitable purple and normal frames automatically.
+                        Search the FITS retained for this camera. The tool
+                        selects suitable purple and normal frame groups and
+                        tries additional groups when needed.
+                        Complete normal/purple/normal groups are preferred;
+                        groups with one normal reference remain eligible when needed.
                         Your saved FITS are not changed.
                     </p>
                     <div class="tw:mb-4">
@@ -393,8 +396,9 @@
                                 {{ form_calibration.DATABASE_GROUP_LIMIT(class='tw:input tw:input-bordered tw:bg-base-100 tw:text-base-content tw:w-full') }}
                             </div>
                             <div class="calibration-help tw:text-sm">
-                                Leave this at 20. Increase it only if calibration
-                                reports that more groups are needed. Allowed
+                                Leave this at 20. This is the desired number of
+                                groups used for calibration; the search can
+                                check more groups to find suitable evidence. Allowed
                                 range: {{ calibration_database_limits.minimum }}
                                 to {{ calibration_database_limits.maximum }}.
                             </div>
@@ -455,7 +459,7 @@
 <div id="calibration-progress-panel" class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:mt-6 tw:shadow-sm" style="display: none;">
     <div class="tw:px-6 tw:pt-5 tw:font-semibold" id="calibration-stage">Preparing upload</div>
     <div class="tw:card-body tw:p-6 tw:pt-3">
-        <div class="calibration-progress-track" role="progressbar" aria-label="Calibration upload progress">
+        <div class="calibration-progress-track" role="progressbar" aria-label="Estimated calibration progress">
             <div
                 id="calibration-progress"
                 class="calibration-progress-bar progress-bar-animated"
@@ -463,6 +467,11 @@
             >0%</div>
         </div>
         <div id="calibration-status" class="calibration-help tw:mt-2"></div>
+        <div id="calibration-progress-explanation" class="calibration-callout calibration-callout-info tw:mt-3" style="display: none;">
+            Progress is an estimate. The bar may move backwards and stages may
+            repeat as additional saved frame groups are checked. This is normal;
+            all quality checks still apply.
+        </div>
         <div
             id="calibration-progress-error"
             class="calibration-callout calibration-callout-danger tw:mt-4"
@@ -845,6 +854,7 @@ function showCalibrationFailure(sessionId, message, reportAvailable) {
     $('#calibration-notice, #calibration-error').hide();
     $('#calibration-stage').text('Calibration failed');
     $('#calibration-status').text('No settings were changed.');
+    $('#calibration-progress-explanation').hide();
     $('#calibration-progress')
         .css('width', '100%')
         .text('Failed')
@@ -925,6 +935,7 @@ function setCalibrationProgress(percent, stage, status) {
     showCalibrationProgressView();
     $('#calibration-stage').text(stage);
     $('#calibration-status').text(status || '');
+    $('#calibration-progress-explanation').toggle(activeCalibrationSourceKind === 'database');
     $('#calibration-progress').css('width', rounded + '%').text(rounded + '%');
 }
 
@@ -1674,6 +1685,8 @@ async function fetchCalibrationStatus(sessionId) {
 async function pollCalibration(sessionId) {
     while (true) {
         const status = await fetchCalibrationStatus(sessionId);
+        // Restored sessions also need the saved-FITS progress explanation.
+        activeCalibrationSourceKind = status.source_kind || activeCalibrationSourceKind;
         if (status.status === 'success') {
             if (status.result.outcome === 'threshold_suggestion') {
                 renderThresholdSuggestion(sessionId, status.result);
@@ -1779,6 +1792,16 @@ async function pollCalibration(sessionId) {
                     86,
                     'Enough files found',
                     'Preparing the selected frame groups.'
+                );
+            } else if (progress.phase === 'replacing_groups') {
+                // A refill returns to staging before another fit/validation;
+                // its lower estimate is explained by the saved-FITS callout.
+                setCalibrationProgress(
+                    89,
+                    'Checking more saved frames',
+                    progress.reason === 'highlights'
+                        ? 'Looking for frame groups with usable bright areas, then recalculating the repair values.'
+                        : 'Trying additional purple and normal frame groups, then recalculating the repair values.'
                 );
             } else if (progress.phase === 'fitting') {
                 setCalibrationProgress(

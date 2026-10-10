@@ -71,7 +71,7 @@
                 ) }}
                 {{ repair_toggle(
                     form_config.IMAGE_ASI676MC_REPAIR__SAVE_PRECEDING_FITS,
-                    'Optional. Also saves the normal frame before each purple frame. This improves calibration but uses about one extra FITS frame of memory.',
+                    'Optional. Saves the preceding normal FITS only when capture settings match. Even small automatic exposure changes can prevent it from being saved. Uses about one extra FITS frame of memory.',
                     'Requires Save purple and following normal FITS for calibration'
                 ) }}
             </div>
