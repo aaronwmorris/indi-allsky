@@ -5,7 +5,7 @@ import adafruit_bus_device.i2c_device as i2cdevice
 try:
     from busio import I2C
 except ImportError:
-    pass
+    I2C = None
 
 
 class DockerPi4ChannelRelay(object):

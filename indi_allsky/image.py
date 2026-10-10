@@ -492,7 +492,7 @@ class ImageWorker(Process):
         }
         exif_ifd = {
             piexif.ExifIFD.DateTimeOriginal  : exp_date_utc.strftime('%Y:%m:%d %H:%M:%S'),
-            piexif.ExifIFD.LensModel         : camera.lensName,
+            piexif.ExifIFD.LensModel         : camera.lensName or '',
             piexif.ExifIFD.LensSpecification : (focal_length, focal_length, f_number, f_number),
             piexif.ExifIFD.FocalLength       : focal_length,
             piexif.ExifIFD.FNumber           : f_number,
@@ -1989,7 +1989,7 @@ class ImageWorker(Process):
             else:
                 img = Image.fromarray(cv2.cvtColor(scaled_data_8, cv2.COLOR_BGR2RGB))
 
-            img.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=jpeg_exif)
+            img.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=jpeg_exif or b"")
         elif self.config['IMAGE_EXPORT_RAW'] in ('png',):
             # Pillow does not support 16-bit RGB data
             # opencv is faster than Pillow with PNG
@@ -2220,7 +2220,7 @@ class ImageWorker(Process):
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
             # opencv is faster but we have exif data
             img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
-            img_rgb.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=jpeg_exif)
+            img_rgb.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=jpeg_exif or b"")
         elif self.config['IMAGE_FILE_TYPE'] in ('png',):
             # exif does not appear to work with png
             #img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
@@ -2230,7 +2230,7 @@ class ImageWorker(Process):
             cv2.imwrite(str(tmpfile_name), data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
         elif self.config['IMAGE_FILE_TYPE'] in ('webp',):
             img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
-            img_rgb.save(str(tmpfile_name), quality=90, lossless=False, exif=jpeg_exif)
+            img_rgb.save(str(tmpfile_name), quality=90, lossless=False, exif=jpeg_exif or b"")
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
             # exif does not appear to work with tiff
             img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
@@ -2439,7 +2439,7 @@ class ImageWorker(Process):
         # write to temporary file
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
             img_rgb = Image.fromarray(cv2.cvtColor(pano_data, cv2.COLOR_BGR2RGB))
-            img_rgb.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=jpeg_exif)
+            img_rgb.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=jpeg_exif or b"")
         elif self.config['IMAGE_FILE_TYPE'] in ('png',):
             # exif does not appear to work with png
             #img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
@@ -2449,7 +2449,7 @@ class ImageWorker(Process):
             cv2.imwrite(str(tmpfile_name), pano_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
         elif self.config['IMAGE_FILE_TYPE'] in ('webp',):
             img_rgb = Image.fromarray(cv2.cvtColor(pano_data, cv2.COLOR_BGR2RGB))
-            img_rgb.save(str(tmpfile_name), quality=90, lossless=False, exif=jpeg_exif)
+            img_rgb.save(str(tmpfile_name), quality=90, lossless=False, exif=jpeg_exif or b"")
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
             # exif does not appear to work with tiff
             img_rgb = Image.fromarray(cv2.cvtColor(pano_data, cv2.COLOR_BGR2RGB))
@@ -2580,7 +2580,7 @@ class ImageWorker(Process):
         # write to temporary file
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
             img_rgb = Image.fromarray(cv2.cvtColor(circular_image_data, cv2.COLOR_BGR2RGB))
-            img_rgb.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=jpeg_exif)
+            img_rgb.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=jpeg_exif or b"")
         elif self.config['IMAGE_FILE_TYPE'] in ('png',):
             # exif does not appear to work with png
             #img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
@@ -2590,7 +2590,7 @@ class ImageWorker(Process):
             cv2.imwrite(str(tmpfile_name), circular_image_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
         elif self.config['IMAGE_FILE_TYPE'] in ('webp',):
             img_rgb = Image.fromarray(cv2.cvtColor(circular_image_data, cv2.COLOR_BGR2RGB))
-            img_rgb.save(str(tmpfile_name), quality=90, lossless=False, exif=jpeg_exif)
+            img_rgb.save(str(tmpfile_name), quality=90, lossless=False, exif=jpeg_exif or b"")
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
             # exif does not appear to work with tiff
             img_rgb = Image.fromarray(cv2.cvtColor(circular_image_data, cv2.COLOR_BGR2RGB))
@@ -2620,9 +2620,10 @@ class ImageWorker(Process):
 
 
     def write_realtime_keogram(self, data, camera):
-        if isinstance(data, type(None)):
+        if isinstance(data, type(None)) or getattr(data, 'size', 0) == 0:
             logger.warning('Realtime keogram data empty')
             return
+
 
 
         save_interval = self.config.get('REALTIME_KEOGRAM', {}).get('SAVE_INTERVAL', 25)

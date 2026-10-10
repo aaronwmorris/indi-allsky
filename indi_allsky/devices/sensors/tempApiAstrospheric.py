@@ -100,13 +100,13 @@ class TempApiAstrospheric(SensorBase):
             raise SensorReadException(str(e)) from e
         except requests.exceptions.ConnectTimeout as e:
             raise SensorReadException(str(e)) from e
-        except requests.exceptions.ConnectionError as e:
-            raise SensorReadException(str(e)) from e
         except requests.exceptions.ReadTimeout as e:
             raise SensorReadException(str(e)) from e
         except ssl.SSLCertVerificationError as e:
             raise SensorReadException(str(e)) from e
         except requests.exceptions.SSLError as e:
+            raise SensorReadException(str(e)) from e
+        except requests.exceptions.ConnectionError as e:
             raise SensorReadException(str(e)) from e
 
 

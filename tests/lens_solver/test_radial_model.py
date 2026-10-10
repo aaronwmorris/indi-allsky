@@ -1,5 +1,7 @@
 import numpy as np
 import pytest
+
+pytestmark = pytest.mark.slow
 import cv2
 
 from indi_allsky.lens_solver import IndiAllSkyLensSolver, predictAltAz, projectToPixels

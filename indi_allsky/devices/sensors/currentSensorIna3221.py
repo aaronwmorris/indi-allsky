@@ -16,7 +16,7 @@ class CurrentSensorIna3221(SensorBase):
     def update(self):
 
         # set all values to 0
-        current_data = [0.0 for x in range(self.METADATA.count)]
+        current_data = [0.0 for x in range(self.METADATA['count'])]
 
 
         try:
