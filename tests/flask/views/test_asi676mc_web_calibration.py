@@ -1134,7 +1134,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('Selection path: progressive ratio search', report)
         self.assertIn('Usable marked groups found: 3', report)
         self.assertIn('Initial fallback search target: 19 FITS files', report)
-        self.assertIn('FITS inspected: 19 of 19', report)
+        self.assertIn('FITS inspected in the initial selection: 19 of 19', report)
         self.assertIn('Saved ratio metadata available: 9', report)
         self.assertIn('Post-repair standard FITS excluded: 2', report)
         self.assertIn('Duplicate standard FITS excluded: 1', report)
@@ -1208,16 +1208,18 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         warning = ' '.join(result['warnings'])
         flat_report = ' '.join(report.split())
 
-        self.assertIn('Purple-frame groups staged: 23', report)
-        self.assertIn('Reserve groups staged: 3', report)
-        self.assertIn('Reserve groups promoted:', report)
+        self.assertIn('Purple-frame groups initially staged: 23', report)
+        self.assertIn('Reserve groups initially staged: 3', report)
+        self.assertIn('Additional groups selected for checking:', report)
         self.assertIn('Frame groups set aside', report)
-        self.assertIn('marginal_bad.fit', report)
-        self.assertIn('extra improvement from full repair 5.279%', flat_report)
-        self.assertIn('minimum required 10.000%', flat_report)
-        self.assertIn('marginal_bad.fit', warning)
-        self.assertIn('5.3%', warning)
-        self.assertIn('1 reserve group replaced it', warning)
+        self.assertEqual(report.count('marginal_bad.fit'), 1)
+        self.assertIn('Comparison error: before repair 49.310%', flat_report)
+        self.assertIn('colour-only correction 8.598%; full repair 8.144%', flat_report)
+        self.assertNotIn('extra improvement from full repair', flat_report)
+        self.assertIn('1 frame group', warning)
+        self.assertIn('1 additional group was selected', warning)
+        self.assertIn('Download details', warning)
+        self.assertNotIn('marginal_bad.fit', warning)
         for technical_term in (
             'gain-only',
             'row-shift',
@@ -1226,6 +1228,45 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         ):
             self.assertNotIn(technical_term, report.lower())
             self.assertNotIn(technical_term, warning.lower())
+
+    def test_report_lists_one_entry_per_rejection_with_or_without_scores(self):
+        scores = {
+            'original_error': 0.45763,
+            'gain_only_error': 0.03096,
+            'repaired_error': 0.04005,
+            'improvement_vs_gain_only': -0.29374,
+            'required_improvement': 0.10,
+        }
+        rejected = [
+            dict(scores, name='negative_bad.fit', reason=(
+                'full repair increased the comparison error by 29.4% relative '
+                'to colour-only correction; it must reduce that error by at least 10.0%'
+            )),
+            {'name': 'missing_bad.fit', 'reason': 'One or more FITS became unavailable.'},
+            dict(scores, name='legacy_bad.fit'),
+        ]
+        payload = self._successful_payload()
+        payload['quality']['marginal_exclusions'] = rejected
+        report = asi676mc_calibration.format_integrated_report(payload, {
+            'settings': dict(calibration_engine.DEFAULT_SETTINGS),
+            'max_pair_seconds': 90.0,
+            'files': [],
+        })
+        section = report.split('Frame groups set aside', 1)[1].split('Result notes', 1)[0]
+        entries = [line for line in section.splitlines() if line.startswith('- ')]
+        self.assertEqual(len(entries), len(rejected))
+        for item in rejected:
+            with self.subTest(name=item['name']):
+                self.assertEqual(section.count(item['name']), 1)
+        flat_section = ' '.join(section.split())
+        self.assertIn('increased the comparison error by 29.4%', flat_section)
+        self.assertIn('it must reduce that error by at least 10.0%', flat_section)
+        self.assertIn('colour-only correction 3.096%; full repair 4.005%', flat_section)
+        self.assertIn('before repair 45.763%', flat_section)
+        self.assertIn('missing_bad.fit: One or more FITS became unavailable.', flat_section)
+        self.assertIn('Full repair must reduce the comparison error by at least 10.0%', flat_section)
+        self.assertNotIn('-29.374%', section)
+
 
     def test_report_timestamp_uses_explicit_local_timezone(self):
         local_timezone = timezone(timedelta(hours=2), name='CEST')
@@ -2178,7 +2219,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertEqual(evidence['unmatched_bad_count'], 1)
 
     def test_every_web_endpoint_requires_a_real_login(self):
-        project_root = Path(__file__).resolve().parents[2]
+        project_root = Path(__file__).resolve().parents[3]
         views_path = project_root / 'indi_allsky' / 'flask' / 'views.py'
         views_source = views_path.read_text(encoding='utf-8')
         views_tree = ast.parse(views_source, filename=str(views_path))
@@ -2220,7 +2261,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertEqual(found, protected_classes)
 
     def test_page_uses_one_multi_file_selection(self):
-        project_root = Path(__file__).resolve().parents[2]
+        project_root = Path(__file__).resolve().parents[3]
         template = (
             project_root
             / 'indi_allsky'
@@ -2343,7 +2384,8 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('Only uncompressed .fit, .fits, and .fts', template)
         self.assertIn('Select all FITS at once', template)
         self.assertIn('up to 2 GiB in total', template)
-        self.assertIn('finds suitable purple and normal frames automatically', template)
+        self.assertIn('selects suitable purple and normal frame groups', template)
+        self.assertIn('tries additional groups when needed', template)
         self.assertIn('Leave this at 20', template)
         automatic_card = template.split(
             '<span>Use saved FITS</span>',
@@ -3030,7 +3072,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertIn('turn on purple-frame handling', result['guidance']['text'])
 
     def test_safe_exclude_only_defaults_are_source_visible(self):
-        project_root = Path(__file__).resolve().parents[2]
+        project_root = Path(__file__).resolve().parents[3]
         config_source = project_root.joinpath(
             'indi_allsky', 'config.py'
         ).read_text(encoding='utf-8')
@@ -3187,7 +3229,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         self.assertLess(sample_step_position, chunk_rows_position)
 
     def test_base_config_numerical_defaults_match_runtime_defaults(self):
-        project_root = Path(__file__).resolve().parents[2]
+        project_root = Path(__file__).resolve().parents[3]
         config_source = project_root.joinpath(
             'indi_allsky',
             'config.py',
@@ -3215,7 +3257,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
 
     def test_video_worker_cancellation_expires_task_without_dereference(self):
         video_path = (
-            Path(__file__).resolve().parents[2]
+            Path(__file__).resolve().parents[3]
             / 'indi_allsky'
             / 'video.py'
         )
@@ -3260,7 +3302,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
         task.setFailed.assert_not_called()
 
     def test_video_task_only_enqueues_dedicated_calibration_work(self):
-        project_root = Path(__file__).resolve().parents[2]
+        project_root = Path(__file__).resolve().parents[3]
         video_source = project_root.joinpath(
             'indi_allsky', 'video.py'
         ).read_text(encoding='utf-8')
@@ -3277,7 +3319,7 @@ class TestAsi676mcWebCalibration(unittest.TestCase):
 
     def test_video_worker_backfills_legacy_signatures_in_batches(self):
         video_path = (
-            Path(__file__).resolve().parents[2]
+            Path(__file__).resolve().parents[3]
             / 'indi_allsky'
             / 'video.py'
         )
