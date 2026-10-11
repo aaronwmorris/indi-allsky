@@ -36,6 +36,7 @@ from .smoke import IndiAllskySmokeUpdate
 from .satellite_download import IndiAllskyUpdateSatelliteData
 from .maskProcessing import MaskProcessor
 from .backup import IndiAllskyDatabaseBackup
+from .events import broadcast_media_complete
 
 from .flask import create_app
 from .flask import db
@@ -767,6 +768,10 @@ class VideoWorker(Process):
 
             task.setFailed('Failed to generate timelapse: {0:s}'.format(str(video_file)))
             return
+
+
+        # the video is written and marked successful; announce it before the uploads
+        broadcast_media_complete('timelapse_complete', video_entry)
 
 
         task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
@@ -1876,6 +1881,7 @@ class VideoWorker(Process):
             keogram_file.relative_to(self.image_dir),
             camera.id,
             keogram_metadata,
+            broadcast=False,  # keogram_complete is sent once the file is written
         )
 
 
@@ -1884,6 +1890,7 @@ class VideoWorker(Process):
                 startrail_file.relative_to(self.image_dir),
                 camera.id,
                 startrail_metadata,
+                broadcast=False,  # startrail_complete is sent once the file is written
             )
         else:
             startrail_entry = None
@@ -2157,6 +2164,9 @@ class VideoWorker(Process):
 
 
             if keogram_file.exists():
+                # the keogram is written and marked successful; announce it before the uploads
+                broadcast_media_complete('keogram_complete', keogram_entry)
+
                 self._miscUpload.s3_upload_keogram(keogram_entry, keogram_metadata)
                 self._miscUpload.syncapi_keogram(keogram_entry, keogram_metadata)
                 self._miscUpload.upload_keogram(keogram_entry)
@@ -2173,6 +2183,9 @@ class VideoWorker(Process):
 
 
             if startrail_file.exists():
+                # the star trail image is written and marked successful; announce it before the uploads
+                broadcast_media_complete('startrail_complete', startrail_entry)
+
                 self._miscUpload.syncapi_startrail(startrail_entry, startrail_metadata)  # syncapi before S3
                 self._miscUpload.s3_upload_startrail(startrail_entry, startrail_metadata)
                 self._miscUpload.upload_startrail(startrail_entry)

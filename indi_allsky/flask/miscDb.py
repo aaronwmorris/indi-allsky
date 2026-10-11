@@ -702,7 +702,7 @@ class miscDb(object):
         return panorama_video
 
 
-    def addKeogram(self, filename, camera_id, metadata):
+    def addKeogram(self, filename, camera_id, metadata, broadcast=True):
 
         ### expected metadata
         #{
@@ -755,6 +755,11 @@ class miscDb(object):
         db.session.add(keogram)
         db.session.commit()
 
+        if not broadcast:
+            # The caller creates the row before the file exists and
+            # broadcasts keogram_complete itself once the file is written
+            return keogram
+
         try:
             from ..events import event_manager
             event_manager.broadcast('keogram_complete', {
@@ -772,7 +777,7 @@ class miscDb(object):
         return keogram
 
 
-    def addStarTrail(self, filename, camera_id, metadata):
+    def addStarTrail(self, filename, camera_id, metadata, broadcast=True):
 
         ### expected metadata
         #{
@@ -825,6 +830,11 @@ class miscDb(object):
 
         db.session.add(startrail)
         db.session.commit()
+
+        if not broadcast:
+            # The caller creates the row before the file exists and
+            # broadcasts startrail_complete itself once the file is written
+            return startrail
 
         try:
             from ..events import event_manager
