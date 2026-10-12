@@ -1,0 +1,10 @@
+[Unit]
+Description=Weekly check and renewal of indi-allsky TLS leaf certificate
+
+[Timer]
+OnCalendar=weekly
+Persistent=true
+RandomizedDelaySec=1h
+
+[Install]
+WantedBy=timers.target

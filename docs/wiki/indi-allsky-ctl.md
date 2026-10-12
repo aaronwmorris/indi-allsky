@@ -329,7 +329,33 @@ sudo indi-allsky-ctl setup-usb-mount
 
 ---
 
-## 5. Package & Driver Management (INDI)
+## 5. Security & TLS Certificates
+
+### Export Local Root CA Certificate
+Export or view the local `mkcert` Root Certificate Authority certificate (`/etc/indi-allsky/ca/rootCA.pem`) to install it into client devices (laptops, phones, tablets) for browser-trusted local HTTPS access:
+```bash
+# Print Root CA certificate to stdout:
+sudo indi-allsky-ctl ssl-ca-export
+
+# Or export directly to a file:
+sudo indi-allsky-ctl ssl-ca-export /tmp/indi-allsky-ca.pem
+```
+> [!NOTE]
+> For instructions on installing and trusting this certificate on macOS, Windows, Linux, iOS, and Android, consult the [Local SSL Certificates & mDNS](Local-SSL-and-mDNS) guide.
+
+### Renew Local TLS Leaf Certificate
+Verify leaf certificate validity and renew it automatically if it is within 30 days of expiration:
+```bash
+# Standard renewal check (renews only if expiring within 30 days):
+sudo indi-allsky-ctl ssl-renew
+
+# Force immediate certificate renewal and reload web server:
+sudo indi-allsky-ctl ssl-renew --force
+```
+
+---
+
+## 6. Package & Driver Management (INDI)
 
 Prevent upstream package updates from inadvertently replacing working camera drivers:
 

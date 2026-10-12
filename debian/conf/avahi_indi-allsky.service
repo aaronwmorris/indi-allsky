@@ -1,0 +1,15 @@
+<?xml version="1.0" standalone='no'?>
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<service-group>
+  <name>INDI Allsky</name>
+  <service>
+    <type>_indi-allsky._tcp</type>
+    <port>%HTTPS_PORT%</port>
+    <host-name>indi-allsky.local</host-name>
+    <txt-record>app=indi-allsky</txt-record>
+    <txt-record>path=/indi-allsky</txt-record>
+    <txt-record>ssl=true</txt-record>
+    <txt-record>version=%VERSION%</txt-record>
+    <txt-record>mac=%MAC%</txt-record>
+  </service>
+</service-group>
