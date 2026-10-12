@@ -96,15 +96,30 @@ METADATA = {'createDate': 1791700000, 'dayDate': '20261010', 'night': True}
 
 @pytest.mark.parametrize('name,event', [('addKeogram', 'keogram_complete'), ('addStarTrail', 'startrail_complete')])
 def test_add_broadcasts_by_default(monkeypatch, name, event):
-    # unchanged behaviour for callers that add a file that already exists (e.g. the sync API)
+    # callers that add a file that already exists (e.g. the sync API) still get the event,
+    # now with the shared payload, so dimensions they supply are passed on
     broadcast = Mock(return_value=0)
     add = _misc_db_method(name, broadcast, monkeypatch)
 
-    row = add(SimpleNamespace(), 'ccd_x/keogram.jpg', 1, METADATA)
+    row = add(SimpleNamespace(), 'ccd_x/keogram.jpg', 1, dict(METADATA, frames=3552, width=3552, height=480))
 
     assert row.id == 42
     broadcast.assert_called_once()
-    assert broadcast.call_args.args[0] == event
+    event_type, payload = broadcast.call_args.args
+    assert event_type == event
+    assert payload == events.media_complete_payload(row)
+    assert payload['camera_id'] == 1 and payload['frames'] == 3552
+    assert payload['width'] == 3552 and payload['height'] == 480
+
+
+@pytest.mark.parametrize('name', ['addKeogram', 'addStarTrail'])
+def test_add_uses_the_shared_helper(name):
+    # one payload format: no inline event_manager.broadcast() left in these methods
+    tree = ast.parse((ROOT / 'indi_allsky/flask/miscDb.py').read_text(encoding='utf-8'))
+    cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'miscDb')
+    method = next(n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name == name)
+    assert _calls(method, 'broadcast_media_complete')
+    assert not _calls(method, 'broadcast')
 
 
 @pytest.mark.parametrize('name', ['addKeogram', 'addStarTrail'])
@@ -158,6 +173,20 @@ def test_timelapse_complete_follows_generation_and_success():
                    and getattr(n.type, 'id', None) == 'TimelapseException')
     assert isinstance(handler.body[-1], ast.Return) and line > handler.end_lineno
 
+    # only sent when the video is on disk, like the keogram and star trail events
+    _exists_guard(method, 'video_file', line)
+
+
+def _exists_guard(method, file_var, line):
+    """The `if <file_var>.exists():` block that contains the broadcast on `line`."""
+    guard = next((n for n in ast.walk(method) if isinstance(n, ast.If)
+                  and isinstance(n.test, ast.Call) and getattr(n.test.func, 'attr', None) == 'exists'
+                  and getattr(n.test.func.value, 'id', None) == file_var
+                  and any(s.lineno == line for b in n.body for s in ast.walk(b) if hasattr(s, 'lineno'))),
+                 None)
+    assert guard is not None, f'broadcast on line {line} is not inside "if {file_var}.exists():"'
+    return guard
+
 
 @pytest.mark.parametrize('add,entry,event,finalize_obj,file_var', [
     ('addKeogram', 'keogram_entry', 'keogram_complete', 'kg', 'keogram_file'),
@@ -177,8 +206,4 @@ def test_keogram_and_startrail_complete_follow_the_file(add, entry, event, final
     assert line > max(_success_true_lines(method, entry))
 
     # sent from inside "if <file>.exists():", so only once the file is on disk
-    guard = next(n for n in ast.walk(method) if isinstance(n, ast.If)
-                 and isinstance(n.test, ast.Call) and getattr(n.test.func, 'attr', None) == 'exists'
-                 and getattr(n.test.func.value, 'id', None) == file_var
-                 and any(isinstance(s, ast.Expr) and s.lineno == line for s in ast.walk(n)))
-    assert guard.lineno < line
+    _exists_guard(method, file_var, line)

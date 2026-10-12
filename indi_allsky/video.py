@@ -771,7 +771,10 @@ class VideoWorker(Process):
 
 
         # the video is written and marked successful; announce it before the uploads
-        broadcast_media_complete('timelapse_complete', video_entry)
+        if video_file.exists():
+            broadcast_media_complete('timelapse_complete', video_entry)
+        else:
+            logger.error('Timelapse reported success but %s does not exist', video_file)
 
 
         task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
