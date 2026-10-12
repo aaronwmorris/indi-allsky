@@ -163,7 +163,6 @@ class IndiAllskyDenoise(object):
         the previous fault-tolerant behaviour.
         """
 
-        # debian11 and ubuntu 20.04 (<numpy 2.0) do not support some of the numpy syntax of this module
         from .protection_masks import star_mask
 
         try:
@@ -472,8 +471,8 @@ class IndiAllskyDenoise(object):
     def _compute_gaussian_sigma(self, strength):
         """Compute Gaussian blur sigma from strength (1-5).
 
-        Returns adjusted sigma value, configurable per strength level
-        or globally via config keys.
+        Returns an adjusted strength-based sigma, optionally overridden by
+        the GAUSSIAN_SIGMA configuration value.
         """
         default_sigma_map = {1: 1.0, 2: 1.8, 3: 3.0, 4: 4.2, 5: 5.8}
         sigma = float(self.config.get('GAUSSIAN_SIGMA',

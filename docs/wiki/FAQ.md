@@ -205,3 +205,27 @@ indi-allsky consumes RAW/DNG data by default.  RAW data is generally unprocessed
 TJ's Allsky ingests JPEG data from libcamera and libcamera performs more processing by default on the JPEG output.  You should be able to get the same output from indi-allsky if you switch the libcamera configuration to provide JPEG data instead of DNG data.
 ***
 </details>
+
+<details>
+  <summary>How do I change the image directory / move image storage to an external drive or SSD?</summary>
+
+***
+On systems installed from the `.deb` package / APT repository:
+
+1. Stop services: `sudo systemctl stop indi-allsky.service gunicorn-indi-allsky.service`
+2. Move/copy your images to the new path:
+   `sudo mkdir -p /path/to/new/images && sudo rsync -av /var/www/html/allsky/images/ /path/to/new/images/`
+3. Update `INDI_ALLSKY_IMAGE_FOLDER` in `/etc/indi-allsky/flask.json`:
+   ```json
+   "INDI_ALLSKY_IMAGE_FOLDER": "/path/to/new/images"
+   ```
+4. In the Web UI (**Configuration &rarr; Camera Settings**), set `IMAGE_FOLDER` to `/path/to/new/images`.
+5. Run [`indi-allsky-ctl fix-perms`](indi-allsky-ctl#how-to-relocate--change-the-image-directory) to automatically configure ownership (`indi-allsky:www-data`) and permissions (`775`):
+   ```bash
+   sudo indi-allsky-ctl fix-perms
+   ```
+6. Restart services: `sudo systemctl start indi-allsky.service gunicorn-indi-allsky.service`
+
+See [Disk Optimizations](Disk-Optimizations#relocating-the-image-directory-to-external-storage) and [`indi-allsky-ctl`](indi-allsky-ctl) for additional details.
+***
+</details>

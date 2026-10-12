@@ -836,11 +836,13 @@ class PairSamples:
     stable_masks: tuple
 
 
-def collect_pair_samples(pairs, checkpoint_callback=None):
+def collect_pair_samples(pairs, checkpoint_callback=None, failed_groups=None):
     """Load only the central sparse samples needed by calibration.
 
     Holding these small arrays instead of complete 3552x3552 frames keeps the
     background job practical on Raspberry Pi systems with limited memory.
+    Passing a failure list enables archive recovery; None preserves the
+    immediate read error for uploads and other fixed evidence collections.
     """
     step = CALIBRATION_OPTIONS['SAMPLE_STEP']
     samples = []
@@ -851,18 +853,72 @@ def collect_pair_samples(pairs, checkpoint_callback=None):
             f'  Sampling pair {index}/{len(pairs)}: {pair.bad.path.name}',
             flush=True,
         )
-        reference_planes, stable_masks = _reference_planes(pair, step)
-        samples.append(PairSamples(
-            pair=pair,
-            bad_planes=_sample_planes(
-                pair.bad,
-                bad_source=True,
-                step=step,
-            ),
-            reference_planes=reference_planes,
-            stable_masks=stable_masks,
-        ))
+        try:
+            reference_planes, stable_masks = _reference_planes(pair, step)
+            samples.append(PairSamples(
+                pair=pair,
+                bad_planes=_sample_planes(
+                    pair.bad,
+                    bad_source=True,
+                    step=step,
+                ),
+                reference_planes=reference_planes,
+                stable_masks=stable_masks,
+            ))
+        except Exception as error:
+            if failed_groups is None or not is_recoverable_fits_error(error):
+                raise
+            failed_groups.append({
+                'pair': pair,
+                'check': {
+                    'name': pair.bad.source_name or pair.bad.path.name,
+                    'failure_code': 'unreadable_group',
+                    'reason': 'A FITS in this group could not be read.',
+                },
+            })
     return samples
+
+
+def _gain_sample_mask(bad, reference, stable):
+    """Share the exact eligibility rule between gain fitting and recovery."""
+    return (
+        stable
+        & (reference >= CALIBRATION_OPTIONS['MIN_REFERENCE_VALUE'])
+        & (reference <= CALIBRATION_OPTIONS['MAX_REFERENCE_VALUE'])
+        & (bad >= CALIBRATION_OPTIONS['MIN_REFERENCE_VALUE'])
+        & (bad <= CALIBRATION_OPTIONS['MAX_SOURCE_VALUE_FOR_GAIN'])
+    )
+
+
+def _insufficient_gain_groups(samples):
+    """Identify unusable groups only when a gain lacks enough contributing pairs."""
+    counts = [
+        [int(numpy.count_nonzero(_gain_sample_mask(bad, reference, stable)))
+         for bad, reference, stable in zip(
+             sample.bad_planes, sample.reference_planes, sample.stable_masks,
+         )]
+        for sample in samples
+    ]
+    required = CALIBRATION_OPTIONS['MIN_GAIN_SAMPLES_PER_PARITY']
+    # Partially useful groups need not be discarded when the collection
+    # already supplies enough samples for every colour gain.
+    missing_parities = [
+        index for index in range(4)
+        if sum(count[index] >= required for count in counts)
+        < CALIBRATION_OPTIONS['MIN_BAD_PAIRS']
+    ]
+    return [
+        {
+            'pair': sample.pair,
+            'check': {
+                'name': sample.pair.bad.source_name or sample.pair.bad.path.name,
+                'failure_code': 'insufficient_gain_samples',
+                'reason': 'Too few stable, usable pixels to fit the missing colour gains.',
+            },
+        }
+        for sample, count in zip(samples, counts)
+        if any(count[index] < required for index in missing_parities)
+    ]
 
 
 def _median_absolute_deviation(values):
@@ -876,9 +932,6 @@ def estimate_gains(samples):
     parity_names = ('GAIN_R', 'GAIN_G1', 'GAIN_G2', 'GAIN_B')
     per_parity = {name: [] for name in parity_names}
     sample_counts = {name: 0 for name in parity_names}
-    minimum = CALIBRATION_OPTIONS['MIN_REFERENCE_VALUE']
-    maximum = CALIBRATION_OPTIONS['MAX_REFERENCE_VALUE']
-    source_max = CALIBRATION_OPTIONS['MAX_SOURCE_VALUE_FOR_GAIN']
     required = CALIBRATION_OPTIONS['MIN_GAIN_SAMPLES_PER_PARITY']
 
     for pair_sample in samples:
@@ -888,13 +941,7 @@ def estimate_gains(samples):
             pair_sample.reference_planes,
             pair_sample.stable_masks,
         ):
-            mask = (
-                stable
-                & (reference >= minimum)
-                & (reference <= maximum)
-                & (bad >= minimum)
-                & (bad <= source_max)
-            )
+            mask = _gain_sample_mask(bad, reference, stable)
             count = int(numpy.count_nonzero(mask))
             if count < required:
                 continue
@@ -960,8 +1007,9 @@ def estimate_saturation_threshold(samples):
         if value >= DEFAULT_SETTINGS['SOURCE_SATURATION_THRESHOLD']
     ]
     if not clipped_maxima:
-        raise CalibrationError(
-            'no source green plateau was found; collect brighter daylight pairs'
+        raise InsufficientHighlightEvidence(
+            'no source green plateau was found; collect brighter daylight pairs',
+            samples, [0] * len(samples),
         )
     # Use a high percentile rather than the absolute maximum so one hot pixel
     # cannot masquerade as the camera's clipping plateau.
@@ -1109,7 +1157,7 @@ def estimate_highlight_ratios(
 ):
     """Grid-search bounded Method-5 highlight ratios against normal frames."""
     datasets = []
-    counts = []
+    group_counts = []
     for pair_sample in samples:
         if checkpoint_callback:
             checkpoint_callback()
@@ -1120,15 +1168,19 @@ def estimate_highlight_ratios(
         )
         count = int(arrays[0].size)
         if count < CALIBRATION_OPTIONS['MIN_HIGHLIGHT_SAMPLES_PER_PAIR']:
+            # Keep counts aligned with samples, including dim groups: the
+            # archive uses these scores to find highlights without rejecting
+            # groups that may still supply gains or exposure diversity.
+            group_counts.append(0)
             continue
+        group_counts.append(count)
         datasets.append(arrays)
-        counts.append(count)
 
-    total = sum(counts)
+    total = sum(group_counts)
     if total < CALIBRATION_OPTIONS['MIN_HIGHLIGHT_SAMPLES_TOTAL']:
-        raise CalibrationError(
+        raise InsufficientHighlightEvidence(
             'only {0} stable jointly-clipped highlight samples were found; '
-            'collect brighter daylight pairs'.format(total)
+            'collect brighter daylight pairs'.format(total), samples, group_counts,
         )
 
     # The search space is intentionally small and explicit.  It is easier to
@@ -1191,7 +1243,7 @@ def estimate_highlight_ratios(
         'default_score': default_score,
         'sample_count': total,
         'pair_count': len(datasets),
-        'per_pair_counts': counts,
+        'per_pair_counts': [int(arrays[0].size) for arrays in datasets],
     }
 
 
@@ -1590,6 +1642,17 @@ class CalibrationError(RuntimeError):
     """Raised when an evidence collection cannot support safe calibration."""
 
 
+class InsufficientHighlightEvidence(CalibrationError):
+    """More archive evidence may supply highlights without rejecting dim groups."""
+
+    def __init__(self, message, samples, counts):
+        super().__init__(message)
+        self.groups = [
+            {'pair': sample.pair, 'highlight_sample_count': count}
+            for sample, count in zip(samples, counts)
+        ]
+
+
 def validate_evidence(records, pairs, unmatched, allow_unmatched=False):
     """Refuse calibration when the dataset cannot support safe conclusions.
 
@@ -1762,8 +1825,15 @@ def validate_calibrated_frames(
     settings,
     checkpoint_callback=None,
     collect_phase_failures=False,
+    replace_failed_groups=False,
 ):
-    """Apply final rounded settings to every pair without writing outputs."""
+    """Apply final rounded settings to every pair without writing outputs.
+
+    Archive recovery may collect per-group failures for replacement. The
+    legacy collect_phase_failures option remains narrower for fixed inputs:
+    it only collects positive but insufficient improvement over colour-only repair.
+    Neither option permits a settings result that changes a normal frame.
+    """
     repaired_count = 0
     normal_count = 0
     similarity_checks = []
@@ -1779,124 +1849,171 @@ def validate_calibrated_frames(
     for pair in pairs:
         if checkpoint_callback:
             checkpoint_callback()
-        data, _header, _index = _read_fits(pair.bad.path, copy=True)
-        original = data.copy()
-        reference_planes, stable_masks = _reference_planes(
-            pair,
-            CALIBRATION_OPTIONS['SAMPLE_STEP'],
-        )
-        original_planes = _sample_array_planes(
-            original,
-            bad_source=False,
-            step=CALIBRATION_OPTIONS['SAMPLE_STEP'],
-        )
-        original_error = _reference_error(
-            original_planes,
-            reference_planes,
-            stable_masks,
-        )
-        result = asi676mc.repair_if_needed(data, settings)
-        if not result['repaired'] or result['validation_failed']:
-            raise CalibrationError(
-                'validation_runtime_repair: {0}: the calculated repair values '
-                'did not produce a valid repaired frame'.format(
-                    pair.bad.source_name or pair.bad.path.name
+        check = None
+        try:
+            try:
+                data, _header, _index = _read_fits(pair.bad.path, copy=True)
+                reference_planes, stable_masks = _reference_planes(
+                    pair,
+                    CALIBRATION_OPTIONS['SAMPLE_STEP'],
                 )
+            except Exception as error:
+                if not replace_failed_groups or not is_recoverable_fits_error(error):
+                    raise
+                raise CalibrationError(
+                    'validation_unreadable_group: A FITS in this group could not be read.'
+                ) from error
+            original = data.copy()
+            original_planes = _sample_array_planes(
+                original,
+                bad_source=False,
+                step=CALIBRATION_OPTIONS['SAMPLE_STEP'],
             )
-        repaired_planes = _sample_array_planes(
-            data,
-            bad_source=False,
-            step=CALIBRATION_OPTIONS['SAMPLE_STEP'],
-        )
-        repaired_error = _reference_error(
-            repaired_planes,
-            reference_planes,
-            stable_masks,
-        )
+            original_error = _reference_error(
+                original_planes,
+                reference_planes,
+                stable_masks,
+            )
+            result = asi676mc.repair_if_needed(data, settings)
+            if not result['repaired'] or result['validation_failed']:
+                raise CalibrationError(
+                    'validation_runtime_repair: {0}: the calculated repair values '
+                    'did not produce a valid repaired frame'.format(
+                        pair.bad.source_name or pair.bad.path.name
+                    )
+                )
+            repaired_planes = _sample_array_planes(
+                data,
+                bad_source=False,
+                step=CALIBRATION_OPTIONS['SAMPLE_STEP'],
+            )
+            repaired_error = _reference_error(
+                repaired_planes,
+                reference_planes,
+                stable_masks,
+            )
 
-        # Compare with a counterfactual that applies the fitted gains without
-        # the ASI676MC one-row phase correction. A genuine phase-shift failure
-        # should match its neighbors better after the row correction; two
-        # ordinary colour/brightness populations generally will not.
-        unshifted_corrected = _best_gain_only_planes(
-            original_planes,
-            reference_planes,
-            stable_masks,
-        )
-        unshifted_error = _reference_error(
-            unshifted_corrected,
-            reference_planes,
-            stable_masks,
-        )
-        improvement = CALIBRATION_OPTIONS['MIN_REFERENCE_ERROR_IMPROVEMENT']
-        original_improvement = (
-            1.0 - repaired_error / max(original_error, 1.0e-12)
-        )
-        phase_improvement = (
-            1.0 - repaired_error / max(unshifted_error, 1.0e-12)
-        )
-        check = {
-            'name': pair.bad.source_name or pair.bad.path.name,
-            'original_error': original_error,
-            'gain_only_error': unshifted_error,
-            'repaired_error': repaired_error,
-            'improvement_vs_original': original_improvement,
-            'improvement_vs_gain_only': phase_improvement,
-            'required_improvement': improvement,
-        }
-        if repaired_error > CALIBRATION_OPTIONS['MAX_REPAIRED_REFERENCE_ERROR']:
-            raise CalibrationError(
-                'validation_repaired_reference_error: {0}: the repaired frame '
-                'differs from its nearby normal frame by {1:.1%}; the maximum '
-                'allowed is {2:.1%}'.format(
-                    check['name'],
-                    repaired_error,
-                    CALIBRATION_OPTIONS['MAX_REPAIRED_REFERENCE_ERROR'],
-                )
+            # Compare with a counterfactual that applies the fitted gains without
+            # the ASI676MC one-row phase correction. A genuine phase-shift failure
+            # should match its neighbors better after the row correction; two
+            # ordinary colour/brightness populations generally will not.
+            unshifted_corrected = _best_gain_only_planes(
+                original_planes,
+                reference_planes,
+                stable_masks,
             )
-        if repaired_error > original_error * (1.0 - improvement):
-            raise CalibrationError(
-                'validation_original_improvement: {0}: full repair made the '
-                'purple frame {1:.1%} closer to its nearby normal frame; at '
-                'least {2:.1%} is required'.format(
-                    check['name'],
-                    original_improvement,
-                    improvement,
-                )
+            unshifted_error = _reference_error(
+                unshifted_corrected,
+                reference_planes,
+                stable_masks,
             )
-        if repaired_error > unshifted_error * (1.0 - improvement):
-            check['failure_code'] = 'phase_improvement'
-            check['reason'] = (
-                'full repair matched the nearby normal frame {0:.1%} better '
-                'than colour-only correction; at least {1:.1%} is required'.format(
-                    phase_improvement,
-                    improvement,
-                )
+            improvement = CALIBRATION_OPTIONS['MIN_REFERENCE_ERROR_IMPROVEMENT']
+            original_improvement = (
+                1.0 - repaired_error / max(original_error, 1.0e-12)
             )
-            # A marginal miss still shows positive evidence for row shifting.
-            # If row shifting is no better than gain-only correction, preserve
-            # the hard failure used to reject ordinary colour populations.
-            if collect_phase_failures and phase_improvement > 0.0:
-                phase_failures.append({
-                    'pair': pair,
-                    'check': check,
-                })
-                continue
-            raise CalibrationError(
-                'validation_phase_improvement: {0}: {1}'.format(
-                    check['name'],
-                    check['reason'],
-                )
+            phase_improvement = (
+                1.0 - repaired_error / max(unshifted_error, 1.0e-12)
             )
-        similarity_checks.append(check)
-        repaired_count += 1
+            check = {
+                'name': pair.bad.source_name or pair.bad.path.name,
+                'original_error': original_error,
+                'gain_only_error': unshifted_error,
+                'repaired_error': repaired_error,
+                'improvement_vs_original': original_improvement,
+                'improvement_vs_gain_only': phase_improvement,
+                'required_improvement': improvement,
+            }
+            if repaired_error > CALIBRATION_OPTIONS['MAX_REPAIRED_REFERENCE_ERROR']:
+                raise CalibrationError(
+                    'validation_repaired_reference_error: {0}: the repaired frame '
+                    'differs from its nearby normal frame by {1:.1%}; the maximum '
+                    'allowed is {2:.1%}'.format(
+                        check['name'],
+                        repaired_error,
+                        CALIBRATION_OPTIONS['MAX_REPAIRED_REFERENCE_ERROR'],
+                    )
+                )
+            if repaired_error > original_error * (1.0 - improvement):
+                raise CalibrationError(
+                    'validation_original_improvement: {0}: full repair made the '
+                    'purple frame {1:.1%} closer to its nearby normal frame; at '
+                    'least {2:.1%} is required'.format(
+                        check['name'],
+                        original_improvement,
+                        improvement,
+                    )
+                )
+            if repaired_error > unshifted_error * (1.0 - improvement):
+                check['failure_code'] = 'phase_improvement'
+                check['reason'] = (
+                    'full repair reduced the comparison error by {0:.1%} relative '
+                    'to colour-only correction; a reduction of at least {1:.1%} '
+                    'is required'.format(
+                        phase_improvement,
+                        improvement,
+                    )
+                )
+                if phase_improvement < 0:
+                    check['reason'] = (
+                        'full repair increased the comparison error by {0:.1%} '
+                        'relative to colour-only correction; it must reduce that '
+                        'error by at least {1:.1%}'
+                    ).format(-phase_improvement, improvement)
+                # Saved-FITS searches may reject this entire group and try older
+                # evidence. The accepted groups must still beat colour-only repair.
+                # Uploads and fixed collections retain the original hard failure.
+                if collect_phase_failures and (
+                    phase_improvement > 0.0 or replace_failed_groups
+                ):
+                    phase_failures.append({
+                        'pair': pair,
+                        'check': check,
+                    })
+                    continue
+                raise CalibrationError(
+                    'validation_phase_improvement: {0}: {1}'.format(
+                        check['name'],
+                        check['reason'],
+                    )
+                )
+            similarity_checks.append(check)
+            repaired_count += 1
+        except CalibrationError as error:
+            if not replace_failed_groups:
+                raise
+            check = dict(check or {
+                'name': pair.bad.source_name or pair.bad.path.name,
+            })
+            check['failure_code'] = 'group_validation'
+            check['reason'] = str(error)
+            phase_failures.append({'pair': pair, 'check': check})
 
-    # A normal frame must take the fast no-op path.  The array comparison also
-    # guards against future changes accidentally touching normal input.
+    # Normal-frame safety checks deliberately sit outside per-group recovery.
+    # An unreadable reference can be replaced; falsely detecting or modifying
+    # a readable normal must abort rather than hide unsafe settings by omission.
     for record in unique_normal.values():
         if checkpoint_callback:
             checkpoint_callback()
-        data, _header, _index = _read_fits(record.path, copy=True)
+        try:
+            data, _header, _index = _read_fits(record.path, copy=True)
+        except Exception as error:
+            if not replace_failed_groups or not is_recoverable_fits_error(error):
+                raise
+            failed_paths = {item['pair'].bad.path for item in phase_failures}
+            for pair in pairs:
+                if (
+                    record.path in {reference.path for reference in pair.references}
+                    and pair.bad.path not in failed_paths
+                ):
+                    phase_failures.append({
+                        'pair': pair,
+                        'check': {
+                            'name': pair.bad.source_name or pair.bad.path.name,
+                            'failure_code': 'unreadable_reference',
+                            'reason': 'A normal reference in this group could not be read.',
+                        },
+                    })
+            continue
         original = data.copy()
         result = asi676mc.repair_if_needed(data, settings)
         if result['repaired'] or result['signature_before']['is_bad']:
@@ -2035,12 +2152,20 @@ def calibrate_folder(
     trusted_camera_name=None,
     target_group_count=None,
     marginal_exclusion_limit=0,
+    replacement_callback=None,
 ):
     """Run complete calibration for one staged evidence directory.
 
     The sequence matters: cheap structural/evidence checks happen before
     expensive sample fitting, and full-resolution validation happens last with
     the rounded values that a user will actually type into indi-allsky.
+
+    replacement_callback is exclusive to the saved-FITS archive worker. Each
+    request item contains a pair and either a rejection check or a measured
+    highlight_sample_count (which must not permanently reject the group).
+    The callback returns ordered, privately staged pairs: active groups first,
+    then reserves. It raises on exhaustion. Every refresh restarts fitting and
+    validation; uploads keep their existing fixed-collection policy.
     """
     config = asi676mc.normalize_settings(settings)
     if max_pair_seconds is None:
@@ -2150,6 +2275,23 @@ def calibrate_folder(
     reserve_pairs = list(pairs[working_group_count:])
     excluded_checks = []
     replacement_count = 0
+    examined_paths = {pair.bad.path for pair in active_pairs}
+
+    def replace_groups(failures, exclude=True):
+        nonlocal active_pairs, reserve_pairs, replacement_count
+        if exclude:
+            excluded_checks.extend(dict(item['check']) for item in failures)
+        refreshed_pairs = replacement_callback(failures)
+        # All fitted values must be recomputed for this refreshed collection;
+        # callers continue the outer loop before reusing any fit or validation.
+        active_pairs = list(refreshed_pairs[:requested_group_count])
+        reserve_pairs = list(refreshed_pairs[requested_group_count:])
+        new_paths = {pair.bad.path for pair in active_pairs} - examined_paths
+        replacement_count += len(new_paths)
+        examined_paths.update(new_paths)
+        print(
+            'Refitting {0} groups from the retained archive.'.format(len(active_pairs))
+        )
 
     def records_for_pairs(candidate_pairs):
         """Return the unique bad/reference records in staged pair order."""
@@ -2241,23 +2383,42 @@ def calibrate_folder(
                 'total_files': available_file_count,
                 'detected_bad_count': bad_count,
             })
+        sampling_failures = [] if replacement_callback is not None else None
         samples = collect_pair_samples(
             active_pairs,
             checkpoint_callback=checkpoint_callback,
+            failed_groups=sampling_failures,
         )
+        if sampling_failures:
+            replace_groups(sampling_failures)
+            continue
+        if replacement_callback is not None:
+            sampling_failures = _insufficient_gain_groups(samples)
+            if sampling_failures:
+                replace_groups(sampling_failures)
+                continue
         gains_detail = estimate_gains(samples)
         gain_values = {
             name: result['value']
             for name, result in gains_detail.items()
         }
-        saturation_threshold, plateau = estimate_saturation_threshold(samples)
-        print('Fitting clipped-highlight boundaries...')
-        highlight = estimate_highlight_ratios(
-            samples,
-            gain_values,
-            saturation_threshold,
-            checkpoint_callback=checkpoint_callback,
-        )
+        try:
+            saturation_threshold, plateau = estimate_saturation_threshold(samples)
+            print('Fitting clipped-highlight boundaries...')
+            highlight = estimate_highlight_ratios(
+                samples,
+                gain_values,
+                saturation_threshold,
+                checkpoint_callback=checkpoint_callback,
+            )
+        except InsufficientHighlightEvidence as error:
+            if replacement_callback is None:
+                raise
+            # Missing samples can be supplied by older groups. Other fit
+            # errors (implausible gains or unsafe highlight scores) still abort.
+            print('Searching older groups for stable clipped-highlight evidence.')
+            replace_groups(error.groups, exclude=False)
+            continue
         payload = calibration_payload(
             config,
             evidence,
@@ -2288,10 +2449,19 @@ def calibrate_folder(
             active_pairs,
             validation_settings,
             checkpoint_callback=checkpoint_callback,
-            collect_phase_failures=bool(marginal_exclusion_limit),
+            collect_phase_failures=(
+                bool(marginal_exclusion_limit) or replacement_callback is not None
+            ),
+            replace_failed_groups=replacement_callback is not None,
         )
         if not phase_failures:
             break
+
+        if replacement_callback is not None:
+            # The database worker retains the complete catalog and refreshes
+            # the bounded staging set. Uploads keep their existing policy.
+            replace_groups(phase_failures)
+            continue
 
         if (
             len(excluded_checks) + len(phase_failures)

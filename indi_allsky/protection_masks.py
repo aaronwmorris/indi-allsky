@@ -18,16 +18,12 @@ Example usage::
 
 import cv2
 import numpy as np
-#import os
 import time
 import logging
 from concurrent.futures import ThreadPoolExecutor
 
 # photutils imports; this package must be installed.
 from astropy.convolution import Gaussian2DKernel
-
-# ``protect_denoiser`` lives in :mod:`denoise`; we expose a thin wrapper
-# here to preserve the old public API without introducing a circular import.
 
 # DIAL TO TWIDDLE: Star protection expansion in pixels
 # Change this value to adjust the size of protection circles around stars
@@ -53,13 +49,7 @@ __all__ = [
     "star_mask",
     "fast_star_mask",
     "async_star_mask",
-    "set_cache_size",
 ]
-
-
-def set_cache_size(size):
-    """Deprecated: star-mask caching is no longer used."""
-    return
 
 
 def _estimate_background_stats(data: np.ndarray) -> tuple[float, float]:
@@ -216,7 +206,7 @@ def star_mask(img: np.ndarray, percentile: float = DEFAULT_PERCENTILE, expand_ra
         Grayscale image (float or uint) normalized to whatever range it uses.
     percentile : float
         Pixels whose Laplacian value is above this percentile are marked as
-        containing stars.  The default of 99%% is a reasonable starting point
+        containing stars. The default of 95%% is a reasonable starting point
         but can be adjusted based on image characteristics.
     """
 

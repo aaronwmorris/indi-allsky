@@ -58,7 +58,7 @@ Create an immediate gzipped SQLite database backup inside `/var/lib/indi-allsky/
 sudo indi-allsky-ctl backup-db
 ```
 
-### Repair File & Directory Permissions
+### Repair File & Directory Permissions (`fix-perms`)
 Recursively verify and repair ownership and permissions across all system and web directories (`/var/log/indi-allsky`, `/etc/indi-allsky`, `/var/lib/indi-allsky`, `/var/www/html/allsky`, and your active `IMAGE_FOLDER`):
 ```bash
 sudo indi-allsky-ctl fix-perms
@@ -67,6 +67,78 @@ sudo indi-allsky-ctl repair-perms
 ```
 > [!TIP]
 > Use this command if you have manually copied images, darks, or config files with `sudo` or non-standard permissions and the web interface or capture daemon cannot write to them.
+
+#### How to Relocate / Change the Image Directory
+To move image storage to a secondary drive, SSD, or custom path (e.g. `/mnt/storage/allsky/images`):
+
+1. **Stop all services:**
+   ```bash
+   sudo systemctl stop indi-allsky.service gunicorn-indi-allsky.service
+   ```
+2. **Copy existing image files to the new location:**
+   ```bash
+   sudo mkdir -p /mnt/storage/allsky/images
+   sudo rsync -av /var/www/html/allsky/images/ /mnt/storage/allsky/images/
+   ```
+3. **Update Flask & Web Configuration (`/etc/indi-allsky/flask.json`):**
+   Edit `/etc/indi-allsky/flask.json` and update `INDI_ALLSKY_IMAGE_FOLDER`:
+   ```json
+   "INDI_ALLSKY_IMAGE_FOLDER": "/mnt/storage/allsky/images",
+   ```
+4. **Update Camera Configuration:**
+   In the Web UI under **Configuration &rarr; Camera Settings**, set **`IMAGE_FOLDER`** to `/mnt/storage/allsky/images` (or update via CLI with `indi-allsky-ctl config`).
+5. **Run `fix-perms` to apply correct ownership & permissions:**
+   ```bash
+   sudo indi-allsky-ctl fix-perms
+   ```
+   *`fix-perms` automatically reads `/etc/indi-allsky/flask.json` and the database, assigns `indi-allsky:www-data` ownership, creates required `darks/` and `export/` subfolders, and sets `775` permissions so both the capture daemon and web server can read and write files.*
+6. **Restart services:**
+   ```bash
+   sudo systemctl start indi-allsky.service gunicorn-indi-allsky.service
+   ```
+
+### Capture & Generate Master Dark Frames
+Capture and stack master dark calibration frames for the connected camera without manually managing Python environments:
+```bash
+# Recommended for 16-bit RAW / monochrome / raw Bayer cameras:
+sudo indi-allsky-ctl darks sigmaclip
+
+# For RGB / JPEG / PNG webcams or IP cameras:
+sudo indi-allsky-ctl darks average
+
+# Temperature-calibrated dark series:
+sudo indi-allsky-ctl darks tempsigmaclip
+# or
+sudo indi-allsky-ctl darks tempaverage
+
+# Aliases:
+sudo indi-allsky-ctl generate-darks sigmaclip
+sudo indi-allsky-ctl capture-darks sigmaclip
+```
+*(Ensure `indi-allsky` service is stopped before taking dark frames).*
+
+### Delete / Flush Dark Calibration Frames
+Purge all master dark calibration frames from disk and database:
+```bash
+sudo indi-allsky-ctl darks flush
+# Alias:
+sudo indi-allsky-ctl flush-darks
+```
+
+### Camera Configuration Management & Reset
+Manage or reset camera configuration JSON blobs stored in the database:
+```bash
+# Reset camera configuration back to initial default values:
+sudo indi-allsky-ctl reset-config
+
+# Export active camera configuration to JSON STDOUT:
+indi-allsky-ctl dump-config
+
+# Direct access to configuration management actions:
+indi-allsky-ctl config list
+indi-allsky-ctl config dump
+sudo indi-allsky-ctl config bootstrap
+```
 
 ### Rebuild Missing Thumbnails
 Scan your historical image collection and generate any missing thumbnails for timelapses, keograms, and startrails:

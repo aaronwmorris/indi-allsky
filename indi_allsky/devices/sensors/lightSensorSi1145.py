@@ -89,7 +89,7 @@ class LightSensorSi1145(SensorBase):
                 self.vis_gain_day,
                 str(self.vis_range_high_day),
                 self.ir_gain_day,
-                str(self.ir_range_high_night),
+                str(self.ir_range_high_day),
             )
             self.si1145.vis_gain = self.vis_gain_day
             self.si1145.ir_gain = self.ir_gain_day
