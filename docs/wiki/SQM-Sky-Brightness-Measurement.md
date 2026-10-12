@@ -25,7 +25,9 @@ The exposure from your camera should be at least 1.0s to ensure linearity of the
 ## Raw Magnitude
 The average ADU measurement [Analog-to-Digital Unit] of the central part of the image is taken and a "raw magnitude" calculated using the following formula:
 
-    raw_magnitude = -log10(adu) * 2.5
+$$
+RawMagnitude = {-log_{10}\left(adu\right)} \cdot 2.5
+$$
 
 This results in a negative relative magnitude which can be offset to determine absolute magnitude.
 
@@ -67,3 +69,4 @@ For example, at unity gain... If 100 photons generates one electron volt of sign
 
 ## Unsupported Configs
 Specialty cameras such as Network IP web cameras are not suitable to the task of measuring sky brightness.  These cameras generally do not permit control of exposure or gain, and there for cannot provide valid measurements.
+

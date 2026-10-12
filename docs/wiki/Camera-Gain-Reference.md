@@ -138,3 +138,4 @@ $$
 $$
 NewExposure = CurrentExposure \cdot 10^\left(\frac{NewGain - CurrentGain}{20}\right)
 $$
+

@@ -7,6 +7,7 @@ https://github.com/indilib/indi-3rdparty
 ## Releases
 | INDI Release | Date         | ZWO ASI | ToupTek            | SvBony | PlayerOne | QHY         |
 | ------------ | ------------ | ------- | ------------------ | ------ | --------- | ----------- |
+| v2.2.5       | Oct 1, 2026  |         | 60.32226.20260808  |        |           |             |
 | v2.2.4       | Aug 1, 2026  |         |                    |        |           | v26.7.21    |
 | v2.2.3.1     | Jun 15, 2026 |         |                    |        |           |             |
 | v2.2.3       | Jun 14, 2026 |         | 60.31631.20260606  |        |           |             |

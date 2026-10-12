@@ -192,7 +192,7 @@ class ValidateDatabaseEntries(object):
         for s in startrail_entries:
             if not s.validateFile():
                 #logger.warning('Entry not found on filesystem: %s', s.filename)
-                keogram_notfound_list.append(s)
+                startrail_notfound_list.append(s)
 
 
 
