@@ -56,9 +56,13 @@ override_dh_builddeb:
 override_dh_shlibdeps:
 
 override_dh_installsystemd:
-	dh_installsystemd --name=gunicorn-indi-allsky
-	dh_installsystemd --name=indi-allsky --no-enable --no-start
-	dh_installsystemd --name=indiserver --no-enable --no-start
+	# Enable gunicorn service in indi-allsky-web
+	dh_installsystemd -pindi-allsky --name=gunicorn-indi-allsky
+	# Enable indi-allsky and indiserver services in full indi-allsky
+	dh_installsystemd -pindi-allsky --name=indi-allsky --no-enable --no-start
+	dh_installsystemd -pindi-allsky --name=indiserver --no-enable --no-start
+	# Install indi-allsky-mcp service but do not enable or start automatically
+	dh_installsystemd -pindi-allsky --name=indi-allsky-mcp --no-enable --no-start
 
 override_dh_fixperms:
 	dh_fixperms
