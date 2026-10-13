@@ -75,7 +75,8 @@ class AuroraDataUpdater(object):
         for camera in active_cameras:
             logger.warning('Updating camera: %s', camera.name)
             aurora.update(camera)
-            smoke.update(camera)
+            if self.config.get('SMOKE_ENABLE', True):
+                smoke.update(camera)
 
 
         # satellite data is not location/camera dependent

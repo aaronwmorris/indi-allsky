@@ -4664,6 +4664,7 @@ class IndiAllskyConfigForm(FlaskForm):
     LOCATION_LATITUDE                = FloatField('Latitude', validators=[LOCATION_LATITUDE_validator])
     LOCATION_LONGITUDE               = FloatField('Longitude', validators=[LOCATION_LONGITUDE_validator])
     LOCATION_ELEVATION               = IntegerField('Elevation', validators=[LOCATION_ELEVATION_validator])
+    SMOKE_ENABLE                     = BooleanField('Enable NOAA HMS Smoke Data')
     TIMELAPSE_ENABLE                 = BooleanField('Enable Timelapse Creation')
     TIMELAPSE_SKIP_FRAMES            = IntegerField('Timelapse Skip Frames', validators=[TIMELAPSE_SKIP_FRAMES_validator])
     TIMELAPSE__PRE_PROCESSOR         = SelectField('Timelapse Processing (Night)', choices=TIMELAPSE__PRE_PROCESSOR_choices, validators=[TIMELAPSE__PRE_PROCESSOR_validator])
