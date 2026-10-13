@@ -35,7 +35,7 @@ sudo tee /etc/apt/sources.list.d/indi-allsky.sources <<EOF
 Types: deb
 URIs: https://apt.indi-allsky.org
 Suites: $(lsb_release -cs)
-Components: stable
+Components: nightly
 Architectures: $(dpkg --print-architecture)
 Signed-By: /etc/apt/keyrings/indi-allsky.gpg
 EOF

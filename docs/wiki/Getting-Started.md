@@ -66,14 +66,11 @@ sudo tee /etc/apt/sources.list.d/indi-allsky.sources <<EOF
 Types: deb
 URIs: https://apt.indi-allsky.org
 Suites: $(lsb_release -cs)
-Components: stable
+Components: nightly
 Architectures: $(dpkg --print-architecture)
 Signed-By: /etc/apt/keyrings/indi-allsky.gpg
 EOF
 ```
-
-> [!NOTE]
-> To use bleeding-edge nightly builds, set `Components: nightly` in the `.sources` file above, or visit the [APT Web Portal](https://apt.indi-allsky.org/) to toggle release channels.
 
 ### 3. Install indi-allsky
 ```bash
@@ -181,7 +178,7 @@ An indiserver-only installation deploys the INDI driver server and camera driver
    Types: deb
    URIs: https://apt.indi-allsky.org
    Suites: $(lsb_release -cs)
-   Components: stable
+   Components: nightly
    Architectures: $(dpkg --print-architecture)
    Signed-By: /etc/apt/keyrings/indi-allsky.gpg
    EOF
@@ -264,7 +261,7 @@ The web-only install is intended for remote configuration to use the [SyncAPI](h
    Types: deb
    URIs: https://apt.indi-allsky.org
    Suites: $(lsb_release -cs)
-   Components: stable
+   Components: nightly
    Architectures: $(dpkg --print-architecture)
    Signed-By: /etc/apt/keyrings/indi-allsky.gpg
    EOF
