@@ -7,6 +7,10 @@ Certain functions like automated database backups do not work with MariaDB.
 # General
 
 Use these instructions to convert your Sqlite database to MariaDB/MySQL.
+
+> [!NOTE]
+> **Debian Package (`.deb`) Users**: On Debian package installations, use `sudo systemctl stop indi-allsky` and invoke Flask/database commands using `/var/lib/indi-allsky/venv/bin/flask`. Do not activate non-existent user virtual environments.
+
 1. Stop indi-allsky
 
         systemctl --user stop indi-allsky

@@ -217,6 +217,9 @@ An indiserver-only installation deploys the INDI driver server and camera driver
 
 ### Manual Operation
 
+> [!NOTE]
+> The manual execution steps below apply to source checkouts created via `setup.sh`. On Debian package installations, use systemd system units (`sudo systemctl stop indi-allsky`) and `/var/lib/indi-allsky/venv/bin/python /usr/lib/indi-allsky/allsky.py run`.
+
 1. Stop indi-allsky service:
    ```bash
    systemctl --user stop indi-allsky
