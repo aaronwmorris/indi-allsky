@@ -88,8 +88,13 @@ def validateCalibration(model):
         if not isinstance(model.get('camera_uuid'), str) or len(model['camera_uuid']) > 64:
             return False
         # Keep the schema bounded; diagnostics are generated as a short string.
-        if set(model) != {'version', 'coefficients', 'bounds', 'geometry', 'image_size',
+        if set(model)-{'orientation'} != {'version', 'coefficients', 'bounds', 'geometry', 'image_size',
                           'context', 'pipeline', 'camera_uuid', 'summary'}:
+            return False
+        # Models saved before mirroring support belong to the unflipped overlay.
+        orientation = model.get('orientation', [False, False])
+        if (not isinstance(orientation, list) or len(orientation) != 2
+                or any(type(value) is not bool for value in orientation)):
             return False
         if not isinstance(model['summary'], str) or len(model['summary']) > 500:
             return False
@@ -191,14 +196,16 @@ def fitCorrection(predicted, detected, expected, radius):
 
 
 def calibrate(detections, catalog, latitude, longitude, timestamp, params,
-              width, height, altitude, heading, mask):
+              width, height, altitude, heading, mask, *, flip_h=False, flip_v=False):
+    # Fit residuals after reflection, in photo coordinates. The detections and
+    # exclusion mask stay fixed; the browser applies this correction last too.
     center = np.array([width/2+params[4], height/2-params[5]])
     reference = params[3]/2
 
     def visiblePoints(alt, az):
         # Catalogue matches and coverage must use the same sensor/mask bounds.
         x, y = projectToPixels(alt, az, params, width, height,
-                              lens_altitude=altitude, pointing_azimuth=heading)
+                              lens_altitude=altitude, pointing_azimuth=heading, flip_h=flip_h, flip_v=flip_v)
         keep = (cameraAltAz(alt, az, altitude, heading)[0] > 0)
         keep &= (x >= 0) & (x < width) & (y >= 0) & (y < height)
         x, y = x[keep], y[keep]

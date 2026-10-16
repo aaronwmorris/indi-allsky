@@ -33,7 +33,7 @@ COARSE_GRID_HALF_SPAN_DEG = 180.0
 COARSE_GRID_STEP_DEG = 7.5
 COARSE_MATCH_RADIUS_FRACTION = 0.02
 MIN_COARSE_MATCH_RADIUS_PX = 8.0
-# never recommend a destructive image flip off a handful of noise matches
+# never recommend changing overlay orientation off a handful of noise matches
 CHIRALITY_MIN_RATIO = 1.5
 
 STAGE1_AZIMUTH_BOUND_DEG = 60.0
@@ -120,8 +120,8 @@ EFFECTIVE_MIN_MATCHED_STARS = int(round(MATCH_CONFIDENCE_MULTIPLIER * MIN_MATCHE
 SolveContext = collections.namedtuple('SolveContext', [
     'detections', 'tree', 'catalog', 'latitude', 'longitude',
     'obstime_unix', 'image_width', 'image_height', 'min_alt_rad',
-    'initial_params', 'lens_altitude', 'pointing_azimuth',
-], defaults=(90.0, 0.0))
+    'initial_params', 'lens_altitude', 'pointing_azimuth', 'flip_h', 'flip_v',
+], defaults=(90.0, 0.0, False, False))
 
 
 def _rmsGatePx(diameter):
@@ -236,8 +236,8 @@ def _chiralityMismatchResult(best_mirror_count, coarse_radius):
         'success': False,
         'reason': 'chirality_mismatch',
         'message': ('Image appears mirrored relative to the expected '
-                    'orientation. Toggle exactly one of Config -> Image -> '
-                    'Flip Image Horizontally or Flip Image Vertically, '
+                    'overlay orientation. Toggle exactly one of '
+                    'Flip Overlay Horizontally or Flip Overlay Vertically, '
                     'then re-solve.'),
         'stars_matched': best_mirror_count,
         'final_match_radius': coarse_radius,
@@ -287,6 +287,38 @@ def _buildFitResult(final, n, rms, radius, partial):
     }
 
 
+def fitOrientations(fit, flip_h=False, flip_v=False):
+    """Compare validated fits for both handednesses.
+
+    The callback runs the same fitting stages for each orientation and returns
+    the usual fit result. Only successful fits participate in the comparison.
+
+    A vertical reflection equals a horizontal reflection plus 180 degrees
+    of roll. Keep the vertical flag to avoid equivalent settings jumping
+    between solves; searching roll and horizontal parity is complete.
+    """
+    successes, failures = [], []
+    for horizontal in (flip_h, not flip_h):
+        result = fit(horizontal, flip_v)
+        if result['success']:
+            successes.append(dict(result, flip_h=horizontal, flip_v=flip_v))
+        else:
+            failures.append(result)
+    if not successes:
+        # Prefer the actual fitting failure to a request to flip manually.
+        return max(failures, key=lambda r: (r['reason'] != 'chirality_mismatch', r['stars_matched']))
+    # A slightly lower residual alone cannot resolve two well-supported mirrors.
+    successes.sort(key=lambda r: (-r['stars_matched'], r['rms_px']))
+    if (len(successes) == 2 and successes[0]['stars_matched']
+            <= CHIRALITY_MIN_RATIO * successes[1]['stars_matched']):
+        return {
+            'success': False, 'reason': 'orientation_ambiguous',
+            'message': 'Star matches do not determine a reliable overlay orientation. Try a clearer frame.',
+            'stars_matched': successes[0]['stars_matched'],
+        }
+    return successes[0]
+
+
 class FitEngine(object):
     """One staged fit over a fixed SolveContext: coarse azimuth/chirality
     grid, two least-squares stages, seed-search fallbacks, and refinement
@@ -327,6 +359,18 @@ class FitEngine(object):
 
         return result
 
+    def fitWithOrientation(self, p0, diameter0):
+        original = self.ctx
+
+        def fit(flip_h, flip_v):
+            self.ctx = original._replace(flip_h=flip_h, flip_v=flip_v)
+            return self.fitWithFallbacks(p0, diameter0)
+
+        try:
+            return fitOrientations(fit, original.flip_h, original.flip_v)
+        finally:
+            self.ctx = original
+
     def _visibleStars(self, alt, az):
         visible = alt > self.ctx.min_alt_rad
         if self.ctx.lens_altitude is not None and self.ctx.lens_altitude != 90.0:
@@ -339,7 +383,7 @@ class FitEngine(object):
         ctx = self.ctx
         return projectToPixels(alt, az, params, ctx.image_width, ctx.image_height,
                                mirror=mirror, lens_altitude=ctx.lens_altitude,
-                               pointing_azimuth=ctx.pointing_azimuth)
+                               pointing_azimuth=ctx.pointing_azimuth, flip_h=ctx.flip_h, flip_v=ctx.flip_v)
 
     def _matchAtParams(self, params, radius, precomputed_alt_az=None):
         ctx = self.ctx

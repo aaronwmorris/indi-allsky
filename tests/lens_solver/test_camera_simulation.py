@@ -226,7 +226,7 @@ def test_varied_distorted_camera(tmp_path, case):
 
 
 @pytest.mark.parametrize('kind', ['noise', 'grid', 'mirror'])
-def test_flexible_lens_does_not_turn_false_stars_into_a_solution(tmp_path, kind):
+def test_flexible_lens_distinguishes_mirrors_from_false_stars(tmp_path, kind):
     path = tmp_path/'false-sky.png'
     diameter = 1600/lens_radius(np.radians(70), 'equisolid')
     if kind == 'mirror':
@@ -247,7 +247,11 @@ def test_flexible_lens_does_not_turn_false_stars_into_a_solution(tmp_path, kind)
         IMAGE_CIRCLE_DIAMETER=diameter, OFFSET_X=0, OFFSET_Y=0,
         LENS_ALTITUDE=90, POINTING_AZIMUTH=0, PRECESSION=True, RADIAL_DISTORTION=0)
     result = IndiAllSkyLensSolver({}).solve(path, 53, 11, observed_sky(0)[0], initial)
-    assert not result['success'] and 'values' not in result, result
     if kind == 'mirror':
-        assert result['reason'] == 'chirality_mismatch'
-        assert 'Flip Image' in result['message']
+        assert result['success'] and not result['partial'], result
+        values = result['values']
+        assert values['FLIP_H'] is True and values['FLIP_V'] is False
+        assert abs(values['LENS_ALTITUDE']-ALTITUDE) < 0.5
+        assert abs((values['POINTING_AZIMUTH']-HEADING+180) % 360-180) < 2
+    else:
+        assert not result['success'] and 'values' not in result, result
