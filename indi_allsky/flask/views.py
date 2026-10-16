@@ -28,6 +28,7 @@ from .. import constants
 from .. import asi676mc
 from .. import asi676mc_calibration
 from ..processing import ImageProcessor
+from ..charts import BUILTIN_CHARTS, MAX_CUSTOM_CHARTS, build_chart_data, chart_configuration, chart_definitions, validate_chart_configuration
 from ..lens_solver import IndiAllSkyLensSolver
 from ..lens_solver import parseSolverRequestValues
 from ..lens_solver import applySolvedValuesToConfig
@@ -95,6 +96,7 @@ from sqlalchemy.sql.expression import false as sa_false
 from sqlalchemy.sql.expression import null as sa_null
 
 from .forms import IndiAllskyConfigForm
+from .forms import IndiAllskyChartConfigForm
 from .forms import IndiAllskyImageViewer
 from .forms import IndiAllskyImageViewerPreload
 from .forms import IndiAllskyFitsImageViewer
@@ -295,6 +297,12 @@ class IndexCanvasView(TemplateView):
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
         context['refreshInterval'] = refreshInterval_ms + 1000  # additional time for exposures to download
 
+        context['chart_overlays'] = chart_configuration(self.indi_allsky_config, self.camera.data, is_local=self.camera.local)
+        context['chart_overlays']['definitions'] = chart_definitions(
+            self.indi_allsky_config, self.camera.data, is_local=self.camera.local)
+        if self.latest_image_view != 'indi_allsky.js_latest_image_view':
+            context['chart_overlays']['OVERLAY_IDS'] = []
+
         return context
 
 
@@ -420,6 +428,8 @@ class JsonLatestImageView(JsonView):
             data['latest_image']['width'] = latest_image_data['width']
             data['latest_image']['height'] = latest_image_data['height']
             data['latest_image']['message'] = ''
+            if 'label_bounds' in latest_image_data:
+                data['latest_image']['label_bounds'] = latest_image_data['label_bounds']
 
 
         return data
@@ -476,6 +486,9 @@ class JsonLatestImageView(JsonView):
             'width' : latest_image.width,
             'height' : latest_image.height,
         }
+        bounds = (latest_image.data or {}).get('chart_label_bounds')
+        if bounds:
+            image_data['label_bounds'] = bounds
 
         return image_data
 
@@ -492,6 +505,12 @@ class IndexImgView(TemplateView):
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
         context['refreshInterval'] = refreshInterval_ms + 1000  # additional time for exposures to download
+
+        context['chart_overlays'] = chart_configuration(self.indi_allsky_config, self.camera.data, is_local=self.camera.local)
+        context['chart_overlays']['definitions'] = chart_definitions(
+            self.indi_allsky_config, self.camera.data, is_local=self.camera.local)
+        if self.latest_image_view != 'indi_allsky.js_latest_image_view':
+            context['chart_overlays']['OVERLAY_IDS'] = []
 
         return context
 
@@ -1725,44 +1744,66 @@ class ChartView(TemplateView):
         context['form_history'] = IndiAllskyChartHistoryForm()
 
 
-        if self.camera.data:
-            camera_data = dict(self.camera.data)
-        else:
-            camera_data = dict()
+        context['chart_settings'] = chart_configuration(self.indi_allsky_config, self.camera.data, is_local=self.camera.local)
+        context['chart_definitions'] = chart_definitions(
+            self.indi_allsky_config, self.camera.data, is_local=self.camera.local)
 
-
-        custom_chart_1_key = camera_data.get('custom_chart_1_key', 'sensor_user_10')
-        custom_chart_2_key = camera_data.get('custom_chart_2_key', 'sensor_user_11')
-        custom_chart_3_key = camera_data.get('custom_chart_3_key', 'sensor_user_12')
-        custom_chart_4_key = camera_data.get('custom_chart_4_key', 'sensor_user_13')
-        custom_chart_5_key = camera_data.get('custom_chart_5_key', 'sensor_user_14')
-        custom_chart_6_key = camera_data.get('custom_chart_6_key', 'sensor_user_15')
-        custom_chart_7_key = camera_data.get('custom_chart_7_key', 'sensor_user_16')
-        custom_chart_8_key = camera_data.get('custom_chart_8_key', 'sensor_user_17')
-        custom_chart_9_key = camera_data.get('custom_chart_9_key', 'sensor_user_18')
-
-
-        context['label_custom_chart_1'] = camera_data.get(custom_chart_1_key, 'Unset')
-        context['min_custom_chart_1'] = camera_data.get('custom_chart_1_min', 0.0)
-        context['label_custom_chart_2'] = camera_data.get(custom_chart_2_key, 'Unset')
-        context['min_custom_chart_2'] = camera_data.get('custom_chart_2_min', 0.0)
-        context['label_custom_chart_3'] = camera_data.get(custom_chart_3_key, 'Unset')
-        context['min_custom_chart_3'] = camera_data.get('custom_chart_3_min', 0.0)
-        context['label_custom_chart_4'] = camera_data.get(custom_chart_4_key, 'Unset')
-        context['min_custom_chart_4'] = camera_data.get('custom_chart_4_min', 0.0)
-        context['label_custom_chart_5'] = camera_data.get(custom_chart_5_key, 'Unset')
-        context['min_custom_chart_5'] = camera_data.get('custom_chart_5_min', 0.0)
-        context['label_custom_chart_6'] = camera_data.get(custom_chart_6_key, 'Unset')
-        context['min_custom_chart_6'] = camera_data.get('custom_chart_6_min', 0.0)
-        context['label_custom_chart_7'] = camera_data.get(custom_chart_7_key, 'Unset')
-        context['min_custom_chart_7'] = camera_data.get('custom_chart_7_min', 0.0)
-        context['label_custom_chart_8'] = camera_data.get(custom_chart_8_key, 'Unset')
-        context['min_custom_chart_8'] = camera_data.get('custom_chart_8_min', 0.0)
-        context['label_custom_chart_9'] = camera_data.get(custom_chart_9_key, 'Unset')
-        context['min_custom_chart_9'] = camera_data.get('custom_chart_9_min', 0.0)
-
+        context['can_manage_charts'] = app.config['LOGIN_DISABLED'] or (current_user.is_authenticated and current_user.is_admin)
+        if context['can_manage_charts']:
+            context['form_config'] = IndiAllskyChartConfigForm(data={
+                'CHARTS__CONFIG': json.dumps(chart_configuration(self.indi_allsky_config))})
+            metadata = self.camera.data or {}
+            choices = dict(IndiAllskyConfigForm.CUSTOM_CHART_choices, **IndiAllskyConfigForm.SENSOR_SLOT_choices)
+            context['chart_source_choices'] = {
+                group: [(source, metadata.get(source, label)) for source, label in sources]
+                for group, sources in choices.items()}
+            context['chart_builtin_definitions'] = BUILTIN_CHARTS
+            context['chart_maximum'] = MAX_CUSTOM_CHARTS
 
         return context
+
+
+class AjaxChartConfigView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def dispatch_request(self):
+        if not app.config['LOGIN_DISABLED'] and not current_user.is_admin:
+            return jsonify({'form_global': ['You do not have permission to make configuration changes']}), 400
+
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return jsonify({'form_global': ['Invalid chart configuration']}), 400
+        reload_on_save = payload.get('RELOAD_ON_SAVE', False)
+        if not isinstance(reload_on_save, bool):
+            return jsonify({'RELOAD_ON_SAVE': ['Reload on Save must be a boolean']}), 400
+        form_config = IndiAllskyChartConfigForm(data=payload)
+        if not form_config.validate():
+            return jsonify(form_config.errors), 400
+        if not self.indi_allsky_config:
+            return jsonify({'form_global': ['Configuration is unavailable']}), 400
+
+        settings = validate_chart_configuration(json.loads(form_config.CHARTS__CONFIG.data))
+        previous = self.indi_allsky_config.get('CHARTS', {})
+        self.indi_allsky_config['CHARTS'] = settings
+        username = 'system' if app.config['LOGIN_DISABLED'] else current_user.username
+        try:
+            self._indi_allsky_config_obj.save(username, 'Updated chart settings')
+        except ConfigSaveException as error:
+            self.indi_allsky_config['CHARTS'] = previous
+            return jsonify({'form_global': [str(error)]}), 400
+        if reload_on_save:
+            self._miscDb.setState('STATUS', constants.STATUS_RELOADING)
+            task_reload = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.MAIN,
+                state=TaskQueueState.MANUAL,
+                priority=100,
+                data={'action': 'reload'},
+            )
+            db.session.add(task_reload)
+            db.session.commit()
+            return jsonify({'success-message': 'Saved new config. Reloading indi-allsky service.'})
+        return jsonify({'success-message': 'Saved new config.'})
 
 
 class JsonChartView(JsonView):
@@ -1790,11 +1831,12 @@ class JsonChartView(JsonView):
 
         data = {
             'chart_data' : self.getChartData(camera_id, ts_dt, history_seconds),
+            'chart_definitions': chart_definitions(self.indi_allsky_config, self.camera.data, is_local=self.camera.local),
             'message' : '',
         }
 
 
-        if len(data['chart_data']['jsqm']) == 0:
+        if not any(points for key, points in data['chart_data'].items() if key != 'histogram') and not any(data['chart_data']['histogram'].values()):
             data['message'] = 'No chart data in history range'
 
 
@@ -1802,8 +1844,6 @@ class JsonChartView(JsonView):
 
 
     def getChartData(self, camera_id, ts_dt, history_seconds):
-        import numpy
-
         ts_minus_seconds = ts_dt - timedelta(seconds=history_seconds)
 
         chart_query = IndiAllSkyDbImageTable.query\
@@ -1831,225 +1871,18 @@ class JsonChartView(JsonView):
 
         #app.logger.info('Chart SQL: %s', str(chart_query))
 
-        chart_data = {
-            'jsqm'   : [],
-            'jsqm_d' : [],
-            'stars' : [],
-            'temp'  : [],
-            'gain'  : [],
-            'exp'   : [],
-            'detection' : [],
-            'custom_1'  : [],
-            'custom_2'  : [],
-            'custom_3'  : [],
-            'custom_4'  : [],
-            'custom_5'  : [],
-            'custom_6'  : [],
-            'custom_7'  : [],
-            'custom_8'  : [],
-            'custom_9'  : [],
-            'histogram' : {
-                'red'   : [],
-                'green' : [],
-                'blue'  : [],
-                'gray'  : [],
-            },
-        }
+        definitions = chart_definitions(self.indi_allsky_config, self.camera.data, is_local=self.camera.local)
+        selected = request.args.get('series')
+        selected_ids = set(selected.split(',')) if selected is not None else None
+        chart_data = build_chart_data(chart_query, definitions, self.indi_allsky_config.get('TEMP_DISPLAY'), selected_ids,
+                          include_timestamp=request.args.get('image_chart') == '1')
+        if selected is None:
+            chart_data['jsqm_d'] = []
+        chart_data['histogram'] = {'red': [], 'green': [], 'blue': [], 'gray': []}
+        if request.args.get('histogram', '1') != '1':
+            return chart_data
 
-
-        if self.camera.data:
-            camera_data = dict(self.camera.data)
-        else:
-            camera_data = dict()
-
-
-        custom_chart_1_key = camera_data.get('custom_chart_1_key', 'sensor_user_10')
-        custom_chart_2_key = camera_data.get('custom_chart_2_key', 'sensor_user_11')
-        custom_chart_3_key = camera_data.get('custom_chart_3_key', 'sensor_user_12')
-        custom_chart_4_key = camera_data.get('custom_chart_4_key', 'sensor_user_13')
-        custom_chart_5_key = camera_data.get('custom_chart_5_key', 'sensor_user_14')
-        custom_chart_6_key = camera_data.get('custom_chart_6_key', 'sensor_user_15')
-        custom_chart_7_key = camera_data.get('custom_chart_7_key', 'sensor_user_16')
-        custom_chart_8_key = camera_data.get('custom_chart_8_key', 'sensor_user_17')
-        custom_chart_9_key = camera_data.get('custom_chart_9_key', 'sensor_user_18')
-
-
-        for i in chart_query:
-            x = i.createDate.strftime('%H:%M:%S')
-
-            jsqm_data = {
-                'x' : x,
-                'y' : i.jsqm,
-            }
-            chart_data['jsqm'].append(jsqm_data)
-
-            star_data = {
-                'x' : x,
-                'y' : int(i.stars_rolling),
-            }
-            chart_data['stars'].append(star_data)
-
-
-            if self.indi_allsky_config.get('TEMP_DISPLAY') == 'f':
-                sensortemp = ((i.temp * 9.0) / 5.0) + 32
-            elif self.indi_allsky_config.get('TEMP_DISPLAY') == 'k':
-                sensortemp = i.temp + 273.15
-            else:
-                sensortemp = i.temp
-
-            temp_data = {
-                'x' : x,
-                'y' : sensortemp,
-            }
-            chart_data['temp'].append(temp_data)
-
-            exp_data = {
-                'x' : x,
-                'y' : i.exposure,
-            }
-            chart_data['exp'].append(exp_data)
-
-            gain_data = {
-                'x' : x,
-                'y' : i.gain,
-            }
-            chart_data['gain'].append(gain_data)
-
-            #jsqm_d_data = {
-            #    'x' : x,
-            #    'y' : i.jsqm_diff,
-            #}
-            #chart_data['jsqm_d'].append(jsqm_d_data)
-
-
-            if i.detections > 0:
-                detection = 1
-            else:
-                detection = 0
-
-            detection_data = {
-                'x' : x,
-                'y' : detection,
-            }
-            chart_data['detection'].append(detection_data)
-
-
-            # custom chart 1
-            try:
-                custom_1_y = i.data[custom_chart_1_key]
-            except KeyError:
-                custom_1_y = 0
-
-            custom_1_data = {
-                'x' : x,
-                'y' : custom_1_y,
-            }
-            chart_data['custom_1'].append(custom_1_data)
-
-
-            # custom chart 2
-            try:
-                custom_2_y = i.data[custom_chart_2_key]
-            except KeyError:
-                custom_2_y = 0
-
-            custom_2_data = {
-                'x' : x,
-                'y' : custom_2_y,
-            }
-            chart_data['custom_2'].append(custom_2_data)
-
-
-            # custom chart 3
-            try:
-                custom_3_y = i.data[custom_chart_3_key]
-            except KeyError:
-                custom_3_y = 0
-
-            custom_3_data = {
-                'x' : x,
-                'y' : custom_3_y,
-            }
-            chart_data['custom_3'].append(custom_3_data)
-
-
-            # custom chart 4
-            try:
-                custom_4_y = i.data[custom_chart_4_key]
-            except KeyError:
-                custom_4_y = 0
-
-            custom_4_data = {
-                'x' : x,
-                'y' : custom_4_y,
-            }
-            chart_data['custom_4'].append(custom_4_data)
-
-
-            # custom chart 5
-            try:
-                custom_5_y = i.data[custom_chart_5_key]
-            except KeyError:
-                custom_5_y = 0
-
-            custom_5_data = {
-                'x' : x,
-                'y' : custom_5_y,
-            }
-            chart_data['custom_5'].append(custom_5_data)
-
-
-            # custom chart 6
-            try:
-                custom_6_y = i.data[custom_chart_6_key]
-            except KeyError:
-                custom_6_y = 0
-
-            custom_6_data = {
-                'x' : x,
-                'y' : custom_6_y,
-            }
-            chart_data['custom_6'].append(custom_6_data)
-
-
-            # custom chart 7
-            try:
-                custom_7_y = i.data[custom_chart_7_key]
-            except KeyError:
-                custom_7_y = 0
-
-            custom_7_data = {
-                'x' : x,
-                'y' : custom_7_y,
-            }
-            chart_data['custom_7'].append(custom_7_data)
-
-
-            # custom chart 8
-            try:
-                custom_8_y = i.data[custom_chart_8_key]
-            except KeyError:
-                custom_8_y = 0
-
-            custom_8_data = {
-                'x' : x,
-                'y' : custom_8_y,
-            }
-            chart_data['custom_8'].append(custom_8_data)
-
-
-            # custom chart 9
-            try:
-                custom_9_y = i.data[custom_chart_9_key]
-            except KeyError:
-                custom_9_y = 0
-
-            custom_9_data = {
-                'x' : x,
-                'y' : custom_9_y,
-            }
-            chart_data['custom_9'].append(custom_9_data)
-
+        import numpy
 
         # build last image histogram
         now_minus_seconds = ts_dt - timedelta(seconds=history_seconds)
@@ -3228,24 +3061,6 @@ class ConfigView(FormView):
             'TEMP_SENSOR__AS3935_NOISE_LEVEL'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('AS3935_NOISE_LEVEL', 2),
             'TEMP_SENSOR__AS3935_SPIKE_REJECTION': self.indi_allsky_config.get('TEMP_SENSOR', {}).get('AS3935_SPIKE_REJECTION', 2),
             'TEMP_SENSOR__LUX_MAGNITUDE_OFFSET'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('LUX_MAGNITUDE_OFFSET', 26.0),
-            'CHARTS__CUSTOM_SLOT_1'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 'sensor_user_10'),
-            'CHARTS__CUSTOM_SLOT_1_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1_MIN', 0.0),
-            'CHARTS__CUSTOM_SLOT_2'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 'sensor_user_11'),
-            'CHARTS__CUSTOM_SLOT_2_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2_MIN', 0.0),
-            'CHARTS__CUSTOM_SLOT_3'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 'sensor_user_12'),
-            'CHARTS__CUSTOM_SLOT_3_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3_MIN', 0.0),
-            'CHARTS__CUSTOM_SLOT_4'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 'sensor_user_13'),
-            'CHARTS__CUSTOM_SLOT_4_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4_MIN', 0.0),
-            'CHARTS__CUSTOM_SLOT_5'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_5', 'sensor_user_14'),
-            'CHARTS__CUSTOM_SLOT_5_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_5_MIN', 0.0),
-            'CHARTS__CUSTOM_SLOT_6'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_6', 'sensor_user_15'),
-            'CHARTS__CUSTOM_SLOT_6_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_6_MIN', 0.0),
-            'CHARTS__CUSTOM_SLOT_7'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_7', 'sensor_user_16'),
-            'CHARTS__CUSTOM_SLOT_7_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_7_MIN', 0.0),
-            'CHARTS__CUSTOM_SLOT_8'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_8', 'sensor_user_14'),
-            'CHARTS__CUSTOM_SLOT_8_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_8_MIN', 0.0),
-            'CHARTS__CUSTOM_SLOT_9'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_9', 'sensor_user_15'),
-            'CHARTS__CUSTOM_SLOT_9_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_9_MIN', 0.0),
             'ADSB__ENABLE'                   : self.indi_allsky_config.get('ADSB', {}).get('ENABLE', False),
             'ADSB__DUMP1090_URL'             : self.indi_allsky_config.get('ADSB', {}).get('DUMP1090_URL', 'https://localhost/skyaware/data/aircraft.json'),
             'ADSB__USERNAME'                 : self.indi_allsky_config.get('ADSB', {}).get('USERNAME', ''),
@@ -3506,6 +3321,8 @@ class ConfigView(FormView):
         form_data['ADMIN_NETWORKS_FLASK'] = admin_network_text
 
         context['form_config'] = IndiAllskyConfigForm(data=form_data)
+        context['chart_builtin_definitions'] = BUILTIN_CHARTS
+        context['chart_maximum'] = MAX_CUSTOM_CHARTS
 
         return context
 
@@ -4317,24 +4134,6 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['AS3935_NOISE_LEVEL']    = int(request.json['TEMP_SENSOR__AS3935_NOISE_LEVEL'])
         self.indi_allsky_config['TEMP_SENSOR']['AS3935_SPIKE_REJECTION'] = int(request.json['TEMP_SENSOR__AS3935_SPIKE_REJECTION'])
         self.indi_allsky_config['TEMP_SENSOR']['LUX_MAGNITUDE_OFFSET']  = float(request.json['TEMP_SENSOR__LUX_MAGNITUDE_OFFSET'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_1']              = str(request.json['CHARTS__CUSTOM_SLOT_1'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_1_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_1_MIN'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_2']              = str(request.json['CHARTS__CUSTOM_SLOT_2'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_2_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_2_MIN'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_3']              = str(request.json['CHARTS__CUSTOM_SLOT_3'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_3_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_3_MIN'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_4']              = str(request.json['CHARTS__CUSTOM_SLOT_4'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_4_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_4_MIN'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_5']              = str(request.json['CHARTS__CUSTOM_SLOT_5'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_5_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_5_MIN'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_6']              = str(request.json['CHARTS__CUSTOM_SLOT_6'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_6_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_6_MIN'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_7']              = str(request.json['CHARTS__CUSTOM_SLOT_7'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_7_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_7_MIN'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_8']              = str(request.json['CHARTS__CUSTOM_SLOT_8'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_8_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_8_MIN'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_9']              = str(request.json['CHARTS__CUSTOM_SLOT_9'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_9_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_9_MIN'])
         self.indi_allsky_config['ADSB']['ENABLE']                       = bool(request.json['ADSB__ENABLE'])
         self.indi_allsky_config['ADSB']['DUMP1090_URL']                 = str(request.json['ADSB__DUMP1090_URL'])
         self.indi_allsky_config['ADSB']['USERNAME']                     = str(request.json['ADSB__USERNAME'])
@@ -14781,7 +14580,8 @@ bp_allsky.add_url_rule('/js/loopraw', view_func=JsonRawImageLoopView.as_view('js
 
 bp_allsky.add_url_rule('/sqm', view_func=SqmView.as_view('sqm_view', template_name='sqm.html'))
 
-bp_allsky.add_url_rule('/charts', view_func=ChartView.as_view('chart_view', template_name='chart.html'))
+bp_allsky.add_url_rule('/charts', view_func=ChartView.as_view('chart_view', template_name='charts.html'))
+bp_allsky.add_url_rule('/ajax/charts', view_func=AjaxChartConfigView.as_view('ajax_chart_config_view'))
 bp_allsky.add_url_rule('/js/charts', view_func=JsonChartView.as_view('js_chart_view'))
 
 bp_allsky.add_url_rule('/imageviewer', view_func=ImageViewerView.as_view('imageviewer_view', template_name='imageviewer.html'))
