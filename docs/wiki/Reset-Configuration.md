@@ -1,27 +1,63 @@
-# Overview
-Use these instructions if you want to revert all configurations to the defaults.
+# Reset Configuration to Defaults
 
-1. Stop indi-allsky
+Use these instructions to revert all camera configurations to their default initial values.
 
-       systemctl --user stop indi-allsky
-       systemctl --user stop gunicorn-indi-allsky
+---
 
-1. Activate the virtualenv
+## Method 1: Debian Package Installations (`indi-allsky-ctl` — Recommended)
 
-       source virtualenv/indi-allsky/bin/activate
+On installations managed via the `.deb` package / APT repository, you can reset configuration directly:
 
-1. Backup current config
+1. **Stop services:**
+   ```bash
+   sudo systemctl stop indi-allsky.service gunicorn-indi-allsky.service
+   ```
 
-       ./config.py dump > indi_allsky_config_$(date +%Y%m%d_%H%M%S).json
+2. *(Optional)* **Backup active configuration:**
+   ```bash
+   indi-allsky-ctl dump-config > indi_allsky_config_$(date +%Y%m%d_%H%M%S).json
+   ```
 
-1. Flush all configs
+3. **Reset configuration to defaults:**
+   ```bash
+   sudo indi-allsky-ctl reset-config
+   ```
+   *(Direct CLI alternative without `indi-allsky-ctl`: `/var/lib/indi-allsky/venv/bin/python /usr/share/indi-allsky/config.py flush --force && /var/lib/indi-allsky/venv/bin/python /usr/share/indi-allsky/config.py bootstrap`)*
 
-       ./config.py flush
+4. **Restart services:**
+   ```bash
+   sudo systemctl start indi-allsky.service gunicorn-indi-allsky.service
+   ```
 
-1. Bootstrap a fresh config
+---
 
-       ./config.py bootstrap
+## Method 2: Git / Source Installations
 
-1. Restart the gunicorn service
+1. **Stop services:**
+   ```bash
+   systemctl --user stop indi-allsky
+   systemctl --user stop gunicorn-indi-allsky
+   ```
 
-       systemctl --user restart gunicorn-indi-allsky
+2. **Activate the Python virtual environment:**
+   ```bash
+   cd indi-allsky
+   source virtualenv/indi-allsky/bin/activate
+   ```
+
+3. *(Optional)* **Backup active configuration:**
+   ```bash
+   ./config.py dump > indi_allsky_config_$(date +%Y%m%d_%H%M%S).json
+   ```
+
+4. **Flush and bootstrap initial configuration:**
+   ```bash
+   ./config.py flush --force
+   ./config.py bootstrap
+   ```
+
+5. **Restart services:**
+   ```bash
+   systemctl --user start gunicorn-indi-allsky
+   systemctl --user start indi-allsky
+   ```
