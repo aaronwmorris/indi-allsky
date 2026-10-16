@@ -372,8 +372,21 @@ EOF
         fi
 
         # Validate virtualenv
-        if ! "$VENV/bin/python3" -c 'import flask, sqlalchemy' 2>/dev/null; then
-            echo "indi-allsky: ERROR: Virtual environment is missing or incomplete." >&2
+        VENV_ERR=""
+        if ! VENV_ERR=$("$VENV/bin/python3" -c 'import flask, sqlalchemy' 2>&1); then
+            echo "indi-allsky: ERROR: Virtual environment verification failed:" >&2
+            echo "$VENV_ERR" >&2
+            HOST_PY=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null || echo "unknown")
+            VENV_PY_VER=$(grep -E '^version' "${VENV}/pyvenv.cfg" 2>/dev/null | awk '{print $3}' || echo "")
+            if [ -n "$VENV_PY_VER" ] && [ "$HOST_PY" != "unknown" ]; then
+                case "$VENV_PY_VER" in
+                    "${HOST_PY}".*) ;;
+                    *)
+                        echo "indi-allsky: ERROR: Python ABI mismatch. Host system provides Python ${HOST_PY}, but package virtual environment was built for Python ${VENV_PY_VER}." >&2
+                        echo "indi-allsky: Ensure you install the package built for your specific Linux distribution." >&2
+                        ;;
+                esac
+            fi
             exit 1
         fi
 
