@@ -742,21 +742,6 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
-                'object_id' : 'indi_allsky_smoke_rating',
-                'config' : {
-                    'name' : 'Smoke Rating',
-                    'unique_id' : 'indi_allsky_smoke_rating_{0}'.format(self.unique_id_base),
-                    'state_topic' : '/'.join((indi_allsky_base_topic, 'smoke_rating')),
-                    'device'   : {
-                        'name' : self.device_name,
-                        'identifiers' : [
-                            self.device_name,
-                        ],
-                    },
-                },
-            },
-            {
-                'component' : 'sensor',
                 'object_id' : 'indi_allsky_sidereal_time',
                 'config' : {
                     'name' : 'Sidereal Time',
@@ -771,6 +756,23 @@ class HADiscovery(object):
                 },
             },
         ]
+
+        if self.config.get('SMOKE_ENABLE', True):
+            basic_sensor_list.append({
+                'component' : 'sensor',
+                'object_id' : 'indi_allsky_smoke_rating',
+                'config' : {
+                    'name' : 'Smoke Rating',
+                    'unique_id' : 'indi_allsky_smoke_rating_{0}'.format(self.unique_id_base),
+                    'state_topic' : '/'.join((indi_allsky_base_topic, 'smoke_rating')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
+                },
+            })
 
 
         if self.config['FISH2PANO'].get('ENABLE'):

@@ -216,6 +216,7 @@ const field_names = [
     'LOCATION_LATITUDE',
     'LOCATION_LONGITUDE',
     'LOCATION_ELEVATION',
+    'SMOKE_ENABLE',
     'NIGHT_SUN_ALT_DEG',
     'NIGHT_MOONMODE_ALT_DEG',
     'NIGHT_MOONMODE_PHASE',
@@ -1069,6 +1070,12 @@ function setLocationFromBrowser() {
             // altitude is optional, often null
             if (eleEl && pos.coords.altitude !== null && pos.coords.altitude !== undefined) {
                 eleEl.value = String(Math.round(pos.coords.altitude));
+            }
+
+            // Automatically set NOAA smoke tracking based on NW hemisphere coverage
+            const smokeEl = document.getElementById('SMOKE_ENABLE');
+            if (smokeEl) {
+                smokeEl.checked = (lat > 0 && lon < 0);
             }
 
             const acc = (pos.coords.accuracy !== undefined && pos.coords.accuracy !== null) ? Math.round(pos.coords.accuracy) : null;
