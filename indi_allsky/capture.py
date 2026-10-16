@@ -1549,7 +1549,8 @@ class CaptureWorker(Process):
 
     def _sync_camera(self, camera, camera_metadata):
         ### sync camera
-        if not self.config.get('SYNCAPI', {}).get('ENABLE'):
+        from .syncapi import automatic_sync_enabled
+        if not automatic_sync_enabled(self.config):
             return
 
 

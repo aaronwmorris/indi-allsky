@@ -155,6 +155,11 @@ class FileUploader(Thread):
             return
 
 
+        from .syncapi import saved_automatic_sync_enabled
+        if task.data['action'] == constants.TRANSFER_SYNC_V1 and not saved_automatic_sync_enabled(self.config):
+            task.setExpired()
+            return
+
         task.setRunning()
 
 
@@ -615,7 +620,8 @@ class FileUploader(Thread):
 
     def _syncapi(self, asset_entry, metadata):
         ### sync camera
-        if not self.config.get('SYNCAPI', {}).get('ENABLE'):
+        from .syncapi import automatic_sync_enabled
+        if not automatic_sync_enabled(self.config):
             return
 
 
