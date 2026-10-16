@@ -1070,6 +1070,10 @@ class TestAsi676mcCalibrationEngine(unittest.TestCase):
 
         self.assertEqual((repaired, normal, checks), (0, 0, []))
         self.assertEqual(len(failures), 1)
+        self.assertIn(
+            'reduced the comparison error by 5.3% relative to colour-only correction',
+            failures[0]['check']['reason'],
+        )
         self.assertAlmostEqual(
             failures[0]['check']['improvement_vs_gain_only'],
             1.0 - 0.081437 / 0.085976,
