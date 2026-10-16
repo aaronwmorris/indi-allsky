@@ -83,6 +83,10 @@ Peripheral Configuration & Integrations:
   setup-rtc                Configure I2C hardware Real-Time Clock
   setup-usb-mount          Configure automatic USB flash drive automount
 
+Security & TLS Certificates:
+  ssl-ca-export            Export or display the local mkcert Root CA certificate
+  ssl-renew                Check and renew TLS leaf certificate (optional: --force)
+
 Package & Driver Management:
   hold-indi                Pin installed INDI packages so 'apt upgrade' won't touch them
   unhold-indi              Unpin INDI packages to allow upgrades with 'apt upgrade'
@@ -282,6 +286,113 @@ status_indi_hold() {
     fi
 }
 
+ssl_ca_export() {
+    local ca_cert="/etc/indi-allsky/ca/rootCA.pem"
+    local dest="$1"
+
+    if [ ! -f "$ca_cert" ]; then
+        echo "Error: Local Root CA certificate not found at $ca_cert." >&2
+        echo "Please verify that mkcert has initialized the CA." >&2
+        exit 1
+    fi
+
+    if [ -n "$dest" ]; then
+        cp -f "$ca_cert" "$dest"
+        echo "indi-allsky: Exported Root CA certificate to: $dest"
+    else
+        cat "$ca_cert"
+    fi
+}
+
+ssl_renew() {
+    if [ "$(id -u)" -ne 0 ]; then
+        echo "Error: ssl-renew requires root privileges. Please run with sudo:" >&2
+        echo "  sudo indi-allsky-ctl ssl-renew" >&2
+        exit 1
+    fi
+
+    local force="false"
+    if [ "$1" = "--force" ] || [ "$1" = "-f" ]; then
+        force="true"
+    fi
+
+    local ca_dir="/etc/indi-allsky/ca"
+    if [ ! -f "${ca_dir}/rootCA.pem" ] || [ ! -f "${ca_dir}/rootCA-key.pem" ]; then
+        echo "Error: Local Root CA not found in ${ca_dir}." >&2
+        exit 1
+    fi
+
+    # Detect active web server
+    local web_server=""
+    local crt_path=""
+    local key_path=""
+    local key_group="root"
+    local key_perms="600"
+    local reload_cmd=""
+
+    if systemctl is-active --quiet caddy 2>/dev/null || [ -f "/etc/caddy/Caddyfile" ]; then
+        web_server="caddy"
+        crt_path="/etc/caddy/ssl/indi-allsky_caddy.pem"
+        key_path="/etc/caddy/ssl/indi-allsky_caddy.key"
+        key_group="caddy"
+        key_perms="640"
+        reload_cmd="systemctl reload caddy || systemctl restart caddy"
+    elif systemctl is-active --quiet nginx 2>/dev/null || [ -f "/etc/nginx/sites-available/indi-allsky.conf" ]; then
+        web_server="nginx"
+        crt_path="/etc/nginx/ssl/indi-allsky_nginx.pem"
+        key_path="/etc/nginx/ssl/indi-allsky_nginx.key"
+        key_group="root"
+        key_perms="600"
+        reload_cmd="systemctl reload nginx || systemctl restart nginx"
+    elif systemctl is-active --quiet apache2 2>/dev/null || [ -f "/etc/apache2/sites-available/indi-allsky.conf" ]; then
+        web_server="apache2"
+        crt_path="/etc/apache2/ssl/indi-allsky_apache.pem"
+        key_path="/etc/apache2/ssl/indi-allsky_apache.key"
+        key_group="root"
+        key_perms="600"
+        reload_cmd="systemctl reload apache2 || systemctl restart apache2"
+    fi
+
+    if [ -z "$web_server" ] || [ -z "$crt_path" ]; then
+        echo "indi-allsky: No supported active web server (caddy/nginx/apache2) detected, skipping TLS renewal."
+        return 0
+    fi
+
+    # Check if certificate expires within 30 days (2592000 seconds)
+    local needs_renewal="false"
+    if [ "$force" = "true" ] || [ ! -f "$crt_path" ] || [ ! -f "$key_path" ]; then
+        needs_renewal="true"
+    elif ! openssl x509 -checkend 2592000 -noout -in "$crt_path"; then
+        needs_renewal="true"
+    fi
+
+    if [ "$needs_renewal" = "false" ]; then
+        echo "indi-allsky: Certificate at ${crt_path} is still valid for >30 days. No renewal required."
+        return 0
+    fi
+
+    echo "indi-allsky: Renewing TLS leaf certificate for ${web_server}..."
+    local lan_ips
+    lan_ips=$(hostname -I 2>/dev/null || ip addr show 2>/dev/null | grep -Po 'inet \K[\d.]+' | grep -v '^127\.' || true)
+
+    mkdir -p "$(dirname "$key_path")" "$(dirname "$crt_path")"
+    CAROOT="$ca_dir" mkcert \
+        -cert-file "$crt_path" \
+        -key-file "$key_path" \
+        "indi-allsky.local" \
+        "localhost" \
+        127.0.0.1 \
+        ::1 \
+        $lan_ips
+
+    chown "root:${key_group}" "$key_path" "$crt_path"
+    chmod "$key_perms" "$key_path"
+    chmod 644 "$crt_path"
+
+    eval "$reload_cmd"
+    echo "indi-allsky: TLS leaf certificate renewed successfully for ${web_server}."
+}
+
 check_flask_config() {
     local flask_config="${INDI_ALLSKY_FLASK_CONFIG:-/etc/indi-allsky/flask.json}"
     local flask_dir
@@ -454,6 +565,14 @@ case "$COMMAND" in
         ;;
     setup-usb-mount)
         exec bash "${APP_DIR}/misc/setup_usb_automount.sh" "$@"
+        ;;
+
+    # Security & TLS Certificates
+    ssl-ca-export|ssl-ca)
+        ssl_ca_export "$@"
+        ;;
+    ssl-renew|renew-ssl)
+        ssl_renew "$@"
         ;;
 
     # Package & Driver Management
