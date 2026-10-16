@@ -1,4 +1,5 @@
 import os
+import copy
 from pathlib import Path
 import io
 import re
@@ -748,12 +749,18 @@ def SQM_ROI_validator(form, field):
 
 
 def ADU_FOV_DIV_validator(form, field):
-    if int(field.data) not in (2, 3, 4, 6):
+    try:
+        if int(field.data) not in (2, 3, 4, 6):
+            raise ValidationError('ADU FoV divisor must be 2, 3, 4, 5, or 6')
+    except (TypeError, ValueError):
         raise ValidationError('ADU FoV divisor must be 2, 3, 4, 5, or 6')
 
 
 def SQM_FOV_DIV_validator(form, field):
-    if int(field.data) not in (2, 3, 4, 6):
+    try:
+        if int(field.data) not in (2, 3, 4, 6):
+            raise ValidationError('SQM FoV divisor must be 2, 3, 4, 5, or 6')
+    except (TypeError, ValueError):
         raise ValidationError('SQM FoV divisor must be 2, 3, 4, 5, or 6')
 
 
@@ -5326,178 +5333,41 @@ class IndiAllskyConfigForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(IndiAllskyConfigForm, self).__init__(*args, **kwargs)
 
+        self.SENSOR_SLOT_choices = copy.deepcopy(IndiAllskyConfigForm.SENSOR_SLOT_choices)
+        self.CUSTOM_CHART_choices = copy.deepcopy(IndiAllskyConfigForm.CUSTOM_CHART_choices)
+
         from ..devices import sensors as indi_allsky_sensors
 
-        data = kwargs['data']
+        data = kwargs.get('data', {})
 
+        for letter in ('a', 'b', 'c', 'd', 'e', 'f'):
+            upper_l = letter.upper()
+            classname = str(data.get(f'TEMP_SENSOR__{upper_l}_CLASSNAME', ''))
+            label = str(data.get(f'TEMP_SENSOR__{upper_l}_LABEL', ''))
+            user_var_slot = str(data.get(f'TEMP_SENSOR__{upper_l}_USER_VAR_SLOT', ''))
+            pin_1_name = str(data.get(f'TEMP_SENSOR__{upper_l}_PIN_1', ''))
 
-        temp_sensor__a_classname = str(data['TEMP_SENSOR__A_CLASSNAME'])
-        temp_sensor__a_label = str(data['TEMP_SENSOR__A_LABEL'])
-        temp_sensor__a_user_var_slot = str(data['TEMP_SENSOR__A_USER_VAR_SLOT'])
-        temp_sensor__a_pin_1_name = str(data['TEMP_SENSOR__A_PIN_1'])
+            if classname:
+                try:
+                    sensor_class = getattr(indi_allsky_sensors, classname)
+                    slot_index = constants.SENSOR_INDEX_MAP.get(user_var_slot)
+                    if slot_index is None:
+                        raise AttributeError('Unknown slot key: {0:s}'.format(user_var_slot))
+                    sensor_labels = sensor_class.get_labels(pin_1_name)
 
-        temp_sensor__b_classname = str(data['TEMP_SENSOR__B_CLASSNAME'])
-        temp_sensor__b_label = str(data['TEMP_SENSOR__B_LABEL'])
-        temp_sensor__b_user_var_slot = str(data['TEMP_SENSOR__B_USER_VAR_SLOT'])
-        temp_sensor__b_pin_1_name = str(data['TEMP_SENSOR__B_PIN_1'])
-
-        temp_sensor__c_classname = str(data['TEMP_SENSOR__C_CLASSNAME'])
-        temp_sensor__c_label = str(data['TEMP_SENSOR__C_LABEL'])
-        temp_sensor__c_user_var_slot = str(data['TEMP_SENSOR__C_USER_VAR_SLOT'])
-        temp_sensor__c_pin_1_name = str(data['TEMP_SENSOR__C_PIN_1'])
-
-        temp_sensor__d_classname = str(data['TEMP_SENSOR__D_CLASSNAME'])
-        temp_sensor__d_label = str(data['TEMP_SENSOR__D_LABEL'])
-        temp_sensor__d_user_var_slot = str(data['TEMP_SENSOR__D_USER_VAR_SLOT'])
-        temp_sensor__d_pin_1_name = str(data['TEMP_SENSOR__D_PIN_1'])
-
-        temp_sensor__e_classname = str(data['TEMP_SENSOR__E_CLASSNAME'])
-        temp_sensor__e_label = str(data['TEMP_SENSOR__E_LABEL'])
-        temp_sensor__e_user_var_slot = str(data['TEMP_SENSOR__E_USER_VAR_SLOT'])
-        temp_sensor__e_pin_1_name = str(data['TEMP_SENSOR__E_PIN_1'])
-
-        temp_sensor__f_classname = str(data['TEMP_SENSOR__F_CLASSNAME'])
-        temp_sensor__f_label = str(data['TEMP_SENSOR__F_LABEL'])
-        temp_sensor__f_user_var_slot = str(data['TEMP_SENSOR__F_USER_VAR_SLOT'])
-        temp_sensor__f_pin_1_name = str(data['TEMP_SENSOR__F_PIN_1'])
-
-
-        if temp_sensor__a_classname:
-            try:
-                temp_sensor__a_class = getattr(indi_allsky_sensors, temp_sensor__a_classname)
-                slot_a_index = constants.SENSOR_INDEX_MAP[temp_sensor__a_user_var_slot]
-                temp_sensor__a_labels = temp_sensor__a_class.get_labels(temp_sensor__a_pin_1_name)
-
-                for x in range(temp_sensor__a_class.METADATA['count']):
-                    try:
-                        sensor_label_data = {
-                            'index' : slot_a_index + x,
-                            'name'  : temp_sensor__a_class.METADATA['name'],
-                            'label' : temp_sensor__a_label,
-                            'probe' : temp_sensor__a_labels[x],
-                        }
-
-                        self.SENSOR_SLOT_choices['User Sensors'][slot_a_index + x][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
-                    except IndexError:
-                        app.logger.error('Not enough slots for sensor values')
-                        pass
-            except AttributeError:
-                app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
-
-
-        if temp_sensor__b_classname:
-            try:
-                temp_sensor__b_class = getattr(indi_allsky_sensors, temp_sensor__b_classname)
-                slot_b_index = constants.SENSOR_INDEX_MAP[temp_sensor__b_user_var_slot]
-                temp_sensor__b_labels = temp_sensor__b_class.get_labels(temp_sensor__b_pin_1_name)
-
-                for x in range(temp_sensor__b_class.METADATA['count']):
-                    try:
-                        sensor_label_data = {
-                            'index' : slot_b_index + x,
-                            'name'  : temp_sensor__b_class.METADATA['name'],
-                            'label' : temp_sensor__b_label,
-                            'probe' : temp_sensor__b_labels[x],
-                        }
-
-                        self.SENSOR_SLOT_choices['User Sensors'][slot_b_index + x][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
-                    except IndexError:
-                        app.logger.error('Not enough slots for sensor values')
-                        pass
-            except AttributeError:
-                app.logger.error('Unknown sensor class: %s', temp_sensor__b_classname)
-
-
-        if temp_sensor__c_classname:
-            try:
-                temp_sensor__c_class = getattr(indi_allsky_sensors, temp_sensor__c_classname)
-                slot_c_index = constants.SENSOR_INDEX_MAP[temp_sensor__c_user_var_slot]
-                temp_sensor__c_labels = temp_sensor__c_class.get_labels(temp_sensor__c_pin_1_name)
-
-                for x in range(temp_sensor__c_class.METADATA['count']):
-                    try:
-                        sensor_label_data = {
-                            'index' : slot_c_index + x,
-                            'name'  : temp_sensor__c_class.METADATA['name'],
-                            'label' : temp_sensor__c_label,
-                            'probe' : temp_sensor__c_labels[x],
-                        }
-
-                        self.SENSOR_SLOT_choices['User Sensors'][slot_c_index + x][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
-                    except IndexError:
-                        app.logger.error('Not enough slots for sensor values')
-                        pass
-            except AttributeError:
-                app.logger.error('Unknown sensor class: %s', temp_sensor__c_classname)
-
-
-        if temp_sensor__d_classname:
-            try:
-                temp_sensor__d_class = getattr(indi_allsky_sensors, temp_sensor__d_classname)
-                slot_d_index = constants.SENSOR_INDEX_MAP[temp_sensor__d_user_var_slot]
-                temp_sensor__d_labels = temp_sensor__d_class.get_labels(temp_sensor__d_pin_1_name)
-
-                for x in range(temp_sensor__d_class.METADATA['count']):
-                    try:
-                        sensor_label_data = {
-                            'index' : slot_d_index + x,
-                            'name'  : temp_sensor__d_class.METADATA['name'],
-                            'label' : temp_sensor__d_label,
-                            'probe' : temp_sensor__d_labels[x],
-                        }
-
-                        self.SENSOR_SLOT_choices['User Sensors'][slot_d_index + x][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
-                    except IndexError:
-                        app.logger.error('Not enough slots for sensor values')
-                        pass
-            except AttributeError:
-                app.logger.error('Unknown sensor class: %s', temp_sensor__d_classname)
-
-
-        if temp_sensor__e_classname:
-            try:
-                temp_sensor__e_class = getattr(indi_allsky_sensors, temp_sensor__e_classname)
-                slot_e_index = constants.SENSOR_INDEX_MAP[temp_sensor__e_user_var_slot]
-                temp_sensor__e_labels = temp_sensor__e_class.get_labels(temp_sensor__e_pin_1_name)
-
-                for x in range(temp_sensor__e_class.METADATA['count']):
-                    try:
-                        sensor_label_data = {
-                            'index' : slot_e_index + x,
-                            'name'  : temp_sensor__e_class.METADATA['name'],
-                            'label' : temp_sensor__e_label,
-                            'probe' : temp_sensor__e_labels[x],
-                        }
-
-                        self.SENSOR_SLOT_choices['User Sensors'][slot_e_index + x][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
-                    except IndexError:
-                        app.logger.error('Not enough slots for sensor values')
-                        pass
-            except AttributeError:
-                app.logger.error('Unknown sensor class: %s', temp_sensor__e_classname)
-
-
-        if temp_sensor__f_classname:
-            try:
-                temp_sensor__f_class = getattr(indi_allsky_sensors, temp_sensor__f_classname)
-                slot_f_index = constants.SENSOR_INDEX_MAP[temp_sensor__f_user_var_slot]
-                temp_sensor__f_labels = temp_sensor__f_class.get_labels(temp_sensor__f_pin_1_name)
-
-                for x in range(temp_sensor__f_class.METADATA['count']):
-                    try:
-                        sensor_label_data = {
-                            'index' : slot_f_index + x,
-                            'name'  : temp_sensor__f_class.METADATA['name'],
-                            'label' : temp_sensor__f_label,
-                            'probe' : temp_sensor__f_labels[x],
-                        }
-
-                        self.SENSOR_SLOT_choices['User Sensors'][slot_f_index + x][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
-                    except IndexError:
-                        app.logger.error('Not enough slots for sensor values')
-                        pass
-            except AttributeError:
-                app.logger.error('Unknown sensor class: %s', temp_sensor__f_classname)
+                    for x in range(sensor_class.METADATA.get('count', 1)):
+                        target_slot = slot_index + x
+                        if 0 <= target_slot <= 59 and target_slot < len(self.SENSOR_SLOT_choices['User Sensors']):
+                            probe_name = sensor_labels[x] if x < len(sensor_labels) else f'Probe {x+1}'
+                            sensor_label_data = {
+                                'index' : target_slot,
+                                'name'  : sensor_class.METADATA.get('name', classname),
+                                'label' : label,
+                                'probe' : probe_name,
+                            }
+                            self.SENSOR_SLOT_choices['User Sensors'][target_slot][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
+                except AttributeError:
+                    app.logger.error('Unknown sensor class: %s', classname)
 
 
         # Set system temp names
@@ -5518,7 +5388,8 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
         for x, label in enumerate(temp_label_list[:50]):  # limit to 50
-            self.SENSOR_SLOT_choices['System Sensors'][x + 10][1] = '({0:d}) {1:s}'.format(x + 10, label)
+            if (x + 10) < len(self.SENSOR_SLOT_choices['System Sensors']):
+                self.SENSOR_SLOT_choices['System Sensors'][x + 10][1] = '({0:d}) {1:s}'.format(x + 10, label)
 
 
         ### Update the choices
@@ -5844,11 +5715,11 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
 
                 except (FileNotFoundError, OSError, RuntimeError) as e:
-                    self.DEW_HEATER__CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
+                    self.DEW_HEATER__PIN_1.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
                 except AttributeError as e:
-                    self.DEW_HEATER__CLASSNAME.errors.append('AttributeError: {0:s}'.format(str(e)))
+                    self.DEW_HEATER__PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
                     result = False
 
             elif self.DEW_HEATER__CLASSNAME.data.startswith('rpigpio_'):
@@ -5878,8 +5749,8 @@ class IndiAllskyConfigForm(FlaskForm):
                 except PermissionError:
                     self.DEW_HEATER__PIN_1.errors.append('GPIO permissions need to be fixed')
                     result = False
-                except RuntimeError as e:
-                    self.DEW_HEATER__PIN_1.errors.append('RuntimeError: {0:s}'.format(str(e)))
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.DEW_HEATER__CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
             elif self.DEW_HEATER__CLASSNAME.data.startswith('gpiozero_'):
@@ -5908,6 +5779,9 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
                 except PermissionError:
                     self.DEW_HEATER__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.DEW_HEATER__CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
             elif self.DEW_HEATER__CLASSNAME.data.startswith('motorkit_'):
@@ -6011,11 +5885,11 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
 
                 except (FileNotFoundError, OSError, RuntimeError) as e:
-                    self.FAN__CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
+                    self.FAN__PIN_1.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
                 except AttributeError as e:
-                    self.FAN__CLASSNAME.errors.append('AttributeError: {0:s}'.format(str(e)))
+                    self.FAN__PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
                     result = False
 
             elif self.FAN__CLASSNAME.data.startswith('rpigpio_'):
@@ -6045,8 +5919,8 @@ class IndiAllskyConfigForm(FlaskForm):
                 except PermissionError:
                     self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
                     result = False
-                except RuntimeError as e:
-                    self.FAN__PIN_1.errors.append('RuntimeError: {0:s}'.format(str(e)))
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.FAN__CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
             elif self.FAN__CLASSNAME.data.startswith('gpiozero_'):
@@ -6076,6 +5950,9 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
                 except PermissionError:
                     self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.FAN__CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
             elif self.FAN__CLASSNAME.data.startswith('motorkit_'):
@@ -6284,702 +6161,202 @@ class IndiAllskyConfigForm(FlaskForm):
                 except PermissionError:
                     self.MANUAL_GPIO__A_CLASSNAME.errors.append('GPIO permissions need to be fixed')
                     result = False
-                except RuntimeError as e:
-                    self.MANUAL_GPIO__A_CLASSNAME.errors.append('RuntimeError: {0:s}'.format(str(e)))
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.MANUAL_GPIO__A_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
 
-        # sensor A
-        if self.TEMP_SENSOR__A_CLASSNAME.data:
-            if self.TEMP_SENSOR__A_CLASSNAME.data.startswith('blinka_'):
-                try:
-                    import board
+        # sensors A through F
+        pin_requiring_blinka_prefixes = ('blinka_temp_sensor_dht', )
+        pin_requiring_blinka_sensors = ('blinka_rain_sensor_fc37', )
 
-                    if self.TEMP_SENSOR__A_PIN_1.data:
+        for letter in ('A', 'B', 'C', 'D', 'E', 'F'):
+            classname_field = getattr(self, f'TEMP_SENSOR__{letter}_CLASSNAME')
+            pin_1_field = getattr(self, f'TEMP_SENSOR__{letter}_PIN_1')
+            pin_2_field = getattr(self, f'TEMP_SENSOR__{letter}_PIN_2')
+
+            if not classname_field.data:
+                continue
+
+            c_name = classname_field.data
+            if c_name.startswith('blinka_'):
+                is_pin_required = (
+                    c_name.endswith('_spi')
+                    or any(c_name.startswith(p) for p in pin_requiring_blinka_prefixes)
+                    or c_name in pin_requiring_blinka_sensors
+                )
+
+                if is_pin_required:
+                    if pin_1_field.data:
                         try:
-                            getattr(board, self.TEMP_SENSOR__A_PIN_1.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__A_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__A_PIN_1.data))
+                            import board
+                            try:
+                                getattr(board, pin_1_field.data)
+                            except AttributeError:
+                                pin_1_field.errors.append('PIN {0:s} not valid for your system'.format(pin_1_field.data))
+                                result = False
+                        except NotImplementedError:
+                            classname_field.errors.append('System not supported by Adafruit Blinka module')
+                            result = False
+                        except ImportError:
+                            classname_field.errors.append('GPIO python modules not installed')
+                            result = False
+                        except PermissionError:
+                            pin_1_field.errors.append('GPIO permissions need to be fixed')
+                            result = False
+                        except (FileNotFoundError, OSError, RuntimeError) as e:
+                            classname_field.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
+                            result = False
+                        except AttributeError as e:
+                            pin_1_field.errors.append('AttributeError: {0:s}'.format(str(e)))
                             result = False
                     else:
-                        self.TEMP_SENSOR__A_PIN_1.errors.append('PIN must be defined')
+                        pin_1_field.errors.append('PIN must be defined')
                         result = False
 
-                    if self.TEMP_SENSOR__A_PIN_2.data:
+                    if pin_2_field.data:
                         try:
-                            getattr(board, self.TEMP_SENSOR__A_PIN_2.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__A_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__A_PIN_2.data))
+                            import board
+                            try:
+                                getattr(board, pin_2_field.data)
+                            except AttributeError:
+                                pin_2_field.errors.append('PIN {0:s} not valid for your system'.format(pin_2_field.data))
+                                result = False
+                        except NotImplementedError:
+                            classname_field.errors.append('System not supported by Adafruit Blinka module')
                             result = False
-                    else:
-                        # permit empty pin 2
-                        pass
+                        except ImportError:
+                            classname_field.errors.append('GPIO python modules not installed')
+                            result = False
+                        except PermissionError:
+                            pin_2_field.errors.append('GPIO permissions need to be fixed')
+                            result = False
+                        except (FileNotFoundError, OSError, RuntimeError) as e:
+                            classname_field.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
+                            result = False
+                        except AttributeError as e:
+                            pin_2_field.errors.append('AttributeError: {0:s}'.format(str(e)))
+                            result = False
+                else:
+                    # I2C or non-pin blinka sensor: PIN is optional
+                    if pin_1_field.data:
+                        try:
+                            import board
+                            try:
+                                getattr(board, pin_1_field.data)
+                            except AttributeError:
+                                pin_1_field.errors.append('PIN {0:s} not valid for your system'.format(pin_1_field.data))
+                                result = False
+                        except NotImplementedError:
+                            classname_field.errors.append('System not supported by Adafruit Blinka module')
+                            result = False
+                        except ImportError:
+                            classname_field.errors.append('GPIO python modules not installed')
+                            result = False
+                        except PermissionError:
+                            pin_1_field.errors.append('GPIO permissions need to be fixed')
+                            result = False
+                        except (FileNotFoundError, OSError, RuntimeError) as e:
+                            classname_field.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
+                            result = False
 
-                except NotImplementedError:
-                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('System not supported by Adafruit Blinka module')
-                    result = False
+                    if pin_2_field.data:
+                        try:
+                            import board
+                            try:
+                                getattr(board, pin_2_field.data)
+                            except AttributeError:
+                                pin_2_field.errors.append('PIN {0:s} not valid for your system'.format(pin_2_field.data))
+                                result = False
+                        except NotImplementedError:
+                            classname_field.errors.append('System not supported by Adafruit Blinka module')
+                            result = False
+                        except ImportError:
+                            classname_field.errors.append('GPIO python modules not installed')
+                            result = False
+                        except PermissionError:
+                            pin_2_field.errors.append('GPIO permissions need to be fixed')
+                            result = False
+                        except (FileNotFoundError, OSError, RuntimeError) as e:
+                            classname_field.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
+                            result = False
+                        except AttributeError as e:
+                            pin_2_field.errors.append('AttributeError: {0:s}'.format(str(e)))
+                            result = False
 
-                except ImportError:
-                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('GPIO python modules not installed')
-                    result = False
-
-                except PermissionError:
-                    self.TEMP_SENSOR__A_PIN_1.errors.append('GPIO permissions need to be fixed')
-                    result = False
-
-                except (FileNotFoundError, OSError, RuntimeError) as e:
-                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
-                    result = False
-
-                except AttributeError as e:
-                    self.TEMP_SENSOR__A_PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
-                    result = False
-
-            elif self.TEMP_SENSOR__A_CLASSNAME.data.startswith('cpads_'):
+            elif c_name.startswith('cpads_'):
                 try:
                     import adafruit_ads1x15.ads1115 as ADS
 
-                    if self.TEMP_SENSOR__A_PIN_1.data:
+                    if pin_1_field.data:
                         try:
-                            getattr(ADS, self.TEMP_SENSOR__A_PIN_1.data)
+                            getattr(ADS, pin_1_field.data)
                         except AttributeError:
-                            self.TEMP_SENSOR__A_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__A_PIN_1.data))
+                            pin_1_field.errors.append('PIN {0:s} not valid for your system'.format(pin_1_field.data))
                             result = False
                     else:
-                        self.TEMP_SENSOR__A_PIN_1.errors.append('PIN must be defined')
+                        pin_1_field.errors.append('PIN must be defined')
                         result = False
 
-                    if self.TEMP_SENSOR__A_PIN_2.data:
+                    if pin_2_field.data:
                         try:
-                            getattr(ADS, self.TEMP_SENSOR__A_PIN_2.data)
+                            getattr(ADS, pin_2_field.data)
                         except AttributeError:
-                            self.TEMP_SENSOR__A_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__A_PIN_2.data))
+                            pin_2_field.errors.append('PIN {0:s} not valid for your system'.format(pin_2_field.data))
                             result = False
                     else:
                         # permit empty pin 2
                         pass
 
                 except ImportError:
-                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('GPIO python modules not installed')
+                    classname_field.errors.append('GPIO python modules not installed')
                     result = False
-
                 except (FileNotFoundError, OSError, RuntimeError) as e:
-                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
+                    classname_field.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
-
                 except AttributeError as e:
-                    self.TEMP_SENSOR__A_PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
+                    pin_1_field.errors.append('AttributeError: {0:s}'.format(str(e)))
                     result = False
 
-            elif self.TEMP_SENSOR__A_CLASSNAME.data.startswith('qwiic_'):
+            elif c_name.startswith('qwiic_'):
                 try:
                     import qwiic_i2c  # noqa: F401
                 except ImportError:
-                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('SparkFun QWIIC modules not installed')
+                    classname_field.errors.append('SparkFun QWIIC modules not installed')
                     result = False
 
-            elif self.TEMP_SENSOR__A_CLASSNAME.data.startswith('mqtt_broker_'):
-                if self.TEMP_SENSOR__A_PIN_1.data:
-                    topic_list = self.TEMP_SENSOR__A_PIN_1.data.split(',')
-
+            elif c_name.startswith('mqtt_broker_'):
+                if pin_1_field.data:
+                    topic_list = pin_1_field.data.split(',')
                     if len(topic_list) != len(set(topic_list)):
-                        self.TEMP_SENSOR__A_PIN_1.errors.append('Contains duplicate topics')
+                        pin_1_field.errors.append('Contains duplicate topics')
                         result = False
                 else:
-                    self.TEMP_SENSOR__A_PIN_1.errors.append('Topics must be defined')
+                    pin_1_field.errors.append('Topics must be defined')
                     result = False
-
-        # sensor B
-        if self.TEMP_SENSOR__B_CLASSNAME.data:
-            if self.TEMP_SENSOR__B_CLASSNAME.data.startswith('blinka_'):
-                try:
-                    import board
-
-                    if self.TEMP_SENSOR__B_PIN_1.data:
-                        try:
-                            getattr(board, self.TEMP_SENSOR__B_PIN_1.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__B_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__B_PIN_1.data))
-                            result = False
-                    else:
-                        self.TEMP_SENSOR__B_PIN_1.errors.append('PIN must be defined')
-                        result = False
-
-                    if self.TEMP_SENSOR__B_PIN_2.data:
-                        try:
-                            getattr(board, self.TEMP_SENSOR__B_PIN_2.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__B_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__B_PIN_2.data))
-                            result = False
-                    else:
-                        # permit empty pin 2
-                        pass
-
-                except NotImplementedError:
-                    self.TEMP_SENSOR__B_CLASSNAME.errors.append('System not supported by Adafruit Blinka module')
-                    result = False
-
-                except ImportError:
-                    self.TEMP_SENSOR__B_CLASSNAME.errors.append('GPIO python modules not installed')
-                    result = False
-
-                except PermissionError:
-                    self.TEMP_SENSOR__B_PIN_1.errors.append('GPIO permissions need to be fixed')
-                    result = False
-
-                except (FileNotFoundError, OSError, RuntimeError) as e:
-                    self.TEMP_SENSOR__B_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
-                    result = False
-
-                except AttributeError as e:
-                    self.TEMP_SENSOR__B_PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
-                    result = False
-
-            elif self.TEMP_SENSOR__B_CLASSNAME.data.startswith('cpads_'):
-                try:
-                    import adafruit_ads1x15.ads1115 as ADS
-
-                    if self.TEMP_SENSOR__B_PIN_1.data:
-                        try:
-                            getattr(ADS, self.TEMP_SENSOR__B_PIN_1.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__B_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__B_PIN_1.data))
-                            result = False
-                    else:
-                        self.TEMP_SENSOR__B_PIN_1.errors.append('PIN must be defined')
-                        result = False
-
-                    if self.TEMP_SENSOR__B_PIN_2.data:
-                        try:
-                            getattr(ADS, self.TEMP_SENSOR__B_PIN_2.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__B_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__B_PIN_2.data))
-                            result = False
-                    else:
-                        # permit empty pin 2
-                        pass
-
-                except ImportError:
-                    self.TEMP_SENSOR__B_CLASSNAME.errors.append('GPIO python modules not installed')
-                    result = False
-
-                except (FileNotFoundError, OSError, RuntimeError) as e:
-                    self.TEMP_SENSOR__B_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
-                    result = False
-
-                except AttributeError as e:
-                    self.TEMP_SENSOR__B_PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
-                    result = False
-
-            elif self.TEMP_SENSOR__B_CLASSNAME.data.startswith('qwiic_'):
-                try:
-                    import qwiic_i2c  # noqa: F401,F811
-                except ImportError:
-                    self.TEMP_SENSOR__B_CLASSNAME.errors.append('SparkFun QWIIC modules not installed')
-                    result = False
-
-            elif self.TEMP_SENSOR__B_CLASSNAME.data.startswith('mqtt_broker_'):
-                if self.TEMP_SENSOR__B_PIN_1.data:
-                    topic_list = self.TEMP_SENSOR__B_PIN_1.data.split(',')
-
-                    if len(topic_list) != len(set(topic_list)):
-                        self.TEMP_SENSOR__B_PIN_1.errors.append('Contains duplicate topics')
-                        result = False
-                else:
-                    self.TEMP_SENSOR__B_PIN_1.errors.append('Topics must be defined')
-                    result = False
-
-
-        # sensor C
-        if self.TEMP_SENSOR__C_CLASSNAME.data:
-            if self.TEMP_SENSOR__C_CLASSNAME.data.startswith('blinka_'):
-                try:
-                    import board
-
-                    if self.TEMP_SENSOR__C_PIN_1.data:
-                        try:
-                            getattr(board, self.TEMP_SENSOR__C_PIN_1.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__C_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__C_PIN_1.data))
-                            result = False
-                    else:
-                        self.TEMP_SENSOR__C_PIN_1.errors.append('PIN must be defined')
-                        result = False
-
-                    if self.TEMP_SENSOR__C_PIN_2.data:
-                        try:
-                            getattr(board, self.TEMP_SENSOR__C_PIN_2.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__C_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__C_PIN_2.data))
-                            result = False
-                    else:
-                        # permit empty pin 2
-                        pass
-
-                except NotImplementedError:
-                    self.TEMP_SENSOR__C_CLASSNAME.errors.append('System not supported by Adafruit Blinka module')
-                    result = False
-
-                except ImportError:
-                    self.TEMP_SENSOR__C_CLASSNAME.errors.append('GPIO python modules not installed')
-                    result = False
-
-                except PermissionError:
-                    self.TEMP_SENSOR__C_PIN_1.errors.append('GPIO permissions need to be fixed')
-                    result = False
-
-                except (FileNotFoundError, OSError, RuntimeError) as e:
-                    self.TEMP_SENSOR__C_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
-                    result = False
-
-                except AttributeError as e:
-                    self.TEMP_SENSOR__C_PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
-                    result = False
-
-            elif self.TEMP_SENSOR__C_CLASSNAME.data.startswith('cpads_'):
-                try:
-                    import adafruit_ads1x15.ads1115 as ADS
-
-                    if self.TEMP_SENSOR__C_PIN_1.data:
-                        try:
-                            getattr(ADS, self.TEMP_SENSOR__C_PIN_1.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__C_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__C_PIN_1.data))
-                            result = False
-                    else:
-                        self.TEMP_SENSOR__C_PIN_1.errors.append('PIN must be defined')
-                        result = False
-
-                    if self.TEMP_SENSOR__C_PIN_2.data:
-                        try:
-                            getattr(ADS, self.TEMP_SENSOR__C_PIN_2.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__C_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__C_PIN_2.data))
-                            result = False
-                    else:
-                        # permit empty pin 2
-                        pass
-
-                except ImportError:
-                    self.TEMP_SENSOR__C_CLASSNAME.errors.append('GPIO python modules not installed')
-                    result = False
-
-                except (FileNotFoundError, OSError, RuntimeError) as e:
-                    self.TEMP_SENSOR__C_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
-                    result = False
-
-                except AttributeError as e:
-                    self.TEMP_SENSOR__C_PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
-                    result = False
-
-            elif self.TEMP_SENSOR__C_CLASSNAME.data.startswith('qwiic_'):
-                try:
-                    import qwiic_i2c  # noqa: F401,F811
-                except ImportError:
-                    self.TEMP_SENSOR__C_CLASSNAME.errors.append('SparkFun QWIIC modules not installed')
-                    result = False
-
-            elif self.TEMP_SENSOR__C_CLASSNAME.data.startswith('mqtt_broker_'):
-                if self.TEMP_SENSOR__C_PIN_1.data:
-                    topic_list = self.TEMP_SENSOR__C_PIN_1.data.split(',')
-
-                    if len(topic_list) != len(set(topic_list)):
-                        self.TEMP_SENSOR__C_PIN_1.errors.append('Contains duplicate topics')
-                        result = False
-                else:
-                    self.TEMP_SENSOR__C_PIN_1.errors.append('Topics must be defined')
-                    result = False
-
-
-        # sensor D
-        if self.TEMP_SENSOR__D_CLASSNAME.data:
-            if self.TEMP_SENSOR__D_CLASSNAME.data.startswith('blinka_'):
-                try:
-                    import board
-
-                    if self.TEMP_SENSOR__D_PIN_1.data:
-                        try:
-                            getattr(board, self.TEMP_SENSOR__D_PIN_1.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__D_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__D_PIN_1.data))
-                            result = False
-                    else:
-                        self.TEMP_SENSOR__D_PIN_1.errors.append('PIN must be defined')
-                        result = False
-
-                    if self.TEMP_SENSOR__D_PIN_2.data:
-                        try:
-                            getattr(board, self.TEMP_SENSOR__D_PIN_2.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__D_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__D_PIN_2.data))
-                            result = False
-                    else:
-                        # permit empty pin 2
-                        pass
-
-                except NotImplementedError:
-                    self.TEMP_SENSOR__D_CLASSNAME.errors.append('System not supported by Adafruit Blinka module')
-                    result = False
-
-                except ImportError:
-                    self.TEMP_SENSOR__D_CLASSNAME.errors.append('GPIO python modules not installed')
-                    result = False
-
-                except PermissionError:
-                    self.TEMP_SENSOR__D_PIN_1.errors.append('GPIO permissions need to be fixed')
-                    result = False
-
-                except (FileNotFoundError, OSError, RuntimeError) as e:
-                    self.TEMP_SENSOR__D_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
-                    result = False
-
-                except AttributeError as e:
-                    self.TEMP_SENSOR__D_PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
-                    result = False
-
-            elif self.TEMP_SENSOR__D_CLASSNAME.data.startswith('cpads_'):
-                try:
-                    import adafruit_ads1x15.ads1115 as ADS
-
-                    if self.TEMP_SENSOR__D_PIN_1.data:
-                        try:
-                            getattr(ADS, self.TEMP_SENSOR__D_PIN_1.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__D_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__D_PIN_1.data))
-                            result = False
-                    else:
-                        self.TEMP_SENSOR__D_PIN_1.errors.append('PIN must be defined')
-                        result = False
-
-                    if self.TEMP_SENSOR__D_PIN_2.data:
-                        try:
-                            getattr(ADS, self.TEMP_SENSOR__D_PIN_2.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__D_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__D_PIN_2.data))
-                            result = False
-                    else:
-                        # permit empty pin 2
-                        pass
-
-                except ImportError:
-                    self.TEMP_SENSOR__D_CLASSNAME.errors.append('GPIO python modules not installed')
-                    result = False
-
-                except (FileNotFoundError, OSError, RuntimeError) as e:
-                    self.TEMP_SENSOR__D_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
-                    result = False
-
-                except AttributeError as e:
-                    self.TEMP_SENSOR__D_PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
-                    result = False
-
-            elif self.TEMP_SENSOR__D_CLASSNAME.data.startswith('qwiic_'):
-                try:
-                    import qwiic_i2c  # noqa: F401,F811
-                except ImportError:
-                    self.TEMP_SENSOR__D_CLASSNAME.errors.append('SparkFun QWIIC modules not installed')
-                    result = False
-
-            elif self.TEMP_SENSOR__D_CLASSNAME.data.startswith('mqtt_broker_'):
-                if self.TEMP_SENSOR__D_PIN_1.data:
-                    topic_list = self.TEMP_SENSOR__D_PIN_1.data.split(',')
-
-                    if len(topic_list) != len(set(topic_list)):
-                        self.TEMP_SENSOR__D_PIN_1.errors.append('Contains duplicate topics')
-                        result = False
-                else:
-                    self.TEMP_SENSOR__D_PIN_1.errors.append('Topics must be defined')
-                    result = False
-
-
-        # sensor E
-        if self.TEMP_SENSOR__E_CLASSNAME.data:
-            if self.TEMP_SENSOR__E_CLASSNAME.data.startswith('blinka_'):
-                try:
-                    import board
-
-                    if self.TEMP_SENSOR__E_PIN_1.data:
-                        try:
-                            getattr(board, self.TEMP_SENSOR__E_PIN_1.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__E_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__E_PIN_1.data))
-                            result = False
-                    else:
-                        self.TEMP_SENSOR__E_PIN_1.errors.append('PIN must be defined')
-                        result = False
-
-                    if self.TEMP_SENSOR__E_PIN_2.data:
-                        try:
-                            getattr(board, self.TEMP_SENSOR__E_PIN_2.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__E_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__E_PIN_2.data))
-                            result = False
-                    else:
-                        # permit empty pin 2
-                        pass
-
-                except NotImplementedError:
-                    self.TEMP_SENSOR__E_CLASSNAME.errors.append('System not supported by Adafruit Blinka module')
-                    result = False
-
-                except ImportError:
-                    self.TEMP_SENSOR__E_CLASSNAME.errors.append('GPIO python modules not installed')
-                    result = False
-
-                except PermissionError:
-                    self.TEMP_SENSOR__E_PIN_1.errors.append('GPIO permissions need to be fixed')
-                    result = False
-
-                except (FileNotFoundError, OSError, RuntimeError) as e:
-                    self.TEMP_SENSOR__E_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
-                    result = False
-
-                except AttributeError as e:
-                    self.TEMP_SENSOR__E_PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
-                    result = False
-
-            elif self.TEMP_SENSOR__E_CLASSNAME.data.startswith('cpads_'):
-                try:
-                    import adafruit_ads1x15.ads1115 as ADS
-
-                    if self.TEMP_SENSOR__E_PIN_1.data:
-                        try:
-                            getattr(ADS, self.TEMP_SENSOR__E_PIN_1.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__E_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__E_PIN_1.data))
-                            result = False
-                    else:
-                        self.TEMP_SENSOR__E_PIN_1.errors.append('PIN must be defined')
-                        result = False
-
-                    if self.TEMP_SENSOR__E_PIN_2.data:
-                        try:
-                            getattr(ADS, self.TEMP_SENSOR__E_PIN_2.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__E_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__E_PIN_2.data))
-                            result = False
-                    else:
-                        # permit empty pin 2
-                        pass
-
-                except ImportError:
-                    self.TEMP_SENSOR__E_CLASSNAME.errors.append('GPIO python modules not installed')
-                    result = False
-
-                except (FileNotFoundError, OSError, RuntimeError) as e:
-                    self.TEMP_SENSOR__E_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
-                    result = False
-
-                except AttributeError as e:
-                    self.TEMP_SENSOR__E_PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
-                    result = False
-
-            elif self.TEMP_SENSOR__E_CLASSNAME.data.startswith('qwiic_'):
-                try:
-                    import qwiic_i2c  # noqa: F401,F811
-                except ImportError:
-                    self.TEMP_SENSOR__E_CLASSNAME.errors.append('SparkFun QWIIC modules not installed')
-                    result = False
-
-            elif self.TEMP_SENSOR__E_CLASSNAME.data.startswith('mqtt_broker_'):
-                if self.TEMP_SENSOR__E_PIN_1.data:
-                    topic_list = self.TEMP_SENSOR__E_PIN_1.data.split(',')
-
-                    if len(topic_list) != len(set(topic_list)):
-                        self.TEMP_SENSOR__E_PIN_1.errors.append('Contains duplicate topics')
-                        result = False
-                else:
-                    self.TEMP_SENSOR__E_PIN_1.errors.append('Topics must be defined')
-                    result = False
-
-
-        # sensor F
-        if self.TEMP_SENSOR__F_CLASSNAME.data:
-            if self.TEMP_SENSOR__F_CLASSNAME.data.startswith('blinka_'):
-                try:
-                    import board
-
-                    if self.TEMP_SENSOR__F_PIN_1.data:
-                        try:
-                            getattr(board, self.TEMP_SENSOR__F_PIN_1.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__F_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__F_PIN_1.data))
-                            result = False
-                    else:
-                        self.TEMP_SENSOR__F_PIN_1.errors.append('PIN must be defined')
-                        result = False
-
-                    if self.TEMP_SENSOR__F_PIN_2.data:
-                        try:
-                            getattr(board, self.TEMP_SENSOR__F_PIN_2.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__F_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__F_PIN_2.data))
-                            result = False
-                    else:
-                        # permit empty pin 2
-                        pass
-
-                except NotImplementedError:
-                    self.TEMP_SENSOR__F_CLASSNAME.errors.append('System not supported by Adafruit Blinka module')
-                    result = False
-
-                except ImportError:
-                    self.TEMP_SENSOR__F_CLASSNAME.errors.append('GPIO python modules not installed')
-                    result = False
-
-                except PermissionError:
-                    self.TEMP_SENSOR__F_PIN_1.errors.append('GPIO permissions need to be fixed')
-                    result = False
-
-                except (FileNotFoundError, OSError, RuntimeError) as e:
-                    self.TEMP_SENSOR__F_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
-                    result = False
-
-                except AttributeError as e:
-                    self.TEMP_SENSOR__F_PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
-                    result = False
-
-            elif self.TEMP_SENSOR__F_CLASSNAME.data.startswith('cpads_'):
-                try:
-                    import adafruit_ads1x15.ads1115 as ADS
-
-                    if self.TEMP_SENSOR__F_PIN_1.data:
-                        try:
-                            getattr(ADS, self.TEMP_SENSOR__F_PIN_1.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__F_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__F_PIN_1.data))
-                            result = False
-                    else:
-                        self.TEMP_SENSOR__F_PIN_1.errors.append('PIN must be defined')
-                        result = False
-
-                    if self.TEMP_SENSOR__F_PIN_2.data:
-                        try:
-                            getattr(ADS, self.TEMP_SENSOR__F_PIN_2.data)
-                        except AttributeError:
-                            self.TEMP_SENSOR__F_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__F_PIN_2.data))
-                            result = False
-                    else:
-                        # permit empty pin 2
-                        pass
-
-                except ImportError:
-                    self.TEMP_SENSOR__F_CLASSNAME.errors.append('GPIO python modules not installed')
-                    result = False
-
-                except (FileNotFoundError, OSError, RuntimeError) as e:
-                    self.TEMP_SENSOR__F_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
-                    result = False
-
-                except AttributeError as e:
-                    self.TEMP_SENSOR__F_PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
-                    result = False
-
-            elif self.TEMP_SENSOR__F_CLASSNAME.data.startswith('qwiic_'):
-                try:
-                    import qwiic_i2c  # noqa: F401,F811
-                except ImportError:
-                    self.TEMP_SENSOR__F_CLASSNAME.errors.append('SparkFun QWIIC modules not installed')
-                    result = False
-
-            elif self.TEMP_SENSOR__F_CLASSNAME.data.startswith('mqtt_broker_'):
-                if self.TEMP_SENSOR__F_PIN_1.data:
-                    topic_list = self.TEMP_SENSOR__F_PIN_1.data.split(',')
-
-                    if len(topic_list) != len(set(topic_list)):
-                        self.TEMP_SENSOR__F_PIN_1.errors.append('Contains duplicate topics')
-                        result = False
-                else:
-                    self.TEMP_SENSOR__F_PIN_1.errors.append('Topics must be defined')
-                    result = False
-
-
-        ### ensure sensor slots are unique
-        ### (disabled, let them be duplicate)
-        #custom_charts = (
-        #    self.CHARTS__CUSTOM_SLOT_1,
-        #    self.CHARTS__CUSTOM_SLOT_2,
-        #    self.CHARTS__CUSTOM_SLOT_3,
-        #    self.CHARTS__CUSTOM_SLOT_4,
-        #    self.CHARTS__CUSTOM_SLOT_5,
-        #    self.CHARTS__CUSTOM_SLOT_6,
-        #    self.CHARTS__CUSTOM_SLOT_7,
-        #    self.CHARTS__CUSTOM_SLOT_8,
-        #    self.CHARTS__CUSTOM_SLOT_9,
-        #)
-
-        #for chart1, chart2 in itertools.combinations(custom_charts, 2):
-        #    if chart1.data == chart2.data:
-        #        chart1.errors.append('Duplicate chart defined')
-        #        chart2.errors.append('Duplicate chart defined')
-        #        result = False
-
 
 
         from ..devices import sensors as indi_allsky_sensors
 
         check_sensor_slots = list()
 
-        if self.TEMP_SENSOR__A_CLASSNAME.data:
-            temp_sensor__a_class = getattr(indi_allsky_sensors, self.TEMP_SENSOR__A_CLASSNAME.data)
-            temp_sensor__a_slot_int = constants.SENSOR_INDEX_MAP[self.TEMP_SENSOR__A_USER_VAR_SLOT.data]
-            check_sensor_slots.append({
-                'name'   : 'Sensor A',
-                #'class'  : temp_sensor__a_class,
-                'slot'   : self.TEMP_SENSOR__A_USER_VAR_SLOT,
-                'set'    : set(range(temp_sensor__a_slot_int, temp_sensor__a_slot_int + temp_sensor__a_class.METADATA['count'])),
-            })
-
-        if self.TEMP_SENSOR__B_CLASSNAME.data:
-            temp_sensor__b_class = getattr(indi_allsky_sensors, self.TEMP_SENSOR__B_CLASSNAME.data)
-            temp_sensor__b_slot_int = constants.SENSOR_INDEX_MAP[self.TEMP_SENSOR__B_USER_VAR_SLOT.data]
-            check_sensor_slots.append({
-                'name' : 'Sensor B',
-                #'class' : temp_sensor__b_class,
-                'slot'  : self.TEMP_SENSOR__B_USER_VAR_SLOT,
-                'set'   : set(range(temp_sensor__b_slot_int, temp_sensor__b_slot_int + temp_sensor__b_class.METADATA['count'])),
-            })
-
-        if self.TEMP_SENSOR__C_CLASSNAME.data:
-            temp_sensor__c_class = getattr(indi_allsky_sensors, self.TEMP_SENSOR__C_CLASSNAME.data)
-            temp_sensor__c_slot_int = constants.SENSOR_INDEX_MAP[self.TEMP_SENSOR__C_USER_VAR_SLOT.data]
-            check_sensor_slots.append({
-                'name' : 'Sensor C',
-                #'class' : temp_sensor__c_class,
-                'slot'  : self.TEMP_SENSOR__C_USER_VAR_SLOT,
-                'set'   : set(range(temp_sensor__c_slot_int, temp_sensor__c_slot_int + temp_sensor__c_class.METADATA['count'])),
-            })
-
-        if self.TEMP_SENSOR__D_CLASSNAME.data:
-            temp_sensor__d_class = getattr(indi_allsky_sensors, self.TEMP_SENSOR__D_CLASSNAME.data)
-            temp_sensor__d_slot_int = constants.SENSOR_INDEX_MAP[self.TEMP_SENSOR__D_USER_VAR_SLOT.data]
-            check_sensor_slots.append({
-                'name' : 'Sensor D',
-                #'class' : temp_sensor__d_class,
-                'slot'  : self.TEMP_SENSOR__D_USER_VAR_SLOT,
-                'set'   : set(range(temp_sensor__d_slot_int, temp_sensor__d_slot_int + temp_sensor__d_class.METADATA['count'])),
-            })
-
-        if self.TEMP_SENSOR__E_CLASSNAME.data:
-            temp_sensor__e_class = getattr(indi_allsky_sensors, self.TEMP_SENSOR__E_CLASSNAME.data)
-            temp_sensor__e_slot_int = constants.SENSOR_INDEX_MAP[self.TEMP_SENSOR__E_USER_VAR_SLOT.data]
-            check_sensor_slots.append({
-                'name' : 'Sensor E',
-                #'class' : temp_sensor__e_class,
-                'slot'  : self.TEMP_SENSOR__E_USER_VAR_SLOT,
-                'set'   : set(range(temp_sensor__e_slot_int, temp_sensor__e_slot_int + temp_sensor__e_class.METADATA['count'])),
-            })
-
-        if self.TEMP_SENSOR__F_CLASSNAME.data:
-            temp_sensor__f_class = getattr(indi_allsky_sensors, self.TEMP_SENSOR__F_CLASSNAME.data)
-            temp_sensor__f_slot_int = constants.SENSOR_INDEX_MAP[self.TEMP_SENSOR__F_USER_VAR_SLOT.data]
-            check_sensor_slots.append({
-                'name' : 'Sensor F',
-                #'class' : temp_sensor__f_class,
-                'slot'  : self.TEMP_SENSOR__F_USER_VAR_SLOT,
-                'set'   : set(range(temp_sensor__f_slot_int, temp_sensor__f_slot_int + temp_sensor__f_class.METADATA['count'])),
-            })
-
+        for letter in ('A', 'B', 'C', 'D', 'E', 'F'):
+            classname_field = getattr(self, f'TEMP_SENSOR__{letter}_CLASSNAME')
+            slot_field = getattr(self, f'TEMP_SENSOR__{letter}_USER_VAR_SLOT')
+            if classname_field.data:
+                try:
+                    sensor_class = getattr(indi_allsky_sensors, classname_field.data)
+                    slot_int = constants.SENSOR_INDEX_MAP.get(slot_field.data)
+                    if slot_int is None:
+                        pass  # unrecognised slot key — skip overlap check
+                    else:
+                        check_sensor_slots.append({
+                            'name': f'Sensor {letter}',
+                            'slot': slot_field,
+                            'set': set(range(slot_int, slot_int + sensor_class.METADATA.get('count', 1))),
+                        })
+                except AttributeError:
+                    pass
 
 
         for slot1, slot2 in itertools.combinations(check_sensor_slots, 2):
@@ -6990,7 +6367,7 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
         for slot in check_sensor_slots:
-            if list(slot['set'])[-1] > 59:
+            if slot['set'] and max(slot['set']) > 59:
                 slot['slot'].errors.append('Not enough sensor slots to fit all values')
                 result = False
 

@@ -71,9 +71,12 @@ innodb_flush_log_at_trx_commit = 0
     * https://github.com/aaronwmorris/indi-allsky/wiki/Database-conversion
 * If you want to start from scratch, delete the existing migrations from the sqlite database and ensure the connection URL is updated in `/etc/indi-allsky/flask.json`
 
+> [!NOTE]
+> On Debian package installations, invoke Flask and configuration commands using `/var/lib/indi-allsky/venv/bin/flask` and `/var/lib/indi-allsky/venv/bin/python /usr/lib/indi-allsky/config.py` rather than activating user virtual environments.
+
         rm -f /var/lib/indi-allsky/migrations/versions/*.py
         
-        # indi-allsky git folder
+        # indi-allsky git folder (source installations)
         source virtualenv/indi-allsky/bin/activate
 
         flask db revision --autogenerate
