@@ -69,7 +69,13 @@ Make sure you selected the correct INDI/libcamera camera server during the setup
 
 If you have changed cameras or changed the camera selection, you may need to restart the indiserver process.
 
+On Debian package installations:
+```bash
+sudo systemctl restart indiserver
 ```
+
+On git source installations:
+```bash
 systemctl --user restart indiserver
 ```
 ***

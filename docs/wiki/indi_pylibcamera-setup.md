@@ -2,6 +2,9 @@
 
 * Recommend `Raspberry Pi OS 12 64-bit (bookworm)` minimum
 
+> [!IMPORTANT]
+> **Debian Package (`.deb`) Users**: Do **NOT** modify `pyvenv.cfg` or execute pip installations inside `/var/lib/indi-allsky/venv/`. The Debian package manages Python dependencies, system-wide systemd units (`/etc/systemd/system/indiserver.service`), and library integrations automatically. The manual instructions below apply **only** to manual git source checkouts running under user session systemd units (`systemctl --user`).
+
 ## Git repo
 https://github.com/scriptorron/indi_pylibcamera
 

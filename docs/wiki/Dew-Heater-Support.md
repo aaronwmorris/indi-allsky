@@ -72,7 +72,11 @@ mosquitto_sub -d -V mqttv5 -F %j -h localhost -p 1883 -u mqtt_username -P passwo
 
 ### Raspberry Pi 5
 #### Raspberry Pi 5 - RuntimeError: Cannot determine SOC peripheral base address
-```
+
+> [!IMPORTANT]
+> **Debian Package (`.deb`) Users**: Do **NOT** run `pip` or modify virtualenvs manually. The Debian package already bundles pre-compiled, compatible GPIO and `rpi.lgpio` drivers inside `/var/lib/indi-allsky/venv/`. Manual pip modifications will break the package virtual environment. The steps below apply **only** to manual git source checkouts.
+
+```bash
 source virtualenv/indi-allsky/bin/activate
 
 pip uninstall RPi.GPIO rpi.lgpio
