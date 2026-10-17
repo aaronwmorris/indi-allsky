@@ -29,8 +29,10 @@ cat <<EOF_SUM > "$SUMMARY_FILE"
 EOF_SUM
 
 if [ "$HTTPS_P" = "443" ]; then
+    echo "   https://indi-allsky.local/indi-allsky/  (Local mDNS)" >> "$SUMMARY_FILE"
     echo "   https://${HOST_IP}/indi-allsky/" >> "$SUMMARY_FILE"
 else
+    echo "   https://indi-allsky.local:${HTTPS_P}/indi-allsky/  (Local mDNS)" >> "$SUMMARY_FILE"
     echo "   https://${HOST_IP}:${HTTPS_P}/indi-allsky/" >> "$SUMMARY_FILE"
 fi
 if [ "$HTTP_P" = "80" ]; then
@@ -38,6 +40,10 @@ if [ "$HTTP_P" = "80" ]; then
 else
     echo "   http://${HOST_IP}:${HTTP_P}/indi-allsky/" >> "$SUMMARY_FILE"
 fi
+echo "" >> "$SUMMARY_FILE"
+echo "  [i] To trust the local HTTPS certificate on your computer or mobile device:" >> "$SUMMARY_FILE"
+echo "      sudo indi-allsky-ctl ssl-ca-export <destination-path>" >> "$SUMMARY_FILE"
+echo "      Guide: https://github.com/aaronwmorris/indi-allsky/wiki/Local-SSL-and-mDNS" >> "$SUMMARY_FILE"
 echo "" >> "$SUMMARY_FILE"
 
 if [ -n "$GENERATED_ADMIN_PASS" ]; then

@@ -7,4 +7,8 @@ d /var/www/html/allsky 0755 indi-allsky www-data - -
 d /var/www/html/allsky/images 0775 indi-allsky www-data - -
 d /var/www/html/allsky/images/darks 0775 indi-allsky www-data - -
 d /var/www/html/allsky/images/export 0775 indi-allsky www-data - -
+d /var/lib/indi-allsky/working 0775 indi-allsky indi-allsky - -
+d /var/lib/indi-allsky/working/indi-allsky 0775 indi-allsky indi-allsky - -
+d /var/lib/indi-allsky/working/indiserver 0775 indi-allsky indi-allsky - -
+d /var/lib/indi-allsky/working/gunicorn 0775 indi-allsky www-data - -
 d /etc/indi-allsky 0775 indi-allsky indi-allsky - -
