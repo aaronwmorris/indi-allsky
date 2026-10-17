@@ -21,6 +21,7 @@ Deployments may override the location with ``ASI676MC_CALIBRATION_FOLDER``.
 from contextlib import contextmanager
 from contextlib import redirect_stdout
 from collections import Counter
+from dataclasses import replace
 import base64
 from datetime import datetime
 from datetime import timezone
@@ -481,8 +482,11 @@ def capture_configuration_guidance(config):
 
     if preceding_fits:
         guidance_sentences.append(
-            'The normal frame before each purple frame will also be saved. '
-            'This improves calibration and uses about one extra FITS frame of memory.'
+            'The normal frame before each purple frame is also saved when it '
+            'is available and its capture settings match. This improves '
+            'calibration and uses about one extra FITS frame of memory. '
+            'Having both saving options enabled does not guarantee complete '
+            'normal/purple/normal groups.'
         )
 
     if not retention_valid:
@@ -968,6 +972,134 @@ def _database_compatibility_key(record):
     )
 
 
+def _select_database_groups(
+    pairs, raw_by_path, target_groups, cancel_callback=None, highlight_scores=None,
+):
+    """Select active groups plus reserves within the existing evidence limits.
+
+    Order matters: staging preserves it so the engine fits the exposure seeds
+    and preferred groups before promoting reserves.
+    """
+    from . import asi676mc_calibration_engine as engine
+
+    if highlight_scores:
+        # Explore untested groups first, then keep the strongest measured
+        # highlight evidence. Prefer triplets among otherwise equal candidates,
+        # but do not hide a one-sided group that supplies missing highlights.
+        pairs.sort(key=lambda pair: (
+            raw_by_path[str(pair.bad.path)]['id'] not in highlight_scores,
+            highlight_scores.get(raw_by_path[str(pair.bad.path)]['id'], 0),
+            pair.two_sided,
+            pair.bad.timestamp,
+        ), reverse=True)
+    else:
+        # Prefer both compatible neighbours before recency. Exposure seeding
+        # below may still need a one-sided group; every group is validated later.
+        pairs.sort(
+            key=lambda pair: (pair.two_sided, pair.bad.timestamp), reverse=True,
+        )
+    exposure_seeds = []
+    seeded_exposures = []
+    for pair in pairs:
+        exposure = float(pair.bad.exposure)
+        if any(
+            math.isclose(
+                exposure,
+                seeded,
+                rel_tol=engine.EXPOSURE_LEVEL_REL_TOLERANCE,
+                abs_tol=engine.EXPOSURE_LEVEL_ABS_TOLERANCE,
+            )
+            for seeded in seeded_exposures
+        ):
+            continue
+        exposure_seeds.append(pair)
+        seeded_exposures.append(exposure)
+        if len(exposure_seeds) >= engine.CALIBRATION_OPTIONS[
+            'MIN_EXPOSURE_LEVELS'
+        ]:
+            break
+    seeded_ids = {id(pair) for pair in exposure_seeds}
+    ordered_pairs = exposure_seeds + [
+        pair for pair in pairs
+        if id(pair) not in seeded_ids
+    ]
+    selected_records = []
+    selected_ids = set()
+    selected_pairs = []
+    selected_reference_paths = set()
+    selected_bytes = 0
+    selection_limit_blocked = False
+
+    def add_group(pair, references):
+        nonlocal selected_bytes, selection_limit_blocked
+        # Every active prefix must retain enough distinct normal references.
+        # A recent burst can otherwise fill staging with failures that all
+        # share the same two normals, hiding suitable older groups.
+        reference_paths = selected_reference_paths.union(
+            reference.path for reference in references
+        )
+        if len(reference_paths) < (
+            (len(selected_pairs) + 1)
+            * engine.CALIBRATION_OPTIONS['MIN_GOOD_BAD_RATIO']
+        ):
+            return False
+        group_frames = (pair.bad,) + tuple(references)
+        group_records = []
+        for frame in group_frames:
+            raw_record = raw_by_path.get(str(frame.path))
+            if raw_record is None or raw_record['id'] in selected_ids:
+                continue
+            group_records.append(raw_record)
+        group_bytes = sum(record['size'] for record in group_records)
+        if (
+            len(selected_records) + len(group_records) > DATABASE_MAX_FILES
+            or selected_bytes + group_bytes > DATABASE_MAX_BYTES
+        ):
+            selection_limit_blocked = True
+            return False
+        for raw_record in group_records:
+            selected_records.append(raw_record)
+            selected_ids.add(raw_record['id'])
+            selected_bytes += raw_record['size']
+        return True
+
+    initial_candidate_count = len(ordered_pairs)
+    for index, pair in enumerate(ordered_pairs):
+        if cancel_callback:
+            cancel_callback()
+        references = tuple(pair.references)
+        added = add_group(pair, references)
+        if not added and len(references) > 1:
+            # A triplet is a preference, not a larger minimum: one reference
+            # can still fit the staging budget without weakening validation.
+            references = (min(
+                references,
+                key=lambda item: abs(item.timestamp - pair.bad.timestamp),
+            ),)
+            added = add_group(pair, references)
+        if not added:
+            if index < initial_candidate_count:
+                # Older groups may add distinct normals that make a shared-
+                # reference group usable. Revisit deferred candidates once.
+                ordered_pairs.append(pair)
+            continue
+        selected_pairs.append(engine.MatchedPair(
+            bad=pair.bad, references=references,
+        ))
+        selected_reference_paths.update(
+            reference.path for reference in references
+        )
+        if len(selected_pairs) >= target_groups + DATABASE_RESERVE_GROUPS:
+            break
+
+    return selected_records, selected_pairs, {
+        'staged_group_count': len(selected_pairs),
+        'two_sided_group_count': sum(pair.two_sided for pair in selected_pairs),
+        'selected_logical_bytes': selected_bytes,
+        'selection_limit_blocked': selection_limit_blocked,
+    }
+
+
 def discover_full_retention_database_evidence(
     fits_records,
     bad_frames,
@@ -977,6 +1109,7 @@ def discover_full_retention_database_evidence(
     progress_callback=None,
     cancel_callback=None,
     signature_callback=None,
+    candidate_callback=None,
 ):
     """Inspect the complete retained database catalog and stage only evidence.
 
@@ -1248,97 +1381,16 @@ def discover_full_retention_database_evidence(
             max_pair_seconds,
             checkpoint_callback=cancel_callback,
         )
-    pairs.sort(key=lambda pair: pair.bad.timestamp, reverse=True)
-    exposure_seeds = []
-    seeded_exposures = []
-    for pair in pairs:
-        exposure = float(pair.bad.exposure)
-        if any(
-            math.isclose(
-                exposure,
-                seeded,
-                rel_tol=engine.EXPOSURE_LEVEL_REL_TOLERANCE,
-                abs_tol=engine.EXPOSURE_LEVEL_ABS_TOLERANCE,
-            )
-            for seeded in seeded_exposures
-        ):
-            continue
-        exposure_seeds.append(pair)
-        seeded_exposures.append(exposure)
-        if len(exposure_seeds) >= engine.CALIBRATION_OPTIONS[
-            'MIN_EXPOSURE_LEVELS'
-        ]:
-            break
-    seeded_ids = {id(pair) for pair in exposure_seeds}
-    ordered_pairs = exposure_seeds + [
-        pair for pair in pairs
-        if id(pair) not in seeded_ids
-    ]
-    selected_records = []
-    selected_ids = set()
-    selected_pairs = []
-    selected_bytes = 0
-    staged_group_count = 0
-    two_sided_group_count = 0
-    selection_limit_blocked = False
-
-    def add_group(pair, references):
-        nonlocal selected_bytes, selection_limit_blocked
-        group_frames = (pair.bad,) + tuple(references)
-        group_records = []
-        for frame in group_frames:
-            raw_record = raw_by_path.get(str(frame.path))
-            if raw_record is None or raw_record['id'] in selected_ids:
-                continue
-            group_records.append(raw_record)
-        group_bytes = sum(record['size'] for record in group_records)
-        if (
-            len(selected_records) + len(group_records) > DATABASE_MAX_FILES
-            or selected_bytes + group_bytes > DATABASE_MAX_BYTES
-        ):
-            selection_limit_blocked = True
-            return False
-        for raw_record in group_records:
-            selected_records.append(raw_record)
-            selected_ids.add(raw_record['id'])
-            selected_bytes += raw_record['size']
-        return True
-
-    for pair in ordered_pairs:
-        if cancel_callback:
-            cancel_callback()
-        references = tuple(pair.references)
-        added = add_group(pair, references)
-        used_two_sided = pair.two_sided
-        if not added and len(references) > 1:
-            nearest = min(
-                references,
-                key=lambda item: abs(item.timestamp - pair.bad.timestamp),
-            )
-            added = add_group(pair, (nearest,))
-            used_two_sided = False
-        if not added:
-            continue
-        staged_group_count += 1
-        selected_pairs.append(engine.MatchedPair(
-            bad=pair.bad,
-            references=(
-                references
-                if used_two_sided
-                else (
-                    min(
-                        references,
-                        key=lambda item: abs(
-                            item.timestamp - pair.bad.timestamp
-                        ),
-                    ),
-                )
-            ),
-        ))
-        if used_two_sided:
-            two_sided_group_count += 1
-        if staged_group_count >= target_groups + DATABASE_RESERVE_GROUPS:
-            break
+    if candidate_callback:
+        candidate_callback(pairs, raw_by_path)
+    selected_records, selected_pairs, selection = _select_database_groups(
+        pairs, raw_by_path, target_groups, cancel_callback,
+    )
+    staged_group_count = selection['staged_group_count']
+    two_sided_group_count = selection['two_sided_group_count']
+    selected_bytes = selection['selected_logical_bytes']
+    selection_limit_blocked = selection['selection_limit_blocked']
+    selected_ids = {record['id'] for record in selected_records}
 
     if staged_group_count < minimum:
         limit_detail = ''
@@ -1459,6 +1511,7 @@ def _stage_database_files_unlocked(
     storage_root=None,
     expected_status='uploading',
     worker_token=None,
+    append=False,
 ):
     """Link selected local DB assets into a private calibration session.
 
@@ -1481,13 +1534,15 @@ def _stage_database_files_unlocked(
             'The calibration service could not continue this run. Reload the '
             'page and start again.'
         )
-    if manifest.get('files') or manifest.get('total_bytes'):
+    if not append and (manifest.get('files') or manifest.get('total_bytes')):
         raise CalibrationSessionError(
             'This saved-FITS search already contains temporary files. Reload '
             'the page and start a new search.'
         )
     records = list(records)
-    if len(records) > DATABASE_MAX_FILES:
+    existing_ids = {entry['database_id'] for entry in manifest.get('files', ())}
+    records = [record for record in records if record['id'] not in existing_ids]
+    if len(manifest.get('files', ())) + len(records) > DATABASE_MAX_FILES:
         raise CalibrationSessionError(
             'The saved-FITS search selected too many files. Start a new search '
             'with a lower purple-frame group target.'
@@ -1562,7 +1617,10 @@ def _stage_database_files_unlocked(
                 'repair_status': record.get('repair_status'),
             })
             manifest['total_bytes'] += file_size
-        if not manifest['files']:
+        # A refill may lose its entire batch to retention cleanup. Return the
+        # empty manifest so the archive worker can select older groups; fixed
+        # collections have no such fallback and must keep the original error.
+        if not manifest['files'] and not append:
             raise CalibrationSessionError(
                 'all selected database FITS became unavailable during staging'
             )
@@ -1601,11 +1659,33 @@ def stage_database_files_for_worker(
     worker_token,
     records,
     storage_root=None,
+    replace_existing=False,
 ):
     """Stage selected database evidence for the worker that owns the session."""
     session_dir = _session_dir(session_id, storage_root)
     with _file_lock(_session_lock_path(session_dir)):
         manifest = _read_manifest(session_dir)
+        if replace_existing:
+            if (
+                manifest.get('status') != 'running'
+                or manifest.get('worker_token') != str(worker_token)
+            ):
+                raise CalibrationSessionError('calibration worker no longer owns this run')
+            records = list(records)
+            retained_ids = {record['id'] for record in records}
+            kept = []
+            for entry in manifest.get('files', ()):
+                if entry['database_id'] in retained_ids:
+                    kept.append(entry)
+                else:
+                    # Only private staging links/copies are removed. Retain
+                    # selected links even if the original has since expired.
+                    session_dir.joinpath('uploads', Path(entry['name']).name).unlink(
+                        missing_ok=True,
+                    )
+            manifest['files'] = kept
+            manifest['total_bytes'] = sum(entry['size'] for entry in kept)
+            _write_manifest(session_dir, manifest)
         return _stage_database_files_unlocked(
             session_id,
             manifest.get('owner'),
@@ -1613,6 +1693,7 @@ def stage_database_files_for_worker(
             storage_root=storage_root,
             expected_status='running',
             worker_token=worker_token,
+            append=replace_existing,
         )
 
 
@@ -2175,42 +2256,38 @@ def _result_warnings(
     warnings = []
     marginal_exclusions = list(quality.get('marginal_exclusions') or ())
     if marginal_exclusions:
-        details = '; '.join(
-            '{0}: full repair was {1:.1%} better than colour-only correction; '
-            'at least {2:.1%} was required'.format(
-                item.get('name', 'Unknown FITS'),
-                float(item.get('improvement_vs_gain_only', 0.0)),
-                float(item.get('required_improvement', 0.0)),
-            )
-            for item in marginal_exclusions
-        )
         replacement_count = int(quality.get('replacement_group_count', 0))
         requested_count = quality.get('requested_group_count')
         used_count = int(
             quality.get('used_group_count', quality.get('matched_bad_count', 0))
         )
         if replacement_count:
-            outcome = '{0} reserve {1} replaced {2}.'.format(
-                replacement_count,
-                'group' if replacement_count == 1 else 'groups',
-                'it' if len(marginal_exclusions) == 1 else 'them',
+            outcome = '{0} {1} selected for checking. '.format(
+                _counted_item(replacement_count, 'additional group'),
+                'was' if replacement_count == 1 else 'were',
             )
-        elif requested_count is not None and used_count < int(requested_count):
-            outcome = (
-                'No additional suitable reserve was available, so calibration '
+        else:
+            outcome = ''
+        if requested_count is not None and used_count < int(requested_count):
+            outcome += (
+                'No further suitable groups were available, so calibration '
                 'used {0} of the requested {1} groups.'.format(
                     used_count,
                     int(requested_count),
                 )
             )
         else:
-            outcome = 'The remaining evidence was sufficient.'
+            outcome += 'The selected evidence was sufficient.'
+        # Archive recovery can reject many groups. Keep the page summary short;
+        # the report already lists each filename, reason, and available scores.
         warnings.append(
-            'Calibration set aside {0} because the result was inconclusive '
-            '({1}). {2}'.format(
+            'Calibration set aside {0} that could not supply usable evidence '
+            'or pass every check. {1} Every group used passed all quality checks. '
+            '{2}'.format(
                 _counted_item(len(marginal_exclusions), 'frame group'),
-                details,
                 outcome,
+                'See Frame groups set aside in this report for filenames and reasons.'
+                if report_context else 'Download details lists the filenames and reasons.',
             )
         )
     bound_identity_count = int(
@@ -2296,14 +2373,9 @@ def _result_warnings(
         if source_details.get('selection_limit_reached'):
             if str(selection_mode or '').startswith('full_retention_'):
                 warnings.append(
-                    'The saved-FITS limit was reached, so the newest suitable '
-                    'frame groups were used. No action is needed.'
-                    .format(
-                        source_details.get(
-                            'selection_limit_file_count',
-                            DATABASE_MAX_FILES,
-                        )
-                    )
+                    'The saved-FITS limit was reached, so a selection of '
+                    'suitable frame groups was used, preferring complete '
+                    'normal/purple/normal groups. No action is needed.'
                 )
             else:
                 warnings.append(
@@ -2409,32 +2481,34 @@ def _result_warnings(
                 and triplet_coverage_complete
                 and not references_reused
             ):
-                if (
-                    one_sided_count
-                    and references_reused
-                    and not triplet_coverage_complete
-                ):
-                    improvement = (
-                        'more complete normal/purple/normal groups with '
-                        'different normal frames would improve confidence'
+                coverage_notes = [coverage_text + '.', result_status + '.']
+                if one_sided_count:
+                    # Coverage describes selected references, not why another
+                    # neighbour was absent. Do not infer a saving failure or
+                    # require more captures for an already accepted result.
+                    coverage_notes.append(
+                        'A second normal reference may be unavailable (not '
+                        'saved or no longer retained) or unusable (for example, '
+                        'different exposure or gain). The coverage count does '
+                        'not distinguish these causes.'
                     )
-                elif one_sided_count and not triplet_coverage_complete:
-                    improvement = (
-                        'more complete normal/purple/normal groups would '
-                        'improve confidence'
+                    if source_details.get('kind') == 'database':
+                        coverage_notes.append(
+                            'If diagnostic and preceding FITS saving are '
+                            'already enabled, no capture-setting change is '
+                            'needed. Complete groups cannot be guaranteed.'
+                        )
+                    else:
+                        coverage_notes.append(
+                            'For manual uploads, include normal FITS from '
+                            'both sides when available and compatible.'
+                        )
+                if references_reused:
+                    coverage_notes.append(
+                        'Using more different normal reference frames would '
+                        'improve confidence.'
                     )
-                else:
-                    improvement = (
-                        'more different normal reference frames would improve '
-                        'confidence'
-                    )
-                warnings.append(
-                    '{0}. {1}, but {2}.'.format(
-                        coverage_text,
-                        result_status,
-                        improvement,
-                    )
-                )
+                warnings.append(' '.join(coverage_notes))
 
     skipped_parts = []
     unmatched_count = int(quality.get('unmatched_bad_count', 0))
@@ -2928,6 +3002,8 @@ def _friendly_failure_message(message):
             'Too few stable scene pixels remained for the final comparison. '
             'Use clearer daylight sequences with less cloud or movement.'
         )
+    if lowered.startswith('validation_archive_exhausted:'):
+        return message_text.split(':', 1)[1].strip()
     if lowered.startswith('validation_group_count_after_exclusion:'):
         detail = message_text.split(':', 1)[1].strip()
         return (
@@ -3381,8 +3457,8 @@ def format_threshold_suggestion_report(payload, manifest):
         lines.extend((
             'Method: Saved FITS search in Tools > Fix ASI676MC purple frames',
             'Camera: {0}'.format(source_details.get('camera_name', 'Unknown')),
-            'Selection preference: Newest compatible FITS with required '
-            'exposure diversity',
+            'Selection preference: Complete normal/purple/normal groups before '
+            'recency, with required exposure and normal-reference diversity',
             'Target purple-frame groups: {0}'.format(
                 source_details.get('requested_group_count', 0)
             ),
@@ -3395,7 +3471,7 @@ def format_threshold_suggestion_report(payload, manifest):
                 source_details.get('selected_marked_group_count', 0)
             ),
             _database_search_coverage_line(source_details),
-            'FITS inspected: {0} of {1}'.format(
+            'FITS inspected in the initial selection: {0} of {1}'.format(
                 payload.get('quality', {}).get(
                     'scanned_file_count',
                     selected_count,
@@ -3509,6 +3585,29 @@ def format_threshold_suggestion_report(payload, manifest):
     return '\n'.join(lines).rstrip() + '\n'
 
 
+def _append_validation_search_report(lines, source):
+    search = source.get('validation_search')
+    if not search:
+        return
+    _append_report_section(lines, 'Replacement search')
+    for label, key in (
+        ('Matched candidate groups in retained archive', 'candidate_group_count'),
+        ('Groups selected for validation', 'examined_group_count'),
+        ('Groups rejected', 'rejected_group_count'),
+        ('Replacement groups selected', 'replacement_group_count'),
+        ('Candidates not yet selected for validation', 'remaining_candidate_group_count'),
+    ):
+        lines.append('{0}: {1}'.format(label, search[key]))
+    if search.get('highlight_search_group_count'):
+        lines.append('Groups assessed in unsuccessful highlight fits: {0}'.format(
+            search['highlight_search_group_count'],
+        ))
+    for check in search.get('excluded_groups', ()):
+        _append_report_paragraph(
+            lines, '{0}: {1}'.format(check['name'], check['reason']), prefix='- ',
+        )
+
+
 def format_failure_report(message, manifest):
     """Build a browser-safe downloadable record for a failed calibration."""
     source_details = manifest.get('source') or {}
@@ -3537,16 +3636,16 @@ def format_failure_report(message, manifest):
             'Purple-frame groups requested: {0}'.format(
                 source_details.get('requested_group_count', 0)
             ),
-            'Purple-frame groups staged: {0}'.format(
+            'Purple-frame groups initially staged: {0}'.format(
                 source_details.get(
                     'staged_group_count',
                     source_details.get('selected_group_count', 0),
                 )
             ),
-            'Reserve groups staged: {0}'.format(
+            'Reserve groups initially staged: {0}'.format(
                 source_details.get('reserve_group_count', 0)
             ),
-            'FITS staged: {0}'.format(len(manifest.get('files', ()))),
+            'FITS in the last staged selection: {0}'.format(len(manifest.get('files', ()))),
         ))
         if cleanup_complete:
             cleanup_text = (
@@ -3578,6 +3677,7 @@ def format_failure_report(message, manifest):
     else:
         lines.append('Method: Tools > Fix ASI676MC purple frames')
 
+    _append_validation_search_report(lines, source_details)
     _append_report_section(lines, 'About this report')
     _append_report_paragraph(
         lines,
@@ -3732,17 +3832,18 @@ def format_integrated_report(payload, manifest):
         lines.extend((
             'Method: Saved FITS search in Tools > Fix ASI676MC purple frames',
             'Camera: {0}'.format(source_details.get('camera_name', 'Unknown')),
-            'Selection preference: Newest compatible FITS with required '
-            'exposure diversity',
+            'Selection preference: Complete normal/purple/normal groups before '
+            'recency, with required exposure and normal-reference diversity; '
+            'missing highlight evidence takes priority during recovery',
             'Target purple-frame groups: {0}'.format(
                 source_details.get('requested_group_count', 0)
             ),
             *(
                 (
-                    'Purple-frame groups staged: {0}'.format(
+                    'Purple-frame groups initially staged: {0}'.format(
                         source_details['staged_group_count']
                     ),
-                    'Reserve groups staged: {0}'.format(
+                    'Reserve groups initially staged: {0}'.format(
                         source_details.get('reserve_group_count', 0)
                     ),
                 )
@@ -3758,7 +3859,7 @@ def format_integrated_report(payload, manifest):
                 source_details.get('selected_marked_group_count', 0)
             ),
             _database_search_coverage_line(source_details),
-            'FITS inspected: {0} of {1}'.format(
+            'FITS inspected in the initial selection: {0} of {1}'.format(
                 quality.get('scanned_file_count', selected_file_count),
                 selected_file_count,
             ),
@@ -3862,8 +3963,8 @@ def format_integrated_report(payload, manifest):
         evidence_lines.extend((
             ('Purple-frame groups requested', quality['requested_group_count']),
             ('Purple-frame groups used', quality['used_group_count']),
-            ('Reserve groups promoted', quality['replacement_group_count']),
-            ('Inconclusive groups set aside',
+            ('Additional groups selected for checking', quality['replacement_group_count']),
+            ('Unsuitable groups set aside',
              quality['excluded_marginal_group_count']),
         ))
     evidence_lines.extend((
@@ -3927,24 +4028,38 @@ def format_integrated_report(payload, manifest):
         _append_report_section(lines, 'Frame groups set aside')
         _append_report_paragraph(
             lines,
-            'Each group below was repaired successfully and became much closer '
-            'to its nearby normal frame. However, the tool could not prove '
-            'that the complete repair was enough better than correcting the '
-            'colour alone. The group was therefore set aside. For the three '
-            'difference values, lower is better.',
+            'These groups were excluded because required evidence was missing '
+            'or a quality check failed. Calibration was refitted and validated '
+            'using the accepted groups. Comparison errors measure the difference '
+            'from the nearby normal reference; lower values are better.',
         )
         for item in marginal_exclusions:
+            # One bullet per group: keep the reason and its supporting scores
+            # together without repeating a signed "improvement" as another failure.
+            details = (item.get('reason') or '').rstrip('. ')
+            if details:
+                details += '.'
+            if 'original_error' in item:
+                details += (
+                    ' Comparison error: before repair {0:.3%}; colour-only '
+                    'correction {1:.3%}; full repair {2:.3%}.'.format(
+                        float(item.get('original_error', 0.0)),
+                        float(item.get('gain_only_error', 0.0)),
+                        float(item.get('repaired_error', 0.0)),
+                    )
+                )
+                if not item.get('reason'):
+                    # Older retained results may contain scores without a reason.
+                    details += (
+                        ' Full repair must reduce the comparison error by at least '
+                        '{0:.1%} relative to colour-only correction.'.format(
+                            float(item.get('required_improvement', 0.0)),
+                        )
+                    )
             _append_report_paragraph(
                 lines,
-                '{0}: before repair {1:.3%}; colour-only correction {2:.3%}; '
-                'full repair {3:.3%}; extra improvement from full repair '
-                '{4:.3%}; minimum required {5:.3%}.'.format(
-                    item.get('name', 'Unknown FITS'),
-                    float(item.get('original_error', 0.0)),
-                    float(item.get('gain_only_error', 0.0)),
-                    float(item.get('repaired_error', 0.0)),
-                    float(item.get('improvement_vs_gain_only', 0.0)),
-                    float(item.get('required_improvement', 0.0)),
+                '{0}: {1}'.format(
+                    item.get('name', 'Unknown FITS'), details.strip(),
                 ),
                 prefix='- ',
             )
@@ -4092,6 +4207,7 @@ def format_integrated_report(payload, manifest):
             )
             lines.append(range_text)
 
+    _append_validation_search_report(lines, source_details)
     _append_report_section(lines, 'About this report')
     _append_report_paragraph(
         lines,
@@ -4189,6 +4305,10 @@ def run_calibration_session(
             with _file_lock(_session_lock_path(session_dir)):
                 active_manifest()
 
+        # Retain catalog metadata, not decoded FITS arrays. Recovery can reach
+        # older groups while private staging stays within its file/byte limits.
+        candidate_pool = {}
+        replacement_callback = None
         if (
             source_details.get('kind') == 'database'
             and source_details.get('selection_mode')
@@ -4217,6 +4337,9 @@ def run_calibration_session(
                             dict(signature),
                         )
                     ),
+                    candidate_callback=lambda pairs, records: candidate_pool.update(
+                        pairs=list(pairs), records=records,
+                    ),
                 )
             )
             if database_signature_saver and legacy_signature_updates:
@@ -4235,12 +4358,13 @@ def run_calibration_session(
                         'Unable to cache ASI676MC legacy FITS signatures'
                     )
                     discovery['legacy_signature_cache_failed'] = True
-            stage_database_files_for_worker(
-                session_id,
-                worker_token,
-                selected_records,
-                storage_root=storage_root,
-            )
+            if not candidate_pool:
+                stage_database_files_for_worker(
+                    session_id,
+                    worker_token,
+                    selected_records,
+                    storage_root=storage_root,
+                )
             with _file_lock(_session_lock_path(session_dir)):
                 manifest = active_manifest()
                 updated_source = dict(manifest.get('source') or source_details)
@@ -4256,6 +4380,154 @@ def run_calibration_session(
             for entry in manifest.get('files', ())
             if entry.get('database_id') is not None
         }
+
+        if candidate_pool:
+            catalog_pairs = candidate_pool['pairs']
+            catalog_records = candidate_pool['records']
+
+            def catalog_id(frame):
+                return catalog_records[str(frame.path)]['id']
+
+            def staged_id(frame):
+                return metadata_by_name[frame.path.name]['database_id']
+
+            def group_key(pair, lookup_id):
+                # A different reference can change the fit for the same bad
+                # frame. Include both sides, using IDs stable across restaging.
+                return lookup_id(pair.bad), tuple(sorted(
+                    lookup_id(reference) for reference in pair.references
+                ))
+
+            rejected_ids = set()
+            excluded_checks = []
+            # Rejected groups never return. Highlight scores only change the
+            # search order: a dim group may still supply gains or an exposure.
+            highlight_scores = {}
+            highlight_attempts = set()
+            target_groups = source_details['requested_group_count']
+            initial_pairs = _select_database_groups(
+                catalog_pairs, catalog_records, target_groups,
+                cancellation_checkpoint,
+            )[1][:target_groups]
+            examined_ids = {catalog_id(pair.bad) for pair in initial_pairs}
+            initial_group_count = len(examined_ids)
+
+            def replace_database_groups(failures):
+                """Refresh private staging, or raise when recovery cannot progress."""
+                nonlocal manifest, source_details, metadata_by_name
+                highlight_selection = set()
+                for failure in failures:
+                    pair = failure['pair']
+                    record_id = staged_id(pair.bad)
+                    if 'highlight_sample_count' in failure:
+                        highlight_scores[record_id] = failure['highlight_sample_count']
+                        highlight_selection.add(group_key(pair, staged_id))
+                        continue
+                    rejected_ids.add(record_id)
+                    excluded_checks.append(dict(failure['check']))
+                if highlight_selection:
+                    highlight_attempts.add(frozenset(highlight_selection))
+
+                while True:
+                    cancellation_checkpoint()
+                    if failures or rejected_ids:
+                        record_progress({
+                            'phase': 'replacing_groups',
+                            'reason': 'highlights' if highlight_selection else 'evidence',
+                        })
+                    available_pairs = [
+                        pair for pair in catalog_pairs
+                        if catalog_id(pair.bad) not in rejected_ids
+                    ]
+                    selected, selected_pairs, selection = _select_database_groups(
+                        available_pairs, catalog_records, target_groups,
+                        cancellation_checkpoint,
+                        highlight_scores=highlight_scores,
+                    )
+                    next_ids = {
+                        catalog_id(pair.bad)
+                        for pair in selected_pairs[:target_groups]
+                    }
+                    examined_ids.update(next_ids)
+                    search = {
+                        'candidate_group_count': len(catalog_pairs),
+                        'examined_group_count': len(examined_ids),
+                        'rejected_group_count': len(rejected_ids),
+                        'replacement_group_count': len(examined_ids) - initial_group_count,
+                        'remaining_candidate_group_count': sum(
+                            catalog_id(pair.bad) not in examined_ids
+                            for pair in available_pairs
+                        ),
+                        'excluded_groups': list(excluded_checks),
+                        'highlight_search_group_count': len(highlight_scores),
+                    }
+                    # Persist the audit before any exhaustion or staging error
+                    # so failure reports retain the last completed selection.
+                    with _file_lock(_session_lock_path(session_dir)):
+                        manifest = active_manifest()
+                        source_details = dict(manifest.get('source') or {})
+                        source_details['validation_search'] = search
+                        manifest['source'] = source_details
+                        _write_manifest(session_dir, manifest)
+                    # Repeating a failed set cannot add highlight evidence.
+                    # This is separate from permanently rejecting a bad group.
+                    if highlight_selection and frozenset(
+                        group_key(pair, catalog_id)
+                        for pair in selected_pairs[:target_groups]
+                    ) in highlight_attempts:
+                        raise asi676mc_calibration_engine.CalibrationError(
+                            'validation_archive_exhausted: The retained archive has '
+                            'no further suitable groups with enough stable clipped-highlight '
+                            'evidence within the staging and evidence limits. '
+                            '{0} groups were checked for highlights.'.format(len(highlight_scores))
+                        )
+                    if len(selected_pairs) < DATABASE_GROUP_MIN:
+                        raise asi676mc_calibration_engine.CalibrationError(
+                            'validation_archive_exhausted: The retained archive has '
+                            'no further suitable replacements: '
+                            '{0} candidate groups, {1} rejected, {2} remaining; '
+                            'at least {3} are required.{4}'.format(
+                                len(catalog_pairs), len(rejected_ids),
+                                len(selected_pairs), DATABASE_GROUP_MIN,
+                                ' The temporary staging limit was reached.'
+                                if selection['selection_limit_blocked'] else '',
+                            )
+                        )
+                    manifest = stage_database_files_for_worker(
+                        session_id, worker_token, selected,
+                        storage_root=storage_root, replace_existing=True,
+                    )
+                    metadata_by_name = {
+                        entry['name']: entry for entry in manifest['files']
+                    }
+                    staged_by_id = {
+                        entry['database_id']: entry for entry in manifest['files']
+                    }
+                    refreshed_pairs = []
+                    for pair in selected_pairs:
+                        frames = (pair.bad,) + pair.references
+                        ids = [catalog_id(frame) for frame in frames]
+                        if any(record_id not in staged_by_id for record_id in ids):
+                            rejected_ids.add(ids[0])
+                            excluded_checks.append({
+                                'name': pair.bad.source_name or pair.bad.path.name,
+                                'reason': 'One or more FITS in this group became unavailable.',
+                            })
+                            continue
+                        refreshed = [
+                            replace(frame, path=upload_dir / staged_by_id[record_id]['name'])
+                            for frame, record_id in zip(frames, ids)
+                        ]
+                        refreshed_pairs.append(asi676mc_calibration_engine.MatchedPair(
+                            bad=refreshed[0], references=tuple(refreshed[1:]),
+                        ))
+                    if len(refreshed_pairs) == len(selected_pairs):
+                        return refreshed_pairs
+
+            replacement_callback = replace_database_groups
+            # Record the initial counts too, and refill any groups whose files
+            # disappeared between catalog inspection and private staging.
+            replacement_callback([])
 
         with redirect_stdout(captured_output):
             payload = asi676mc_calibration_engine.calibrate_folder(
@@ -4285,6 +4557,7 @@ def run_calibration_session(
                     'validation_exclusion_limit',
                     0,
                 ),
+                replacement_callback=replacement_callback,
             )
 
         with _file_lock(_session_lock_path(session_dir)):
@@ -4312,6 +4585,14 @@ def run_calibration_session(
             len(manifest.get('files', ())),
         )
         payload_quality.setdefault('search_stopped_early', False)
+        validation_search = (manifest.get('source') or {}).get('validation_search')
+        if validation_search and 'requested_group_count' in payload_quality:
+            # Restaged files can have new private names. Count database IDs,
+            # including staging losses, instead of counting those names twice.
+            for key in ('examined_group_count', 'replacement_group_count'):
+                payload_quality[key] = validation_search[key]
+            payload_quality['excluded_marginal_group_count'] = validation_search['rejected_group_count']
+            payload_quality['marginal_exclusions'] = validation_search['excluded_groups']
 
         original_names = {
             entry.get('name'): entry.get('original_name') or entry.get('name')

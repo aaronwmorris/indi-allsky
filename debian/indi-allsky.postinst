@@ -11,47 +11,44 @@ fetch_debconf() {
     db_get "indi-allsky/$1" 2>/dev/null && echo "$RET" || echo "$2"
 }
 
-generate_self_signed_cert() {
+generate_ssl_cert() {
     _KEY="$1"
     _CRT="$2"
     _GROUP="${3:-root}"
     _KEY_PERMS="${4:-600}"
 
-    if [ ! -f "$_CRT" ] || [ ! -f "$_KEY" ]; then
+    # Initialize shared CA directory for indi-allsky
+    CA_DIR="/etc/indi-allsky/ca"
+
+    # Regenerate if certificates are missing or if upgrading from legacy OpenSSL self-signed certs (CA not initialized)
+    if [ ! -f "$_CRT" ] || [ ! -f "$_KEY" ] || [ ! -f "${CA_DIR}/rootCA.pem" ]; then
         mkdir -p "$(dirname "$_KEY")" "$(dirname "$_CRT")"
-        _HOSTNAME=$(hostname -s 2>/dev/null || echo "indi-allsky")
+        mkdir -p "$CA_DIR"
+        chmod 755 "$CA_DIR"
 
-        ### EC cert
-        openssl req \
-            -x509 \
-            -days 3650 \
-            -newkey ec \
-            -sha384 \
-            -nodes \
-            -pkeyopt ec_paramgen_curve:secp384r1 \
-            -subj "/CN=${_HOSTNAME}" \
-            -addext "subjectAltName=DNS:${_HOSTNAME},DNS:${_HOSTNAME}.local,DNS:localhost" \
-            -keyout "$_KEY" \
-            -out "$_CRT" \
-            2>/dev/null || true
+        if [ ! -f "${CA_DIR}/rootCA.pem" ] || [ ! -f "${CA_DIR}/rootCA-key.pem" ]; then
+            echo "indi-allsky: Initializing local Certificate Authority via mkcert..."
+            CAROOT="$CA_DIR" mkcert -install
+            chmod 644 "${CA_DIR}/rootCA.pem"
+            chmod 600 "${CA_DIR}/rootCA-key.pem"
+        fi
 
-        ### RSA cert
-        #openssl req \
-        #    -new \
-        #    -newkey rsa:4096 \
-        #    -sha512 \
-        #    -days 3650 \
-        #    -nodes \
-        #    -x509 \
-        #    -subj "/CN=${_HOSTNAME}.local" \
-        #    -addext "subjectAltName=DNS:${_HOSTNAME}.local,DNS:${_HOSTNAME},DNS:localhost" \
-        #    -keyout "$_KEY" \
-        #    -out "$_CRT" \
-        #    2>/dev/null || true
+        # Discover active local IPv4 / IPv6 addresses to include in SAN
+        LAN_IPS=$(hostname -I 2>/dev/null || ip addr show 2>/dev/null | grep -Po 'inet \K[\d.]+' | grep -v '^127\.' || true)
+
+        echo "indi-allsky: Generating locally-trusted TLS certificate using mkcert for indi-allsky.local..."
+        CAROOT="$CA_DIR" mkcert \
+            -cert-file "$_CRT" \
+            -key-file "$_KEY" \
+            "indi-allsky.local" \
+            "localhost" \
+            127.0.0.1 \
+            ::1 \
+            $LAN_IPS
     fi
-    chown "root:${_GROUP}" "$_KEY" "$_CRT" 2>/dev/null || true
-    chmod "$_KEY_PERMS" "$_KEY" 2>/dev/null || true
-    chmod 644 "$_CRT" 2>/dev/null || true
+    chown "root:${_GROUP}" "$_KEY" "$_CRT"
+    chmod "$_KEY_PERMS" "$_KEY"
+    chmod 644 "$_CRT"
 }
 
 configure_nginx() {
@@ -75,7 +72,7 @@ configure_nginx() {
     ln -sf /etc/nginx/sites-available/indi-allsky.conf /etc/nginx/sites-enabled/indi-allsky.conf
     rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
 
-    generate_self_signed_cert \
+    generate_ssl_cert \
         /etc/nginx/ssl/indi-allsky_nginx.key \
         /etc/nginx/ssl/indi-allsky_nginx.pem
 
@@ -102,7 +99,7 @@ configure_apache() {
         /usr/share/indi-allsky/conf/apache_indi-allsky.conf > /etc/apache2/sites-available/indi-allsky.conf
     chmod 644 /etc/apache2/sites-available/indi-allsky.conf
 
-    generate_self_signed_cert \
+    generate_ssl_cert \
         /etc/apache2/ssl/indi-allsky_apache.key \
         /etc/apache2/ssl/indi-allsky_apache.pem
 
@@ -140,7 +137,7 @@ configure_caddy() {
 
     CADDY_GROUP="caddy"
 
-    generate_self_signed_cert \
+    generate_ssl_cert \
         /etc/caddy/ssl/indi-allsky_caddy.key \
         /etc/caddy/ssl/indi-allsky_caddy.pem \
         "$CADDY_GROUP" \
@@ -158,7 +155,7 @@ configure_mosquitto() {
     MOSQUITTO_GROUP="mosquitto"
 
     # Setup SSL certificate for MQTT TLS
-    generate_self_signed_cert \
+    generate_ssl_cert \
         /etc/mosquitto/certs/indi-allsky_mosquitto.key \
         /etc/mosquitto/certs/indi-allsky_mosquitto.crt \
         "${MOSQUITTO_GROUP}" \
@@ -449,6 +446,7 @@ with app.app_context():
             chmod 775 "$WORKING_DIR"
             chmod 775 "$WORKING_DIR/indi-allsky"
             chmod 775 "$WORKING_DIR/indiserver"
+            chown -R "${ALLSKY_USER}":www-data "$WORKING_DIR/gunicorn" 2>/dev/null || true
             chmod 775 "$WORKING_DIR/gunicorn"
         fi
 
@@ -582,6 +580,39 @@ with app.app_context():
 
         if [ "$INSTALL_MOSQUITTO" = "true" ]; then
             configure_mosquitto
+        fi
+
+        # Configure Avahi mDNS service publication and indi-allsky.local alias
+        if command -v avahi-daemon >/dev/null 2>&1; then
+            echo "indi-allsky: Configuring Avahi mDNS service discovery..."
+            mkdir -p /etc/avahi/services /etc/avahi
+
+            # Publish dedicated _indi-allsky._tcp mDNS service definition with metadata
+            if [ -f "/usr/share/indi-allsky/conf/avahi_indi-allsky.service" ]; then
+                ALLSKY_VERSION=$(grep -E "^__version__" /usr/share/indi-allsky/indi_allsky/version.py | cut -d'"' -f2)
+                SYS_MAC=$(cat /sys/class/net/$(ip route show default 2>/dev/null | awk '{print $5}' | head -n1)/address 2>/dev/null || ip link show | awk '/ether/ {print $2; exit}')
+
+                sed \
+                    -e "s|%HTTPS_PORT%|${HTTPS_PORT:-443}|g" \
+                    -e "s|%VERSION%|${ALLSKY_VERSION}|g" \
+                    -e "s|%MAC%|${SYS_MAC}|g" \
+                    /usr/share/indi-allsky/conf/avahi_indi-allsky.service > /etc/avahi/services/indi-allsky.service
+                chmod 644 /etc/avahi/services/indi-allsky.service
+            fi
+
+            # Register indi-allsky.local static mDNS alias in /etc/avahi/hosts
+            PRIMARY_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+            if [ -n "$PRIMARY_IP" ]; then
+                if [ ! -f /etc/avahi/hosts ] || ! grep -q "indi-allsky.local" /etc/avahi/hosts; then
+                    echo "${PRIMARY_IP} indi-allsky.local" >> /etc/avahi/hosts
+                else
+                    sed -i "s|.*indi-allsky.local|${PRIMARY_IP} indi-allsky.local|g" /etc/avahi/hosts
+                fi
+                chmod 644 /etc/avahi/hosts
+            fi
+
+            systemctl enable avahi-daemon.service
+            systemctl restart avahi-daemon.service
         fi
 
         # Alter legacy NetworkManager policy kit local authority if present
@@ -732,6 +763,9 @@ EOF
 
         systemctl daemon-reload 2>/dev/null || true
 
+        # Enable and start automated weekly TLS leaf certificate renewal timer
+        systemctl enable indi-allsky-ssl-renew.timer 2>/dev/null || true
+        systemctl start indi-allsky-ssl-renew.timer 2>/dev/null || true
 
         # stopped above for database migration
         # socket will auto-start service

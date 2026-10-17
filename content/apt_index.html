@@ -63,13 +63,13 @@
 
       <!-- Channel Toggle Pill -->
       <div class="flex items-center gap-1.5 bg-slate-950/80 p-1 rounded-xl border border-slate-800 self-start sm:self-auto">
-        <button id="tab-stable" onclick="selectChannel('stable')" class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 bg-emerald-600 text-white shadow-sm">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-200"></span>
-          Stable <span class="text-[10px] bg-emerald-500/30 text-emerald-100 px-1 py-0.2 rounded ml-0.5">Recommended</span>
+        <button id="tab-nightly" onclick="selectChannel('nightly')" class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 bg-amber-600 text-white shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-200"></span>
+          Nightly <span class="text-[10px] bg-amber-500/30 text-amber-100 px-1 py-0.2 rounded ml-0.5">Recommended</span>
         </button>
-        <button id="tab-nightly" onclick="selectChannel('nightly')" class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 text-slate-400 hover:text-slate-200">
-          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-          Nightly
+        <button id="tab-stable" onclick="selectChannel('stable')" class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 text-slate-400 hover:text-slate-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          Stable
         </button>
       </div>
     </div>
@@ -107,7 +107,7 @@ sudo chmod a+r /etc/apt/keyrings/indi-allsky.gpg</pre>
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span class="flex items-center justify-center w-4 h-4 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 text-xs font-bold">2</span>
-            <h2 class="text-xs sm:text-sm font-semibold text-slate-200">Add Repository Source (<span id="channel-name-label" class="text-emerald-400">Stable</span>)</h2>
+            <h2 class="text-xs sm:text-sm font-semibold text-slate-200">Add Repository Source (<span id="channel-name-label" class="text-amber-400">Nightly</span>)</h2>
           </div>
           <button onclick="copyCode('cmd-repo', this)" class="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white transition-colors bg-slate-800/60 hover:bg-slate-800 px-2 py-0.5 rounded border border-slate-700/50">
             <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
@@ -119,13 +119,13 @@ sudo chmod a+r /etc/apt/keyrings/indi-allsky.gpg</pre>
 Types: deb
 URIs: https://apt.indi-allsky.org
 Suites: $(lsb_release -cs)
-Components: stable
+Components: nightly
 Architectures: $(dpkg --print-architecture)
 Signed-By: /etc/apt/keyrings/indi-allsky.gpg
 EOF</pre>
         </div>
         <p id="channel-description" class="text-[11px] sm:text-xs text-slate-400">
-          <span class="text-emerald-400 font-medium">Stable channel:</span> Recommended for all production systems. Receives tested, tagged releases.
+          <span class="text-amber-400 font-medium">Nightly channel (Recommended):</span> Built continuously from latest development commits with continuous improvements and bug fixes.
         </p>
       </div>
 
@@ -172,8 +172,8 @@ EOF</pre>
       origin = window.location.origin + path;
     }
 
-    let currentChannel = 'stable';
-    selectChannel('stable');
+    let currentChannel = 'nightly';
+    selectChannel('nightly');
 
     function updateCommands() {
       // Step 1 command
@@ -184,7 +184,7 @@ EOF</pre>
 
       // Step 2 command (DEB822 format)
       const cmdRepo = document.getElementById('cmd-repo');
-      const sourcesFile = currentChannel === 'stable' ? 'indi-allsky.sources' : 'indi-allsky-nightly.sources';
+      const sourcesFile = 'indi-allsky.sources';
       if (cmdRepo) {
         cmdRepo.textContent = `sudo tee /etc/apt/sources.list.d/${sourcesFile} <<EOF\nTypes: deb\nURIs: ${origin}\nSuites: $(lsb_release -cs)\nComponents: ${currentChannel}\nArchitectures: $(dpkg --print-architecture)\nSigned-By: /etc/apt/keyrings/indi-allsky.gpg\nEOF`;
       }
@@ -194,14 +194,14 @@ EOF</pre>
       const desc = document.getElementById('channel-description');
 
       if (label) {
-        label.textContent = currentChannel === 'stable' ? 'Stable' : 'Nightly';
-        label.className = currentChannel === 'stable' ? 'text-emerald-400' : 'text-amber-400';
+        label.textContent = currentChannel === 'nightly' ? 'Nightly' : 'Stable';
+        label.className = currentChannel === 'nightly' ? 'text-amber-400' : 'text-emerald-400';
       }
       if (desc) {
-        if (currentChannel === 'stable') {
-          desc.innerHTML = '<span class="text-emerald-400 font-medium">Stable channel (Recommended):</span> Recommended for all production systems. Receives tested, tagged releases.';
+        if (currentChannel === 'nightly') {
+          desc.innerHTML = '<span class="text-amber-400 font-medium">Nightly channel (Recommended):</span> Built continuously from latest development commits with continuous improvements and bug fixes.';
         } else {
-          desc.innerHTML = '<span class="text-amber-400 font-medium">Nightly channel:</span> Built continuously from latest git commits with continuous bug fixes.';
+          desc.innerHTML = '<span class="text-emerald-400 font-medium">Stable channel:</span> Periodic releases.';
         }
       }
     }
