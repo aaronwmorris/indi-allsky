@@ -12,7 +12,10 @@ After making these changes, it will be necessary to flush the cache in your brow
 
 * Restart flask
 
-        systemctl --user restart gunicorn-indi-allsky
+        sudo systemctl restart gunicorn-indi-allsky
+
+> [!NOTE]
+> On git checkout installations using user services, run `systemctl --user restart gunicorn-indi-allsky` instead.
 
 
 ## Disable HTTP redirect
