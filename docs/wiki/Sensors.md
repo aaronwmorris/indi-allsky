@@ -214,6 +214,49 @@ Note:  The pin designated as 1-Wire cannot be used as a GPIO pin while this over
 | ICM20x   | IMU | Untested |
 | MPU6050  | IMU | Working |
 | AS3935   | Lightning | Working (beta) |
+| WH-SP-RG | Rain rate / rainfall | Working - tested on Raspberry Pi 5 |
+
+### MISOL WH-SP-RG tipping bucket rain gauge ###
+Select **MISOL WH-SP-RG Tipping Bucket - pulse output (2 slots)** under
+**Rain Sensors**, alongside the FC-37. Set **Pin/Port 1** to the GPIO pin
+connected to the reed switch, for example `D25` (BCM GPIO25, physical pin 22).
+Connect the other switch wire to **GND**. The input uses an internal pull-up
+and 20 ms debounce. Do not connect the switch input to 5 V. The I2C address
+is unused and disabled, as it is for the FC-37.
+
+The factory calibration is **0.3 mm per tip**. Two consecutive user slots
+are populated, beginning at the selected **Initial Slot**:
+
+* **Rain Rate**: rain collected in the preceding 60 minutes, expressed in
+  **mm/hr**. This is a rolling one-hour average, not an instantaneous rate
+  extrapolated from the latest 15-second sensor update.
+* **Rain 24h**: rainfall in the preceding 24 hours, in **mm**. This is not
+  a calendar-day total and does not reset at midnight.
+
+Both readings remain metric regardless of other sensor display-unit settings.
+They are available through the normal sensor slots, charts, image metadata and
+MQTT. Zero rainfall is included in the named sensor payload.
+
+Use `{rain_rate:0.1f} mm/hr` and `{rain_24h:0.1f} mm` in image labels.
+These aliases reflect the last configured WH-SP-RG if more than one is present;
+use each gauge's user slots to distinguish multiple gauges.
+The FC-37's `{rain_status:s}` wet/dry reading is unchanged.
+
+Tip timestamps are saved at each sensor update (normally every 15 seconds)
+and on clean shutdown, in `VARLIB_FOLDER/rain-gauges/wh-sp-rg-<GPIO>.sqlite3`.
+`VARLIB_FOLDER` defaults to `/var/lib/indi-allsky`. The service account must
+be able to write there. Recorded tips survive restarts and expire after
+24 hours. Changing GPIO pins selects a different history file.
+History failures are reported as sensor errors rather than zero rainfall.
+
+On first use, readings cover only the time monitored so far; a full hour/day
+of continuous monitoring is needed for complete windows. Rain while the
+service is stopped cannot be measured. An unclean shutdown may lose tips
+since the most recent sensor update. Timestamps use UTC epoch time, so
+daylight-saving changes do not reset the totals; maintain an accurate system
+clock. The gauge has been tested on a personal Raspberry Pi 5, with rainfall
+readings successfully captured, passed through the sensor pipeline, and
+displayed on the image overlay.
 
 
 ### OpenWeather Map ###

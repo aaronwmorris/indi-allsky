@@ -220,6 +220,8 @@ OpenCV only supports ASCII characters and limited internal fonts.  Pillow is muc
 | dew_heater_status | str       | May 2024   | Dew Heater Status |
 | fan_status     | str          | June 2024  | Fan Status |
 | wind_dir       | str          | June 2024  | Wind direction |
+| rain_rate      | float        | Oct 2026   | Rain rate (mm/hr) |
+| rain_24h       | float        | Oct 2026   | Rainfall in last 24 hours (mm) |
 | camera_sqm_raw_mag | float    | Feb 2026   | Camera SQM Raw Magnitude |
 | sensor_user_0  | float        | May 2024   | Camera Temperature |
 | sensor_user_1  | float        | May 2024   | Dew Heater Duty Cycle |
