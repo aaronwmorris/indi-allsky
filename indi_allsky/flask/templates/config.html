@@ -899,6 +899,42 @@ checkbox_field_names.forEach(item => {
     };
 });
 
+function updateSensorI2cAddressState(sensorSlot) {
+    const sensorClass = $('#TEMP_SENSOR__' + sensorSlot + '_CLASSNAME').val();
+    const i2cAddress = $('#TEMP_SENSOR__' + sensorSlot + '_I2C_ADDRESS');
+    const i2cError = $('#TEMP_SENSOR__' + sensorSlot + '_I2C_ADDRESS-error');
+    const isNonI2cSensor = [
+        'blinka_wind_speed_sensor_wh_sp_ws01',
+        'blinka_rain_sensor_fc37',
+    ].includes(sensorClass);
+
+    i2cAddress.prop('disabled', isNonI2cSensor);
+    i2cAddress.toggleClass('tw:opacity-50', isNonI2cSensor);
+
+    if (isNonI2cSensor) {
+        i2cAddress.removeClass('tw:input-error is-invalid');
+        i2cError.hide();
+    }
+}
+
+function updateWindSpeedSensorVisibility() {
+    const settings = $('#windspeed-sensor-settings');
+    const sensorClassname = settings.data('sensor-classname');
+    const hasWindSensor = ['A', 'B', 'C', 'D', 'E', 'F'].some(sensorSlot =>
+        $('#TEMP_SENSOR__' + sensorSlot + '_CLASSNAME').val() === sensorClassname
+    );
+    settings.toggle(hasWindSensor);
+}
+
+['A', 'B', 'C', 'D', 'E', 'F'].forEach(sensorSlot => {
+    $('#TEMP_SENSOR__' + sensorSlot + '_CLASSNAME').on('change', function() {
+        updateSensorI2cAddressState(sensorSlot);
+        updateWindSpeedSensorVisibility();
+    });
+    updateSensorI2cAddressState(sensorSlot);
+});
+updateWindSpeedSensorVisibility();
+
 
 
 
