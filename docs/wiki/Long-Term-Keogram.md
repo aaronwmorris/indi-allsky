@@ -1,23 +1,50 @@
-# Overview
-indi-allsky has the ability to produce a long term keogram, sometimes referred to a "year long keogram".
+# Long-Term Keograms
 
-The algorithm is agnostic to the length of the exposures and missing data is gracefully handled. 
+While standard keograms summarize a single night horizontally, **Long-Term Keograms** (frequently termed "annual keograms") compile dozens or hundreds of successive nights into a stacked two-dimensional composite:
+* **Horizontal Axis (X)**: Time of night (e.g., dusk to dawn).
+* **Vertical Axis (Y)**: Calendar dates progressing chronologically from top to bottom.
 
-## SyncAPI support
-The long term keogram data is included with the SyncAPI so it is available on the remote instance.
+This format provides an astronomical climatology chart, visualizing seasonal changes in night length, recurring cloud patterns, moon phases, auroral activity, and seasonal smoke or haze over periods up to a full year.
 
-## Generating
-| Parameter | Usage |
-| --------- | ----- |
-| Start     | This is the starting point of the generated keogram |
-| Timeframe | The time period for the generated keogram |
-| Pixels Per Day | indi-allsky pulls 5 pixels per image for the keogram.  This is the number of pixels to use for each row.  More pixels means the day (row) will be taller |
-| Alignment | This is the window used to align the timestamps of every sample.  The alignment window should be at least slightly larger than the period of your exposures.  For example, if you use a 30s exposure period, your alignment window should be 40s or greater.<br><br>Using a smaller alignment will result in gaps in your data.  Multiple samples that fall within the same alignment window will be averaged together.<br><br>A 60s alignment will result in 1440 generated samples per day with the image being 1440 pixels wide.<br><br>A 20s alignment will result in 4320 generated samples |
-| Hour Offset | This can be used to shift the graph left or right.  The timestamps are UTC, but the date calculations are in the local timezone of the system.  If you use the SyncAPI, there can be an offset between these two.|
+---
 
-### MySQL/MariaDB
-On my longer running all sky cameras which used MariaDB, I noticed the Long Term Keogram Generator would fail with an exception of a filesystem being out of space.  My investigation indicates either SQLAlchemy or MariaDB might be using temporary space in the `/tmp` filesystem and if there is not enough space available in `/tmp` the generator would fail.
+## 1. Generation Parameters
 
+Long-Term Keograms are generated via the web dashboard under **Archives** → **Long-Term Keograms**:
+
+| Parameter | Recommended Setting | Description |
+|---|---|---|
+| **Start Date** | Target start date | The initial calendar date (`YYYY-MM-DD`) for the aggregate timeline. |
+| **Timeframe** | `1 Month`, `3 Months`, `1 Year` | Total duration spanned along the vertical axis. |
+| **Pixels Per Day** | `3` to `5` | Height (in pixels) allocated to each calendar night. Higher values produce larger images. |
+| **Alignment Window** | `45s` to `60s` | Temporal sampling bucket. Must slightly exceed your night exposure cycle (e.g. if exposures are 30s, set window $\ge 40$s). Multiple frames within the window are averaged. |
+| **Hour Offset** | Local UTC offset | Shifts the horizontal axis so local midnight aligns with the image center. |
+
+---
+
+## 2. SyncAPI Support
+
+Long-term keogram records and image assets are tracked in `IndiAllSkyDbLongTermKeogramTable` and synchronize to remote web portal instances automatically via the SyncAPI endpoint `/sync/v1/keogram`.
+
+---
+
+## 3. Database Performance & Storage Considerations
+
+Compiling a multi-month or annual keogram queries hundreds of thousands of frame records. Depending on the database engine, substantial intermediate sorting occurs:
+
+### MariaDB / MySQL Disk Space in `/tmp`
+When sorting large query result sets, MariaDB may generate temporary files in `/tmp`. On systems where `/tmp` is mounted as a small RAM-based `tmpfs` (e.g., on Armbian or Raspberry Pi OS), the query may fail with:
+```text
+mysql.connector.errors.DatabaseError: 3 (HY000): Error writing file '/tmp/#sql...' (Errcode: 28 "No space left on device")
 ```
-raise get_mysql_exception(#012mysql.connector.errors.DatabaseError: 3 (HY000): Error writing file '/tmp/#sql/fd=104' (Errcode: 28 "No space left on device")
+
+**Resolution**:
+Direct MariaDB temporary storage to a physical disk volume with sufficient capacity by editing `/etc/mysql/mariadb.conf.d/50-server.cnf` (or `/etc/mysql/my.cnf`):
+```ini
+[mysqld]
+tmpdir = /var/tmp
+```
+Restart the service:
+```bash
+sudo systemctl restart mariadb
 ```

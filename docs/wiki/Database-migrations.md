@@ -1,72 +1,98 @@
-# General
+# Database Migrations
 
-> [!NOTE]
-> **Debian Package (`.deb`) Users**: Schema migrations are performed **automatically** by `indi-allsky.postinst` during `apt upgrade`. You do **not** need to manually generate revisions or run `flask db upgrade`. If manual database troubleshooting is required, use `/var/lib/indi-allsky/venv/bin/flask` or `indi-allsky-ctl` instead of activating non-existent user virtualenvs.
+`indi-allsky` uses [Flask-Migrate](https://flask-migrate.readthedocs.io/) and [Alembic](https://alembic.sqlalchemy.org/) to track and apply database schema changes across updates.
 
-If you update indi-allsky, it may be necessary to upgrade the sqlite database schema.  The python library [Alembic](https://alembic.sqlalchemy.org/) is used to manage the database models in code.
+---
 
-1. Activate python virtual environment
+## 1. Automated Migrations (Debian `.deb` Installations)
 
-        source virtualenv/indi-allsky/bin/activate
+For installations managed via the official APT repository (`apt.indi-allsky.org`), database schema migrations execute **automatically** during package installation and updates (`indi-allsky.postinst`).
 
-1. [Backup](#backups) the database
-1. Run the database migration.
+Manual intervention is not required during regular package upgrades.
 
-        flask db revision --autogenerate
-        flask db upgrade head
-
-
-# Backups
-The sqlite database is located at `/var/lib/indi-allsky/indi-allsky.sqlite`
-
-`.backup` backups can only be restored on the same type of CPU platform
-
-        DB_BACKUP="/var/lib/indi-allsky/backup_$(date +%Y%m%d_%H%M%S).sqlite"
-        sqlite3 "/var/lib/indi-allsky/indi-allsky.sqlite" ".backup $DB_BACKUP"
-        gzip "$DB_BACKUP"
-
-## Cross-platform backup
-
-        sqlite3 /var/lib/indi-allsky/indi-allsky.sqlite .dump | gzip -c > /var/lib/indi-allsky/backup_$(date +%Y%m%d_%H%M%S).sql.gz
-
-
-# Restore
-
-1. Move the original DB
-
-        mv /var/lib/indi-allsky/indi-allsky.sqlite /var/lib/indi-allsky/indi-allsky.sqlite_$(date +%Y%m%d_%H%M%S)
-
-1. Restore a `.backup`
-
-        gunzip -c /var/lib/indi-allsky/backup_20211231_010101.sqlite.gz > /var/lib/indi-allsky/indi-allsky.sqlite
-
-    * Restore a `.dump`
-
-            gunzip -c /var/lib/indi-allsky/backup_20211231_010101.sql.gz | sqlite3 /var/lib/indi-allsky/indi-allsky.sqlite
-
-
-# Fixing broken migrations
-If your database has gotten out of sync with the database migrations, use this method to get things in sync.
-
-Errors like: `can't locate revision xxxxxxxxxxxx exited abnormally`
-
-or `ERROR [flask_migrate] Error: Could not determine revision id from filename xxxxxxxxxxxxxx.py`
-```
-sqlite3 /var/lib/indi-allsky/indi-allsky.sqlite "DELETE FROM alembic_version;"
-
-# from the indi-allsky folder
-rm /var/lib/indi-allsky/migrations/versions/*.py
-
-# now rerun setup.sh
+To manually trigger or verify pending migrations on a Debian package installation:
+```bash
+sudo /var/lib/indi-allsky/venv/bin/flask --app indi_allsky.wsgi db upgrade head
 ```
 
-## Rebuilding database
-If you need to rebuild the database, use the following method.
-```
-rm /var/lib/indi-allsky/indi-allsky.sqlite
+---
 
-# from the indi-allsky folder
-rm /var/lib/indi-allsky/migrations/versions/*.py
+## 2. Manual Migrations (Source / Git / `setup.sh` Installations)
 
-# now rerun setup.sh
+When updating source installations via git:
+
+1. Stop the background capture service:
+   ```bash
+   systemctl --user stop indi-allsky
+   ```
+2. Activate the Python virtual environment:
+   ```bash
+   source /var/lib/indi-allsky/virtualenv/bin/activate
+   # Or from git root: source virtualenv/indi-allsky/bin/activate
+   ```
+3. Backup the database file:
+   ```bash
+   cp /var/lib/indi-allsky/indi-allsky.sqlite /var/lib/indi-allsky/backup_pre_upgrade.sqlite
+   ```
+4. Apply the latest database migrations:
+   ```bash
+   flask db upgrade head
+   ```
+5. Restart the service:
+   ```bash
+   systemctl --user start indi-allsky
+   ```
+
+---
+
+## 3. SQLite Backup & Restoration
+
+The primary SQLite database resides at `/var/lib/indi-allsky/indi-allsky.sqlite`.
+
+### Online Safe Backup (Hot Backup)
+To create an atomic, non-locking backup while the daemon is actively capturing:
+```bash
+sqlite3 /var/lib/indi-allsky/indi-allsky.sqlite ".backup '/var/lib/indi-allsky/backup_$(date +%Y%m%d_%H%M%S).sqlite'"
+gzip /var/lib/indi-allsky/backup_*.sqlite
 ```
+
+### Portable SQL Dump (Cross-Platform)
+To create an architecture-independent text dump:
+```bash
+sqlite3 /var/lib/indi-allsky/indi-allsky.sqlite .dump | gzip -c > /var/lib/indi-allsky/indi-allsky_dump.sql.gz
+```
+
+### Restoring from Backup
+1. Stop the daemon:
+   * Debian `.deb`: `sudo systemctl stop indi-allsky`
+   * Source: `systemctl --user stop indi-allsky`
+2. Replace or restore the database file:
+   ```bash
+   gunzip -c /var/lib/indi-allsky/backup_20261016.sqlite.gz > /var/lib/indi-allsky/indi-allsky.sqlite
+   ```
+3. Verify permissions:
+   ```bash
+   sudo chown indi-allsky:indi-allsky /var/lib/indi-allsky/indi-allsky.sqlite
+   sudo chmod 660 /var/lib/indi-allsky/indi-allsky.sqlite
+   ```
+4. Restart the daemon.
+
+---
+
+## 4. Recovering from Desynchronized Migrations
+
+If a git update causes the database schema revision to fall out of synchronization with local migration files (e.g., `Can't locate revision xxxxxxxxxxxx`):
+
+1. Inspect the recorded Alembic version:
+   ```bash
+   sqlite3 /var/lib/indi-allsky/indi-allsky.sqlite "SELECT * FROM alembic_version;"
+   ```
+2. Stamp the database to the current head revision:
+   * **Debian Package Installations**:
+     ```bash
+     sudo /var/lib/indi-allsky/venv/bin/flask --app indi_allsky.wsgi db stamp head
+     ```
+   * **Source Installations**:
+     ```bash
+     flask db stamp head
+     ```
