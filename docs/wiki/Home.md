@@ -43,9 +43,11 @@ Welcome to the indi-allsky wiki!
 * [Memory Optimizations](Memory-Optimizations)
 * [Armbian Tuning](Armbian-Tuning)
 
-# Security
+# Security & Remote Access
 * [Security considerations](Security-considerations)
 * [Security Notifications](Security-Notifications)
+* [Local SSL Certificates & mDNS](Local-SSL-and-mDNS)
+* [Remote Access via Cloudflare Tunnels](Cloudflare-Tunnels)
 
 # Database
 * [Database Design](Database-Design)

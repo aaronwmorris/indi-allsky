@@ -39,6 +39,10 @@ sudo indi-allsky-ctl optimize-mysql
 If the sqlite database becomes corrupted or you move the files to a new device, you can easily rebuild the sqlite DB.
 
 The import process will try to reimport all images, dark frames, timelapse videos, and keograms.
+
+> [!NOTE]
+> **Debian Package (`.deb`) Users**: On Debian package installations, manage services with `sudo systemctl stop indi-allsky gunicorn-indi-allsky.socket gunicorn-indi-allsky.service`. Execute database scripts using the package virtual environment (`/var/lib/indi-allsky/venv/bin/python`) without entering virtualenvs or git checkouts.
+
 1. Enter the indi-allsky git checkout folder
 
         cd indi-allsky
