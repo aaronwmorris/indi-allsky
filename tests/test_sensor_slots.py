@@ -145,6 +145,73 @@ def test_gpio_hardware_validation_applies_to_z(sensor_form, monkeypatch, pin, va
         assert form.TEMP_SENSOR__Z_PIN_1.errors
 
 
+@pytest.mark.parametrize('letter', sensor_slots.SENSOR_LETTERS)
+def test_i2c_pins_are_optional_without_gpio_modules(sensor_form, monkeypatch, letter):
+    monkeypatch.setitem(sys.modules, 'board', None)
+    form = sensor_form(data=form_data(**{
+        letter + '_CLASSNAME': 'blinka_temp_sensor_bme280_i2c',
+        letter + '_PIN_1': '', letter + '_PIN_2': '',
+    }))
+    assert form.validate_sensors(), form.errors
+
+
+@pytest.mark.parametrize('letter', ['A', 'G', 'Z'])
+@pytest.mark.parametrize('driver', [
+    'blinka_temp_sensor_bme280_spi', 'blinka_temp_sensor_dht22',
+    'blinka_rain_sensor_fc37',
+])
+def test_pin_driven_sensors_still_require_primary_pin(sensor_form, monkeypatch, letter, driver):
+    monkeypatch.setitem(sys.modules, 'board', SimpleNamespace(D5=5))
+    data = form_data(**{letter + '_CLASSNAME': driver, letter + '_PIN_1': ''})
+    form = sensor_form(data=data)
+    assert not form.validate_sensors()
+    assert 'PIN must be defined' in form['TEMP_SENSOR__' + letter + '_PIN_1'].errors
+    data['TEMP_SENSOR__' + letter + '_PIN_1'] = 'D5'
+    form = sensor_form(data=data)
+    assert form.validate_sensors(), form.errors
+
+
+@pytest.mark.parametrize('letter', ['A', 'G', 'Z'])
+@pytest.mark.parametrize('pin_field', ['PIN_1', 'PIN_2'])
+def test_optional_i2c_pins_are_checked_when_supplied(sensor_form, monkeypatch, letter, pin_field):
+    monkeypatch.setitem(sys.modules, 'board', SimpleNamespace(D5=5))
+    data = form_data(**{
+        letter + '_CLASSNAME': 'blinka_temp_sensor_bme280_i2c',
+        letter + '_PIN_1': '', letter + '_PIN_2': '',
+        letter + '_' + pin_field: 'invalid',
+    })
+    form = sensor_form(data=data)
+    assert not form.validate_sensors()
+    assert form['TEMP_SENSOR__' + letter + '_' + pin_field].errors
+    data['TEMP_SENSOR__' + letter + '_' + pin_field] = 'D5'
+    form = sensor_form(data=data)
+    assert form.validate_sensors(), form.errors
+
+
+@pytest.mark.parametrize('letter', ['A', 'G', 'Z'])
+@pytest.mark.parametrize('error', [
+    FileNotFoundError('GPIO device missing'), OSError('GPIO unavailable'),
+    RuntimeError('GPIO initialization failed'),
+])
+def test_sensor_gpio_hardware_failures_are_field_errors(sensor_form, monkeypatch, letter, error):
+    import builtins
+
+    real_import = builtins.__import__
+
+    def gpio_import(name, *args, **kwargs):
+        if name == 'board':
+            raise error
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, '__import__', gpio_import)
+    form = sensor_form(data=form_data(**{
+        letter + '_CLASSNAME': 'blinka_temp_sensor_dht22', letter + '_PIN_1': 'D5',
+    }))
+    assert not form.validate_sensors()
+    assert any('GPIO hardware error' in message
+               for message in form['TEMP_SENSOR__' + letter + '_CLASSNAME'].errors)
+
+
 def test_worker_initializes_reads_and_falls_back_for_new_devices(monkeypatch):
     class Probe:
         METADATA = {'count': 1}

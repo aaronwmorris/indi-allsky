@@ -11,7 +11,11 @@ https://github.com/aaronwmorris/indi-allsky/wiki/GPIO-Permissions
 
 
 ## Raspberry Pi 5 - RuntimeError: Cannot determine SOC peripheral base address
-```
+
+> [!IMPORTANT]
+> **Debian Package (`.deb`) Users**: Do **NOT** run `pip` or modify virtualenvs manually. The Debian package already bundles pre-compiled, compatible GPIO and `rpi.lgpio` drivers inside `/var/lib/indi-allsky/venv/`. Manual pip modifications will break the package virtual environment. The steps below apply **only** to manual git source checkouts.
+
+```bash
 source virtualenv/indi-allsky/bin/activate
 
 pip uninstall RPi.GPIO rpi.lgpio
@@ -36,6 +40,13 @@ The editor suggests a free initial reading slot when a driver is selected.
 Device slots A-Z are distinct from the shared reading slots: readings still use
 slots 10-59, and multi-probe devices consume consecutive slots. Overlap and
 capacity checks apply to all 26 devices.
+
+I2C and other non-pin Blinka sensors may leave both pin fields empty; saving
+these configurations does not require loading GPIO modules. SPI, DHT, and FC37
+rain sensors still require a primary pin. Any supplied pin is validated, and
+GPIO initialization failures are reported on the affected device's fields.
+Reading and chart labels are isolated per configuration form, so removing or
+reconfiguring a sensor does not leave stale labels in subsequent forms.
 
 Omitted sensor fields retain their saved values and remain part of overlap
 validation. In incomplete configurations, named sensor data uses the same
@@ -123,13 +134,13 @@ Default: `{name:s} - {label:s} - {probe:s}`
 
 
 ## Testing sensors
-There is a test script will will execute the same code that indi-allsky utilizes so you do not have to start the program to validate their behavior.
+There is a test command to validate sensor behavior:
 
+```bash
+indi-allsky-ctl test-sensors
 ```
-source virtualenv/indi-allsky/bin/activate
 
-./misc/sensor_test.py
-```
+*(Or from a git checkout: `source virtualenv/indi-allsky/bin/activate && ./misc/sensor_test.py`).*
 
 ## Interfaces
 ### I2C

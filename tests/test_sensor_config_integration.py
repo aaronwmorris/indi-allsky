@@ -163,6 +163,27 @@ def test_omitted_configured_sensor_is_still_validated(config_endpoint):
     assert Config().config_id == previous_id
 
 
+@pytest.mark.parametrize('letter', ['A', 'F', 'G', 'Z'])
+def test_i2c_sensor_without_pins_survives_save_reload(config_endpoint, monkeypatch, letter):
+    client, Config, _, _ = config_endpoint
+    monkeypatch.setitem(sys.modules, 'board', None)
+    payload = client.get('/config').get_json()
+    payload.update({
+        'TEMP_SENSOR__' + letter + '_CLASSNAME': 'blinka_temp_sensor_bme280_i2c',
+        'TEMP_SENSOR__' + letter + '_PIN_1': '',
+        'TEMP_SENSOR__' + letter + '_PIN_2': '',
+        'TEMP_SENSOR__' + letter + '_USER_VAR_SLOT': 'sensor_user_10',
+    })
+    response = client.post('/config', json=payload)
+    assert response.status_code == 200, response.get_json()
+    saved = Config().config['TEMP_SENSOR']
+    assert saved[letter + '_CLASSNAME'] == 'blinka_temp_sensor_bme280_i2c'
+    assert saved[letter + '_PIN_1'] == saved[letter + '_PIN_2'] == ''
+    reloaded = client.get('/config').get_json()
+    assert all(reloaded[key] == value for key, value in payload.items()
+               if key.startswith('TEMP_SENSOR__' + letter + '_'))
+
+
 def test_legacy_save_payload_preserves_new_sensor_fields(config_endpoint):
     client, Config, _, _ = config_endpoint
     payload = client.get('/config').get_json()

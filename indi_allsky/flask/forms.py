@@ -749,12 +749,18 @@ def SQM_ROI_validator(form, field):
 
 
 def ADU_FOV_DIV_validator(form, field):
-    if int(field.data) not in (2, 3, 4, 6):
+    try:
+        if int(field.data) not in (2, 3, 4, 6):
+            raise ValidationError('ADU FoV divisor must be 2, 3, 4, 5, or 6')
+    except (TypeError, ValueError):
         raise ValidationError('ADU FoV divisor must be 2, 3, 4, 5, or 6')
 
 
 def SQM_FOV_DIV_validator(form, field):
-    if int(field.data) not in (2, 3, 4, 6):
+    try:
+        if int(field.data) not in (2, 3, 4, 6):
+            raise ValidationError('SQM FoV divisor must be 2, 3, 4, 5, or 6')
+    except (TypeError, ValueError):
         raise ValidationError('SQM FoV divisor must be 2, 3, 4, 5, or 6')
 
 
@@ -5319,7 +5325,6 @@ class IndiAllskyConfigForm(FlaskForm):
 
         data = kwargs['data']
 
-
         for letter in SENSOR_LETTERS:
             prefix = 'TEMP_SENSOR__' + letter + '_'
             classname = str(data[prefix + 'CLASSNAME'])
@@ -5369,7 +5374,8 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
         for x, label in enumerate(temp_label_list[:50]):  # limit to 50
-            self.SENSOR_SLOT_choices['System Sensors'][x + 10][1] = '({0:d}) {1:s}'.format(x + 10, label)
+            if (x + 10) < len(self.SENSOR_SLOT_choices['System Sensors']):
+                self.SENSOR_SLOT_choices['System Sensors'][x + 10][1] = '({0:d}) {1:s}'.format(x + 10, label)
 
 
         ### Update the choices
@@ -5695,11 +5701,11 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
 
                 except (FileNotFoundError, OSError, RuntimeError) as e:
-                    self.DEW_HEATER__CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
+                    self.DEW_HEATER__PIN_1.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
                 except AttributeError as e:
-                    self.DEW_HEATER__CLASSNAME.errors.append('AttributeError: {0:s}'.format(str(e)))
+                    self.DEW_HEATER__PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
                     result = False
 
             elif self.DEW_HEATER__CLASSNAME.data.startswith('rpigpio_'):
@@ -5729,8 +5735,8 @@ class IndiAllskyConfigForm(FlaskForm):
                 except PermissionError:
                     self.DEW_HEATER__PIN_1.errors.append('GPIO permissions need to be fixed')
                     result = False
-                except RuntimeError as e:
-                    self.DEW_HEATER__PIN_1.errors.append('RuntimeError: {0:s}'.format(str(e)))
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.DEW_HEATER__CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
             elif self.DEW_HEATER__CLASSNAME.data.startswith('gpiozero_'):
@@ -5759,6 +5765,9 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
                 except PermissionError:
                     self.DEW_HEATER__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.DEW_HEATER__CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
             elif self.DEW_HEATER__CLASSNAME.data.startswith('motorkit_'):
@@ -5862,11 +5871,11 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
 
                 except (FileNotFoundError, OSError, RuntimeError) as e:
-                    self.FAN__CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
+                    self.FAN__PIN_1.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
                 except AttributeError as e:
-                    self.FAN__CLASSNAME.errors.append('AttributeError: {0:s}'.format(str(e)))
+                    self.FAN__PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
                     result = False
 
             elif self.FAN__CLASSNAME.data.startswith('rpigpio_'):
@@ -5896,8 +5905,8 @@ class IndiAllskyConfigForm(FlaskForm):
                 except PermissionError:
                     self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
                     result = False
-                except RuntimeError as e:
-                    self.FAN__PIN_1.errors.append('RuntimeError: {0:s}'.format(str(e)))
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.FAN__CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
             elif self.FAN__CLASSNAME.data.startswith('gpiozero_'):
@@ -5927,6 +5936,9 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
                 except PermissionError:
                     self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.FAN__CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
             elif self.FAN__CLASSNAME.data.startswith('motorkit_'):
@@ -6135,8 +6147,8 @@ class IndiAllskyConfigForm(FlaskForm):
                 except PermissionError:
                     self.MANUAL_GPIO__A_CLASSNAME.errors.append('GPIO permissions need to be fixed')
                     result = False
-                except RuntimeError as e:
-                    self.MANUAL_GPIO__A_CLASSNAME.errors.append('RuntimeError: {0:s}'.format(str(e)))
+                except (FileNotFoundError, OSError, RuntimeError) as e:
+                    self.MANUAL_GPIO__A_CLASSNAME.errors.append('GPIO hardware error: {0:s}'.format(str(e)))
                     result = False
 
 
@@ -6146,8 +6158,14 @@ class IndiAllskyConfigForm(FlaskForm):
             sensor_pin_2 = getattr(self, 'TEMP_SENSOR__' + letter + '_PIN_2')
             if sensor_classname.data and not sensor_classname.errors:
                 if sensor_classname.data.startswith('blinka_'):
+                    is_pin_required = (
+                        sensor_classname.data.endswith('_spi')
+                        or sensor_classname.data.startswith('blinka_temp_sensor_dht')
+                        or sensor_classname.data == 'blinka_rain_sensor_fc37'
+                    )
                     try:
-                        import board
+                        if is_pin_required or sensor_pin_1.data or sensor_pin_2.data:
+                            import board
 
                         if sensor_pin_1.data:
                             try:
@@ -6155,7 +6173,7 @@ class IndiAllskyConfigForm(FlaskForm):
                             except AttributeError:
                                 sensor_pin_1.errors.append('PIN {0:s} not valid for your system'.format(sensor_pin_1.data))
                                 result = False
-                        else:
+                        elif is_pin_required:
                             sensor_pin_1.errors.append('PIN must be defined')
                             result = False
 

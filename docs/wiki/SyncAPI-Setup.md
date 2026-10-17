@@ -35,7 +35,7 @@ sudo tee /etc/apt/sources.list.d/indi-allsky.sources <<EOF
 Types: deb
 URIs: https://apt.indi-allsky.org
 Suites: $(lsb_release -cs)
-Components: stable
+Components: nightly
 Architectures: $(dpkg --print-architecture)
 Signed-By: /etc/apt/keyrings/indi-allsky.gpg
 EOF
@@ -55,7 +55,15 @@ sudo apt install -y indi-allsky
 ## Generate API key
 On the remote indi-allsky server, after the web server is deployed, generate an API key for the remote user.  You may create a dedicated user account for the sync activity.
 
-* Create user
+> [!NOTE]
+> On Debian package installations, use `indi-allsky-ctl`:
+> ```bash
+> sudo indi-allsky-ctl adduser syncuser
+> sudo indi-allsky-ctl setadmin syncuser
+> sudo indi-allsky-ctl genapikey syncuser
+> ```
+
+* Create user (source installs):
 
         source virtualenv/indi-allsky/bin/activate
         

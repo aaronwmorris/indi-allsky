@@ -1,5 +1,8 @@
 # General
 
+> [!NOTE]
+> **Debian Package (`.deb`) Users**: Schema migrations are performed **automatically** by `indi-allsky.postinst` during `apt upgrade`. You do **not** need to manually generate revisions or run `flask db upgrade`. If manual database troubleshooting is required, use `/var/lib/indi-allsky/venv/bin/flask` or `indi-allsky-ctl` instead of activating non-existent user virtualenvs.
+
 If you update indi-allsky, it may be necessary to upgrade the sqlite database schema.  The python library [Alembic](https://alembic.sqlalchemy.org/) is used to manage the database models in code.
 
 1. Activate python virtual environment
