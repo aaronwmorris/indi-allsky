@@ -214,7 +214,7 @@ Note:  The pin designated as 1-Wire cannot be used as a GPIO pin while this over
 | ICM20x   | IMU | Untested |
 | MPU6050  | IMU | Working |
 | AS3935   | Lightning | Working (beta) |
-| WH-SP-RG | Rain rate / rainfall | Untested |
+| WH-SP-RG | Rain rate / rainfall | Working - tested on Raspberry Pi 5 |
 
 ### MISOL WH-SP-RG tipping bucket rain gauge ###
 Select **MISOL WH-SP-RG Tipping Bucket - pulse output (2 slots)** under
@@ -254,7 +254,9 @@ of continuous monitoring is needed for complete windows. Rain while the
 service is stopped cannot be measured. An unclean shutdown may lose tips
 since the most recent sensor update. Timestamps use UTC epoch time, so
 daylight-saving changes do not reset the totals; maintain an accurate system
-clock. The gauge has not yet been verified on physical hardware.
+clock. The gauge has been tested on a personal Raspberry Pi 5, with rainfall
+readings successfully captured, passed through the sensor pipeline, and
+displayed on the image overlay.
 
 
 ### OpenWeather Map ###
