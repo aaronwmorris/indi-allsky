@@ -2,6 +2,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 import logging
 from queue import Queue
+import ssl
 import uuid
 
 import pytest
@@ -427,7 +428,7 @@ def test_failure_classification_stops_run(sync_env, monkeypatch, failure, messag
     def fail(*args, **kwargs):
         calls.append(1)
         if failure == 'certificate':
-            raise env.transport.requests.exceptions.SSLError('test certificate')
+            raise env.transport.requests.exceptions.SSLError(ssl.SSLCertVerificationError(1, 'test certificate'))
         if failure == 'authentication':
             return SimpleNamespace(status_code=400, json=lambda: {'error': 'authentication failed'})
         if failure == 'server':

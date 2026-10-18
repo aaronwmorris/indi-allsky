@@ -8,6 +8,7 @@ from .exceptions import TransferFailure
 from pathlib import Path
 import requests
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
+from urllib3.util.ssl_match_hostname import CertificateError
 import io
 import time
 import math
@@ -23,6 +24,26 @@ requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.
 
 
 logger = logging.getLogger('indi_allsky')
+
+
+def _certificate_validation_error(error):
+    # Requests/urllib3 wrap SSL failures in args, reason or exception chains.
+    # EOF/handshake failures also use SSLError, even with verification disabled.
+    pending, seen = [error], set()
+    while pending:
+        current = pending.pop()
+        if id(current) in seen:
+            continue
+        seen.add(id(current))
+        if isinstance(current, (ssl.SSLCertVerificationError, CertificateError)):
+            return True
+        # Alternative SSL backends may preserve only OpenSSL's error text.
+        if 'certificate verify failed' in str(current).lower().replace('_', ' '):
+            return True
+        pending.extend(value for value in (
+            current.__cause__, current.__context__, getattr(current, 'reason', None), *current.args
+        ) if isinstance(value, BaseException))
+    return False
 
 
 class requests_syncapi_v1(GenericFileTransfer):
@@ -198,7 +219,10 @@ class requests_syncapi_v1(GenericFileTransfer):
         except requests.exceptions.ConnectTimeout as e:
             raise ConnectionFailure(str(e)) from e
         except requests.exceptions.SSLError as e:
-            raise CertificateValidationFailure(str(e)) from e
+            logger.debug('SyncAPI TLS request failed', exc_info=True)
+            if _certificate_validation_error(e):
+                raise CertificateValidationFailure(str(e)) from e
+            raise ConnectionFailure(str(e)) from e
         except requests.exceptions.ConnectionError as e:
             raise ConnectionFailure(str(e)) from e
         except requests.exceptions.ChunkedEncodingError as e:
@@ -208,6 +232,7 @@ class requests_syncapi_v1(GenericFileTransfer):
         except requests.exceptions.ReadTimeout as e:
             raise ConnectionFailure(str(e)) from e
         except ssl.SSLCertVerificationError as e:
+            logger.debug('SyncAPI certificate verification failed', exc_info=True)
             raise CertificateValidationFailure(str(e)) from e
         finally:
             f_metadata.close()
