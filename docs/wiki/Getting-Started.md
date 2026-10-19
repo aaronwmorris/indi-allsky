@@ -83,6 +83,24 @@ sudo apt install -y indi-allsky
 
 During installation, an interactive setup wizard will guide you through configuring your camera driver, administrator credentials, and observatory coordinates.
 
+### 4. Upgrading indi-allsky (.deb)
+Upgrading `indi-allsky` on Debian package installations follows standard APT package management:
+
+```bash
+sudo apt update
+sudo apt install --only-upgrade -y indi-allsky
+```
+
+APT upgrades automatically:
+* Execute pending database schema migrations via Alembic.
+* Preserve all camera settings, user accounts, and `/etc/indi-allsky/flask.json` configuration.
+* Restart the `indi-allsky.service` daemon and `gunicorn-indi-allsky.socket` web workers without manual service restarts.
+
+To re-run the interactive setup wizard at any time (e.g. to switch reverse proxies, change ports, or alter camera drivers):
+```bash
+sudo dpkg-reconfigure indi-allsky
+```
+
 ---
 
 ## Option 2: Manual Source Installation (`setup.sh`)

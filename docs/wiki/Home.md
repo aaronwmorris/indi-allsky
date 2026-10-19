@@ -1,60 +1,107 @@
 Welcome to the indi-allsky wiki!
 
-# Setup
+# Setup & Deployment
 * [Getting Started](Getting-Started)
-* [Frequently Asked Questions](FAQ)
+* [Frequently Asked Questions (FAQ)](FAQ)
 * [General Recommended Settings](General-Recommended-Settings)
-* [Known Camera Problems](Known-Camera-Problems)
+* [Configuration Reference](Configuration-Reference)
+* [Debian Deployment Workflow](Debian-Deployment-Workflow)
 * [Upgrading indi-allsky](Updating-indi-allsky)
 * [Migration Guide: setup.sh to .deb](Setup-to-Deb-Migration)
-* [Password Management](Web-Interface-Password)
-* [Command-Line Control Utility (`indi-allsky-ctl`)](indi-allsky-ctl)
-* [INDI Configuration](INDI-custom-config)
-* [libcamera setup](libcamera-enablement)
-* [Web Status Configuration](Web-Status-Configuration)
-* [Image Labels](Image-Labels)
-* [Dark Calibration Frames](Dark-Calibration-Frames)
-* [Keogram Rotation](Keogram-Rotation)
-* [Detection Masks](Detection-Masks)
-* [Star Detection](Star-Detection)
 * [Docker](Docker)
-* [YouTube Uploads](Youtube-Uploads)
+* [Uninstall indi-allsky](Uninstall-indi-allsky)
+* [Uninstall INDI Repository](Uninstall-indi-repository)
 
-# Backup and Recovery
+# System Administration & Security
+* [Command-Line Utility (`indi-allsky-ctl`)](indi-allsky-ctl)
+* [PolicyKit (Polkit)](polkit)
 * [Backup and Recovery](Backup-and-Recovery)
 * [Reset Configuration](Reset-Configuration)
-* [Rebuilding the Database](Rebuilding-the-database)
+* [Password Management](Web-Interface-Password)
+* [OpenID Connect (OIDC / SSO) Authentication](OIDC-OAuth2-SSO-Auth)
+* [Change Root Context](Change-root-context)
+* [Disable HTTPS](Disable-HTTPS)
+* [Local SSL and mDNS](Local-SSL-and-mDNS)
+* [Cloudflare Tunnels](Cloudflare-Tunnels)
+* [Redirect Views](Redirect-Views)
+* [Security Considerations](Security-considerations)
+* [Security Notifications](Security-Notifications)
+* [Action API](Action-API)
 
-# Hardware
+# Hardware & Camera Drivers
+* [Camera Information](Camera-Information)
+* [Camera Interfaces](Camera-Interfaces)
+* [Camera Gain Reference](Camera-Gain-Reference)
 * [Lens Information](Lens-Information)
-* [Sensors](Sensors)
-* [Disable LEDs](Disable-LEDs)
 * [Supported SoC Hardware](Supported-SoC-Hardware)
-* [Raspberry Pi Watchdog](Raspberry-Pi-Watchdog)
+* [INDI Configuration](INDI-custom-config)
+* [indilib 3rd-Party SDK Versions](indilib-3rdparty-SDK-versions)
+* [libcamera Setup](libcamera-enablement)
+* [indi_pylibcamera Setup](indi_pylibcamera-setup)
+* [Raspberry Pi HQ Camera](Raspberry-PI-HQ-Camera)
+* [Known Camera Problems](Known-Camera-Problems)
 * [ASI120MC-S Camera Issues](ASI120MC-S-Camera-Issues)
+* [ASI676MC Known Issues](ASI676MC-Known-Issues)
+* [ASI676MC Purple Frame Repair Technical Details](ASI676MC-Purple-Frame-Repair-Details)
+* [Touptek Known Issues](Touptek-Known-Issues)
+* [Build fxload for USB3 Support](Build-fxload-for-USB3-support)
+* [indi_libcamera_ccd Known Issues](indi_libcamera_ccd-Known-Issues)
+
+# Image Processing & Overlays
+* [Exposure Modes](Exposure-Mode)
+* [Dark Calibration Frames](Dark-Calibration-Frames)
+* [Detection Masks](Detection-Masks)
+* [Star Detection](Star-Detection)
+* [Image Labels](Image-Labels)
+* [Image Order of Operations](Image-order-of-operations)
+* [VirtualSky](VirtualSky)
+* [Sun & Moon Orbs](Orbs)
+* [Circular & Round Displays](Round-Displays)
+* [Thumbnails](Thumbnails)
+* [Hide Camera Entries](Hide-Camera-Entries)
+
+# Timelapses, Keograms & Star Trails
+* [Timelapses](Timelapses)
+* [Mini-Timelapses](Mini-Timelapses)
+* [Keogram](Keogram)
+* [Long-Term Keograms](Long-Term-Keogram)
+* [Star Trails](Startrails)
+
+# Sensors & Environmental Control
+* [Sensors](Sensors)
 * [External Temperature Sensor](External-Temperature-Sensor)
-* [GPSd NTP Time-Sync](GPSd-NTP-Time-Sync)
 * [Dew Heater Support](Dew-Heater-Support)
 * [Fan Control](Fan-Control)
 * [Focuser](Focuser-Device)
+* [GPIO Permissions](GPIO-Permissions)
+* [Disable LEDs](Disable-LEDs)
+* [Raspberry Pi Watchdog](Raspberry-Pi-Watchdog)
+* [GPSd NTP Time-Sync](GPSd-NTP-Time-Sync)
 
-# Tuning
+# Tracking & Integrations
+* [ADS-B Aircraft Tracking](ADS‐B-Aircraft-Tracking)
+* [Satellite Tracking](Satellite-Tracking)
+* [Sky Quality Meter (SQM)](SQM-Sky-Brightness-Measurement)
+* [MQTT Broker Publishing](MQTT-Broker-Publishing)
+* [Grafana, Telegraf & InfluxDB](Grafana-Telegraf-Influx-Integration)
+* [Web Status Configuration](Web-Status-Configuration)
+
+# File Transfers & Cloud Storage
+* [File Transfers](File-transfers)
+* [S3 & Object Storage](S3-Object-Storage)
+* [SyncAPI Setup](SyncAPI-Setup)
+* [SyncAPI Force Resync](SyncAPI-Force-Resync)
+* [YouTube Uploads](Youtube-Uploads)
+* [Custom Upload Directory (`misc/`)](Misc-Folder)
+
+# Database & Performance
+* [Database Design](Database-Design)
+* [Database Migrations](Database-migrations)
+* [Database Conversion](Database-conversion)
+* [MySQL & MariaDB Information](MySQL-MariaDB-Information)
+* [Rebuilding the Database](Rebuilding-the-database)
+* [SQL Queries](SQL-queries)
 * [Disk Optimizations](Disk-Optimizations)
 * [Memory Optimizations](Memory-Optimizations)
 * [Armbian Tuning](Armbian-Tuning)
-
-# Security & Remote Access
-* [Security considerations](Security-considerations)
-* [Security Notifications](Security-Notifications)
-* [Local SSL Certificates & mDNS](Local-SSL-and-mDNS)
-* [Remote Access via Cloudflare Tunnels](Cloudflare-Tunnels)
-
-# Database
-* [Database Design](Database-Design)
-* [Database Migrations](Database-migrations)
-* [Database Conversion](Database-conversion) - Migrate from SQLite to MySQL
-* [Rebuilding the Database](Rebuilding-the-database)
-* [SQL Queries](SQL-Queries)
-
-# Uninstall
-* [Uninstall indi-allsky](Uninstall-indi-allsky)
+* [PNG Performance](PNG-Performance)
