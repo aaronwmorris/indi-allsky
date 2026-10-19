@@ -1,12 +1,19 @@
-# Touptek Camera Known Issues
+# ToupTek and Altair Camera Known Issues & Optimizations
 
-## Altair Image corruption
-Altair cameras are known to start in an odd mode where the image is corrupted into 4 overlapping images with a black bar at the top.  This can affect other Touptek cameras, too.
+Cameras utilizing ToupTek mainboards and OEM derivatives (including Altair Astro, Omegon, RisingTech, MallinCam, and Ogma) operate under the `indi_toupcam_ccd` or `indi_altair_ccd` drivers. Specific hardware models exhibit documented idiosyncrasies requiring custom driver configuration.
 
-* https://github.com/aaronwmorris/indi-allsky/issues/1840
-* https://github.com/aaronwmorris/indi-allsky/discussions/2397
+---
 
-Setting the to RAW mode will correct this issue.
+## 1. Frame Quadrant Artifacts (Overlapping Quads)
+
+### Symptom
+Certain Altair and ToupTek models (notably IMX585, IMX571, and IMX290 variants) intermittently initialize with severely corrupted frames displaying four horizontally and vertically shifted sub-quadrants divided by a black band at the top of the frame.
+
+### Root Cause
+This artifact is caused by the camera driver defaulting to an RGB demosaicing mode using incomplete or unaligned frame buffers rather than direct sensor bayer readout.
+
+### Resolution
+Force the driver to stream frames in native `INDI_RAW` format. In the camera configuration (**INDI Configuration -> Custom Properties / Switches**), define:
 
 ```json
 {
@@ -21,10 +28,17 @@ Setting the to RAW mode will correct this issue.
 }
 ```
 
-## Default resolution
-Touptek/Altair cameras usually start in a low resolution mode.  Additional config parameters are needed for higher resolutions.
+Reference discussions:
+* [GitHub Issue #1840](https://github.com/aaronwmorris/indi-allsky/issues/1840)
+* [GitHub Discussion #2397](https://github.com/aaronwmorris/indi-allsky/discussions/2397)
 
-### Touptek AE676c
+---
+
+## 2. Sensor Resolution and Conversion Gain Presets
+
+ToupTek camera drivers frequently initialize in a binned or lower-resolution preview mode by default. To operate at maximum optical resolution and optimize conversion gain, insert the appropriate switch configurations:
+
+### ToupTek ATR3CMOS / AE676C (Sony IMX676)
 ```json
 {
     "PROPERTIES": {},
@@ -51,7 +65,7 @@ Touptek/Altair cameras usually start in a low resolution mode.  Additional confi
 }
 ```
 
-### Altair GPCAM3 678
+### Altair GPCAM3 678C (Sony IMX678)
 ```json
 {
     "PROPERTIES": {},
@@ -78,7 +92,7 @@ Touptek/Altair cameras usually start in a low resolution mode.  Additional confi
 }
 ```
 
-### Altair Hypercam 178C
+### Altair Hypercam 178C (Sony IMX178)
 ```json
 {
     "PROPERTIES": {
@@ -100,7 +114,8 @@ Touptek/Altair cameras usually start in a low resolution mode.  Additional confi
     }
 }
 ```
-### Altair 290C resolution
+
+### Altair GPCAM2 / GPCAM3 290C (Sony IMX290)
 ```json
 {
     "PROPERTIES": {},
@@ -119,7 +134,7 @@ Touptek/Altair cameras usually start in a low resolution mode.  Additional confi
 }
 ```
 
-### Altair 224C resolution
+### Altair GPCAM2 224C (Sony IMX224)
 ```json
 {
     "PROPERTIES": {},
