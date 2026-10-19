@@ -52,38 +52,53 @@ sudo apt install -y indi-allsky
 ./misc/web_only_setup.sh
 ```
 
-## Generate API key
-On the remote indi-allsky server, after the web server is deployed, generate an API key for the remote user.  You may create a dedicated user account for the sync activity.
+## Generate API Key on Remote Server
+
+On the remote `indi-allsky` server, provision a dedicated synchronization user account and generate an API key.
 
 The receiver account must be active. Deactivating it also blocks SyncAPI access with its existing key.
 
-> [!NOTE]
-> On Debian package installations, use `indi-allsky-ctl`:
-> ```bash
-> sudo indi-allsky-ctl adduser syncuser
-> sudo indi-allsky-ctl setadmin syncuser
-> sudo indi-allsky-ctl genapikey syncuser
-> ```
+### Option 1: Web Administration Interface (Recommended)
+1. Navigate to `/indi-allsky/users` on the remote server as an administrative user.
+2. Select **Add User**, set username (e.g. `syncuser`), email, and password.
+3. Grant **Admin** privileges (required for media creation endpoints).
+4. In the user details modal, click **Generate API Key** and copy the generated 64-character token.
 
-* Create user (source installs):
+---
 
-        source virtualenv/indi-allsky/bin/activate
-        
-        $ ./misc/usertool.py adduser -u syncuser
-        Password (not echoed):
-        Password (again):
-        Name: SyncAPI user
-        Email: foo@example.com
+### Option 2: Command-Line Interface
 
-* Set admin
+#### Debian Package (`.deb`) Installations
+```bash
+# 1. Create synchronization user
+sudo indi-allsky-ctl user-add -u syncuser -f "SyncAPI Ingestion" -e "sync@example.local"
 
-        $ ./misc/usertool.py setadmin -u syncuser
+# 2. Grant administrative rights
+sudo /var/lib/indi-allsky/venv/bin/python /usr/share/indi-allsky/misc/usertool.py setadmin -u syncuser
 
-* Generate API key
+# 3. Generate API key
+sudo /var/lib/indi-allsky/venv/bin/python /usr/share/indi-allsky/misc/usertool.py genapikey -u syncuser
+```
 
-        $ ./misc/usertool.py genapikey -u syncuser
+#### Source / Git (`setup.sh`) Installations
+```bash
+source /var/lib/indi-allsky/virtualenv/bin/activate
+# Or from git checkout: source virtualenv/indi-allsky/bin/activate
 
-        API key: 00000000000000000000000000000000000000000000000000
+# 1. Create synchronization user
+python ./misc/usertool.py adduser -u syncuser -f "SyncAPI Ingestion" -e "sync@example.local"
+
+# 2. Grant administrative rights
+python ./misc/usertool.py setadmin -u syncuser
+
+# 3. Generate API key
+python ./misc/usertool.py genapikey -u syncuser
+```
+The utility outputs a 64-character hexadecimal API token:
+```text
+API key: a1b2c3d4e5f6...
+```
+
 
 ## Setup syncapi
 Navigate to the config URL in the local server and enable the SyncAPI and add the following details.
