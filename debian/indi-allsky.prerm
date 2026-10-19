@@ -4,11 +4,13 @@ set -e
 case "$1" in
     remove|upgrade|deconfigure)
         # Stop background services so SQLite database is not locked during upgrade/migration
-        systemctl stop indi-allsky.service 2>/dev/null || true
-        systemctl stop indiserver.service 2>/dev/null || true
-        systemctl stop gunicorn-indi-allsky.service 2>/dev/null || true
-        systemctl stop indi-allsky-ssl-renew.timer 2>/dev/null || true
-        systemctl disable indi-allsky-ssl-renew.timer 2>/dev/null || true
+        if [ -d /run/systemd/system ]; then
+            systemctl stop indi-allsky.service || true
+            systemctl stop indiserver.service || true
+            systemctl stop gunicorn-indi-allsky.service || true
+            systemctl stop indi-allsky-ssl-renew.timer || true
+            systemctl disable indi-allsky-ssl-renew.timer || true
+        fi
 
         # Clean up Python bytecode files created dynamically at runtime in /usr/share/indi-allsky and /var/lib/indi-allsky/venv
         if [ -d "/usr/share/indi-allsky" ]; then
