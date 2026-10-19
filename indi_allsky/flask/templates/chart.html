@@ -991,6 +991,12 @@ $( document ).ready(function() {
         gap: 1rem;
         width: 100%;
     }
+    .allsky-charts-grid > div {
+        /* Keep canvas resizing from changing the size observed by Chart.js. */
+        aspect-ratio: 2;
+        box-sizing: content-box;
+        contain: size;
+    }
     @media (min-width: 768px) {
         .allsky-charts-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
