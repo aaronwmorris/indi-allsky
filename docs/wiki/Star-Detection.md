@@ -1,42 +1,44 @@
-# Overview
+# Star Detection Engines
 
-indi-allsky has two methods for detecting stars.  The method is set under `Config -> Processing` in the Star & Meteor Detection Engine card.
+`indi-allsky` tracks celestial clarity and transparency by counting detected stars across captured nighttime frames. The star count is logged in the database (`IndiAllSkyDbImageTable`), rendered as image overlay text, and plotted on telemetry graphs.
 
-**Template Match** looks for shapes in the image that resemble a small round star.  This is the default.
+The detection method is configured under **Configuration** → **Processing** in the **Star & Meteor Detection Engine** section.
 
-**SEP** measures the sky background across the frame, subtracts it, and then finds the sources that are left standing above the noise.
+---
 
-## Choosing a method
+## 1. Detection Algorithms
 
-Template Match looks for one fixed star shape.  Allsky lenses stretch stars near the edges of the frame, so a lot of real stars do not match it.  There is also no measurement of the sky background, so moonlight and cloud change the results.
+### A. SEP (Source Extractor in Python) — Recommended
+`SEP` calculates a dynamic, two-dimensional model of the sky background and RMS noise across the frame, subtracts the background, and identifies stellar sources exceeding a statistical significance threshold.
+* **Advantages**: Normalized against shifting background illumination (such as twilight, urban light pollution, and moon phases). Star counts remain mathematically comparable over time.
+* **Lens Distortion Resilient**: Accurately detects elongated or distorted stars near the peripheral edges of wide fisheye lenses.
 
-The bigger issue is that the threshold does not mean anything consistent.  A value that works on a clear night can behave very differently on the next one, so star counts are hard to compare over time.
+### B. Template Matching (OpenCV)
+Template matching cross-correlates image features against a fixed circular star kernel.
+* **Limitations**: Highly sensitive to sky brightness shifts. Because fisheye lenses produce significant radial optical distortion (coma, astigmatism) near the horizon, stars outside the central sensor area are frequently missed.
+* Retained for legacy installations or low-power embedded processors where background modeling overhead must be minimized.
 
-SEP measures every image against its own background.  A sigma value means the same thing whatever the conditions are.
+---
 
-**Note: Star counts will change if you switch methods.  Treat the threshold as a fresh setting rather than carrying the old one over.**
+## 2. Configuration Reference (SEP Engine)
 
-## Settings
+| Parameter | Type | Default | Recommended Range | Description |
+|---|---|---|---|---|
+| `DETECT_STARS_METHOD` | Select | `sep` | `sep` / `template` | Active star detection algorithm. |
+| `DETECT_STARS_SEP_THOLD` | Float | `5.0` | `3.0` – `15.0` | Significance threshold (in standard deviations $\sigma$ above the local background RMS noise). Lower values detect fainter stars but increase susceptibility to noise artifacts. |
+| `DETECT_STARS_SEP_MAX_RADIUS` | Integer | `20` | `5` – `30` | Maximum allowable object radius (in pixels). Excludes large saturated star blooms, satellites, or illuminated cloud edges from inflating star counts. |
 
-**Star Detection Method** picks the method.  Only the threshold for the method you selected stays editable, the other one is greyed out.
+### Calibrating Sigma Thresholds (`DETECT_STARS_SEP_THOLD`)
+* **`3.0`**: Faint limiting magnitude; captures marginal stars but may count high-gain noise spikes.
+* **`5.0` (Default)**: Balanced for typical suburban/rural skies.
+* **`10.0` – `15.0`**: Restricts detection strictly to prominent navigational stars (useful in light-polluted urban environments).
 
-**SEP Sigma Threshold** is how far above the background noise something has to be before it counts as a star.  The default is 5.0.
+---
 
-* 3 - faint stars, and more noise
-* 5 - works for most conditions
-* 10 - brighter stars only
-* 15 and up - only the brightest
+## 3. Interactive Detection Tuning
 
-**SEP Max Star Radius** ignores anything bigger than the size you set.  The number is about half the width of the object in pixels, so 5 ignores anything wider than roughly 10 pixels.  The default is 20.
-
-Moonlit cloud, bloomed stars and satellite trails get picked up as one large source and counted as a star.  If your count jumps when cloud comes over, lower this.
-
-## Tuning
-
-You do not have to guess at the values.  `Config -> Image Processing` has a Detection Tuning card in the Image tab.
-
-Turn on **Run Detection** and press Process.  The stars and meteors it found are drawn on the preview image and the counts are shown next to it.  Nothing you change here is saved, so you can try values and reprocess as much as you want.  You can switch methods here too and run both against the same image.
-
-Set your detection mask before you touch the thresholds.  Without one, trees and rooftops around the horizon can be more than half of everything detected.  See [Detection Masks](Detection-Masks).
-
-Once you are happy with the values, set them under `Config -> Processing`.
+Before committing detection parameters:
+1. Establish an accurate [Detection Mask](Detection-Masks) to exclude trees, buildings, and ground illumination.
+2. In the web interface, open **Configuration** → **Image Processing** → **Detection Tuning**.
+3. Toggle **Run Detection** and select **Process**.
+4. The preview image renders detected stars (with centroid bounding boxes) and reports total counts. Adjust thresholds interactively until counts accurately reflect genuine stars.
