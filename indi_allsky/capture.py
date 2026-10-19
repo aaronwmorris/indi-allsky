@@ -966,7 +966,12 @@ class CaptureWorker(Process):
                 },
             }
 
-            self.indiclient.configureTelescopeDevice(telescope_config)
+            try:
+                self.indiclient.configureTelescopeDevice(telescope_config)
+            except TimeOutException as e:
+                logger.warning('Telescope configuration timed out: %s', e)
+            except Exception as e:
+                logger.warning('Failed to configure telescope device: %s', e)
 
             self.reparkTelescope()
 
@@ -1968,9 +1973,14 @@ class CaptureWorker(Process):
         if self.indiclient.telescope_device is None:
             return
 
-        self.indiclient.unparkTelescope()
-        self.indiclient.setTelescopeParkPosition(0.0, self.position_av[constants.POSITION_LATITUDE])
-        self.indiclient.parkTelescope()
+        try:
+            self.indiclient.unparkTelescope()
+            self.indiclient.setTelescopeParkPosition(0.0, self.position_av[constants.POSITION_LATITUDE])
+            self.indiclient.parkTelescope()
+        except TimeOutException as e:
+            logger.warning('Telescope park operation timed out: %s', e)
+        except Exception as e:
+            logger.warning('Failed to repark telescope: %s', e)
 
 
     def reconfigureCcd(self):

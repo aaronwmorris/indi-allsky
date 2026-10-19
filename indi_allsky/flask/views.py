@@ -7193,7 +7193,12 @@ class AjaxIndiServerChangeView(BaseView):
 
         # re-create env file
         indiserver_env_p = Path('/etc/indi-allsky/indiserver.env')
+        telescope_server = ''
+        if self.indi_allsky_config.get('CAMERA_INTERFACE', '').startswith('libcamera'):
+            telescope_server = 'indi_simulator_telescope'
+
         with io.open(str(indiserver_env_p), 'w') as f_indiserver_env:
+            f_indiserver_env.write('TELESCOPE_DRIVER={0:s}\n'.format(telescope_server))
             f_indiserver_env.write('CCD_DRIVER={0:s}\n'.format(camera_server))
             f_indiserver_env.write('GPS_DRIVER={0:s}\n'.format(gps_server))
             f_indiserver_env.write('INDI_PORT={0:d}\n'.format(self.indi_allsky_config.get('INDI_PORT', 7624)))

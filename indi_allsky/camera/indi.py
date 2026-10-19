@@ -782,14 +782,14 @@ class IndiClient(PyIndi.BaseClient):
     def findTelescope(self, telescope_name='Telescope Simulator'):
         telescope_list = self._findTelescopes()
 
-        logger.info('Found %d Telescopess', len(telescope_list))
+        logger.info('Found %d Telescopes', len(telescope_list))
 
         for t in telescope_list:
             if t.getDeviceName().lower() == telescope_name.lower():
                 self.telescope_device = t
                 break
         else:
-            logger.error('No telescopes found')
+            logger.debug('No telescopes found')
 
         return self.telescope_device
 

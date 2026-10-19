@@ -335,11 +335,26 @@ case "$1" in
             else
                 GPS_DRIVER_VAL="$GPS_DRIVER"
             fi
+            if [ "$CAMERA_INTERFACE" = "libcamera" ]; then
+                TELESCOPE_DRIVER_VAL="indi_simulator_telescope"
+            else
+                TELESCOPE_DRIVER_VAL=""
+            fi
             cat <<EOF > "$INDISERVER_ENV"
 INDI_PORT="${SAFE_INDI_PORT}"
+TELESCOPE_DRIVER="${TELESCOPE_DRIVER_VAL}"
 CCD_DRIVER="${CCD_DRIVER:-indi_simulator_ccd}"
 GPS_DRIVER="${GPS_DRIVER_VAL}"
 EOF
+        else
+            # Ensure existing indiserver.env defines TELESCOPE_DRIVER on package upgrades
+            if ! grep -q "^TELESCOPE_DRIVER=" "$INDISERVER_ENV" 2>/dev/null; then
+                if [ "$CAMERA_INTERFACE" = "libcamera" ]; then
+                    echo 'TELESCOPE_DRIVER="indi_simulator_telescope"' >> "$INDISERVER_ENV"
+                else
+                    echo 'TELESCOPE_DRIVER=""' >> "$INDISERVER_ENV"
+                fi
+            fi
         fi
 
 

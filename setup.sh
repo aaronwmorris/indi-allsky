@@ -2732,8 +2732,14 @@ chmod 600 "${ALLSKY_ETC}/indi-allsky.env"
 
 if [ "$INSTALL_INDISERVER" == "true" ]; then
     INDISERVER_ENV="${ALLSKY_ETC}/indiserver.env"
+    if [[ "$CAMERA_INTERFACE" =~ ^libcamera ]]; then
+        TELESCOPE_DRIVER="indi_simulator_telescope"
+    else
+        TELESCOPE_DRIVER=""
+    fi
     sudo tee "$INDISERVER_ENV" <<EOF
 INDI_PORT="$INDI_PORT"
+TELESCOPE_DRIVER="$TELESCOPE_DRIVER"
 CCD_DRIVER="$CCD_DRIVER"
 GPS_DRIVER="$GPS_DRIVER"
 EOF
