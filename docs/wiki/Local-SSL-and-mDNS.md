@@ -122,12 +122,12 @@ For users interested in the underlying implementation:
 ```
 
 ### mDNS & Home Assistant Discovery
-- **Avahi Daemon**: Broadcasts `indi-allsky.local` via `/etc/avahi/hosts`.
+- **Avahi Daemon**: Publishes the camera service dynamically under `<hostname>.local` while maintaining `indi-allsky.local` via `/etc/avahi/hosts` and `/etc/hosts` for direct browser navigation.
 - **Dedicated Service Type**: Publishes `_indi-allsky._tcp` via `/etc/avahi/services/indi-allsky.service` on the configured `HTTPS_PORT`.
 - **TXT Records**: Includes `app=indi-allsky`, `path=/indi-allsky`, `ssl=true`, `version`, and `mac` to support Home Assistant Zeroconf discovery without colliding with generic HTTP devices.
 
 ### Certificate Paths & Web Server Storage
-Certificates are generated with Subject Alternative Names (SAN) for `indi-allsky.local`, `localhost`, `127.0.0.1`, `::1`, and any active local network IPs. They are stored at:
+Certificates are generated with Subject Alternative Names (SAN) for `indi-allsky.local`, `<hostname>.local`, `<hostname>`, `localhost`, `127.0.0.1`, `::1`, and any active local network IPs. They are stored at:
 
 | Web Server | Certificate Path | Private Key Path | Permissions |
 |---|---|---|---|
