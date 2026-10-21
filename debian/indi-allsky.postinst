@@ -33,14 +33,17 @@ generate_ssl_cert() {
             chmod 600 "${CA_DIR}/rootCA-key.pem"
         fi
 
-        # Discover active local IPv4 / IPv6 addresses to include in SAN
+        # Discover active local IPv4 / IPv6 addresses and hostnames to include in SAN
         LAN_IPS=$(hostname -I 2>/dev/null || ip addr show 2>/dev/null | grep -Po 'inet \K[\d.]+' | grep -v '^127\.' || true)
+        SYS_HOST=$(hostname -s 2>/dev/null || hostname 2>/dev/null || echo "indi-allsky")
 
-        echo "indi-allsky: Generating locally-trusted TLS certificate using mkcert for indi-allsky.local..."
+        echo "indi-allsky: Generating locally-trusted TLS certificate using mkcert for ${SYS_HOST}.local and indi-allsky.local..."
         CAROOT="$CA_DIR" mkcert \
             -cert-file "$_CRT" \
             -key-file "$_KEY" \
             "indi-allsky.local" \
+            "${SYS_HOST}.local" \
+            "${SYS_HOST}" \
             "localhost" \
             127.0.0.1 \
             ::1 \
@@ -645,6 +648,11 @@ with app.app_context():
                     sed -i "s|.*indi-allsky.local|${PRIMARY_IP} indi-allsky.local|g" /etc/avahi/hosts
                 fi
                 chmod 644 /etc/avahi/hosts
+            fi
+
+            # Ensure local loopback resolution for indi-allsky.local in /etc/hosts
+            if [ -f /etc/hosts ] && ! grep -q "indi-allsky.local" /etc/hosts; then
+                sed -i '/^127\.0\.0\.1/ s/$/ indi-allsky.local/' /etc/hosts 2>/dev/null || true
             fi
 
             if [ -d /run/systemd/system ]; then
