@@ -1,85 +1,89 @@
-## Install
-```
-sudo apt-get install mariadb-server
+# MySQL & MariaDB Configuration
+
+While SQLite is the default database for `indi-allsky`, MySQL or MariaDB may be utilized for multi-camera deployments, network-attached clusters, or dedicated remote web portal servers.
+
+---
+
+## 1. Installation
+
+Install MariaDB server on Debian, Ubuntu, or Raspberry Pi OS:
+
+```bash
+sudo apt-get install -y mariadb-server
 ```
 
-## Create database
-```
-# assuming no password connecting to root from localhost
+---
+
+## 2. Database & User Provisioning
+
+Connect to the MariaDB CLI as root:
+```bash
 sudo mysql -u root
+```
 
+Create the dedicated `indi_allsky` database with full UTF-8 Unicode character support:
+```sql
 CREATE DATABASE indi_allsky
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 ```
 
-## Create user
-```
-# no ssl
-GRANT ALL PRIVILEGES ON indi_allsky.* TO 'indi_allsky_own'@'localhost' IDENTIFIED BY 'password';
+Create the service user and grant privileges:
+```sql
+-- For local Unix socket or localhost connections
+GRANT ALL PRIVILEGES ON indi_allsky.* TO 'indi_allsky_own'@'localhost' IDENTIFIED BY 'your_password';
 
-# ssl
-GRANT ALL PRIVILEGES ON indi_allsky.* TO 'indi_allsky_own'@'%' IDENTIFIED BY 'password' REQUIRE SSL;
+-- For remote TCP connections requiring SSL
+GRANT ALL PRIVILEGES ON indi_allsky.* TO 'indi_allsky_own'@'%' IDENTIFIED BY 'your_password' REQUIRE SSL;
 
 FLUSH PRIVILEGES;
+EXIT;
 ```
 
-## Connection strings
+---
 
-File:  `/etc/indi-allsky/flask.json`
+## 3. Connection Strings (`flask.json`)
 
-### mysqlconnector (recommended)
-```
-# socket
-"SQLALCHEMY_DATABASE_URI": "mysql+mysqlconnector://indi_allsky_own:password@/indi_allsky?charset=utf8mb4&collation=utf8mb4_unicode_ci&unix_socket=/var/run/mysqld/mysqld.sock",
+Configure `SQLALCHEMY_DATABASE_URI` in `/etc/indi-allsky/flask.json`:
 
-# TCP no ssl
-"SQLALCHEMY_DATABASE_URI": "mysql+mysqlconnector://indi_allsky_own:password@localhost:3306/indi_allsky?charset=utf8mb4&collation=utf8mb4_unicode_ci",
-
-# TCP with ssl
-"SQLALCHEMY_DATABASE_URI": "mysql+mysqlconnector://indi_allsky_own:password@hostname:3306/indi_allsky?charset=utf8mb4&collation=utf8mb4_unicode_ci&ssl_ca=/etc/ssl/certs/ca-certificates.crt&ssl_verify_identity",
+### Local Unix Domain Socket (Recommended for Local MariaDB)
+```json
+"SQLALCHEMY_DATABASE_URI": "mysql+mysqlconnector://indi_allsky_own:your_password@/indi_allsky?charset=utf8mb4&collation=utf8mb4_unicode_ci&unix_socket=/var/run/mysqld/mysqld.sock"
 ```
 
-_August 2023: mysql-connector changed the default collation to utf8mb4_0900_ai_ci which is not available in MariaDB.  Update your DB URI to include the new charset and collation._
-
-### PyMySQL
-```
-# socket
-"SQLALCHEMY_DATABASE_URI": "mysql+pymysql://indi_allsky_own:password@/indi_allsky?charset=utf8mb4&unix_socket=/var/run/mysqld/mysqld.sock",
-
-# TCP no ssl
-"SQLALCHEMY_DATABASE_URI": "mysql+pymysql://indi_allsky_own:password@localhost:3306/indi_allsky?charset=utf8mb4",
-
-# TCP with ssl
-"SQLALCHEMY_DATABASE_URI": "mysql+pymysql://indi_allsky_own:password@hostname:3306/indi_allsky?charset=utf8mb4&ssl_ca=/etc/ssl/certs/ca-certificates.crt&ssl_verify_identity=false",
+### Localhost TCP
+```json
+"SQLALCHEMY_DATABASE_URI": "mysql+mysqlconnector://indi_allsky_own:your_password@localhost:3306/indi_allsky?charset=utf8mb4&collation=utf8mb4_unicode_ci"
 ```
 
-## DB tuning (optional)
-* File: /etc/mysql/mariadb.conf.d/50-server.cnf
-
+### Remote Host with SSL
+```json
+"SQLALCHEMY_DATABASE_URI": "mysql+mysqlconnector://indi_allsky_own:your_password@db.example.com:3306/indi_allsky?charset=utf8mb4&collation=utf8mb4_unicode_ci&ssl_ca=/etc/ssl/certs/ca-certificates.crt&ssl_verify_identity"
 ```
-[mysqld]
-...
-innodb_file_per_table = 1
-lower_case_table_name = 0
-innodb_flush_log_at_trx_commit = 0
-...
-```
-
-## Database setup
-* If you have existing configuration in a sqlite database, you can follow these instructions to convert
-    * https://github.com/aaronwmorris/indi-allsky/wiki/Database-conversion
-* If you want to start from scratch, delete the existing migrations from the sqlite database and ensure the connection URL is updated in `/etc/indi-allsky/flask.json`
 
 > [!NOTE]
-> On Debian package installations, invoke Flask and configuration commands using `/var/lib/indi-allsky/venv/bin/flask` and `/var/lib/indi-allsky/venv/bin/python /usr/lib/indi-allsky/config.py` rather than activating user virtual environments.
+> MariaDB uses `utf8mb4_unicode_ci`. Specifying both `charset=utf8mb4` and `collation=utf8mb4_unicode_ci` ensures compatibility across modern versions of `mysql-connector-python`.
 
-        rm -f /var/lib/indi-allsky/migrations/versions/*.py
-        
-        # indi-allsky git folder (source installations)
-        source virtualenv/indi-allsky/bin/activate
+---
 
-        flask db revision --autogenerate
-        flask db upgrade head
-        
-        ./config.py bootstrap
+## 4. Server Engine Tuning
+
+For performance optimization under high frame rates, edit `/etc/mysql/mariadb.conf.d/50-server.cnf`:
+
+```ini
+[mysqld]
+innodb_file_per_table = 1
+innodb_flush_log_at_trx_commit = 2
+innodb_buffer_pool_size = 512M
+tmpdir = /var/tmp
+```
+Restart MariaDB:
+```bash
+sudo systemctl restart mariadb
+```
+
+---
+
+## 5. Converting Existing SQLite Data
+
+To migrate existing media history and camera parameters from SQLite into MariaDB, follow the [Database Conversion](Database-conversion) guide.

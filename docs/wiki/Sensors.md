@@ -5,10 +5,8 @@ indi-allsky supports reading external sensors (eg temperature) with SBCs like Ra
 If you have an unsupported sensor, please open an Enhancement Issue and I will investigate adding support.  It may take a week or two if I have to order the part.
 
 ## GPIO Permissions
-If you receive a `PermissionDenied` exception when accessing GPIO pins
-
-https://github.com/aaronwmorris/indi-allsky/wiki/GPIO-Permissions
-
+If you encounter a `PermissionDenied` error when accessing I2C buses, SPI devices, or GPIO lines, review:
+[`GPIO Permissions`](GPIO-Permissions.md)
 
 ## Raspberry Pi 5 - RuntimeError: Cannot determine SOC peripheral base address
 
@@ -136,11 +134,18 @@ Default: `{name:s} - {label:s} - {probe:s}`
 ## Testing sensors
 There is a test command to validate sensor behavior:
 
+### Debian Package (`.deb`) Installations
 ```bash
-indi-allsky-ctl test-sensors
+sudo indi-allsky-ctl test-sensors
 ```
 
-*(Or from a git checkout: `source virtualenv/indi-allsky/bin/activate && ./misc/sensor_test.py`).*
+### Source / Git (`setup.sh`) Installations
+```bash
+source /var/lib/indi-allsky/virtualenv/bin/activate
+# Or from git checkout: source virtualenv/indi-allsky/bin/activate
+
+python ./misc/sensor_test.py
+```
 
 ## Interfaces
 ### I2C

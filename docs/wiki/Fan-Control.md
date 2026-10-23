@@ -7,21 +7,28 @@ It is also possible to control the fan using temperature thresholds if you have 
 
 
 ## GPIO Permissions
-If you receive a `PermissionDenied` exception when accessing GPIO pins
+If you encounter a `PermissionDenied` error when accessing GPIO lines or character devices, review:
+[`GPIO Permissions`](GPIO-Permissions.md)
 
-https://github.com/aaronwmorris/indi-allsky/wiki/GPIO-Permissions
-
-## WARNING
-**The pins from a SBC cannot be used to directly drive a fan.  Trying to do so WILL damage your system.**
+## Hardware Warning
+> [!CAUTION]
+> Single Board Computer GPIO pins (3.3V logic) cannot source sufficient current to drive fan motors directly. Inductive flyback can permanently destroy SoC GPIO banks. Always utilize a dedicated logic-level MOSFET circuit or relay board.
 
 ## Testing Fans
-The following test command can be used to test your fan for proper wiring and operation:
+Verify fan circuit operation and pin mapping using the diagnostic test tool:
 
+### Debian Package (`.deb`) Installations
 ```bash
-indi-allsky-ctl test-devices fan
+sudo indi-allsky-ctl test-devices fan
 ```
 
-*(Or from a git checkout: `source virtualenv/indi-allsky/bin/activate && ./misc/device_test.py fan`).*
+### Source / Git (`setup.sh`) Installations
+```bash
+source /var/lib/indi-allsky/virtualenv/bin/activate
+# Or from git checkout: source virtualenv/indi-allsky/bin/activate
+
+python ./misc/device_test.py fan
+```
 
 ## Fan - Standard
 This type of fan only supports two modes:  ON and OFF.  Any duty cycle applied to the fan will set it to FULL power.  This type may use either a relay or MOSFET driver.
