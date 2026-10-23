@@ -25,7 +25,7 @@ DEFAULT_FIXED_SLOTS: List[Dict[str, Any]] = [
 ]
 
 
-# Units mapping for sensor types
+# Default units mapping for sensor types
 TYPE_UNIT_MAP = {
     constants.SENSOR_TEMPERATURE: "°C",
     constants.SENSOR_RELATIVE_HUMIDITY: "%",
@@ -35,6 +35,26 @@ TYPE_UNIT_MAP = {
     constants.SENSOR_LIGHT_LUX: "lx",
     constants.SENSOR_FAN_SPEED: "rpm",
     constants.SENSOR_PERCENTAGE: "%",
+}
+
+TEMP_DISPLAY_UNIT_MAP: Dict[str, str] = {
+    "c": "°C",
+    "f": "°F",
+    "k": "K",
+}
+
+PRESSURE_DISPLAY_UNIT_MAP: Dict[str, str] = {
+    "hpa": "hPa",
+    "psi": "psi",
+    "inhg": "inHg",
+    "mmhg": "mmHg",
+}
+
+WINDSPEED_DISPLAY_UNIT_MAP: Dict[str, str] = {
+    "ms": "m/s",
+    "mph": "mph",
+    "knots": "kn",
+    "kph": "km/h",
 }
 
 # Device class mapping for HA
@@ -48,15 +68,46 @@ TYPE_DEVICE_CLASS_MAP = {
 }
 
 
+def resolve_temp_unit(config: Dict[str, Any] = None) -> str:
+    """Resolve temperature unit string from configuration."""
+    cfg = config or {}
+    temp_display = str(cfg.get("TEMP_DISPLAY", "c") or "c").lower()
+    return TEMP_DISPLAY_UNIT_MAP.get(temp_display, "°C")
+
+
+def resolve_type_unit_map(config: Dict[str, Any] = None) -> Dict[str, str]:
+    """Resolve sensor type to unit mapping based on display configuration."""
+    cfg = config or {}
+    temp_display = str(cfg.get("TEMP_DISPLAY", "c") or "c").lower()
+    pressure_display = str(cfg.get("PRESSURE_DISPLAY", "hPa") or "hPa").lower()
+    windspeed_display = str(cfg.get("WINDSPEED_DISPLAY", "ms") or "ms").lower()
+
+    return {
+        constants.SENSOR_TEMPERATURE: TEMP_DISPLAY_UNIT_MAP.get(temp_display, "°C"),
+        constants.SENSOR_RELATIVE_HUMIDITY: "%",
+        constants.SENSOR_ATMOSPHERIC_PRESSURE: PRESSURE_DISPLAY_UNIT_MAP.get(pressure_display, "hPa"),
+        constants.SENSOR_WIND_SPEED: WINDSPEED_DISPLAY_UNIT_MAP.get(windspeed_display, "m/s"),
+        constants.SENSOR_PRECIPITATION: "in" if temp_display == "f" else "mm",
+        constants.SENSOR_LIGHT_LUX: "lx",
+        constants.SENSOR_FAN_SPEED: "rpm",
+        constants.SENSOR_PERCENTAGE: "%",
+    }
+
+
 def build_slot_label_map(config: Dict[str, Any]) -> Dict[int, Dict[str, Any]]:
     """
     Builds a map of slot_index -> {name, unit, device_class, key} by inspecting TEMP_SENSOR configuration.
     """
     slot_map: Dict[int, Dict[str, Any]] = {}
+    temp_unit = resolve_temp_unit(config)
+    type_unit_map = resolve_type_unit_map(config)
 
     # Initialize fixed slots 0-9
     for fixed in DEFAULT_FIXED_SLOTS:
-        slot_map[fixed["slot"]] = fixed
+        slot_entry = dict(fixed)
+        if slot_entry.get("device_class") == "temperature":
+            slot_entry["unit"] = temp_unit
+        slot_map[slot_entry["slot"]] = slot_entry
 
     from .devices import sensors as indi_allsky_sensors
 
@@ -97,7 +148,7 @@ def build_slot_label_map(config: Dict[str, Any]) -> Dict[int, Dict[str, Any]]:
                     "key": sensor_key,
                     "slot": slot_idx,
                     "name": display_name,
-                    "unit": TYPE_UNIT_MAP.get(stype, ""),
+                    "unit": type_unit_map.get(stype, ""),
                     "device_class": TYPE_DEVICE_CLASS_MAP.get(stype),
                 }
         except Exception as e:
@@ -135,7 +186,7 @@ def get_latest_sensors_payload(config: Dict[str, Any] = None) -> Dict[str, Any]:
     """
     from .flask.models import IndiAllSkyDbImageTable
 
-    config = config or {}
+    effective_config = dict(config or {})
     sensor_user = [0.0] * 60
     sensor_temp = [0.0] * 60
     last_update = None
@@ -150,16 +201,24 @@ def get_latest_sensors_payload(config: Dict[str, Any] = None) -> Dict[str, Any]:
 
             data = dict(latest_img.data) if hasattr(latest_img, 'data') and latest_img.data else {}
 
+            if 'temp_display' in data:
+                effective_config['TEMP_DISPLAY'] = data['temp_display']
+            if 'pressure_display' in data:
+                effective_config['PRESSURE_DISPLAY'] = data['pressure_display']
+            if 'windspeed_display' in data:
+                effective_config['WINDSPEED_DISPLAY'] = data['windspeed_display']
+
             sensor_user = [float(data.get(f'sensor_user_{i}', 0.0)) for i in range(60)]
             sensor_temp = [float(data.get(f'sensor_temp_{i}', 0.0)) for i in range(60)]
     except Exception as e:
         logger.error("Error querying latest sensor image data: %s", e)
 
-    named_sensors = format_named_sensors(sensor_temp, sensor_user, config)
+    named_sensors = format_named_sensors(sensor_temp, sensor_user, effective_config)
 
     return {
         'last_update': last_update,
         'last_update_age_s': last_update_age_s,
+        'temp_unit': resolve_temp_unit(effective_config),
         'sensor_user': sensor_user,
         'sensor_temp': sensor_temp,
         'sensors': named_sensors,

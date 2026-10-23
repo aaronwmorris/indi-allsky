@@ -2226,12 +2226,21 @@ class JsonSensorPanelView(JsonView):
             last_update = None
             last_update_age_s = None
 
-        from ..sensors_mapping import format_named_sensors
-        named_sensors = format_named_sensors(sensor_temp, sensor_user, getattr(self, 'indi_allsky_config', {}))
+        from ..sensors_mapping import format_named_sensors, resolve_temp_unit
+        image_metadata = self.latest_image_entry.data if self.latest_image_entry and self.latest_image_entry.data else {}
+        effective_config = dict(getattr(self, 'indi_allsky_config', {}))
+        if 'temp_display' in image_metadata:
+            effective_config['TEMP_DISPLAY'] = image_metadata['temp_display']
+        if 'pressure_display' in image_metadata:
+            effective_config['PRESSURE_DISPLAY'] = image_metadata['pressure_display']
+        if 'windspeed_display' in image_metadata:
+            effective_config['WINDSPEED_DISPLAY'] = image_metadata['windspeed_display']
+        named_sensors = format_named_sensors(sensor_temp, sensor_user, effective_config)
 
         payload = {
             'last_update': last_update,
             'last_update_age_s': last_update_age_s,
+            'temp_unit': resolve_temp_unit(effective_config),
             'sensor_user': sensor_user,
             'sensor_temp': sensor_temp,
             'sensors': named_sensors,
