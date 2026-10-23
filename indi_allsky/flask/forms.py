@@ -5067,7 +5067,7 @@ class IndiAllskyConfigForm(FlaskForm):
     YOUTUBE__SECRETS_FILE            = StringField('Client Secrets File', validators=[YOUTUBE__SECRETS_FILE_validator])
     YOUTUBE__PRIVACY_STATUS          = SelectField('Privacy Status', choices=YOUTUBE__PRIVACY_STATUS_choices, validators=[DataRequired(), YOUTUBE__PRIVACY_STATUS_validator])
     YOUTUBE__TITLE_TEMPLATE          = StringField('Title', validators=[DataRequired(), YOUTUBE__TITLE_TEMPLATE_validator])
-    YOUTUBE__DESCRIPTION_TEMPLATE    = StringField('Description', validators=[YOUTUBE__DESCRIPTION_TEMPLATE_validator])
+    YOUTUBE__DESCRIPTION_TEMPLATE    = TextAreaField('Description', validators=[YOUTUBE__DESCRIPTION_TEMPLATE_validator])
     YOUTUBE__CATEGORY                = IntegerField('Category ID', validators=[YOUTUBE__CATEGORY_validator])
     YOUTUBE__TAGS_STR                = StringField('Tags', validators=[YOUTUBE__TAGS_STR_validator])
     YOUTUBE__UPLOAD_VIDEO            = BooleanField('Auto-Upload Timelapses')
