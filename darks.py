@@ -28,7 +28,8 @@ if __name__ == "__main__":
         pass
 
     from indi_allsky.darks import IndiAllSkyDarks
-
+    logger.setLevel(logging.INFO)
+    logger.addHandler(LOG_HANDLER_STREAM)
 
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
