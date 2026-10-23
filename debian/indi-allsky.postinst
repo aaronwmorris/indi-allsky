@@ -46,9 +46,9 @@ generate_ssl_cert() {
             ::1 \
             $LAN_IPS
     fi
-    chown "root:${_GROUP}" "$_KEY" "$_CRT"
-    chmod "$_KEY_PERMS" "$_KEY"
-    chmod 644 "$_CRT"
+    chown "root:${_GROUP}" "$_KEY" "$_CRT" 2>/dev/null || true
+    chmod "$_KEY_PERMS" "$_KEY" 2>/dev/null || true
+    chmod 644 "$_CRT" 2>/dev/null || true
 }
 
 configure_nginx() {
@@ -76,7 +76,9 @@ configure_nginx() {
         /etc/nginx/ssl/indi-allsky_nginx.key \
         /etc/nginx/ssl/indi-allsky_nginx.pem
 
-    systemctl restart nginx 2>/dev/null || systemctl start nginx 2>/dev/null || true
+    if [ -d /run/systemd/system ]; then
+        systemctl restart nginx || systemctl start nginx
+    fi
 }
 
 configure_apache() {
@@ -114,7 +116,9 @@ configure_apache() {
     a2dissite 000-default.conf default-ssl.conf >/dev/null 2>&1 || true
     a2enmod rewrite proxy proxy_http proxy_wstunnel headers ssl socache_shmcb expires http2 proxy_http2 >/dev/null 2>&1 || true
     a2ensite indi-allsky.conf >/dev/null 2>&1 || true
-    systemctl restart apache2 2>/dev/null || systemctl start apache2 2>/dev/null || true
+    if [ -d /run/systemd/system ]; then
+        systemctl restart apache2 || systemctl start apache2
+    fi
 }
 
 configure_caddy() {
@@ -143,7 +147,9 @@ configure_caddy() {
         "$CADDY_GROUP" \
         640
 
-    systemctl restart caddy 2>/dev/null || systemctl start caddy 2>/dev/null || true
+    if [ -d /run/systemd/system ]; then
+        systemctl restart caddy || systemctl start caddy
+    fi
 }
 
 configure_mosquitto() {
@@ -189,9 +195,13 @@ configure_mosquitto() {
         echo "indi-allsky: Generated MQTT user '${MQTT_USER}' with random password." >&2
     fi
 
-    systemctl enable mosquitto 2>/dev/null || true
-    systemctl restart mosquitto 2>/dev/null || true
-    echo "indi-allsky: Mosquitto MQTT broker configured and started."
+    if [ -d /run/systemd/system ]; then
+        systemctl enable mosquitto
+        systemctl restart mosquitto
+        echo "indi-allsky: Mosquitto MQTT broker configured and started."
+    else
+        echo "indi-allsky: Mosquitto MQTT broker configured."
+    fi
 }
 
 case "$1" in
@@ -369,8 +379,21 @@ EOF
         fi
 
         # Validate virtualenv
-        if ! "$VENV/bin/python3" -c 'import flask, sqlalchemy' 2>/dev/null; then
-            echo "indi-allsky: ERROR: Virtual environment is missing or incomplete." >&2
+        VENV_ERR=""
+        if ! VENV_ERR=$("$VENV/bin/python3" -c 'import flask, sqlalchemy' 2>&1); then
+            echo "indi-allsky: ERROR: Virtual environment verification failed:" >&2
+            echo "$VENV_ERR" >&2
+            HOST_PY=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null || echo "unknown")
+            VENV_PY_VER=$(grep -E '^version' "${VENV}/pyvenv.cfg" 2>/dev/null | awk '{print $3}' || echo "")
+            if [ -n "$VENV_PY_VER" ] && [ "$HOST_PY" != "unknown" ]; then
+                case "$VENV_PY_VER" in
+                    "${HOST_PY}".*) ;;
+                    *)
+                        echo "indi-allsky: ERROR: Python ABI mismatch. Host system provides Python ${HOST_PY}, but package virtual environment was built for Python ${VENV_PY_VER}." >&2
+                        echo "indi-allsky: Ensure you install the package built for your specific Linux distribution." >&2
+                        ;;
+                esac
+            fi
             exit 1
         fi
 
@@ -391,11 +414,11 @@ EOF
 
         # Initialize SQLite Database (Backup, Vacuum, Migration) & Admin User
         # Ensure services are stopped so SQLite has 0 write locks during backup/vacuum
-        systemctl stop indi-allsky.service 2>/dev/null || true
-
-        # Stop the socket to prevent requests from auto-starting the service
-        systemctl stop gunicorn-indi-allsky.socket 2>/dev/null || true
-        systemctl stop gunicorn-indi-allsky.service 2>/dev/null || true
+        if [ -d /run/systemd/system ]; then
+            systemctl stop indi-allsky.service || true
+            systemctl stop gunicorn-indi-allsky.socket || true
+            systemctl stop gunicorn-indi-allsky.service || true
+        fi
 
         DB_DIR="/var/lib/indi-allsky"
         DB_FILE="${DB_DIR}/indi-allsky.sqlite"
@@ -540,32 +563,45 @@ with app.app_context():
 
 
         # Disable conflicting legacy/third-party allsky service if present
-        if systemctl list-unit-files "allsky.service" 2>/dev/null | grep -q "allsky.service"; then
-            systemctl stop allsky.service 2>/dev/null || true
-            systemctl disable allsky.service 2>/dev/null || true
+        if [ -d /run/systemd/system ]; then
+            if systemctl list-unit-files "allsky.service" 2>/dev/null | grep -q "allsky.service"; then
+                systemctl stop allsky.service || true
+                systemctl disable allsky.service || true
 
-            # allsky uses lighttpd
-            if systemctl is-enabled --quiet lighttpd 2>/dev/null; then
-                # even if we disable this here, the normal web server (eg caddy) might not be operational due to the port conflict
-                systemctl stop lighttpd.service 2>/dev/null || true
-                systemctl disable lighttpd.service 2>/dev/null || true
+                # allsky uses lighttpd
+                if systemctl is-enabled --quiet lighttpd 2>/dev/null; then
+                    # even if we disable this here, the normal web server (eg caddy) might not be operational due to the port conflict
+                    systemctl stop lighttpd.service || true
+                    systemctl disable lighttpd.service || true
+                fi
             fi
         fi
-
 
         # Configure Web Server
         USE_CADDY=0
         USE_NGINX=0
         USE_APACHE=0
 
-
         # use is-enabled in case the unit is down due to a port conflict
-        if systemctl is-enabled --quiet caddy 2>/dev/null; then
-            USE_CADDY=1
-        elif systemctl is-enabled --quiet nginx 2>/dev/null; then
-            USE_NGINX=1
-        elif systemctl is-enabled --quiet apache2 2>/dev/null; then
-            USE_APACHE=1
+        if [ -d /run/systemd/system ]; then
+            if systemctl is-enabled --quiet caddy 2>/dev/null; then
+                USE_CADDY=1
+            elif systemctl is-enabled --quiet nginx 2>/dev/null; then
+                USE_NGINX=1
+            elif systemctl is-enabled --quiet apache2 2>/dev/null; then
+                USE_APACHE=1
+            fi
+        fi
+
+        # Fallback for container/chroot environments without booted systemd
+        if [ "$USE_CADDY" = "0" ] && [ "$USE_NGINX" = "0" ] && [ "$USE_APACHE" = "0" ]; then
+            if dpkg-query -W -f='${Status}' caddy 2>/dev/null | grep -q "ok installed"; then
+                USE_CADDY=1
+            elif dpkg-query -W -f='${Status}' nginx 2>/dev/null | grep -q "ok installed"; then
+                USE_NGINX=1
+            elif dpkg-query -W -f='${Status}' apache2 2>/dev/null | grep -q "ok installed"; then
+                USE_APACHE=1
+            fi
         fi
 
 
@@ -611,8 +647,10 @@ with app.app_context():
                 chmod 644 /etc/avahi/hosts
             fi
 
-            systemctl enable avahi-daemon.service
-            systemctl restart avahi-daemon.service
+            if [ -d /run/systemd/system ]; then
+                systemctl enable avahi-daemon.service
+                systemctl restart avahi-daemon.service
+            fi
         fi
 
         # Alter legacy NetworkManager policy kit local authority if present
@@ -622,10 +660,12 @@ with app.app_context():
         fi
 
         # Disable ModemManager if present (prevents hijacking/locking serial GPS and INDI devices)
-        if systemctl is-enabled --quiet ModemManager.service 2>/dev/null; then
-            echo "indi-allsky: Disabling ModemManager to prevent serial port conflicts with GPS and cameras..."
-            systemctl stop ModemManager.service 2>/dev/null || true
-            systemctl disable ModemManager.service 2>/dev/null || true
+        if [ -d /run/systemd/system ]; then
+            if systemctl is-enabled --quiet ModemManager.service 2>/dev/null; then
+                echo "indi-allsky: Disabling ModemManager to prevent serial port conflicts with GPS and cameras..."
+                systemctl stop ModemManager.service || true
+                systemctl disable ModemManager.service || true
+            fi
         fi
 
         # Add indi-allsky user to hardware, web, and journal groups
@@ -701,9 +741,9 @@ with app.app_context():
             cp -f /usr/share/indi-allsky/conf/90-indi-allsky-sysctl.conf /etc/sysctl.d/90-indi-allsky.conf 2>/dev/null || true
             sysctl --system 2>/dev/null || true
 
-            mkdir -p /etc/systemd/journald.conf.d
-            cp -f /usr/share/indi-allsky/conf/90-indi-allsky-journald.conf /etc/systemd/journald.conf.d/90-indi-allsky.conf 2>/dev/null || true
-            systemctl restart systemd-journald 2>/dev/null || true
+            if [ -d /run/systemd/system ]; then
+                systemctl restart systemd-journald
+            fi
         fi
 
         if [ "$ENABLE_WATCHDOG" = "true" ]; then
@@ -761,43 +801,44 @@ EOF
         fi
 
 
-        systemctl daemon-reload 2>/dev/null || true
+        if [ -d /run/systemd/system ]; then
+            systemctl daemon-reload
 
-        # Enable and start automated weekly TLS leaf certificate renewal timer
-        systemctl enable indi-allsky-ssl-renew.timer 2>/dev/null || true
-        systemctl start indi-allsky-ssl-renew.timer 2>/dev/null || true
+            # Enable and start automated weekly TLS leaf certificate renewal timer
+            systemctl enable indi-allsky-ssl-renew.timer
+            systemctl start indi-allsky-ssl-renew.timer
 
-        # stopped above for database migration
-        # socket will auto-start service
-        systemctl start gunicorn-indi-allsky.socket 2>/dev/null || true
+            # stopped above for database migration
+            # socket will auto-start service
+            systemctl start gunicorn-indi-allsky.socket
 
+            if [ "$WEB_ONLY_INSTANCE" = "true" ]; then
+                # Web-only instance does not require indiserver or capture service
+                systemctl disable indi-allsky.service
+                systemctl stop indi-allsky.service
 
-        if [ "$WEB_ONLY_INSTANCE" = "true" ]; then
-            # Web-only instance does not require indiserver or capture service
-            systemctl disable indi-allsky.service 2>/dev/null || true
-            systemctl stop indi-allsky.service 2>/dev/null || true
+                systemctl disable indiserver.service
+                systemctl stop indiserver.service
+            elif [ "$INDISERVER_ONLY_INSTANCE" = "true" ]; then
+                # leave the gunicorn service operational
+                systemctl disable indi-allsky.service
+                systemctl stop indi-allsky.service
 
-            systemctl disable indiserver.service 2>/dev/null || true
-            systemctl stop indiserver.service 2>/dev/null || true
-        elif [ "$INDISERVER_ONLY_INSTANCE" = "true" ]; then
-            # leave the gunicorn service operational
-            systemctl disable indi-allsky.service 2>/dev/null || true
-            systemctl stop indi-allsky.service 2>/dev/null || true
-
-            systemctl enable indiserver.service 2>/dev/null || true
-            systemctl restart indiserver.service 2>/dev/null || systemctl start indiserver.service 2>/dev/null || true
-        else
-            # Always enable and start indiserver service (matches setup.sh behavior)
-            # Even libcamera and test configurations connect to localhost indiserver for core subsystem operations
-            systemctl enable indiserver.service 2>/dev/null || true
-            systemctl restart indiserver.service 2>/dev/null || systemctl start indiserver.service 2>/dev/null || true
-
-            if [ "$AUTO_START_CAPTURE" = "true" ]; then
-                systemctl enable indi-allsky.service 2>/dev/null || true
-                systemctl restart indi-allsky.service 2>/dev/null || systemctl start indi-allsky.service 2>/dev/null || true
+                systemctl enable indiserver.service
+                systemctl restart indiserver.service || systemctl start indiserver.service
             else
-                systemctl disable indi-allsky.service 2>/dev/null || true
-                systemctl stop indi-allsky.service 2>/dev/null || true
+                # Always enable and start indiserver service (matches setup.sh behavior)
+                # Even libcamera and test configurations connect to localhost indiserver for core subsystem operations
+                systemctl enable indiserver.service
+                systemctl restart indiserver.service || systemctl start indiserver.service
+
+                if [ "$AUTO_START_CAPTURE" = "true" ]; then
+                    systemctl enable indi-allsky.service
+                    systemctl restart indi-allsky.service || systemctl start indi-allsky.service
+                else
+                    systemctl disable indi-allsky.service
+                    systemctl stop indi-allsky.service
+                fi
             fi
         fi
     ;;
