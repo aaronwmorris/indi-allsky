@@ -31,6 +31,7 @@ from fractions import Fraction
 
 from . import constants
 from . import asi676mc
+from . import sensors_mapping
 
 from .processing import ImageProcessor
 from .panorama import panoramaSourceCircleClipped
@@ -85,6 +86,7 @@ class ImageWorker(Process):
         sensors_user_av,
         night_av,
         astro_av,
+        sensors_user_read_time_av=None,
     ):
         super(ImageWorker, self).__init__()
 
@@ -103,6 +105,8 @@ class ImageWorker(Process):
 
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av
+        self.sensors_user_read_time_av = sensors_user_read_time_av
+        self.cloudiness_index_history = {}
         self.night_av = night_av
         self.astro_av = astro_av
 
@@ -406,6 +410,31 @@ class ImageWorker(Process):
             #task.setFailed('Bad Image: {0:s}'.format(str(filename_p)))
             return
 
+        i_ref.cloudiness_index = None
+        if self.config.get('TEMP_SENSOR', {}).get('CLOUDINESS_INDEX_ENABLE', False):
+            with self.sensors_user_av.get_lock():
+                cloudiness_sensor_values = self.sensors_user_av[:]
+                cloudiness_sensor_read_times = (
+                    self.sensors_user_read_time_av[:]
+                    if self.sensors_user_read_time_av is not None else None
+                )
+
+            cloudiness_snapshot_time = time.monotonic()
+            i_ref.cloudiness_index = sensors_mapping.calculate_cloudiness_index(
+                self.config,
+                lambda idx: sensors_mapping.get_fresh_sensor_value(
+                    cloudiness_sensor_values, cloudiness_sensor_read_times, idx,
+                    now=cloudiness_snapshot_time),
+            )
+            if self.config.get('TEMP_SENSOR', {}).get('CLOUDINESS_INDEX_SMOOTHING', False):
+                history = self.cloudiness_index_history.setdefault(camera.id, [])
+                raw_index = i_ref.cloudiness_index
+                i_ref.cloudiness_index = sensors_mapping.apply_cloudiness_smoothing(raw_index, history)
+                if raw_index is not None:
+                    history.append(raw_index)
+                    del history[:-3]
+            else:
+                self.cloudiness_index_history.pop(camera.id, None)
 
         # Purple-frame handling deliberately precedes both pre-dark and
         # post-dark standard FITS saving. In active repair mode those outputs
@@ -906,6 +935,10 @@ class ImageWorker(Process):
                 image_add_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
 
 
+            if i_ref.cloudiness_index is not None:
+                image_add_data['cloudiness_index'] = i_ref.cloudiness_index
+
+
             if self.adsb_aircraft_list:
                 image_add_data['aircraft'] = list()
 
@@ -1118,6 +1151,11 @@ class ImageWorker(Process):
             for i in range(100, 110):
                 sensor_topic = 'sensor_user_{0:d}'.format(i)
                 mqtt_data[sensor_topic] = round(self.sensors_user_av[i], 3)
+
+
+            mqtt_data['cloudiness_index'] = (
+                round(i_ref.cloudiness_index, 1) if i_ref.cloudiness_index is not None else ''
+            )
 
 
             if new_filename:
@@ -2322,6 +2360,7 @@ class ImageWorker(Process):
             'current_adu'         : adu,
             'adu_average'         : adu_average,
             'sqm'                 : i_ref.sqm_value,
+            'cloudiness_index'    : i_ref.cloudiness_index,
             'stars'               : len(i_ref.stars),
             'detections'          : len(i_ref.lines),
             'time'                : i_ref.exp_date.strftime('%s'),
