@@ -3,6 +3,7 @@
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
 {% block head %}
+<script defer src="{{ url_for('indi_allsky.static', filename='js/sensor-slots.js') }}"></script>
 <link href="{{ url_for('indi_allsky.static', filename='css/style.css') }}" rel="stylesheet">
 <script src="{{ url_for('indi_allsky.static', filename='js/indi-allsky-tabs.js') }}"></script>
 <script type="text/javascript">
@@ -598,48 +599,11 @@ const field_names = [
     'DEVICE__MQTT_USERNAME',
     'DEVICE__MQTT_PASSWORD',
     'DEVICE__MQTT_QOS',
-    'TEMP_SENSOR__A_CLASSNAME',
-    'TEMP_SENSOR__A_LABEL',
-    'TEMP_SENSOR__A_PIN_1',
-    'TEMP_SENSOR__A_PIN_2',
-    'TEMP_SENSOR__A_USER_VAR_SLOT',
-    'TEMP_SENSOR__A_I2C_ADDRESS',
-    'TEMP_SENSOR__A_TITLE_TEMPLATE',
-    'TEMP_SENSOR__B_CLASSNAME',
-    'TEMP_SENSOR__B_LABEL',
-    'TEMP_SENSOR__B_PIN_1',
-    'TEMP_SENSOR__B_PIN_2',
-    'TEMP_SENSOR__B_USER_VAR_SLOT',
-    'TEMP_SENSOR__B_I2C_ADDRESS',
-    'TEMP_SENSOR__B_TITLE_TEMPLATE',
-    'TEMP_SENSOR__C_CLASSNAME',
-    'TEMP_SENSOR__C_LABEL',
-    'TEMP_SENSOR__C_PIN_1',
-    'TEMP_SENSOR__C_PIN_2',
-    'TEMP_SENSOR__C_USER_VAR_SLOT',
-    'TEMP_SENSOR__C_I2C_ADDRESS',
-    'TEMP_SENSOR__C_TITLE_TEMPLATE',
-    'TEMP_SENSOR__D_CLASSNAME',
-    'TEMP_SENSOR__D_LABEL',
-    'TEMP_SENSOR__D_PIN_1',
-    'TEMP_SENSOR__D_PIN_2',
-    'TEMP_SENSOR__D_USER_VAR_SLOT',
-    'TEMP_SENSOR__D_I2C_ADDRESS',
-    'TEMP_SENSOR__D_TITLE_TEMPLATE',
-    'TEMP_SENSOR__E_CLASSNAME',
-    'TEMP_SENSOR__E_LABEL',
-    'TEMP_SENSOR__E_PIN_1',
-    'TEMP_SENSOR__E_PIN_2',
-    'TEMP_SENSOR__E_USER_VAR_SLOT',
-    'TEMP_SENSOR__E_I2C_ADDRESS',
-    'TEMP_SENSOR__E_TITLE_TEMPLATE',
-    'TEMP_SENSOR__F_CLASSNAME',
-    'TEMP_SENSOR__F_LABEL',
-    'TEMP_SENSOR__F_PIN_1',
-    'TEMP_SENSOR__F_PIN_2',
-    'TEMP_SENSOR__F_USER_VAR_SLOT',
-    'TEMP_SENSOR__F_I2C_ADDRESS',
-    'TEMP_SENSOR__F_TITLE_TEMPLATE',
+    {% for letter in form_config.sensor_letters %}
+    {% for field in ['CLASSNAME', 'LABEL', 'PIN_1', 'PIN_2', 'USER_VAR_SLOT', 'I2C_ADDRESS', 'TITLE_TEMPLATE'] %}
+    'TEMP_SENSOR__{{ letter }}_{{ field }}',
+    {% endfor %}
+    {% endfor %}
     'TEMP_SENSOR__OPENWEATHERMAP_APIKEY',
     'TEMP_SENSOR__WUNDERGROUND_APIKEY',
     'TEMP_SENSOR__ASTROSPHERIC_APIKEY',
@@ -981,6 +945,11 @@ $('#form_config').on('submit', function() {
 
                 // Red outline
                 fields[key].input.addClass('tw:input-error tw:select-error tw:toggle-error');
+                const sensorCard = fields[key].input.closest('[data-sensor-slot]');
+                if (sensorCard.length) {
+                    sensorCard.prop('hidden', false).children('input[type="checkbox"]').prop('checked', true);
+                    document.getElementById('sensor-slot-list').dispatchEvent(new Event('sensor-errors'));
+                }
 
                 // Show message under field — inject div if not already in HTML
                 var $err = fields[key].error;
@@ -1944,23 +1913,15 @@ $( document ).ready(function() {
 
     // Enable/disable FC-37 Active Low toggle when any sensor slot has FC-37 selected
     function updateFc37ActiveLowState() {
-        const sensorSlotIds = [
-            'TEMP_SENSOR__A_CLASSNAME',
-            'TEMP_SENSOR__B_CLASSNAME',
-            'TEMP_SENSOR__C_CLASSNAME',
-            'TEMP_SENSOR__D_CLASSNAME',
-            'TEMP_SENSOR__E_CLASSNAME',
-            'TEMP_SENSOR__F_CLASSNAME',
-        ];
-        const fc37Selected = sensorSlotIds.some(function(id) {
-            return $('#' + id).val() === 'blinka_rain_sensor_fc37';
+        const fc37Selected = $('[id^="TEMP_SENSOR__"][id$="_CLASSNAME"]').toArray().some(function(element) {
+            return element.value === 'blinka_rain_sensor_fc37';
         });
         const $toggle = $('#TEMP_SENSOR__FC37_ACTIVE_LOW');
         $toggle.prop('disabled', !fc37Selected);
         $toggle.parent().css('opacity', fc37Selected ? '' : '0.5');
     }
 
-    $('#TEMP_SENSOR__A_CLASSNAME, #TEMP_SENSOR__B_CLASSNAME, #TEMP_SENSOR__C_CLASSNAME, #TEMP_SENSOR__D_CLASSNAME, #TEMP_SENSOR__E_CLASSNAME, #TEMP_SENSOR__F_CLASSNAME').on('change', updateFc37ActiveLowState);
+    $('[id^="TEMP_SENSOR__"][id$="_CLASSNAME"]').on('change', updateFc37ActiveLowState);
 
     updateFc37ActiveLowState();
 
