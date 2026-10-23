@@ -205,7 +205,7 @@ SENSOR_USER_CAMERA_SQM_ADU      = 9
 # 10-60 user sensors
 # 61-99 possible future expansion
 SENSOR_USER_RAIN                = 100
-#SENSOR_USER_                    = 101
+SENSOR_USER_WIND_SPEED          = 101
 #SENSOR_USER_                    = 102
 #SENSOR_USER_                    = 103
 #SENSOR_USER_                    = 104
