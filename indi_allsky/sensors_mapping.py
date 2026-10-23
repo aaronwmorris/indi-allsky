@@ -32,6 +32,7 @@ TYPE_UNIT_MAP = {
     constants.SENSOR_ATMOSPHERIC_PRESSURE: "hPa",
     constants.SENSOR_WIND_SPEED: "m/s",
     constants.SENSOR_PRECIPITATION: "mm",
+    constants.SENSOR_PRECIPITATION_RATE: "mm/h",
     constants.SENSOR_LIGHT_LUX: "lx",
     constants.SENSOR_FAN_SPEED: "rpm",
     constants.SENSOR_PERCENTAGE: "%",
@@ -44,6 +45,7 @@ TYPE_DEVICE_CLASS_MAP = {
     constants.SENSOR_ATMOSPHERIC_PRESSURE: "pressure",
     constants.SENSOR_WIND_SPEED: "wind_speed",
     constants.SENSOR_PRECIPITATION: "precipitation",
+    constants.SENSOR_PRECIPITATION_RATE: "precipitation_intensity",
     constants.SENSOR_LIGHT_LUX: "illuminance",
 }
 
@@ -100,6 +102,8 @@ def build_slot_label_map(config: Dict[str, Any]) -> Dict[int, Dict[str, Any]]:
                     "unit": TYPE_UNIT_MAP.get(stype, ""),
                     "device_class": TYPE_DEVICE_CLASS_MAP.get(stype),
                 }
+                if classname == 'blinka_rain_sensor_wh_sp_rg':
+                    slot_map[slot_idx]["include_zero"] = True
         except Exception as e:
             logger.error("Error building slot label for sensor %s (%s): %s", letter, classname, e)
 
@@ -117,7 +121,7 @@ def format_named_sensors(sensor_temp: List[float], sensor_user: List[float], con
     for idx, val in enumerate(sensor_user):
         if idx in slot_map:
             meta = slot_map[idx]
-            if val != 0.0 or idx in (0, 1, 4):
+            if val != 0.0 or idx in (0, 1, 4) or meta.get("include_zero"):
                 named_sensors[meta["key"]] = {
                     "name": meta["name"],
                     "value": round(val, 2) if isinstance(val, float) else val,
