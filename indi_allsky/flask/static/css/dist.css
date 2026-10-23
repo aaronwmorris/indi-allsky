@@ -8784,49 +8784,9 @@ calendar-select-month::part(option):disabled, calendar-select-year::part(option)
 @keyframes radio {
   0% {
     padding: 5px;
-    opacity: 0;
-  }
-}
-@keyframes progress {
-  50% {
-    background-position-x: -115%;
-  }
-}
-@keyframes rating {
-  0%, 40% {
-    scale: 1.1;
-    filter: brightness(1.05) contrast(1.05);
-  }
-}
-@keyframes progress {
-  50% {
-    background-position-x: -115%;
-  }
-}
-@keyframes aura {
-  to {
-    --aura-angle: 360deg;
-    transform: translateZ(1px);
-  }
-}
-@keyframes aura-glow {
-  20%, 80% {
-    opacity: 0.7;
-    filter: blur(0.25rem);
   }
   50% {
-    opacity: 1;
-    filter: blur(0.75rem);
-  }
-}
-@keyframes aura-glow-after {
-  20%, 80% {
-    opacity: 0.3;
-    filter: blur(1rem);
-  }
-  50% {
-    opacity: 0.6;
-    filter: blur(1.5rem);
+    padding: 3px;
   }
 }
 @keyframes rating {

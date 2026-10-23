@@ -10590,6 +10590,10 @@ class ConfigDownloadView(BaseView):
             'APIKEY' : 'REDACTED',
             'APIKEY_E' : '',
         },
+        'ALLSKYMAP' : {
+            'API_KEY' : 'REDACTED',
+            'API_KEY_E' : '',
+        },
         'PYCURL_CAMERA' : {
             'PASSWORD' : 'REDACTED',
             'PASSWORD_E' : '',
