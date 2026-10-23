@@ -1,84 +1,77 @@
-## OS Distribution
+# `indi_pylibcamera` Driver Setup
 
-* Recommend `Raspberry Pi OS 12 64-bit (bookworm)` minimum
+`indi_pylibcamera` is a Python-based INDI driver that interfaces with Raspberry Pi libcamera CSI sensors (IMX477 HQ Camera, IMX708 Camera Module 3, IMX296 Global Shutter Camera) via the official Python bindings (`python3-picamera2` and `python3-libcamera`).
 
 > [!IMPORTANT]
-> **Debian Package (`.deb`) Users**: Do **NOT** modify `pyvenv.cfg` or execute pip installations inside `/var/lib/indi-allsky/venv/`. The Debian package manages Python dependencies, system-wide systemd units (`/etc/systemd/system/indiserver.service`), and library integrations automatically. The manual instructions below apply **only** to manual git source checkouts running under user session systemd units (`systemctl --user`).
+> **Debian Package (`.deb`) Installations**: The pre-built `.deb` package installs all necessary system libraries and manages systemd units automatically. Modifying `pyvenv.cfg` or executing `pip install` inside `/var/lib/indi-allsky/venv/` is unnecessary and unsupported.
+>
+> The setup steps below apply specifically to **Source / Git Checkout (`setup.sh`)** installations configuring user-level INDI servers (`systemctl --user`).
 
-## Git repo
-https://github.com/scriptorron/indi_pylibcamera
+---
 
-#### Bullseye note
-It may be possible to install on Raspberry Pi OS 11 (bullseye), but libcamera is an older version.
+## 1. System Requirements
 
-## Memory
-indi_pylibcamera is writtin in Python, therefore, it has higher memory requirements versus other camera drivers.  It is recommended to have at least 2GB of RAM.
+* **Operating System**: Raspberry Pi OS 12 (Bookworm) 64-bit or Raspberry Pi OS 13 (Trixie) 64-bit.
+* **Memory**: Minimum 2 GB RAM recommended due to Python runtime memory consumption during frame acquisition and debayering.
 
-## Install system packages
+---
 
-```
-sudo apt-get install \
+## 2. Install Host Dependencies
+
+Install the system Python libcamera bindings:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y \
     python3-picamera2 \
-    python3-libcamera
-
-# may be necessary
-sudo apt-get install \
+    python3-libcamera \
     libgles2-mesa
-
 ```
 
-Note:  It is possible to install `picamera2` in the indi-allsky virtualenv, but it is not possible to install the `libcamera` python modules [in the virtualenv].
+---
 
+## 3. Virtual Environment Configuration (Source Installs Only)
 
-## Virtualenv change
-System modules must be allowed in the virtualenv
+Python `libcamera` bindings must be inherited from system site-packages.
 
-Edit `virtualenv/indi-allsky/pyvenv.cfg` and set `include-system-site-packages = true`
+### Step 1: Enable System Site Packages
+Edit the virtual environment configuration file (`virtualenv/indi-allsky/pyvenv.cfg`):
 
-Example:
-```
+```ini
 home = /usr/bin
 include-system-site-packages = true
 version = 3.11.2
 executable = /usr/bin/python3.11
-command = /usr/bin/python3 -m venv /home/pi/indi-allsky/virtualenv/indi-allsky
 ```
 
-## Reactivate the virtualenv
-```
-deactivate
-```
+### Step 2: Install Driver inside Virtualenv
+Activate the virtual environment and install `indi-pylibcamera`:
 
-## Install indi_pylibcamera
-```
-source virtualenv/indi-allsky/bin/activate
+```bash
+source /var/lib/indi-allsky/virtualenv/bin/activate
+# Or from git checkout: source virtualenv/indi-allsky/bin/activate
 
 pip3 install indi-pylibcamera
-```
-
-## Upgrade simplejpeg
-* The OS distribution of picamera2 installs the distribution version of python3-simplejpeg.  simplejpeg needs to be rebuilt to support the newer version of numpy.
-```
 pip3 install --upgrade simplejpeg
 ```
 
-## systemd indiserver unit changes
-The indiserver systemd unit must be updated to allow the indi_pylibcamera module to function correctly.  Uncomment the two `Environment` settings and add `indi_pylibcamera`
+---
 
-Note:  **Some of the paths are user, architecture, and python version dependent**
+## 4. User Systemd Unit Configuration
 
-File: `$HOME/.config/systemd/user/indiserver.service`
-```
+When executing `indiserver` under a user systemd service (`$HOME/.config/systemd/user/indiserver.service`), ensure `PATH` and `PYTHONPATH` expose the virtualenv and system libraries:
+
+```ini
 [Unit]
-Description=Indi Server
+Description=INDI Server
 After=network.target
 
 [Service]
-#User=pi
 Environment="PATH=/home/pi/indi-allsky/virtualenv/indi-allsky/bin:/usr/local/bin:/usr/bin:/bin"
 Environment="PYTHONPATH=/home/pi/indi-allsky/virtualenv/indi-allsky/lib/python3.11/site-packages:/usr/local/lib/aarch64-linux-gnu/python3.11/site-packages"
-ExecStart=%INDI_DRIVER_PATH%/indiserver -p 7624 indi_simulator_telescope indi_pylibcamera
+ExecStart=/usr/bin/indiserver -p 7624 indi_simulator_telescope indi_pylibcamera
 ExecStop=/bin/kill -TERM $MAINPID
+Restart=on-failure
 RestartSec=5
 PrivateTmp=true
 UMask=0022
@@ -87,43 +80,19 @@ UMask=0022
 WantedBy=default.target
 ```
 
-## Reload the systemd config
-```
+Reload and restart the user service:
+```bash
 systemctl --user daemon-reload
-```
-
-## Restart the indiserver
-```
 systemctl --user restart indiserver
-```
-
-## Validation
-```
 systemctl --user status indiserver
 ```
 
-This should show something like the following.  If there are any exceptions, something is wrong.
-```
-● indiserver.service - Indi Server
-     Loaded: loaded (/home/pi/.config/systemd/user/indiserver.service; enabled; preset: enabled)
-     Active: active (running) since Tue 2024-01-30 11:07:54 CST; 31min ago
-   Main PID: 856 (indiserver)
-      Tasks: 11 (limit: 817)
-        CPU: 6.919s
-     CGroup: /user.slice/user-1000.slice/user@1000.service/app.slice/indiserver.service
-             ├─856 /usr/local/bin/indiserver -p 7624 indi_simulator_telescope indi_pylibcamera
-             ├─890 indi_simulator_telescope
-             └─891 /home/pi/indi-allsky/virtualenv/indi-allsky/bin/python3 /home/pi/indi-allsky/virtualenv/indi-allsky/bin/indi_pylibcamera
+---
 
-Jan 30 11:07:54 allsky systemd[708]: Started indiserver.service - Indi Server.
-Jan 30 11:07:55 allsky indiserver[856]: 2024-01-30T17:07:55: startup: /usr/local/bin/indiserver -p 7624 indi_simulator_telescope indi_pylibcamera
-Jan 30 11:07:55 allsky indiserver[856]: 2024-01-30T17:07:55: Driver indi_simulator_telescope: HaAxis: TrackRate 1, trackingRateDegSec 15.041067 arcsec
-```
+## 5. Driver Configuration Preset
 
-## INDI config
-These are not recommendations, just examples.
+In the web interface under **Camera Settings -> INDI Custom Properties / Switches**:
 
-### Enable AWB
 ```json
 {
     "SWITCHES": {
@@ -138,3 +107,5 @@ These are not recommendations, just examples.
     "TEXT": {}
 }
 ```
+
+Reference repository: [scriptorron/indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera)
