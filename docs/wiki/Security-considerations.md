@@ -1,52 +1,61 @@
-# Design principles
-I have tried to take security considerations as a first class design principle.  While there may be some compromises security-wise, I have tried to do the Right Thing© to minimize risks.
+# Security Architecture & Hardening
 
-# General
-* All software components run as a non-privileged (non-root) user.  Any user may be used--the pi user is not assumed.
-    * indiserver
-    * indi-allsky
-    * flask
-* The user used will be added as a member of the following groups for device access:
-    * `video` - Access to web cameras
-    * `dialout` - Access to serial ports
-    * `gpio` - Access to GPIO pins
-    * `i2c` - Access to I2C bus (sensors)
-    * `spi` - Access to SPI bus (sensors)
+`indi-allsky` incorporates defense-in-depth principles across process isolation, credential cryptography, network restrictions, and web application security.
 
-# Privileged Access
-The indi-allsky OS user is assigned the following designated privileged actions:
-* Shutdown/reboot system (via web inteface)
-* Set system time (via web interface)
-* Auto-mount USB sticks
+---
 
-All of these activities are performed via standard [SystemD](https://www.freedesktop.org/wiki/Software/systemd/) and [udisks](https://www.freedesktop.org/wiki/Software/udisks/) interfaces.  Privileges are assigned using standard [polkit](http://www.freedesktop.org/wiki/Software/polkit) definitions.
+## 1. Process Isolation & Least Privilege
 
-# Passwords
-* There is an option to encrypt passwords in the database using [Fernet](https://cryptography.io/en/latest/fernet/) symmetric encryption.  The encryption key is stored in `/etc/indi-allsky/flask.json` as `PASSWORD_KEY`
+* **Unprivileged Execution**: All background services (`indi-allsky.service`, `gunicorn-indi-allsky.service`, `indiserver.service`) execute under a dedicated non-root service account (`indi-allsky`).
+* **Group-Based Hardware Access**: Hardware access is delegated via standard Linux supplementary groups:
+  * `video`: Camera access (V4L2, libcamera).
+  * `dialout`: Serial interfaces (GPS, RS-232 focusers, udev devices).
+  * `gpio`: Access to `/dev/gpiochip*` for dew heaters, fans, and focusers.
+  * `i2c`: Sensor buses (BME280, TSL2591, MLX90614, etc.).
+  * `spi`: SPI-driven display modules and sensors.
+* **Controlled Privileged Operations**: System-level commands (rebooting, power management, time synchronization, and USB drive auto-mounting) are mediated via PolicyKit (`/etc/polkit-1/rules.d/90-indi-allsky.rules`) rather than `sudo` or SUID binaries.
 
-# Web Interface
-The web interface is designed to run with a self-signed server certificate.  The certificate is generated on first run of setup.sh and is stored in with the system server certificates in `/usr/local/share/ca-certificates/` and added to the system trust store.
-* 4096 bit key
-* SHA512 hash
-* SAN extension
+---
 
-[Flask](https://flask.palletsprojects.com/) is used as the application server layer.  CSRF tokens are used for all server interactions and should prevent most cross-site scripting attacks.
-* [CSRF](https://en.wikipedia.org/wiki/Cross-site_request_forgery) tokens to prevent XSS attacks
-* [HSTS](https://en.wikipedia.org/wiki/HTTP_Strict_Transport_Security) to enforce HTTPS mode
-* Argon2 password hashing
-* Session cookies are set with secure flag
-* [SQLAlchemy](https://www.sqlalchemy.org/) ORM to prevent SQL injection attacks
-* 3 levels of access control
-    * Anonymous - only able to view images and videos
-    * Staff - Able to view indi-allsky and system configuration, not able to make changes
-    * Admin - Full administrative control
-* Authentication is provided by [flask-login](https://flask-login.readthedocs.io/) and is controlled via IDs in the indi-allsky database.
+## 2. Cryptography & Credential Security
 
-# File transfers
-indi-allsky supports several secure (and unsecure) file transfer protocols.  indi-allsky may bypass certificate and host key validations for convenience.
+* **Password Storage**: User passwords are encrypted with the **Argon2** password-hashing function via `passlib`, resisting GPU/ASIC brute-force attempts.
+* **Configuration Secrets Encryption**: Sensitive configuration attributes stored in the database (API tokens, MQTT credentials, S3 secret keys, Wi-Fi passwords) are encrypted symmetrically using **Fernet** (AES-128-CBC with HMAC-SHA256).
+  * The encryption key is stored on the filesystem in `/etc/indi-allsky/flask.json` (`PASSWORD_KEY`).
+  * If `PASSWORD_KEY` is lost or altered, stored third-party credentials must be re-entered.
+* **SyncAPI HMAC Signatures**: Synchronization between on-premises cameras and remote web portals utilizes pre-shared HMAC keys. Raw API keys are never transmitted over the network; each request payload is cryptographically signed and timestamped.
 
-# SyncAPI
-An internal REST-like interface is implemented to support synchronizing data between indi-allsky instances.  An API key is used to create an HMAC signature of the data and [the API key] is never directly transmitted over the network.
+---
 
-# Warnings
-* indi-allsky uses various astronomy and image manipulation related python libraries.  Most of these libraries are community managed and may contain security vulnerabilities.
+## 3. Web Application Security
+
+The web layer (Flask, Flask-WTF, Flask-Login) includes standard defensive measures:
+* **CSRF Protection**: All state-modifying POST/PUT operations require cryptographically signed CSRF tokens (`WTF_CSRF_TIME_LIMIT`).
+* **SQL Injection Prevention**: Database interactions operate exclusively through SQLAlchemy ORM parameter binding; raw SQL concatenation is avoided.
+* **Session Security**: Session cookies enforce `HttpOnly`, `SameSite=Lax`, and `Secure` attributes by default.
+* **Role-Based Access Control**:
+  * **Anonymous**: Restricted to viewing live images, charts, and public archives (or fully blocked if `INDI_ALLSKY_AUTH_ALL_VIEWS` is enabled).
+  * **Standard User**: Authenticated access to media archives and astronomical status panels.
+  * **Administrator**: Exclusive authority to modify hardware configurations, trigger calibration routines, manage users, and issue system control tasks.
+
+---
+
+## 4. Network Boundary & Remote Access Hardening
+
+### Admin Network Restrictions (`ADMIN_NETWORKS`)
+Administrative actions and Action API endpoints (`/indi-allsky/action/*`) require the requesting client IP address to reside within CIDR subnets defined in `/etc/indi-allsky/flask.json`:
+```json
+"ADMIN_NETWORKS": [
+    "127.0.0.1/32",
+    "::1/128",
+    "10.0.0.0/8",
+    "172.16.0.0/12",
+    "192.168.0.0/16"
+]
+```
+
+### Exposing to the Internet
+If the allsky camera must be accessible outside the local area network:
+1. **Prefer Encrypted Overlays**: Utilize Cloudflare Tunnels, Tailscale, or WireGuard rather than direct router port-forwarding.
+2. **Require Authentication**: Set `"INDI_ALLSKY_AUTH_ALL_VIEWS": true` in `/etc/indi-allsky/flask.json` to prevent unauthenticated access to the live camera canvas.
+3. **Protect Media Directories**: Set `"INDI_ALLSKY_AUTH_MEDIA_VIEWS": true` if image and timelapse archives should not be publicly indexable.

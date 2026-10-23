@@ -1,50 +1,47 @@
-# Overview
-indi-allsky has the ability to control an electronic focuser mechanism to adjust the focus of all sky cameras.
+# Mechanical Focusers
 
-## GPIO Permissions
-If you receive a `PermissionDenied` exception when accessing GPIO pins
+`indi-allsky` supports electronic focuser mechanisms to automate and fine-tune lens optical focus directly from the web interface or via command-line utilities.
 
-https://github.com/aaronwmorris/indi-allsky/wiki/GPIO-Permissions
+Focusers are configured in the web interface under **Configuration** → **Focuser**.
 
-## Support Matrix
-| Device                  | Note |
-| ----------------------- | ---- |
-| 28BYJ-48 Stepper        | Working |
-| A4988 w/ NEMA17         | Not tested |
-| Adafruit Motor Shield   | Not tested |
+---
 
-## 28BYJ-48 Stepper Motor
-This is a common and inexpensive stepper motor that is commonly distributed with a ULN2003 driver.  This configuration only requires 4 GPIO pins (+GND and Power).
+## 1. Supported Focuser Hardware
 
-The 28BYJ-48 Stepper Motor has multiple variations, but the 1/64 geared is the most common variety.  If you have one where the gear ratio is not supported, please open an issue and we can add the version.
+| Driver Class | Supported Controller / Motor | Interface | Typical Pin Configuration |
+|---|---|---|---|
+| `focuser_28byj` | 28BYJ-48 Stepper with ULN2003 Driver | 4 GPIO Pins | Pin 1: IN1, Pin 2: IN2, Pin 3: IN3, Pin 4: IN4 |
+| `focuser_a4988` | A4988 / DRV8825 with NEMA 14 / NEMA 17 | 2–3 GPIO Pins | Pin 1: STEP, Pin 2: DIR, Pin 3: MS1 (Optional half-stepping) |
+| `focuserMotorKit` | Adafruit Motor Shield / Motor FeatherWing (PCA9685) | I2C (`0x60`) | `stepper1` or `stepper2` channel |
+| `focuserSerial28byj` | Arduino / Custom Serial Microcontroller | USB / Serial | Serial device path (e.g. `/dev/ttyUSB0` or `/dev/ttyACM0`) |
+| `focuserSimulator` | Software Simulation Driver | Software | Virtual device for interface testing |
 
-https://ben.akrin.com/driving-a-28byj-48-stepper-motor-uln2003-driver-with-a-raspberry-pi/
+---
 
-| GPIO Pin     | Driver Pin     |
-| ------------ | -------------- |
-| GPIO Pin 1   | IN1            |
-| GPIO Pin 2   | IN2            |
-| GPIO Pin 3   | IN3            |
-| GPIO Pin 4   | IN4            |
+## 2. Wiring & Controller Details
 
+### 28BYJ-48 Stepper with ULN2003 Driver
+The 28BYJ-48 is an inexpensive 5V geared unipolar stepper motor (most commonly 1:64 reduction ratio) driven by a ULN2003 Darlington transistor array:
+* Connect 5V and GND to the board power rail.
+* Connect IN1, IN2, IN3, and IN4 to four available GPIO pins (e.g., `D17`, `D18`, `D27`, `D22`).
+* Ensure appropriate [GPIO Permissions](GPIO-Permissions) are granted to the `indi-allsky` service user.
 
-## NEMA17 Stepper Motor with A4988 controller
-The NEMA17 stepper motor support 200 steps per revolution (1.8 degrees per step) in full step mode.  This configuration requires only 2 GPIO pins in full step mode.  One additional GPIO pin may be used for half step (0.9 degrees/step) mode.
+### A4988 / DRV8825 Bipolar Stepper Driver
+For higher-torque NEMA 14 or NEMA 17 stepper motors:
+* **STEP**: Pulses motor position (1 pulse = 1 step).
+* **DIR**: Logic level sets clockwise or counter-clockwise rotation.
+* **MS1 / MS2 / MS3**: (Optional) Microstepping selection pins.
 
-| GPIO Pin     | AS4988 Pin     |
-| ------------ | -------------- |
-| GPIO Pin 1   | STEP           |
-| GPIO Pin 2   | DIR            |
-| GPIO Pin 3   | MS1 (optional) |
-| GPIO Pin 4   | Unused         |
+### Adafruit MotorKit (I2C)
+The Adafruit Motor Shield uses I2C communication (default address `0x60`).
+> [!WARNING]
+> If utilizing the Adafruit MotorKit for both focuser control and dew heaters/fans, ensure that I2C bus concurrency conflicts do not occur between the capture process and web worker processes.
 
-## Adafruit Motor Shield/Hat
-Support for the Motor Shield (various models) with the PCA9685 PWM driver is supported by the Adafruit MotorKit python driver.  The Motor Shield is controlled via I2C.  The default I2C address is `0x60`
+---
 
-| Possible pin values |
-| ------------------- |
-| `stepper1`          |
-| `stepper2`          |
+## 3. Web Interface Focus Calibration
 
-### Note about Motor Shield concurrent access
-The Motor Shield may be used for both the focus controller and Dew Heater and Fan drivers, however, it will likely not be possible to utilize the focus/stepper capability while the fan and dew heater is active.  The focus controller runs in the web interface, while dew heater/fan runs in the capture process.  Trying to access the same i2c device across multiple processes will likely fail.
+In the web interface:
+1. Navigate to **Tools** → **Focus Assistant**.
+2. Select target step increments (`1`, `10`, `50`, `100` steps) and direction (In / Out).
+3. Inspect live star metrics (FWHM, HFD, and SEP star counts) as focus position varies to identify the critical focus zone.
