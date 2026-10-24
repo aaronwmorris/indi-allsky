@@ -291,6 +291,16 @@
                     </div>
                 </div>
 
+                <div class="tw:flex tw:flex-wrap tw:gap-4">
+                    {% for field in [form_config.VIRTUALSKY__FLIP_H, form_config.VIRTUALSKY__FLIP_V] %}
+                    <label for="{{ field.id }}" class="tw:flex tw:items-center tw:gap-2">
+                        {{ field(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <span>{{ field.label.text }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+                <p class="tw:text-xs tw:text-base-content/60">Flips the overlay around its center after rotation. The captured image and X/Y offsets stay unchanged.</p>
+
                 <!-- Toggles Grid -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-3 tw:gap-4 tw:pt-2">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
