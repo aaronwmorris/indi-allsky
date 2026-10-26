@@ -114,7 +114,9 @@ function loadJS(url, onDone, onError) {
             $('#dl_support').on('click', saveTextAsFile);
         },
         error: function(data){
-            onError(data.status);
+            $("#support_info").text('Unable to generate support info. Check the Webapp Log for details.');
+            $("#loader_support").css({'display' : 'none'});
+            onError(data.status);
         },
     });
 }
