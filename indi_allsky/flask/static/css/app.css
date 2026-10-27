@@ -1,3 +1,10 @@
+/*
+ * indi-allsky - Tailwind CSS v4 Manifest
+ *
+ * Configures Tailwind CSS directives, DaisyUI, and Iconify plugins.
+ * Imports custom.css (runtime UI themes) and overrides.css (codebase rules).
+ */
+
 @import "tailwindcss" prefix(tw);
 @import "./custom.css";
 @import "./overrides.css";
@@ -5,3 +12,5 @@
   themes: all;
 }
 @plugin "@iconify/tailwind4";
+
+
