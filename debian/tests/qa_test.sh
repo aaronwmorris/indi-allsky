@@ -52,7 +52,7 @@ apt-get install -y "${DEB_FILES[@]}"
 echo "============================================================"
 echo "=== 2. Testing Bundled Virtualenv & Extensions ==="
 echo "============================================================"
-PYTHONPATH=/usr/share/indi-allsky /var/lib/indi-allsky/venv/bin/python3 -c "
+GUNICORN_ERROR_LOG_HANDLER=wsgi PYTHONPATH=/usr/share/indi-allsky /var/lib/indi-allsky/venv/bin/python3 -c "
 import PyIndi, flask, astropy, cv2, cryptography, dbus, systemd, rawpy, scipy, boto3, google.cloud.storage, adafruit_bme280, adafruit_bmp280, adafruit_ina219
 from indi_allsky.wsgi import application
 assert application is not None
@@ -96,13 +96,105 @@ print('Database verified: Admin user provisioned and observatory coordinates ver
 "
 
 echo "============================================================"
-echo "=== 4. Testing System Configuration ==="
+echo "=== 4. Testing Authenticated Web Routes & WSGI Server ==="
+echo "============================================================"
+
+# Verify unauthenticated and authenticated route rendering via Flask WSGI test client as indi-allsky user
+su -s /bin/sh indi-allsky -c "GUNICORN_ERROR_LOG_HANDLER=wsgi PYTHONPATH=/usr/share/indi-allsky /var/lib/indi-allsky/venv/bin/python3 -c '
+import re, logging, logging.handlers
+from indi_allsky.wsgi import application
+assert application is not None
+
+# Remove syslog handler if /dev/log is absent in container to prevent socket connection errors
+allsky_logger = logging.getLogger(\"indi_allsky\")
+allsky_logger.handlers = [h for h in allsky_logger.handlers if not isinstance(h, logging.handlers.SysLogHandler)]
+
+with application.test_client() as client:
+    # 1. Verify unauthenticated login route and static asset delivery
+    res_login = client.get(\"/indi-allsky/login\")
+    assert res_login.status_code == 200, f\"Expected 200 on /indi-allsky/login, got {res_login.status_code}\"
+    login_html = res_login.get_data(as_text=True)
+
+    res_css = client.get(\"/indi-allsky/static/css/dist.css\")
+    assert res_css.status_code == 200, f\"Expected 200 on dist.css, got {res_css.status_code}\"
+    assert len(res_css.data) > 1000, \"dist.css is empty or truncated\"
+
+    # 2. Extract CSRF token from login form
+    csrf_match = re.search(r\"name=[\x27\\\"]csrf_token[\x27\\\"][^>]*value=[\x27\\\"]([^\x27\\\"]+)[\x27\\\"]\", login_html) or \
+                 re.search(r\"value=[\x27\\\"]([^\x27\\\"]+)[\x27\\\"][^>]*name=[\x27\\\"]csrf_token[\x27\\\"]\", login_html)
+    assert csrf_match is not None, \"CSRF token missing from login page HTML\"
+    csrf_token = csrf_match.group(1)
+
+    # 3. Authenticate as preseeded admin user
+    login_res = client.post(
+        \"/indi-allsky/login\",
+        json={
+            \"USERNAME\": \"admin\",
+            \"PASSWORD\": \"testpassword123\",
+            \"NEXT\": \"\",
+            \"csrf_token\": csrf_token,
+        },
+        headers={\"X-CSRFToken\": csrf_token},
+    )
+    assert login_res.status_code == 200, f\"Admin login failed with HTTP {login_res.status_code}: {login_res.get_data(as_text=True)}\"
+
+    # 4. Authenticated web routes rendering sweep
+    routes = [
+        \"/indi-allsky/\",
+        \"/indi-allsky/config\",
+        \"/indi-allsky/system\",
+        \"/indi-allsky/users\",
+        \"/indi-allsky/sensor_panel\",
+    ]
+    for route in routes:
+        resp = client.get(route)
+        assert resp.status_code == 200, f\"Route {route} failed with HTTP {resp.status_code}: {resp.get_data(as_text=True)[:300]}\"
+
+print(\"All core authenticated web routes (/indi-allsky/, /config, /system, /users, /sensor_panel) rendered successfully!\")
+'"
+
+# Verify live Gunicorn WSGI HTTP server binding and serving requests on loopback
+su -s /bin/sh indi-allsky -c "GUNICORN_ERROR_LOG_HANDLER=wsgi exec /var/lib/indi-allsky/venv/bin/gunicorn \
+    --bind 127.0.0.1:8080 \
+    --workers 1 \
+    --timeout 15 \
+    --access-logfile - \
+    --error-logfile - \
+    indi_allsky.wsgi:application" &
+GUNICORN_PID=$!
+
+/var/lib/indi-allsky/venv/bin/python3 -c "
+import urllib.request, time
+
+for _ in range(20):
+    try:
+        with urllib.request.urlopen('http://127.0.0.1:8080/indi-allsky/login', timeout=2) as resp:
+            if resp.status == 200:
+                print('Live Gunicorn WSGI server successfully served HTTP 200 on loopback!')
+                break
+    except Exception:
+        time.sleep(0.5)
+else:
+    raise RuntimeError('Gunicorn WSGI server failed to respond within 10 seconds')
+"
+kill "$GUNICORN_PID" 2>/dev/null || true
+wait "$GUNICORN_PID" 2>/dev/null || true
+pkill -f gunicorn 2>/dev/null || true
+echo "Live Gunicorn WSGI server smoke test verified successfully!"
+
+echo "============================================================"
+echo "=== 5. Testing System Configuration & CLI Utilities ==="
 echo "============================================================"
 test -f /etc/indi-allsky/flask.json
 echo "Configuration file /etc/indi-allsky/flask.json is present!"
 
+# Verify CLI utilities execution
+/var/lib/indi-allsky/venv/bin/python3 /usr/share/indi-allsky/allsky.py --help > /dev/null
+/var/lib/indi-allsky/venv/bin/python3 /usr/share/indi-allsky/config.py --help > /dev/null
+echo "CLI utilities (--help) executed successfully!"
+
 echo "============================================================"
-echo "=== 5. Testing Non-Interactive Package Upgrade / Reinstall ==="
+echo "=== 6. Testing Non-Interactive Package Upgrade / Reinstall ==="
 echo "============================================================"
 # Verify that upgrading/reinstalling packages with -y automatically reuses configuration without prompting
 apt-get install --reinstall -y "${DEB_FILES[@]}"
@@ -110,13 +202,13 @@ test -f /etc/indi-allsky/flask.json
 echo "Non-interactive package reinstall/upgrade passed without prompts!"
 
 echo "============================================================"
-echo "=== 6. Testing Debconf Reconfiguration ==="
+echo "=== 7. Testing Debconf Reconfiguration ==="
 echo "============================================================"
 dpkg-reconfigure -f noninteractive indi-allsky
 echo "Debconf reconfiguration passed!"
 
 echo "============================================================"
-echo "=== 7. Testing Package Purge ==="
+echo "=== 8. Testing Package Purge ==="
 echo "============================================================"
 apt-get purge -y indi-allsky
 test ! -d /var/lib/indi-allsky
