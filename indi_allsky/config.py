@@ -26,6 +26,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from .version import __config_level__
 from .exceptions import ConfigSaveException
+from .system_profile import get_system_hardware_profile
 
 
 app = create_app()
@@ -1539,6 +1540,14 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
             self._bootstrap(**kwargs)
 
 
+    def _apply_hardware_profile(self, profile):
+        for key, val in profile.config_overrides.items():
+            if isinstance(val, dict) and key in self.config and isinstance(self.config[key], dict):
+                self.config[key].update(val)
+            else:
+                self.config[key] = val
+
+
     def _bootstrap(self, **kwargs):
         try:
             self._getConfigEntry()
@@ -1553,9 +1562,48 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         self._createSystemAccount()
 
 
+        profile = get_system_hardware_profile()
+        logger.info(
+            'Detected hardware: %.1f GB RAM, %d CPU cores (Tier %d: %s). Applying hardware-optimized settings.',
+            profile.ram_gb,
+            profile.cpu_cores,
+            profile.tier,
+            profile.tier_name,
+        )
+        self._apply_hardware_profile(profile)
+
         logger.info('Creating initial configuration')
         self.config['IMAGE_FOLDER'] = str(self.image_folder)
-        self.save('system', 'Initial config')
+        self.save(
+            'system',
+            f'Initial config (Tuned for Tier {profile.tier} [{profile.tier_name}] hardware: {profile.ram_gb:.1f} GB RAM)',
+        )
+
+
+    def profile(self, **kwargs):
+        profile = get_system_hardware_profile()
+        table = PrettyTable()
+        table.field_names = ['Attribute', 'Detected Value']
+        table.align['Attribute'] = 'l'
+        table.align['Detected Value'] = 'l'
+        table.add_row(['Physical RAM', f'{profile.ram_gb:.2f} GB ({profile.ram_bytes:,} bytes)'])
+        table.add_row(['Active Swap', f'{profile.swap_gb:.2f} GB ({profile.swap_bytes:,} bytes)'])
+        table.add_row(['CPU Cores', str(profile.cpu_cores)])
+        table.add_row(['Hardware Tier', f'Tier {profile.tier} ({profile.tier_name})'])
+        print(table)
+        print()
+        print('Recommended Preset Adjustments for this System:')
+        preset_table = PrettyTable()
+        preset_table.field_names = ['Configuration Key', 'Recommended Value']
+        preset_table.align['Configuration Key'] = 'l'
+        preset_table.align['Recommended Value'] = 'l'
+        for key, val in profile.config_overrides.items():
+            if isinstance(val, dict):
+                for subk, subv in val.items():
+                    preset_table.add_row([f'{key}.{subk}', str(subv)])
+            else:
+                preset_table.add_row([key, str(val) if val != '' else '(No Scaling)'])
+        print(preset_table)
 
 
     def list(self, **kwargs):

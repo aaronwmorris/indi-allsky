@@ -39,6 +39,7 @@ if __name__ == "__main__":
             'user_count',       # return count of active users to STDOUT
             'delete',           # deletes config by --id
             'flush',            # deletes all configs
+            'profile',          # display system hardware profile and recommendations
         ),
     )
     argparser.add_argument(

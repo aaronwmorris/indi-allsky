@@ -4043,6 +4043,22 @@ EOF
 
     sudo sysctl --system
 
+    ### ensures adequate swap buffer on memory-constrained systems (< 2GB RAM)
+    SWAP_TOTAL=$(grep SwapTotal /proc/meminfo | awk '{print $2}')
+    if [ "$MEM_TOTAL" -lt "2000000" ] && [ -n "$SWAP_TOTAL" ] && [ "$SWAP_TOTAL" -lt "1000000" ]; then
+        if [ -f "/etc/dphys-swapfile" ]; then
+            echo "Adjusting dphys-swapfile to 1024MB for memory-constrained host..."
+            sudo sed -i 's/^CONF_SWAPSIZE=.*/CONF_SWAPSIZE=1024/' /etc/dphys-swapfile
+            sudo dphys-swapfile swapoff >/dev/null 2>&1 || true
+            sudo dphys-swapfile setup >/dev/null 2>&1 || true
+            sudo dphys-swapfile swapon >/dev/null 2>&1 || true
+        elif [ -f "/etc/rpi/swap.conf" ]; then
+            echo "Adjusting rpi/swap.conf to 1024MB for memory-constrained host..."
+            sudo sed -i 's/^FixedSizeMiB=.*/FixedSizeMiB=1024/' /etc/rpi/swap.conf
+            sudo systemctl restart rpi-swap >/dev/null 2>&1 || true
+        fi
+    fi
+
 
     ### reduces disk i/o for system journal
     [[ ! -d "/etc/systemd/journald.conf.d" ]] && sudo mkdir -m 755 "/etc/systemd/journald.conf.d"
