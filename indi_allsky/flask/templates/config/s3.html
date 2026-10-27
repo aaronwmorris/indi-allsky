@@ -51,7 +51,7 @@
                 </div>
 
                 <!-- Credentials File (GCP / OCI) -->
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3">
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 config-expert">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__CREDS_FILE.label.text }}</span>
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">GCP / OCI Service Key Filepath</span>
@@ -102,7 +102,7 @@
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Storage region. Not used by GCP; use “auto” for Cloudflare R2. The value is not validated.</span>
                         <div id="S3UPLOAD__REGION-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__HOST.label.text }}</span>
                         {{ form_config.S3UPLOAD__HOST(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">amazonaws.com / storage.googleapis.com</span>
@@ -111,7 +111,7 @@
                 </div>
 
                 <!-- Namespace & URL Template -->
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3">
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.S3UPLOAD__NAMESPACE.label.text }}</span>
                         {{ form_config.S3UPLOAD__NAMESPACE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -130,7 +130,7 @@
         </div>
 
         <!-- ACLs, Storage Classes & Network Timeouts Card -->
-        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm config-expert">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">ACLs, Storage Class & Network Options</span>
 

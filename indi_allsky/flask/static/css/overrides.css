@@ -450,3 +450,8 @@ calendar-select-year::part(option):disabled {
         filter: blur(3px) hue-rotate(360deg);
     }
 }
+
+/* Configuration Simple / Expert Mode Visibility */
+#form_config.mode-simple .config-expert {
+    display: none !important;
+}

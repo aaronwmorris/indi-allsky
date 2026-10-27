@@ -7,7 +7,7 @@
         </div>
 
         <!-- Manual & Generic GPIO Controls Card -->
-        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm config-expert">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Manual & Generic GPIO Relays</span>
@@ -113,12 +113,12 @@
 
                 <!-- Toggles & Duty Cycle -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
-                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__INVERT_OUTPUT.label.text }}</span>
                         {{ form_config.DEW_HEATER__INVERT_OUTPUT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="DEW_HEATER__INVERT_OUTPUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__ENABLE_DAY.label.text }}</span>
                         {{ form_config.DEW_HEATER__ENABLE_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="DEW_HEATER__ENABLE_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -128,7 +128,7 @@
                         {{ form_config.DEW_HEATER__THOLD_ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="DEW_HEATER__THOLD_ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__LEVEL_DEF.label.text }}</span>
                         {{ form_config.DEW_HEATER__LEVEL_DEF(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Default duty cycle of PWM. If you enable dew heater thresholds, this should be set to 0.</span>
@@ -152,7 +152,7 @@
                     </div>
                 </div>
 
-                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__MANUAL_TARGET.label.text }}</span>
                         {{ form_config.DEW_HEATER__MANUAL_TARGET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -168,7 +168,7 @@
                 </div>
 
                 <!-- Levels & Thresholds -->
-                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-4 tw:gap-4 tw:pt-2">
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-4 tw:gap-4 tw:pt-2 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DEW_HEATER__PWM_FREQUENCY.label.text }}</span>
                         {{ form_config.DEW_HEATER__PWM_FREQUENCY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -236,12 +236,12 @@
 
                 <!-- Toggles & Duty Cycle -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
-                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__INVERT_OUTPUT.label.text }}</span>
                         {{ form_config.FAN__INVERT_OUTPUT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FAN__INVERT_OUTPUT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__ENABLE_NIGHT.label.text }}</span>
                         {{ form_config.FAN__ENABLE_NIGHT(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FAN__ENABLE_NIGHT-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
@@ -251,7 +251,7 @@
                         {{ form_config.FAN__THOLD_ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="FAN__THOLD_ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__LEVEL_DEF.label.text }}</span>
                         {{ form_config.FAN__LEVEL_DEF(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Default duty cycle of PWM. If you enable fan thresholds, this should be set to 0.</span>
@@ -273,7 +273,7 @@
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Delta: {{ fan_temp_delta_str }} | Status: {{ fan_status_str }}</span>
                         <div id="FAN__TARGET-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__HOLD_SECONDS.label.text }}</span>
                         {{ form_config.FAN__HOLD_SECONDS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Prevent Fan status from changing too often.</span>
@@ -282,7 +282,7 @@
                 </div>
 
                 <!-- Levels & Thresholds -->
-                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-4 tw:gap-4 tw:pt-2">
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-4 tw:gap-4 tw:pt-2 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FAN__PWM_FREQUENCY.label.text }}</span>
                         {{ form_config.FAN__PWM_FREQUENCY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -319,7 +319,7 @@
         </div>
 
         <!-- Focuser & Hardware Device MQTT Card -->
-        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm config-expert">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Focuser Driver & Device MQTT Telemetry</span>

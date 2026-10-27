@@ -23,6 +23,12 @@
 
         if (!targetPane) return false;
 
+        // Ensure Expert mode is activated if the requested tab is an expert-only tab
+        const targetBtn = document.querySelector('[data-tab-target="' + targetId + '"]');
+        if (targetBtn && targetBtn.classList.contains('config-expert') && typeof window.setConfigMode === 'function') {
+            window.setConfigMode('expert');
+        }
+
         // Hide all tab panes
         document.querySelectorAll('.tab-pane').forEach(function(pane) {
             pane.classList.remove('show', 'active');
@@ -55,6 +61,11 @@
     function highlightField(fieldId) {
         const el = document.getElementById(fieldId);
         if (!el) return;
+
+        // Ensure Expert mode is activated if the targeted field is in an expert container
+        if (typeof window.setConfigMode === 'function' && el.closest('.config-expert')) {
+            window.setConfigMode('expert');
+        }
 
         // Open any collapsed accordion section that contains this field
         const collapse = el.closest('.tw\\:collapse, .collapse');
