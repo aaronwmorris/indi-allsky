@@ -707,6 +707,8 @@ class SensorWorker(Process):
                 logger.error('Sensor IOError: {0:s}'.format(str(e)))
             except IndexError as e:
                 logger.error('Sensor slot error: {0:s}'.format(str(e)))
+            except Exception as e:
+                logger.exception('Sensor update exception on %s: %s', getattr(sensor, 'name', 'unknown'), str(e))
 
 
     def check_dew_heater_thresholds(self):

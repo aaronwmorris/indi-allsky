@@ -176,76 +176,58 @@ class TempApiEcowitt(SensorBase):
         except json.JSONDecodeError as e:
             raise SensorReadException(str(e)) from e
 
-        if r_data['code'] != 0:
-            raise SensorReadException('Ecowitt API returned "{0}" '.format(r_data['msg']))
+        if not isinstance(r_data, dict):
+            raise SensorReadException('Ecowitt API returned invalid JSON object')
 
-        if r_data['data']['outdoor']['temperature'].get('value'):
-            temp_f = float(r_data['data']['outdoor']['temperature']['value'])
+        if r_data.get('code') != 0:
+            raise SensorReadException('Ecowitt API returned "{0}" '.format(r_data.get('msg', 'Unknown error')))
+
+        api_data = r_data.get('data')
+        if not isinstance(api_data, dict):
+            logger.warning('[%s] Ecowitt API returned no sensor data block', self.name)
+            return self.data
+
+        def _parse_float(val, default=0.0):
+            if val is None:
+                return default
+            try:
+                return float(val)
+            except (ValueError, TypeError):
+                return default
+
+        outdoor = api_data.get('outdoor')
+        if isinstance(outdoor, dict):
+            temp_f = _parse_float(outdoor.get('temperature', {}).get('value'))
+            feels_like_f = _parse_float(outdoor.get('feels_like', {}).get('value'))
+            rel_h = _parse_float(outdoor.get('humidity', {}).get('value'))
+            dewpt_f = _parse_float(outdoor.get('dew_point', {}).get('value'))
         else:
+            logger.warning('[%s] Ecowitt API: outdoor sensor block missing from response', self.name)
             temp_f = 0.0
-
-
-        if r_data['data']['outdoor']['feels_like'].get('value'):
-            feels_like_f = float(r_data['data']['outdoor']['feels_like']['value'])
-        else:
             feels_like_f = 0.0
-
-
-        if r_data['data']['outdoor']['humidity'].get('value'):
-            rel_h = float(r_data['data']['outdoor']['humidity']['value'])
-        else:
             rel_h = 0.0
-
-
-        if r_data['data']['outdoor']['dew_point'].get('value'):
-            dewpt_f = float(r_data['data']['outdoor']['dew_point']['value'])
-        else:
             dewpt_f = 0.0
 
+        pressure = api_data.get('pressure', {}) if isinstance(api_data.get('pressure'), dict) else {}
+        pressure_in = _parse_float(pressure.get('relative', {}).get('value'))
 
-        if r_data['data']['pressure']['relative'].get('value'):
-            pressure_in = float(r_data['data']['pressure']['relative']['value'])
-        else:
-            pressure_in = 0.0
+        wind = api_data.get('wind', {}) if isinstance(api_data.get('wind'), dict) else {}
+        wind_speed_mph = _parse_float(wind.get('wind_speed', {}).get('value'))
+        wind_gust_mph = _parse_float(wind.get('wind_gust', {}).get('value'))
+        wind_dir = _parse_float(wind.get('wind_direction', {}).get('value'))
 
-
-        if r_data['data'].get('wind', {}).get('wind_speed', {}).get('value'):
-            wind_speed_mph = float(r_data['data']['wind']['wind_speed']['value'])
-        else:
-            wind_speed_mph = 0.0
-
-
-        if r_data['data'].get('wind', {}).get('wind_gust', {}).get('value'):
-            wind_gust_mph = float(r_data['data']['wind']['wind_gust']['value'])
-        else:
-            wind_gust_mph = 0.0
-
-
-        if r_data['data']['wind']['wind_direction'].get('value'):
-            wind_dir = float(r_data['data']['wind']['wind_direction']['value'])
-        else:
-            wind_dir = 0.0
-
-
-        if r_data['data'].get('rainfall', {}).get('rain_rate', {}).get('value'):
-            rain_total = float(r_data['data']['rainfall']['rain_rate']['value'])
-        elif r_data['data'].get('rainfall_piezo', {}).get('rain_rate', {}).get('value'):
-            rain_total = float(r_data['data']['rainfall_piezo']['rain_rate']['value'])
+        rainfall = api_data.get('rainfall', {}) if isinstance(api_data.get('rainfall'), dict) else {}
+        rainfall_piezo = api_data.get('rainfall_piezo', {}) if isinstance(api_data.get('rainfall_piezo'), dict) else {}
+        if rainfall.get('rain_rate', {}).get('value') is not None:
+            rain_total = _parse_float(rainfall.get('rain_rate', {}).get('value'))
+        elif rainfall_piezo.get('rain_rate', {}).get('value') is not None:
+            rain_total = _parse_float(rainfall_piezo.get('rain_rate', {}).get('value'))
         else:
             rain_total = 0.0
 
-
-        if r_data['data'].get('solar_and_uvi', {}).get('solar', {}).get('value'):
-            solar_radiation = float(r_data['data']['solar_and_uvi']['solar']['value'])
-        else:
-            solar_radiation = 0.0
-
-
-        if r_data['data'].get('solar_and_uvi', {}).get('uvi', {}).get('value'):
-            uv = float(r_data['data']['solar_and_uvi']['uvi']['value'])
-        else:
-            uv = 0.0
-
+        solar_and_uvi = api_data.get('solar_and_uvi', {}) if isinstance(api_data.get('solar_and_uvi'), dict) else {}
+        solar_radiation = _parse_float(solar_and_uvi.get('solar', {}).get('value'))
+        uv = _parse_float(solar_and_uvi.get('uvi', {}).get('value'))
 
         logger.info('[%s] Ecowitt API - temp: %0.1ff, feels like: %0.1ff humidity: %d%%', self.name, temp_f, feels_like_f, rel_h)
 
@@ -253,11 +235,15 @@ class TempApiEcowitt(SensorBase):
         dewpt_c = self.f2c(dewpt_f)
 
 
-        try:
-            dew_point_c = self.get_dew_point_c(self.f2c(temp_f), rel_h)
-            frost_point_c = self.get_frost_point_c(self.f2c(temp_f), dew_point_c)
-        except ValueError as e:
-            logger.error('Dew Point calculation error - ValueError: %s', str(e))
+        if rel_h > 0.0:
+            try:
+                dew_point_c = self.get_dew_point_c(self.f2c(temp_f), rel_h)
+                frost_point_c = self.get_frost_point_c(self.f2c(temp_f), dew_point_c)
+            except ValueError as e:
+                logger.error('Dew Point calculation error - ValueError: %s', str(e))
+                dew_point_c = 0.0
+                frost_point_c = 0.0
+        else:
             dew_point_c = 0.0
             frost_point_c = 0.0
 
