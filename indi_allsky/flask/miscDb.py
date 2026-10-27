@@ -360,7 +360,7 @@ class miscDb(object):
                 'sqm': image.sqm,
                 'stars': image.stars,
             })
-            sensor_payload = get_latest_sensors_payload()
+            sensor_payload = get_latest_sensors_payload(self._config)
             event_manager.broadcast('sensor_update', sensor_payload)
         except Exception as ev_err:
             logger.error('Error broadcasting exposure events: %s', ev_err)
