@@ -3304,10 +3304,12 @@ class ImageProcessor(object):
 
         # user sensors
         for i in range(60):
-            label_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
+            val = self.sensors_user_av[i]
+            label_data['sensor_user_{0:d}'.format(i)] = '' if math.isnan(val) else val
 
         for i in range(100, 110):
-            label_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
+            val = self.sensors_user_av[i]
+            label_data['sensor_user_{0:d}'.format(i)] = '' if math.isnan(val) else val
 
 
         # rain sensor state - scan TEMP_SENSOR A-F slots for FC-37 classname
