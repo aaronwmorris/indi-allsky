@@ -1,6 +1,9 @@
 # Overview
 The dew heater support in indi-allsky is intended to use the GPIO or PWM pins from a SBC such as a Raspberry PI to drive either a MOSFET or relay to manage the dew heater state.
 
+> [!NOTE]
+> Dew heater controls are configured under **Configuration** → **Devices**. Primary driver assignment and sensor slots are available in Simple Mode; advanced tuning parameters (PWM frequency, multi-level differentials, manual targets, and hold timers) require **Expert Mode** to be enabled using the top header switch.
+
 The default functionality is to activate the dew heater at night and deactivate during the day, although it is possible to enable day time operation.
 
 It is also possible to operate the dew heater using temperature thresholds if you have an appropriate temperature sensor.  The default target temperature is the dew point, which will be available if you have a sensor that detects both temperature and relative humidity [RH].  If you do not, you may set a manual temperature threshold.

@@ -17,7 +17,10 @@ When circular display generation is enabled, the image processing pipeline:
 
 ## 2. Configuration Reference
 
-Settings are configured in the web interface under **Configuration** → **Image Processing** → **Circular Display**:
+> [!NOTE]
+> The **Circular Display** card under **Configuration** → **Processing** is an advanced feature visible only in **Expert Mode**. Enable Expert Mode using the toggle switch in the top configuration header.
+
+Settings are configured in the web interface under **Configuration** → **Processing** → **Circular Display**:
 
 | Parameter | Type | Options / Range | Default | Description |
 |---|---|---|---|---|

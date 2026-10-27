@@ -10,7 +10,10 @@ The horizontal axis represents time; the vertical axis represents the sky from h
 
 For celestial and meteorological features to track consistently, the vertical slice must align with the local celestial meridian (the North-South celestial circle passing through the zenith).
 
-In **Configuration** → **Image Processing** → **Keogram**:
+> [!NOTE]
+> Keogram rotation angles, vertical/horizontal scaling, and realtime keogram generation parameters under **Configuration** → **Processing** are hidden by default in Simple Mode. Enable **Expert Mode** using the toggle switch in the top configuration header.
+
+In **Configuration** → **Processing** → **Keogram**:
 
 * `KEOGRAM_ROTATION`: Rotates the source frame before extracting the central pixel column.
   * `0`: No rotation applied.

@@ -3,6 +3,9 @@ indi-allsky has the built-in capability to publish data from your all sky camera
 
 You can find the settings related to the MQTT service in the configuration form.
 
+> [!NOTE]
+> Standard broker credentials and topic prefixes are available under Simple Mode. Advanced transport protocols, protocol versions, QoS, certificate validation bypass, and raw image payload publishing require **Expert Mode** to be enabled via the toggle switch in the configuration header.
+
 ## MQTT Broker Setup
 If you need a local MQTT broker installed on your machine, you can configure Mosquitto automatically using [`indi-allsky-ctl`](indi-allsky-ctl):
 ```bash

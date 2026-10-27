@@ -99,6 +99,10 @@ API key: a1b2c3d4e5f6...
 
 
 ## Setup syncapi
+
+> [!NOTE]
+> The **SyncAPI** configuration tab in the web interface is hidden by default in Simple Mode. Enable **Expert Mode** via the toggle switch in the top configuration header to access SyncAPI settings.
+
 Navigate to the config URL in the local server and enable the SyncAPI and add the following details.
 
 * Remote base URL
