@@ -98,20 +98,64 @@ def send_allsky_map_ping(config, logger, db_notification_helper=None):
     image_base64 = ''
     if allskymap_conf.get('UPLOAD_IMAGE', True):
         img_folder = config.get('IMAGE_FOLDER')
-        if img_folder:
-            img_path = os.path.join(img_folder, 'latest.jpg')
-            if os.path.exists(img_path):
-                try:
+        if not img_folder:
+            default_pkg_images = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'html', 'images')
+            if os.path.exists(default_pkg_images):
+                img_folder = default_pkg_images
+            else:
+                img_folder = '/var/www/html/allsky/images'
+
+        file_type = str(config.get('IMAGE_FILE_TYPE', 'jpg')).lower().strip()
+        filename = f'latest.{file_type}'
+        img_path = os.path.join(img_folder, filename)
+
+        max_image_bytes = 10 * 1024 * 1024  # 10MB soft limit
+
+        if os.path.exists(img_path):
+            try:
+                img_data = None
+                if file_type in ('tif', 'tiff'):
+                    # Allsky Map server does not support TIFF; transcode to JPEG in memory
+                    try:
+                        from PIL import Image
+                        import io
+                        with Image.open(img_path) as im:
+                            buf = io.BytesIO()
+                            im.convert('RGB').save(buf, format='JPEG', quality=85)
+                            img_data = buf.getvalue()
+                    except Exception as e:
+                        if logger:
+                            logger.error('Allsky Map Ping failed to transcode %s to JPEG: %s', filename, e)
+                else:
                     with open(img_path, 'rb') as f:
                         img_data = f.read()
-                    if len(img_data) <= 5 * 1024 * 1024:
+
+                    # If native format (e.g. large PNG) exceeds 10MB soft limit, attempt transcoding to JPEG
+                    if len(img_data) > max_image_bytes:
+                        try:
+                            from PIL import Image
+                            import io
+                            with Image.open(io.BytesIO(img_data)) as im:
+                                buf = io.BytesIO()
+                                im.convert('RGB').save(buf, format='JPEG', quality=85)
+                                compressed_data = buf.getvalue()
+                                if len(compressed_data) <= max_image_bytes:
+                                    img_data = compressed_data
+                                    if logger:
+                                        logger.info('Allsky Map Ping: %s exceeded 10MB limit; transcoded to JPEG (%0.2f MB)', filename, len(img_data) / (1024 * 1024))
+                        except Exception as e:
+                            if logger:
+                                logger.warning('Allsky Map Ping: failed to transcode oversized image %s: %s', filename, e)
+
+                if img_data is not None:
+                    if len(img_data) <= max_image_bytes:
                         image_base64 = base64.b64encode(img_data).decode('utf-8')
                     else:
                         if logger:
-                            logger.warning('Allsky Map Ping: latest.jpg is larger than 5MB limit')
-                except Exception as e:
-                    if logger:
-                        logger.error('Allsky Map Ping failed to read image file: %s', e)
+                            logger.warning('Allsky Map Ping: %s is larger than 10MB limit', filename)
+            except Exception as e:
+                if logger:
+                    logger.error('Allsky Map Ping failed to read image file: %s', e)
 
     payload = {
         "name": name,

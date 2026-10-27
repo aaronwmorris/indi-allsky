@@ -2258,6 +2258,13 @@ class ImageWorker(Process):
         except FileNotFoundError:
             pass
 
+        # Remove stale latest files with other extensions
+        for old_ext in ('jpg', 'jpeg', 'png', 'webp', 'tif', 'tiff'):
+            if old_ext != self.config['IMAGE_FILE_TYPE']:
+                try:
+                    self.image_dir.joinpath(f'latest.{old_ext}').unlink()
+                except FileNotFoundError:
+                    pass
 
         shutil.copy2(str(tmpfile_name), str(latest_file))
         latest_file.chmod(0o644)
