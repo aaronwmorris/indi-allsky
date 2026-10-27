@@ -21,7 +21,7 @@ VALUES = dict(AZIMUTH_ANGLE=200, POINTING_AZIMUTH=123, LATITUDE_OFFSET=43.49,
 def endpoint():
     # Execute the real view with injected infrastructure, avoiding the camera,
     # system D-Bus and database services that the full application imports.
-    path = Path(__file__).resolve().parents[2] / 'indi_allsky/flask/views.py'
+    path = Path(__file__).resolve().parents[3] / 'indi_allsky/flask/views.py'
     tree = ast.parse(path.read_text(encoding='utf-8'))
     node = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'AjaxLensSolverView')
     namespace = dict(BaseView=object, login_required=lambda f: f, threading=threading,
@@ -205,7 +205,7 @@ def test_solve_uses_selected_camera_orientation(endpoint, tmp_path, explicit_hea
 
 @pytest.mark.parametrize('altitude,expected', [(None, 90), (90, 90), (0, 0), (54, 54)])
 def test_page_uses_camera_altitude_with_legacy_fallback(altitude, expected):
-    path = Path(__file__).resolve().parents[2] / 'indi_allsky/flask/views.py'
+    path = Path(__file__).resolve().parents[3] / 'indi_allsky/flask/views.py'
     tree = ast.parse(path.read_text(encoding='utf-8'))
     node = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'VirtualSkyView')
 
@@ -226,3 +226,22 @@ def test_page_uses_camera_altitude_with_legacy_fallback(altitude, expected):
     assert context['camera_altitude'] == expected
     assert context['form_virtualsky']['POINTING_AZIMUTH'] == 0
     assert context['form_virtualsky']['AZIMUTH_ANGLE'] == 200
+
+
+@pytest.mark.parametrize('saved_flip', [False, True])
+def test_legacy_calibration_save_checks_preserved_orientation(endpoint, saved_flip):
+    from tests.lens_solver.test_calibration import saved_model
+
+    app, view, _, saved = endpoint
+    view.indi_allsky_config['VIRTUALSKY']['FLIP_H'] = saved_flip
+    payload = dict(VALUES, action='save', LENS_ALTITUDE=90,
+                   CALIBRATION_ENABLED=True, CALIBRATION=saved_model())
+    with app.test_request_context(json=payload):
+        response = view.dispatch_request()
+    if saved_flip:
+        assert response[1] == 400
+        assert 'Orientation changed' in response[0].get_json()['message']
+        assert saved == []
+    else:
+        assert response.get_json()['success']
+        assert saved[0]['VIRTUALSKY']['FLIP_H'] is False

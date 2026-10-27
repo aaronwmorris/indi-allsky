@@ -13,16 +13,16 @@ from flask_sqlalchemy import SQLAlchemy
 
 from indi_allsky.exceptions import ConfigSaveException
 from indi_allsky.lens_solver.calibration import displacement
-from tests.flask.test_virtualsky import run_node
+from tests.flask.views.test_virtualsky import run_node
 from tests.lens_solver.test_calibration import saved_model
-from tests.flask.test_virtualsky_requests import endpoint, VALUES
+from tests.flask.views.test_virtualsky_requests import endpoint, VALUES
 
 
 @pytest.fixture(scope='module')
 def camera_models():
     # Load the real schema with an isolated ORM registry. Importing the Flask
     # package normally also starts imports of camera/D-Bus infrastructure.
-    path = Path(__file__).resolve().parents[2] / 'indi_allsky/flask/models.py'
+    path = Path(__file__).resolve().parents[3] / 'indi_allsky/flask/models.py'
     tree = ast.parse(path.read_text(encoding='utf-8'))
     tree.body = [node for node in tree.body if not (
         isinstance(node, ast.ImportFrom) and node.level == 1 and node.module is None)]
@@ -90,7 +90,7 @@ def test_solve_endpoint_uses_real_image_binning(endpoint, camera_models, tmp_pat
 
 
 def test_calibration_javascript():
-    run_node('--test', 'tests/flask/virtualsky_calibration.test.cjs')
+    run_node('--test', 'tests/flask/views/virtualsky_calibration.test.cjs')
 
 
 def test_python_and_browser_apply_identical_correction():
@@ -122,7 +122,7 @@ def test_endpoint_saves_validated_calibration_and_disabled_preference(endpoint):
 @pytest.fixture
 def config_store(endpoint):
     app, view, namespace, saved = endpoint
-    path = Path(__file__).resolve().parents[2] / 'indi_allsky/config.py'
+    path = Path(__file__).resolve().parents[3] / 'indi_allsky/config.py'
     tree = ast.parse(path.read_text(encoding='utf-8'))
     tree.body = [n for n in tree.body if isinstance(n, ast.ClassDef)
                  and n.name in ('IndiAllSkyConfigBase', 'IndiAllSkyConfig')]

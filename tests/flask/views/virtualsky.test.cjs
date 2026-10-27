@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const {test} = require('node:test');
-const {makeSky} = require('./virtualsky_harness.cjs');
+const {isDeepStrictEqual} = require('node:util');
+const {makeSky, loadPlanets} = require('./virtualsky_harness.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
@@ -8,6 +9,67 @@ const rad = Math.PI / 180;
 const close = (a, b, tolerance = 1e-8) => assert.ok(Math.abs(a-b) < tolerance, `${a} != ${b}`);
 
 for (const asset of ['virtualsky.js', 'virtualsky.min.js']) {
+    test(`${asset}: planet interpolation follows the short arc in both directions`, () => {
+        const sky = makeSky({}, asset);
+        for (const year of [2022, 2026, 2050, 2100]) {
+            const jd = Date.UTC(year, 0, 1)/86400000 + 2440587.5;
+            for (const [start, end, step] of [[359, 1, 2], [1, 359, -2], [0, 359, -1],
+                [359, 0, 1], [15, 25, 10], [25, 15, -10], [0, 0, 0]]) {
+                for (const fraction of [0, 0.25, 0.5, 0.75, 1]) {
+                    const actual = sky.interpolate(jd+fraction, [jd, start, -4, 1, jd+1, end, 4, 3]);
+                    close(actual.ra, (start+step*fraction+360)%360);
+                    close(actual.dec, -4+8*fraction);
+                    close(actual.mag, 1+2*fraction);
+                }
+            }
+        }
+    });
+
+    test(`${asset}: planet positions do not depend on the date the table was loaded`, () => {
+        const date = new Date('2026-09-23T02:36:45Z');
+        const first = loadPlanets(makeSky({clock: date}, asset));
+        const next = loadPlanets(makeSky({clock: new Date(date.getTime()+86400000)}, asset));
+        for (let i = 0; i < first.planets.length; i++) {
+            const a = first.interpolate(first.times.JD, first.planets[i][2]);
+            const b = next.interpolate(first.times.JD, next.planets[i][2]);
+            close(a.ra, b.ra);
+            close(a.dec, b.dec);
+            close(a.mag, b.mag);
+        }
+    });
+
+    test(`${asset}: a late galaxy response preserves the outline across redraws`, () => {
+        const sky = makeSky({showgalaxy: true}, asset);
+        const raw = fs.readFileSync(path.join(__dirname,
+            '../../../indi_allsky/flask/static/virtualsky/galaxy.json'), 'utf8');
+        const responses = [];
+        sky.loadJSON = function (file, callback) { responses.push(callback); return this; };
+        sky.draw = () => {}; // Explicitly render between the two network responses.
+        let points;
+        sky.ctx = {
+            beginPath() { points = []; }, stroke() {},
+            moveTo(x, y) { points.push(['move', x, y]); },
+            lineTo(x, y) { points.push(['line', x, y]); },
+        };
+        const render = () => { sky.drawGalaxy(); return points; };
+        sky.load('galaxy', sky.file.galaxy);
+        sky.load('galaxy', sky.file.galaxy);
+        responses.shift().call(sky, JSON.parse(raw));
+        const expected = render();
+        const converted = structuredClone(sky.galaxy);
+        assert.ok(expected.some(p => p.slice(1).every(Number.isFinite)));
+
+        // Replacement data arrives in degrees after the first array was converted.
+        responses.shift().call(sky, JSON.parse(raw));
+        assert.ok(isDeepStrictEqual(render(), expected), 'A late response changed the outline');
+        assert.ok(isDeepStrictEqual(sky.galaxy, converted), 'Replacement coordinates must be in radians');
+        assert.ok(isDeepStrictEqual(render(), expected), 'Redraws must not convert again');
+
+        sky.load('lines', sky.file.lines);
+        responses.shift().call(sky, {lines: []});
+        assert.ok(isDeepStrictEqual(render(), expected), 'Other catalogs must not invalidate the galaxy');
+    });
+
     test(`${asset}: invalid lens curvature cannot replace a working projection`, () => {
         const sky = makeSky({fisheye_radial: 0.08}, asset);
         for (const value of [null, '0.1', NaN, Infinity, -0.51, 1.01]) {
@@ -120,7 +182,7 @@ for (const asset of ['virtualsky.js', 'virtualsky.min.js']) {
 
 function calibrationPage() {
     const html = fs.readFileSync(path.join(__dirname,
-        '../../indi_allsky/flask/templates/virtualsky.html'), 'utf8');
+        '../../../indi_allsky/flask/templates/virtualsky.html'), 'utf8');
     const controls = new Map();
     const $ = id => {
         if (!controls.has(id)) controls.set(id, {

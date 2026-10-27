@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 
 from indi_allsky.lens_solver.projection import precessCatalog
-from tests.flask.test_virtualsky import run_node
-from tests.flask.test_virtualsky_requests import endpoint, VALUES
+from tests.flask.views.test_virtualsky import run_node
+from tests.flask.views.test_virtualsky_requests import endpoint, VALUES
 
 
 def test_browser_precession_and_inverse_match_solver():
@@ -15,7 +15,7 @@ def test_browser_precession_and_inverse_match_solver():
         cases.append(dict(timestamp=timestamp, expected=precessCatalog(catalog, timestamp).tolist()))
     run_node('-e', '''
 const assert = require('node:assert/strict');
-const {makeSky} = require('./tests/flask/virtualsky_harness.cjs');
+const {makeSky} = require('./tests/flask/views/virtualsky_harness.cjs');
 const input = JSON.parse(require('node:fs').readFileSync(0, 'utf8'));
 function xyz(p) {return [Math.cos(p.dec)*Math.cos(p.ra), Math.cos(p.dec)*Math.sin(p.ra), Math.sin(p.dec)];}
 for (const asset of ['virtualsky.js','virtualsky.min.js']) {

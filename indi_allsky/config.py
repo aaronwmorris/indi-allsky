@@ -695,8 +695,8 @@ class IndiAllSkyConfigBase(object):
             "LONGITUDE_OFFSET"       : 0.0,
             "OFFSET_X"               : 0,
             "OFFSET_Y"               : 0,
-            #"FLIP_NS"                : False,
-            #"FLIP_EW"                : False,
+            "FLIP_H"                : False,
+            "FLIP_V"                : False,
         },
         "CIRCULAR_DISPLAY" : {
             "ENABLE"                 : False,
