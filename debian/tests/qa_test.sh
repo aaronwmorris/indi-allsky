@@ -97,7 +97,7 @@ assert abs(cfg.get('LOCATION_LONGITUDE', 0) - 138.6007) < 1e-4, f'Longitude mism
 assert int(cfg.get('LOCATION_ELEVATION', 0)) == 50, f'Elevation mismatch: {cfg.get(\"LOCATION_ELEVATION\")}'
 
 # Verify auto-tuned hardware profile note and tier parameters
-tuned_rows = conn.cursor().execute("SELECT note FROM config WHERE note LIKE '%Tuned for Tier%'").fetchall()
+tuned_rows = conn.cursor().execute(\"SELECT note FROM config WHERE note LIKE '%Tuned for Tier%'\").fetchall()
 assert len(tuned_rows) > 0, 'Hardware profile tuning record missing from database config history'
 assert 'TIMELAPSE_SCALE' in cfg, 'TIMELAPSE_SCALE missing from bootstrapped configuration'
 

@@ -935,7 +935,11 @@ window.setConfigMode = function(mode) {
 };
 
 function initConfigMode() {
-    const savedMode = localStorage.getItem('indi_allsky_config_mode') || 'simple';
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlMode = urlParams.get('mode');
+    const savedMode = (urlMode === 'expert' || urlMode === 'simple')
+        ? urlMode
+        : (localStorage.getItem('indi_allsky_config_mode') || 'simple');
     window.setConfigMode(savedMode);
 
     $('#config-mode-toggle').on('change', function() {
