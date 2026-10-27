@@ -2,6 +2,7 @@ import os
 import io
 import json
 import re
+import math
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
@@ -1111,17 +1112,28 @@ class ImageWorker(Process):
 
 
                 sensor_topic = 'sensor_temp_{0:d}'.format(i)
-                mqtt_data[sensor_topic] = round(v_temp, 1)
+                if math.isnan(v):
+                    mqtt_data[sensor_topic] = None
+                else:
+                    mqtt_data[sensor_topic] = round(v_temp, 1)
 
 
             # user sensors
             for i in range(60):
                 sensor_topic = 'sensor_user_{0:d}'.format(i)
-                mqtt_data[sensor_topic] = round(self.sensors_user_av[i], 3)
+                val = self.sensors_user_av[i]
+                if math.isnan(val):
+                    mqtt_data[sensor_topic] = None
+                else:
+                    mqtt_data[sensor_topic] = round(val, 3)
 
             for i in range(100, 110):
                 sensor_topic = 'sensor_user_{0:d}'.format(i)
-                mqtt_data[sensor_topic] = round(self.sensors_user_av[i], 3)
+                val = self.sensors_user_av[i]
+                if math.isnan(val):
+                    mqtt_data[sensor_topic] = None
+                else:
+                    mqtt_data[sensor_topic] = round(val, 3)
 
 
             if new_filename:
@@ -1224,17 +1236,19 @@ class ImageWorker(Process):
 
 
             sensor_topic = 'sensor_temp_{0:d}'.format(i)
-            metadata[sensor_topic] = v_temp
+            metadata[sensor_topic] = None if math.isnan(v_temp) else v_temp
 
 
         # user sensors
         for i in range(60):
             sensor_topic = 'sensor_user_{0:d}'.format(i)
-            metadata[sensor_topic] = self.sensors_user_av[i]
+            val = self.sensors_user_av[i]
+            metadata[sensor_topic] = None if math.isnan(val) else val
 
         for i in range(100, 110):
             sensor_topic = 'sensor_user_{0:d}'.format(i)
-            metadata[sensor_topic] = self.sensors_user_av[i]
+            val = self.sensors_user_av[i]
+            metadata[sensor_topic] = None if math.isnan(val) else val
 
 
         with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json', encoding='utf-8') as f_tmp_metadata:
@@ -2361,17 +2375,19 @@ class ImageWorker(Process):
 
 
             sensor_topic = 'sensor_temp_{0:d}'.format(i)
-            status[sensor_topic] = v_temp
+            status[sensor_topic] = None if math.isnan(v_temp) else v_temp
 
 
         # user sensors
         for i in range(60):
             sensor_topic = 'sensor_user_{0:d}'.format(i)
-            status[sensor_topic] = self.sensors_user_av[i]
+            val = self.sensors_user_av[i]
+            status[sensor_topic] = None if math.isnan(val) else val
 
         for i in range(100, 110):
             sensor_topic = 'sensor_user_{0:d}'.format(i)
-            status[sensor_topic] = self.sensors_user_av[i]
+            val = self.sensors_user_av[i]
+            status[sensor_topic] = None if math.isnan(val) else val
 
 
         indi_allsky_status_p = self.varlib_folder_p.joinpath('indi_allsky_status.json')

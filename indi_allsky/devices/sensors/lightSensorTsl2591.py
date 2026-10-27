@@ -1,3 +1,4 @@
+import math
 import time
 import logging
 
@@ -11,6 +12,11 @@ logger = logging.getLogger('indi_allsky')
 
 
 class LightSensorTsl2591(SensorBase):
+
+    def __init__(self, *args, **kwargs):
+        super(LightSensorTsl2591, self).__init__(*args, **kwargs)
+        self._clipped = False
+
 
     def update(self):
         astro_darkness = self.astro_av[constants.ASTRO_SUN_ALT] <= -18.0
@@ -33,18 +39,45 @@ class LightSensorTsl2591(SensorBase):
 
 
         try:
-            lux = float(self.tsl2591.lux)
-            infrared = int(self.tsl2591.infrared)
-            visible = int(self.tsl2591.visible)
-            full_spectrum = int(self.tsl2591.full_spectrum)
+            raw_lux = self.tsl2591.lux
         except RuntimeError as e:
+            if 'overflow' in str(e).lower():
+                raw_lux = None
+            else:
+                raise SensorReadException(str(e)) from e
+        except (TypeError, OSError):
+            raw_lux = None
+
+        try:
+            infrared = int(self.tsl2591.infrared) if self.tsl2591.infrared is not None else float('nan')
+            visible = int(self.tsl2591.visible) if self.tsl2591.visible is not None else float('nan')
+            full_spectrum = int(self.tsl2591.full_spectrum) if self.tsl2591.full_spectrum is not None else float('nan')
+        except (RuntimeError, OSError) as e:
             raise SensorReadException(str(e)) from e
+        except Exception:
+            infrared = float('nan')
+            visible = float('nan')
+            full_spectrum = float('nan')
+
+        if raw_lux is None:
+            if not self._clipped:
+                logger.warning('[%s] TSL2591 sensor clipped or out of range (lux is None)', self.name)
+                self._clipped = True
+            lux = float('nan')
+        else:
+            if self._clipped:
+                logger.info('[%s] TSL2591 sensor returned to valid range (lux: %0.4f)', self.name, float(raw_lux))
+                self._clipped = False
+            lux = float(raw_lux)
 
 
-        logger.info('[%s] TSL2591 - lux: %0.4f, visible: %d, ir: %d, full: %d', self.name, lux, visible, infrared, full_spectrum)
+        if math.isnan(lux):
+            logger.debug('[%s] TSL2591 - lux: out of range, visible: %s, ir: %s, full: %s', self.name, visible, infrared, full_spectrum)
+        else:
+            logger.info('[%s] TSL2591 - lux: %0.4f, visible: %s, ir: %s, full: %s', self.name, lux, visible, infrared, full_spectrum)
 
 
-        if self.astro_darkness:
+        if self.astro_darkness and not math.isnan(lux) and lux > 0:
             try:
                 sqm_mag, raw_mag = self.lux2mag(lux)
             except ValueError as e:
@@ -52,9 +85,9 @@ class LightSensorTsl2591(SensorBase):
                 sqm_mag = 0.0
                 raw_mag = 0.0
         else:
-            # disabled outside astronomical darkness
-            sqm_mag = 0.0
-            raw_mag = 0.0
+            # disabled outside astronomical darkness or when lux is invalid
+            sqm_mag = float('nan') if math.isnan(lux) else 0.0
+            raw_mag = float('nan') if math.isnan(lux) else 0.0
 
 
         data = {
