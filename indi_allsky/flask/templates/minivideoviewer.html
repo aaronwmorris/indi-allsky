@@ -129,7 +129,9 @@ function populate_videos(video_list) {
             $('<div />', { 'text' : 'KPINDEX: ' + item['max_kpindex'] }).appendTo(stats_grid);
             $('<div />', { 'text' : 'AURORA: ' + item['max_ovation_max'] + '%' }).appendTo(stats_grid);
         }
-        $('<div />', { 'text' : 'SMOKE: ' + item['max_smoke_rating'] }).appendTo(stats_grid);
+        if (item['max_smoke_rating'] && item['max_smoke_rating'] !== 'No data') {
+            $('<div />', { 'text' : 'SMOKE: ' + item['max_smoke_rating'] }).appendTo(stats_grid);
+        }
 
 
         // video

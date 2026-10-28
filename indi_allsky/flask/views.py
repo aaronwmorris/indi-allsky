@@ -2657,6 +2657,7 @@ class ConfigView(FormView):
             'LOCATION_LATITUDE'              : '{0:+0.3f}'.format(self.indi_allsky_config.get('LOCATION_LATITUDE', 0.0)),
             'LOCATION_LONGITUDE'             : '{0:+0.3f}'.format(self.indi_allsky_config.get('LOCATION_LONGITUDE', 0.0)),
             'LOCATION_ELEVATION'             : self.indi_allsky_config.get('LOCATION_ELEVATION', 0),
+            'SMOKE_ENABLE'                   : self.indi_allsky_config.get('SMOKE_ENABLE', True),
             'TIMELAPSE_ENABLE'               : self.indi_allsky_config.get('TIMELAPSE_ENABLE', True),
             'TIMELAPSE_SKIP_FRAMES'          : self.indi_allsky_config.get('TIMELAPSE_SKIP_FRAMES', 4),
             'TIMELAPSE__PRE_PROCESSOR'       : self.indi_allsky_config.get('TIMELAPSE', {}).get('PRE_PROCESSOR', 'standard'),
@@ -3728,6 +3729,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['LOCATION_LATITUDE']                    = float(round(float(request.json['LOCATION_LATITUDE']), 3))
         self.indi_allsky_config['LOCATION_LONGITUDE']                   = float(round(float(request.json['LOCATION_LONGITUDE']), 3))
         self.indi_allsky_config['LOCATION_ELEVATION']                   = int(request.json['LOCATION_ELEVATION'])
+        self.indi_allsky_config['SMOKE_ENABLE']                         = bool(request.json.get('SMOKE_ENABLE', False))
         self.indi_allsky_config['TIMELAPSE_ENABLE']                     = bool(request.json['TIMELAPSE_ENABLE'])
         self.indi_allsky_config['TIMELAPSE_SKIP_FRAMES']                = int(request.json['TIMELAPSE_SKIP_FRAMES'])
         self.indi_allsky_config['TIMELAPSE']['PRE_PROCESSOR']           = str(request.json['TIMELAPSE__PRE_PROCESSOR'])

@@ -3081,7 +3081,7 @@ TMP_LOCATION=$(mktemp --suffix=.json)
 jq \
     --argjson latitude "$LOCATION_LATITUDE_INPUT" \
     --argjson longitude "$LOCATION_LONGITUDE_INPUT" \
-    '.LOCATION_LATITUDE = $latitude | .LOCATION_LONGITUDE = $longitude' "${TMP_CONFIG_DUMP}" > "$TMP_LOCATION"
+    '.LOCATION_LATITUDE = $latitude | .LOCATION_LONGITUDE = $longitude | .SMOKE_ENABLE = ($latitude > 0 and $longitude < 0)' "${TMP_CONFIG_DUMP}" > "$TMP_LOCATION"
 
 cat "$TMP_LOCATION" > "$TMP_CONFIG_DUMP"
 
