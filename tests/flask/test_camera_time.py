@@ -1,5 +1,7 @@
 import ast
 from datetime import datetime, timedelta, timezone
+import hashlib
+import math
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -91,3 +93,52 @@ def test_latest_image_camera_time(local, saved_offset, host_offset, wall_time, a
         assert result == expected
         assert view.camera_time_offset == expected_offset
         assert view.camera_now == camera_now
+
+
+@pytest.mark.parametrize('local,saved_offset,host_offset,wall_time', [
+    (True, 7200, 3600, datetime(2026, 10, 25, 12)),
+    (True, 3600, 7200, datetime(2026, 3, 29, 12)),
+    (False, 7200, 0, datetime(2026, 10, 25, 12)),
+    (False, -18000, 7200, datetime(2026, 10, 25, 12)),
+    (False, 19800, -18000, datetime(2026, 10, 25, 12)),
+], ids=['local-autumn', 'local-spring', 'remote-ahead', 'remote-behind', 'remote-fractional'])
+def test_virtualsky_overlay_uses_solver_camera_time(local, saved_offset, host_offset, wall_time):
+    class Clock(datetime):
+        @classmethod
+        def now(cls):
+            return cls.combine(wall_time.date(), wall_time.time())
+
+        def astimezone(self, tz=None):
+            return self.replace(tzinfo=timezone(timedelta(seconds=host_offset)))
+
+    class TemplateView:
+        def get_context(self):
+            return {}
+
+    root = Path(__file__).resolve().parents[2]
+    app = flask.Flask(__name__, static_folder=str(root / 'indi_allsky/flask/static'))
+    namespace = dict(datetime=Clock, timedelta=timedelta, hashlib=hashlib, math=math,
+                     Path=Path, app=flask.current_app, request=flask.request,
+                     IndiAllskyVirtualSkyHelperForm=lambda **kwargs: None)
+    setup = load_method('base_views.py', 'BaseView', 'cameraSetup', namespace)
+
+    class VirtualSkyView(TemplateView):
+        get_context = load_method('views.py', 'VirtualSkyView', 'get_context', namespace)
+
+    namespace['VirtualSkyView'] = VirtualSkyView
+    view = VirtualSkyView()
+    view.camera = SimpleNamespace(local=local, utc_offset=saved_offset, az=0, alt=90, data={},
+                                  daytime_capture=True, daytime_capture_save=True,
+                                  capture_pause=False, s3_prefix='', web_nonlocal_images=False,
+                                  web_local_images_admin=False)
+    view.image_loop_view = 'indi_allsky.js_image_loop_view'
+    view.indi_allsky_config = {}
+    view.getSunSetDate = lambda: None
+    view.getCameraPrivacyLatLong = lambda camera: (52, 13)
+    setup(view)
+
+    with app.test_request_context():
+        context = view.get_context()
+
+    # The solver's observation time and calibration context use camera_time_offset.
+    assert context['time_offset'] == view.camera_time_offset == (0 if local else saved_offset - host_offset)
