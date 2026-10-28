@@ -569,7 +569,7 @@ class VirtualSkyView(TemplateView):
 
 
         ### Calculate time offset
-        context['time_offset'] = self.camera.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
+        context['time_offset'] = self.camera_time_offset
 
 
         return context
