@@ -2,6 +2,9 @@
 
 `indi-allsky` tracks visual satellite passes overhead in real time, determining which spacecraft and orbital objects are within the camera field of view and rendering their positional metadata as text overlays.
 
+> [!NOTE]
+> The **Satellite Tracking** configuration tab in the web interface is hidden by default in Simple Mode. Enable **Expert Mode** via the toggle switch in the top configuration header to access satellite tracking settings.
+
 ---
 
 ## 1. TLE Orbital Data Synchronization

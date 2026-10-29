@@ -336,6 +336,14 @@ indi-allsky-ctl test-websocket --action keogram
 indi-allsky-ctl test-ws --action ping
 ```
 
+### System Hardware Profile & Resource Presets
+Inspect detected host physical memory, swap space, CPU core count, assigned hardware tier, and auto-tuned presets:
+```bash
+indi-allsky-ctl profile
+# Alias:
+indi-allsky-ctl system-profile
+```
+
 ### Generate Diagnostic Support Bundle
 Generate a redacted diagnostic report containing system logs, hardware configurations, and environment details for troubleshooting:
 ```bash

@@ -7047,6 +7047,12 @@
     .tw\:toggle-primary[aria-checked="true"] {
       --input-color: var(--color-primary);
     }
+    .tw\:toggle-secondary:checked {
+      --input-color: var(--color-secondary);
+    }
+    .tw\:toggle-secondary[aria-checked="true"] {
+      --input-color: var(--color-secondary);
+    }
     .tw\:toggle-sm:is([type="checkbox"]) {
       --size: calc(var(--size-selector, 0.25rem) * 5);
     }
@@ -7538,6 +7544,9 @@ calendar-select-month::part(option):disabled, calendar-select-year::part(option)
   100% {
     filter: blur(3px) hue-rotate(360deg);
   }
+}
+#form_config.mode-simple .config-expert {
+  display: none !important;
 }
 @layer base {
   :where(:root),:root:has(input.theme-controller[value=light]:checked),[data-theme=light] {

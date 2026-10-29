@@ -13,7 +13,7 @@ These guidelines represent operational recommendations for allsky camera install
    * **Standard Deviation Cutoff**: Set cutoff between `2.0` and `2.5` (default: `2.25`) for balanced night contrast without blowing out horizon light domes.
    * **Midtone Transfer Function (MTF)**: Shadow cutoff around `0.03`.
 4. **Calibration**: Generate master dark frames to eliminate sensor thermal noise and hot pixels. See [Dark Calibration Frames](Dark-Calibration-Frames).
-5. **Optical Masking**: Use the Image Circle Mask to conceal sensor margins and optical vignetting outside the lens projection circle.
+5. **Optical Masking**: Use the Image Circle Mask to conceal sensor margins and optical vignetting outside the lens projection circle. (Note: Image Circle Mask controls under the Processing tab require **Expert Mode** to be enabled in the configuration header).
 6. **Processing Previews**: Utilize the interactive Image Processor utility (**Tools** → **Image Processor**) to test debayering, curves, and stretching on historical FITS or RAW frames without affecting live capture.
 
 ---
