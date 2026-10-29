@@ -13,7 +13,7 @@ var camera_id = {{ camera_id }};
 {% block content %}
 <div class="tw:container tw:mx-auto tw:px-4 tw:py-6">
 
-<form id="form_config" onSubmit="return false;" autocomplete="off" novalidate>
+<form id="form_config" class="mode-simple" onSubmit="return false;" autocomplete="off" novalidate>
 
 <nav class="tw:mb-6">
   <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm" id="nav-tab" role="tablist">
@@ -76,15 +76,11 @@ var camera_id = {{ camera_id }};
             <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80 tw:whitespace-nowrap" title="Restart capture after saving. The restart can take 1–3 minutes.">{{ form_config.RELOAD_ON_SAVE.label.text }}</span>
         </label>
         <div id="RELOAD_ON_SAVE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-        <!-- Simple / Expert Mode Toggle -->
-        <div class="tw:flex tw:items-center tw:gap-2 tw:bg-base-100 tw:border tw:border-base-300 tw:px-3 tw:py-1.5 tw:rounded-[var(--radius-field)] tw:flex-shrink-0 tw:select-none" title="Toggle between Simple view and Expert view (revealing advanced parameters)">
-            <i class="tw:icon-[lucide--sliders-horizontal] tw:w-4 tw:h-4 tw:text-base-content/70"></i>
-            <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/70">Mode:</span>
-            <label class="tw:flex tw:items-center tw:gap-2 tw:cursor-pointer">
-                <input type="checkbox" id="config-mode-toggle" class="tw:toggle tw:toggle-secondary tw:toggle-sm" />
-                <span id="config-mode-label" class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/90 tw:w-14">Simple</span>
-            </label>
-        </div>
+        <!-- Show Advanced Settings Toggle -->
+        <label class="tw:flex tw:items-center tw:gap-2 tw:cursor-pointer tw:select-none tw:flex-shrink-0 tw:px-1" title="Show advanced configuration settings">
+            <input type="checkbox" id="config-mode-toggle" class="tw:toggle tw:toggle-secondary tw:toggle-sm" />
+            <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80 tw:whitespace-nowrap">Show advanced settings</span>
+        </label>
         <div class="tw:flex tw:items-center tw:gap-3 tw:flex-1 tw:min-w-[200px]">
             <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/70 tw:whitespace-nowrap">{{ form_config.CONFIG_NOTE.label.text }}:</span>
             <div class="tw:flex-1">
@@ -913,18 +909,15 @@ window.setConfigMode = function(mode) {
     const isExpert = (mode === 'expert' || mode === true);
     const form = $('#form_config');
     const toggle = $('#config-mode-toggle');
-    const label = $('#config-mode-label');
 
     if (isExpert) {
         form.removeClass('mode-simple').addClass('mode-expert');
         toggle.prop('checked', true);
-        label.text('Expert');
-        localStorage.setItem('indi_allsky_config_mode', 'expert');
+        sessionStorage.setItem('indi_allsky_config_mode', 'expert');
     } else {
         form.removeClass('mode-expert').addClass('mode-simple');
         toggle.prop('checked', false);
-        label.text('Simple');
-        localStorage.setItem('indi_allsky_config_mode', 'simple');
+        sessionStorage.setItem('indi_allsky_config_mode', 'simple');
 
         // If the currently active tab has been hidden by simple mode, switch to the Camera tab
         const activeBtn = $('#nav-tab .tab-btn.active');
@@ -937,13 +930,21 @@ window.setConfigMode = function(mode) {
 function initConfigMode() {
     const urlParams = new URLSearchParams(window.location.search);
     const urlMode = urlParams.get('mode');
-    const savedMode = (urlMode === 'expert' || urlMode === 'simple')
-        ? urlMode
-        : (localStorage.getItem('indi_allsky_config_mode') || 'simple');
+    let savedMode = 'simple';
+    if (urlMode === 'expert' || urlMode === 'simple') {
+        savedMode = urlMode;
+    } else if (sessionStorage.getItem('indi_allsky_config_mode')) {
+        savedMode = sessionStorage.getItem('indi_allsky_config_mode');
+    }
+    // Clean up any legacy localStorage that would force expert mode
+    localStorage.removeItem('indi_allsky_config_mode');
+
     window.setConfigMode(savedMode);
 
     $('#config-mode-toggle').on('change', function() {
-        window.setConfigMode($(this).prop('checked') ? 'expert' : 'simple');
+        const mode = $(this).prop('checked') ? 'expert' : 'simple';
+        sessionStorage.setItem('indi_allsky_config_mode', mode);
+        window.setConfigMode(mode);
     });
 }
 
@@ -1052,7 +1053,7 @@ $('#form_config').on('submit', function() {
                 }
             });
 
-            if (hasHiddenExpertError && (localStorage.getItem('indi_allsky_config_mode') || 'simple') !== 'expert') {
+            if (hasHiddenExpertError && !$('#config-mode-toggle').prop('checked')) {
                 window.setConfigMode('expert');
             }
 
