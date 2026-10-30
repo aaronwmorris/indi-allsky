@@ -2654,8 +2654,8 @@ class ConfigView(FormView):
             'HEALTHCHECK__DISK_USAGE'        : self.indi_allsky_config.get('HEALTHCHECK', {}).get('DISK_USAGE', 90.0),
             'HEALTHCHECK__SWAP_USAGE'        : self.indi_allsky_config.get('HEALTHCHECK', {}).get('SWAP_USAGE', 90.0),
             'LOCATION_NAME'                  : self.indi_allsky_config.get('LOCATION_NAME', ''),
-            'LOCATION_LATITUDE'              : '{0:+0.3f}'.format(self.indi_allsky_config.get('LOCATION_LATITUDE', 0.0)),
-            'LOCATION_LONGITUDE'             : '{0:+0.3f}'.format(self.indi_allsky_config.get('LOCATION_LONGITUDE', 0.0)),
+            'LOCATION_LATITUDE'              : '{0:0.3f}'.format(self.indi_allsky_config.get('LOCATION_LATITUDE', 0.0)),
+            'LOCATION_LONGITUDE'             : '{0:0.3f}'.format(self.indi_allsky_config.get('LOCATION_LONGITUDE', 0.0)),
             'LOCATION_ELEVATION'             : self.indi_allsky_config.get('LOCATION_ELEVATION', 0),
             'TIMELAPSE_ENABLE'               : self.indi_allsky_config.get('TIMELAPSE_ENABLE', True),
             'TIMELAPSE_SKIP_FRAMES'          : self.indi_allsky_config.get('TIMELAPSE_SKIP_FRAMES', 4),
@@ -2675,8 +2675,8 @@ class ConfigView(FormView):
             'CONTRAST_ENHANCE_16BIT'         : self.indi_allsky_config.get('CONTRAST_ENHANCE_16BIT', False),
             'CLAHE_CLIPLIMIT'                : self.indi_allsky_config.get('CLAHE_CLIPLIMIT', 3.0),
             'CLAHE_GRIDSIZE'                 : self.indi_allsky_config.get('CLAHE_GRIDSIZE', 8),
-            'NIGHT_SUN_ALT_DEG'              : '{0:+0.1f}'.format(self.indi_allsky_config.get('NIGHT_SUN_ALT_DEG', -6.0)),
-            'NIGHT_MOONMODE_ALT_DEG'         : '{0:+0.1f}'.format(self.indi_allsky_config.get('NIGHT_MOONMODE_ALT_DEG', 5.0)),
+            'NIGHT_SUN_ALT_DEG'              : '{0:0.1f}'.format(self.indi_allsky_config.get('NIGHT_SUN_ALT_DEG', -6.0)),
+            'NIGHT_MOONMODE_ALT_DEG'         : '{0:0.1f}'.format(self.indi_allsky_config.get('NIGHT_MOONMODE_ALT_DEG', 5.0)),
             'NIGHT_MOONMODE_PHASE'           : self.indi_allsky_config.get('NIGHT_MOONMODE_PHASE', 50.0),
             'WEB_STATUS_TEMPLATE'            : self.indi_allsky_config.get('WEB_STATUS_TEMPLATE', ''),
             'WEB_EXTRA_TEXT'                 : self.indi_allsky_config.get('WEB_EXTRA_TEXT', ''),
@@ -2711,9 +2711,9 @@ class ConfigView(FormView):
             'REALTIME_KEOGRAM__MAX_ENTRIES'  : self.indi_allsky_config.get('REALTIME_KEOGRAM', {}).get('MAX_ENTRIES', 1000),
             'REALTIME_KEOGRAM__SAVE_INTERVAL': self.indi_allsky_config.get('REALTIME_KEOGRAM', {}).get('SAVE_INTERVAL', 25),
             'REALTIME_KEOGRAM__LABEL'        : self.indi_allsky_config.get('REALTIME_KEOGRAM', {}).get('LABEL', False),
-            'STARTRAILS_SUN_ALT_THOLD'       : '{0:+0.1f}'.format(self.indi_allsky_config.get('STARTRAILS_SUN_ALT_THOLD', -15.0)),
+            'STARTRAILS_SUN_ALT_THOLD'       : '{0:0.1f}'.format(self.indi_allsky_config.get('STARTRAILS_SUN_ALT_THOLD', -15.0)),
             'STARTRAILS_MOONMODE_THOLD'      : self.indi_allsky_config.get('STARTRAILS_MOONMODE_THOLD', True),
-            'STARTRAILS_MOON_ALT_THOLD'      : '{0:+0.1f}'.format(self.indi_allsky_config.get('STARTRAILS_MOON_ALT_THOLD', 91.0)),
+            'STARTRAILS_MOON_ALT_THOLD'      : '{0:0.1f}'.format(self.indi_allsky_config.get('STARTRAILS_MOON_ALT_THOLD', 91.0)),
             'STARTRAILS_MOON_PHASE_THOLD'    : self.indi_allsky_config.get('STARTRAILS_MOON_PHASE_THOLD', 101.0),
             'STARTRAILS_MAX_ADU'             : self.indi_allsky_config.get('STARTRAILS_MAX_ADU', 65),
             'STARTRAILS_MASK_THOLD'          : self.indi_allsky_config.get('STARTRAILS_MASK_THOLD', 255),
@@ -3785,8 +3785,10 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['REALTIME_KEOGRAM']['LABEL']            = bool(request.json['REALTIME_KEOGRAM__LABEL'])
         self.indi_allsky_config['STARTRAILS_SUN_ALT_THOLD']             = float(request.json['STARTRAILS_SUN_ALT_THOLD'])
         self.indi_allsky_config['STARTRAILS_MOONMODE_THOLD']            = bool(request.json['STARTRAILS_MOONMODE_THOLD'])
-        self.indi_allsky_config['STARTRAILS_MOON_ALT_THOLD']            = float(request.json['STARTRAILS_MOON_ALT_THOLD'])
-        self.indi_allsky_config['STARTRAILS_MOON_PHASE_THOLD']          = float(request.json['STARTRAILS_MOON_PHASE_THOLD'])
+        if request.json.get('STARTRAILS_MOON_ALT_THOLD') not in (None, ''):
+            self.indi_allsky_config['STARTRAILS_MOON_ALT_THOLD']        = float(request.json['STARTRAILS_MOON_ALT_THOLD'])
+        if request.json.get('STARTRAILS_MOON_PHASE_THOLD') not in (None, ''):
+            self.indi_allsky_config['STARTRAILS_MOON_PHASE_THOLD']      = float(request.json['STARTRAILS_MOON_PHASE_THOLD'])
         self.indi_allsky_config['STARTRAILS_MAX_ADU']                   = int(request.json['STARTRAILS_MAX_ADU'])
         self.indi_allsky_config['STARTRAILS_MASK_THOLD']                = int(request.json['STARTRAILS_MASK_THOLD'])
         self.indi_allsky_config['STARTRAILS_PIXEL_THOLD']               = float(request.json['STARTRAILS_PIXEL_THOLD'])

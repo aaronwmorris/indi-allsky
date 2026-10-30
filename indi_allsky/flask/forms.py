@@ -863,36 +863,51 @@ def CLAHE_GRIDSIZE_validator(form, field):
 
 
 def NIGHT_SUN_ALT_DEG_validator(form, field):
-    if not isinstance(field.data, (int, float)):
+    if field.data is None or str(field.data).strip() == '':
         raise ValidationError('Please enter valid number')
 
-    if field.data < -90:
+    try:
+        val = float(field.data)
+    except (ValueError, TypeError):
+        raise ValidationError('Please enter valid number')
+
+    if val < -90:
         raise ValidationError('Sun altitude must be greater than -90')
 
-    if field.data > 90:
+    if val > 90:
         raise ValidationError('Sun altitude must be less than 90')
 
 
 def NIGHT_MOONMODE_ALT_DEG_validator(form, field):
-    if not isinstance(field.data, (int, float)):
+    if field.data is None or str(field.data).strip() == '':
         raise ValidationError('Please enter valid number')
 
-    if field.data < -90:
+    try:
+        val = float(field.data)
+    except (ValueError, TypeError):
+        raise ValidationError('Please enter valid number')
+
+    if val < -90:
         raise ValidationError('Moon altitude must be greater than -90')
 
     # 91 is disabled
-    if field.data > 91:
-        raise ValidationError('Moon altitude must be less than 90')
+    if val > 91:
+        raise ValidationError('Moon altitude must be less than 91')
 
 
 def NIGHT_MOONMODE_PHASE_validator(form, field):
-    if not isinstance(field.data, (int, float)):
+    if field.data is None or str(field.data).strip() == '':
         raise ValidationError('Please enter valid number')
 
-    if field.data < 0:
+    try:
+        val = float(field.data)
+    except (ValueError, TypeError):
+        raise ValidationError('Please enter valid number')
+
+    if val < 0:
         raise ValidationError('Moon illumination must be 0 or greater')
 
-    if field.data > 100:
+    if val > 100:
         raise ValidationError('Moon illumination must be 100 or less')
 
 
@@ -1422,35 +1437,56 @@ def STARTRAILS_TIMELAPSE_MINFRAMES_validator(form, field):
 
 
 def STARTRAILS_SUN_ALT_THOLD_validator(form, field):
-    if not isinstance(field.data, (int, float)):
+    if field.data is None or str(field.data).strip() == '':
         raise ValidationError('Please enter valid number')
 
-    if field.data < -90:
+    try:
+        val = float(field.data)
+    except (ValueError, TypeError):
+        raise ValidationError('Please enter valid number')
+
+    if val < -90:
         raise ValidationError('Sun altitude must be greater than -90')
 
-    if field.data > 90:
+    if val > 90:
         raise ValidationError('Sun altitude must be less than 90')
 
 
 def STARTRAILS_MOON_ALT_THOLD_validator(form, field):
-    if not isinstance(field.data, (int, float)):
+    if getattr(form, 'STARTRAILS_MOONMODE_THOLD', None) and form.STARTRAILS_MOONMODE_THOLD.data:
+        return
+
+    if field.data is None or str(field.data).strip() == '':
         raise ValidationError('Please enter valid number')
 
-    if field.data < -90:
+    try:
+        val = float(field.data)
+    except (ValueError, TypeError):
+        raise ValidationError('Please enter valid number')
+
+    if val < -90:
         raise ValidationError('Moon altitude must be greater than -90')
 
-    if field.data > 91:
+    if val > 91:
         raise ValidationError('Moon altitude must be less than 91')
 
 
 def STARTRAILS_MOON_PHASE_THOLD_validator(form, field):
-    if not isinstance(field.data, (int, float)):
+    if getattr(form, 'STARTRAILS_MOONMODE_THOLD', None) and form.STARTRAILS_MOONMODE_THOLD.data:
+        return
+
+    if field.data is None or str(field.data).strip() == '':
         raise ValidationError('Please enter valid number')
 
-    if field.data < 0:
+    try:
+        val = float(field.data)
+    except (ValueError, TypeError):
+        raise ValidationError('Please enter valid number')
+
+    if val < 0:
         raise ValidationError('Moon phase must be greater than 0')
 
-    if field.data > 101:
+    if val > 101:
         raise ValidationError('Moon phase must be less than 101')
 
 
@@ -4725,10 +4761,10 @@ class IndiAllskyConfigForm(FlaskForm):
     REALTIME_KEOGRAM__MAX_ENTRIES    = IntegerField('Realtime Keogram Max Entries', validators=[REALTIME_KEOGRAM__MAX_ENTRIES_validator])
     REALTIME_KEOGRAM__SAVE_INTERVAL  = IntegerField('Save Interval', validators=[REALTIME_KEOGRAM__SAVE_INTERVAL_validator])
     REALTIME_KEOGRAM__LABEL          = BooleanField('Label Realtime Keogram')
-    STARTRAILS_SUN_ALT_THOLD         = FloatField('Star Trails Max Sun Altitude', validators=[DataRequired(), STARTRAILS_SUN_ALT_THOLD_validator])
+    STARTRAILS_SUN_ALT_THOLD         = FloatField('Star Trails Max Sun Altitude', validators=[STARTRAILS_SUN_ALT_THOLD_validator])
     STARTRAILS_MOONMODE_THOLD        = BooleanField('Star Trails: Use Camera Moon Mode Thresholds')
-    STARTRAILS_MOON_ALT_THOLD        = FloatField('Custom Max Moon Altitude', validators=[DataRequired(), STARTRAILS_MOON_ALT_THOLD_validator])
-    STARTRAILS_MOON_PHASE_THOLD      = FloatField('Custom Max Moon Phase', validators=[DataRequired(), STARTRAILS_MOON_PHASE_THOLD_validator])
+    STARTRAILS_MOON_ALT_THOLD        = FloatField('Custom Max Moon Altitude', validators=[STARTRAILS_MOON_ALT_THOLD_validator])
+    STARTRAILS_MOON_PHASE_THOLD      = FloatField('Custom Max Moon Phase', validators=[STARTRAILS_MOON_PHASE_THOLD_validator])
     STARTRAILS_MAX_ADU               = IntegerField('Star Trails Max ADU', validators=[DataRequired(), STARTRAILS_MAX_ADU_validator])
     STARTRAILS_MASK_THOLD            = IntegerField('Star Trails Mask Threshold ADU', validators=[DataRequired(), STARTRAILS_MASK_THOLD_validator])
     STARTRAILS_PIXEL_THOLD           = FloatField('Star Trails Pixel Threshold', validators=[STARTRAILS_PIXEL_THOLD_validator])
