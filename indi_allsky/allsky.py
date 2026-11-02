@@ -264,6 +264,9 @@ class IndiAllSky(object):
         self.upload_q = Queue()
         self.upload_worker_list = []
         self.upload_worker_idx = 0
+        self.sync_worker = None
+        self.sync_task_id = None
+        self.sync_scheduler = None
 
         for x in range(self.config.get('UPLOAD_WORKERS', 1)):
             self.upload_worker_list.append({
@@ -760,6 +763,8 @@ class IndiAllSky(object):
 
             self._expireOrphanedTasks()
             self._deleteScratchFolder()
+            from .syncapi_sync import interrupt_previous_run
+            interrupt_previous_run()
 
             self._startup()
 
@@ -771,6 +776,7 @@ class IndiAllSky(object):
 
 
                 logger.warning('Shutting down')
+                self._stopSyncWorker()
                 self._stopCaptureWorker()  # stop this first so image queue is cleared out
                 self._stopImageWorker()
                 self._stopVideoWorker()
@@ -791,6 +797,7 @@ class IndiAllSky(object):
             if self._reload:
                 logger.warning('Restarting processes')
                 self._reload = False
+                self._stopSyncWorker()
                 self._stopCaptureWorker()  # stop this first so image queue is cleared out
                 self._stopImageWorker()
                 self._stopVideoWorker()
@@ -815,9 +822,11 @@ class IndiAllSky(object):
 
             # Queue externally defined tasks
             with app.app_context():
+                self._scheduleSync()
                 self._queueManualTasks()
                 self._periodic_tasks()
 
+            self._startSyncWorker()
 
             time.sleep(13)
 
@@ -846,6 +855,46 @@ class IndiAllSky(object):
 
         # indicate newer config is loaded
         self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
+
+
+    def _scheduleSync(self):
+        from .syncapi_schedule import SyncApiScheduler
+        if self.sync_scheduler is None:
+            self.sync_scheduler = SyncApiScheduler()
+        self.sync_scheduler.tick(self.config, self._config_obj.config_id,
+                                 busy=self.sync_task_id is not None or bool(self.sync_worker and self.sync_worker.is_alive()))
+
+
+    def _startSyncWorker(self):
+        # Unlike capture workers, manual sync is never restarted automatically.
+        if self.sync_worker and self.sync_worker.is_alive():
+            return
+        if self.sync_worker:
+            from .syncapi_sync import ACTIVE_STATES, STATUS_KEY, get_state, set_state
+            with app.app_context():
+                task = db.session.get(IndiAllSkyDbTaskQueueTable, self.sync_worker.task_id)
+                if task and task.state in ACTIVE_STATES:
+                    message = 'Synchronization worker stopped unexpectedly. Press Sync now to continue.'
+                    task.setFailed(message)
+                    result = get_state(STATUS_KEY, {})
+                    result.update(task_id=task.id, state='failed', reason='unexpected', message=message)
+                    set_state(STATUS_KEY, result)
+                    logger.warning(message)
+            self.sync_worker = None
+        if self.sync_task_id is None:
+            return
+        from .syncapi_sync import SyncApiSyncWorker
+        self.sync_worker = SyncApiSyncWorker(app, self.sync_task_id)
+        self.sync_task_id = None
+        self.sync_worker.start()
+
+
+    def _stopSyncWorker(self):
+        if self.sync_worker and self.sync_worker.is_alive():
+            # Finish the in-flight request before reload/shutdown replaces the
+            # configuration. The worker owns its Flask/database session.
+            self.sync_worker.stop()
+            self.sync_worker.join()
 
 
     def _systemHealthCheck(self, task_state=TaskQueueState.QUEUED):
@@ -1364,6 +1413,11 @@ class IndiAllSky(object):
         flush_old_tasks = IndiAllSkyDbTaskQueueTable.query\
             .filter(IndiAllSkyDbTaskQueueTable.createDate < now_minus_3d)
 
+        # A large manual archive can legitimately outlive the task retention age.
+        if self.sync_worker and self.sync_worker.is_alive():
+            flush_old_tasks = flush_old_tasks.filter(IndiAllSkyDbTaskQueueTable.id != self.sync_worker.task_id)
+        if self.sync_task_id is not None:
+            flush_old_tasks = flush_old_tasks.filter(IndiAllSkyDbTaskQueueTable.id != self.sync_task_id)
         logger.warning('Found %d expired tasks to delete', flush_old_tasks.count())
         flush_old_tasks.delete()
         db.session.commit()
@@ -1411,7 +1465,16 @@ class IndiAllSky(object):
 
                 action = task.data['action']
 
-                if action == 'reload':
+                if action == 'archive_sync':
+                    if self.sync_task_id is not None or (self.sync_worker and self.sync_worker.is_alive()):
+                        task.setExpired()
+                        continue
+                    # All admission happens in this single service loop. Start
+                    # the thread only after leaving the main Flask context.
+                    task.setQueued()
+                    self.sync_task_id = task.id
+
+                elif action == 'reload':
                     if reload_received:
                         logger.warning('Skipping duplicate reload signal')
                         task.setExpired()
