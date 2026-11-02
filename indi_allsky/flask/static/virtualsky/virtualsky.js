@@ -20,6 +20,7 @@
 		transparent (false) - make the sky background transparent
 		color ('rgb(255,255,255)') - the text colour
 		az (180) - an azimuthal offset with 0 = north and 90 = east
+		flip_h / flip_v (false) - reflect fisheye overlay positions horizontally / vertically
 		ra (0 <= x < 360) - the RA for the centre of the view in gnomic projection
 		dec (-90 < x < 90) - the Declination for the centre of the view in gnomic projection
 		negative (false) - invert the default colours i.e. to black on white
@@ -293,6 +294,8 @@ function VirtualSky(input){
 	this.islive = false;				// Update the sky in real time
 	this.fullscreen = false;			// Should it take up the full browser window
 	this.transparent = false;			// Show the sky background or not
+	this.flip_h = false;				// Fisheye overlay only; text stays readable
+	this.flip_v = false;
 	this.fps = 10;						// Number of frames per second when animating
 	this.credit = (location.host == "lco.global" && location.href.indexOf("/embed") < 0) ? false : true;
 	this.callback = { geo:'', mouseenter:'', mouseout:'', contextmenu: '', cursor: '', click:'' };
@@ -357,13 +360,15 @@ function VirtualSky(input){
 				if(this.fisheye_radial && unclipped) el = Math.max(0,el); // off-camera direction labels stay at the rim
 				var r = radius*Math.sin(((Math.PI/2)-el)/2)/0.70710678;	// the field of view is bigger than 180 degrees
 				if(this.fisheye_radial) r *= Math.pow(Math.max(2-Math.pow(r/radius,2),1e-12),-this.fisheye_radial);
-				return {x:(w/2-r*Math.sin(az)),y:(radius-r*Math.cos(az)),el:horizonEl};
+				// Reflect positions after tilt/roll/curvature, keeping canvas text upright.
+				return {x:(w/2+(this.flip_h ? 1 : -1)*r*Math.sin(az)),y:(radius+(this.flip_v ? 1 : -1)*r*Math.cos(az)),el:horizonEl};
 			},
 			xy2azel: function(x, y, w, h) {
 				var radius = h/2;
 
-				var X = w/2-x;
-				var Y = radius - y;
+				// Pointer lookup undoes reflection before the inverse lens projection.
+				var X = (w/2-x)*(this.flip_h ? -1 : 1);
+				var Y = (radius-y)*(this.flip_v ? -1 : 1);
 				r = Math.sqrt(X*X + Y*Y);
 				if (r > radius) {
 					return undefined;
@@ -1068,6 +1073,8 @@ VirtualSky.prototype.init = function(d){
 		fullscreen: b,
 		credit: b,
 		transparent: b,
+		flip_h: b,
+		flip_v: b,
 		plugins: o,
 		lang: s
 	};
@@ -1273,6 +1280,8 @@ VirtualSky.prototype.load = function(t,file,fn){
 			for(i = 0; i < this.stars.length; i++) this.lookup.star.push({'ra':this.stars[i][2],'dec':this.stars[i][3],'label':this.stars[i][0],'mag':this.stars[i][1]});
 		}
 		else{ this[t] = data[t]; }
+		// A late response replaces the converted outline with coordinates in degrees.
+		if(t=="galaxy") this.gal.processed = false;
 		this.draw();
 		this.trigger("loaded"+(t.charAt(0).toUpperCase() + t.slice(1)),{data:data});
 	},fn);
@@ -2746,7 +2755,9 @@ VirtualSky.prototype.interpolate = function(jd,data){
 		ddec = data[mini+2];
 		dmag = data[mini+3];
 	}else{
-		dra = (Math.abs(data[pos_2]-data[pos_1]) > 180) ? (data[pos_1]+(data[pos_2]+360-data[pos_1])*fract)%360 : (data[pos_1]+(data[pos_2]-data[pos_1])*fract)%360;
+		// Follow the short arc through 0/360 in either direction, including retrograde motion.
+		var deltaRA = (data[pos_2]-data[pos_1]+540)%360-180;
+		dra = (data[pos_1]+deltaRA*fract+360)%360;
 		ddec = data[pos_1+1]+(data[pos_2+1]-data[pos_1+1])*fract;
 		dmag = data[pos_1+2]+(data[pos_2+2]-data[pos_1+2])*fract;
 	}
@@ -3259,6 +3270,10 @@ VirtualSky.prototype.drawCardinalPoints = function(){
 			f = (this.tall/2) - r*1.5;
 			x = -f*Math.sin(ang);
 			y = -f*Math.cos(ang);
+			if(this.projection.id === 'fisheye'){
+				if(this.flip_h) x = -x;
+				if(this.flip_v) y = -y;
+			}
 			x = isFinite(x) ? this.wide/2 + x - r : 0;
 			y = isFinite(y) ? this.tall/2 + y + r: 0;
 		}else{

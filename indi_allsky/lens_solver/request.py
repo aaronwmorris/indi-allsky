@@ -40,7 +40,7 @@ def parseSolverRequestValues(data, for_save=False):
             return None, '{0:s} out of range'.format(key)
         values[key] = v
 
-    for key in ('PRECESSION', 'CALIBRATION_ENABLED'):
+    for key in ('FLIP_H', 'FLIP_V', 'PRECESSION', 'CALIBRATION_ENABLED'):
         if key in data:
             if not isinstance(data[key], bool):
                 return None, '{0:s} must be a boolean'.format(key)
@@ -56,6 +56,8 @@ def parseSolverRequestValues(data, for_save=False):
             geometry += [values.get('RADIAL_DISTORTION', 0), int(values.get('PRECESSION', False))]
             # Older corrections belong to the original lens and catalogue convention.
             saved_geometry = model['geometry'] + ([0, 0] if model['version'] == 1 else [])
+            if model.get('orientation', [False, False]) != [values.get('FLIP_H', False), values.get('FLIP_V', False)]:
+                return None, 'Orientation changed since calibration; solve again'
             if saved_geometry != geometry:
                 return None, 'Alignment changed since calibration; solve again'
         # A successful solve may need no extra correction. Keep the opt-in
@@ -65,8 +67,8 @@ def parseSolverRequestValues(data, for_save=False):
 
 
 def applySolvedValuesToConfig(config, values):
-    """Write overlay calibration and optional camera pointing, in place.
-    The LENS_IMAGE_CIRCLE family drives unrelated behavior and stays unchanged.
+    """Write overlay geometry and optional orientation in place, leaving
+    captured-image flips and the LENS_IMAGE_CIRCLE family unchanged.
     """
     config['LENS_AZIMUTH'] = values['AZIMUTH_ANGLE']
     if 'LENS_ALTITUDE' in values:
@@ -82,7 +84,7 @@ def applySolvedValuesToConfig(config, values):
     virtualsky['OFFSET_X'] = values['OFFSET_X']
     virtualsky['OFFSET_Y'] = values['OFFSET_Y']
     # Omitted extension fields leave existing settings intact for older clients.
-    for key in ('POINTING_AZIMUTH', 'PRECESSION', 'RADIAL_DISTORTION'):
+    for key in ('FLIP_H', 'FLIP_V', 'POINTING_AZIMUTH', 'PRECESSION', 'RADIAL_DISTORTION'):
         if key in values:
             virtualsky[key] = values[key]
     if 'CALIBRATION_ENABLED' in values:

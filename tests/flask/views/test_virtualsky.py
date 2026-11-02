@@ -1,15 +1,17 @@
 import json
+import math
 from pathlib import Path
 import shutil
 import subprocess
 
 import numpy
+import ephem
 import pytest
 
 from indi_allsky.lens_solver.projection import predictAltAz, projectToPixels, precessCatalog, cameraAltAz
 
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def run_node(*args, input=None):
@@ -22,7 +24,32 @@ def run_node(*args, input=None):
 
 
 def test_virtualsky_javascript():
-    run_node('--test', 'tests/flask/virtualsky.test.cjs', 'tests/flask/virtualsky_refresh.test.cjs')
+    run_node('--test', 'tests/flask/views/virtualsky.test.cjs', 'tests/flask/views/virtualsky_refresh.test.cjs')
+
+
+@pytest.mark.parametrize('date', ['2022-10-21T18:00:00Z', '2022-11-05T18:00:00Z',
+                                  '2022-12-15T00:00:00Z', '2026-09-23T02:36:45Z'])
+def test_planet_positions_against_independent_ephemeris(date):
+    # Cover the original jumping-Jupiter dates and the observed 2026 offset.
+    rows = json.loads(run_node('-e', '''
+const {makeSky, loadPlanets} = require('./tests/flask/views/virtualsky_harness.cjs');
+console.log(JSON.stringify(['virtualsky.js', 'virtualsky.min.js'].flatMap(asset => {
+    const sky = loadPlanets(makeSky({clock: new Date(process.argv[1])}, asset));
+    return sky.planets.map(p => ({asset, name: p[0], ...sky.interpolate(sky.times.JD, p[2])}));
+})));
+''', date))
+    planets = dict(Me=ephem.Mercury, V=ephem.Venus, Ma=ephem.Mars, J=ephem.Jupiter,
+                   S=ephem.Saturn, U=ephem.Uranus, N=ephem.Neptune)
+    assert len(rows) == 2*len(planets)
+    for row in rows:
+        body = planets[row['name']]()
+        body.compute(date.replace('T', ' ').replace('Z', ''))
+        # VirtualSky renders these coordinates directly in the equinox of date.
+        error = math.degrees(ephem.separation(
+            (math.radians(row['ra']), math.radians(row['dec'])), (body.g_ra, body.g_dec)))
+        # The bundled orbital model is approximate; catch offsets and wrap jumps
+        # without claiming the precision of a modern numerical ephemeris.
+        assert error < 0.25, (date, row, error)
 
 
 @pytest.mark.parametrize('altitude,heading', [(90, 215), (54, 0), (20, 120), (0, 350)])
@@ -45,7 +72,7 @@ def test_browser_and_solver_agree_across_timestamps(altitude, heading, precessio
     payload = dict(cases=cases, altitude=altitude, heading=heading, precession=precession, radial=radial)
     run_node('-e', '''
 const assert = require('node:assert/strict');
-const {makeSky} = require('./tests/flask/virtualsky_harness.cjs');
+const {makeSky} = require('./tests/flask/views/virtualsky_harness.cjs');
 const input = JSON.parse(require('node:fs').readFileSync(0, 'utf8'));
 for (const asset of ['virtualsky.js', 'virtualsky.min.js']) {
   for (const c of input.cases) {

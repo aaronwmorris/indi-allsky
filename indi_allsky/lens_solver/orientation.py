@@ -42,7 +42,10 @@ def _triangles(rays):
     return edges[keep], triangles[keep]
 
 
-def _pixelRays(xy, diameter, center, radial=None):
+def _pixelRays(xy, diameter, center, radial=None, *, flip_h=False, flip_v=False):
+    # Undo only the overlay reflection; detections and masks stay in photo coordinates.
+    if flip_h or flip_v:
+        xy = center + (xy-center)*numpy.array([-1 if flip_h else 1, -1 if flip_v else 1])
     # Invert a native lens radius into unit rays; ignore pixels outside the
     # guessed front hemisphere. The normal fit will refine scale and centre.
     if radial in (-0.5, 0.5):
@@ -59,15 +62,15 @@ def _pixelRays(xy, diameter, center, radial=None):
     return numpy.column_stack([2*xy*numpy.sqrt(1-r2)[:, None], 1-2*r2])
 
 
-def _project(world, matrix, params, width, height):
+def _project(world, matrix, params, width, height, *, flip_h=False, flip_v=False):
     # Unlike projectToPixels, rotation is supplied by matrix; params[:3] are
     # rotation-vector increments used by the search, not geographic offsets.
     rays = world @ matrix.T
     factor = params[3]/(2*SIN45*numpy.sqrt(numpy.maximum(2*(1+rays[:, 2]), 1e-12)))
     if len(params) > 6:
         factor *= numpy.maximum(1+rays[:, 2], 1e-12)**(-params[6])
-    xy = numpy.column_stack([width/2+params[4]-factor*rays[:, 0],
-                             height/2-params[5]-factor*rays[:, 1]])
+    xy = numpy.column_stack([width/2+params[4]+(1 if flip_h else -1)*factor*rays[:, 0],
+                             height/2-params[5]+(1 if flip_v else -1)*factor*rays[:, 1]])
     return xy, rays[:, 2] > 0
 
 
@@ -98,7 +101,9 @@ def pointingFromFit(params, latitude, longitude, timestamp, lens_altitude, point
     return _orientationValues(camera.T @ world)
 
 
-def recoverOrientation(detections, catalog, latitude, longitude, timestamp, initial, width, height, radial=None):
+def recoverOrientation(detections, catalog, latitude, longitude, timestamp, initial, width, height, radial=None,
+                       *, flip_h=False, flip_v=False):
+    flips = dict(flip_h=flip_h, flip_v=flip_v)
     if len(detections) < fitting.EFFECTIVE_MIN_MATCHED_STARS:
         return None
     alt, az = predictAltAz(catalog, latitude, longitude, timestamp)
@@ -120,7 +125,7 @@ def recoverOrientation(detections, catalog, latitude, longitude, timestamp, init
     for diameter in diameters:
         if diameter < fitting.MIN_VIABLE_DIAMETER_PX:
             continue
-        rays = _pixelRays(detections[:PATTERN_STARS, :2], diameter, center, radial)
+        rays = _pixelRays(detections[:PATTERN_STARS, :2], diameter, center, radial, **flips)
         if len(rays) < 10:
             continue
         observed, triples = _triangles(rays)
@@ -171,7 +176,7 @@ def recoverOrientation(detections, catalog, latitude, longitude, timestamp, init
             upper.append(RADIAL_MAX)
         for fraction in (0.02, 0.01, 0.006, 0.004):
             matrix = Rotation.from_rotvec(params[:3]).as_matrix() @ seed
-            xy, visible = _project(world, matrix, params, width, height)
+            xy, visible = _project(world, matrix, params, width, height, **flips)
             indices = numpy.flatnonzero(visible)
             radius = max(6., fraction*params[3])
             pred, detected = fitting._matchStars(detections, xy[indices], radius)
@@ -181,14 +186,14 @@ def recoverOrientation(detections, catalog, latitude, longitude, timestamp, init
 
             def residuals(trial):
                 rotation = Rotation.from_rotvec(trial[:3]).as_matrix() @ seed
-                return (_project(stars, rotation, trial, width, height)[0]-target).ravel()
+                return (_project(stars, rotation, trial, width, height, **flips)[0]-target).ravel()
 
             params = least_squares(residuals, params, bounds=(lower, upper),
                 loss=fitting.FIT_LOSS, f_scale=radius, x_scale=[0.1]*3+[diameter]*3+([0.1] if radial is not None else []),
                 max_nfev=80).x
 
         matrix = Rotation.from_rotvec(params[:3]).as_matrix() @ seed
-        xy, visible = _project(world, matrix, params, width, height)
+        xy, visible = _project(world, matrix, params, width, height, **flips)
         counts, rms, matched = [], float('inf'), numpy.empty((0, 2))
         gate = fitting._rmsGatePx(params[3])
         for radius in (max(6., 0.004*params[3]), gate):
@@ -222,7 +227,7 @@ def recoverOrientation(detections, catalog, latitude, longitude, timestamp, init
 
 
 def refineLensModel(detections, catalog, latitude, longitude, timestamp, initial,
-                    width, height, lens_altitude, pointing_azimuth):
+                    width, height, lens_altitude, pointing_azimuth, *, flip_h=False, flip_v=False):
     """Separate radial lens curvature from pointing after establishing star matches.
 
     A fixed equisolid model can move its fitted centre to absorb distortion,
@@ -234,7 +239,7 @@ def refineLensModel(detections, catalog, latitude, longitude, timestamp, initial
         alt, az = predictAltAz(catalog, latitude+trial[1], longitude+trial[2], timestamp)
         camera_alt, _ = cameraAltAz(alt, az, lens_altitude, pointing_azimuth)
         xy = numpy.column_stack(projectToPixels(alt, az, trial, width, height,
-            lens_altitude=lens_altitude, pointing_azimuth=pointing_azimuth))
+            lens_altitude=lens_altitude, pointing_azimuth=pointing_azimuth, flip_h=flip_h, flip_v=flip_v))
         visible = (alt > numpy.radians(fitting.MIN_STAR_ALT_DEG)) & (camera_alt > 0)
         return xy, numpy.flatnonzero(visible)
 

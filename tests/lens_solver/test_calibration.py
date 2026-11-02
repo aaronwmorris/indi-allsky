@@ -6,7 +6,7 @@ from indi_allsky.lens_solver.calibration import (
     fitCorrection, displacement, validateCalibration, pipelineSignature)
 from indi_allsky.lens_solver.detection import StarDetector
 from indi_allsky.lens_solver.request import parseSolverRequestValues, applySolvedValuesToConfig
-from tests.flask.test_virtualsky_requests import VALUES
+from tests.flask.views.test_virtualsky_requests import VALUES
 
 
 def field(layout='circle'):
@@ -262,7 +262,8 @@ def test_masked_noise_retries_normal_threshold_without_removing_limit(monkeypatc
 
 
 @pytest.mark.parametrize('altitude,heading', [(90, 0), (54, 123)])
-def test_solver_learns_from_rendered_catalogue(tmp_path, altitude, heading):
+@pytest.mark.parametrize('flip_h,flip_v', [(False, False), (True, False), (False, True), (True, True)])
+def test_solver_learns_from_rendered_catalogue(tmp_path, altitude, heading, flip_h, flip_v):
     from indi_allsky.lens_solver import IndiAllSkyLensSolver
     from tests.lens_solver.test_orientation import star_field, render_stars
     from tests.lens_solver.test_camera_tilt import PARAMS, KEYS
@@ -274,6 +275,7 @@ def test_solver_learns_from_rendered_catalogue(tmp_path, altitude, heading):
     shift = q*(0.025*(u*u+v*v))[:, None]
     shift += np.column_stack([0.006*(3*u*u+v*v), 0.012*u*v])
     detections[:, :2] += shift*(PARAMS[3]/2)
+    detections[:, :2] = center+(detections[:, :2]-center)*[-1 if flip_h else 1, -1 if flip_v else 1]
     path = tmp_path / 'distorted.png'
     render_stars(path, detections)
     initial = dict(zip(KEYS, PARAMS), CALIBRATION_ENABLED=True)
@@ -283,6 +285,9 @@ def test_solver_learns_from_rendered_catalogue(tmp_path, altitude, heading):
     assert result['calibration'] is not None, result['message']
     assert validateCalibration(result['calibration'])
     assert result['calibration']['image_size'] == [2028, 1520]
+    assert result['calibration']['orientation'] == [result['values']['FLIP_H'], result['values']['FLIP_V']]
+    assert result['values']['FLIP_H'] is (flip_h != flip_v)
+    assert result['values']['FLIP_V'] is False
 
 
 @pytest.mark.parametrize('scale', [1, 3])
@@ -308,9 +313,10 @@ def test_learning_uses_solved_curvature_and_precessed_catalogue(tmp_path, monkey
     calls = []
     calibrate = solver_mod.calibrate
 
-    def record(*args):
+    def record(*args, **kwargs):
         calls.append(args)
-        return calibrate(*args)
+        assert kwargs == dict(flip_h=False, flip_v=False)
+        return calibrate(*args, **kwargs)
 
     monkeypatch.setattr(solver_mod, 'calibrate', record)
     initial = dict(zip(KEYS, PARAMS), LENS_ALTITUDE=90, PRECESSION=True,

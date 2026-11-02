@@ -66,7 +66,8 @@ class IndiAllSkyLensSolver(object):
 
     def fitParameters(self, detections, catalog, latitude, longitude, obstime_unix,
                        initial_params, image_width, image_height,
-                       lens_altitude=90.0, pointing_azimuth=0.0):
+                       lens_altitude=90.0, pointing_azimuth=0.0, *, flip_h=False, flip_v=False,
+                       auto_orientation=False):
         self._residual_evals = 0
         self._predict_calls = 0
         self._coarse_s = 0.0
@@ -106,10 +107,14 @@ class IndiAllSkyLensSolver(object):
             image_height=image_height,
             min_alt_rad=numpy.radians(fitting.MIN_STAR_ALT_DEG),
             initial_params=p0,
+            flip_h=flip_h,
+            flip_v=flip_v,
             lens_altitude=lens_altitude,
             pointing_azimuth=pointing_azimuth,
         ))
         try:
+            if auto_orientation:
+                return engine.fitWithOrientation(p0, diameter0)
             return engine.fitWithFallbacks(p0, diameter0)
         finally:
             self._residual_evals = engine.residual_evals
@@ -235,76 +240,106 @@ class IndiAllSkyLensSolver(object):
         timing['catalog_s'] = round(time.monotonic() - t0, 3)
 
         preferred = self._detector.preferredDetections(detections, work_img.shape) if learn else detections[:0]
-        seed = initial_params
         hinted = detections
         if len(preferred) >= 60:
             # Prefer likely sky in triangle seeding, retaining all detections.
             preferred_xy = {tuple(row[:2]) for row in preferred}
             other = numpy.array([row for row in detections if tuple(row[:2]) not in preferred_xy])
             hinted = numpy.vstack([preferred, other]) if len(other) else preferred
-            roi_fit = self.fitParameters(preferred, catalog, latitude, longitude, obstime_unix,
-                initial_params, work_width, work_height, lens_altitude, pointing_azimuth)
-            if roi_fit['success'] and not roi_fit.get('partial'):
-                seed = roi_fit['params']
-        fit = self.fitParameters(
-            detections, catalog, latitude, longitude, obstime_unix,
-            seed, work_width, work_height, lens_altitude, pointing_azimuth)
-        if seed is not initial_params and (not fit['success'] or fit.get('partial')):
-            fit = self.fitParameters(detections, catalog, latitude, longitude, obstime_unix,
-                initial_params, work_width, work_height, lens_altitude, pointing_azimuth)
 
-        # New clients fit lens curvature even after a good local match: otherwise
-        # lens distortion can masquerade as tilt. Older clients retain the
-        # six-parameter fit, with orientation recovery only when it fails.
-        recovered = None
-        if ('RADIAL_DISTORTION' in initial_values
-                and fit.get('reason') != 'catalog_not_validated'):
-            t0 = time.monotonic()
+        # Each handedness starts from the same pointing. Cache its fixed-pointing
+        # fit so camera-pointing recovery can reuse it on a second pass.
+        initial_pointing = lens_altitude, pointing_azimuth
+        local_fits = {}
 
-            def candidates():
-                yield fit, lens_altitude, pointing_azimuth
-                # Also retry a plausible but unreliable local fit. Otherwise
-                # it can hide the correct solution for a different lens law.
-                for stars in ([hinted, detections] if hinted is not detections else [detections]):
-                    for curve in (0.0, -0.5, 0.5):
-                        candidate = recoverOrientation(stars, catalog, latitude, longitude,
-                            obstime_unix, initial_params, work_width, work_height, curve)
-                        if candidate is not None:
-                            yield candidate, candidate['lens_altitude'], candidate['pointing_azimuth']
+        def fit_orientation(flip_h, flip_v, recover=False):
+            lens_altitude, pointing_azimuth = initial_pointing
+            flips = dict(flip_h=flip_h, flip_v=flip_v)
 
-            for candidate, altitude, heading in candidates():
-                if not candidate['success'] or candidate.get('partial'):
-                    continue
-                refined = refineLensModel(detections, catalog, latitude, longitude,
-                    obstime_unix, candidate['params'], work_width, work_height, altitude, heading)
-                if refined is not None:
-                    fit, lens_altitude, pointing_azimuth = refined, altitude, heading
-                    break
-            else:
-                if fit.get('reason') != 'chirality_mismatch':
-                    fit = dict(success=False, reason='lens_model_unconstrained',
-                        message='Camera pointing is not reliable for this frame or lens model. Try a clearer image with stars spread across the field.',
-                        stars_matched=fit['stars_matched'])
-            self._fit_s += time.monotonic() - t0
-        elif ((not fit['success'] or fit.get('partial'))
-                and fit.get('reason') != 'catalog_not_validated'):
-            t0 = time.monotonic()
-            if hinted is not detections:
-                recovered = recoverOrientation(hinted, catalog, latitude, longitude,
-                    obstime_unix, initial_params, work_width, work_height)
-            if recovered is None:
-                recovered = recoverOrientation(detections, catalog, latitude, longitude,
-                    obstime_unix, initial_params, work_width, work_height)
-            self._fit_s += time.monotonic() - t0
-            if recovered is not None:
-                fit = recovered
-                lens_altitude = fit['lens_altitude']
-                pointing_azimuth = fit['pointing_azimuth']
+            def fixed_fit(stars, seed):
+                result = self.fitParameters(stars, catalog, latitude, longitude, obstime_unix,
+                    seed, work_width, work_height, lens_altitude, pointing_azimuth, **flips)
+                for key in ('coarse_s', 'fit_s', 'residual_evals', 'predict_calls'):
+                    timing[key] += getattr(self, '_' + key)
+                return result
 
-        timing['coarse_s'] = round(self._coarse_s, 3)
-        timing['fit_s'] = round(self._fit_s, 3)
-        timing['residual_evals'] = int(self._residual_evals)
-        timing['predict_calls'] = int(self._predict_calls)
+            parity = (flip_h, flip_v)
+            if parity not in local_fits:
+                seed = initial_params
+                if len(preferred) >= 60:
+                    roi_fit = fixed_fit(preferred, initial_params)
+                    if roi_fit['success'] and not roi_fit.get('partial'):
+                        seed = roi_fit['params']
+                fit = fixed_fit(detections, seed)
+                if seed is not initial_params and (not fit['success'] or fit.get('partial')):
+                    fit = fixed_fit(detections, initial_params)
+
+                local_fits[parity] = fit
+            fit = local_fits[parity]
+
+            # New clients fit lens curvature even after a good local match: otherwise
+            # lens distortion can masquerade as tilt. Older clients retain the
+            # six-parameter fit, with orientation recovery only when it fails.
+            recovered = None
+            if ('RADIAL_DISTORTION' in initial_values
+                    and fit.get('reason') != 'catalog_not_validated'):
+                t0 = time.monotonic()
+
+                def candidates():
+                    yield fit, lens_altitude, pointing_azimuth
+                    if not recover:
+                        return
+                    # Also retry a plausible but unreliable local fit. Otherwise
+                    # it can hide the correct solution for a different lens law.
+                    for stars in ([hinted, detections] if hinted is not detections else [detections]):
+                        for curve in (0.0, -0.5, 0.5):
+                            candidate = recoverOrientation(stars, catalog, latitude, longitude,
+                                obstime_unix, initial_params, work_width, work_height, curve, **flips)
+                            if candidate is not None:
+                                yield candidate, candidate['lens_altitude'], candidate['pointing_azimuth']
+
+                for candidate, altitude, heading in candidates():
+                    if not candidate['success'] or candidate.get('partial'):
+                        continue
+                    refined = refineLensModel(detections, catalog, latitude, longitude,
+                        obstime_unix, candidate['params'], work_width, work_height, altitude, heading, **flips)
+                    if refined is not None:
+                        fit, lens_altitude, pointing_azimuth = refined, altitude, heading
+                        break
+                else:
+                    if fit.get('reason') != 'chirality_mismatch':
+                        fit = dict(success=False, reason='lens_model_unconstrained',
+                            message='Camera pointing is not reliable for this frame or lens model. Try a clearer image with stars spread across the field.',
+                            stars_matched=fit['stars_matched'])
+                timing['fit_s'] += time.monotonic() - t0
+            elif (recover and (not fit['success'] or fit.get('partial'))
+                    and fit.get('reason') != 'catalog_not_validated'):
+                t0 = time.monotonic()
+                if hinted is not detections:
+                    recovered = recoverOrientation(hinted, catalog, latitude, longitude,
+                        obstime_unix, initial_params, work_width, work_height, **flips)
+                if recovered is None:
+                    recovered = recoverOrientation(detections, catalog, latitude, longitude,
+                        obstime_unix, initial_params, work_width, work_height, **flips)
+                timing['fit_s'] += time.monotonic() - t0
+                if recovered is not None:
+                    fit = recovered
+                    lens_altitude = fit['lens_altitude']
+                    pointing_azimuth = fit['pointing_azimuth']
+
+            return dict(fit, lens_altitude=lens_altitude, pointing_azimuth=pointing_azimuth,
+                        pointing_recovered=recovered is not None)
+
+        fit = fitting.fitOrientations(fit_orientation, initial_values.get('FLIP_H', False),
+                                     initial_values.get('FLIP_V', False))
+        # A validated local orientation keeps the normal fast path. Only an
+        # incomplete fit needs the blind pointing search, in both handednesses.
+        if ((not fit['success'] or fit.get('partial'))
+                and fit.get('reason') not in ('orientation_ambiguous', 'catalog_not_validated')):
+            fit = fitting.fitOrientations(lambda h, v: fit_orientation(h, v, recover=True),
+                initial_values.get('FLIP_H', False), initial_values.get('FLIP_V', False))
+        for key in ('coarse_s', 'fit_s'):
+            timing[key] = round(timing[key], 3)
 
         quality = {
             'stars_detected': stars_detected,
@@ -328,7 +363,9 @@ class IndiAllSkyLensSolver(object):
             })
 
         p = fit['params'].copy()
-        pointing_solved = recovered is not None
+        lens_altitude, pointing_azimuth = fit['lens_altitude'], fit['pointing_azimuth']
+        flips = dict(flip_h=fit['flip_h'], flip_v=fit['flip_v'])
+        pointing_solved = fit['pointing_recovered']
         # Older six-field clients retain their original offset representation.
         if not fit['partial'] and not pointing_solved and 'LENS_ALTITUDE' in initial_values:
             altitude, heading, roll = pointingFromFit(
@@ -349,6 +386,8 @@ class IndiAllSkyLensSolver(object):
             'IMAGE_CIRCLE_DIAMETER': int(round(diameter_native)),
             'OFFSET_X': int(round(offset_x_native)),
             'OFFSET_Y': int(round(offset_y_native)),
+            'FLIP_H': fit['flip_h'],
+            'FLIP_V': fit['flip_v'],
         }
         if pointing_solved:
             values.update(LENS_ALTITUDE=round(float(lens_altitude), 2),
@@ -366,6 +405,8 @@ class IndiAllSkyLensSolver(object):
             'horizon_diameter_px': int(round(diameter_native)),
             'tilt_ns_deg': round(float(p[1]), 2),
             'tilt_ew_deg': round(float(p[2]), 2),
+            'flip_h': fit['flip_h'],
+            'flip_v': fit['flip_v'],
         }
         if lens_altitude is not None and lens_altitude != 90.0:
             # The axis and zenith no longer coincide. The legacy diameter
@@ -377,7 +418,7 @@ class IndiAllSkyLensSolver(object):
             native_params[3:6] *= scale
             zx, zy = projectToPixels(numpy.pi / 2, 0.0,
                                      native_params, native_width, native_height,
-                                     lens_altitude=lens_altitude, pointing_azimuth=pointing_azimuth)
+                                     lens_altitude=lens_altitude, pointing_azimuth=pointing_azimuth, **flips)
             geometry['zenith_x'] = round(float(zx), 1)
             geometry['zenith_y'] = round(float(zy), 1)
 
@@ -407,7 +448,7 @@ class IndiAllSkyLensSolver(object):
             t0 = time.monotonic()
             correction, why = calibrate(detections, catalog, latitude, longitude, obstime_unix,
                 work_params, work_width, work_height, *geometry_values[6:8],
-                self.buildExclusionMask(work_img.shape)) if not fit['partial'] else (None,
+                self.buildExclusionMask(work_img.shape), **flips) if not fit['partial'] else (None,
                     'A complete alignment is required before learning distortion.')
             if correction is not None:
                 calibration, stats = correction
@@ -417,7 +458,8 @@ class IndiAllSkyLensSolver(object):
                     stats['before']*radius_native, stats['after']*radius_native, stats['coverage'])
                 calibration.update(version=2, geometry=geometry_values, image_size=[native_width, native_height],
                     pipeline=pipelineSignature(self.config), summary=summary,
-                    context=[latitude, longitude, 0], camera_uuid='')
+                    context=[latitude, longitude, 0], camera_uuid='',
+                    orientation=[fit['flip_h'], fit['flip_v']])
                 message += '. ' + summary
             else:
                 message += '. Original mapping retained: ' + why

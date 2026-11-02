@@ -1102,9 +1102,9 @@ class CaptureWorker(Process):
         camera_metadata['data']['vs_offset_x'] = self.config.get('VIRTUALSKY', {}).get('OFFSET_X', 0)
         camera_metadata['data']['vs_offset_y'] = self.config.get('VIRTUALSKY', {}).get('OFFSET_Y', 0)
 
-        # VirtualSky does not support flipping the view
-        #camera_metadata['data']['vs_flip_ns'] = self.config.get('VIRTUALSKY', {}).get('FLIP_NS', False)
-        #camera_metadata['data']['vs_flip_ew'] = self.config.get('VIRTUALSKY', {}).get('FLIP_EW', False)
+        # Overlay orientation does not alter the captured image.
+        camera_metadata['data']['vs_flip_h'] = self.config.get('VIRTUALSKY', {}).get('FLIP_H', False)
+        camera_metadata['data']['vs_flip_v'] = self.config.get('VIRTUALSKY', {}).get('FLIP_V', False)
 
 
         self.update_sensor_slot_labels()

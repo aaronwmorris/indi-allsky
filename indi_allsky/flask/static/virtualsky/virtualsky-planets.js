@@ -105,8 +105,7 @@
 				{"jd":2456440.5,"i":1.3033,"o":100.627,"p":14.586,"a":5.20259,"n":0.083096,"e":0.048892,"L":81.3228},
 				{"jd":2456520.5,"i":1.3033,"o":100.629,"p":14.556,"a":5.20245,"n":0.083099,"e":0.048892,"L":87.9728},
 				{"jd":2456600.5,"i":1.3033,"o":100.631,"p":14.576,"a":5.20254,"n":0.083097,"e":0.048907,"L":94.6223},
-				{"jd":2456680.5,"i":1.3033,"o":100.633,"p":14.592,"a":5.20259,"n":0.083096,"e":0.048891,"L":101.2751},
-				{"jd":2456681,"i":1.3033,"o":100.633,"p":14.592,"a":5.20259,"n":0.083096,"e":0.048891,"L":100.29282654}	// Added fudge factor on 2022-11-02 otherwise Jupiter moved quickly across the sky - not sure why it is so sensitive 
+				{"jd":2456680.5,"i":1.3033,"o":100.633,"p":14.592,"a":5.20259,"n":0.083096,"e":0.048891,"L":101.2751}
 			]
 		},{
 			"name":"S",
@@ -200,7 +199,8 @@
 			p = match;
 		}
 	
-		interval = (typeof this.planets[p].interval==="number" ? this.planets[p].interval : 1);
+		// Earth's motion curves even the outer planets' apparent paths between samples.
+		interval = Math.min(1, typeof this.planets[p].interval==="number" ? this.planets[p].interval : 1);
 	
 		// Build an array of the form:
 		// [Planet name,colour,[jd_1, ra_1, dec_1, mag_1, jd_2, ra_2, dec_2, mag_2....]]

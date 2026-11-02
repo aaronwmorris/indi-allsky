@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const {test} = require('node:test');
 const {makeSky} = require('./virtualsky_harness.cjs');
-const calibration = require('../../indi_allsky/flask/static/js/virtualsky-calibration.js');
+const calibration = require('../../../indi_allsky/flask/static/js/virtualsky-calibration.js');
 
 function model() {
     const coefficients = Array.from({length: 10}, () => [0, 0]);
@@ -189,4 +189,64 @@ for (const asset of ['virtualsky.js', 'virtualsky.min.js']) {
         }
         assert.deepEqual(calibration.delta(m, 3, 3), [0, 0]);
     });
+}
+
+
+test('saved correction requires exactly the selected mirroring, with legacy defaults', () => {
+    for (const version of [1, 2]) for (const h of [false, true]) for (const v of [false, true]) {
+        const m = model();
+        m.version = version;
+        if (version === 2) m.geometry.push(0.08, 1);
+        m.orientation = [h, v];
+        const check = orientation => calibration.compatible(m, m.geometry, m.image_size, m.context, m.camera_uuid, orientation);
+        assert.equal(check([h, v]), true);
+        assert.equal(check([!h, v]), false);
+        assert.equal(check([h, !v]), false);
+        delete m.orientation;
+        assert.equal(check([h, v]), !h && !v);
+        for (const invalid of [null, [], [false], [true, false, true], [0, 1], ['true', false]]) {
+            m.orientation = invalid;
+            assert.equal(check([h, v]), false);
+        }
+    }
+});
+
+for (const asset of ['virtualsky.js', 'virtualsky.min.js']) {
+    for (const flip_h of [false, true]) for (const flip_v of [false, true]) {
+        test(`${asset}: mirrored tilt, correction, pointer and asymmetric mask ${flip_h}/${flip_v}`, () => {
+            const m = model();
+            for (const altitude of [0, 54, 88, 90]) for (const radial of [-0.5, 0, 0.08, 0.5]) {
+                const options = {fisheye_altitude: altitude, fisheye_azimuth: 123, az: 70,
+                    fisheye_radial: radial, precession: true, flip_h, flip_v};
+                const sky = makeSky(options, asset), original = makeSky(options, asset);
+                for (const size of [400, 2200]) {
+                    sky.wide = sky.tall = original.wide = original.tall = size;
+                    calibration.install(sky, m);
+                    let circle;
+                    sky.drawImmediate = function() {};
+                    sky.ctx = {save() {}, restore() {}, clearRect() {}, beginPath() {}, clip() {},
+                        arc(x, y, r) { circle = [x, y, r]; }};
+                    calibration.maskImage(sky, [2200, 36, 3, 100, 80, 70, 0, 0],
+                        [2406, 2350], 1, [2218, -10, -34]);
+                    sky.drawImmediate();
+                    const scale = size/2218;
+                    assert.ok(Math.hypot(circle[0]-1120*scale, circle[1]-1112*scale) < 1e-8);
+                    for (const az of [0, 90, 210, 300]) for (const el of [20, 45, 75]) {
+                        const a = (az-sky.az_off)*Math.PI/180, e = el*Math.PI/180;
+                        const before = original.azel2xy(a, e, size, size), p = sky.azel2xy(a, e, size, size);
+                        if (!Number.isFinite(before.x)) { assert.ok(Number.isNaN(p.x)); continue; }
+                        const d = calibration.delta(m, (before.x-size/2)/(size/2), (before.y-size/2)/(size/2));
+                        assert.ok(Math.hypot(p.x-before.x-d[0]*size/2, p.y-before.y-d[1]*size/2) < 1e-8);
+                        const expected = original.xy2radec(before.x, before.y);
+                        if (!expected) continue;
+                        const actual = sky.xy2radec(p.x, p.y);
+                        assert.ok(actual);
+                        assert.ok(Math.abs(actual.dec-expected.dec) < 1e-8);
+                        assert.ok(Math.abs(Math.sin(actual.ra-expected.ra)) < 1e-8);
+                    }
+                    calibration.install(sky, null);
+                }
+            }
+        });
+    }
 }

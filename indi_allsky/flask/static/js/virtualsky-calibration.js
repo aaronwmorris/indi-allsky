@@ -21,9 +21,14 @@
         return d;
     }
 
-    function compatible(model, geometry, size, context, uuid) {
+    function compatible(model, geometry, size, context, uuid, orientation = [false, false]) {
         if (!model || ![1, 2].includes(model.version) || model.camera_uuid !== uuid
             || !Array.isArray(model.geometry) || model.geometry.length !== (model.version === 2 ? 10 : 8)) return false;
+        // Older models omit orientation and apply only to the unflipped overlay.
+        const savedOrientation = model.orientation === undefined ? [false, false] : model.orientation;
+        if (!Array.isArray(savedOrientation) || savedOrientation.length !== 2
+            || !Array.isArray(orientation) || orientation.length !== 2
+            || savedOrientation.some((flag, i) => typeof flag !== 'boolean' || flag !== orientation[i])) return false;
         // Version 1 predates lens curvature and catalogue-date correction.
         const savedGeometry = model.version === 1 && geometry.length === 10
             ? [...model.geometry, 0, 0] : model.geometry;
