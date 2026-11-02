@@ -49,7 +49,7 @@
     "OIDC_DISCOVERY_ENDPOINT" : "",
     "OIDC_USERINFO_ENDPOINT" : "",
     "OIDC_USERNAME_CLAIM" : "preferred_username",
-    "OIDC_SCOPES" : "openid email profile offline_access",
+    "OIDC_SCOPES" : "openid email profile",
     "OIDC_PKCE" : true,
     "OIDC_LOGO_URL" : "",
     "OIDC_ALLOWED_GROUPS" : [],
