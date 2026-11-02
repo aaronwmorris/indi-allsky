@@ -911,6 +911,10 @@ class ImageWorker(Process):
             for i in range(100, 110):
                 image_add_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
 
+            image_add_data['temp_display'] = self.config.get('TEMP_DISPLAY', 'c')
+            image_add_data['pressure_display'] = self.config.get('PRESSURE_DISPLAY', 'hPa')
+            image_add_data['windspeed_display'] = self.config.get('WINDSPEED_DISPLAY', 'ms')
+
 
             if self.image_processor.chart_label_bounds:
                 image_add_data['chart_label_bounds'] = [list(bound) for bound in self.image_processor.chart_label_bounds]
