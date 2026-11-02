@@ -4300,149 +4300,149 @@ class IndiAllskyConfigForm(FlaskForm):
 
     # SENSOR_SLOT_choices will be merged with this var
     CUSTOM_CHART_choices = {
-        'Aurora' : (
-            ['kpindex', 'Planetary K-Index (kpindex)'],
-            ['ovation_max', 'Aurora Chance'],
-            ['aurora_mag_bt', 'Solar Wind Bt (nT)'],
-            ['aurora_mag_gsm_bz', 'Solar Wind Bz'],
-            ['aurora_plasma_density', 'Solar Wind Plasma Density [1/cm³]'],
-            ['aurora_plasma_speed', 'Solar Wind Plasma Speed [km/s]'],
-            ['aurora_plasma_temp', 'PSolar Wind lasma Temperature [K]'],
-            ['aurora_n_hemi_gw', 'Hemispheric Power - Northern [GW]'],
-            ['aurora_s_hemi_gw', 'Hemispheric Power - Southern [GW]'],
-        ),
-        'SQM' : (
-            ['camera_sqm_raw_mag', 'Camera SQM - Raw Magnitude'],
-        ),
+        'Aurora' : [
+            ('kpindex', 'Planetary K-Index (kpindex)'),
+            ('ovation_max', 'Aurora Chance'),
+            ('aurora_mag_bt', 'Solar Wind Bt (nT)'),
+            ('aurora_mag_gsm_bz', 'Solar Wind Bz'),
+            ('aurora_plasma_density', 'Solar Wind Plasma Density [1/cm³]'),
+            ('aurora_plasma_speed', 'Solar Wind Plasma Speed [km/s]'),
+            ('aurora_plasma_temp', 'PSolar Wind lasma Temperature [K]'),
+            ('aurora_n_hemi_gw', 'Hemispheric Power - Northern [GW]'),
+            ('aurora_s_hemi_gw', 'Hemispheric Power - Southern [GW]'),
+        ],
+        'SQM' : [
+            ('camera_sqm_raw_mag', 'Camera SQM - Raw Magnitude'),
+        ],
     }
 
 
     SENSOR_SLOT_choices = {
-        'User Sensors' : (
-            ['sensor_user_0', '(0) User Slot - Camera Temp'],  # mutable
-            ['sensor_user_1', '(1) User Slot - Dew Heater Level'],
-            ['sensor_user_2', '(2) User Slot - Dew Point'],
-            ['sensor_user_3', '(3) User Slot - Frost Point'],
-            ['sensor_user_4', '(4) User Slot - Fan Level'],
-            ['sensor_user_5', '(5) User Slot - Heat Index'],
-            ['sensor_user_6', '(6) User Slot - Wind Dir (Degrees)'],
-            ['sensor_user_7', '(7) User Slot - Sensor SQM Magnitude (mag/arcsec²)'],
-            ['sensor_user_8', '(8) User Slot - Camera SQM Magnitude (mag/arcsec²)'],
-            ['sensor_user_9', '(9) User Slot - Camera SQM ADU'],
-            ['sensor_user_10', 'User Slot 10'],
-            ['sensor_user_11', 'User Slot 11'],
-            ['sensor_user_12', 'User Slot 12'],
-            ['sensor_user_13', 'User Slot 13'],
-            ['sensor_user_14', 'User Slot 14'],
-            ['sensor_user_15', 'User Slot 15'],
-            ['sensor_user_16', 'User Slot 16'],
-            ['sensor_user_17', 'User Slot 17'],
-            ['sensor_user_18', 'User Slot 18'],
-            ['sensor_user_19', 'User Slot 19'],
-            ['sensor_user_20', 'User Slot 20'],
-            ['sensor_user_21', 'User Slot 21'],
-            ['sensor_user_22', 'User Slot 22'],
-            ['sensor_user_23', 'User Slot 23'],
-            ['sensor_user_24', 'User Slot 24'],
-            ['sensor_user_25', 'User Slot 25'],
-            ['sensor_user_26', 'User Slot 26'],
-            ['sensor_user_27', 'User Slot 27'],
-            ['sensor_user_28', 'User Slot 28'],
-            ['sensor_user_29', 'User Slot 29'],
-            ['sensor_user_30', 'User Slot 30'],
-            ['sensor_user_31', 'User Slot 31'],
-            ['sensor_user_32', 'User Slot 32'],
-            ['sensor_user_33', 'User Slot 33'],
-            ['sensor_user_34', 'User Slot 34'],
-            ['sensor_user_35', 'User Slot 35'],
-            ['sensor_user_36', 'User Slot 36'],
-            ['sensor_user_37', 'User Slot 37'],
-            ['sensor_user_38', 'User Slot 38'],
-            ['sensor_user_39', 'User Slot 39'],
-            ['sensor_user_40', 'User Slot 40'],
-            ['sensor_user_41', 'User Slot 41'],
-            ['sensor_user_42', 'User Slot 42'],
-            ['sensor_user_43', 'User Slot 43'],
-            ['sensor_user_44', 'User Slot 44'],
-            ['sensor_user_45', 'User Slot 45'],
-            ['sensor_user_46', 'User Slot 46'],
-            ['sensor_user_47', 'User Slot 47'],
-            ['sensor_user_48', 'User Slot 48'],
-            ['sensor_user_49', 'User Slot 49'],
-            ['sensor_user_50', 'User Slot 50'],
-            ['sensor_user_51', 'User Slot 51'],
-            ['sensor_user_52', 'User Slot 52'],
-            ['sensor_user_53', 'User Slot 53'],
-            ['sensor_user_54', 'User Slot 54'],
-            ['sensor_user_55', 'User Slot 55'],
-            ['sensor_user_56', 'User Slot 56'],
-            ['sensor_user_57', 'User Slot 57'],
-            ['sensor_user_58', 'User Slot 58'],
-            ['sensor_user_59', 'User Slot 59'],
-            ['sensor_user_100', '(100) User Slot - Rain Value'],
-        ),
-        'System Sensors' : (
-            ['sensor_temp_0', '(0) System Temp - Camera Temp'],
-            ['sensor_temp_1', 'System Temp - Future'],
-            ['sensor_temp_2', 'System Temp - Future'],
-            ['sensor_temp_3', 'System Temp - Future'],
-            ['sensor_temp_4', 'System Temp - Future'],
-            ['sensor_temp_5', 'System Temp - Future'],
-            ['sensor_temp_6', 'System Temp - Future'],
-            ['sensor_temp_7', 'System Temp - Future'],
-            ['sensor_temp_8', 'System Temp - Future'],
-            ['sensor_temp_9', 'System Temp - Future'],
-            ['sensor_temp_10', 'System Temp 10'],
-            ['sensor_temp_11', 'System Temp 11'],
-            ['sensor_temp_12', 'System Temp 12'],
-            ['sensor_temp_13', 'System Temp 13'],
-            ['sensor_temp_14', 'System Temp 14'],
-            ['sensor_temp_15', 'System Temp 15'],
-            ['sensor_temp_16', 'System Temp 16'],
-            ['sensor_temp_17', 'System Temp 17'],
-            ['sensor_temp_18', 'System Temp 18'],
-            ['sensor_temp_19', 'System Temp 19'],
-            ['sensor_temp_20', 'System Temp 20'],
-            ['sensor_temp_21', 'System Temp 21'],
-            ['sensor_temp_22', 'System Temp 22'],
-            ['sensor_temp_23', 'System Temp 23'],
-            ['sensor_temp_24', 'System Temp 24'],
-            ['sensor_temp_25', 'System Temp 25'],
-            ['sensor_temp_26', 'System Temp 26'],
-            ['sensor_temp_27', 'System Temp 27'],
-            ['sensor_temp_28', 'System Temp 28'],
-            ['sensor_temp_29', 'System Temp 29'],
-            ['sensor_temp_30', 'System Temp 30'],
-            ['sensor_temp_31', 'System Temp 31'],
-            ['sensor_temp_32', 'System Temp 32'],
-            ['sensor_temp_33', 'System Temp 33'],
-            ['sensor_temp_34', 'System Temp 34'],
-            ['sensor_temp_35', 'System Temp 35'],
-            ['sensor_temp_36', 'System Temp 36'],
-            ['sensor_temp_37', 'System Temp 37'],
-            ['sensor_temp_38', 'System Temp 38'],
-            ['sensor_temp_39', 'System Temp 39'],
-            ['sensor_temp_40', 'System Temp 40'],
-            ['sensor_temp_41', 'System Temp 41'],
-            ['sensor_temp_42', 'System Temp 42'],
-            ['sensor_temp_43', 'System Temp 43'],
-            ['sensor_temp_44', 'System Temp 44'],
-            ['sensor_temp_45', 'System Temp 45'],
-            ['sensor_temp_46', 'System Temp 46'],
-            ['sensor_temp_47', 'System Temp 47'],
-            ['sensor_temp_48', 'System Temp 48'],
-            ['sensor_temp_49', 'System Temp 49'],
-            ['sensor_temp_50', 'System Temp 50'],
-            ['sensor_temp_51', 'System Temp 51'],
-            ['sensor_temp_52', 'System Temp 52'],
-            ['sensor_temp_53', 'System Temp 53'],
-            ['sensor_temp_54', 'System Temp 54'],
-            ['sensor_temp_55', 'System Temp 55'],
-            ['sensor_temp_56', 'System Temp 56'],
-            ['sensor_temp_57', 'System Temp 57'],
-            ['sensor_temp_58', 'System Temp 58'],
-            ['sensor_temp_59', 'System Temp 59'],
-        )
+        'User Sensors' : [
+            ('sensor_user_0', '(0) User Slot - Camera Temp'),  # mutable
+            ('sensor_user_1', '(1) User Slot - Dew Heater Level'),
+            ('sensor_user_2', '(2) User Slot - Dew Point'),
+            ('sensor_user_3', '(3) User Slot - Frost Point'),
+            ('sensor_user_4', '(4) User Slot - Fan Level'),
+            ('sensor_user_5', '(5) User Slot - Heat Index'),
+            ('sensor_user_6', '(6) User Slot - Wind Dir (Degrees)'),
+            ('sensor_user_7', '(7) User Slot - Sensor SQM Magnitude (mag/arcsec²)'),
+            ('sensor_user_8', '(8) User Slot - Camera SQM Magnitude (mag/arcsec²)'),
+            ('sensor_user_9', '(9) User Slot - Camera SQM ADU'),
+            ('sensor_user_10', 'User Slot 10'),
+            ('sensor_user_11', 'User Slot 11'),
+            ('sensor_user_12', 'User Slot 12'),
+            ('sensor_user_13', 'User Slot 13'),
+            ('sensor_user_14', 'User Slot 14'),
+            ('sensor_user_15', 'User Slot 15'),
+            ('sensor_user_16', 'User Slot 16'),
+            ('sensor_user_17', 'User Slot 17'),
+            ('sensor_user_18', 'User Slot 18'),
+            ('sensor_user_19', 'User Slot 19'),
+            ('sensor_user_20', 'User Slot 20'),
+            ('sensor_user_21', 'User Slot 21'),
+            ('sensor_user_22', 'User Slot 22'),
+            ('sensor_user_23', 'User Slot 23'),
+            ('sensor_user_24', 'User Slot 24'),
+            ('sensor_user_25', 'User Slot 25'),
+            ('sensor_user_26', 'User Slot 26'),
+            ('sensor_user_27', 'User Slot 27'),
+            ('sensor_user_28', 'User Slot 28'),
+            ('sensor_user_29', 'User Slot 29'),
+            ('sensor_user_30', 'User Slot 30'),
+            ('sensor_user_31', 'User Slot 31'),
+            ('sensor_user_32', 'User Slot 32'),
+            ('sensor_user_33', 'User Slot 33'),
+            ('sensor_user_34', 'User Slot 34'),
+            ('sensor_user_35', 'User Slot 35'),
+            ('sensor_user_36', 'User Slot 36'),
+            ('sensor_user_37', 'User Slot 37'),
+            ('sensor_user_38', 'User Slot 38'),
+            ('sensor_user_39', 'User Slot 39'),
+            ('sensor_user_40', 'User Slot 40'),
+            ('sensor_user_41', 'User Slot 41'),
+            ('sensor_user_42', 'User Slot 42'),
+            ('sensor_user_43', 'User Slot 43'),
+            ('sensor_user_44', 'User Slot 44'),
+            ('sensor_user_45', 'User Slot 45'),
+            ('sensor_user_46', 'User Slot 46'),
+            ('sensor_user_47', 'User Slot 47'),
+            ('sensor_user_48', 'User Slot 48'),
+            ('sensor_user_49', 'User Slot 49'),
+            ('sensor_user_50', 'User Slot 50'),
+            ('sensor_user_51', 'User Slot 51'),
+            ('sensor_user_52', 'User Slot 52'),
+            ('sensor_user_53', 'User Slot 53'),
+            ('sensor_user_54', 'User Slot 54'),
+            ('sensor_user_55', 'User Slot 55'),
+            ('sensor_user_56', 'User Slot 56'),
+            ('sensor_user_57', 'User Slot 57'),
+            ('sensor_user_58', 'User Slot 58'),
+            ('sensor_user_59', 'User Slot 59'),
+            ('sensor_user_100', '(100) User Slot - Rain Value'),
+        ],
+        'System Sensors' : [
+            ('sensor_temp_0', '(0) System Temp - Camera Temp'),
+            ('sensor_temp_1', 'System Temp - Future'),
+            ('sensor_temp_2', 'System Temp - Future'),
+            ('sensor_temp_3', 'System Temp - Future'),
+            ('sensor_temp_4', 'System Temp - Future'),
+            ('sensor_temp_5', 'System Temp - Future'),
+            ('sensor_temp_6', 'System Temp - Future'),
+            ('sensor_temp_7', 'System Temp - Future'),
+            ('sensor_temp_8', 'System Temp - Future'),
+            ('sensor_temp_9', 'System Temp - Future'),
+            ('sensor_temp_10', 'System Temp 10'),
+            ('sensor_temp_11', 'System Temp 11'),
+            ('sensor_temp_12', 'System Temp 12'),
+            ('sensor_temp_13', 'System Temp 13'),
+            ('sensor_temp_14', 'System Temp 14'),
+            ('sensor_temp_15', 'System Temp 15'),
+            ('sensor_temp_16', 'System Temp 16'),
+            ('sensor_temp_17', 'System Temp 17'),
+            ('sensor_temp_18', 'System Temp 18'),
+            ('sensor_temp_19', 'System Temp 19'),
+            ('sensor_temp_20', 'System Temp 20'),
+            ('sensor_temp_21', 'System Temp 21'),
+            ('sensor_temp_22', 'System Temp 22'),
+            ('sensor_temp_23', 'System Temp 23'),
+            ('sensor_temp_24', 'System Temp 24'),
+            ('sensor_temp_25', 'System Temp 25'),
+            ('sensor_temp_26', 'System Temp 26'),
+            ('sensor_temp_27', 'System Temp 27'),
+            ('sensor_temp_28', 'System Temp 28'),
+            ('sensor_temp_29', 'System Temp 29'),
+            ('sensor_temp_30', 'System Temp 30'),
+            ('sensor_temp_31', 'System Temp 31'),
+            ('sensor_temp_32', 'System Temp 32'),
+            ('sensor_temp_33', 'System Temp 33'),
+            ('sensor_temp_34', 'System Temp 34'),
+            ('sensor_temp_35', 'System Temp 35'),
+            ('sensor_temp_36', 'System Temp 36'),
+            ('sensor_temp_37', 'System Temp 37'),
+            ('sensor_temp_38', 'System Temp 38'),
+            ('sensor_temp_39', 'System Temp 39'),
+            ('sensor_temp_40', 'System Temp 40'),
+            ('sensor_temp_41', 'System Temp 41'),
+            ('sensor_temp_42', 'System Temp 42'),
+            ('sensor_temp_43', 'System Temp 43'),
+            ('sensor_temp_44', 'System Temp 44'),
+            ('sensor_temp_45', 'System Temp 45'),
+            ('sensor_temp_46', 'System Temp 46'),
+            ('sensor_temp_47', 'System Temp 47'),
+            ('sensor_temp_48', 'System Temp 48'),
+            ('sensor_temp_49', 'System Temp 49'),
+            ('sensor_temp_50', 'System Temp 50'),
+            ('sensor_temp_51', 'System Temp 51'),
+            ('sensor_temp_52', 'System Temp 52'),
+            ('sensor_temp_53', 'System Temp 53'),
+            ('sensor_temp_54', 'System Temp 54'),
+            ('sensor_temp_55', 'System Temp 55'),
+            ('sensor_temp_56', 'System Temp 56'),
+            ('sensor_temp_57', 'System Temp 57'),
+            ('sensor_temp_58', 'System Temp 58'),
+            ('sensor_temp_59', 'System Temp 59'),
+        ]
     }
 
 
@@ -5365,7 +5365,10 @@ class IndiAllskyConfigForm(FlaskForm):
                                 'label' : label,
                                 'probe' : probe_name,
                             }
-                            self.SENSOR_SLOT_choices['User Sensors'][target_slot][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
+                            self.SENSOR_SLOT_choices['User Sensors'][target_slot] = (
+                                self.SENSOR_SLOT_choices['User Sensors'][target_slot][0],
+                                '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data),
+                            )
                 except AttributeError:
                     app.logger.error('Unknown sensor class: %s', classname)
 
@@ -5389,7 +5392,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
         for x, label in enumerate(temp_label_list[:50]):  # limit to 50
             if (x + 10) < len(self.SENSOR_SLOT_choices['System Sensors']):
-                self.SENSOR_SLOT_choices['System Sensors'][x + 10][1] = '({0:d}) {1:s}'.format(x + 10, label)
+                self.SENSOR_SLOT_choices['System Sensors'][x + 10] = (
+                    self.SENSOR_SLOT_choices['System Sensors'][x + 10][0],
+                    '({0:d}) {1:s}'.format(x + 10, label),
+                )
 
 
         ### Update the choices
@@ -8878,7 +8884,7 @@ class IndiAllskySetTimezoneForm(FlaskForm):
         try:
             session_bus = dbus.SystemBus()
         except dbus.exceptions.DBusException:
-            return (['D-Bus Unavailable', 'D-Bus Unavailable'],)
+            return (('D-Bus Unavailable', 'D-Bus Unavailable'),)
 
 
         timedate1 = session_bus.get_object('org.freedesktop.timedate1', '/org/freedesktop/timedate1')
@@ -8891,7 +8897,7 @@ class IndiAllskySetTimezoneForm(FlaskForm):
 
         timezone_list = list()
         for tz in systemd_timezones:
-            timezone_list.append([str(tz), str(tz)])
+            timezone_list.append((str(tz), str(tz)))
 
 
         # ensure sorted by name
@@ -9420,7 +9426,7 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
         try:
             bus = dbus.SystemBus()
         except dbus.exceptions.DBusException:
-            return (['D-Bus Unavailable', 'D-Bus Unavailable'],)
+            return (('D-Bus Unavailable', 'D-Bus Unavailable'),)
 
 
         try:
@@ -9666,7 +9672,7 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
         try:
             bus = dbus.SystemBus()
         except dbus.exceptions.DBusException:
-            return (['D-Bus Unavailable', 'D-Bus Unavailable'],)
+            return (('D-Bus Unavailable', 'D-Bus Unavailable'),)
 
 
         try:
@@ -9756,7 +9762,7 @@ class IndiAllskyDriveManagerForm(FlaskForm):
         try:
             bus = dbus.SystemBus()
         except dbus.exceptions.DBusException:
-            return (['D-Bus Unavailable', 'D-Bus Unavailable'],)
+            return (('D-Bus Unavailable', 'D-Bus Unavailable'),)
 
 
         try:
@@ -9843,7 +9849,7 @@ class IndiAllskyDriveManagerForm(FlaskForm):
         try:
             bus = dbus.SystemBus()
         except dbus.exceptions.DBusException:
-            return (['D-Bus Unavailable', 'D-Bus Unavailable'],)
+            return (('D-Bus Unavailable', 'D-Bus Unavailable'),)
 
 
         try:
@@ -9966,7 +9972,7 @@ class IndiAllskyIndiServerChangeForm(FlaskForm):
 
     def getCameraServers(self):
         select_list = [
-            ['', 'None'],
+            ('', 'None'),
         ]
 
 
@@ -9980,7 +9986,7 @@ class IndiAllskyIndiServerChangeForm(FlaskForm):
 
         for server in constants.INDISERVER_CAMERA_MAP.keys():
             if indiserver_p.parent.joinpath(server).exists():
-                select_list.append([server, '{0:s} - [{1:s}]'.format(constants.INDISERVER_CAMERA_MAP[server], server)])
+                select_list.append((server, '{0:s} - [{1:s}]'.format(constants.INDISERVER_CAMERA_MAP[server], server)))
 
 
         return select_list
@@ -9988,7 +9994,7 @@ class IndiAllskyIndiServerChangeForm(FlaskForm):
 
     def getGpsServers(self):
         select_list = [
-            ['', 'None'],
+            ('', 'None'),
         ]
 
 
@@ -10002,7 +10008,7 @@ class IndiAllskyIndiServerChangeForm(FlaskForm):
 
         for server in constants.INDISERVER_GPS_MAP.keys():
             if indiserver_p.parent.joinpath(server).exists():
-                select_list.append([server, '{0:s} - [{1:s}]'.format(constants.INDISERVER_GPS_MAP[server], server)])
+                select_list.append((server, '{0:s} - [{1:s}]'.format(constants.INDISERVER_GPS_MAP[server], server)))
 
 
         return select_list
