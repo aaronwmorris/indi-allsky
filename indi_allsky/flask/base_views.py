@@ -94,7 +94,10 @@ class BaseView(View):
         else:
             self.camera_data = dict()
 
-        self.camera_time_offset = self.camera.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
+        if self.local_indi_allsky:
+            self.camera_time_offset = 0
+        else:
+            self.camera_time_offset = self.camera.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
         self.camera_now = datetime.now() + timedelta(seconds=self.camera_time_offset)
 
 
