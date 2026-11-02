@@ -94,6 +94,20 @@ def _config(**temp_sensor):
     return {'TEMP_SENSOR': settings}
 
 
+@pytest.mark.parametrize('display, unit', [
+    ('c', '\u00b0C'), ('f', '\u00b0F'), ('k', 'K'),
+    (None, '\u00b0C'), ('invalid', '\u00b0C'),
+])
+def test_mlx_and_ground_sensor_labels_follow_display_temperature_units(display, unit):
+    config = _config()
+    config['TEMP_DISPLAY'] = display
+
+    slots = sensors_mapping.build_slot_label_map(config)
+
+    assert [slots[index]['unit'] for index in (0, 10, 11, 12)] == [unit] * 4
+    assert slots[13]['unit'] == '%'
+
+
 def _validate_cloudiness_form(form):
     validate = _source_member('flask/forms.py', 'IndiAllskyConfigForm', 'validate')
     namespace = {'self': form, 'math': math, 'sensors_mapping': sensors_mapping, 'result': True}
@@ -120,9 +134,11 @@ def _cloudiness_ground_form(config, ground_slot, enabled):
                      TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR=ground_slot)
     form.SENSOR_SLOT_choices = {'User Sensors': [(str(index), str(index)) for index in range(110)]}
     namespace['self'] = form
-    for letter in ('A', 'B', 'C', 'D', 'E', 'F'):
-        namespace['temp_sensor__' + letter.lower() + '_classname'] = config['TEMP_SENSOR'].get(letter + '_CLASSNAME', '')
-        namespace['temp_sensor__' + letter.lower() + '_user_var_slot'] = config['TEMP_SENSOR'].get(letter + '_USER_VAR_SLOT', '')
+    namespace['data'] = {
+        f'TEMP_SENSOR__{letter}_{key}': config['TEMP_SENSOR'].get(f'{letter}_{key}', '')
+        for letter in ('A', 'B', 'C', 'D', 'E', 'F')
+        for key in ('CLASSNAME', 'USER_VAR_SLOT')
+    }
     initialize = _source_member('flask/forms.py', 'IndiAllskyConfigForm', '__init__')
     temp_sensors = _source_assignment(initialize.body, 'temp_sensors')
     start = initialize.body.index(_source_assignment(initialize.body, 'ground_sensor_choices'))

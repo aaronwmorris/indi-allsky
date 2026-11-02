@@ -139,6 +139,32 @@ def test_i2c_sensor_validation_without_pin(flask_app):
         assert not form.TEMP_SENSOR__A_CLASSNAME.errors
 
 
+@pytest.mark.parametrize('letter, index', [('A', 10), ('F', 55)])
+def test_mlx_cloud_and_ambient_choices_initialize_and_render(flask_app, letter, index):
+    with flask_app.test_request_context():
+        data = _get_dummy_form_data()
+        slot = f'sensor_user_{index}'
+        data[f'TEMP_SENSOR__{letter}_CLASSNAME'] = 'blinka_temp_sensor_mlx90614_i2c'
+        data[f'TEMP_SENSOR__{letter}_USER_VAR_SLOT'] = slot
+        data['TEMP_SENSOR__CLOUDINESS_INDEX_ENABLE'] = True
+        data['TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR'] = slot
+        data['TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR'] = slot
+
+        form = IndiAllskyConfigForm(data=data)
+        cloud_field = form.TEMP_SENSOR__CLOUDINESS_INDEX_SENSOR
+        ground_field = form.TEMP_SENSOR__CLOUDINESS_INDEX_GROUND_SENSOR
+
+        assert slot in dict(cloud_field.choices['MLX Cloudiness Sensors'])
+        assert slot in dict(ground_field.choices['Temperature Sensors'])
+        assert f'sensor_user_{index + 1}' not in dict(ground_field.choices['Temperature Sensors'])
+        for field in (cloud_field, ground_field):
+            assert field.validate(form)
+            assert all(isinstance(choice, tuple) for group in field.choices.values() for choice in group)
+            rendered = field()
+            assert '<optgroup label="Auto">' in rendered
+            assert f'value="{slot}"' in rendered
+
+
 def test_spi_and_dht_sensor_validation_requires_pin(flask_app):
     with flask_app.test_request_context():
         data = _get_dummy_form_data()
