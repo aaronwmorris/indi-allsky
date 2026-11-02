@@ -264,7 +264,7 @@ VIRTUALENV_REQ_GPIO=requirements/requirements_gpio.txt
 
 if [[ "$DISTRO" == "debian_13" ]]; then
     if [ "$CPU_ARCH" == "armv6l" ]; then
-        VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
+        VIRTUALENV_REQ=requirements/legacy/requirements_latest_armv6l.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     elif [ "$CPU_BITS" == "32" ]; then
         VIRTUALENV_REQ=requirements/requirements_latest_32.txt
@@ -357,7 +357,7 @@ if [[ "$DISTRO" == "debian_13" ]]; then
 
 elif [[ "$DISTRO" == "debian_12" ]]; then
     if [ "$CPU_ARCH" == "armv6l" ]; then
-        VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
+        VIRTUALENV_REQ=requirements/legacy/requirements_latest_armv6l.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     elif [ "$CPU_BITS" == "32" ]; then
         VIRTUALENV_REQ=requirements/requirements_latest_32.txt
@@ -439,10 +439,10 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
 
 elif [[ "$DISTRO" == "debian_11" ]]; then
     if [ "$CPU_ARCH" == "armv6l" ]; then
-        VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
+        VIRTUALENV_REQ=requirements/legacy/requirements_latest_armv6l.txt
         VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
     else
-        VIRTUALENV_REQ=requirements/requirements_debian11.txt
+        VIRTUALENV_REQ=requirements/legacy/requirements_debian11.txt
     fi
 
 
@@ -601,7 +601,7 @@ elif [[ "$DISTRO" == "ubuntu_26.04" ]]; then
 
 elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     if [ "$CPU_ARCH" == "armv6l" ]; then
-        VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
+        VIRTUALENV_REQ=requirements/legacy/requirements_latest_armv6l.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     elif [ "$CPU_BITS" == "32" ]; then
         VIRTUALENV_REQ=requirements/requirements_latest_32.txt
@@ -684,7 +684,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
 
 elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     if [ "$CPU_ARCH" == "armv6l" ]; then
-        VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
+        VIRTUALENV_REQ=requirements/legacy/requirements_latest_armv6l.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     elif [ "$CPU_BITS" == "32" ]; then
         VIRTUALENV_REQ=requirements/requirements_latest_32.txt
@@ -771,10 +771,10 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
 elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
 
     if [ "$CPU_ARCH" == "armv6l" ]; then
-        VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
+        VIRTUALENV_REQ=requirements/legacy/requirements_latest_armv6l.txt
         VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
     else
-        VIRTUALENV_REQ=requirements/requirements_debian11.txt
+        VIRTUALENV_REQ=requirements/legacy/requirements_debian11.txt
     fi
 
 
