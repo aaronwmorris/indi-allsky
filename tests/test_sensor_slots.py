@@ -431,6 +431,19 @@ def test_editor_renders_only_configured_cards_and_preserves_keys(sensor_form):
     assert 'value="Sensor Z"' in html
 
 
+def test_remove_buttons_use_destructive_styling(sensor_form):
+    html = render_sensor_editor(sensor_form, {'A_CLASSNAME': 'kernel_temp_sensor_ds18x20_w1'})
+    buttons = re.findall(r'<button[^>]* data-remove-sensor\b[^>]*>.*?</button>', html, re.DOTALL)
+    assert len(buttons) == 26
+    for letter, button in zip(sensor_slots.SENSOR_LETTERS, buttons):
+        classes = re.search(r'class="([^"]+)"', button)[1].split()
+        assert {'tw:btn', 'tw:btn-error', 'tw:btn-outline'} <= set(classes)
+        assert 'tw:btn-ghost' not in classes
+        assert f'aria-label="Remove Sensor {letter}"' in button
+        assert 'tw:icon-[lucide--trash-2]' in button
+        assert 'aria-hidden="true"' in button
+
+
 def test_ui_serializes_all_26_slots_and_keeps_global_sensor_settings():
     from jinja2 import Environment
 

@@ -25,7 +25,9 @@
                         <div class="tw:collapse-title tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:flex tw:items-center tw:gap-2">
                             <i class="tw:icon-[lucide--thermometer] tw:w-4 tw:h-4 tw:text-primary"></i>
                             Sensor Probe {{ letter }} Configuration
-                            <button type="button" data-remove-sensor class="tw:btn tw:btn-ghost tw:btn-xs tw:relative tw:z-10" aria-label="Remove Sensor {{ letter }}">Remove</button>
+                            <button type="button" data-remove-sensor class="tw:btn tw:btn-error tw:btn-outline tw:btn-xs tw:rounded-[var(--radius-box)] tw:relative tw:z-10" aria-label="Remove Sensor {{ letter }}">
+                                <i class="tw:icon-[lucide--trash-2] tw:w-4 tw:h-4" aria-hidden="true"></i> Remove
+                            </button>
                         </div>
                         <div class="tw:collapse-content tw:flex tw:flex-col tw:gap-4 tw:pt-2">
                             <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4">
