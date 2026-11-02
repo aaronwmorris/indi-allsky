@@ -139,7 +139,8 @@ def test_i2c_sensor_validation_without_pin(flask_app):
         assert not form.TEMP_SENSOR__A_CLASSNAME.errors
 
 
-def test_spi_and_dht_sensor_validation_requires_pin(flask_app):
+def test_spi_and_dht_sensor_validation_requires_pin(flask_app, monkeypatch):
+    monkeypatch.setitem(sys.modules, 'board', types.SimpleNamespace(D5=5, D6=6))
     with flask_app.test_request_context():
         data = _get_dummy_form_data()
         data['TEMP_SENSOR__A_CLASSNAME'] = 'blinka_temp_sensor_bme280_spi'
@@ -148,6 +149,28 @@ def test_spi_and_dht_sensor_validation_requires_pin(flask_app):
         form = IndiAllskyConfigForm(data=data)
         form.validate()
         assert 'PIN must be defined' in form.TEMP_SENSOR__A_PIN_1.errors
+
+
+@pytest.mark.parametrize('letter', ['A', 'G', 'Z'])
+def test_sensor_labels_render_in_control_and_chart_choices(flask_app, letter):
+    with flask_app.test_request_context():
+        data = _get_dummy_form_data()
+        data[f'TEMP_SENSOR__{letter}_CLASSNAME'] = 'kernel_temp_sensor_ds18x20_w1'
+        data[f'TEMP_SENSOR__{letter}_LABEL'] = 'Roof probe'
+        data[f'TEMP_SENSOR__{letter}_USER_VAR_SLOT'] = 'sensor_user_59'
+        data['FAN__TEMP_USER_VAR_SLOT'] = 'sensor_user_59'
+        data['CHARTS__CUSTOM_SLOT_1'] = 'sensor_user_59'
+
+        form = IndiAllskyConfigForm(data=data)
+
+        assert not getattr(form, f'TEMP_SENSOR__{letter}_CLASSNAME').process_errors
+        assert isinstance(form.SENSOR_SLOT_choices['User Sensors'][59], tuple)
+        for field in (form.FAN__TEMP_USER_VAR_SLOT, form.CHARTS__CUSTOM_SLOT_1):
+            assert 'Roof probe' in field.choices['User Sensors'][59][1]
+            assert field.validate(form)
+            rendered = field()
+            assert 'Roof probe' in rendered
+            assert 'value="sensor_user_59"' in rendered
 
 
 def test_slot_choices_instance_isolation(flask_app):
@@ -180,7 +203,8 @@ def test_slot_choices_instance_isolation(flask_app):
         assert IndiAllskyConfigForm.SENSOR_SLOT_choices['User Sensors'][20][1] == 'User Slot 20'
 
 
-def test_slot_bounds_and_overlap_validation(flask_app):
+def test_slot_bounds_and_overlap_validation(flask_app, monkeypatch):
+    monkeypatch.setitem(sys.modules, 'board', types.SimpleNamespace(D5=5, D6=6))
     with flask_app.test_request_context():
         # Valid non-overlapping slots
         data = _get_dummy_form_data()
