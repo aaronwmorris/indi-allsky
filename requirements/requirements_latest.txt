@@ -67,6 +67,7 @@ shapely >= 2.2.0
 requests-toolbelt
 pytz
 mysql-connector-python
-PyWavelets >= 1.10.0
+PyWavelets >= 1.4.0 ; python_version < '3.12'
+PyWavelets >= 1.10.0 ; python_version >= '3.12'
 systemd-python
 pkgconfig
