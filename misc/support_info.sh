@@ -8,6 +8,9 @@ shopt -s nullglob
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 export PATH
 
+# Configuration values may contain Unicode, even under a non-UTF-8 locale.
+export PYTHONIOENCODING=utf-8
+
 
 function catch_error() {
     echo
