@@ -24,6 +24,8 @@ class IndiAllSky_Exposure_Base(object):
         self._target_adu_found = False
         self._current_adu_target = 0
         self.hist_adu = []
+        # The dark-library camera snapshot supplies the same rounding as its plan.
+        self._dark_gain = lambda gain: gain
 
 
     @property
@@ -172,6 +174,8 @@ class IndiAllSky_Exposure_Base(object):
         #    logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.6fs', exposure_offset * -1)
 
 
+        next_gain = self._dark_gain(next_gain)
+        gain_delta = next_gain - current_gain
         logger.warning('New calculated exposure: %0.6fs (%+0.6f) @ gain %0.3f (%+0.3f) bin %d', next_exposure, exposure_delta, next_gain, gain_delta, next_binning)
         self._expUtils.EXPOSURE_NEXT = next_exposure
         self._expUtils.EXPOSURE_DELTA = exposure_delta

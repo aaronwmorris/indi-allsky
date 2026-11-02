@@ -255,6 +255,7 @@ class FakeIndiClient(object):
             'max'     : self._ccd_device.max_gain,
             'step'    : None,
             'format'  : None,
+            'values'  : [],
         }
 
         return ccdinfo

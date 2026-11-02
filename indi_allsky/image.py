@@ -38,6 +38,7 @@ from .miscUpload import miscUpload
 from .adsb import AdsbAircraftHttpWorker
 
 from . import exposure as exposure_module
+from .capture_state import CameraCapabilities
 
 from .flask import create_app
 from .flask import db
@@ -348,6 +349,8 @@ class ImageWorker(Process):
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .one()
 
+
+        self.exposure_o._dark_gain = CameraCapabilities.from_camera(camera).snap_gain
 
         ### Special function: image is for SQM calculations only
         if sqm_exposure:
