@@ -93,6 +93,50 @@ def test_first_update_establishes_baseline_and_discards_startup_pulses(gpio_back
     sensor.deinit()
 
 
+@pytest.mark.parametrize('temperature, pressure, windspeed, expected_units', [
+    ('c', 'hPa', 'ms', ['\u00b0C', 'hPa', 'm/s', 'mm']),
+    ('f', 'inHg', 'mph', ['\u00b0F', 'inHg', 'mph', 'in']),
+    ('k', 'psi', 'knots', ['K', 'psi', 'kn', 'mm']),
+    ('c', 'mmHg', 'kph', ['\u00b0C', 'mmHg', 'km/h', 'mm']),
+    (None, None, None, ['\u00b0C', 'hPa', 'm/s', 'mm']),
+    ('invalid', 'invalid', 'invalid', ['\u00b0C', 'hPa', 'm/s', 'mm']),
+])
+def test_named_sensor_units_use_shared_display_settings(
+    monkeypatch, temperature, pressure, windspeed, expected_units,
+):
+    from indi_allsky import constants
+    from indi_allsky.devices import sensors
+    from indi_allsky.sensors_mapping import build_slot_label_map
+
+    sensor = SimpleNamespace(
+        METADATA={
+            'name': 'Unit test sensor',
+            'count': 4,
+            'types': [
+                constants.SENSOR_TEMPERATURE,
+                constants.SENSOR_ATMOSPHERIC_PRESSURE,
+                constants.SENSOR_WIND_SPEED,
+                constants.SENSOR_PRECIPITATION,
+            ],
+        },
+        get_labels=lambda pin: ['Temperature', 'Pressure', 'Wind Speed', 'Precipitation'],
+    )
+    monkeypatch.setattr(sensors, 'unit_test_sensor', sensor, raising=False)
+    config = {
+        'TEMP_DISPLAY': temperature,
+        'PRESSURE_DISPLAY': pressure,
+        'WINDSPEED_DISPLAY': windspeed,
+        'TEMP_SENSOR': {
+            'A_CLASSNAME': 'unit_test_sensor',
+            'A_USER_VAR_SLOT': 'sensor_user_10',
+        },
+    }
+
+    slot_map = build_slot_label_map(config)
+
+    assert [slot_map[slot]['unit'] for slot in range(10, 14)] == expected_units
+
+
 @pytest.mark.parametrize('units', ['ms', 'kph', 'mph', 'knots'])
 @pytest.mark.parametrize('sensor_slot, classname', [
     (None, ''),
