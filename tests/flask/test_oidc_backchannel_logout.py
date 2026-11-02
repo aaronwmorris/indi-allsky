@@ -361,3 +361,34 @@ def test_check_oidc_session_prevents_5_minute_logout(mock_app):
     local_user = MagicMock(is_authenticated=True)
     local_user.data = {"idp": "local"}
     assert check_session(local_user, {}, "/indi-allsky/") == "PROCEED"
+
+
+def test_login_view_revoked_session_clears_without_redirect_loop(mock_app):
+    """Ensure LoginView.get() does not redirect to index_view if OIDC session is revoked."""
+    from indi_allsky.flask.auth_views import LoginView
+
+    from indi_allsky.flask.base_views import TemplateView
+
+    mock_app.config['OIDC_AUTO_LOGIN'] = False
+    mock_app.config['LOCAL_AUTH_ENABLE'] = True
+
+    revoked_user = MagicMock(is_authenticated=True)
+    revoked_user.data = {
+        "idp": "oidc",
+        "oidc_sub": "sub1",
+        "oidc_logged_out_at": 2000,
+    }
+
+    with mock_app.test_request_context('/indi-allsky/login'):
+        with patch.object(LoginView, '__init__', return_value=None):
+            with patch('indi_allsky.flask.auth_views.current_user', revoked_user):
+                with patch('indi_allsky.flask.auth_views.session', {'oidc_login_time': 1000}) as mock_session:
+                    with patch('indi_allsky.flask.auth_views.logout_user') as mock_logout:
+                        with patch.object(TemplateView, 'dispatch_request', return_value='login_rendered') as mock_super_dispatch:
+                            view = LoginView(template_name='login.html')
+                            resp = view.get()
+                            # logout_user must have been called
+                            mock_logout.assert_called_once()
+                            # Must NOT redirect to index_view!
+                            assert resp == 'login_rendered'
+

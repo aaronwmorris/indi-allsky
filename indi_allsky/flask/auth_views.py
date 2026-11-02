@@ -74,7 +74,26 @@ class LoginView(TemplateView):
 
     def get(self):
         if current_user.is_authenticated:
-            return redirect(url_for('indi_allsky.index_view'))
+            user_data = dict(current_user.data) if current_user.data else {}
+            if user_data.get('idp') == 'oidc':
+                session_sid = session.get('oidc_sid')
+                session_login_time = session.get('oidc_login_time', 0)
+                user_logged_out_at = user_data.get('oidc_logged_out_at', 0)
+                revoked_sids = user_data.get('oidc_revoked_sids', {})
+
+                is_revoked = False
+                if session_sid and session_sid in revoked_sids:
+                    is_revoked = True
+                elif user_logged_out_at and session_login_time <= user_logged_out_at:
+                    is_revoked = True
+
+                if is_revoked:
+                    session.clear()
+                    logout_user()
+                else:
+                    return redirect(url_for('indi_allsky.index_view'))
+            else:
+                return redirect(url_for('indi_allsky.index_view'))
 
         if app.config.get('OIDC_ENABLE') and app.config.get('OIDC_AUTO_LOGIN'):
             return redirect(url_for('auth_indi_allsky.oidc_login_view', next=request.args.get('next', '')))
@@ -333,7 +352,7 @@ class OIDCCallbackView(BaseView):
 
 
         session.permanent = True
-        login_user(user, remember=True)
+        login_user(user, remember=False)
 
 
         now = datetime.now()

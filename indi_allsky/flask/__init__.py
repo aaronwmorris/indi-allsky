@@ -191,9 +191,20 @@ def create_app():
 
             if is_revoked:
                 app.logger.info('Logging out user %s due to OIDC backchannel logout', current_user.username)
-                logout_user()
                 session.clear()
-                return redirect(url_for('auth_indi_allsky.login_view'))
+                logout_user()
+
+                if request.endpoint and request.endpoint.startswith('auth_indi_allsky.'):
+                    return
+
+                resp = redirect(url_for('auth_indi_allsky.login_view'))
+                remember_cookie = app.config.get('REMEMBER_COOKIE_NAME', 'remember_token')
+                resp.delete_cookie(
+                    remember_cookie,
+                    domain=app.config.get('REMEMBER_COOKIE_DOMAIN'),
+                    path=app.config.get('REMEMBER_COOKIE_PATH', '/')
+                )
+                return resp
 
 
     @app.after_request
