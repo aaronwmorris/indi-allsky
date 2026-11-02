@@ -14,7 +14,7 @@ ephem == 4.2
 skyfield == 1.54
 paramiko == 5.0.0
 pycurl == 7.45.7
-Pillow == 12.3.0
+Pillow == 13.0.0
 piexif
 imageio
 imageio-ffmpeg
