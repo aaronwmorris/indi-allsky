@@ -44,13 +44,29 @@ Peak memory consumption occurs during the ffmpeg multi-threaded encoding pipelin
 | `x264` | Standard software H.264 encoder. Universal browser compatibility. |
 | `x265 hevc` | H.265 encoder. Higher CPU utilization and memory footprint. Limited browser playback support without transcoding. |
 | `webm` | VP8/VP9 open web format. |
-| `h264 v4l2m2m` | Raspberry Pi hardware-accelerated V4L2 M2M encoder (limited to 1920x1920 maximum resolution). |
+| `h264 v4l2m2m` | Raspberry Pi hardware-accelerated V4L2 M2M encoder. Requires scaling to a supported width; see the warning below. |
 | `h264 QSV` | Intel Quick Sync Video hardware acceleration. |
 | `h264 NVENC` | NVIDIA hardware NVENC acceleration. |
 | `h264 VAAPI` | VA-API hardware acceleration (Intel/AMD). |
 
 > [!WARNING]
 > Hardware-accelerated targets (`NVENC`, `QSV`, `VAAPI`) require host GPU driver enablement and non-free encoder packages installed on the system.
+
+> [!WARNING]
+> **`h264 v4l2m2m` silently produces corrupt video at many resolutions.** If the output width, rounded up to a multiple of 16, is not a multiple of 64, the video is scrambled (diagonal streaks, a green band across the bottom). ffmpeg still reports success, and the file looks valid to `ffprobe`. Height does not matter.
+>
+> Select one of the **Raspberry Pi h264 (v4l2m2m)** FFMPEG Scaling options (`Width 1280px`, `1024px` or `640px`) for night, day and star trail timelapses. The height-based options (`-2:720`, `-2:1080`, ...) usually produce an unsupported width.
+>
+> | Width | Result |
+> |---|---|
+> | 640, 1024, 1280, 1344, 1408, 1470, 1536, 1600 | OK |
+> | 992, 1000, 1296, 1304, 1312, 1376, 1440, 1504, 1700 | Corrupt |
+>
+> Frames larger than about 1920x1088 fail with `VIDIOC_STREAMON failed` (1920x1088 and 1600x1200 work; 1920x1436 fails).
+>
+> Panorama timelapses are not scaled, so check that their width also meets the rule.
+>
+> Tested on a Raspberry Pi 4 (Ubuntu 24.04, kernel 6.8, ffmpeg 6.1.1). This appears to be a stride mismatch in the Raspberry Pi V4L2 stack, not an indi-allsky bug.
 
 ---
 

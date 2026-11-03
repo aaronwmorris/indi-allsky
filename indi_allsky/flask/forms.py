@@ -3965,6 +3965,11 @@ class IndiAllskyConfigForm(FlaskForm):
             ('-2:720', 'Height 720px - [-2:720] - 1GB RAM'),
             ('-2:480', 'Height 480px - [-2:480] - <1GB RAM'),
         ),
+        'Raspberry Pi h264 (v4l2m2m)' : (
+            ('1280:-2', 'Width 1280px - [1280:-2] - v4l2m2m safe'),
+            ('1024:-2', 'Width 1024px - [1024:-2] - v4l2m2m safe'),
+            ('640:-2', 'Width 640px - [640:-2] - v4l2m2m safe'),
+        ),
         'Legacy' : (
             ('-1:2304', 'Height 2304px - [-1:2304] - 75% (imx477-only)'),
             ('-1:1520', 'Height 1520px - [-1:1520] - 50% (imx477-only)'),
