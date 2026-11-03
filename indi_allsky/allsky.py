@@ -188,6 +188,7 @@ class IndiAllSky(object):
         # 108 reserved for future use
         # 109 reserved for future use
         self.sensors_user_av = Array('f', [0.0 for x in range(110)])
+        self.sensors_user_read_time_av = Array('d', [0.0 for x in range(110)])
 
 
         ### all values in microseconds (0.000001 second)
@@ -532,6 +533,7 @@ class IndiAllSky(object):
             self.sensors_user_av,
             self.night_av,
             self.astro_av,
+            sensors_user_read_time_av=self.sensors_user_read_time_av,
         )
         self.image_worker.start()
 
@@ -642,6 +644,8 @@ class IndiAllSky(object):
         self.sensor_worker_idx += 1
 
         logger.info('Starting Sensor-%d worker', self.sensor_worker_idx)
+        with self.sensors_user_av.get_lock():
+            self.sensors_user_read_time_av[:] = [0.0] * len(self.sensors_user_read_time_av)
         self.sensor_worker = SensorWorker(
             self.sensor_worker_idx,
             self.config,
@@ -651,6 +655,7 @@ class IndiAllSky(object):
             self.sensors_user_av,
             self.night_av,
             self.astro_av,
+            sensors_user_read_time_av=self.sensors_user_read_time_av,
         )
         self.sensor_worker.start()
 
