@@ -47,6 +47,7 @@
     --tw-tracking-widest: 0.1em;
     --tw-leading-tight: 1.25;
     --tw-leading-relaxed: 1.625;
+    --tw-radius-xs: 0.125rem;
     --tw-radius-xl: 0.75rem;
     --tw-drop-shadow-2xl: 0 25px 25px rgb(0 0 0 / 0.15);
     --tw-animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -4786,6 +4787,19 @@
     mask-size: 100% 100%;
     --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cg fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'%3E%3Cpath d='M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z'/%3E%3Cpath d='M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7M7 3v4a1 1 0 0 0 1 1h7'/%3E%3C/g%3E%3C/svg%3E");
   }
+  .tw\:icon-\[lucide--search-x\] {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    background-color: currentColor;
+    -webkit-mask-image: var(--svg);
+    mask-image: var(--svg);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cg fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'%3E%3Cpath d='m13.5 8.5l-5 5m0-5l5 5'/%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21l-4.3-4.3'/%3E%3C/g%3E%3C/svg%3E");
+  }
   .tw\:icon-\[lucide--server\] {
     display: inline-block;
     width: 1em;
@@ -4850,6 +4864,19 @@
     -webkit-mask-size: 100% 100%;
     mask-size: 100% 100%;
     --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cpath fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z'/%3E%3C/svg%3E");
+  }
+  .tw\:icon-\[lucide--sliders-horizontal\] {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    background-color: currentColor;
+    -webkit-mask-image: var(--svg);
+    mask-image: var(--svg);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cpath fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 5H3m9 14H3M14 3v4m2 10v4m5-9h-9m9 7h-5m5-14h-7m-6 5v4m0-2H3'/%3E%3C/svg%3E");
   }
   .tw\:icon-\[lucide--sliders\] {
     display: inline-block;
@@ -5743,6 +5770,9 @@
   .tw\:rounded-full {
     border-radius: calc(infinity * 1px);
   }
+  .tw\:rounded-xs {
+    border-radius: var(--tw-radius-xs);
+  }
   .tw\:rounded-t-xl {
     border-top-left-radius: var(--tw-radius-xl);
     border-top-right-radius: var(--tw-radius-xl);
@@ -5833,6 +5863,12 @@
       border-color: currentColor;
     }
   }
+  .tw\:border-base-200\/80 {
+    border-color: var(--color-base-200);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-base-200) 80%, transparent);
+    }
+  }
   .tw\:border-base-300 {
     border-color: var(--color-base-300);
   }
@@ -5907,6 +5943,9 @@
     @supports (color: color-mix(in lab, red, red)) {
       border-color: color-mix(in oklab, var(--tw-color-white) 15%, transparent);
     }
+  }
+  .tw\:border-l-primary {
+    border-left-color: var(--color-primary);
   }
   @layer daisyui.l1.l2 {
     :is(.tw\:tabs-lift :checked, .tw\:tabs-lift label:has(:checked), .tw\:tabs-lift :is(:is(.tw\:tab-active), [aria-selected="true"], [aria-current="true"], [aria-current="page"])) + .tw\:tab-content:nth-child(1) {
@@ -6256,6 +6295,9 @@
       padding-block: 0.25rem;
     }
   }
+  .tw\:px-0\.5 {
+    padding-inline: calc(var(--tw-spacing) * 0.5);
+  }
   .tw\:px-1 {
     padding-inline: var(--tw-spacing);
   }
@@ -6369,6 +6411,9 @@
   }
   .tw\:pl-5 {
     padding-left: calc(var(--tw-spacing) * 5);
+  }
+  .tw\:pl-5\.5 {
+    padding-left: calc(var(--tw-spacing) * 5.5);
   }
   .tw\:pl-10 {
     padding-left: calc(var(--tw-spacing) * 10);
