@@ -1380,6 +1380,21 @@
         visibility: visible;
       }
     }
+    .tw\:collapse-open {
+      grid-template-rows: max-content 1fr;
+    }
+    .tw\:collapse-open > .tw\:collapse-content {
+      --overflow-delay: 0.2s;
+      overflow: revert-layer;
+      content-visibility: visible;
+      min-height: fit-content;
+      padding-bottom: 1rem;
+    }
+    @supports not (content-visibility: visible) {
+      .tw\:collapse-open > .tw\:collapse-content {
+        visibility: visible;
+      }
+    }
   }
   .tw\:collapse {
     visibility: collapse;
@@ -3834,6 +3849,9 @@
   }
   .tw\:mt-2 {
     margin-top: calc(var(--tw-spacing) * 2);
+  }
+  .tw\:mt-2\.5 {
+    margin-top: calc(var(--tw-spacing) * 2.5);
   }
   .tw\:mt-3 {
     margin-top: calc(var(--tw-spacing) * 3);
@@ -7656,6 +7674,45 @@ calendar-select-month::part(option):disabled, calendar-select-year::part(option)
 }
 #form_config.mode-simple .config-expert {
   display: none !important;
+}
+input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webkit-search-decoration, input[type="search"]::-webkit-search-results-button, input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+.field-highlight {
+  background-color: rgba(59, 130, 246, 0.12) !important;
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  border-radius: var(--radius-box, 0.5rem) !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25) !important;
+  transition: background-color 0.4s ease, outline 0.4s ease, box-shadow 0.4s ease !important;
+  animation: field-pulse 2s ease-out;
+}
+@keyframes field-pulse {
+  0% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
+  }
+}
+.parent-toggle-flashing {
+  outline: 2px solid #f59e0b !important;
+  outline-offset: 2px !important;
+  background-color: rgba(245, 158, 11, 0.15) !important;
+  border-radius: var(--radius-box, 0.5rem) !important;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.35) !important;
+  transition: all 0.3s ease !important;
+  animation: parent-toggle-flash 1.2s ease-in-out infinite alternate !important;
+}
+@keyframes parent-toggle-flash {
+  0% {
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.55);
+  }
 }
 @layer base {
   :where(:root),:root:has(input.theme-controller[value=light]:checked),[data-theme=light] {

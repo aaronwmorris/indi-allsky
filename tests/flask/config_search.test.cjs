@@ -115,19 +115,10 @@ function matchesSelector(el, selector) {
     if (!el || !selector) return false;
     const parts = selector.split(',').map(s => s.trim());
     for (const part of parts) {
-        if (part === '.tab-pane' && el.classList.contains('tab-pane')) return true;
-        if (part === '.config-expert' && el.classList.contains('config-expert')) return true;
-        if (part === '.tw\\:card' && el.classList.contains('tw:card')) return true;
-        if (part === '.card' && el.classList.contains('card')) return true;
-        if (part === '.tw\\:collapse' && el.classList.contains('tw:collapse')) return true;
-        if (part === '.collapse' && el.classList.contains('collapse')) return true;
-        if (part === '.tw\\:grid' && el.classList.contains('tw:grid')) return true;
-        if (part === '.tw\\:flex' && el.classList.contains('tw:flex')) return true;
-        if (part === '.form-group' && el.classList.contains('form-group')) return true;
-        if (part === '.config-search-item' && el.classList.contains('config-search-item')) return true;
-        if (part === '.parent-toggle-hint' && el.classList.contains('parent-toggle-hint')) return true;
         if (part.includes('tw\\:font-bold') && el.classList.contains('tw:font-bold')) return true;
         if (part.includes('tw\\:tracking-widest') && el.classList.contains('tw:tracking-widest')) return true;
+        if (part.includes('btn-enable-parent') && el.classList.contains('btn-enable-parent')) return true;
+        if (part.startsWith('.') && el.classList.contains(part.slice(1).replace(/\\/g, ''))) return true;
         if (part === 'label' && el.tagName === 'LABEL') return true;
         if (part === 'span' && el.tagName === 'SPAN') return true;
         if (part === 'input[type="checkbox"]' && el.tagName === 'INPUT' && el.type === 'checkbox') return true;
@@ -477,6 +468,7 @@ test('Selecting dependent setting flashes parent toggle and displays hint banner
 
     const input = env.elements.get('config-search-input');
     const rowMqttEnable = env.elements.get('row-mqtt-enable');
+    const rowMqttHost = env.elements.get('row-mqtt-host');
 
     input.value = 'broker';
     input.dispatchEvent({ type: 'input' });
@@ -492,10 +484,41 @@ test('Selecting dependent setting flashes parent toggle and displays hint banner
     assert.ok(rowMqttEnable.classList.contains('parent-toggle-flashing'));
     assert.ok(rowMqttEnable.querySelector('.parent-toggle-hint') !== null);
 
+    // Target child row should also have guidance banner with Enable Now button
+    assert.ok(rowMqttHost.querySelector('.parent-toggle-hint') !== null);
+    const enableBtn = rowMqttHost.querySelector('.btn-enable-parent');
+    assert.ok(enableBtn !== null);
+
     // Clicking anywhere ceases flashing
     env.document.dispatchEvent({ type: 'click' });
     assert.ok(!rowMqttEnable.classList.contains('parent-toggle-flashing'));
     assert.ok(rowMqttEnable.querySelector('.parent-toggle-hint') === null);
+});
+
+test('Clicking Enable Now on dependent setting turns on parent toggle', () => {
+    const env = buildMockDOM();
+    loadConfigSearch(env);
+
+    const input = env.elements.get('config-search-input');
+    const rowMqttEnable = env.elements.get('row-mqtt-enable');
+    const rowMqttHost = env.elements.get('row-mqtt-host');
+    const inputMqttEnable = env.elements.get('MQTTPUBLISH__ENABLE');
+
+    assert.equal(inputMqttEnable.checked, false);
+
+    input.value = 'broker';
+    input.dispatchEvent({ type: 'input' });
+    input.dispatchEvent({ type: 'keydown', key: 'Enter', preventDefault() {} });
+
+    const enableBtn = rowMqttHost.querySelector('.btn-enable-parent');
+    assert.ok(enableBtn !== null);
+
+    enableBtn.dispatchEvent({ type: 'click', preventDefault() {}, stopPropagation() {} });
+
+    // Master toggle is now checked
+    assert.equal(inputMqttEnable.checked, true);
+    // Flashing on parent row ceased
+    assert.ok(!rowMqttEnable.classList.contains('parent-toggle-flashing'));
 });
 
 test('Dynamic re-indexing via window.reindexConfigSearch() detects added hardware', () => {

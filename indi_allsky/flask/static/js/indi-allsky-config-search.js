@@ -149,21 +149,58 @@
         return '';
     }
 
+    const KNOWN_PARENT_MAP = {
+        'IMAGE_SAVE_FITS_PERIOD': 'IMAGE_SAVE_FITS',
+        'IMAGE_SAVE_FITS_PRE_DARK': 'IMAGE_SAVE_FITS',
+        'DEW_HEATER__TEMP_USER_VAR_SLOT': 'DEW_HEATER__THOLD_ENABLE',
+        'DEW_HEATER__DEWPOINT_USER_VAR_SLOT': 'DEW_HEATER__THOLD_ENABLE',
+        'DEW_HEATER__MANUAL_TARGET': 'DEW_HEATER__THOLD_ENABLE',
+        'DEW_HEATER__LEVEL_LOW': 'DEW_HEATER__THOLD_ENABLE',
+        'DEW_HEATER__LEVEL_MED': 'DEW_HEATER__THOLD_ENABLE',
+        'DEW_HEATER__LEVEL_HIGH': 'DEW_HEATER__THOLD_ENABLE',
+        'DEW_HEATER__THOLD_DIFF_LOW': 'DEW_HEATER__THOLD_ENABLE',
+        'DEW_HEATER__THOLD_DIFF_MED': 'DEW_HEATER__THOLD_ENABLE',
+        'DEW_HEATER__THOLD_DIFF_HIGH': 'DEW_HEATER__THOLD_ENABLE',
+        'FAN__TEMP_USER_VAR_SLOT': 'FAN__THOLD_ENABLE',
+        'FAN__TARGET': 'FAN__THOLD_ENABLE',
+        'FAN__LEVEL_LOW': 'FAN__THOLD_ENABLE',
+        'FAN__LEVEL_MED': 'FAN__THOLD_ENABLE',
+        'FAN__LEVEL_HIGH': 'FAN__THOLD_ENABLE',
+        'FAN__THOLD_DIFF_LOW': 'FAN__THOLD_ENABLE',
+        'FAN__THOLD_DIFF_MED': 'FAN__THOLD_ENABLE',
+        'FAN__THOLD_DIFF_HIGH': 'FAN__THOLD_ENABLE',
+        'CCD_TEMP': 'CCD_COOLING',
+        'CCD_TEMP_DAY': 'CCD_COOLING_DAY',
+        'FOCUS_DELAY': 'FOCUS_MODE',
+        'STARTRAILS_MOON_ALT_THOLD': 'STARTRAILS_MOONMODE_THOLD',
+        'STARTRAILS_MOON_PHASE_THOLD': 'STARTRAILS_MOONMODE_THOLD',
+        'LIBCAMERA__AWB': 'LIBCAMERA__AWB_ENABLE',
+        'LIBCAMERA__AWB_DAY': 'LIBCAMERA__AWB_ENABLE_DAY',
+        'DAYTIME_TIMELAPSE': 'TIMELAPSE_ENABLE',
+        'WEB_LOCAL_IMAGES_ADMIN': 'WEB_NONLOCAL_IMAGES',
+        'FISH2PANO__ENABLE_CARDINAL_DIRS': 'CARDINAL_DIRS__ENABLE',
+        'IMAGE_EXPORT_FOLDER': 'IMAGE_EXPORT_RAW',
+    };
+
     function findParentToggle(fieldId) {
         if (!fieldId) return null;
 
-        let candidateId = null;
-        if (fieldId.includes('__')) {
-            const prefix = fieldId.split('__')[0];
-            if (fieldId !== prefix + '__ENABLE') {
-                candidateId = prefix + '__ENABLE';
+        let candidateId = KNOWN_PARENT_MAP[fieldId];
+        if (!candidateId) {
+            if (fieldId.startsWith('FITSHEADERS__')) {
+                candidateId = 'IMAGE_SAVE_FITS';
+            } else if (fieldId.startsWith('TIMELAPSE_') && fieldId !== 'TIMELAPSE_ENABLE') {
+                candidateId = 'TIMELAPSE_ENABLE';
+            } else if (fieldId.startsWith('STARTRAILS_') && fieldId !== 'STARTRAILS_TIMELAPSE') {
+                candidateId = 'STARTRAILS_TIMELAPSE';
+            } else if (fieldId.startsWith('FILETRANSFER_') && fieldId !== 'FILETRANSFER_ENABLE') {
+                candidateId = 'FILETRANSFER_ENABLE';
+            } else if (fieldId.includes('__')) {
+                const prefix = fieldId.split('__')[0];
+                if (fieldId !== prefix + '__ENABLE') {
+                    candidateId = prefix + '__ENABLE';
+                }
             }
-        } else if (fieldId.startsWith('TIMELAPSE_') && fieldId !== 'TIMELAPSE_ENABLE') {
-            candidateId = 'TIMELAPSE_ENABLE';
-        } else if (fieldId.startsWith('STARTRAILS_') && fieldId !== 'STARTRAILS_TIMELAPSE') {
-            candidateId = 'STARTRAILS_TIMELAPSE';
-        } else if (fieldId.startsWith('FILETRANSFER_') && fieldId !== 'FILETRANSFER_ENABLE') {
-            candidateId = 'FILETRANSFER_ENABLE';
         }
 
         if (candidateId) {
@@ -175,33 +212,97 @@
         return null;
     }
 
+    function getElementLabel(el) {
+        if (!el) return '';
+        const explicitLabel = document.querySelector('label[for="' + el.id + '"]');
+        if (explicitLabel) return explicitLabel.textContent.trim();
+        const findFn = (window.indiAllskyTabs && window.indiAllskyTabs.findSettingContainer)
+            ? window.indiAllskyTabs.findSettingContainer
+            : function(node) { return node.closest('.tw\\:flex, .tw\\:grid, .form-group') || node; };
+        const row = findFn(el);
+        if (row) {
+            const span = row.querySelector('span.tw\\:font-bold, span.tw\\:tracking-wider, label');
+            if (span) return span.textContent.trim();
+        }
+        return el.id;
+    }
+
     function clearParentToggleFlash() {
         if (activeFlashingRow) {
             activeFlashingRow.classList.remove('parent-toggle-flashing');
-            const hint = activeFlashingRow.querySelector('.parent-toggle-hint');
-            if (hint) hint.remove();
             activeFlashingRow = null;
         }
+        document.querySelectorAll('.parent-toggle-hint').forEach(function(h) {
+            h.remove();
+        });
         if (flashCleanupTimer) {
             clearTimeout(flashCleanupTimer);
             flashCleanupTimer = null;
         }
     }
 
-    function flashParentToggle(parentEl, childLabel) {
+    function flashParentToggle(parentEl, childLabel, targetEl) {
         clearParentToggleFlash();
 
-        const parentRow = parentEl.closest('.tw\\:flex, .tw\\:grid, .form-group') || parentEl;
-        if (!parentRow) return;
+        const findContainer = (window.indiAllskyTabs && window.indiAllskyTabs.findSettingContainer)
+            ? window.indiAllskyTabs.findSettingContainer
+            : function(node) { return node.closest('.tw\\:flex, .tw\\:grid, .form-group') || node; };
 
-        parentRow.classList.add('parent-toggle-flashing');
-        activeFlashingRow = parentRow;
+        const parentRow = findContainer(parentEl);
+        if (parentRow) {
+            parentRow.classList.add('parent-toggle-flashing');
+            activeFlashingRow = parentRow;
 
-        if (!parentRow.querySelector('.parent-toggle-hint')) {
-            const hint = document.createElement('div');
-            hint.className = 'parent-toggle-hint tw:alert tw:alert-warning tw:py-1.5 tw:px-2.5 tw:text-xs tw:mt-2 tw:w-full tw:flex tw:items-center tw:gap-2';
-            hint.innerHTML = '<i class="tw:icon-[lucide--info] tw:w-3.5 tw:h-3.5 tw:shrink-0"></i><span>Enable this toggle to activate <strong>' + escapeHtml(childLabel) + '</strong></span>';
-            parentRow.appendChild(hint);
+            // Full-width guidance banner on the parent toggle row
+            if (!parentRow.querySelector('.parent-toggle-hint')) {
+                const parentHint = document.createElement('div');
+                parentHint.className = 'parent-toggle-hint tw:alert tw:alert-warning tw:py-2 tw:px-3 tw:text-xs tw:mt-2.5 tw:w-full tw:flex tw:items-center tw:gap-2 tw:rounded-[var(--radius-box)]';
+                parentHint.innerHTML = '<i class="tw:icon-[lucide--info] tw:w-4 tw:h-4 tw:shrink-0 tw:text-warning-content"></i><span class="tw:text-warning-content">Enable this toggle to activate dependent setting <strong>' + escapeHtml(childLabel) + '</strong></span>';
+                parentRow.appendChild(parentHint);
+            }
+        }
+
+        const parentLabel = getElementLabel(parentEl) || parentEl.id;
+
+        // Actionable guidance banner attached directly to the target child setting
+        const targetRow = targetEl ? findContainer(targetEl) : null;
+        if (targetRow && !targetRow.querySelector('.parent-toggle-hint')) {
+            const childHint = document.createElement('div');
+            childHint.className = 'parent-toggle-hint tw:alert tw:alert-warning tw:py-2 tw:px-3 tw:text-xs tw:mt-2.5 tw:w-full tw:flex tw:items-center tw:justify-between tw:gap-3 tw:rounded-[var(--radius-box)] tw:shadow-sm';
+
+            const hintBody = document.createElement('div');
+            hintBody.className = 'tw:flex tw:items-center tw:gap-2 tw:min-w-0';
+            hintBody.innerHTML = '<i class="tw:icon-[lucide--alert-triangle] tw:w-4 tw:h-4 tw:shrink-0 tw:text-warning-content"></i>' +
+                '<span class="tw:text-warning-content">Setting is currently inactive because <strong>' + escapeHtml(parentLabel) + '</strong> is disabled.</span>';
+            childHint.appendChild(hintBody);
+
+            const enableBtn = document.createElement('button');
+            enableBtn.type = 'button';
+            enableBtn.className = 'btn-enable-parent tw:btn tw:btn-xs tw:btn-neutral tw:shrink-0 tw:gap-1';
+            enableBtn.innerHTML = '<i class="tw:icon-[lucide--power] tw:w-3 tw:h-3"></i>Enable Now';
+
+            enableBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                parentEl.checked = true;
+                const changeEvt = typeof Event !== 'undefined' ? new Event('change', { bubbles: true }) : { type: 'change' };
+                parentEl.dispatchEvent(changeEvt);
+                if (typeof window.jQuery !== 'undefined') {
+                    window.jQuery(parentEl).trigger('change');
+                }
+                childHint.className = 'parent-toggle-hint tw:alert tw:alert-success tw:py-2 tw:px-3 tw:text-xs tw:mt-2.5 tw:w-full tw:flex tw:items-center tw:gap-2 tw:rounded-[var(--radius-box)]';
+                childHint.innerHTML = '<i class="tw:icon-[lucide--check-circle-2] tw:w-4 tw:h-4 tw:shrink-0 tw:text-success-content"></i><span class="tw:text-success-content"><strong>' + escapeHtml(parentLabel) + '</strong> enabled successfully.</span>';
+                if (activeFlashingRow) {
+                    activeFlashingRow.classList.remove('parent-toggle-flashing');
+                    activeFlashingRow = null;
+                }
+                setTimeout(function() {
+                    childHint.remove();
+                }, 2000);
+            });
+
+            childHint.appendChild(enableBtn);
+            targetRow.appendChild(childHint);
         }
 
         function handleDismiss() {
@@ -217,7 +318,7 @@
             parentEl.addEventListener('change', handleDismiss, { once: true });
         }, 150);
 
-        flashCleanupTimer = setTimeout(clearParentToggleFlash, 15000);
+        flashCleanupTimer = setTimeout(clearParentToggleFlash, 12000);
     }
 
     function highlightMatches(text, queryTokens) {
@@ -409,6 +510,7 @@
         if (targetEl) {
             const collapse = targetEl.closest('.tw\\:collapse, .collapse');
             if (collapse) {
+                collapse.classList.add('tw:collapse-open');
                 const cb = collapse.querySelector('input[type="checkbox"]');
                 if (cb) cb.checked = true;
             }
@@ -422,7 +524,7 @@
         // 5. Check if parent master toggle is disabled and flash it with guidance hint
         const parentToggle = findParentToggle(item.id);
         if (parentToggle) {
-            flashParentToggle(parentToggle, item.label);
+            flashParentToggle(parentToggle, item.label, targetEl);
         } else {
             clearParentToggleFlash();
         }
@@ -430,12 +532,12 @@
         // 6. Update browser URL hash
         history.replaceState(null, '', '#' + item.tab + '-' + item.id);
 
-        // 7. Focus target element for immediate editing
+        // 7. Focus target element for immediate editing (preventScroll preserves smooth center alignment)
         setTimeout(function() {
             if (targetEl && typeof targetEl.focus === 'function') {
-                targetEl.focus();
+                targetEl.focus({ preventScroll: true });
             }
-        }, 250);
+        }, 200);
     }
 
     function init() {
