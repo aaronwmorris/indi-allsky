@@ -1,4 +1,5 @@
 import os
+import time
 import json
 import mimetypes
 from pathlib import Path
@@ -134,7 +135,7 @@ def create_app():
         with app.app_context():
             if app.config.get('OIDC_CLIENT_ID'):
                 client_kwargs = {
-                    'scope': app.config.get('OIDC_SCOPES', 'openid email profile offline_access'),
+                    'scope': app.config.get('OIDC_SCOPES', 'openid email profile'),
                 }
 
                 if app.config.get('OIDC_PKCE', True):
@@ -165,78 +166,62 @@ def create_app():
 
 
     @app.before_request
-    def refresh_oidc_token():
+    def check_oidc_session():
         from flask_login import current_user, logout_user
         from flask import redirect, url_for, request, session
-        import time
 
+        if not current_user.is_authenticated:
+            return
 
-        # Skip for static files and common public assets to save DB hits
-        # Note: This should not be necessary since the web server serves static content and images directly, bypassing gunicorn
-        #app.logger.info('Request path: %s', request.path)
+        # Skip for static files and common public assets to save processing
         if '/static/' in request.path or request.path.endswith(('.png', '.jpg', '.jpeg', '.gif', '.ico', '.css', '.js', '.mp4')):
             return
 
+        user_data = dict(current_user.data) if current_user.data else {}
+        if user_data.get('idp') == 'oidc':
+            now_ts = int(time.time())
+            session_sid = session.get('oidc_sid')
+            session_login_time = session.get('oidc_login_time', 0)
+            user_logged_out_at = user_data.get('oidc_logged_out_at', 0)
+            revoked_sids = user_data.get('oidc_revoked_sids', {})
 
-        # Check session cache first to avoid DB hits
-        if current_user.is_authenticated and session.get('oidc_expires_at'):
-            if time.time() + 60 < session['oidc_expires_at']:
-                return
+            is_revoked = False
+            if session_sid and session_sid in revoked_sids:
+                is_revoked = True
+            elif user_logged_out_at and session_login_time <= user_logged_out_at:
+                is_revoked = True
 
+            session_timeout = app.config.get('OIDC_SESSION_TIMEOUT', 21600)  # default 6 hours
+            if not is_revoked and session_timeout > 0:
+                last_active = session.get('oidc_last_active') or session_login_time
+                if last_active and (now_ts - last_active > session_timeout):
+                    app.logger.info(
+                        'Logging out user %s due to OIDC session inactivity timeout (%ds)',
+                        current_user.username,
+                        session_timeout,
+                    )
+                    is_revoked = True
 
-        if current_user.is_authenticated:
-            if current_user.data:
-                current_user_data = dict(current_user.data)
-            else:
-                current_user_data = dict()
-        else:
-            current_user_data = dict()
+            if is_revoked:
+                app.logger.info('Logging out user %s due to OIDC session termination', current_user.username)
+                session.clear()
+                logout_user()
 
+                if request.endpoint and request.endpoint.startswith('auth_indi_allsky.'):
+                    return
 
-        if current_user.is_authenticated and current_user_data.get('oidc_token'):
-            token = current_user_data['oidc_token']
-            # check expiration (with 60s buffer)
-            expires_at = token.get('expires_at')
-            if expires_at and expires_at < (time.time() + 60):
-                if 'refresh_token' in token and hasattr(oauth, 'oidc'):
-                    try:
-                        # Attempt refresh using the most compatible method
-                        if hasattr(oauth.oidc, 'refresh_token'):
-                            # Authlib 1.0+
-                            new_token = oauth.oidc.refresh_token(
-                                refresh_token=token['refresh_token']
-                            )
-                        else:
-                            # Fallback for older Authlib or when method is missing
-                            # We can use the internal session or fetch_access_token
-                            new_token = oauth.oidc.fetch_access_token(
-                                grant_type='refresh_token',
-                                refresh_token=token['refresh_token']
-                            )
+                resp = redirect(url_for('auth_indi_allsky.login_view'))
+                remember_cookie = app.config.get('REMEMBER_COOKIE_NAME', 'remember_token')
+                resp.delete_cookie(
+                    remember_cookie,
+                    domain=app.config.get('REMEMBER_COOKIE_DOMAIN'),
+                    path=app.config.get('REMEMBER_COOKIE_PATH', '/')
+                )
+                return resp
 
-                        # Merge new token data into existing token to preserve id_token
-                        # as many IdPs do not return a new id_token on refresh
-                        token.update(new_token)
-
-                        # Use a copy to ensure SQLAlchemy detects the change
-                        current_user_data['oidc_token'] = dict(token)
-                        current_user.data = current_user_data
-                        db.session.commit()
-
-                        session['oidc_expires_at'] = token.get('expires_at')
-                        app.logger.debug('OIDC token refreshed for user %s', current_user.username)
-                    except Exception as e:
-                        app.logger.error('OIDC token refresh failed for user %s: %s', current_user.username, str(e))
-                        logout_user()
-                        return redirect(url_for('auth_indi_allsky.login_view'))
-                else:
-                    # No refresh token, and token is expired. Force logout.
-                    app.logger.warning('OIDC token expired and no refresh token available for user %s', current_user.username)
-                    logout_user()
-                    return redirect(url_for('auth_indi_allsky.login_view'))
-            elif expires_at:
-                # Cache it if it was missing from session but present in DB
-                session['oidc_expires_at'] = expires_at
+            # Update last activity timestamp for non-background polling requests
+            if not request.path.endswith(('/notification', '/notifications', '/system_stats')):
+                session['oidc_last_active'] = now_ts
 
 
     @app.after_request

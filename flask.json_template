@@ -49,13 +49,15 @@
     "OIDC_DISCOVERY_ENDPOINT" : "",
     "OIDC_USERINFO_ENDPOINT" : "",
     "OIDC_USERNAME_CLAIM" : "preferred_username",
-    "OIDC_SCOPES" : "openid email profile offline_access",
+    "OIDC_SCOPES" : "openid email profile",
     "OIDC_PKCE" : true,
     "OIDC_LOGO_URL" : "",
     "OIDC_ALLOWED_GROUPS" : [],
     "OIDC_ADMIN_GROUPS" : [],
     "OIDC_ALLOWED_USERS" : [],
     "OIDC_ADMIN_USERS" : [],
+    "OIDC_SESSION_TIMEOUT_comment" : "Session inactivity timeout in seconds (default 21600 = 6 hours; set to 0 to disable)",
+    "OIDC_SESSION_TIMEOUT" : 21600,
 
     "ADMIN_NETWORKS" : [
         "10.0.0.0/8",

@@ -4,16 +4,26 @@
 
 ---
 
-## 1. Redirect URI
+## 1. Endpoints & URIs
 
+### Redirect URI
 Configure the authorized redirect URI in your Identity Provider (IdP):
 
 ```
 https://<your-allsky-domain>/indi-allsky/oidc/callback
 ```
 
+### Back-Channel Logout URI
+If your IdP supports OpenID Connect Back-Channel Logout 1.0 (e.g., Keycloak, Authentik), configure the Back-Channel Logout URL:
+
+```
+https://<your-allsky-domain>/indi-allsky/oidc/backchannel-logout
+```
+
+When a user logs out from your Identity Provider, the IdP sends a signed `logout_token` directly to this endpoint via a server-to-server request, terminating the user's active session without requiring browser redirection.
+
 > [!IMPORTANT]
-> The redirect URI must use HTTPS unless testing strictly on `localhost`. If `indi-allsky` operates behind a reverse proxy (e.g. Caddy or Nginx), ensure proxy headers (`X-Forwarded-Proto: https`) are transmitted so callback validation succeeds.
+> The redirect and logout URIs must use HTTPS unless testing strictly on `localhost`. If `indi-allsky` operates behind a reverse proxy (e.g. Caddy or Nginx), ensure proxy headers (`X-Forwarded-Proto: https`) are transmitted so validation succeeds.
 
 ---
 
@@ -47,13 +57,14 @@ After updating `flask.json`, restart the web application service:
 | `OIDC_DISCOVERY_ENDPOINT` | String | `""` | OpenID configuration endpoint (`.../.well-known/openid-configuration`). |
 | `OIDC_USERINFO_ENDPOINT` | String | `""` | (Optional) Explicit userinfo endpoint for providers that omit it from discovery (e.g., GitHub). |
 | `OIDC_USERNAME_CLAIM` | String | `"preferred_username"` | Token claim mapped to the local username (`preferred_username`, `email`, or `login`). |
-| `OIDC_SCOPES` | String | `"openid email profile offline_access"` | OAuth 2.0 scopes requested during authorization. |
+| `OIDC_SCOPES` | String | `"openid email profile"` | OAuth 2.0 scopes requested during authorization. |
 | `OIDC_PKCE` | Boolean | `true` | Enables Proof Key for Code Exchange (RFC 7636). Recommended for all modern IdPs. |
 | `OIDC_LOGO_URL` | String | `""` | Optional URL to an image or SVG icon displayed on the SSO login button. |
 | `OIDC_ALLOWED_GROUPS` | List | `[]` | List of IdP group names permitted to log in. An empty list allows all authenticated users. |
 | `OIDC_ADMIN_GROUPS` | List | `[]` | List of IdP group names granted administrator privileges (`is_admin=True`). |
 | `OIDC_ALLOWED_USERS` | List | `[]` | Specific usernames/emails allowed login (useful if the IdP lacks group claims). |
 | `OIDC_ADMIN_USERS` | List | `[]` | Specific usernames/emails granted administrator privileges. |
+| `OIDC_SESSION_TIMEOUT` | Integer | `21600` | Session inactivity timeout in seconds (default 6 hours; set to `0` to disable). |
 | `LOCAL_AUTH_ENABLE` | Boolean | `true` | Retains local username/password login alongside OIDC. |
 
 ---
@@ -70,7 +81,7 @@ After updating `flask.json`, restart the web application service:
   "OIDC_CLIENT_SECRET": "your-client-secret",
   "OIDC_DISCOVERY_ENDPOINT": "https://auth.example.com/realms/master/.well-known/openid-configuration",
   "OIDC_USERNAME_CLAIM": "preferred_username",
-  "OIDC_SCOPES": "openid email profile offline_access",
+  "OIDC_SCOPES": "openid email profile",
   "OIDC_PKCE": true,
   "OIDC_ALLOWED_GROUPS": ["allsky-users", "allsky-admins"],
   "OIDC_ADMIN_GROUPS": ["allsky-admins"],

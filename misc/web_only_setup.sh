@@ -1374,7 +1374,7 @@ if "$WHIPTAIL_BIN" --title "OIDC Single Sign-On Authentication" --yesno "Do you 
     OIDC_CLIENT_SECRET=$(jq -r '.OIDC_CLIENT_SECRET // ""' "${ALLSKY_ETC}/flask.json")
     OIDC_DISCOVERY_ENDPOINT=$(jq -r '.OIDC_DISCOVERY_ENDPOINT // ""' "${ALLSKY_ETC}/flask.json")
     OIDC_USERINFO_ENDPOINT=$(jq -r '.OIDC_USERINFO_ENDPOINT // ""' "${ALLSKY_ETC}/flask.json")
-    OIDC_SCOPES=$(jq -r '.OIDC_SCOPES // "openid email profile offline_access"' "${ALLSKY_ETC}/flask.json")
+    OIDC_SCOPES=$(jq -r '.OIDC_SCOPES // "openid email profile"' "${ALLSKY_ETC}/flask.json")
     OIDC_USERNAME_CLAIM=$(jq -r '.OIDC_USERNAME_CLAIM // "preferred_username"' "${ALLSKY_ETC}/flask.json")
     OIDC_PKCE=$(jq -r '.OIDC_PKCE // true' "${ALLSKY_ETC}/flask.json")
 

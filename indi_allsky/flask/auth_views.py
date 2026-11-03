@@ -15,7 +15,9 @@ from flask import abort
 #from flask import render_template
 #from flask import flash
 from flask import jsonify
+from flask import make_response
 from flask import current_app as app
+from flask.views import View
 
 from flask_login import login_user
 from flask_login import logout_user
@@ -27,6 +29,7 @@ from .base_views import TemplateView
 
 from . import db
 from . import oauth
+from . import csrf
 
 from .models import IndiAllSkyDbUserTable
 
@@ -71,7 +74,32 @@ class LoginView(TemplateView):
 
     def get(self):
         if current_user.is_authenticated:
-            return redirect(url_for('indi_allsky.index_view'))
+            user_data = dict(current_user.data) if current_user.data else {}
+            if user_data.get('idp') == 'oidc':
+                session_sid = session.get('oidc_sid')
+                session_login_time = session.get('oidc_login_time', 0)
+                user_logged_out_at = user_data.get('oidc_logged_out_at', 0)
+                revoked_sids = user_data.get('oidc_revoked_sids', {})
+
+                is_revoked = False
+                if session_sid and session_sid in revoked_sids:
+                    is_revoked = True
+                elif user_logged_out_at and session_login_time <= user_logged_out_at:
+                    is_revoked = True
+
+                session_timeout = app.config.get('OIDC_SESSION_TIMEOUT', 21600)
+                if not is_revoked and session_timeout > 0:
+                    last_active = session.get('oidc_last_active') or session_login_time
+                    if last_active and (int(time.time()) - last_active > session_timeout):
+                        is_revoked = True
+
+                if is_revoked:
+                    session.clear()
+                    logout_user()
+                else:
+                    return redirect(url_for('indi_allsky.index_view'))
+            else:
+                return redirect(url_for('indi_allsky.index_view'))
 
         if app.config.get('OIDC_ENABLE') and app.config.get('OIDC_AUTO_LOGIN'):
             return redirect(url_for('auth_indi_allsky.oidc_login_view', next=request.args.get('next', '')))
@@ -227,6 +255,25 @@ class OIDCCallbackView(BaseView):
 
         oidc_username = oidc_user_info.get(app.config.get('OIDC_USERNAME_CLAIM', 'preferred_username'))
         oidc_user_groups = oidc_user_info.get('groups', [])
+        oidc_sub = oidc_user_info.get('sub')
+        oidc_sid = oidc_user_info.get('sid') or token.get('sid')
+
+        # Try to parse sid/sub from id_token claims if not present in userinfo
+        if (not oidc_sid or not oidc_sub) and hasattr(oauth.oidc, 'parse_id_token') and token.get('id_token'):
+            try:
+                parsed_id = oauth.oidc.parse_id_token(token, nonce=session.get('_oidc_authlib_nonce_'))
+                if parsed_id:
+                    if not oidc_sid:
+                        oidc_sid = parsed_id.get('sid')
+                    if not oidc_sub:
+                        oidc_sub = parsed_id.get('sub')
+            except Exception:
+                pass
+
+        session['oidc_sub'] = oidc_sub
+        session['oidc_sid'] = oidc_sid
+        session['oidc_login_time'] = int(time.time())
+        session['oidc_last_active'] = int(time.time())
 
 
         if not oidc_username:
@@ -312,7 +359,7 @@ class OIDCCallbackView(BaseView):
 
 
         session.permanent = True
-        login_user(user, remember=True)
+        login_user(user, remember=False)
 
 
         now = datetime.now()
@@ -321,6 +368,13 @@ class OIDCCallbackView(BaseView):
 
         user_data['idp'] = 'oidc'
         user_data['oidc_token'] = token
+        user_data['oidc_sub'] = oidc_sub
+        user_data['oidc_sid'] = oidc_sid
+        user_data.pop('oidc_logged_out_at', None)
+        if oidc_sid and 'oidc_revoked_sids' in user_data:
+            revoked = dict(user_data['oidc_revoked_sids'])
+            revoked.pop(oidc_sid, None)
+            user_data['oidc_revoked_sids'] = revoked
         user.data = user_data
 
         db.session.commit()
@@ -377,7 +431,139 @@ class LogoutView(BaseView):
         return redirect(url_for('indi_allsky.index_view'))
 
 
+class OIDCBackchannelLogoutView(View):
+    methods = ['POST']
+    decorators = [csrf.exempt]
+
+    def dispatch_request(self):
+        if not app.config.get('OIDC_ENABLE'):
+            return abort(404)
+
+        if not hasattr(oauth, 'oidc'):
+            app.logger.error('OIDC backchannel logout received but OIDC client is not registered')
+            return abort(503)
+
+        logout_token = request.form.get('logout_token')
+        if not logout_token:
+            app.logger.warning('OIDC backchannel logout request missing logout_token')
+            resp = jsonify({'error': 'invalid_request', 'error_description': 'Missing logout_token'})
+            resp.status_code = 400
+            resp.headers['Cache-Control'] = 'no-store'
+            return resp
+
+        try:
+            claims = self._validate_logout_token(logout_token)
+        except Exception as e:
+            app.logger.error('OIDC backchannel logout token validation failed: %s', str(e))
+            resp = jsonify({'error': 'invalid_request', 'error_description': str(e)})
+            resp.status_code = 400
+            resp.headers['Cache-Control'] = 'no-store'
+            return resp
+
+        target_sub = claims.get('sub')
+        target_sid = claims.get('sid')
+
+        app.logger.info('Processing OIDC backchannel logout for sub=%s, sid=%s', target_sub, target_sid)
+
+        now_ts = int(time.time())
+        revoked_count = 0
+
+        users = IndiAllSkyDbUserTable.query.all()
+        for user in users:
+            user_data = dict(user.data) if user.data else {}
+            if user_data.get('idp') != 'oidc':
+                continue
+
+            user_sub = user_data.get('oidc_sub')
+            user_sid = user_data.get('oidc_sid')
+
+            match = False
+            if target_sub and user_sub == target_sub:
+                match = True
+            elif target_sid and user_sid == target_sid:
+                match = True
+
+            if match:
+                if target_sid:
+                    revoked_sids = dict(user_data.get('oidc_revoked_sids', {}))
+                    # Prune entries older than 24h
+                    revoked_sids = {sid: ts for sid, ts in revoked_sids.items() if now_ts - ts < 86400}
+                    revoked_sids[target_sid] = now_ts
+                    user_data['oidc_revoked_sids'] = revoked_sids
+
+                if target_sub or not target_sid:
+                    user_data['oidc_logged_out_at'] = now_ts
+
+                user.data = user_data
+                revoked_count += 1
+
+        if revoked_count > 0:
+            db.session.commit()
+            app.logger.info('Revoked OIDC session(s) for %d user record(s)', revoked_count)
+
+        resp = make_response('', 200)
+        resp.headers['Cache-Control'] = 'no-store'
+        resp.headers['Pragma'] = 'no-cache'
+        return resp
+
+    def _validate_logout_token(self, logout_token: str) -> dict:
+        metadata = oauth.oidc.load_server_metadata()
+        expected_issuer = metadata.get('issuer')
+        client_id = app.config.get('OIDC_CLIENT_ID')
+
+        jwks = oauth.oidc.fetch_jwk_set()
+
+        try:
+            from joserfc import jwt
+            from joserfc.jwk import KeySet
+            from joserfc.errors import InvalidKeyIdError
+
+            try:
+                keyset = KeySet.import_key_set(jwks)
+                token = jwt.decode(logout_token, keyset)
+            except (InvalidKeyIdError, KeyError, ValueError):
+                # Force refresh JWKS in case key rotation occurred
+                jwks = oauth.oidc.fetch_jwk_set(force=True)
+                keyset = KeySet.import_key_set(jwks)
+                token = jwt.decode(logout_token, keyset)
+
+            claims = dict(token.claims)
+        except ImportError:
+            from authlib.jose import jwt
+            claims = dict(jwt.decode(logout_token, jwks))
+
+        # OpenID Connect Back-Channel Logout 1.0 Validation
+        # 1. Issuer verification
+        if expected_issuer and claims.get('iss') != expected_issuer:
+            raise ValueError(f"Issuer mismatch: expected {expected_issuer}, got {claims.get('iss')}")
+
+        # 2. Audience verification (aud can be string or list)
+        aud = claims.get('aud')
+        if isinstance(aud, list):
+            if client_id not in aud:
+                raise ValueError(f"Client ID {client_id} not in audience {aud}")
+        elif aud != client_id:
+            raise ValueError(f"Audience mismatch: expected {client_id}, got {aud}")
+
+        # 3. Events claim: MUST contain http://schemas.openid.net/event/backchannel-logout
+        events = claims.get('events')
+        if not isinstance(events, dict) or 'http://schemas.openid.net/event/backchannel-logout' not in events:
+            raise ValueError("Logout token missing 'http://schemas.openid.net/event/backchannel-logout' event")
+
+        # 4. Nonce claim: MUST NOT contain nonce
+        if 'nonce' in claims:
+            raise ValueError("Logout token must not contain a nonce claim")
+
+        # 5. sub or sid claim: MUST contain either sub or sid or both
+        if not claims.get('sub') and not claims.get('sid'):
+            raise ValueError("Logout token must contain either 'sub' or 'sid' claim")
+
+        return claims
+
+
 bp_auth_allsky.add_url_rule('/login', view_func=LoginView.as_view('login_view', template_name='login.html'))
 bp_auth_allsky.add_url_rule('/oidc/login', view_func=OIDCLoginView.as_view('oidc_login_view'))
 bp_auth_allsky.add_url_rule('/oidc/callback', view_func=OIDCCallbackView.as_view('oidc_callback_view'))
+bp_auth_allsky.add_url_rule('/oidc/backchannel-logout', view_func=OIDCBackchannelLogoutView.as_view('oidc_backchannel_logout_view'))
+bp_auth_allsky.add_url_rule('/oidc/backchannel_logout', view_func=OIDCBackchannelLogoutView.as_view('oidc_backchannel_logout_alias_view'))
 bp_auth_allsky.add_url_rule('/logout', view_func=LogoutView.as_view('logout_view'))
