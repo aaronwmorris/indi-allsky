@@ -10,6 +10,7 @@
     let isShowingSuggestions = false;
     let activeFlashingRow = null;
     let flashCleanupTimer = null;
+    let isSelectingResult = false;
 
     const SUGGESTED_SETTINGS = [
         'CCD_EXPOSURE_MAX',
@@ -306,6 +307,7 @@
         }
 
         function handleDismiss() {
+            if (isSelectingResult) return;
             clearParentToggleFlash();
             document.removeEventListener('click', handleDismiss);
             document.removeEventListener('keydown', handleDismiss);
@@ -318,7 +320,7 @@
             parentEl.addEventListener('change', handleDismiss, { once: true });
         }, 150);
 
-        flashCleanupTimer = setTimeout(clearParentToggleFlash, 12000);
+        flashCleanupTimer = setTimeout(clearParentToggleFlash, 15000);
     }
 
     function highlightMatches(text, queryTokens) {
@@ -464,6 +466,10 @@
                     selectResult(currentResults[idx]);
                 }
             });
+            el.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
         });
     }
 
@@ -487,6 +493,11 @@
 
     function selectResult(item) {
         if (!item) return;
+
+        isSelectingResult = true;
+        setTimeout(function() {
+            isSelectingResult = false;
+        }, 300);
 
         const dropdown = document.getElementById('config-search-dropdown');
         if (dropdown) dropdown.style.display = 'none';

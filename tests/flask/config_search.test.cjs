@@ -411,8 +411,8 @@ function loadConfigSearch(env) {
         window: env.window,
         history: env.window.history,
         setTimeout: (fn, delay) => {
-            if (delay === 150) {
-                // simulate delayed execution
+            if (delay <= 300) {
+                // simulate delayed execution for setup timers
                 fn();
             }
             return 1;
