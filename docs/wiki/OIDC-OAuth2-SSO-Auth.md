@@ -64,6 +64,7 @@ After updating `flask.json`, restart the web application service:
 | `OIDC_ADMIN_GROUPS` | List | `[]` | List of IdP group names granted administrator privileges (`is_admin=True`). |
 | `OIDC_ALLOWED_USERS` | List | `[]` | Specific usernames/emails allowed login (useful if the IdP lacks group claims). |
 | `OIDC_ADMIN_USERS` | List | `[]` | Specific usernames/emails granted administrator privileges. |
+| `OIDC_SESSION_TIMEOUT` | Integer | `21600` | Session inactivity timeout in seconds (default 6 hours; set to `0` to disable). |
 | `LOCAL_AUTH_ENABLE` | Boolean | `true` | Retains local username/password login alongside OIDC. |
 
 ---

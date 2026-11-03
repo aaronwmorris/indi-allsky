@@ -392,3 +392,34 @@ def test_login_view_revoked_session_clears_without_redirect_loop(mock_app):
                             # Must NOT redirect to index_view!
                             assert resp == 'login_rendered'
 
+
+def test_login_view_inactivity_timeout_clears_session(mock_app):
+    """Ensure LoginView.get() clears session when 6-hour inactivity timeout is exceeded."""
+    from indi_allsky.flask.auth_views import LoginView
+    from indi_allsky.flask.base_views import TemplateView
+
+    mock_app.config['OIDC_AUTO_LOGIN'] = False
+    mock_app.config['LOCAL_AUTH_ENABLE'] = True
+    mock_app.config['OIDC_SESSION_TIMEOUT'] = 21600  # 6 hours
+
+    active_user = MagicMock(is_authenticated=True)
+    active_user.data = {
+        "idp": "oidc",
+        "oidc_sub": "sub1",
+    }
+
+    now_ts = int(time.time())
+    seven_hours_ago = now_ts - (7 * 3600)
+
+    with mock_app.test_request_context('/indi-allsky/login'):
+        with patch.object(LoginView, '__init__', return_value=None):
+            with patch('indi_allsky.flask.auth_views.current_user', active_user):
+                with patch('indi_allsky.flask.auth_views.session', {'oidc_login_time': seven_hours_ago, 'oidc_last_active': seven_hours_ago}) as mock_session:
+                    with patch('indi_allsky.flask.auth_views.logout_user') as mock_logout:
+                        with patch.object(TemplateView, 'dispatch_request', return_value='login_rendered') as mock_super_dispatch:
+                            view = LoginView(template_name='login.html')
+                            resp = view.get()
+                            mock_logout.assert_called_once()
+                            assert resp == 'login_rendered'
+
+

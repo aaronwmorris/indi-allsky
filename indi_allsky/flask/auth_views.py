@@ -87,6 +87,12 @@ class LoginView(TemplateView):
                 elif user_logged_out_at and session_login_time <= user_logged_out_at:
                     is_revoked = True
 
+                session_timeout = app.config.get('OIDC_SESSION_TIMEOUT', 21600)
+                if not is_revoked and session_timeout > 0:
+                    last_active = session.get('oidc_last_active') or session_login_time
+                    if last_active and (int(time.time()) - last_active > session_timeout):
+                        is_revoked = True
+
                 if is_revoked:
                     session.clear()
                     logout_user()
@@ -267,6 +273,7 @@ class OIDCCallbackView(BaseView):
         session['oidc_sub'] = oidc_sub
         session['oidc_sid'] = oidc_sid
         session['oidc_login_time'] = int(time.time())
+        session['oidc_last_active'] = int(time.time())
 
 
         if not oidc_username:

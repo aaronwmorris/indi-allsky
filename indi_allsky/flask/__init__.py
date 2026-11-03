@@ -178,6 +178,7 @@ def create_app():
 
         user_data = dict(current_user.data) if current_user.data else {}
         if user_data.get('idp') == 'oidc':
+            now_ts = int(time.time())
             session_sid = session.get('oidc_sid')
             session_login_time = session.get('oidc_login_time', 0)
             user_logged_out_at = user_data.get('oidc_logged_out_at', 0)
@@ -189,8 +190,19 @@ def create_app():
             elif user_logged_out_at and session_login_time <= user_logged_out_at:
                 is_revoked = True
 
+            session_timeout = app.config.get('OIDC_SESSION_TIMEOUT', 21600)  # default 6 hours
+            if not is_revoked and session_timeout > 0:
+                last_active = session.get('oidc_last_active') or session_login_time
+                if last_active and (now_ts - last_active > session_timeout):
+                    app.logger.info(
+                        'Logging out user %s due to OIDC session inactivity timeout (%ds)',
+                        current_user.username,
+                        session_timeout,
+                    )
+                    is_revoked = True
+
             if is_revoked:
-                app.logger.info('Logging out user %s due to OIDC backchannel logout', current_user.username)
+                app.logger.info('Logging out user %s due to OIDC session termination', current_user.username)
                 session.clear()
                 logout_user()
 
@@ -205,6 +217,10 @@ def create_app():
                     path=app.config.get('REMEMBER_COOKIE_PATH', '/')
                 )
                 return resp
+
+            # Update last activity timestamp for non-background polling requests
+            if not request.path.endswith(('/notification', '/notifications', '/system_stats')):
+                session['oidc_last_active'] = now_ts
 
 
     @app.after_request

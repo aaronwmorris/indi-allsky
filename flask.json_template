@@ -56,6 +56,8 @@
     "OIDC_ADMIN_GROUPS" : [],
     "OIDC_ALLOWED_USERS" : [],
     "OIDC_ADMIN_USERS" : [],
+    "OIDC_SESSION_TIMEOUT_comment" : "Session inactivity timeout in seconds (default 21600 = 6 hours; set to 0 to disable)",
+    "OIDC_SESSION_TIMEOUT" : 21600,
 
     "ADMIN_NETWORKS" : [
         "10.0.0.0/8",
