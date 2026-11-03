@@ -135,3 +135,35 @@ class EventManager:
 
 # Global singleton instance
 event_manager = EventManager()
+
+
+def media_complete_payload(entry) -> Dict[str, Any]:
+    """Payload for timelapse_complete, keogram_complete and startrail_complete.
+
+    Built from the DB entry once the file has been written, so frames, size and
+    dimensions are the final values.  Fields the entry does not have are left out.
+    """
+    payload = {
+        'id': entry.id,
+        'filename': str(entry.filename),
+        'camera_id': entry.camera_id,
+        'createDate': str(entry.createDate),
+        'dayDate': str(entry.dayDate),
+        'night': entry.night,
+        'frames': entry.frames,
+    }
+
+    for key in ('framerate', 'fileSize', 'width', 'height'):
+        value = getattr(entry, key, None)
+        if value is not None:
+            payload[key] = value
+
+    return payload
+
+
+def broadcast_media_complete(event_type: str, entry) -> None:
+    """Broadcast a *_complete event for a finished file.  Never raises."""
+    try:
+        event_manager.broadcast(event_type, media_complete_payload(entry))
+    except Exception as ev_err:
+        logger.error('Error broadcasting %s event: %s', event_type, ev_err)
