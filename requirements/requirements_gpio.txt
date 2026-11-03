@@ -1,4 +1,4 @@
-Adafruit-Blinka >= 9.2.0
+Adafruit-Blinka >= 10.1.0
 gpiod
 gpiozero
 pyserial
