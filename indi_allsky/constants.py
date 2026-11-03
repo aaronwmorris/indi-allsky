@@ -173,6 +173,7 @@ SENSOR_LIGHT_SQM            = 607
 SENSOR_LIGHT_MISC           = 608
 SENSOR_FAN_SPEED            = 609
 SENSOR_PERCENTAGE           = 610
+SENSOR_PRECIPITATION_RATE   = 611
 SENSOR_DIRECTION_AZIMUTH    = 612
 SENSOR_STATE                = 613
 SENSOR_MISC                 = 620
@@ -206,8 +207,8 @@ SENSOR_USER_CAMERA_SQM_ADU      = 9
 # 61-99 possible future expansion
 SENSOR_USER_RAIN                = 100
 #SENSOR_USER_                    = 101
-#SENSOR_USER_                    = 102
-#SENSOR_USER_                    = 103
+SENSOR_USER_RAIN_RATE           = 102
+SENSOR_USER_RAIN_24H            = 103
 #SENSOR_USER_                    = 104
 #SENSOR_USER_                    = 105
 #SENSOR_USER_                    = 106
@@ -485,4 +486,3 @@ INDISERVER_GPS_MAP = {
     'indi_gpsnmea'          : 'GPSd NEMA',
     'indi_simulator_gps'    : 'GPS Simulator',
 }
-
