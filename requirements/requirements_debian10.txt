@@ -35,6 +35,7 @@ paramiko
 pycurl
 # https://www.piwheels.org/project/Pillow/
 Pillow
+matplotlib >= 3.5.3
 piexif
 imageio
 imageio-ffmpeg
