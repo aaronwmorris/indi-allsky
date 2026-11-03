@@ -5,9 +5,36 @@
     }
 }
 
-/* Highlight applied to a form-group row when deep-linked via URL hash */
+/* Highlight applied to a form-group row when deep-linked via URL hash or search */
 .field-highlight {
-    background-color: rgba(255, 193, 7, 0.15);
-    outline: 1px solid rgba(255, 193, 7, 0.5);
-    border-radius: 4px;
+    background-color: rgba(59, 130, 246, 0.15) !important;
+    outline: 2px solid #3b82f6 !important;
+    border-radius: var(--radius-box, 0.5rem) !important;
+    animation: field-pulse 2s ease-out;
+}
+
+@keyframes field-pulse {
+    0% {
+        box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.45);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
+}
+
+/* Flashing animation applied to parent toggle row when dependent child setting is selected */
+.parent-toggle-flashing {
+    outline: 2px dashed #f59e0b !important;
+    background-color: rgba(245, 158, 11, 0.12) !important;
+    border-radius: var(--radius-box, 0.5rem) !important;
+    animation: parent-toggle-flash 1s infinite alternate !important;
+}
+
+@keyframes parent-toggle-flash {
+    0% {
+        box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+    }
+    100% {
+        box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.55);
+    }
 }

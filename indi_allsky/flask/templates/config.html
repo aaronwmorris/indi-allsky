@@ -5,6 +5,7 @@
 {% block head %}
 <link href="{{ url_for('indi_allsky.static', filename='css/style.css') }}" rel="stylesheet">
 <script src="{{ url_for('indi_allsky.static', filename='js/indi-allsky-tabs.js') }}"></script>
+<script src="{{ url_for('indi_allsky.static', filename='js/indi-allsky-config-search.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
@@ -14,6 +15,63 @@ var camera_id = {{ camera_id }};
 <div class="tw:container tw:mx-auto tw:px-4 tw:py-6">
 
 <form id="form_config" class="mode-simple" onSubmit="return false;" autocomplete="off" novalidate>
+
+<!-- Live Configuration Search -->
+<div class="tw:mb-4 tw:relative" id="config-search-wrapper">
+    <div class="tw:relative tw:flex tw:items-center">
+        <span class="tw:absolute tw:left-3 tw:flex tw:items-center tw:pointer-events-none tw:text-base-content/50">
+            <i class="tw:icon-[lucide--search] tw:w-4 tw:h-4"></i>
+        </span>
+        <input
+            type="search"
+            id="config-search-input"
+            class="tw:input tw:input-bordered tw:w-full tw:pl-10 tw:pr-20 tw:h-11 tw:bg-base-200/60 focus:tw:bg-base-100 tw:text-base-content tw:rounded-[var(--radius-box)] tw:border-base-300 focus:tw:border-primary tw:transition-all"
+            placeholder="Search all configuration settings... (Press '/' or Ctrl+K)"
+            autocomplete="off"
+            spellcheck="false"
+            role="combobox"
+            aria-expanded="false"
+            aria-autocomplete="list"
+            aria-controls="config-search-results"
+        />
+        <div class="tw:absolute tw:right-3 tw:flex tw:items-center tw:gap-1.5">
+            <button
+                type="button"
+                id="config-search-clear"
+                class="tw:btn tw:btn-ghost tw:btn-xs tw:btn-circle tw:text-base-content/50 hover:tw:text-base-content"
+                style="display: none;"
+                aria-label="Clear search"
+            >
+                <i class="tw:icon-[lucide--x] tw:w-3.5 tw:h-3.5"></i>
+            </button>
+            <kbd class="tw:kbd tw:kbd-xs tw:text-[0.6875rem] tw:hidden sm:tw:inline-flex tw:text-base-content/50 tw:border-base-300">Ctrl+K</kbd>
+        </div>
+    </div>
+
+    <!-- Search Results Dropdown -->
+    <div
+        id="config-search-dropdown"
+        class="tw:absolute tw:left-0 tw:right-0 tw:top-full tw:mt-1.5 tw:z-50 tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-2xl tw:overflow-hidden"
+        style="display: none;"
+        role="listbox"
+    >
+        <div class="tw:flex tw:items-center tw:justify-between tw:px-3.5 tw:py-2 tw:bg-base-200/50 tw:border-b tw:border-base-300 tw:text-xs tw:text-base-content/60">
+            <span id="config-search-header-title" class="tw:font-medium">Matching Settings</span>
+            <span id="config-search-count" class="tw:font-medium"></span>
+        </div>
+        <div id="config-search-results" class="tw:max-h-[min(22rem,55vh)] tw:overflow-y-auto">
+            <!-- Dynamically populated -->
+        </div>
+        <div class="tw:flex tw:items-center tw:justify-between tw:px-3.5 tw:py-1.5 tw:bg-base-200/30 tw:border-t tw:border-base-300 tw:text-[0.6875rem] tw:text-base-content/50">
+            <div class="tw:flex tw:items-center tw:gap-2">
+                <span><kbd class="tw:kbd tw:kbd-xs">↑</kbd> <kbd class="tw:kbd tw:kbd-xs">↓</kbd> navigate</span>
+                <span><kbd class="tw:kbd tw:kbd-xs">↵</kbd> select</span>
+                <span><kbd class="tw:kbd tw:kbd-xs">esc</kbd> close</span>
+            </div>
+            <span>Deep-links directly to setting</span>
+        </div>
+    </div>
+</div>
 
 <nav class="tw:mb-6">
   <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm" id="nav-tab" role="tablist">

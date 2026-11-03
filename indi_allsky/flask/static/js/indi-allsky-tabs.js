@@ -149,6 +149,13 @@
         });
     }
 
+    window.indiAllskyTabs = {
+        showTab: showTab,
+        highlightField: highlightField,
+        findFieldTab: findFieldTab,
+        activateTabFromHash: activateTabFromHash,
+    };
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
