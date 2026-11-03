@@ -51,7 +51,7 @@
                         {{ form_config.IMAGE_CALIBRATE_DARK(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_CALIBRATE_DARK-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 config-expert">
                         <div class="tw:flex tw:flex-col">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CALIBRATE_BPM.label.text }}</span>
                             <span class="tw:text-[0.625rem] tw:text-base-content/40">Normally disabled - Enable if you have problems with pulsing pixels.</span>
@@ -59,7 +59,7 @@
                         {{ form_config.IMAGE_CALIBRATE_BPM(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_CALIBRATE_BPM-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 config-expert">
                         <div class="tw:flex tw:flex-col">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CALIBRATE_FIX_HOLES.label.text }}</span>
                             <span class="tw:text-[0.625rem] tw:text-base-content/40">Fix holes left by dark frame calibration (BETA).</span>
@@ -70,7 +70,7 @@
                 </div>
 
                 <!-- Manual Offset & Hole Threshold -->
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:pt-2">
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:pt-2 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CALIBRATE_MANUAL_OFFSET.label.text }}</span>
                         {{ form_config.IMAGE_CALIBRATE_MANUAL_OFFSET(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -101,7 +101,7 @@
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Target Average Image Brightness - Max value: 255 [8-bit]. Default: 75 (~30% of histogram).</span>
                         <div id="TARGET_ADU-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TARGET_ADU_DEV.label.text }}</span>
                         {{ form_config.TARGET_ADU_DEV(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Allowed ADU deadband around the target before adjusting exposure.</span>
@@ -113,7 +113,7 @@
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Daytime target mean ADU (0–255).</span>
                         <div id="TARGET_ADU_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TARGET_ADU_DEV_DAY.label.text }}</span>
                         {{ form_config.TARGET_ADU_DEV_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Allowed Brightness deviation. Setting this value too low can cause exposure flapping.</span>
@@ -122,7 +122,7 @@
                 </div>
 
                 <!-- ADU FOV Div & ROI Coordinates -->
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:pt-2">
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:pt-2 config-expert">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.ADU_FOV_DIV.label.text }}</span>
                         {{ form_config.ADU_FOV_DIV(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -151,7 +151,7 @@
         </div>
 
         <!-- CLAHE Contrast & Histogram Stretch Card -->
-        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm config-expert">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Contrast Enhancement (CLAHE) & Histogram Stretching</span>
 
@@ -268,7 +268,7 @@
         </div>
 
         <!-- SCNR, Noise Reduction & Color Balance Card -->
-        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm config-expert">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Noise Reduction (Denoise) & SCNR Color Tuning</span>
 
@@ -527,7 +527,7 @@
                 </div>
 
                 <!-- Compression Factors (JPG, PNG, TIF) -->
-                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:pt-2">
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:pt-2 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_FILE_COMPRESSION__JPG.label.text }}</span>
                         {{ form_config.IMAGE_FILE_COMPRESSION__JPG(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -562,13 +562,13 @@
                         {{ form_config.IMAGE_ROTATE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_ROTATE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ROTATE_ANGLE.label.text }}</span>
                         {{ form_config.IMAGE_ROTATE_ANGLE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Rotate by arbitrary angle (0 = disabled).</span>
                         <div id="IMAGE_ROTATE_ANGLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 config-expert">
                         <div class="tw:flex tw:flex-col">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ROTATE_KEEP_SIZE.label.text }}</span>
                             <span class="tw:text-[0.625rem] tw:text-base-content/40">Keep the current canvas size when rotating by an angle; content outside the bounds is cropped.</span>
@@ -576,7 +576,7 @@
                         {{ form_config.IMAGE_ROTATE_KEEP_SIZE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_ROTATE_KEEP_SIZE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_SCALE.label.text }}</span>
                         {{ form_config.IMAGE_SCALE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Scale factor for timelapse images.</span>
@@ -609,7 +609,7 @@
                 </div>
 
                 <!-- Crop ROI & Image Circle Crop -->
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60 config-expert">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">Crop ROI Coordinates</span>
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Lower-right (x2, y2).</span>
@@ -637,7 +637,7 @@
                 </div>
 
                 <!-- Colormap & Border Paddings -->
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4 tw:pt-2">
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4 tw:pt-2 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_COLORMAP.label.text }}</span>
                         {{ form_config.IMAGE_COLORMAP(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -667,7 +667,7 @@
         </div>
 
         <!-- RAW Export & FITS Storage Options Card -->
-        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm config-expert">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">RAW Data & FITS Export Settings</span>
 

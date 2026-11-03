@@ -39,6 +39,9 @@ Place the PNG mask file on the host filesystem:
 * **Source / Git (`setup.sh`) Installations**:
   `/var/www/html/allsky/images/detection_mask.png`
 
+> [!NOTE]
+> Detection mask configuration under **Configuration** → **Processing** is an advanced feature visible only in **Expert Mode**. Enable Expert Mode via the toggle switch in the top configuration header.
+
 In **Configuration** → **Processing**:
 * Set `DETECT_MASK` to `detection_mask.png` (or provide the absolute path).
 

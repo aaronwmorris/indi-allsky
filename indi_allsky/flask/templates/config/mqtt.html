@@ -37,7 +37,7 @@
                 </div>
 
                 <!-- Transport & Protocol -->
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__TRANSPORT.label.text }}</span>
                         {{ form_config.MQTTPUBLISH__TRANSPORT(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -65,7 +65,7 @@
                 </div>
 
                 <!-- Base Topic & QoS -->
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__BASE_TOPIC.label.text }}</span>
                         {{ form_config.MQTTPUBLISH__BASE_TOPIC(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -89,7 +89,7 @@
                         {{ form_config.MQTTPUBLISH__TLS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="MQTTPUBLISH__TLS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 config-expert">
                         <div class="tw:flex tw:flex-col">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__CERT_BYPASS.label.text }}</span>
                             <span class="tw:text-[0.625rem] tw:text-base-content/40">Bypass SSL cert</span>
@@ -97,7 +97,7 @@
                         {{ form_config.MQTTPUBLISH__CERT_BYPASS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="MQTTPUBLISH__CERT_BYPASS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 config-expert">
                         <div class="tw:flex tw:flex-col">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.MQTTPUBLISH__PUBLISH_IMAGE.label.text }}</span>
                             <span class="tw:text-[0.625rem] tw:text-base-content/40">Publish image payload</span>

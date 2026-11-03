@@ -1,6 +1,23 @@
 # General
 These instructions are mainly for Raspberry PI hardware.  If your hardware has 4GB of memory, decreasing swappiness is probably the only useful optimization.  All of the optimizations are recommended for 1GB systems.
 
+## Automatic Hardware Profiling & Configuration Presets
+
+During installation and initial configuration bootstrapping (`indi-allsky-ctl reset-config`), `indi-allsky` dynamically evaluates host physical memory, active swap space, and CPU cores to apply hardware-optimized defaults that prevent Out-Of-Memory (OOM) terminations and excessive load out of the box:
+
+| Hardware Tier | Memory Boundary | FFmpeg Scaling (`FFMPEG_VFSCALE`) | Queue Size (`IMAGE_QUEUE_MAX`) | Upload Workers |
+| :--- | :--- | :--- | :--- | :--- |
+| **Tier 1 (Constrained)** | $< 1.5\text{ GB RAM}$ | `-2:720` (720p HD) | 3 | 1 |
+| **Tier 2 (Moderate)** | $1.5\text{ GB} \le \text{RAM} < 3.5\text{ GB}$ | `-2:1080` (1080p FHD) | 5 | 1 |
+| **Tier 3 (Standard)** | $3.5\text{ GB} \le \text{RAM} < 6.0\text{ GB}$ | `-2:1440` (1440p QHD) | 8 | 2 |
+| **Tier 4 (High Performance)** | $\ge 6.0\text{ GB RAM}$ | `""` (Native Resolution) | 10 | 3 |
+
+Inspect your host's assigned tier and recommended preset values via CLI:
+```bash
+indi-allsky-ctl profile
+```
+
+
 ## Decrease swappiness
 This will decrease the rate at which the Linux kernel will swap out memory pages to the swap file and reduce disk I/O.
 ```bash

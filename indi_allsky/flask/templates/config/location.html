@@ -7,7 +7,7 @@
                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Location & GPS Services</span>
 
                 <!-- GPS Enable -->
-                <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.GPS_ENABLE.label.text }}</span>
                         <span class="tw:text-[0.625rem] tw:text-base-content/50">Enable using GPS location services. Requires GPS hardware and <a href="https://github.com/aaronwmorris/indi-allsky/wiki/GPSd-NTP-Time-Sync" class="tw:link tw:link-info tw:no-underline" target="_blank">GPSd installation</a></span>
@@ -19,7 +19,7 @@
                 </div>
 
                 <!-- Privacy Mode -->
-                <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.PRIVACY_MODE.label.text }}</span>
                         <span class="tw:text-[0.625rem] tw:text-base-content/50">Reduces precision of Latitude and Longitude information when it is exposed</span>
@@ -31,7 +31,7 @@
                 </div>
 
                 <!-- EXIF Privacy -->
-                <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_EXIF_PRIVACY.label.text }}</span>
                         <span class="tw:text-[0.625rem] tw:text-base-content/50">Exclude private identifying information from image EXIF tags including owner and GPS details. Only valid for JPEG images.</span>
@@ -162,7 +162,7 @@
                 </div>
 
                 <!-- Lens Image Circle -->
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60 config-expert">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_IMAGE_CIRCLE.label.text }}</span>
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Image-circle diameter in pixels. If the edge is outside the frame, use a value larger than the image diagonal. This circle and its offsets are separate from VirtualSky; Solve does not change them.</span>
@@ -174,7 +174,7 @@
                 </div>
 
                 <!-- Lens Offsets X & Y -->
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_OFFSET_X.label.text }}</span>
                         {{ form_config.LENS_OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -189,7 +189,7 @@
                 </div>
 
                 <!-- Lens Altitude & Azimuth -->
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3">
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.LENS_ALTITUDE.label.text }} (°)</span>
                         {{ form_config.LENS_ALTITUDE(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -208,7 +208,7 @@
         </div>
 
         <!-- Night & Celestial Thresholds Card -->
-        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm config-expert">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Night & Moon Mode Thresholds</span>
 
@@ -235,7 +235,7 @@
         </div>
 
         <!-- VirtualSky Configuration Card -->
-        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm config-expert">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">VirtualSky Overlay Geometry</span>

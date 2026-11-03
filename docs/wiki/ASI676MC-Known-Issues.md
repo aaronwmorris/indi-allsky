@@ -46,6 +46,9 @@ untouched measurement. The original investigation is in
 
 ## Collect calibration frames
 
+> [!NOTE]
+> The dedicated **ASI676MC** tab and advanced tuning options in the web configuration are hidden by default in Simple Mode. Enable **Expert Mode** using the toggle switch in the top configuration header.
+
 1. Open **Config > Image** and find **ASI676MC purple-frame handling**.
 2. Turn on **Enable ASI676MC purple-frame handling**.
 3. Leave **Detect and exclude only** on. This keeps detected purple frames

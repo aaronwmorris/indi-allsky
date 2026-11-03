@@ -62,7 +62,7 @@
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Select the exposure-control mode. Restart the capture service after changing it.</span>
                         <div id="CCD_CONFIG__EXPOSURE_CLASSNAME-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_CONFIG__AUTO_GAIN_LEVELS.label.text }}</span>
                         {{ form_config.CCD_CONFIG__AUTO_GAIN_LEVELS(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Legacy Auto-Gain only. Divides the camera's gain range into this many equal levels.</span>
@@ -84,13 +84,13 @@
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">0 = auto</span>
                         <div id="CCD_EXPOSURE_DEF-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_EXPOSURE_MIN.label.text }}</span>
                         {{ form_config.CCD_EXPOSURE_MIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Min: {{ "%0.6f" | format(camera_minExposure | float) }}s</span>
                         <div id="CCD_EXPOSURE_MIN-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_EXPOSURE_MIN_DAY.label.text }}</span>
                         {{ form_config.CCD_EXPOSURE_MIN_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">0 = auto (daytime)</span>
@@ -112,7 +112,7 @@
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Seconds between daytime frames. Use 5 seconds or more.</span>
                         <div id="EXPOSURE_PERIOD_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_EXPOSURE_TIMEOUT.label.text }}</span>
                         {{ form_config.CCD_EXPOSURE_TIMEOUT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Maximum seconds before aborting a stalled exposure.</span>
@@ -145,7 +145,7 @@
                     </div>
 
                     <!-- Moon Mode -->
-                    <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                    <div class="tw:flex tw:flex-col tw:gap-2 tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/70">Moon Mode Profile</span>
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Moon Mode Gain</span>
                         {{ form_config.CCD_CONFIG__MOONMODE__GAIN(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
@@ -171,7 +171,7 @@
         </div>
 
         <!-- Camera SQM (Sky Quality Meter) Card -->
-        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm config-expert">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:items-center tw:justify-between">
                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Camera-Based Sky Quality Measurement (SQM)</span>
@@ -251,7 +251,7 @@
                             {{ form_config.CCD_COOLING(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                             <div id="CCD_COOLING-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
-                        <div class="tw:flex tw:flex-col tw:gap-1">
+                        <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/50">{{ form_config.CCD_TEMP.label.text }}</span>
                             {{ form_config.CCD_TEMP(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                             <div id="CCD_TEMP-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
@@ -266,7 +266,7 @@
                             {{ form_config.CCD_COOLING_DAY(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                             <div id="CCD_COOLING_DAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
-                        <div class="tw:flex tw:flex-col tw:gap-1">
+                        <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/50">{{ form_config.CCD_TEMP_DAY.label.text }}</span>
                             {{ form_config.CCD_TEMP_DAY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-200 tw:text-base-content tw:w-full') }}
                             <div id="CCD_TEMP_DAY-error" class="tw:text-error tw:text-xs" style="display: none;"></div>
@@ -291,7 +291,7 @@
                         {{ form_config.WINDSPEED_DISPLAY(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="WINDSPEED_DISPLAY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.CCD_TEMP_SCRIPT.label.text }}</span>
                         {{ form_config.CCD_TEMP_SCRIPT(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">External script used for CCD temperature. Used when a camera does not support temperature measurements.</span>
@@ -303,7 +303,7 @@
         </div>
 
         <!-- Advanced Queue & Bit Depth Controls Card -->
-        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm config-expert">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Queue Management & Focus Mode</span>
 
@@ -357,7 +357,7 @@
         </div>
 
         <!-- Specialized Driver Configuration Accordions -->
-        <div class="tw:flex tw:flex-col tw:gap-4">
+        <div class="tw:flex tw:flex-col tw:gap-4 config-expert">
 
             <!-- libcamera Accordion -->
             <div class="tw:collapse tw:collapse-arrow tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)]">

@@ -19,7 +19,10 @@ https://<allsky-host>/indi-allsky/virtualsky
 
 ## Configuration Reference
 
-Settings are managed in the web interface under **Configuration** → **VirtualSky**:
+> [!NOTE]
+> The **VirtualSky** settings card under **Configuration** → **Location** is an advanced feature visible only in **Expert Mode**. Enable Expert Mode via the toggle switch in the top configuration header to access VirtualSky settings.
+
+Settings are managed in the web interface under **Configuration** → **Location** → **VirtualSky**:
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|

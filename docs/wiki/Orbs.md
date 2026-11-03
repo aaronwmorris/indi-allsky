@@ -32,6 +32,9 @@ The larger, accented tick mark (rendered in the primary text color) indicates th
 
 ## 3. Configuration Parameters
 
+> [!NOTE]
+> The **Orb Properties** settings card under **Configuration** → **Overlays** is hidden by default in Simple Mode. Enable **Expert Mode** via the toggle switch in the top configuration header to access orb settings.
+
 In the web interface under **Configuration -> Overlays -> Orb Properties**, or via JSON configuration:
 
 ```json

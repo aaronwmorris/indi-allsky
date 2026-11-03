@@ -72,6 +72,7 @@ Hardware & Diagnostics:
   test-adsb                Test ADS-B aircraft tracking receiver connection
   test-oci                 Validate Oracle Cloud Infrastructure (OCI) credentials
   test-websocket           Test WebSocket real-time events and send control commands
+  profile / system-profile Display detected hardware tier and auto-tuned settings
   support-info             Generate diagnostic report bundle for troubleshooting
 
 Peripheral Configuration & Integrations:
@@ -424,7 +425,8 @@ case "$COMMAND" in
     retry-uploads|upload-sync|sync-uploads|\
     notify|add-notification|test-camera|test-linearity|camera-linearity|\
     test-sensors|test-devices|test-hardware|test-fans|test-upload|test-transfers|\
-    test-adsb|test-oci|test-websocket|test-ws|ha-discovery|setup-ha-discovery)
+    test-adsb|test-oci|test-websocket|test-ws|profile|system-profile|hardware-profile|\
+    ha-discovery|setup-ha-discovery)
         check_flask_config "$@"
         ;;
 esac
@@ -539,6 +541,9 @@ case "$COMMAND" in
         ;;
     test-websocket|test-ws)
         exec "$PYTHON_BIN" "${APP_DIR}/misc/test_websocket_events.py" "$@"
+        ;;
+    profile|system-profile|hardware-profile)
+        exec "$PYTHON_BIN" "${APP_DIR}/config.py" profile "$@"
         ;;
     support-info)
         exec bash "${APP_DIR}/misc/support_info.sh" "$@"

@@ -23,6 +23,12 @@
 
         if (!targetPane) return false;
 
+        // Ensure Expert mode is activated if the requested tab is an expert-only tab
+        const targetBtn = document.querySelector('[data-tab-target="' + targetId + '"]');
+        if (targetBtn && targetBtn.classList.contains('config-expert') && typeof window.setConfigMode === 'function') {
+            window.setConfigMode('expert');
+        }
+
         // Hide all tab panes
         document.querySelectorAll('.tab-pane').forEach(function(pane) {
             pane.classList.remove('show', 'active');
@@ -52,32 +58,87 @@
         return true;
     }
 
+    let highlightTimer = null;
+
+    function clearHighlights() {
+        if (highlightTimer) {
+            clearTimeout(highlightTimer);
+            highlightTimer = null;
+        }
+        document.querySelectorAll('.field-highlight').forEach(function(el) {
+            el.classList.remove('field-highlight');
+        });
+    }
+
+    function findSettingContainer(el) {
+        if (!el) return null;
+
+        // 1. Direct form-group container
+        const formGroup = el.closest('.form-group');
+        if (formGroup) return formGroup;
+
+        // 2. Check for standard indi-allsky row with border-b or py-3 padding
+        const standardRow = el.closest('[class*="tw:border-b"], .tw\\:py-3, .tw\\:py-2');
+        if (standardRow && !standardRow.classList.contains('tw:card-body') && !standardRow.classList.contains('card-body') && !standardRow.classList.contains('tab-pane')) {
+            return standardRow;
+        }
+
+        // 3. Walk up until container with label and input is found
+        let candidate = el.parentElement;
+        while (candidate && candidate !== document.body && !candidate.classList.contains('tab-pane')) {
+            if (candidate.classList.contains('tw:card') || candidate.classList.contains('card')) {
+                break;
+            }
+            const hasLabel = candidate.querySelector('label[for="' + el.id + '"]') ||
+                             candidate.querySelector('span.tw\\:font-bold, span.tw\\:tracking-wider, label');
+            if (hasLabel && candidate !== el.parentElement && (candidate.classList.contains('tw:grid') || candidate.classList.contains('tw:flex'))) {
+                return candidate;
+            }
+            if (hasLabel && candidate.parentElement && (candidate.parentElement.classList.contains('tw:grid') || candidate.parentElement.classList.contains('tw:flex'))) {
+                return candidate;
+            }
+            candidate = candidate.parentElement;
+        }
+
+        return el.closest('.tw\\:flex, .tw\\:grid') || el;
+    }
+
     function highlightField(fieldId) {
         const el = document.getElementById(fieldId);
         if (!el) return;
 
+        // Ensure Expert mode is activated if the targeted field is in an expert container
+        if (typeof window.setConfigMode === 'function' && el.closest('.config-expert')) {
+            window.setConfigMode('expert');
+        }
+
         // Open any collapsed accordion section that contains this field
         const collapse = el.closest('.tw\\:collapse, .collapse');
         if (collapse) {
+            collapse.classList.add('tw:collapse-open');
             const checkbox = collapse.querySelector('input[type="checkbox"]');
             if (checkbox) {
                 checkbox.checked = true;
             }
         }
 
-        // Highlight the field container
-        const row = el.closest('.tw\\:flex, .tw\\:grid, .form-group') || el;
+        // Clear any previous highlights across the page
+        clearHighlights();
+
+        // Highlight the resolved field container
+        const row = findSettingContainer(el);
+        if (!row) return;
+
         row.classList.add('field-highlight');
 
         setTimeout(function() {
             row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 200);
-    }
+        }, 150);
 
-    function clearHighlights() {
-        document.querySelectorAll('.field-highlight').forEach(function(el) {
-            el.classList.remove('field-highlight');
-        });
+        // Auto-fade highlight after 4.5 seconds
+        highlightTimer = setTimeout(function() {
+            row.classList.remove('field-highlight');
+        }, 4500);
     }
 
     function findFieldTab(fieldId) {
@@ -137,6 +198,15 @@
             activateTabFromHash(window.location.hash);
         });
     }
+
+    window.indiAllskyTabs = {
+        showTab: showTab,
+        highlightField: highlightField,
+        clearHighlights: clearHighlights,
+        findSettingContainer: findSettingContainer,
+        findFieldTab: findFieldTab,
+        activateTabFromHash: activateTabFromHash,
+    };
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);

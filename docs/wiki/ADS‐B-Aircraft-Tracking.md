@@ -12,6 +12,9 @@ There are two typical deployment architectures:
 
 ## Configuration
 
+> [!NOTE]
+> The **ADS-B** configuration tab in the web interface is hidden by default in Simple Mode. Enable **Expert Mode** via the toggle switch in the top configuration header to access ADS-B settings.
+
 ### Setup 1: Remote Receiver (Separate Pi / PiAware on your network)
 If you already run PiAware or dump1090 on another machine:
 * **No SDR software needed on the Allsky device**: Do **NOT** install `dump1090`, `dump1090-fa`, or `rtl-sdr` on your indi-allsky machine. The camera daemon simply fetches the JSON feed over HTTP from the remote receiver.

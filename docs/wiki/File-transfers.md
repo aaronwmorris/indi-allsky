@@ -13,6 +13,10 @@ indi-allsky supports several methods of file transfers.  All are implemented usi
 | webdav (https) | pycurl_webdav_https | 443  | HTTPS PUT via pycurl |
 
 # PycURL Options
+
+> [!NOTE]
+> Advanced file transfer settings (including PycURL options, worker process count, and specialized upload schedules for keograms and star trails) are hidden by default in Simple Mode. Enable **Expert Mode** via the toggle switch in the top configuration header.
+
   * You may add additional libcurl configuration options via the `PycURL Options` entry
   * Options may be added with `CURLOPT_` prefix or without
   * Examples

@@ -47,17 +47,17 @@
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Maximum age in days before original timelapse and panorama images are deleted.</span>
                         <div id="IMAGE_EXPIRE_DAYS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_RAW_EXPIRE_DAYS.label.text }}</span>
                         {{ form_config.IMAGE_RAW_EXPIRE_DAYS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_RAW_EXPIRE_DAYS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_FITS_EXPIRE_DAYS.label.text }}</span>
                         {{ form_config.IMAGE_FITS_EXPIRE_DAYS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_FITS_EXPIRE_DAYS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE_EXPIRE_DAYS.label.text }}</span>
                         {{ form_config.TIMELAPSE_EXPIRE_DAYS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Maximum age of timelapse, keogram, and star trails before deletion.</span>
@@ -66,7 +66,7 @@
                 </div>
 
                 <!-- Overwrite Existing Timelapse -->
-                <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3">
+                <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE_OVERWRITE.label.text }}</span>
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">If a timelapse already exists for a given time, this setting will overwrite the existing entry instead of stopping.</span>
@@ -86,7 +86,7 @@
                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Storage Directories & Status Template</span>
 
                 <!-- Image Folder -->
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60 config-expert">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_FOLDER.label.text }}</span>
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Folder for captured images. Run setup.sh after changing it so the web-server configuration is updated.</span>
@@ -98,7 +98,7 @@
                 </div>
 
                 <!-- VarLib Folder -->
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60 config-expert">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.VARLIB_FOLDER.label.text }}</span>
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Folder for persistent data. Run setup.sh after changing it so permissions are updated.</span>
@@ -110,7 +110,7 @@
                 </div>
 
                 <!-- Web Status Template -->
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60 config-expert">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.WEB_STATUS_TEMPLATE.label.text }}</span>
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Status-bar HTML template using Python format syntax. See the Web Status wiki for available variables.</span>
@@ -141,7 +141,7 @@
         </div>
 
         <!-- Custom Charts Slots Grid Card -->
-        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm config-expert">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <div class="tw:flex tw:flex-col">
                     <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Custom Charts Sensor Slots (1 to 9)</span>
@@ -244,7 +244,7 @@
         </div>
 
         <!-- Healthcheck, Networks & Security Card -->
-        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm config-expert">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Healthcheck & Administrative Security</span>
 

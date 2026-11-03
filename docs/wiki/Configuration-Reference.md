@@ -3,8 +3,16 @@ This page has not been updated in a while and is no longer maintained.  There ar
 
 # General
 
-All configuration is read from the database.  Almost all of the configuration is managed via the web interface.
-You may use the config.py utility to manipulate the configuration from the command line.
+All configuration is read from the database. Almost all of the configuration is managed via the web interface (`/indi-allsky/config`).
+You may use the `config.py` utility to manipulate the configuration from the command line.
+
+## Web Interface: Simple vs. Expert Mode
+
+The web configuration page provides a **Mode Toggle** located in the top sticky action bar:
+- **Simple Mode**: Streamlines the interface for everyday operation. Only primary configuration items are presented (camera exposure and auto-gain thresholds, image stretch curves, basic overlays, standard timelapse settings, primary weather station credentials, and basic hardware drivers). Specialized calibration tabs (SyncAPI, ADS-B, Satellite Tracking, ASI676MC) and deep hardware/algorithmic tweaks remain tucked away.
+- **Expert Mode**: Reveals every advanced setting across all 17 configuration categories, including custom crop ROIs, Hough line parameters, star detection filters, PWM frequencies, raw MQTT connection parameters, and manual GPIO overrides.
+- **State Persistence**: The active mode preference is stored locally in the browser (`localStorage`).
+- **Automatic Elevation**: If a validation error is encountered upon saving, or if a direct link to an expert field or tab is followed, the interface automatically switches to Expert mode and highlights the affected control.
 
 | Setting             | Default     | Description |
 | ------------------- | ----------- | ----------- |

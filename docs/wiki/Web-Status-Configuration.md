@@ -1,6 +1,9 @@
 # Overview
 The Web Status section can be customized using a template and python string format codes.
 
+> [!NOTE]
+> The **Web Status Template** configuration under **Configuration** → **Admin** is an advanced feature visible only in **Expert Mode**. Enable Expert Mode using the toggle switch in the top configuration header.
+
 Information regarding python string formats may be found here:
 https://docs.python.org/3/library/string.html#formatspec
 

@@ -2,7 +2,10 @@
 
 `indi-allsky` supports electronic focuser mechanisms to automate and fine-tune lens optical focus directly from the web interface or via command-line utilities.
 
-Focusers are configured in the web interface under **Configuration** → **Focuser**.
+Focusers are configured in the web interface under **Configuration** → **Devices** → **Focuser Driver & Device MQTT Telemetry**.
+
+> [!NOTE]
+> The **Focuser** hardware settings card is hidden by default in Simple Mode. Enable **Expert Mode** using the toggle switch in the top configuration header to access focuser options.
 
 ---
 

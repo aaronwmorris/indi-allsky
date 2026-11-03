@@ -55,8 +55,11 @@ echo "============================================================"
 PYTHONPATH=/usr/share/indi-allsky /var/lib/indi-allsky/venv/bin/python3 -c "
 import PyIndi, flask, astropy, cv2, cryptography, dbus, systemd, rawpy, scipy, boto3, google.cloud.storage, adafruit_bme280, adafruit_bmp280, adafruit_ina219
 from indi_allsky.wsgi import application
+from indi_allsky.system_profile import get_system_hardware_profile
 assert application is not None
-print('All core, cloud, and hardware sensor modules and Flask WSGI application verified successfully!')
+profile = get_system_hardware_profile()
+assert profile.tier in (1, 2, 3, 4), f'Invalid hardware tier: {profile.tier}'
+print(f'All core, cloud, hardware sensor modules, Flask WSGI application, and Tier {profile.tier} ({profile.tier_name}) profile verified successfully!')
 "
 
 echo "============================================================"
@@ -92,14 +95,24 @@ cfg = json.loads(data_row[0])
 assert abs(cfg.get('LOCATION_LATITUDE', 0) - (-34.9285)) < 1e-4, f'Latitude mismatch: {cfg.get(\"LOCATION_LATITUDE\")}'
 assert abs(cfg.get('LOCATION_LONGITUDE', 0) - 138.6007) < 1e-4, f'Longitude mismatch: {cfg.get(\"LOCATION_LONGITUDE\")}'
 assert int(cfg.get('LOCATION_ELEVATION', 0)) == 50, f'Elevation mismatch: {cfg.get(\"LOCATION_ELEVATION\")}'
-print('Database verified: Admin user provisioned and observatory coordinates verified (-34.9285, 138.6007, 50m)!')
+
+# Verify auto-tuned hardware profile note and tier parameters
+tuned_rows = conn.cursor().execute(\"SELECT note FROM config WHERE note LIKE '%Tuned for Tier%'\").fetchall()
+assert len(tuned_rows) > 0, 'Hardware profile tuning record missing from database config history'
+assert 'FFMPEG_VFSCALE' in cfg, 'FFMPEG_VFSCALE missing from bootstrapped configuration'
+
+print('Database verified: Admin user provisioned, coordinates verified (-34.9285, 138.6007, 50m), and hardware profile applied!')
 "
 
 echo "============================================================"
-echo "=== 4. Testing System Configuration ==="
+echo "=== 4. Testing System Configuration & Control Utility ==="
 echo "============================================================"
 test -f /etc/indi-allsky/flask.json
 echo "Configuration file /etc/indi-allsky/flask.json is present!"
+
+# Verify indi-allsky-ctl profile CLI execution against live configuration
+/usr/bin/indi-allsky-ctl profile
+echo "Control utility 'indi-allsky-ctl profile' executed successfully!"
 
 echo "============================================================"
 echo "=== 5. Testing Non-Interactive Package Upgrade / Reinstall ==="

@@ -1,6 +1,9 @@
 # Overview
 The fan controller support in indi-allsky is intended to use the GPIO or PWM pins from a SBC such as a Raspberry PI to drive either a MOSFET or relay to manage the fan state.
 
+> [!NOTE]
+> Cooling fan controls are configured under **Configuration** → **Devices**. Basic driver and target temperature options appear in Simple Mode; advanced PWM frequencies, multi-stage threshold differentials, and hold timers require **Expert Mode** to be enabled via the top header switch.
+
 The default functionality is to activate the fan during the day and deactivate at night, although it is possible to enable night time operation.
 
 It is also possible to control the fan using temperature thresholds if you have an appropriate temperature sensor.

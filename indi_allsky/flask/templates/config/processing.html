@@ -16,7 +16,7 @@
                         {{ form_config.DETECT_STARS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="DETECT_STARS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_STARS_THOLD.label.text }}</span>
                         {{ form_config.DETECT_STARS_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">0.5 - 0.6 is a good value to start.</span>
@@ -30,7 +30,7 @@
                         {{ form_config.DETECT_METEORS(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="DETECT_METEORS-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_METEORS_THOLD.label.text }}</span>
                         {{ form_config.DETECT_METEORS_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Default: 125 - Increase to 250 if too many false detections.</span>
@@ -39,7 +39,7 @@
                 </div>
 
                 <!-- Star Detection Method & SEP Threshold -->
-                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_STARS_METHOD.label.text }}</span>
                         {{ form_config.DETECT_STARS_METHOD(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -61,7 +61,7 @@
                 </div>
 
                 <!-- Detection Mask File & Draw Toggle -->
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4 tw:pt-2 tw:items-center">
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-4 tw:pt-2 tw:items-center config-expert">
                     <div class="md:tw:col-span-3 tw:flex tw:flex-col tw:gap-1">
                         <div class="tw:flex tw:items-center tw:justify-between">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.DETECT_MASK.label.text }}</span>
@@ -96,25 +96,25 @@
                         {{ form_config.IMAGE_CIRCLE_MASK__ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_CIRCLE_MASK__ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__DIAMETER.label.text }}</span>
                         {{ form_config.IMAGE_CIRCLE_MASK__DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Image-circle mask diameter in pixels.</span>
                         <div id="IMAGE_CIRCLE_MASK__DIAMETER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__BLUR.label.text }}</span>
                         {{ form_config.IMAGE_CIRCLE_MASK__BLUR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_CIRCLE_MASK__BLUR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__OPACITY.label.text }}</span>
                         {{ form_config.IMAGE_CIRCLE_MASK__OPACITY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <div id="IMAGE_CIRCLE_MASK__OPACITY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
                 </div>
 
-                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_CIRCLE_MASK__OFFSET_X.label.text }}</span>
                         {{ form_config.IMAGE_CIRCLE_MASK__OFFSET_X(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -134,7 +134,7 @@
                 </div>
 
                 <!-- SQM FoV & ROI Coordinates -->
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:pt-2">
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:pt-2 config-expert">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SQM_FOV_DIV.label.text }}</span>
                         {{ form_config.SQM_FOV_DIV(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -186,7 +186,7 @@
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Method to use for image stacking. Stacking disabled during daytime and moon mode.</span>
                         <div id="IMAGE_STACK_METHOD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 config-expert">
                         <div class="tw:flex tw:flex-col">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_ALIGN.label.text }}</span>
                             <span class="tw:text-[0.625rem] tw:text-base-content/40">Align frames before stacking. All-sky distortion can cause occasional registration errors.</span>
@@ -194,7 +194,7 @@
                         {{ form_config.IMAGE_STACK_ALIGN(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
                         <div id="IMAGE_STACK_ALIGN-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 config-expert">
                         <div class="tw:flex tw:flex-col">
                             <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_SPLIT.label.text }}</span>
                             <span class="tw:text-[0.625rem] tw:text-base-content/40">Stacking split screen. Left is original, right is stacked.</span>
@@ -205,7 +205,7 @@
                 </div>
 
                 <!-- Registration Alignment Parameters -->
-                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_ALIGN_DETECTSIGMA.label.text }}</span>
                         {{ form_config.IMAGE_ALIGN_DETECTSIGMA(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -227,7 +227,7 @@
                 </div>
 
                 <!-- Stack Toggles (Moonmode & Day) -->
-                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:pt-2">
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:pt-2 config-expert">
                     <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.IMAGE_STACK_MOONMODE.label.text }}</span>
                         {{ form_config.IMAGE_STACK_MOONMODE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
@@ -370,7 +370,7 @@
                 </div>
 
                 <!-- Sun & Moon Thresholds -->
-                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_SUN_ALT_THOLD.label.text }}</span>
                         {{ form_config.STARTRAILS_SUN_ALT_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -407,19 +407,19 @@
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Max average image brightness (8-bit) to include in star trails. This should be at least 10 ADUs less than your target ADU.</span>
                         <div id="STARTRAILS_MAX_ADU-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MASK_THOLD.label.text }}</span>
                         {{ form_config.STARTRAILS_MASK_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Pixel ADU threshold used to build the star-trail mask.</span>
                         <div id="STARTRAILS_MASK_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_PIXEL_THOLD.label.text }}</span>
                         {{ form_config.STARTRAILS_PIXEL_THOLD(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Exclude image for this percentage of pixels above the Mask Threshold ADU.</span>
                         <div id="STARTRAILS_PIXEL_THOLD-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                     </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
+                    <div class="tw:flex tw:flex-col tw:gap-1 config-expert">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.STARTRAILS_MIN_STARS.label.text }}</span>
                         {{ form_config.STARTRAILS_MIN_STARS(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Minimum detected stars to include image.</span>
@@ -450,31 +450,33 @@
                 </div>
 
                 <!-- Star Trails Circle Mask -->
-                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Star Trails Image Circle Mask</span>
-                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:pt-2">
-                    <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
-                        <div class="tw:flex tw:flex-col">
-                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE.label.text }}</span>
-                            <span class="tw:text-[0.625rem] tw:text-base-content/40">This may be used to mask text outside the image circle.</span>
+                <div class="config-expert">
+                    <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 tw:mt-2">Star Trails Image Circle Mask</span>
+                    <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-4 tw:gap-4 tw:pt-2">
+                        <div class="tw:flex tw:items-center tw:justify-between tw:p-3 tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300">
+                            <div class="tw:flex tw:flex-col">
+                                <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE.label.text }}</span>
+                                <span class="tw:text-[0.625rem] tw:text-base-content/40">This may be used to mask text outside the image circle.</span>
+                            </div>
+                            {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                            <div id="STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                         </div>
-                        {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
-                        <div id="STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                    </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER.label.text }}</span>
-                        {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <span class="tw:text-[0.625rem] tw:text-base-content/40">Star-trail mask diameter in pixels.</span>
-                        <div id="STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                    </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_BLUR.label.text }}</span>
-                        {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_BLUR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="STARTRAILS__IMAGE_CIRCLE_MASK_BLUR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
-                    </div>
-                    <div class="tw:flex tw:flex-col tw:gap-1">
-                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY.label.text }}</span>
-                        {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
-                        <div id="STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER.label.text }}</span>
+                            {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                            <span class="tw:text-[0.625rem] tw:text-base-content/40">Star-trail mask diameter in pixels.</span>
+                            <div id="STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_BLUR.label.text }}</span>
+                            {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_BLUR(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                            <div id="STARTRAILS__IMAGE_CIRCLE_MASK_BLUR-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
+                        <div class="tw:flex tw:flex-col tw:gap-1">
+                            <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:text-base-content/80">{{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY.label.text }}</span>
+                            {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY(class='tw:input tw:input-bordered tw:input-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
+                            <div id="STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -482,7 +484,7 @@
         </div>
 
         <!-- Fish2Pano Panorama Generator Card -->
-        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm config-expert">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Fisheye to Panorama (Fish2Pano) Conversion</span>
 
@@ -571,7 +573,7 @@
         </div>
 
         <!-- Circular Display & Custom Script Hooks Card -->
-        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm config-expert">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Circular Displays & External Script Hooks</span>
 

@@ -33,6 +33,10 @@ This results in a negative relative magnitude which can be offset to determine a
 
 
 ## Magnitude Offset calibration
+
+> [!NOTE]
+> Lux sensor calibration, optical sensor gains, and magnitude offset controls under **Configuration** → **Sensors** require **Expert Mode** to be enabled via the toggle switch in the top configuration header.
+
 The magnitude offset is added to the relative, raw magnitude to calculate the absolute magnitude.  Using a calibrated SQM meter is the best possible scenario to determine the offset.
 
 **You should wait until a you have a moonless, cloudless, clear night to calibrate.**  Let the camera take an SQM exposure to generate a raw magnitude.

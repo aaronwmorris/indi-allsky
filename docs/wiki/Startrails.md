@@ -18,6 +18,9 @@ The core stacking engine (`indi_allsky/stack.py`) isolates stellar trajectories 
 
 High-quality star trail composites require excluding frames affected by lunar illumination, twilight sky glow, passing clouds, or atmospheric ground fog.
 
+> [!NOTE]
+> Star trail circle masking and advanced frame filtering parameters under **Configuration** require **Expert Mode** to be enabled using the toggle switch in the top configuration header.
+
 Under **Configuration -> Star Trails**, the following filter parameters govern frame inclusion:
 
 | Parameter | Default | Empirical Purpose |

@@ -4,6 +4,9 @@
 
 The detection method is configured under **Configuration** → **Processing** in the **Star & Meteor Detection Engine** section.
 
+> [!NOTE]
+> The **Star & Meteor Detection Engine** settings card is hidden by default in Simple Mode. Enable **Expert Mode** using the toggle switch in the top configuration header to access star detection thresholds.
+
 ---
 
 ## 1. Detection Algorithms

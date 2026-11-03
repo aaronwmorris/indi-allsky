@@ -34,7 +34,7 @@
                 </div>
 
                 <!-- Pre-Processor Selection -->
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60">
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-4 tw:gap-2 md:tw:gap-4 tw:items-center tw:py-3 tw:border-b tw:border-base-300/60 config-expert">
                     <div class="tw:flex tw:flex-col">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.TIMELAPSE__PRE_PROCESSOR.label.text }}</span>
                         <span class="tw:text-[0.625rem] tw:text-base-content/40">Night pre-processing engine</span>
@@ -62,7 +62,7 @@
                 </div>
 
                 <!-- Scaling & Star Trail Scaling -->
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_VFSCALE.label.text }}</span>
                         {{ form_config.FFMPEG_VFSCALE(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -78,7 +78,7 @@
                 </div>
 
                 <!-- Codec, Extra Options & Skip Frames -->
-                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:py-3">
+                <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-3 tw:gap-4 tw:py-3 config-expert">
                     <div class="tw:flex tw:flex-col tw:gap-1">
                         <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.FFMPEG_CODEC.label.text }}</span>
                         {{ form_config.FFMPEG_CODEC(class='tw:select tw:select-bordered tw:select-sm tw:h-11 tw:bg-base-100 tw:text-base-content tw:w-full') }}
@@ -102,7 +102,7 @@
         </div>
 
         <!-- Daytime Specific Timelapse Card -->
-        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm config-expert">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Daytime Specific Overrides</span>
 
@@ -165,7 +165,7 @@
         </div>
 
         <!-- Advanced Processing Options Card -->
-        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm config-expert">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Advanced Geometry & Debugging Options</span>
 

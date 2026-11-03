@@ -5,6 +5,7 @@
 {% block head %}
 <link href="{{ url_for('indi_allsky.static', filename='css/style.css') }}" rel="stylesheet">
 <script src="{{ url_for('indi_allsky.static', filename='js/indi-allsky-tabs.js') }}"></script>
+<script src="{{ url_for('indi_allsky.static', filename='js/indi-allsky-config-search.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
@@ -13,7 +14,64 @@ var camera_id = {{ camera_id }};
 {% block content %}
 <div class="tw:container tw:mx-auto tw:px-4 tw:py-6">
 
-<form id="form_config" onSubmit="return false;" autocomplete="off" novalidate>
+<form id="form_config" class="mode-simple" onSubmit="return false;" autocomplete="off" novalidate>
+
+<!-- Live Configuration Search -->
+<div class="tw:mb-4 tw:relative" id="config-search-wrapper">
+    <div class="tw:relative tw:flex tw:items-center">
+        <span class="tw:absolute tw:left-3 tw:flex tw:items-center tw:pointer-events-none tw:text-base-content/50">
+            <i class="tw:icon-[lucide--search] tw:w-4 tw:h-4"></i>
+        </span>
+        <input
+            type="search"
+            id="config-search-input"
+            class="tw:input tw:input-bordered tw:w-full tw:pl-10 tw:pr-20 tw:h-11 tw:bg-base-200/60 focus:tw:bg-base-100 tw:text-base-content tw:rounded-[var(--radius-box)] tw:border-base-300 focus:tw:border-primary tw:transition-all [&::-webkit-search-cancel-button]:tw:appearance-none [&::-webkit-search-cancel-button]:tw:hidden [&::-webkit-search-decoration]:tw:appearance-none"
+            placeholder="Search all configuration settings... (Press '/' or Ctrl+K)"
+            autocomplete="off"
+            spellcheck="false"
+            role="combobox"
+            aria-expanded="false"
+            aria-autocomplete="list"
+            aria-controls="config-search-results"
+        />
+        <div class="tw:absolute tw:right-3 tw:flex tw:items-center tw:gap-1.5">
+            <button
+                type="button"
+                id="config-search-clear"
+                class="tw:btn tw:btn-ghost tw:btn-xs tw:btn-circle tw:text-base-content/50 hover:tw:text-base-content"
+                style="display: none;"
+                aria-label="Clear search"
+            >
+                <i class="tw:icon-[lucide--x] tw:w-3.5 tw:h-3.5"></i>
+            </button>
+            <kbd class="tw:kbd tw:kbd-xs tw:text-[0.6875rem] tw:hidden sm:tw:inline-flex tw:text-base-content/50 tw:border-base-300">Ctrl+K</kbd>
+        </div>
+    </div>
+
+    <!-- Search Results Dropdown -->
+    <div
+        id="config-search-dropdown"
+        class="tw:absolute tw:left-0 tw:right-0 tw:top-full tw:mt-1.5 tw:z-50 tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] tw:shadow-2xl tw:overflow-hidden"
+        style="display: none;"
+        role="listbox"
+    >
+        <div class="tw:flex tw:items-center tw:justify-between tw:px-3.5 tw:py-2 tw:bg-base-200/50 tw:border-b tw:border-base-300 tw:text-xs tw:text-base-content/60">
+            <span id="config-search-header-title" class="tw:font-medium">Matching Settings</span>
+            <span id="config-search-count" class="tw:font-medium"></span>
+        </div>
+        <div id="config-search-results" class="tw:max-h-[min(22rem,55vh)] tw:overflow-y-auto">
+            <!-- Dynamically populated -->
+        </div>
+        <div class="tw:flex tw:items-center tw:justify-between tw:px-3.5 tw:py-1.5 tw:bg-base-200/30 tw:border-t tw:border-base-300 tw:text-[0.6875rem] tw:text-base-content/50">
+            <div class="tw:flex tw:items-center tw:gap-2">
+                <span><kbd class="tw:kbd tw:kbd-xs">↑</kbd> <kbd class="tw:kbd tw:kbd-xs">↓</kbd> navigate</span>
+                <span><kbd class="tw:kbd tw:kbd-xs">↵</kbd> select</span>
+                <span><kbd class="tw:kbd tw:kbd-xs">esc</kbd> close</span>
+            </div>
+            <span>Deep-links directly to setting</span>
+        </div>
+    </div>
+</div>
 
 <nav class="tw:mb-6">
   <div class="tw:flex tw:flex-wrap tw:gap-2 tw:bg-base-200 tw:p-2.5 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-sm" id="nav-tab" role="tablist">
@@ -28,12 +86,12 @@ var camera_id = {{ camera_id }};
     <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-mqtt-tab" data-tab-target="nav-mqtt" type="button" role="tab"><i class="tw:icon-[lucide--radio] tw:w-3.5 tw:h-3.5"></i> MQTT</button>
     <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-youtube-tab" data-tab-target="nav-youtube" type="button" role="tab"><i class="tw:icon-[lucide--youtube] tw:w-3.5 tw:h-3.5"></i> YouTube</button>
     <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-s3-tab" data-tab-target="nav-s3" type="button" role="tab"><i class="tw:icon-[lucide--database] tw:w-3.5 tw:h-3.5"></i> Object Storage</button>
-    <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-syncapi-tab" data-tab-target="nav-syncapi" type="button" role="tab"><i class="tw:icon-[lucide--refresh-cw] tw:w-3.5 tw:h-3.5"></i> SyncAPI</button>
+    <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all config-expert" id="nav-syncapi-tab" data-tab-target="nav-syncapi" type="button" role="tab"><i class="tw:icon-[lucide--refresh-cw] tw:w-3.5 tw:h-3.5"></i> SyncAPI</button>
     <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-allskymap-tab" data-tab-target="nav-allskymap" type="button" role="tab"><i class="tw:icon-[lucide--map] tw:w-3.5 tw:h-3.5"></i> Allsky Map</button>
     <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-sensors-tab" data-tab-target="nav-sensors" type="button" role="tab"><i class="tw:icon-[lucide--cpu] tw:w-3.5 tw:h-3.5"></i> Sensors</button>
     <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-devices-tab" data-tab-target="nav-devices" type="button" role="tab"><i class="tw:icon-[lucide--plug] tw:w-3.5 tw:h-3.5"></i> Devices</button>
-    <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-adsb-tab" data-tab-target="nav-adsb" type="button" role="tab"><i class="tw:icon-[lucide--plane] tw:w-3.5 tw:h-3.5"></i> ADS-B</button>
-    <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all" id="nav-sat_track-tab" data-tab-target="nav-sat_track" type="button" role="tab"><i class="tw:icon-[lucide--satellite] tw:w-3.5 tw:h-3.5"></i> Satellite Tracking</button>
+    <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all config-expert" id="nav-adsb-tab" data-tab-target="nav-adsb" type="button" role="tab"><i class="tw:icon-[lucide--plane] tw:w-3.5 tw:h-3.5"></i> ADS-B</button>
+    <button class="tab-btn tw:btn tw:btn-sm tw:btn-ghost tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/60 hover:tw:text-base-content tw:gap-1.5 active:tw:scale-95 tw:transition-all config-expert" id="nav-sat_track-tab" data-tab-target="nav-sat_track" type="button" role="tab"><i class="tw:icon-[lucide--satellite] tw:w-3.5 tw:h-3.5"></i> Satellite Tracking</button>
   </div>
 </nav>
 
@@ -76,6 +134,11 @@ var camera_id = {{ camera_id }};
             <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80 tw:whitespace-nowrap" title="Restart capture after saving. The restart can take 1–3 minutes.">{{ form_config.RELOAD_ON_SAVE.label.text }}</span>
         </label>
         <div id="RELOAD_ON_SAVE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+        <!-- Show Advanced Settings Toggle -->
+        <label class="tw:flex tw:items-center tw:gap-2 tw:cursor-pointer tw:select-none tw:flex-shrink-0 tw:px-1" title="Show advanced configuration settings">
+            <input type="checkbox" id="config-mode-toggle" class="tw:toggle tw:toggle-secondary tw:toggle-sm" />
+            <span class="tw:text-xs tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80 tw:whitespace-nowrap">Show advanced settings</span>
+        </label>
         <div class="tw:flex tw:items-center tw:gap-3 tw:flex-1 tw:min-w-[200px]">
             <span class="tw:text-xs tw:font-bold tw:uppercase tw:text-base-content/70 tw:whitespace-nowrap">{{ form_config.CONFIG_NOTE.label.text }}:</span>
             <div class="tw:flex-1">
@@ -900,6 +963,50 @@ checkbox_field_names.forEach(item => {
 });
 
 
+window.setConfigMode = function(mode) {
+    const isExpert = (mode === 'expert' || mode === true);
+    const form = $('#form_config');
+    const toggle = $('#config-mode-toggle');
+
+    if (isExpert) {
+        form.removeClass('mode-simple').addClass('mode-expert');
+        toggle.prop('checked', true);
+        sessionStorage.setItem('indi_allsky_config_mode', 'expert');
+    } else {
+        form.removeClass('mode-expert').addClass('mode-simple');
+        toggle.prop('checked', false);
+        sessionStorage.setItem('indi_allsky_config_mode', 'simple');
+
+        // If the currently active tab has been hidden by simple mode, switch to the Camera tab
+        const activeBtn = $('#nav-tab .tab-btn.active');
+        if (activeBtn.hasClass('config-expert')) {
+            $('#nav-camera-tab').click();
+        }
+    }
+};
+
+function initConfigMode() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlMode = urlParams.get('mode');
+    let savedMode = 'simple';
+    if (urlMode === 'expert' || urlMode === 'simple') {
+        savedMode = urlMode;
+    } else if (sessionStorage.getItem('indi_allsky_config_mode')) {
+        savedMode = sessionStorage.getItem('indi_allsky_config_mode');
+    }
+    // Clean up any legacy localStorage that would force expert mode
+    localStorage.removeItem('indi_allsky_config_mode');
+
+    window.setConfigMode(savedMode);
+
+    $('#config-mode-toggle').on('change', function() {
+        const mode = $(this).prop('checked') ? 'expert' : 'simple';
+        sessionStorage.setItem('indi_allsky_config_mode', mode);
+        window.setConfigMode(mode);
+    });
+}
+
+initConfigMode();
 
 
 $('#form_config').on('submit', function() {
@@ -972,10 +1079,15 @@ $('#form_config').on('submit', function() {
 
             var errors = JSON.parse(rdata.responseText);
             var errorFieldNames = [];
+            var hasHiddenExpertError = false;
 
             var firstErrorTab = null;
             Object.keys(errors).forEach((key) => {
                 if (key === 'form_global' || !fields[key]) return;
+
+                if (fields[key].input.closest('.config-expert').length > 0) {
+                    hasHiddenExpertError = true;
+                }
 
                 errorFieldNames.push(key);
 
@@ -998,6 +1110,10 @@ $('#form_config').on('submit', function() {
                     }
                 }
             });
+
+            if (hasHiddenExpertError && !$('#config-mode-toggle').prop('checked')) {
+                window.setConfigMode('expert');
+            }
 
             // Show banner and scroll it into view
             if (errorFieldNames.length > 0) {
