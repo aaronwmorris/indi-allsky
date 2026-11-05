@@ -85,6 +85,7 @@ Welcome to the indi-allsky wiki!
 * [MQTT Broker Publishing](MQTT-Broker-Publishing)
 * [Grafana, Telegraf & InfluxDB](Grafana-Telegraf-Influx-Integration)
 * [Web Status Configuration](Web-Status-Configuration)
+* [Model Context Protocol (MCP)](Model-Context-Protocol-(MCP))
 
 # File Transfers & Cloud Storage
 * [File Transfers](File-transfers)

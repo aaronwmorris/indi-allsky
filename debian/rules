@@ -59,6 +59,7 @@ override_dh_installsystemd:
 	dh_installsystemd --name=gunicorn-indi-allsky
 	dh_installsystemd --name=indi-allsky --no-enable --no-start
 	dh_installsystemd --name=indiserver --no-enable --no-start
+	dh_installsystemd --name=indi-allsky-mcp --no-enable --no-start
 
 override_dh_fixperms:
 	dh_fixperms
