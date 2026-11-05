@@ -1220,6 +1220,7 @@ class TemplateView(BaseView):
             'username_text'      : self.get_user_info(),
             'login_disabled'     : self.login_disabled,
             'docker'             : self.docker,
+            'smoke__enable'      : int(bool(self.indi_allsky_config.get('SMOKE_ENABLE', True))),
         }
 
         # Expose the tool exactly where the server-side decorator will allow

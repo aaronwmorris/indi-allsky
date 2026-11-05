@@ -5440,6 +5440,7 @@ class VideoViewerView(FormView):
             camera_id=self.camera.id,
             s3_prefix=self.s3_prefix,
             local=local,
+            smoke_enable=self.indi_allsky_config.get('SMOKE_ENABLE', True),
         )
 
         return context
@@ -5476,6 +5477,7 @@ class AjaxVideoViewerView(BaseView):
             camera_id=camera_id,
             s3_prefix=self.s3_prefix,
             local=local,
+            smoke_enable=self.indi_allsky_config.get('SMOKE_ENABLE', True),
         )
 
 
@@ -5540,6 +5542,7 @@ class MiniVideoViewerView(FormView):
             camera_id=self.camera.id,
             s3_prefix=self.s3_prefix,
             local=local,
+            smoke_enable=self.indi_allsky_config.get('SMOKE_ENABLE', True),
         )
 
         return context
@@ -5573,6 +5576,7 @@ class AjaxMiniVideoViewerView(BaseView):
             camera_id=camera_id,
             s3_prefix=self.s3_prefix,
             local=local,
+            smoke_enable=self.indi_allsky_config.get('SMOKE_ENABLE', True),
         )
 
 

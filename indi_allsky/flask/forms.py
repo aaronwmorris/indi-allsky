@@ -7175,6 +7175,7 @@ class IndiAllskyImageViewer(FlaskForm):
         self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
         self.local = kwargs.get('local')
+        self.smoke_enable = kwargs.get('smoke_enable', True)
         self.asi676mc_diagnostic_download_enabled = kwargs.get(
             'asi676mc_diagnostic_download_enabled',
             False,
@@ -7845,6 +7846,7 @@ class IndiAllskyGalleryViewer(FlaskForm):
         self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
         self.local = kwargs.get('local')
+        self.smoke_enable = kwargs.get('smoke_enable', True)
         requested_statuses = kwargs.get('asi676mc_statuses', ())
         self.asi676mc_statuses = tuple(
             status
@@ -8189,6 +8191,7 @@ class IndiAllskyVideoViewer(FlaskForm):
         self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
         self.local = kwargs.get('local')
+        self.smoke_enable = kwargs.get('smoke_enable', True)
 
 
     def getYears(self):
@@ -8349,7 +8352,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 'dayDate_long'      : v.dayDate.strftime('%B %d, %Y'),
                 'dayDate'           : v.dayDate.strftime('%Y%m%d'),
                 'night'             : v.night,
-                'max_smoke_rating'  : constants.SMOKE_RATING_MAP_STR[data.get('max_smoke_rating', constants.SMOKE_RATING_NODATA)],
+                'max_smoke_rating'  : constants.SMOKE_RATING_MAP_STR.get(data.get('max_smoke_rating'), '') if self.smoke_enable and data.get('max_smoke_rating', constants.SMOKE_RATING_NODATA) != constants.SMOKE_RATING_NODATA else '',
                 'max_kpindex'       : data.get('max_kpindex', 0.0),
                 'max_ovation_max'   : data.get('max_ovation_max', 0),
                 'max_moonphase'     : data.get('max_moonphase', 0),  # might be null
@@ -8650,6 +8653,7 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
         self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
         self.local = kwargs.get('local')
+        self.smoke_enable = kwargs.get('smoke_enable', True)
 
 
     def getYears(self):
@@ -8823,7 +8827,7 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
                 'dayDate'           : v.dayDate.strftime('%Y%m%d'),
                 'night'             : v.night,
                 'note'              : v.note,
-                'max_smoke_rating'  : constants.SMOKE_RATING_MAP_STR[data.get('max_smoke_rating', constants.SMOKE_RATING_NODATA)],
+                'max_smoke_rating'  : constants.SMOKE_RATING_MAP_STR.get(data.get('max_smoke_rating'), '') if self.smoke_enable and data.get('max_smoke_rating', constants.SMOKE_RATING_NODATA) != constants.SMOKE_RATING_NODATA else '',
                 'max_kpindex'       : data.get('max_kpindex', 0.0),
                 'max_ovation_max'   : data.get('max_ovation_max', 0),
                 'max_moonphase'     : data.get('max_moonphase', 0),  # might be null
