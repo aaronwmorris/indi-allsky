@@ -3138,6 +3138,9 @@ class ImageProcessor(object):
         # gain is int, gain_f is float
         image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain_f:0.3f}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}')
 
+        if not self.config.get('SMOKE_ENABLE', True):
+            image_label_tmpl = '\n'.join([line for line in image_label_tmpl.splitlines() if '{smoke_rating' not in line])
+
         if self.config.get('TEMP_DISPLAY') == 'f':
             temp_unit = 'F'
         elif self.config.get('TEMP_DISPLAY') == 'k':

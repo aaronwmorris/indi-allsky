@@ -694,6 +694,8 @@ class BaseView(View):
             'smoke_rating_status' : '',
         }
 
+        if not self.indi_allsky_config.get('SMOKE_ENABLE', True):
+            return data
 
         if not self.camera_data:
             data['smoke_rating'] = 'No data'
@@ -859,8 +861,11 @@ class BaseView(View):
 
 
     def get_status_text(self, data):
+        smoke_enabled = self.indi_allsky_config.get('SMOKE_ENABLE', True)
         status_lines = list()
         for line in self.indi_allsky_config.get('WEB_STATUS_TEMPLATE', 'Status: {status:s}').splitlines():
+            if not smoke_enabled and '{smoke_rating' in line:
+                continue
             # encapsulate each line in a div
             status_lines.append('<div>{0:s}</div>'.format(line))
 
@@ -1218,6 +1223,7 @@ class TemplateView(BaseView):
             'username_text'      : self.get_user_info(),
             'login_disabled'     : self.login_disabled,
             'docker'             : self.docker,
+            'smoke__enable'      : int(bool(self.indi_allsky_config.get('SMOKE_ENABLE', True))),
         }
 
         # Expose the tool exactly where the server-side decorator will allow

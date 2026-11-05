@@ -42,6 +42,18 @@
                     </div>
                 </div>
 
+                <!-- Smoke Enable -->
+                <div class="tw:flex tw:flex-col sm:tw:flex-row sm:tw:items-center tw:justify-between tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
+                    <div class="tw:flex tw:flex-col tw:gap-1">
+                        <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wider tw:text-base-content/80">{{ form_config.SMOKE_ENABLE.label.text }}</span>
+                        <span class="tw:text-[0.625rem] tw:text-base-content/50">Pull wildfire smoke plume ratings from NOAA Hazard Mapping System (Coverage: North America / NW hemisphere only).</span>
+                    </div>
+                    <div class="tw:flex tw:flex-col tw:items-start sm:tw:items-end">
+                        {{ form_config.SMOKE_ENABLE(class='tw:toggle tw:toggle-primary tw:toggle-sm') }}
+                        <div id="SMOKE_ENABLE-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
+                    </div>
+                </div>
+
                 <div class="tw:alert tw:alert-info tw:py-2.5 tw:text-xs tw:rounded-[var(--radius-box)]">
                     <i class="tw:icon-[lucide--info] tw:w-4 tw:h-4"></i>
                     <span>Changes to LATITUDE and LONGITUDE will not be immediately reflected in the status area. A reload is necessary to update camera metadata.</span>

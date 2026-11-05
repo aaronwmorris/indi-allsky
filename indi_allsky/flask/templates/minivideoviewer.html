@@ -8,6 +8,7 @@
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 var youtube__enable = {{ youtube__enable }};
+var smoke__enable = {{ smoke__enable }};
 </script>
 {% endblock %}
 
@@ -129,7 +130,9 @@ function populate_videos(video_list) {
             $('<div />', { 'text' : 'KPINDEX: ' + item['max_kpindex'] }).appendTo(stats_grid);
             $('<div />', { 'text' : 'AURORA: ' + item['max_ovation_max'] + '%' }).appendTo(stats_grid);
         }
-        $('<div />', { 'text' : 'SMOKE: ' + item['max_smoke_rating'] }).appendTo(stats_grid);
+        if (smoke__enable && item['max_smoke_rating'] && item['max_smoke_rating'].toLowerCase() !== 'no data') {
+            $('<div />', { 'text' : 'SMOKE: ' + item['max_smoke_rating'] }).appendTo(stats_grid);
+        }
 
 
         // video

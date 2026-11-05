@@ -2398,6 +2398,10 @@ class VideoWorker(Process):
 
         task.setRunning()
 
+        if not self.config.get('SMOKE_ENABLE', True):
+            task.setSuccess('Smoke data disabled')
+            return
+
         smoke = IndiAllskySmokeUpdate(self.config)
         smoke.update(camera)
 
