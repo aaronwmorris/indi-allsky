@@ -1,0 +1,10 @@
+[Unit]
+Description=Periodically check NetworkManager Wi-Fi recovery on %I
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=1min
+AccuracySec=5s
+
+[Install]
+WantedBy=timers.target

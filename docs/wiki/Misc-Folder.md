@@ -38,6 +38,7 @@ Contents of the `misc/` folder in indi-allsky.
 | `setup_disable_leds.sh` | Disable onboard LEDs on Raspberry Pi | `indi-allsky-ctl disable-leds` |
 | `setup_gpsd.sh` | Install and basic setup for gpsd | `indi-allsky-ctl setup-gps` |
 | `setup_hotspot.sh` | Setup basic WIFI hotspot using NetworkManager | `indi-allsky-ctl setup-hotspot` |
+| `setup_wifi_recovery.sh` | [Optional recovery of saved station Wi-Fi connections](Wi-Fi-Recovery) | Standalone source installer |
 | `setup_mosquitto_mqtt.sh` | Install and setup Mosquitto MQTT broker | `indi-allsky-ctl setup-mqtt` |
 | `setup_rtc_i2c.sh` | Setup of I2C real-time clock module | `indi-allsky-ctl setup-rtc` |
 | `setup_usb_automount.sh` | Setup of udisks2 automount for USB devices | `indi-allsky-ctl setup-usb-mount` |

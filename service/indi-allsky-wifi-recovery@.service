@@ -1,0 +1,18 @@
+[Unit]
+Description=Check NetworkManager Wi-Fi recovery on %I
+After=NetworkManager.service
+
+[Service]
+Type=oneshot
+ExecCondition=/usr/bin/systemctl is-active --quiet NetworkManager.service
+ExecStart=/usr/bin/python3 /usr/local/lib/indi-allsky/wifi_recovery.py %I
+TimeoutStartSec=40s
+RuntimeDirectory=indi-allsky-wifi-recovery-%i
+RuntimeDirectoryMode=0700
+RuntimeDirectoryPreserve=yes
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+RestrictAddressFamilies=AF_UNIX
