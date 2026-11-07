@@ -18,9 +18,9 @@
         window.addEventListener('storage', applyCompanionTheme);
     </script>
     <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='css/dist.css') }}">
-    <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='css/companion.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='css/companion.css') }}?v=3">
     <script defer src="{{ url_for('indi_allsky.static', filename='js/chart.umd.js') }}"></script>
-    <script defer src="{{ url_for('indi_allsky.static', filename='js/companion.js') }}?v=2"></script>
+    <script defer src="{{ url_for('indi_allsky.static', filename='js/companion.js') }}?v=3"></script>
 </head>
 <body class="tw:font-sans">
 <main class="companion" id="companion" data-camera-id="{{ camera_id }}" data-refresh-ms="{{ refresh_ms }}"
@@ -43,7 +43,7 @@
             </div>
             <figcaption>
                 <div><span class="caption-label">Aufnahme</span><time id="image-time">–</time></div>
-                <span id="image-age" class="age"></span>
+                <span id="image-age" class="age" title="Zeit seit der Aufnahme, einschließlich der Bildverarbeitung"></span>
             </figcaption>
         </figure>
     </div>

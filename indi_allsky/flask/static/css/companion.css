@@ -53,6 +53,7 @@ body { background: var(--color-base-300); color: var(--color-base-content); marg
 #image-time { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 .5rem; line-height: 1.25; }
 #image-time strong, .age { font-size: 1.5rem; font-weight: 700; }
 .age { line-height: 1.15; color: var(--color-base-content); align-self: center; }
+.age.new-frame { color: var(--color-success); }
 .notice { margin: 0; border-inline-start: .25rem solid var(--color-warning); padding: .35rem .7rem; font-size: 1rem; }
 .surface { padding: .45rem .55rem; }
 .surface h2 { margin: 0 0 .25rem; font-size: 1rem; line-height: 1.2; font-weight: 700; }

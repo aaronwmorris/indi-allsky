@@ -42,22 +42,24 @@ def companion_status(view):
 
     zone = camera_timezone(view.camera)
     now = datetime.now(timezone.utc).astimezone(zone)
-    latitude, longitude = view.getCameraPrivacyLatLong(view.camera)
-    astronomy = night_ephemeris(now, zone, latitude, longitude, view.camera.elevation or 0)
-    metrics, defaults, series = companion_charts(
-        view.camera, view.indi_allsky_config, now, zone, request.args.getlist('metric'),
-    )
-    return {
+    data = {
         'camera_id': view.camera.id,
         'now': now.isoformat(),
         'time_zone': getattr(zone, 'key', None),
         'offset_minutes': int(now.utcoffset().total_seconds() / 60),
         'image': latest_companion_image(view, now),
-        'astronomy': astronomy,
-        'metrics': metrics,
-        'defaults': defaults,
-        'series': series,
     }
+    # The browser can discover a published frame promptly without recomputing
+    # two hours of sensor readings and the ephemerides on each image check.
+    if request.args.get('image_only') == '1':
+        return data
+
+    latitude, longitude = view.getCameraPrivacyLatLong(view.camera)
+    data['astronomy'] = night_ephemeris(now, zone, latitude, longitude, view.camera.elevation or 0)
+    data['metrics'], data['defaults'], data['series'] = companion_charts(
+        view.camera, view.indi_allsky_config, now, zone, request.args.getlist('metric'),
+    )
+    return data
 
 
 def latest_companion_image(view, now):

@@ -21,6 +21,8 @@
     let timer;
     let request;
     let lastPayload;
+    let nextDetails = 0;
+    const imageCheckMs = 2000;
 
     try {
         const saved = JSON.parse(localStorage.getItem(storageKey));
@@ -103,7 +105,9 @@
             const seconds = Math.floor(Math.max(0, now - displayed.timestamp) / 1000);
             const age = seconds < 60 ? seconds + ' s' : seconds < 3600 ? Math.floor(seconds / 60) + ' min'
                 : seconds < 86400 ? Math.floor(seconds / 3600) + ' Std.' : Math.floor(seconds / 86400) + ' Tagen';
-            byId('image-age').textContent = 'vor ' + age.replace(/^1 Tagen$/, '1 Tag');
+            const badge = byId('image-age');
+            badge.textContent = 'vor ' + age.replace(/^1 Tagen$/, '1 Tag');
+            badge.classList.toggle('new-frame', performance.now() < displayed.highlightUntil);
         }
         updateStatus();
     }
@@ -135,7 +139,9 @@
             byId('capture-image').replaceWith(image);
             page.style.setProperty('--capture-aspect', image.naturalWidth / image.naturalHeight);
             byId('empty-image').hidden = true;
-            displayed = { key, timestamp: Date.parse(entry.captured_at) };
+            const timestamp = Date.parse(entry.captured_at);
+            const advanced = displayed && timestamp > displayed.timestamp && cameraNow() - timestamp < 60000;
+            displayed = {key, timestamp, highlightUntil: advanced ? performance.now() + 3000 : 0};
             const time = byId('image-time');
             const formatted = dateAndTime(entry.captured_at);
             const date = document.createElement('span');
@@ -245,6 +251,10 @@
         clock = {timestamp, syncedAt: performance.now(), offset: payload.offset_minutes || 0};
         offline = false;
         updateImage(payload.image);
+        if (!payload.astronomy) {
+            tick();
+            return;
+        }
         const astronomy = payload.astronomy;
         for (const id of eventNames) showEvent(id, astronomy[id]);
         const phase = [astronomy.moon_phase];
@@ -255,14 +265,17 @@
         tick();
     }
 
-    async function refresh() {
+    async function refresh(forceDetails = false) {
         clearTimeout(timer);
+        if (document.hidden) return;
         if (request) request.abort();
         const controller = new AbortController();
         request = controller;
         const deadline = setTimeout(() => controller.abort(), 16000);
         const url = new URL(page.dataset.endpoint, document.baseURI);
-        if (choices) {
+        const full = forceDetails || performance.now() >= nextDetails;
+        if (!full) url.searchParams.set('image_only', '1');
+        else if (choices) {
             const active = choices.filter(Boolean);
             for (const id of active.length ? active : ['none']) url.searchParams.append('metric', id);
         }
@@ -270,7 +283,10 @@
             const result = await fetch(url, {cache: 'no-store', credentials: 'same-origin', signal: controller.signal});
             if (!result.ok) throw new Error('HTTP ' + result.status);
             const payload = await result.json();
-            if (request === controller) render(payload);
+            if (request === controller) {
+                render(payload);
+                if (full) nextDetails = performance.now() + interval;
+            }
         } catch (_) {
             if (request === controller) {
                 offline = true;
@@ -281,7 +297,7 @@
             clearTimeout(deadline);
             if (request === controller) {
                 request = null;
-                timer = setTimeout(refresh, interval);
+                if (!document.hidden) timer = setTimeout(refresh, offline ? Math.max(5000, imageCheckMs) : imageCheckMs);
             }
         }
     }
@@ -291,14 +307,18 @@
             choices = selects.map(control => control.value);
             try { localStorage.setItem(storageKey, JSON.stringify(choices)); } catch (_) {}
             if (lastPayload) showHistory(lastPayload);
-            refresh();
+            nextDetails = 0;
+            refresh(true);
         });
     }
     window.addEventListener('storage', event => {
         if (lastPayload && event.key?.startsWith('allsky-')) showHistory(lastPayload);
     });
-    window.addEventListener('online', refresh);
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+    window.addEventListener('online', () => refresh(true));
+    document.addEventListener('visibilitychange', () => {
+        clearTimeout(timer);
+        if (!document.hidden) refresh(true);
+    });
     window.setInterval(tick, 1000);
     refresh();
 })();
