@@ -94,6 +94,14 @@ def test_latest_image_camera_time(local, saved_offset, host_offset, wall_time, a
         assert view.camera_time_offset == expected_offset
         assert view.camera_now == camera_now
 
+        # The companion keeps an old capture visible, but a future-dated entry
+        # must not hide newer captures when the camera clock is corrected.
+        db.session.add(Image(id=3, camera_id=7, createDate=camera_now + timedelta(days=1)))
+        db.session.commit()
+        archived = latest(view, camera_id=7, history_seconds=None, not_after=camera_now)
+        assert archived['url'] == 'images/1.jpg'
+        assert archived['create_date'] == camera_now - timedelta(seconds=age_seconds)
+
 
 @pytest.mark.parametrize('local,saved_offset,host_offset,wall_time', [
     (True, 7200, 3600, datetime(2026, 10, 25, 12)),
