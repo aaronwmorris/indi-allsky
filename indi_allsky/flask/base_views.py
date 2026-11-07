@@ -74,12 +74,14 @@ class BaseView(View):
         self.docker = bool(os.environ.get('INDIALLSKY_DOCKER'))
 
 
-    def cameraSetup(self, camera_id=None):
+    def cameraSetup(self, camera_id=None, *, include_sunset=True):
         if not self.camera:
             self.camera = self.getCameraById(camera_id)
 
         self.local_indi_allsky = self.camera.local
-        self.getSunSetDate()
+        self.sun_set_date = None
+        if include_sunset:
+            self.getSunSetDate()
 
         self.daytime_capture = self.camera.daytime_capture
         self.daytime_capture_save = self.camera.daytime_capture_save
@@ -142,7 +144,8 @@ class BaseView(View):
     def getCameraPrivacyLatLong(self, camera):
         # reduce precision for privacy
         if self.indi_allsky_config.get('PRIVACY_MODE'):
-            return float(round(camera.latitude)), float(round(camera.longitude))
+            return tuple(float(round(value)) if value is not None else None
+                         for value in (camera.latitude, camera.longitude))
 
         return camera.latitude, camera.longitude
 
@@ -209,6 +212,9 @@ class BaseView(View):
         longitude = self.camera.longitude
         latitude = self.camera.latitude
         elevation = self.camera.elevation
+        if longitude is None or latitude is None or self.camera.nightSunAlt is None:
+            self.sun_set_date = None
+            return
 
         # this can be eventually removed
         if isinstance(elevation, type(None)):

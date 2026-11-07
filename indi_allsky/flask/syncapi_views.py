@@ -1,7 +1,10 @@
 import time
 import math
+import fcntl
+import filecmp
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 from pathlib import Path
 import hashlib
 import hmac
@@ -20,11 +23,13 @@ from flask import current_app as app
 from .. import constants
 
 from .base_views import BaseView
+from .miscDb import image_capture_offset
 
 from . import db
 
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
+from .models import IndiAllSkyDbLongTermKeogramTable
 from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbMiniVideoTable
 from .models import IndiAllSkyDbKeogramTable
@@ -593,15 +598,67 @@ class SyncApiImageView(SyncApiBaseImageView):
 
 
     def processPost(self, camera, image_metadata, tmp_file_p, overwrite=False):
-        if image_metadata.get('keogram_pixels'):
-            # do not offset timestamp
-            self._miscDb.add_long_term_keogram_data(
-                image_metadata['createDate'],
-                camera.id,
-                image_metadata['keogram_pixels'],
-            )
+        try:
+            # The wire timestamp and its offset describe the source's wall
+            # clock even when this receiver uploads an old image after DST.
+            wire_zone = timezone(timedelta(seconds=image_metadata['utc_offset']))
+            wall = datetime.fromtimestamp(image_metadata['createDate'], wire_zone).replace(tzinfo=None)
+            offset = image_capture_offset(image_metadata.get('data'), image_metadata['utc_offset'])
+            epoch = int(wall.replace(tzinfo=timezone(timedelta(seconds=offset))).timestamp())
 
-        return super(SyncApiImageView, self).processPost(camera, image_metadata, tmp_file_p, overwrite=False)
+            camera_dir = self.image_dir / ('ccd_' + camera.uuid)
+            camera_dir.mkdir(parents=True, exist_ok=True)
+            # Concurrent uploads (also metadata-only requests) must reserve
+            # different filenames when their camera wall clocks are identical.
+            with (camera_dir / '.sync-image.lock').open('a') as lock:
+                fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+                folder = self.getImageFolder(wall, image_metadata['night'], camera)
+                rows = self.model.query.filter_by(camera_id=camera.id, createDate=wall).all()
+                entry = next((row for row in rows if image_capture_offset(row.data) == offset), None)
+                if entry is None:
+                    entry = next((row for row in rows if image_capture_offset(row.data) is None
+                                  and self._sameLegacyImage(row, image_metadata, tmp_file_p)), None)
+                if entry is None:
+                    date_str = wall.strftime('%Y%m%d_%H%M%S')
+                    path = folder / self.filename_t.format(camera.id, date_str, tmp_file_p.suffix)
+                    if rows or path.exists():
+                        path = folder / self.filename_t.format(camera.id, f'{date_str}_{epoch}', tmp_file_p.suffix)
+                    if path.exists():
+                        raise EntryExists('Image file already exists: {0}'.format(path))
+                    entry = self._miscDb.addImage(path, camera.id, dict(image_metadata, createDate=wall))
+
+                self._finishImageUpload(tmp_file_p, entry.getFilesystemPath())
+                pixels = image_metadata.get('keogram_pixels')
+                if pixels and not IndiAllSkyDbLongTermKeogramTable.query.filter_by(camera_id=camera.id, ts=epoch).first():
+                    self._miscDb.add_long_term_keogram_data(epoch, camera.id, pixels)
+                return entry
+        finally:
+            tmp_file_p.unlink(missing_ok=True)
+
+
+    @staticmethod
+    def _sameLegacyImage(row, metadata, upload):
+        # Old rows cannot distinguish a repeated hour by timestamp alone.
+        if ((row.s3_key and row.s3_key == metadata.get('s3_key'))
+                or (row.remote_url and row.remote_url == metadata.get('remote_url'))):
+            return True
+        original = row.getFilesystemPath()
+        return upload.stat().st_size > 0 and original.is_file() and filecmp.cmp(original, upload, shallow=False)
+
+
+    @staticmethod
+    def _finishImageUpload(upload, target):
+        # A retry can finish a row whose first transfer failed after DB commit.
+        if not upload.stat().st_size or target.exists():
+            return
+        with tempfile.NamedTemporaryFile(dir=target.parent, delete=False) as stage:
+            staged = Path(stage.name)
+        try:
+            shutil.copy2(upload, staged)
+            staged.chmod(0o644)
+            staged.replace(target)
+        finally:
+            staged.unlink(missing_ok=True)
 
 
 class SyncApiVideoView(SyncApiBaseView):

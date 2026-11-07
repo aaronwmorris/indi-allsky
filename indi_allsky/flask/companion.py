@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from flask import abort, render_template, request, session
@@ -36,7 +36,7 @@ def companion_status(view):
     camera_id = request.args.get('camera_id', type=int)
     if camera_id is None:
         abort(400)
-    view.cameraSetup(camera_id=camera_id)
+    view.cameraSetup(camera_id=camera_id, include_sunset=False)
     if view.camera.id < 1:
         abort(404)
 
@@ -58,6 +58,7 @@ def companion_status(view):
     data['astronomy'] = night_ephemeris(now, zone, latitude, longitude, view.camera.elevation or 0)
     data['metrics'], data['defaults'], data['series'] = companion_charts(
         view.camera, view.indi_allsky_config, now, zone, request.args.getlist('metric'),
+        local_images_allowed=view.local_images_allowed,
     )
     return data
 
@@ -70,10 +71,14 @@ def latest_companion_image(view, now):
     captured = None
     if entry.get('url'):
         wall_time = entry['create_date']
-        captured = wall_time.replace(tzinfo=now.tzinfo)
-        other = captured.replace(fold=1)
-        if other.utcoffset() != captured.utcoffset() and other.timestamp() <= now.timestamp():
-            captured = other
+        offset = entry.get('utc_offset')
+        if isinstance(offset, (int, float)) and -86400 < offset < 86400:
+            captured = wall_time.replace(tzinfo=timezone(timedelta(seconds=offset)))
+        else:
+            captured = wall_time.replace(tzinfo=now.tzinfo)
+            other = captured.replace(fold=1)
+            if other.utcoffset() != captured.utcoffset() and other.timestamp() <= now.timestamp():
+                captured = other
         image = {'url': entry['url'], 'captured_at': captured.isoformat(), 'time_source': 'capture'}
 
     # Focus mode and unsaved daytime frames can exist only as latest.<ext>.
@@ -81,7 +86,7 @@ def latest_companion_image(view, now):
     uses_live_file = view.indi_allsky_config.get('FOCUS_MODE') or (view.daytime_capture and not view.daytime_capture_save)
     if not uses_live_file or not view.local_indi_allsky:
         return image
-    if view.web_nonlocal_images and not (view.web_local_images_admin and view.verify_admin_network()):
+    if not view.local_images_allowed:
         return image
 
     active_camera = IndiAllSkyDbCameraTable.query.filter_by(local=True).order_by(

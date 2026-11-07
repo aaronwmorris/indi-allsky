@@ -47,14 +47,18 @@ def station(monkeypatch):
                      lambda conn, cursor, statement, params, context, many: statements.append(statement))
 
         def add(minute, data, **kwargs):
-            row = Image(camera_id=kwargs.pop('camera_id', 1), createDate=now.replace(tzinfo=None)+timedelta(minutes=minute),
+            wall = minute if isinstance(minute, datetime) else now.replace(tzinfo=None) + timedelta(minutes=minute)
+            row = Image(camera_id=kwargs.pop('camera_id', 1), createDate=wall,
                         data=data, **kwargs)
             db.session.add(row)
 
-        def charts(requested=None, config=None):
+        def charts(requested=None, config=None, *, at=now, zone=tz, local_images_allowed=None):
             db.session.commit()
             statements.clear()
-            return mod.companion_charts(camera, config or {}, now, tz, requested)
+            if local_images_allowed is None:
+                local_images_allowed = not camera.web_nonlocal_images
+            return mod.companion_charts(camera, config or {}, at, zone, requested,
+                                        local_images_allowed=local_images_allowed)
 
         yield camera, add, charts, statements
 
@@ -118,6 +122,8 @@ def test_sqm_sentinels_and_remote_image_visibility(station):
     assert any(m['id']=='sensor_user_8' for m in metrics)
     assert [p[1] for p in series[0]['points']] == [None,20.4,None]
     assert [p[1] for p in series[1]['points']] == [None,20.8,None]
+    _, _, admin_series = charts(['sensor_user_39'], local_images_allowed=True)
+    assert [p[1] for p in admin_series[0]['points']] == [19.99, None, 20.4, None]
 
 
 def test_one_point_per_minute_preserves_entire_range(station):
@@ -129,3 +135,113 @@ def test_one_point_per_minute_preserves_entire_range(station):
     assert len(points) == 120
     assert all(value == 40 for _,value in points)
     assert datetime.fromisoformat(points[-1][0]).astimezone(timezone.utc).hour == 16
+
+BERLIN = ZoneInfo('Europe/Berlin')
+
+
+def test_elapsed_window_preserves_both_fall_back_hours_and_skips_future(station):
+    _, add, charts, sql = station
+    # At 02:20 CET the first 02:55 CEST has passed; the second 02:25 CET hasn't.
+    at = datetime(2026, 10, 25, 2, 20, 30, tzinfo=BERLIN, fold=1)
+    def sample(clock, offset, value):
+        add(datetime.fromisoformat('2026-10-25T' + clock), {'utc_offset': offset, 'sensor_user_35': value})
+
+    sample('01:20:29', 7200, -1)  # one second before the UTC window
+    sample('01:20:30', 7200, 0)
+    sample('02:15:10', 7200, 10)
+    sample('02:15:45', 7200, 11)
+    sample('02:55:00', 7200, 12)
+    sample('02:15:01', 3600, 20)
+    sample('02:15:42', 3600, 21)
+    sample('02:20:30', 3600, 22)
+    sample('02:20:31', 3600, 23)
+    sample('02:25:00', 3600, 24)
+
+    points = charts(['sensor_user_35'], at=at)[2][0]['points']
+    assert points == [
+        ['2026-10-25T01:20:30+02:00', 0],
+        ['2026-10-25T02:15:45+02:00', 11],
+        ['2026-10-25T02:55:00+02:00', 12],
+        ['2026-10-25T02:15:42+01:00', 21],
+        ['2026-10-25T02:20:30+01:00', 22],
+    ]
+    assert len(sql) == 2  # read IDs/times, then only the selected exposures' values
+
+
+def test_legacy_local_frames_use_an_observed_clock_reversal(station):
+    _, add, charts, _ = station
+    at = datetime(2026, 10, 25, 2, 30, tzinfo=BERLIN, fold=1)
+    for clock, value in [('02:16:10', 1), ('02:56:05', 2), ('02:04:05', 3), ('02:16:40', 4)]:
+        add(datetime.fromisoformat('2026-10-25T' + clock), {'sensor_user_35': value})
+    assert charts(['sensor_user_35'], at=at)[2][0]['points'] == [
+        ['2026-10-25T02:16:10+02:00', 1], ['2026-10-25T02:56:05+02:00', 2],
+        ['2026-10-25T02:04:05+01:00', 3], ['2026-10-25T02:16:40+01:00', 4],
+    ]
+
+
+@pytest.mark.parametrize('local', [False, True])
+def test_ambiguous_legacy_samples_need_evidence(station, local):
+    camera, add, charts, _ = station
+    camera.local = local
+    camera.data = {'sensor_user_35': 'photometer - remote - Lux'}
+    for clock, value in [('01:59:30', 1), ('02:12:10', 2), ('02:16:40', 3)]:
+        add(datetime.fromisoformat('2026-10-25T' + clock), {'sensor_user_35': value})
+    at = datetime(2026, 10, 25, 2, 30, tzinfo=BERLIN, fold=1)
+    assert charts(['sensor_user_35'], at=at)[2][0]['points'] == [['2026-10-25T01:59:30+02:00', 1]]
+    if not local:
+        # Even apparent backwards progress in an import sequence cannot prove a fold.
+        add(datetime(2026, 10, 25, 2, 5), {'sensor_user_35': 4})
+        assert charts(['sensor_user_35'], at=at)[2][0]['points'] == [['2026-10-25T01:59:30+02:00', 1]]
+    at = at.replace(fold=0)
+    assert all(t.endswith('+02:00') for t, value in charts(['sensor_user_35'], at=at)[2][0]['points'])
+
+
+def test_spring_gap_does_not_create_or_reorder_samples(station):
+    _, add, charts, _ = station
+    at = datetime(2026, 3, 29, 3, 15, tzinfo=BERLIN)
+    for clock, value in [('01:55:15', 1), ('02:30:00', 2), ('03:10:20', 3), ('03:20:00', 4)]:
+        add(datetime.fromisoformat('2026-03-29T' + clock), {'sensor_user_35': value})
+    assert charts(['sensor_user_35'], at=at)[2][0]['points'] == [
+        ['2026-03-29T01:55:15+01:00', 1], ['2026-03-29T03:10:20+02:00', 3],
+    ]
+
+
+def test_fixed_offset_remote_station_uses_original_offsets(station):
+    camera, add, charts, _ = station
+    camera.local = False
+    camera.data = {'sensor_user_35': 'photometer - remote - Lux'}
+    zone = timezone(timedelta(hours=1))
+    at = datetime(2026, 10, 25, 2, 20, 30, tzinfo=zone)
+    for clock, offset, value in [
+        ('02:15:01', 3600, 20), ('02:16:12', None, 77), ('02:55:45', 7200, 12),
+        ('02:15:45', 7200, 11), ('02:20:30', 3600, 21), ('02:20:45', 3600, 22),
+    ]:
+        data = {'sensor_user_35': value}
+        if offset is not None:
+            data['utc_offset'] = offset
+        add(datetime.fromisoformat('2026-10-25T' + clock), data)
+    assert charts(['sensor_user_35'], at=at, zone=zone)[2][0]['points'] == [
+        ['2026-10-25T02:15:45+02:00', 11], ['2026-10-25T02:55:45+02:00', 12],
+        ['2026-10-25T02:15:01+01:00', 20], ['2026-10-25T02:20:30+01:00', 21],
+    ]
+
+
+def test_fixed_offset_station_without_new_metadata_keeps_known_offset(station):
+    camera, add, charts, _ = station
+    camera.local = False
+    camera.data = {'sensor_user_35': 'photometer - remote - Lux'}
+    zone = timezone(timedelta(hours=5, minutes=30))
+    at = datetime(2026, 11, 7, 9, 0, tzinfo=zone)
+    add(datetime(2026, 11, 7, 8, 30), {'sensor_user_35': 0})
+    assert charts(['sensor_user_35'], at=at, zone=zone)[2][0]['points'] == [
+        ['2026-11-07T08:30:00+05:30', 0],
+    ]
+
+
+def test_minute_sampling_uses_utc_even_with_a_subminute_offset(station):
+    _, add, charts, _ = station
+    zone = timezone(timedelta(hours=5, minutes=30, seconds=30))
+    at = datetime(2026, 11, 7, 9, 15, tzinfo=zone)
+    for second in (5, 20, 35, 45):
+        add(datetime(2026, 11, 7, 9, 0, second), {'sensor_user_35': second, 'utc_offset': 19830})
+    assert [value for _, value in charts(['sensor_user_35'], at=at, zone=zone)[2][0]['points']] == [20, 45]

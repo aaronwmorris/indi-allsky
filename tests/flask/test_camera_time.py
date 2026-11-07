@@ -55,6 +55,7 @@ def test_latest_image_camera_time(local, saved_offset, host_offset, wall_time, a
         camera_id = db.Column(db.Integer, db.ForeignKey(Camera.id))
         camera = db.relationship(Camera)
         createDate = db.Column(db.DateTime, nullable=False)
+        data = db.Column(db.JSON)
         width = db.Column(db.Integer, default=1920)
         height = db.Column(db.Integer, default=1080)
 
@@ -84,7 +85,7 @@ def test_latest_image_camera_time(local, saved_offset, host_offset, wall_time, a
             Image(id=2, camera_id=8, createDate=camera_now),
         ])
         db.session.commit()
-        view = SimpleNamespace(camera=None, getCameraById=lambda camera_id: camera,
+        view = SimpleNamespace(camera=None, local_images_allowed=True, getCameraById=lambda camera_id: camera,
                                getSunSetDate=lambda: None, model=Image)
         setup(view, camera_id=7)
         result = latest(view, camera_id=7, history_seconds=900)

@@ -3,7 +3,7 @@ from collections import Counter
 from datetime import timedelta, timezone
 import math
 
-from sqlalchemy import extract, func, or_
+from sqlalchemy import and_, extract, func, or_
 
 from ..sensors_mapping import build_slot_label_map, resolve_temp_unit
 from .models import IndiAllSkyDbImageTable as Image
@@ -91,25 +91,133 @@ def _sample(value, kind, stored_temp_unit, display_temp_unit):
     return number
 
 
-def _read_samples(camera, start, end, keys):
-    # Read at most one real exposure per minute across the entire window. The inner
-    # query uses timestamps/IDs only; JSON is projected solely for the selected keys.
-    minute = (func.date(Image.createDate), extract('hour', Image.createDate), extract('minute', Image.createDate))
+def _utc_options(wall, tz):
+    """Possible instants for a local timestamp (none in a spring-forward gap)."""
+    instants = {
+        wall.replace(tzinfo=tz, fold=fold).astimezone(timezone.utc) for fold in (0, 1)
+    }
+    return sorted(t for t in instants if t.astimezone(tz).replace(tzinfo=None) == wall)
+
+
+def _stored_zone(seconds):
+    if seconds is None:
+        return None
+    try:
+        return timezone(timedelta(seconds=float(seconds)))
+    except (TypeError, ValueError, OverflowError):
+        return None
+
+
+def _last_per_minute(samples):
+    """Keep the latest real exposure in each elapsed UTC minute."""
+    latest = {}
+    for dated, image_id, *values in samples:
+        stamp = dated.timestamp()
+        minute = int(stamp // 60)
+        if minute not in latest or (stamp, image_id) > latest[minute][:2]:
+            latest[minute] = (stamp, image_id, dated, *values)
+    return [latest[minute][1:] for minute in sorted(latest)]
+
+
+def _transition_samples(query, start, end, tz, offsets, camera, values, stored):
+    # A fall-back window may end at 02:10 yet contain the FIRST 02:59. Include
+    # the full repeated hour to find a clock reversal in older local recordings.
+    shift = max(offsets) - min(offsets)
+    lower = start.replace(tzinfo=None) + min(offsets) - shift
+    upper = end.replace(tzinfo=None) + max(offsets) + shift
+    refs = query.with_entities(Image.id, Image.createDate, stored).filter(
+        Image.createDate.between(lower, upper),
+    ).order_by(Image.id).all()
+    prepared = [(image_id, wall, _stored_zone(offset), _utc_options(wall, tz)) for image_id, wall, offset in refs]
+    # Local frames are inserted in capture order. Historically synced files
+    # can arrive out of order; their IDs are not evidence of which fold applies.
+    reversals = [right[0] for left, right in zip(prepared, prepared[1:])
+                 if len(left[3]) == len(right[3]) == 2 and right[1] < left[1]]
+    pivot = reversals[0] if camera.local and len(reversals) == 1 else None
+    samples = []
+    for image_id, wall, frame_zone, options in prepared:
+        if frame_zone is not None:
+            dated = wall.replace(tzinfo=frame_zone)
+        elif len(options) == 1:
+            dated = options[0].astimezone(tz)
+        elif len(options) == 2:
+            if pivot is not None:
+                instant = options[int(image_id >= pivot)]
+            elif end.astimezone(tz).fold == 0 and options[1] > end:
+                # Before the fall-back, only the first occurrence has happened.
+                instant = options[0]
+            else:
+                continue  # Both assignments are possible; do not invent one.
+            dated = instant.astimezone(tz)
+        else:
+            continue
+        if start <= dated.astimezone(timezone.utc) <= end:
+            samples.append((dated, image_id))
+
+    chosen = _last_per_minute(samples)
+    if not chosen:
+        return []
+    # The first query reads only IDs and timestamps/offsets. Fetch sensor
+    # values for at most one frame per UTC minute, irrespective of cadence.
+    rows = query.with_entities(Image.id, *values).filter(
+        Image.id.in_([image_id for image_id, dated in chosen]),
+    ).all()
+    by_id = {row[0]: row[1:] for row in rows}
+    return [(dated, *by_id[image_id]) for image_id, dated in chosen if image_id in by_id]
+
+
+def _read_samples(camera, start, end, tz, keys, *, local_images_allowed):
+    query = Image.query.filter(Image.camera_id == camera.id, Image.exclude.is_(False))
+    if not local_images_allowed:
+        query = query.filter(or_(Image.remote_url.isnot(None), Image.s3_key.isnot(None)))
+    stored = Image.data['utc_offset'].as_integer()
+    values = [Image.data['temp_display'].as_string()]
+    values.extend(Image.sqm if key == 'jsqm' else Image.data[key].as_string() for key in keys)
+    local_start, local_end = start.astimezone(tz), end.astimezone(tz)
+    offsets = {edge.replace(fold=fold).utcoffset() for edge in (local_start, local_end) for fold in (0, 1)}
+    if len(offsets) != 1:
+        return _transition_samples(query, start, end, tz, offsets, camera, values, stored)
+
+    base_offset = local_start.utcoffset()
+    possible = {base_offset}
+    if isinstance(tz, timezone):
+        # Without an IANA zone the camera supplies only its current offset.
+        # Discover historical offsets in the bounded envelope of possible wall
+        # times; the actual values query below uses exact indexed time ranges.
+        envelope = Image.createDate.between(start.replace(tzinfo=None) - timedelta(days=1),
+                                            end.replace(tzinfo=None) + timedelta(days=1))
+        for (seconds,) in query.with_entities(stored).filter(envelope, stored.isnot(None)).distinct():
+            frame_zone = _stored_zone(seconds)
+            if frame_zone is not None:
+                possible.add(frame_zone.utcoffset(None))
+
+    ranges = []
+    for offset in possible:
+        match = stored == int(offset.total_seconds())
+        # An old row on a fixed-offset-only station has no reliable timestamp
+        # when the nearby records show multiple different offsets.
+        if offset == base_offset and len(possible) == 1:
+            match = or_(match, stored.is_(None))
+        ranges.append(and_(match, Image.createDate.between(
+            start.replace(tzinfo=None) + offset, end.replace(tzinfo=None) + offset)))
+    effective = func.coalesce(stored, int(base_offset.total_seconds()))
+    minute = (func.date(Image.createDate), extract('hour', Image.createDate),
+              extract('minute', Image.createDate), effective)
+    # Some historical offsets include seconds: a single civil minute can
+    # straddle two UTC minutes; preserve each half, then merge by UTC below.
+    if any(offset.total_seconds() % 60 for offset in possible):
+        minute += (extract('second', Image.createDate) >= ((effective % 60 + 60) % 60),)
     rank = func.row_number().over(partition_by=minute, order_by=(Image.createDate.desc(), Image.id.desc()))
-    recent = Image.query.with_entities(Image.id.label('id'), rank.label('position')).filter(
-        Image.camera_id == camera.id, Image.exclude.is_(False),
-        Image.createDate >= start, Image.createDate <= end,
-    )
-    if camera.web_nonlocal_images:
-        recent = recent.filter(or_(Image.remote_url.isnot(None), Image.s3_key.isnot(None)))
-    recent = recent.subquery()
-    values = [Image.sqm if key == 'jsqm' else Image.data[key].as_string() for key in keys]
-    return Image.query.with_entities(Image.createDate, Image.data['temp_display'].as_string(), *values).join(
+    recent = query.with_entities(Image.id.label('id'), rank.label('position')).filter(or_(*ranges)).subquery()
+    rows = Image.query.with_entities(Image.id, Image.createDate, effective, *values).join(
         recent, recent.c.id == Image.id,
-    ).filter(recent.c.position == 1).order_by(Image.createDate).all()
+    ).filter(recent.c.position == 1)
+    samples = [(wall.replace(tzinfo=timezone(timedelta(seconds=offset))), image_id, *data)
+               for image_id, wall, offset, *data in rows]
+    return [(dated, *data) for _, dated, *data in _last_per_minute(samples)]
 
 
-def companion_charts(camera, config, now, tz, requested):
+def companion_charts(camera, config, now, tz, requested, *, local_images_allowed):
     """Return available metrics, suggested IDs, and up to two selected series."""
     slots = _slots(camera, config)
     temp_code = (config if camera.local else camera.data or {}).get('TEMP_DISPLAY' if camera.local else 'temp_display')
@@ -137,16 +245,8 @@ def companion_charts(camera, config, now, tz, requested):
     end = now if now.tzinfo else now.replace(tzinfo=tz)
     end = end.astimezone(timezone.utc)
     start = end - timedelta(hours=2)
-    start_wall = start.astimezone(tz).replace(tzinfo=None)
-    end_wall = end.astimezone(tz).replace(tzinfo=None)
-    for stamp, stored, *values in _read_samples(camera, start_wall, end_wall, selected):
-        # Capture timestamps are stored in the camera's local wall time. Prefer the
-        # occurrence inside this window when a clock change repeats an hour.
-        dated = stamp.replace(tzinfo=tz)
-        if not start <= dated.astimezone(timezone.utc) <= end:
-            dated = dated.replace(fold=1)
-            if not start <= dated.astimezone(timezone.utc) <= end:
-                continue
+    for dated, stored, *values in _read_samples(camera, start, end, tz, selected,
+                                               local_images_allowed=local_images_allowed):
         stored = stored or temp_code or ('c' if camera.local else None)
         for key, data, value in zip(selected, series, values):
             data['points'].append([dated.isoformat(), _sample(value, slots[key], stored, temp_unit)])

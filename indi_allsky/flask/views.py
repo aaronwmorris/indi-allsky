@@ -7,7 +7,7 @@ import tempfile
 import json
 import hashlib
 from collections import OrderedDict
-from functools import wraps
+from functools import cached_property, wraps
 import time
 import math
 import base64
@@ -426,6 +426,13 @@ class JsonLatestImageView(JsonView):
         return data
 
 
+    @cached_property
+    def local_images_allowed(self):
+        return not self.web_nonlocal_images or (
+            self.web_local_images_admin and self.verify_admin_network()
+        )
+
+
     def getLatestImage(self, camera_id, history_seconds, not_after=None):
         latest_image_q = self.model.query\
             .join(self.model.camera)\
@@ -436,25 +443,15 @@ class JsonLatestImageView(JsonView):
             latest_image_q = latest_image_q.filter(self.model.createDate <= not_after)
 
 
-        local = True  # default to local assets
-        if self.web_nonlocal_images:
-            if self.web_local_images_admin and self.verify_admin_network():
-                pass
-            else:
-                local = False
-
-                # Do not serve local assets
-                latest_image_q = latest_image_q\
-                    .filter(
-                        or_(
-                            self.model.remote_url != sa_null(),
-                            self.model.s3_key != sa_null(),
-                        )
-                    )
+        if not self.local_images_allowed:
+            latest_image_q = latest_image_q.filter(or_(
+                self.model.remote_url != sa_null(),
+                self.model.s3_key != sa_null(),
+            ))
 
 
         latest_image = latest_image_q\
-            .order_by(self.model.createDate.desc())\
+            .order_by(self.model.createDate.desc(), self.model.id.desc())\
             .first()
 
 
@@ -463,7 +460,7 @@ class JsonLatestImageView(JsonView):
 
 
         try:
-            url = latest_image.getUrl(s3_prefix=self.s3_prefix, local=local)
+            url = latest_image.getUrl(s3_prefix=self.s3_prefix, local=self.local_images_allowed)
         except ValueError as e:
             app.logger.error('Error determining relative file name: %s', str(e))
             return {'url': None}
@@ -477,6 +474,7 @@ class JsonLatestImageView(JsonView):
 
         if not_after is not None:
             image_data['create_date'] = latest_image.createDate
+            image_data['utc_offset'] = (latest_image.data or {}).get('utc_offset')
         return image_data
 
 

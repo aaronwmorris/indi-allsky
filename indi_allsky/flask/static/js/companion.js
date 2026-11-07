@@ -187,13 +187,19 @@
         const empty = container.querySelector('.plot-empty');
         const reading = container.querySelector('.chart-value');
         const samples = (series?.points || []).map(([time, value]) => ({
-            x: Date.parse(time), y: Number.isFinite(value) ? value : null,
+            x: Date.parse(time), y: Number.isFinite(value) ? value : null, capturedAt: time,
         })).filter(point => Number.isFinite(point.x));
         const values = samples.filter(point => point.y !== null);
         const last = values[values.length - 1];
         reading.hidden = !last;
         reading.textContent = last ? formatReading(last.y) + (series.unit ? ' ' + series.unit : '') : '';
-        if (last) reading.title = 'Letzter Messwert um ' + localTime(last.x);
+        // Equal wall times on either side of a clock change have different UTC offsets.
+        const sampleTime = point => {
+            const time = dateAndTime(point.capturedAt);
+            const offset = point.capturedAt.match(/[+-]\d{2}:\d{2}$/);
+            return time.time + ' UTC' + (offset ? offset[0] : '');
+        };
+        if (last) reading.title = 'Letzter Messwert um ' + sampleTime(last);
         const visible = values.length > 0 && typeof Chart === 'function';
         plot.hidden = !visible;
         empty.hidden = !selects[slot].value || visible;
@@ -214,7 +220,7 @@
         const options = {
             responsive: true, maintainAspectRatio: false, animation: false, parsing: false,
             plugins: { legend: {display: false}, tooltip: { callbacks: {
-                title: items => localTime(items[0].parsed.x),
+                title: items => sampleTime(items[0].raw),
                 label: context => formatReading(context.parsed.y) + (series.unit ? ' ' + series.unit : ''),
             } } },
             scales: {
