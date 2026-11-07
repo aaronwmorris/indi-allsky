@@ -190,3 +190,343 @@ def test_active_without_both_ap_and_carrier_gets_only_a_scan(capsys):
     nm.no_carrier = False
     nm.tick(1500)
     assert nm.actions == [('scan',600),('scan',900)]
+
+
+class FallbackNetwork(Network):
+    """NetworkManager checkpoint and radio state, preserving the real condition() logic."""
+    ap_uuid = '23421417-e910-4a73-a680-247bbf1d2703'
+    owner = ':1.2'
+
+    def __init__(self):
+        super().__init__()
+        self.profile('/ap', b'Allsky', mode='ap', enabled=False)
+        self.profile('/home', b'Home')
+        self.points['/active-ap'] = dict(Uuid=self.ap_uuid, Connection='/ap')
+        self.points['/active-station'] = dict(Uuid='another-uuid', Connection='/home')
+        self.clients = False
+        self.checkpoints = set()
+        self.extended = []
+        self.scan_at = None
+        self.scan_delay = 4
+        self.on_wait = None
+
+    def tick(self, now):
+        from unittest.mock import patch
+        with patch.object(recovery, 'boottime', lambda: self.now), patch.object(recovery.time, 'sleep', self.wait):
+            super().tick(now)
+
+    def wait(self, seconds):
+        self.now += seconds
+        if self.on_wait:
+            self.on_wait(self.now)
+        if self.scan_at is not None and self.now >= self.scan_at + self.scan_delay:
+            self.radio['LastScan'] = self.now * 1000
+
+    def request_probe_scan(self):
+        self.scan_at = self.now
+        self.request_scan()
+
+    def allow_dhcp(self, probe):
+        assert probe['checkpoint'] in self.checkpoints
+        self.extended.append(self.now)
+
+    def fallback_profile(self):
+        return '/ap'
+
+    def activate(self, profile):
+        self.actions.append(('activate', profile))
+        if profile == '/ap':
+            self.enter_ap()
+        else:
+            self.dev.update(State=50, StateReason=(50, 0), ActiveConnection='/active-station')
+            self.radio.update(Mode=2)
+
+    def enter_ap(self):
+        self.dev.update(State=100, StateReason=(100, 0), ActiveConnection='/active-ap')
+        self.radio.update(Mode=3)
+
+    def ap_idle(self):
+        return not self.clients
+
+    def checkpoint(self):
+        path = '/checkpoint/1'
+        self.checkpoints.add(path)
+        return path
+
+    def finish_checkpoint(self, probe, restore):
+        path = probe['checkpoint']
+        if path not in self.checkpoints or probe['owner'] != self.owner:
+            return False
+        self.checkpoints.remove(path)
+        self.actions.append(('finish', restore))
+        if restore:
+            self.enter_ap()
+        return True
+
+    def leave_own_ap(self):
+        if self.clients:
+            return False
+        self.actions.append(('leave', self.now))
+        self.dev.update(State=30, StateReason=(30, recovery.USER_REQUESTED), ActiveConnection='/')
+        self.radio.update(Mode=2)
+        return True
+
+    def request_scan(self):
+        self.actions.append(('scan', self.now))
+
+
+def test_no_router_offers_hotspot_then_restores_it_after_unsuccessful_station_probe():
+    nm = FallbackNetwork()
+    nm.tick(0)
+    nm.tick(recovery.GRACE_SECONDS - 1)
+    assert nm.actions == []
+    nm.tick(recovery.GRACE_SECONDS)
+    assert nm.actions == [('activate', '/ap')]
+    nm.tick(180)
+    nm.tick(780)
+    assert nm.actions[-3:] == [('leave', 780), ('scan', 780), ('finish', True)]
+    assert not nm.extended and not nm.checkpoints
+    assert nm.now == 784 and nm.condition() == 'fallback-ap'
+    nm.tick(1020)
+    assert nm.actions.count(('activate', '/ap')) == 1
+
+
+def test_oscillating_dhcp_and_auth_states_cannot_starve_the_fallback():
+    nm = FallbackNetwork()
+    nm.ap('visible', b'Home', 60)
+    for t, state in [(0, 50), (60, 70), (120, 120), (180, 110), (240, 30), (300, 70)]:
+        nm.dev.update(State=state, ActiveConnection='/active-station' if state != 30 else '/')
+        nm.ap('visible', b'Home', t)
+        nm.tick(t)
+    assert nm.actions[-1] == ('activate', '/ap')
+    assert nm.condition() == 'fallback-ap'
+
+
+def test_return_to_router_after_bounded_probe_and_commit_checkpoint():
+    nm = FallbackNetwork()
+    nm.enter_ap()
+    nm.on_wait = lambda now: nm.ap('router', b'Home', now)
+    nm.tick(5); nm.tick(605)
+    assert nm.extended == [609]
+    assert nm.actions[-1] == ('activate', '/home')
+    nm.dev.update(State=100, ActiveConnection='/active-station')
+    nm.tick(785)
+    assert nm.actions[-1] == ('finish', False)
+    assert not nm.checkpoints and 'probe' not in nm.history
+    nm.tick(2000)
+    assert nm.actions.count(('leave', 605)) == 1
+
+
+def test_active_clients_keep_their_session():
+    nm = FallbackNetwork()
+    nm.enter_ap(); nm.clients = True
+    nm.tick(0); nm.tick(600); nm.tick(1800)
+    assert nm.actions == []
+    nm.clients = False
+    nm.tick(1860)
+    assert nm.actions == [('leave', 1860), ('scan', 1860), ('finish', True)]
+
+
+def test_client_joins_immediately_before_deactivation():
+    nm = FallbackNetwork()
+    nm.enter_ap(); nm.tick(0)
+    create = nm.checkpoint
+
+    def checkpoint():
+        nm.clients = True
+        return create()
+
+    nm.checkpoint = checkpoint
+    nm.tick(600)
+    assert nm.actions == [('finish', False)]
+    assert not nm.checkpoints and 'probe' not in nm.history
+    assert nm.condition() == 'fallback-ap'
+
+
+@pytest.mark.parametrize('protect', ['off', 'unmanaged', 'disconnect', 'other-ap'])
+def test_no_hotspot_when_user_disabled_wifi_or_owns_the_connection(protect):
+    nm = FallbackNetwork()
+    nm.tick(0)
+    if protect == 'off':
+        nm.nm['WirelessEnabled'] = False
+    elif protect == 'unmanaged':
+        nm.dev['Managed'] = False
+    elif protect == 'disconnect':
+        nm.dev['Autoconnect'] = False
+    else:
+        nm.profile('/foreign', b'Other', mode='ap')
+        nm.points['/other-active'] = dict(Uuid='other', Connection='/foreign')
+        nm.dev.update(ActiveConnection='/other-active', State=70)
+    nm.tick(600)
+    assert nm.actions == []
+
+
+def test_checkpoint_creation_failure_preserves_working_ap():
+    nm = FallbackNetwork()
+    nm.enter_ap(); nm.tick(0)
+    nm.checkpoint = lambda: (_ for _ in ()).throw(RuntimeError('checkpoint conflict'))
+    with pytest.raises(RuntimeError, match='conflict'):
+        nm.tick(600)
+    assert 'probe' not in nm.history and nm.actions == []
+    assert nm.condition() == 'fallback-ap'
+
+
+def test_missing_checkpoint_restores_owned_ap_after_timeout():
+    nm = FallbackNetwork()
+    nm.on_wait = lambda now: nm.ap('router', b'Home', now)
+    nm.enter_ap(); nm.tick(0); nm.tick(600)
+    nm.checkpoints.clear()  # lost e.g. during NetworkManager restart
+    nm.tick(786)
+    assert nm.actions[-1] == ('activate', '/ap')
+    assert nm.condition() == 'fallback-ap' and 'probe' not in nm.history
+
+
+def test_checkpoint_dbus_error_is_retried_without_another_disconnect():
+    nm = FallbackNetwork()
+    nm.on_wait = lambda now: nm.ap('router', b'Home', now)
+    nm.enter_ap(); nm.tick(0); nm.tick(600)
+    original = nm.finish_checkpoint
+
+    def failed(*args, **kwargs):
+        raise RuntimeError('NM busy')
+
+    nm.finish_checkpoint = failed
+    with pytest.raises(RuntimeError, match='NM busy'):
+        nm.tick(786)
+    assert nm.checkpoints and 'probe' in nm.history
+    nm.finish_checkpoint = original
+    nm.tick(840)
+    assert nm.actions[-1] == ('finish', True)
+    assert nm.condition() == 'fallback-ap'
+
+
+def test_wifi_disabled_during_probe_cancels_rollback():
+    nm = FallbackNetwork()
+    nm.on_wait = lambda now: nm.ap('router', b'Home', now)
+    nm.enter_ap(); nm.tick(0); nm.tick(600)
+    nm.nm['WirelessEnabled'] = False
+    nm.tick(660); nm.tick(900)
+    assert nm.actions[-1] == ('finish', False)
+    assert 'probe' not in nm.history and not nm.checkpoints
+
+
+@pytest.mark.parametrize('result,output,expected', [(0, b'', True), (0, b'Station aa\n', False), (1, b'', False)])
+def test_only_successful_empty_station_table_allows_a_probe(monkeypatch, result, output, expected):
+    from types import SimpleNamespace
+    monkeypatch.setattr(recovery.subprocess, 'run', lambda *args, **kwargs: SimpleNamespace(returncode=result, stdout=output))
+    nm = object.__new__(recovery.NetworkManager)
+    nm.interface = 'wlan0'
+    assert nm.ap_idle() == expected
+
+
+def test_other_wifi_with_ap_mode_is_not_a_station_candidate():
+    nm = FallbackNetwork()
+    nm.profile('/asiair', b'ASIAIR-AP', mode='infrastructure')
+    nm.ap('asiair-radio', b'ASIAIR-AP', 120)
+    nm.tick(0); nm.tick(120)
+    assert nm.actions[-1] == ('activate', '/asiair')
+
+
+@pytest.mark.parametrize('key_mgmt,proto,accepted', [
+    ('wpa-psk', ['rsn'], True), ('wpa-psk', [], True), ('wpa-psk', ['wpa'], False),
+    ('none', [], False), (None, [], False),
+])
+def test_only_installed_wpa_hotspot_can_be_activated(key_mgmt, proto, accepted):
+    from types import SimpleNamespace
+    nm = FallbackNetwork()
+    nm.interface = 'wlan0'
+    nm.saved['/ap']['connection']['uuid'] = nm.ap_uuid
+    nm.saved['/ap']['ipv4'] = {'method':'shared'}
+    if key_mgmt is not None:
+        nm.saved['/ap']['802-11-wireless-security'] = {'key-mgmt':key_mgmt, 'proto':proto}
+    nm.object = lambda path: SimpleNamespace(GetConnectionByUuid=lambda uuid: '/ap')
+    nm.dbus = SimpleNamespace(Interface=lambda obj, iface: obj)
+    if accepted:
+        assert recovery.NetworkManager.fallback_profile(nm) == '/ap'
+    else:
+        with pytest.raises(ValueError, match='security'):
+            recovery.NetworkManager.fallback_profile(nm)
+
+
+def test_hotspot_changed_during_search_is_not_activated_or_rolled_back():
+    nm = FallbackNetwork()
+    nm.on_wait = lambda now: nm.ap('router', b'Home', now)
+    nm.enter_ap(); nm.tick(0); nm.tick(600)
+    nm.fallback_profile = lambda: (_ for _ in ()).throw(ValueError('insecure'))
+    with pytest.raises(ValueError):
+        nm.tick(786)
+    assert nm.actions[-1] == ('finish', False)
+    assert not nm.checkpoints
+
+
+def test_pending_checkpoint_destroy_failure_retries_after_station_is_healthy():
+    nm = FallbackNetwork()
+    nm.on_wait = lambda now: nm.ap('router', b'Home', now)
+    nm.enter_ap(); nm.tick(0); nm.tick(600)
+    nm.dev.update(State=100, StateReason=(100, 0), ActiveConnection='/active-station')
+    nm.radio.update(Mode=2)
+    finish = nm.finish_checkpoint
+    nm.finish_checkpoint = lambda *a, **k: (_ for _ in ()).throw(RuntimeError('destroy failed'))
+    with pytest.raises(RuntimeError):
+        nm.tick(660)
+    assert nm.checkpoints and nm.dev['ActiveConnection'] == '/active-station'
+    nm.finish_checkpoint = finish
+    nm.tick(720)
+    assert nm.actions[-1] == ('finish', False)
+    assert not nm.checkpoints
+
+
+def test_scan_that_never_completes_restores_ap_after_sixteen_seconds():
+    nm = FallbackNetwork()
+    nm.scan_delay = 300
+    nm.enter_ap(); nm.tick(0); nm.tick(600)
+    assert nm.actions == [('leave', 600), ('scan', 600), ('finish', True)]
+    assert nm.now == 616 and not nm.extended and nm.condition() == 'fallback-ap'
+
+
+def test_new_scan_does_not_activate_a_cached_router_that_already_left():
+    nm = FallbackNetwork()
+    nm.ap('router', b'Home', 599)
+    nm.enter_ap(); nm.tick(0); nm.tick(600)
+    assert nm.actions == [('leave', 600), ('scan', 600), ('finish', True)]
+    assert nm.now == 604 and not nm.extended
+
+
+def test_native_station_association_gets_dhcp_time_without_duplicate_activation():
+    nm = FallbackNetwork()
+
+    def native_connect(now):
+        nm.dev.update(State=70, StateReason=(70, 0), ActiveConnection='/active-station')
+        nm.radio.update(Mode=2)
+
+    nm.on_wait = native_connect
+    nm.enter_ap(); nm.tick(0); nm.tick(600)
+    assert nm.extended == [602]
+    assert nm.history['probe']['until'] == 782
+    assert not [action for action in nm.actions if action[0] == 'activate']
+    nm.tick(700)
+    assert nm.checkpoints
+    nm.dev.update(State=100)
+    nm.tick(800)
+    assert nm.actions[-1] == ('finish', False)
+
+
+def test_user_requested_transition_of_own_deactivation_is_temporary():
+    nm = FallbackNetwork()
+    nm.enter_ap()
+    nm.dev.update(State=110, StateReason=(110, recovery.USER_REQUESTED))
+    assert nm.condition(probing=True) == 'probe-transition'
+    nm.dev['Autoconnect'] = False
+    assert nm.condition(probing=True) is None
+
+
+def test_checkpoint_timeout_is_short_until_actual_station_activation():
+    from types import SimpleNamespace
+    from unittest.mock import Mock
+    manager = Mock()
+    manager.CheckpointCreate.return_value = '/checkpoint'
+    nm = SimpleNamespace(manager=manager, device='/device')
+    assert recovery.NetworkManager.checkpoint(nm) == '/checkpoint'
+    manager.CheckpointCreate.assert_called_once_with(['/device'], 30, 0, timeout=4)
+    recovery.NetworkManager.allow_dhcp(nm, {'checkpoint':'/checkpoint'})
+    manager.CheckpointAdjustRollbackTimeout.assert_called_once_with('/checkpoint', 270, timeout=4)

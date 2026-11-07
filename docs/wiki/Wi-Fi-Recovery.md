@@ -1,49 +1,44 @@
-# Optional Wi-Fi recovery for mobile stations
+# Wi-Fi recovery and the camera's fallback access point
 
-On a Raspberry Pi running NetworkManager, this companion timer helps a saved Wi-Fi network reconnect when its access point returns. Image capture and the local web interface run independently of the timer. Install it only on stations where this behavior is wanted.
+A mobile camera can keep recording when its router disappears. This optional NetworkManager timer first gives the Pi time to rejoin a saved Wi-Fi network. If it cannot connect, it starts the camera's own Wi-Fi access point (AP). A Mac, iPhone or iPad can then reach the camera directly.
 
-## Install from a source checkout
+## Install
 
-Debian / Raspberry Pi OS requires NetworkManager, systemd, `python3-dbus` and `iw`. Replace `wlan0` below if the Wi-Fi interface has another name. These read-only commands show device and radio status without displaying network names:
-
-```sh
-nmcli -t -f DEVICE,TYPE,STATE device status
-iw dev wlan0 get power_save
-```
-
-Keep the current SSH session open and run from the checkout:
+On Debian or Raspberry Pi OS the helper requires NetworkManager, systemd, `python3-dbus`, `iw` and `dnsmasq-base`. NetworkManager uses dnsmasq to give clients an address on the hotspot. The wireless adapter must support AP mode. Run these commands from the source checkout and replace `wlan0` if necessary.
 
 ```sh
+nmcli -g WIFI-PROPERTIES.AP device show wlan0
 sudo bash misc/setup_wifi_recovery.sh install wlan0
-systemctl status indi-allsky-wifi-recovery@wlan0.timer --no-pager
 systemctl list-timers indi-allsky-wifi-recovery@wlan0.timer
-iw dev wlan0 get power_save
 ```
 
-The installer adds a NetworkManager power-saving default for this interface (`wifi.powersave=2`). Profiles using the default inherit it. An explicit value on a different profile is respected. For an active infrastructure profile the installer also persists the disabled setting and applies it directly to the radio with `iw`. It reloads only NetworkManager's configuration. The active connection stays up throughout. No call to `connection down/up`, global networking toggle or NetworkManager restart is needed to install or test it.
-
-## When it intervenes
-
-The timer first runs two minutes after boot and checks roughly once a minute. NetworkManager handles normal association, DHCP, roaming and profile changes itself. The check acts on a managed station interface only when the radio, networking and automatic connection are enabled, no connection is active and NetworkManager has reported the device disconnected for at least two minutes.
-
-* An infrastructure profile must already exist, permit autoconnect, be available to NetworkManager and match an access point seen in the past 90 seconds. Among matches, profile autoconnect priority and last-used time determine the selection. NetworkManager chooses the access point; the helper stores no SSID, BSSID or credentials.
-* When the router is absent there are no forced connection attempts. If NetworkManager's own scans have stopped for five minutes, the helper may request one broadcast scan, at most once every five minutes. A hidden network that never advertises its SSID remains the responsibility of NetworkManager's configured hidden-network discovery.
-* An eligible but still disconnected interface gets at most one activation request per five minutes and three per rolling hour across all profiles. This includes rejected requests. The attempt budget survives individual checks and resets at boot.
-* A connected station can keep taking images on a LAN with no internet. The helper performs no gateway pings, internet requests or DNS checks. It does not interrupt connected/connecting devices, access points, radio-off or user-disconnected devices. It does not reset NetworkManager, the interface, camera capture or the web server.
-* If IP configuration or another connecting phase stays pending for ten minutes, it logs the condition once and leaves the existing activation alone. NetworkManager's [IPv4 DHCP timeout](https://networkmanager.dev/docs/api/latest/settings-ipv4.html) is normally about 45 seconds per transaction unless configured otherwise, including an explicitly infinite timeout. The [autoconnect retry count](https://networkmanager.dev/docs/api/latest/settings-connection.html) normally defaults to four attempts, with later automatic retries. These settings do not define a universal deadline for every connecting state.
-* If NetworkManager reports an active station for ten minutes while it has no active access point **and** the kernel reports no carrier, it logs the mismatch and may request the same bounded scan when native scans have stopped. It never reactivates that connection. A still-associated but unreachable client, router, driver or IP route needs separate diagnosis.
-
-To inspect activity:
+If there is one recognizable indi-allsky hotspot already configured for this adapter, the installer adopts it and preserves its SSID, password and IP address. To choose explicitly, for example when there are several profiles, find the existing hotspot's UUID and supply it as the last argument:
 
 ```sh
-journalctl -u indi-allsky-wifi-recovery@wlan0.service --since today --no-pager
+nmcli -f NAME,UUID,TYPE connection show
+sudo bash misc/setup_wifi_recovery.sh install wlan0 EXISTING-HOTSPOT-UUID
 ```
 
-To simulate router loss/return, absence of internet, changes between saved networks, manual disconnect and the retry budget without changing the live network:
+An adopted Wi-Fi profile must use AP mode on this adapter, WPA2-PSK with CCMP, and shared IPv4 at `10.42.0.1/24`. The original profile and the settings in it stay available. Only its autoconnect setting is handed to the timer. When no AP profile exists, the installer creates a dedicated 2.4 GHz profile with a unique SSID and a randomly generated password. Reinstalling retains its credentials. The installer can run over the current station's SSH connection. It applies the per-interface power saving setting without changing the current association.
+
+## Connect from a Mac, iPhone or iPad
+
+In Wi-Fi settings, join the camera hotspot with its usual password. If it was newly provisioned, view its SSID and password privately on the Pi. This command deliberately displays the credential; keep its output out of shared logs or screenshots.
 
 ```sh
-python3 -m pytest -q tests/test_wifi_recovery.py
+sudo bash misc/setup_wifi_recovery.sh credentials wlan0
 ```
+
+Open [the camera](https://10.42.0.1/indi-allsky/) or [the companion](https://10.42.0.1/indi-allsky/companion) in the browser. If the Pi's hostname is `allsky` and Bonjour is enabled, [allsky.local](https://allsky.local/indi-allsky/) also works. The direct address works on the hotspot independently of name resolution. macOS and iOS may report that this Wi-Fi has no internet access. Stay connected to use the local camera. To reach the camera from a regular LAN, use its Bonjour hostname or its address on that LAN.
+
+## How the timer chooses a network
+
+* The first check runs about 20 seconds after boot and subsequent checks run about once a minute. With no visible saved network, expect the AP about two to three minutes after disconnection. If the Pi keeps trying a visible network or waiting for an address, it allows about five minutes from the first observed outage before requesting the AP, plus the next timer tick and radio startup time.
+* A station profile must allow autoconnect and match a recently seen router. Eligible stations are ordered by NetworkManager's priority and last use. The helper requests limited scans or retries while disconnected. A deliberate radio-off, manual disconnect or a healthy local network without internet does not trigger fallback.
+* On a single radio, checking for a returning home network can require leaving AP mode. When the hotspot has no associated clients, the helper can search after about ten minutes. If no saved network is visible, the hotspot normally returns after about 16 seconds plus the radio's switching time. A 30-second NetworkManager checkpoint protects the return if the helper stops during this search. If a station connection starts, the helper allows up to three minutes for association and DHCP. Disconnect the Mac or iPad from the hotspot to allow unattended searches. The capture and UPS services keep running independently of these Wi-Fi changes.
+* An unresponsive IP negotiation or driver can also affect connectivity. A connected station with no upstream internet is still valid. NetworkManager's [DHCP timeout](https://networkmanager.dev/docs/api/latest/settings-ipv4.html) and [autoconnect retry settings](https://networkmanager.dev/docs/api/latest/settings-connection.html) determine how long a station attempt can take.
+
+Use `journalctl -u indi-allsky-wifi-recovery@wlan0.service --since today --no-pager` to inspect activity. The timer does not log Wi-Fi credentials.
 
 ## Remove
 
@@ -51,6 +46,6 @@ python3 -m pytest -q tests/test_wifi_recovery.py
 sudo bash misc/setup_wifi_recovery.sh remove wlan0
 ```
 
-This stops the optional checks and removes their NetworkManager drop-in. The installer records the previous Wi-Fi profile/radio power values under the private, root-owned `/var/lib/indi-allsky-wifi-recovery/`. The removal command restores the original power setting of the profile adjusted at installation if that profile still exists and the setting still has the installed value. It restores the previous live radio setting only when the same profile is active. Other existing profile choices stay intact.
+Removal restores the previous autoconnect setting for an adopted AP. A dedicated profile created by this installer is removed. Use a station connection when removing a dedicated AP that is in use. The previous station power setting is restored from the root-only record under `/var/lib/indi-allsky-wifi-recovery/`.
 
-The implementation uses NetworkManager's [device](https://networkmanager.dev/docs/api/latest/gdbus-org.freedesktop.NetworkManager.Device.html), [Wi-Fi device](https://networkmanager.dev/docs/api/latest/gdbus-org.freedesktop.NetworkManager.Device.Wireless.html) and [access-point](https://networkmanager.dev/docs/api/latest/gdbus-org.freedesktop.NetworkManager.AccessPoint.html) D-Bus interfaces, [per-device defaults](https://networkmanager.dev/docs/api/latest/NetworkManager.conf.html) and [wireless profile settings](https://networkmanager.dev/docs/api/latest/settings-802-11-wireless.html).
+The project also provides the [general NetworkManager hotspot setup](Misc-Folder.md). When using automatic recovery, manage the fallback through this installer to keep its selected profile and return-to-station policy together.

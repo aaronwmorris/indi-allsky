@@ -2,7 +2,7 @@
 Description=Periodically check NetworkManager Wi-Fi recovery on %I
 
 [Timer]
-OnBootSec=2min
+OnBootSec=20s
 OnUnitInactiveSec=1min
 AccuracySec=5s
 

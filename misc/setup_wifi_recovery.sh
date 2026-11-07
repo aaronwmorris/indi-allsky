@@ -1,5 +1,5 @@
 #!/bin/bash
-# Optional NetworkManager station recovery. Run independently of setup.sh.
+# Optional NetworkManager station and fallback AP recovery. Run independently of setup.sh.
 set -euo pipefail
 export LC_ALL=C
 export PATH=/usr/sbin:/usr/bin:/sbin:/bin
@@ -7,9 +7,10 @@ umask 077
 
 action=${1:-install}
 interface=${2:-wlan0}
-if [[ $EUID -ne 0 || $# -gt 2 || ! $interface =~ ^[A-Za-z0-9_.-]{1,15}$ || $interface == -* ||
-      ( $action != install && $action != remove ) ]]; then
-    echo 'Usage: sudo bash misc/setup_wifi_recovery.sh {install|remove} [wlan0]' >&2
+if [[ $EUID -ne 0 || $# -gt 3 || ( $# -gt 2 && $action != install ) ||
+      ! $interface =~ ^[A-Za-z0-9_.-]{1,15}$ || $interface == -* ||
+      ( $action != install && $action != remove && $action != credentials ) ]]; then
+    echo 'Usage: sudo bash misc/setup_wifi_recovery.sh {install [interface [existing-AP-UUID]]|credentials [interface]|remove [interface]}' >&2
     exit 2
 fi
 tree=$(cd "$(dirname "$0")/.." && pwd)
@@ -33,6 +34,10 @@ if [[ -f $conf ]] && ! grep -Fqx "$marker" "$conf"; then
     echo 'The target NetworkManager drop-in already exists and is not managed by this installer.' >&2
     exit 1
 fi
+ap_helper="$tree/misc/wifi_recovery_ap.py"
+if [[ $action == credentials ]]; then
+    exec /usr/bin/python3 "$ap_helper" credentials "$interface" "$history"
+fi
 
 active_uuid() {
     nmcli -t -f UUID,TYPE,DEVICE connection show --active |
@@ -55,6 +60,7 @@ if [[ $action == remove ]]; then
     if [[ -e $conf || -d $history ]]; then systemctl is-active --quiet NetworkManager.service; fi
     systemctl disable --now "$timer" 2>/dev/null || true
     systemctl stop "indi-allsky-wifi-recovery@${interface}.service" 2>/dev/null || true
+    /usr/bin/python3 "$ap_helper" remove "$interface" "$history"
     if [[ -e $conf ]]; then
         rm -- "$conf"
         nmcli general reload conf
@@ -84,14 +90,21 @@ if [[ $action == remove ]]; then
     exit 0
 fi
 
-for bin in nmcli iw systemctl python3; do command -v "$bin" >/dev/null; done
+for bin in nmcli iw systemctl python3 dnsmasq; do
+    if ! command -v "$bin" >/dev/null; then echo "Missing required program: $bin" >&2; exit 1; fi
+done
 /usr/bin/python3 -c 'import dbus'
 systemctl is-active --quiet NetworkManager.service
 if [[ $(nmcli -g GENERAL.TYPE device show "$interface") != wifi ]]; then
     echo 'Choose an existing NetworkManager Wi-Fi interface.' >&2
     exit 1
 fi
+if [[ $(nmcli -g WIFI-PROPERTIES.AP device show "$interface") != yes ]]; then
+    echo 'The Wi-Fi device must support access point mode.' >&2
+    exit 1
+fi
 install -d -m 0700 "$state_root" "$history"
+/usr/bin/python3 "$ap_helper" check "$interface" "$history" "${@:3}"
 uuid=$(active_uuid)
 station=false
 if [[ -n $uuid ]]; then
@@ -129,4 +142,8 @@ if [[ $station == true ]] && [[ $(active_uuid) == "$uuid" ]]; then
 fi
 systemctl daemon-reload
 systemctl enable --now "$timer"
+systemctl is-active --quiet "$timer"
+# The previous native AP autoconnect remains enabled until its replacement
+# has been installed and the timer is running.
+/usr/bin/python3 "$ap_helper" install "$interface" "$history" "${@:3}"
 echo "Installed $timer. Inspect with: systemctl status $timer"

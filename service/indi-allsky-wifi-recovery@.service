@@ -1,5 +1,5 @@
 [Unit]
-Description=Check NetworkManager Wi-Fi recovery on %I
+Description=Check NetworkManager station and fallback Wi-Fi on %I
 After=NetworkManager.service
 
 [Service]
@@ -15,4 +15,4 @@ NoNewPrivileges=yes
 ProtectSystem=strict
 ProtectHome=yes
 PrivateTmp=yes
-RestrictAddressFamilies=AF_UNIX
+RestrictAddressFamilies=AF_UNIX AF_NETLINK
