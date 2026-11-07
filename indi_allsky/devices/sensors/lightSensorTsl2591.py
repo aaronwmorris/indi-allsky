@@ -24,7 +24,7 @@ class LightSensorTsl2591(SensorBase):
         #logger.info('[%s] TSL2591 settings - Gain: %d, Integration: %d', gain, integration)
 
 
-        if self.disable_day:
+        if self.disable_day and not self.astro_darkness:
             data = {
                 'data' : (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
             }
@@ -32,13 +32,7 @@ class LightSensorTsl2591(SensorBase):
             return data
 
 
-        try:
-            lux = float(self.tsl2591.lux)
-            infrared = int(self.tsl2591.infrared)
-            visible = int(self.tsl2591.visible)
-            full_spectrum = int(self.tsl2591.full_spectrum)
-        except RuntimeError as e:
-            raise SensorReadException(str(e)) from e
+        lux, visible, infrared, full_spectrum = self.read_channels()
 
 
         logger.info('[%s] TSL2591 - lux: %0.4f, visible: %d, ir: %d, full: %d', self.name, lux, visible, infrared, full_spectrum)
@@ -70,6 +64,38 @@ class LightSensorTsl2591(SensorBase):
         }
 
         return data
+
+
+    def read_channels(self):
+        # Keep the configured day/night gain as the ceiling. A bright light or
+        # the Moon may saturate the ADC even during astronomical darkness.
+        sensor = self.tsl2591
+        target = self.gain_night if self.astro_darkness else self.gain_day
+        idx = self.gain_levels.index(sensor.gain)
+        while True:
+            try:
+                lux = float(sensor.lux)
+                infrared = int(sensor.infrared)
+                visible = int(sensor.visible)
+                full = int(sensor.full_spectrum)
+                break
+            except RuntimeError as e:
+                if idx == 0 or 'overflow' not in str(e).lower():
+                    raise SensorReadException(str(e)) from e
+                idx -= 1
+                sensor.gain = self.gain_levels[idx]
+                logger.warning('[%s] TSL2591 saturated; retrying at gain %d', self.name, sensor.gain)
+                # Allow a complete new integration at the reduced gain.
+                time.sleep(2 * (1 + sensor.integration_time) * 0.1)
+
+        if idx < self.gain_levels.index(target):
+            # full_spectrum packs both ADC channels. Only step back up when
+            # both will remain well below clipping at the next gain.
+            multipliers = (1, 25, 428, 9876)
+            predicted = max(full & 0xffff, infrared) * multipliers[idx + 1] / multipliers[idx]
+            if predicted < 16000:
+                sensor.gain = self.gain_levels[idx + 1]
+        return lux, visible, infrared, full
 
 
     def update_sensor_settings(self):
@@ -119,6 +145,9 @@ class LightSensorTsl2591_I2C(LightSensorTsl2591):
         import board
         #import busio
         import adafruit_tsl2591
+
+        self.gain_levels = (adafruit_tsl2591.GAIN_LOW, adafruit_tsl2591.GAIN_MED,
+                            adafruit_tsl2591.GAIN_HIGH, adafruit_tsl2591.GAIN_MAX)
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
