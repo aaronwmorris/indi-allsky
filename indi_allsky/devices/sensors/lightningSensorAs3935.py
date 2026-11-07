@@ -144,7 +144,7 @@ class LightningSensorAs3935_SparkFun(SensorBase):
 
         import RPi.GPIO as GPIO
 
-        GPIO.cleanup()
+        GPIO.cleanup(self._interrupt_gpio)
 
 
 class LightningSensorAs3935_SparkFun_I2C(LightningSensorAs3935_SparkFun):
@@ -238,7 +238,8 @@ class LightningSensorAs3935_SparkFun_I2C(LightningSensorAs3935_SparkFun):
         GPIO.setmode(GPIO.BCM)
 
         # rpi.gpio does not use board pins, but we can get the pin number using id
-        GPIO.setup(pin2.id, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        self._interrupt_gpio = pin2.id
+        GPIO.setup(self._interrupt_gpio, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
         GPIO.add_event_detect(
             pin2.id,
@@ -342,7 +343,8 @@ class LightningSensorAs3935_SparkFun_SPI(LightningSensorAs3935_SparkFun):
         GPIO.setmode(GPIO.BCM)
 
         # rpi.gpio does not use board pins, but we can get the pin number using id
-        GPIO.setup(pin2.id, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        self._interrupt_gpio = pin2.id
+        GPIO.setup(self._interrupt_gpio, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
         GPIO.add_event_detect(
             pin2.id,

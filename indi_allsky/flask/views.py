@@ -25,6 +25,7 @@ from passlib.hash import argon2
 
 from ..version import __version__
 from .. import constants
+from ..night_movie import attempt_key, prior_attempt, suppress_repair
 from .. import asi676mc
 from .. import asi676mc_calibration
 from ..processing import ImageProcessor
@@ -58,6 +59,7 @@ from . import db
 
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
+from .models import IndiAllSkyDbStateTable
 from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbMiniVideoTable
 from .models import IndiAllSkyDbKeogramTable
@@ -7357,6 +7359,9 @@ class AjaxTimelapseGeneratorView(BaseView):
             .one()
 
 
+        if night and action in ('delete_video_k_st_p', 'delete_video'):
+            suppress_repair(camera.id, day_date)
+
         if action == 'delete_video_k_st_p':
             video_entry = IndiAllSkyDbVideoTable.query\
                 .join(IndiAllSkyDbVideoTable.camera)\
@@ -11531,6 +11536,10 @@ class TimelapseVideoView(TemplateView):
             context['timeofday'] = 'Night'
         else:
             context['timeofday'] = 'Day'
+
+        if local and self.model is IndiAllSkyDbVideoTable and video.night and video.camera.local:
+            record = db.session.get(IndiAllSkyDbStateTable, attempt_key(video.camera_id, video.dayDate))
+            context['night_movie_status'] = prior_attempt(record, video.dayDate).get('result')
 
         context['dayDate_full'] = video.dayDate.strftime('%B %d, %Y')
         context['video_url'] = video.getUrl(s3_prefix=self.s3_prefix, local=local)

@@ -26,6 +26,7 @@ class LightSensorTsl2591(SensorBase):
 
         if self.disable_day and not self.astro_darkness:
             data = {
+                'sample_disabled': True,
                 'data' : (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
             }
 

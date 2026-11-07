@@ -19,10 +19,13 @@ import logging
 import ephem
 
 from . import constants
+from .archive_health import (archive_paused, DEFERRED, VIDEO_ACTIONS, ArchiveUnavailable,
+                             require_writable_archive, space_failure, storage_errno)
 from . import asi676mc
 from . import asi676mc_calibration
 
 from .timelapse import TimelapseGenerator
+from . import night_movie
 from .panorama import buildPanoramaCropFilter
 from .panorama import buildPanoramaPanFilter
 from .panorama import buildPanoramaTimedPanFilter
@@ -196,7 +199,16 @@ class VideoWorker(Process):
     def saferun(self):
         #raise Exception('Test exception handling in worker')
 
+        next_movie_check = time.monotonic() + 60
         while True:
+            if not self._shutdown and time.monotonic() >= next_movie_check:
+                next_movie_check = time.monotonic() + 3600
+                with app.app_context():
+                    try:
+                        night_movie.reconcile(self)
+                    except Exception:
+                        db.session.rollback()
+                        logger.exception('Unable to check recent night timelapses')
             try:
                 v_dict = self.video_q.get(timeout=61)  # prime number
             except queue.Empty:
@@ -232,10 +244,13 @@ class VideoWorker(Process):
             return
 
 
-        task.setRunning()
-
-
         action = task.data['action']
+        if action in VIDEO_ACTIONS and archive_paused(self.config):
+            task.state = TaskQueueState.MANUAL
+            task.result = DEFERRED
+            db.session.commit()
+            return
+        task.setRunning()
         kwargs = task.data.get('kwargs', {})
 
 
@@ -247,7 +262,24 @@ class VideoWorker(Process):
 
 
         # perform the action
-        action_method(task, **kwargs)
+        try:
+            if action == 'expireData':
+                require_writable_archive(self.config)
+            action_method(task, **kwargs)
+            if action in VIDEO_ACTIONS and task.state == TaskQueueState.FAILED and space_failure(self.config):
+                raise ArchiveUnavailable('Storage unavailable during video job')
+        except OSError as exc:
+            if action not in VIDEO_ACTIONS or not storage_errno(exc):
+                raise
+            db.session.rollback()
+            task.state = TaskQueueState.MANUAL
+            task.result = DEFERRED
+            db.session.commit()
+        except ArchiveUnavailable:
+            db.session.rollback()
+            task.state = TaskQueueState.MANUAL
+            task.result = DEFERRED
+            db.session.commit()
 
 
     def _loadAsi676mcCalibrationDatabase(self, source_details, progress_callback):
@@ -547,40 +579,25 @@ class VideoWorker(Process):
         )
 
 
-        try:
-            # delete old video entry if it exists
-            old_video_entry = IndiAllSkyDbVideoTable.query\
-                .join(IndiAllSkyDbVideoTable.camera)\
-                .filter(
-                    and_(
-                        IndiAllSkyDbCameraTable.id == camera.id,
-                        IndiAllSkyDbVideoTable.dayDate == d_dayDate,
-                        IndiAllSkyDbVideoTable.night == night,
-                    )
-                )\
-                .one()
-
-
-            if not self.config.get('TIMELAPSE_OVERWRITE'):
-                logger.error('Timelapse already exists, overwrite not permitted')
+        matches = IndiAllSkyDbVideoTable.query.filter_by(camera_id=camera.id, dayDate=d_dayDate, night=night).all()
+        if len(matches) > 1:
+            task.setFailed('Multiple timelapses exist for this camera and date; review them before replacing.')
+            return
+        previous = matches[0] if matches else None
+        repair = kwargs.get('repair', False)
+        if previous:
+            if repair:
+                if previous.remote_url or previous.s3_key or night_movie.playable(Path(previous.getFilesystemPath())):
+                    task.setSuccess('Existing timelapse preserved')
+                    return
+            elif not self.config.get('TIMELAPSE_OVERWRITE'):
                 task.setFailed('Timelapse already exists, overwrite not permitted')
                 return
 
-
-            logger.warning('Removing old video db entry')
-
-            old_video_entry.deleteAsset()
-
-            db.session.delete(old_video_entry)
-            db.session.commit()
-        except NoResultFound:
-            pass
-
-
-        if video_file.exists():
-            logger.warning('Removing orphaned video file: %s', video_file)
-            video_file.unlink()
-
+        # A retry in the same second must never overwrite an existing file.
+        if video_file.exists() or (previous and Path(previous.getFilesystemPath()) == video_file):
+            video_file = video_file.with_name(video_file.stem.rsplit('_', 1)[0]
+                                               + '_' + str(time.time_ns()) + video_file.suffix)
 
         # find all files
         timelapse_files_entries = IndiAllSkyDbImageTable.query\
@@ -592,8 +609,7 @@ class VideoWorker(Process):
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
 
-        timelapse_files_entries_count = timelapse_files_entries.count()
-        logger.info('Found %d images for timelapse', timelapse_files_entries_count)
+
 
 
         timelapse_data = IndiAllSkyDbImageTable.query\
@@ -657,6 +673,12 @@ class VideoWorker(Process):
 
 
         timelapse_skip_frames = self.config.get('TIMELAPSE_SKIP_FRAMES', 4)
+        if repair:
+            timelapse_files = list(night_movie.readable_images(timelapse_files))
+        if len(timelapse_files) <= timelapse_skip_frames:
+            task.setFailed('Night/day {}: insufficient readable source images ({} usable, {} skipped).'.format(
+                timespec, len(timelapse_files), timelapse_skip_frames))
+            return
 
         video_metadata = {
             'type'          : constants.VIDEO,
@@ -665,7 +687,7 @@ class VideoWorker(Process):
             'dayDate'       : d_dayDate.strftime('%Y%m%d'),
             'night'         : night,
             'framerate'     : self.config['FFMPEG_FRAMERATE'],
-            'frames'        : timelapse_files_entries_count - timelapse_skip_frames,
+            'frames'        : len(timelapse_files) - timelapse_skip_frames,
             'camera_uuid'   : camera.uuid,
         }
 
@@ -678,14 +700,6 @@ class VideoWorker(Process):
             'max_moonphase'     : max_moonphase,
             'avg_sqm'           : avg_sqm,
         }
-
-        # Create DB entry before creating file
-        video_entry = self._miscDb.addVideo(
-            video_file.relative_to(self.image_dir),
-            camera.id,
-            video_metadata,
-        )
-
 
         try:
             # find existing keogram
@@ -742,22 +756,36 @@ class VideoWorker(Process):
             tg.pre_processor.keogram = keogram_filename
             tg.pre_processor.pre_scale = self.config.get('TIMELAPSE', {}).get('PRE_SCALE', 50)
 
-            tg.generate(video_file, timelapse_files)
+            with night_movie.staged_movie(video_file, tg.ffmpeg_bin) as stage:
+                tg.generate(stage, timelapse_files)
 
+            if repair and not night_movie.lock_repair(camera.id, d_dayDate, kwargs.get('repair_token')):
+                db.session.rollback()
+                video_file.unlink(missing_ok=True)
+                task.setExpired()
+                return
 
+            video_metadata.update(fileSize=video_file.stat().st_size, framerate=framerate, success=True)
+            old_path = Path(previous.getFilesystemPath()) if previous else None
             try:
-                fileSize = video_file.stat().st_size
-            except FileNotFoundError:
-                fileSize = None
-
-
-            video_entry.fileSize = fileSize
-            video_metadata['fileSize'] = fileSize
-
-
-            video_entry.success = True
-            db.session.commit()
-        except TimelapseException:
+                video_entry = self._miscDb.addVideo(
+                    video_file.relative_to(self.image_dir), camera.id, video_metadata, replace=previous,
+                )
+            except Exception:
+                db.session.rollback()
+                # A lost DB connection can leave the commit outcome uncertain.
+                # Preserve the validated file; it is preferable to an invalid live row.
+                raise
+            if old_path and old_path != video_file:
+                try:
+                    old_path.unlink(missing_ok=True)
+                except OSError:
+                    logger.warning('Replaced movie published; could not remove old file %s', old_path)
+        except (TimelapseException, OSError) as exc:
+            logger.error('Timelapse generation failed: %s', exc)
+            if space_failure(self.config, exc):
+                task.setFailed(DEFERRED)
+                return
             self._miscDb.addNotification(
                 NotificationCategory.MEDIA,
                 'timelapse_video',
@@ -765,7 +793,7 @@ class VideoWorker(Process):
                 expire=timedelta(hours=12),
             )
 
-            task.setFailed('Failed to generate timelapse: {0:s}'.format(str(video_file)))
+            task.setFailed(('Timelapse {}: {}'.format(timespec, exc))[:255])
             return
 
 
@@ -2584,12 +2612,17 @@ class VideoWorker(Process):
         delete_count = 0
         for asset_list, asset_table in asset_lists:
             while True:
+                require_writable_archive(self.config)
                 id_list = [entry.id for entry in asset_list.limit(500)]
 
                 if not id_list:
                     break
 
-                delete_count += self._deleteAssets(asset_table, id_list)
+                removed = self._deleteAssets(asset_table, id_list)
+                if not removed:
+                    task.setFailed('Retention could not remove this batch; records preserved.')
+                    return
+                delete_count += removed
 
 
         # Remove empty folders
@@ -2598,6 +2631,7 @@ class VideoWorker(Process):
 
         empty_dirs = filter(lambda p: not any(p.iterdir()), dir_list)
         for d in empty_dirs:
+            require_writable_archive(self.config)
             logger.info('Removing empty directory: %s', d)
 
             try:
@@ -2638,6 +2672,7 @@ class VideoWorker(Process):
             orphaned_scratch_file_list_24h = filter(lambda f: f.stat().st_mtime < now_minus_24h_ts, orphaned_scratch_file_list)
 
             for f in orphaned_scratch_file_list_24h:
+                require_writable_archive(self.config)
                 logger.warning('Deleting orphaned scratch file: %s', f)
 
                 try:
@@ -2666,11 +2701,15 @@ class VideoWorker(Process):
             logger.info('Removing old %s entry: %s', entry.__class__.__name__, entry.filename)
 
             try:
+                require_writable_archive(self.config)
                 entry.deleteAsset()
             except OSError as e:
+                if storage_errno(e):
+                    raise ArchiveUnavailable('Storage unavailable during retention') from e
                 logger.error('Cannot remove file: %s', str(e))
                 continue
 
+            require_writable_archive(self.config)
             db.session.delete(entry)
             db.session.commit()
 

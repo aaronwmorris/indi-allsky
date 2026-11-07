@@ -539,18 +539,19 @@ class CaptureWorker(Process):
                 self.getGpsPosition()
 
 
-                if self.config.get('CAPTURE_PAUSE'):
+                archive_blocked = bool(self.health.archive_blocked.value)
+                if self.config.get('CAPTURE_PAUSE') or archive_blocked:
                     self.deadline.previous_until = None
                     if self.deadline.until is not None:
                         self.indiclient.abortCcdExposure()
                         self.deadline.until = None
                         waiting_for_frame = waiting_for_sqm_frame = False
                     self.health.capture_stage('paused')
-                    logger.warning('*** CAPTURE PAUSED ***')
-
-                    now_time = time.time()
-                    self._miscDb.setState('WATCHDOG', int(now_time))
-                    self._miscDb.setState('STATUS', constants.STATUS_PAUSED)
+                    if not archive_blocked:
+                        logger.warning('*** CAPTURE PAUSED ***')
+                        now_time = time.time()
+                        self._miscDb.setState('WATCHDOG', int(now_time))
+                        self._miscDb.setState('STATUS', constants.STATUS_PAUSED)
 
                     if self._shutdown:
                         logger.warning('Shutting down')

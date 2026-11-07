@@ -29,7 +29,7 @@ In Wi-Fi settings, join the camera hotspot with its usual password. If it was ne
 sudo bash misc/setup_wifi_recovery.sh credentials wlan0
 ```
 
-Open [the camera](https://10.42.0.1/indi-allsky/) or [the companion](https://10.42.0.1/indi-allsky/companion) in the browser. If the Pi's hostname is `allsky` and Bonjour is enabled, [allsky.local](https://allsky.local/indi-allsky/) also works. The direct address works on the hotspot independently of name resolution. macOS and iOS may report that this Wi-Fi has no internet access. Stay connected to use the local camera. To reach the camera from a regular LAN, use its Bonjour hostname or its address on that LAN.
+Open [the camera](https://10.42.0.1/indi-allsky/) in the browser. If the Pi's hostname is `allsky` and Bonjour is enabled, [allsky.local](https://allsky.local/indi-allsky/) also works. The direct address works on the hotspot independently of name resolution. macOS and iOS may report that this Wi-Fi has no internet access. Stay connected to use the local camera. To reach the camera from a regular LAN, use its Bonjour hostname or its address on that LAN.
 
 ## How the timer chooses a network
 

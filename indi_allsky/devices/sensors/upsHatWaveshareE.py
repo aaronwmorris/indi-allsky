@@ -154,6 +154,8 @@ class UpsHatWaveshareE_MCU_I2C(SensorBase):
             c2 = float(self._u16(d[2], d[3]))
             c3 = float(self._u16(d[4], d[5]))
             c4 = float(self._u16(d[6], d[7]))
+            if not all(0 < mv <= 5000 for mv in (c1, c2, c3, c4)):
+                raise ValueError('Invalid UPS cell voltage')
 
         except (OSError, RuntimeError, ValueError) as e:
             raise SensorReadException(str(e)) from e

@@ -500,7 +500,7 @@ class miscDb(object):
         return bpm
 
 
-    def addVideo(self, filename, camera_id, metadata):
+    def addVideo(self, filename, camera_id, metadata, replace=None):
 
         ### expected metadata
         #{
@@ -534,10 +534,11 @@ class miscDb(object):
 
 
 
-        video = IndiAllSkyDbVideoTable(
+        fields = dict(
             createDate=createDate,
             camera_id=camera_id,
             filename=str(filename_p),
+            fileSize=metadata.get('fileSize'),
             success=metadata.get('success', False),  # original default was true
             dayDate=dayDate,
             dayDate_year=dayDate.year,
@@ -554,7 +555,16 @@ class miscDb(object):
             thumbnail_uuid=metadata.get('thumbnail_uuid'),
         )
 
-        db.session.add(video)
+        if replace is None:
+            video = IndiAllSkyDbVideoTable(**fields)
+            db.session.add(video)
+        else:
+            # Keep the public watch URL (database ID) when repairing a movie.
+            video = replace
+            for field, value in fields.items():
+                setattr(video, field, value)
+            video.sync_id = None
+            video.uploaded = False
         db.session.commit()
 
         return video

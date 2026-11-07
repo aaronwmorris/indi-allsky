@@ -1,0 +1,10 @@
+[Unit]
+Description=Check indi-allsky Gunicorn and its local HTTPS proxy
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=1min
+AccuracySec=5s
+
+[Install]
+WantedBy=timers.target

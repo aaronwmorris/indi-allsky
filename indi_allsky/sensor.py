@@ -2,6 +2,7 @@ import time
 import signal
 import traceback
 import logging
+import math
 
 #from threading import Thread
 import queue
@@ -10,6 +11,7 @@ import queue
 from multiprocessing import Process
 
 from . import constants
+from .sensor_health import SensorHealth, SensorRetry
 
 from .devices import generic as indi_allsky_gpios
 from .devices import dew_heaters
@@ -35,6 +37,7 @@ class SensorWorker(Process):
         sensors_user_av,
         night_av,
         astro_av,
+        sensor_health=None,
     ):
         super(SensorWorker, self).__init__()
 
@@ -53,9 +56,11 @@ class SensorWorker(Process):
         self.gpio = None
         self.dew_heater = None
         self.fan = None
-        self.sensors = [None, None, None, None, None, None]
+        self.sensors = [None] * 6
+        self.sensor_health = sensor_health if sensor_health is not None else SensorHealth()
+        self.retries = [SensorRetry() for _ in self.sensors]
 
-        self.next_run = time.time()  # run immediately
+        self.next_run = time.monotonic()  # run immediately
         self.next_run_offset = 15
 
         # dew heater
@@ -173,13 +178,13 @@ class SensorWorker(Process):
                 self.fan.deinit()
                 self.dew_heater.deinit()
 
-                for sensor in self.sensors:
-                    sensor.deinit()
+                for i in range(len(self.sensors)):
+                    self._close_sensor(i)
 
                 return
 
 
-            now = time.time()
+            now = time.monotonic()
             if not now >= self.next_run:
                 continue
 
@@ -431,282 +436,122 @@ class SensorWorker(Process):
 
 
     def init_sensors(self):
-        ### Sensor A
-        a_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('A_CLASSNAME')
-        if a_sensor_classname:
-            a_sensor = getattr(indi_allsky_sensors, a_sensor_classname)
+        # Retain the configured driver (even when the first opening fails).
+        # Each device has its own retry deadline; no sleep delays the next one.
+        self.sensor_specs = []
+        cfg = self.config.get('TEMP_SENSOR', {})
+        for i, letter in enumerate('ABCDEF'):
+            name = cfg.get(letter + '_CLASSNAME') or 'sensor_simulator'
+            factory = getattr(indi_allsky_sensors, name, None)
+            address = cfg.get(letter + '_I2C_ADDRESS', ('0x77', '0x76', '0x40', '0x50', '0x51', '0x52')[i])
+            key = cfg.get(letter + '_USER_VAR_SLOT', 'sensor_user_{}'.format((10, 20, 30, 40, 50, 55)[i]))
+            if factory is None or key not in constants.SENSOR_INDEX_MAP:
+                logger.error('Invalid sensor %s driver or slot: %s, %s', letter, name, key)
+                factory = indi_allsky_sensors.sensor_simulator
+            slot = constants.SENSOR_INDEX_MAP.get(key, 0)
+            spec = (factory, cfg.get(letter + '_LABEL', 'Sensor ' + letter), slot,
+                    dict(pin_1_name=cfg.get(letter + '_PIN_1', 'notdefined'),
+                         pin_2_name=cfg.get(letter + '_PIN_2', 'notdefined'), i2c_address=address))
+            self.sensor_specs.append(spec)
+            with self.sensors_user_av.get_lock():
+                self.sensor_health.invalidate(slot, factory.METADATA['count'])
 
-            a_sensor_label = self.config.get('TEMP_SENSOR', {}).get('A_LABEL', 'Sensor A')
-            a_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('A_I2C_ADDRESS', '0x77')
-            a_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'notdefined')
-            a_sensor_pin_2_name = self.config.get('TEMP_SENSOR', {}).get('A_PIN_2', 'notdefined')
 
+    def _close_sensor(self, i):
+        sensor, self.sensors[i] = self.sensors[i], None
+        if sensor is not None:
             try:
-                self.sensors[0] = a_sensor(
-                    self.config,
-                    a_sensor_label,
-                    self.night_av,
-                    self.astro_av,
-                    pin_1_name=a_sensor_pin_1_name,
-                    pin_2_name=a_sensor_pin_2_name,
-                    i2c_address=a_sensor_i2c_address,
-                )
-            except (DeviceControlException, SensorException) as e:
-                logger.error('Error initializing sensor: %s', str(e))
-                self.sensors[0] = indi_allsky_sensors.sensor_simulator(
-                    self.config,
-                    'Sensor A',
-                    self.night_av,
-                    self.astro_av,
-                )
-        else:
-            self.sensors[0] = indi_allsky_sensors.sensor_simulator(
-                self.config,
-                'Sensor A',
-                self.night_av,
-                self.astro_av,
-            )
-
-        sensor_0_key = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 'sensor_user_10')
-        self.sensors[0].slot = constants.SENSOR_INDEX_MAP[sensor_0_key]
+                sensor.deinit()
+            except Exception as exc:
+                logger.warning('%s cleanup failed: %s', sensor.name, exc)
 
 
-        ### Sensor B
-        b_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('B_CLASSNAME')
-        if b_sensor_classname:
-            b_sensor = getattr(indi_allsky_sensors, b_sensor_classname)
-
-            b_sensor_label = self.config.get('TEMP_SENSOR', {}).get('B_LABEL', 'Sensor B')
-            b_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('B_I2C_ADDRESS', '0x76')
-            b_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('B_PIN_1', 'notdefined')
-            b_sensor_pin_2_name = self.config.get('TEMP_SENSOR', {}).get('B_PIN_2', 'notdefined')
-
-            try:
-                self.sensors[1] = b_sensor(
-                    self.config,
-                    b_sensor_label,
-                    self.night_av,
-                    self.astro_av,
-                    pin_1_name=b_sensor_pin_1_name,
-                    pin_2_name=b_sensor_pin_2_name,
-                    i2c_address=b_sensor_i2c_address,
-                )
-            except (DeviceControlException, SensorException) as e:
-                logger.error('Error initializing sensor: %s', str(e))
-                self.sensors[1] = indi_allsky_sensors.sensor_simulator(
-                    self.config,
-                    'Sensor B',
-                    self.night_av,
-                    self.astro_av,
-                )
-        else:
-            self.sensors[1] = indi_allsky_sensors.sensor_simulator(
-                self.config,
-                'Sensor B',
-                self.night_av,
-                self.astro_av,
-            )
-
-        sensor_1_key = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 'sensor_user_20')
-        self.sensors[1].slot = constants.SENSOR_INDEX_MAP[sensor_1_key]
-
-
-        ### Sensor C
-        c_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('C_CLASSNAME')
-        if c_sensor_classname:
-            c_sensor = getattr(indi_allsky_sensors, c_sensor_classname)
-
-            c_sensor_label = self.config.get('TEMP_SENSOR', {}).get('C_LABEL', 'Sensor C')
-            c_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('C_I2C_ADDRESS', '0x40')
-            c_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('C_PIN_1', 'notdefined')
-            c_sensor_pin_2_name = self.config.get('TEMP_SENSOR', {}).get('C_PIN_2', 'notdefined')
-
-            try:
-                self.sensors[2] = c_sensor(
-                    self.config,
-                    c_sensor_label,
-                    self.night_av,
-                    self.astro_av,
-                    pin_1_name=c_sensor_pin_1_name,
-                    pin_2_name=c_sensor_pin_2_name,
-                    i2c_address=c_sensor_i2c_address,
-                )
-            except (DeviceControlException, SensorException) as e:
-                logger.error('Error initializing sensor: %s', str(e))
-                self.sensors[2] = indi_allsky_sensors.sensor_simulator(
-                    self.config,
-                    'Sensor C',
-                    self.night_av,
-                    self.astro_av,
-                )
-        else:
-            self.sensors[2] = indi_allsky_sensors.sensor_simulator(
-                self.config,
-                'Sensor C',
-                self.night_av,
-                self.astro_av,
-            )
-
-        sensor_2_key = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_30')
-        self.sensors[2].slot = constants.SENSOR_INDEX_MAP[sensor_2_key]
-
-
-        ### Sensor D
-        d_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('D_CLASSNAME')
-        if d_sensor_classname:
-            d_sensor = getattr(indi_allsky_sensors, d_sensor_classname)
-
-            d_sensor_label = self.config.get('TEMP_SENSOR', {}).get('D_LABEL', 'Sensor D')
-            d_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('D_I2C_ADDRESS', '0x50')
-            d_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('D_PIN_1', 'notdefined')
-            d_sensor_pin_2_name = self.config.get('TEMP_SENSOR', {}).get('D_PIN_2', 'notdefined')
-
-            try:
-                self.sensors[3] = d_sensor(
-                    self.config,
-                    d_sensor_label,
-                    self.night_av,
-                    self.astro_av,
-                    pin_1_name=d_sensor_pin_1_name,
-                    pin_2_name=d_sensor_pin_2_name,
-                    i2c_address=d_sensor_i2c_address,
-                )
-            except (DeviceControlException, SensorException) as e:
-                logger.error('Error initializing sensor: %s', str(e))
-                self.sensors[3] = indi_allsky_sensors.sensor_simulator(
-                    self.config,
-                    'Sensor D',
-                    self.night_av,
-                    self.astro_av,
-                )
-        else:
-            self.sensors[3] = indi_allsky_sensors.sensor_simulator(
-                self.config,
-                'Sensor D',
-                self.night_av,
-                self.astro_av,
-            )
-
-        sensor_3_key = self.config.get('TEMP_SENSOR', {}).get('D_USER_VAR_SLOT', 'sensor_user_40')
-        self.sensors[3].slot = constants.SENSOR_INDEX_MAP[sensor_3_key]
-
-
-        ### Sensor E
-        e_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('E_CLASSNAME')
-        if e_sensor_classname:
-            e_sensor = getattr(indi_allsky_sensors, e_sensor_classname)
-
-            e_sensor_label = self.config.get('TEMP_SENSOR', {}).get('E_LABEL', 'Sensor E')
-            e_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('E_I2C_ADDRESS', '0x51')
-            e_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('E_PIN_1', 'notdefined')
-            e_sensor_pin_2_name = self.config.get('TEMP_SENSOR', {}).get('E_PIN_2', 'notdefined')
-
-            try:
-                self.sensors[4] = e_sensor(
-                    self.config,
-                    e_sensor_label,
-                    self.night_av,
-                    self.astro_av,
-                    pin_1_name=e_sensor_pin_1_name,
-                    pin_2_name=e_sensor_pin_2_name,
-                    i2c_address=e_sensor_i2c_address,
-                )
-            except (DeviceControlException, SensorException) as e:
-                logger.error('Error initializing sensor: %s', str(e))
-                self.sensors[4] = indi_allsky_sensors.sensor_simulator(
-                    self.config,
-                    'Sensor E',
-                    self.night_av,
-                    self.astro_av,
-                )
-        else:
-            self.sensors[4] = indi_allsky_sensors.sensor_simulator(
-                self.config,
-                'Sensor E',
-                self.night_av,
-                self.astro_av,
-            )
-
-        sensor_4_key = self.config.get('TEMP_SENSOR', {}).get('E_USER_VAR_SLOT', 'sensor_user_50')
-        self.sensors[4].slot = constants.SENSOR_INDEX_MAP[sensor_4_key]
-
-
-        ### Sensor F
-        f_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('F_CLASSNAME')
-        if f_sensor_classname:
-            f_sensor = getattr(indi_allsky_sensors, f_sensor_classname)
-
-            f_sensor_label = self.config.get('TEMP_SENSOR', {}).get('F_LABEL', 'Sensor F')
-            f_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('F_I2C_ADDRESS', '0x52')
-            f_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('F_PIN_1', 'notdefined')
-            f_sensor_pin_2_name = self.config.get('TEMP_SENSOR', {}).get('F_PIN_2', 'notdefined')
-
-            try:
-                self.sensors[5] = f_sensor(
-                    self.config,
-                    f_sensor_label,
-                    self.night_av,
-                    self.astro_av,
-                    pin_1_name=f_sensor_pin_1_name,
-                    pin_2_name=f_sensor_pin_2_name,
-                    i2c_address=f_sensor_i2c_address,
-                )
-            except (DeviceControlException, SensorException) as e:
-                logger.error('Error initializing sensor: %s', str(e))
-                self.sensors[5] = indi_allsky_sensors.sensor_simulator(
-                    self.config,
-                    'Sensor F',
-                    self.night_av,
-                    self.astro_av,
-                )
-        else:
-            self.sensors[5] = indi_allsky_sensors.sensor_simulator(
-                self.config,
-                'Sensor F',
-                self.night_av,
-                self.astro_av,
-            )
-
-        sensor_5_key = self.config.get('TEMP_SENSOR', {}).get('F_USER_VAR_SLOT', 'sensor_user_55')
-        self.sensors[5].slot = constants.SENSOR_INDEX_MAP[sensor_5_key]
+    def _write_sample(self, i, sensor, result, now):
+        if result.get('sample_disabled'):
+            with self.sensors_user_av.get_lock():
+                self.sensor_health.invalidate(sensor.slot, sensor.METADATA['count'])
+            return
+        values = tuple(float(x) if x is not None else None for x in result['data'])
+        if not values:
+            # Some drivers deliberately return an empty cache until warmed up.
+            return
+        if len(values) > sensor.METADATA['count'] or sensor.slot + len(values) > len(self.sensors_user_av):
+            raise SensorReadException('Reading exceeds configured sensor channels')
+        # Drivers with a slower polling cadence return the previous result
+        # object between actual measurements. Its timestamp must not advance.
+        if result is self.retries[i].previous_sample:
+            return
+        fresh_for = max(60, 2 * getattr(sensor, 'next_run_offset', 0) + self.next_run_offset)
+        stamps = result.get('observed', [now] * len(values))
+        if len(stamps) != len(values):
+            raise SensorReadException('Missing per-channel measurement timestamps')
+        derived = ((constants.SENSOR_USER_DEW_POINT, 'dew_point'),
+                   (constants.SENSOR_USER_FROST_POINT, 'frost_point'),
+                   (constants.SENSOR_USER_HEAT_INDEX, 'heat_index'),
+                   (constants.SENSOR_USER_WIND_DIR, 'wind_degrees'),
+                   (constants.SENSOR_USER_SENSOR_SQM_MAG, 'sqm_mag'),
+                   (constants.SENSOR_USER_RAIN, 'rain'))
+        had_sample = False
+        with self.sensors_user_av.get_lock():
+            self.sensor_health.invalidate(sensor.slot, sensor.METADATA['count'])
+            for j, (value, stamp) in enumerate(zip(values, stamps)):
+                if value is None or not math.isfinite(value) or stamp <= 0:
+                    continue
+                self.sensors_user_av[sensor.slot + j] = value
+                self.sensor_health.expires[sensor.slot + j] = stamp + fresh_for
+                if stamp + fresh_for > now:
+                    had_sample = True
+            if had_sample:
+                for slot, key in derived:
+                    value = result.get(key)
+                    if value is not None and math.isfinite(float(value)):
+                        self.sensors_user_av[slot] = float(value)
+                # Store the timestamp of the observation, not repeated polls of
+                # async devices such as MQTT.
+                newest = max(stamp for value, stamp in zip(values, stamps)
+                             if value is not None and math.isfinite(value) and stamp > 0)
+                self.sensor_health.last_good[i] = int(time.time() - max(0, now - newest))
+                self.retries[i].last_observed = newest
+        self.retries[i].previous_sample = result
+        if had_sample:
+            self.retries[i].success()
 
 
     def update_sensors(self):
-        # update sensor readings
-        for sensor in self.sensors:
+        for i, (factory, label, slot, options) in enumerate(self.sensor_specs):
+            if factory.METADATA['count'] == 0:
+                continue  # disabled/empty simulator is not a failing sensor
+            retry = self.retries[i]
+            now = time.monotonic()
+            if now < retry.next_open:
+                continue
             try:
-                sensor_data = sensor.update()
-
+                if self.sensors[i] is None:
+                    sensor = factory(self.config, label, self.night_av, self.astro_av, **options)
+                    sensor.slot = slot
+                    self.sensors[i] = sensor
+                    retry.last_observed = time.monotonic()  # grace for warming up
+                sensor = self.sensors[i]
+                result = sensor.update()
+                completed = time.monotonic()
+                self._write_sample(i, sensor, result, completed)
+                if result.get('sample_disabled'):
+                    # An explicitly disabled sensor is not a failed device.
+                    retry.last_observed = completed
+                    retry.success()
+                elif completed - retry.last_observed > max(60, 2 * getattr(sensor, 'next_run_offset', 0) + self.next_run_offset):
+                    raise SensorReadException('No new measurement within the expected interval')
+            except (SensorException, SensorReadException, DeviceControlException, OSError,
+                    ValueError, RuntimeError, IndexError, TypeError, OverflowError, ImportError) as exc:
                 with self.sensors_user_av.get_lock():
-                    if not isinstance(sensor_data.get('dew_point'), type(None)):
-                        self.sensors_user_av[constants.SENSOR_USER_DEW_POINT] = float(sensor_data['dew_point'])
-
-                    if not isinstance(sensor_data.get('frost_point'), type(None)):
-                        self.sensors_user_av[constants.SENSOR_USER_FROST_POINT] = float(sensor_data['frost_point'])
-
-                    if not isinstance(sensor_data.get('heat_index'), type(None)):
-                        self.sensors_user_av[constants.SENSOR_USER_HEAT_INDEX] = float(sensor_data['heat_index'])
-
-                    if not isinstance(sensor_data.get('wind_degrees'), type(None)):
-                        self.sensors_user_av[constants.SENSOR_USER_WIND_DIR] = float(sensor_data['wind_degrees'])
-
-                    if not isinstance(sensor_data.get('sqm_mag'), type(None)):
-                        self.sensors_user_av[constants.SENSOR_USER_SENSOR_SQM_MAG] = float(sensor_data['sqm_mag'])
-
-                    if not isinstance(sensor_data.get('rain'), type(None)):
-                        self.sensors_user_av[constants.SENSOR_USER_RAIN] = float(sensor_data['rain'])
-
-
-                    for i, v in enumerate(sensor_data['data']):
-                        self.sensors_user_av[sensor.slot + i] = float(v)
-            except SensorReadException as e:
-                logger.error('SensorReadException: {0:s}'.format(str(e)))
-            except OSError as e:
-                logger.error('Sensor OSError: {0:s}'.format(str(e)))
-            except IOError as e:
-                logger.error('Sensor IOError: {0:s}'.format(str(e)))
-            except IndexError as e:
-                logger.error('Sensor slot error: {0:s}'.format(str(e)))
+                    self.sensor_health.invalidate(slot, factory.METADATA['count'])
+                retry.failures += 1
+                logger.error('Sensor %s (%s) failed: %s', 'ABCDEF'[i], label, exc)
+                if self.sensors[i] is None or retry.failures >= 3:
+                    self._close_sensor(i)
+                    retry.retry_later(time.monotonic())
+                    logger.warning('Retrying sensor %s (%s) in %ds', 'ABCDEF'[i], label,
+                                   round(retry.next_open - time.monotonic()))
 
 
     def check_dew_heater_thresholds(self):

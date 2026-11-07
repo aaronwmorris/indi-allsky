@@ -30,6 +30,7 @@ from PIL import Image
 from fractions import Fraction
 
 from . import constants
+from .archive_health import device_error, storage_errno
 from . import asi676mc
 
 from .processing import ImageProcessor
@@ -51,6 +52,7 @@ from .flask.models import IndiAllSkyDbImageTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy import func
+from sqlalchemy.exc import SQLAlchemyError
 #from sqlalchemy.orm.exc import NoResultFound
 
 from .exceptions import TimeOutException
@@ -86,6 +88,7 @@ class ImageWorker(Process):
         night_av,
         astro_av,
         health,
+        sensor_health=None,
     ):
         super(ImageWorker, self).__init__()
 
@@ -96,6 +99,7 @@ class ImageWorker(Process):
         self.error_q = error_q
         self.image_q = image_q
         self.health = health
+        self.sensor_health = sensor_health
         self.upload_q = upload_q
 
         self.position_av = position_av
@@ -271,6 +275,15 @@ class ImageWorker(Process):
 
             # new context for every task, reduces the effects of caching
             self.health.image_pulse.value = int(time.monotonic())
+            if not self.health.archive_blocked.value and self.health.archive_device.value:
+                error = device_error(self.image_dir, self.health.archive_device.value)
+                if error:
+                    self.health.archive_error.value = error
+                    self.health.archive_blocked.value = 1
+            if self.health.archive_blocked.value:
+                # These jobs reference camera-owned temporary input files.
+                Path(i_dict['filename']).unlink(missing_ok=True)
+                continue
             self.health.image_started.value = int(time.time())
             self.health.image_busy.value = 1
             self._expects_publication = (bool(i_dict.get('capture_file_present'))
@@ -280,6 +293,15 @@ class ImageWorker(Process):
             try:
                 with app.app_context():
                     self.processImage(i_dict)
+            except (OSError, SQLAlchemyError) as exc:
+                error = storage_errno(exc)
+                if error is None:
+                    raise
+                self.health.archive_error.value = error
+                self.health.archive_blocked.value = 1
+                self._expects_publication = False
+                Path(i_dict['filename']).unlink(missing_ok=True)
+                logger.error('Archive write failed; pausing for a storage check: %s', exc)
             finally:
                 if self._expects_publication:
                     self.health.publication_result(
@@ -927,11 +949,11 @@ class ImageWorker(Process):
                 image_add_data['sensor_temp_{0:d}'.format(i)] = v_temp
 
 
-            for i in range(60):
-                image_add_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
-
-            for i in range(100, 110):
-                image_add_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
+            with self.sensors_user_av.get_lock():
+                for i in (*range(60), *range(100, 110)):
+                    image_add_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
+                if self.sensor_health is not None:
+                    image_add_data.update(self.sensor_health.metadata(time.monotonic()))
 
             image_add_data['temp_display'] = self.config.get('TEMP_DISPLAY', 'c')
             image_add_data['pressure_display'] = self.config.get('PRESSURE_DISPLAY', 'hPa')

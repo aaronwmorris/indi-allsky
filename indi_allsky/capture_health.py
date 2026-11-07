@@ -63,8 +63,9 @@ class CaptureHealth:
         # multiprocessing lock from a worker that may be blocked or dying.
         for name in ('stage', 'pulse', 'exposure_started', 'raw_received', 'frames', 'image_started',
                      'image_busy', 'image_pulse', 'image_published', 'last_failure', 'unreaped', 'unfinished',
-                     'misses', 'first_miss', 'last_miss', 'publications'):
+                     'misses', 'first_miss', 'last_miss', 'publications', 'archive_blocked', 'archive_error'):
             setattr(self, name, RawValue('I', 0))
+        self.archive_device = RawValue('Q', 0)
 
     def capture_stage(self, name):
         self.stage.value = self.stages.index(name)
@@ -88,6 +89,8 @@ class CaptureHealth:
         limit = max(300, timeout + 60)
         if self.unreaped.value or (self.pulse.value and now - self.pulse.value > limit):
             return 'capture'
+        if self.archive_blocked.value:
+            return None  # wait for storage to recover instead of recycling the image worker
         if self.image_pulse.value and now - self.image_pulse.value > limit:
             return 'image'
         if (self.stages[self.stage.value] not in ('paused', 'daytime_disabled')
