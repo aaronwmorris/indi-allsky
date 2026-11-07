@@ -160,6 +160,13 @@ $( document ).ready(function() {
 
         <!-- Control Overlay -->
         <div class="tw:absolute tw:top-4 tw:right-4 tw:z-20">
+            {% if latest_image_view == 'indi_allsky.js_latest_image_view' %}
+            <a href="{{ url_for('indi_allsky.companion_view', camera_id=camera_id) }}"
+               target="indi_allsky_companion_{{ camera_id }}"
+               onclick="if (!event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { const popup = window.open(this.href, this.target, 'popup,width=510,height=880,resizable=yes,scrollbars=yes'); if (popup) { popup.focus(); return false; } }"
+               class="tw:btn tw:btn-sm tw:bg-base-100/50 tw:backdrop-blur-md tw:border-base-300 hover:tw:bg-base-100 tw:rounded-[var(--radius-box)]"
+               title="Astrofotografie-Begleiter im eigenen Fenster öffnen">Astrofotografie-Begleiter ↗</a>
+            {% endif %}
             <button onclick="goFullscreen(document.getElementById('latest-image'))" 
                     title="Toggle Fullscreen"
                     class="tw:btn tw:btn-square tw:btn-sm tw:bg-base-100/50 tw:backdrop-blur-md tw:border-base-300 hover:tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:cursor-pointer tw:transition-all shadow-sm">

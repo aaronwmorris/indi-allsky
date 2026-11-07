@@ -1,0 +1,134 @@
+html, body { min-height: 100%; }
+body { background: var(--color-base-300); color: var(--color-base-content); margin: 0; }
+.companion {
+    --muted: color-mix(in srgb, var(--color-base-content) 84%, var(--color-base-100));
+    --line: color-mix(in srgb, var(--color-base-content) 22%, var(--color-base-100));
+    --edge: .65rem;
+    --gap: .45rem;
+    padding: var(--edge);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--gap);
+    align-items: start;
+    font-variant-numeric: tabular-nums;
+}
+/* Let the complete frame fill the window before the readings continue below it. */
+.overview, .capture { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.overview {
+    gap: var(--gap);
+    max-height: calc(100vh - 2 * var(--edge));
+    max-height: calc(100dvh - 2 * var(--edge));
+}
+.masthead, .capture figcaption { flex: none; }
+.readings { container: readings / inline-size; min-width: 0; }
+.readings-grid { display: grid; gap: var(--gap); grid-template-columns: minmax(0, 1fr); }
+.notice, .history { grid-column: 1 / -1; }
+.companion [hidden] { display: none !important; }
+.masthead, .capture figcaption { display: flex; align-items: center; justify-content: space-between; gap: .65rem; }
+.masthead {
+    container: masthead / inline-size;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    gap: .1rem .5rem; align-items: center; padding: .15rem .1rem;
+}
+.masthead > div:first-child { grid-column: 1; grid-row: 1; align-self: end; min-width: 0; }
+.masthead h1 { overflow-wrap: anywhere; margin: 0; font-size: 1.3rem; font-weight: 700; line-height: 1.15; }
+.clock { display: contents; }
+.clock time { grid-column: 2; grid-row: 1 / 3; white-space: nowrap; text-align: right; font-size: 2.65rem; font-weight: 700; line-height: 1.04; letter-spacing: -.025em; }
+.clock span { grid-column: 1; grid-row: 2; align-self: start; font-size: .85rem; line-height: 1.15; color: var(--muted); }
+@container masthead (max-width: 24rem) {
+    .masthead > div:first-child { grid-column: 1 / -1; }
+    .clock span { grid-row: 2; align-self: center; }
+    .clock time { grid-row: 2; }
+}
+.capture, .surface { margin: 0; border: 1px solid var(--line); border-radius: var(--radius-box, .65rem); background: var(--color-base-100); overflow: hidden; }
+.image-area {
+    position: relative; display: grid; place-items: center; background: #0a0d10; color: #ecf0f3;
+    aspect-ratio: var(--capture-aspect, auto); min-height: min(7rem, 25vh);
+}
+.image-area img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; }
+.image-area p { margin: 0; padding: 2.5rem .75rem; font-size: 1rem; }
+.capture figcaption { align-items: center; flex-wrap: wrap; gap: .05rem .45rem; padding: .3rem .6rem; }
+.caption-label, #image-time span { color: var(--muted); font-size: .9rem; }
+.capture figcaption > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 .35rem; min-width: 0; }
+#image-time { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 .5rem; line-height: 1.25; }
+#image-time strong, .age { font-size: 1.5rem; font-weight: 700; }
+.age { line-height: 1.15; color: var(--color-base-content); align-self: center; }
+.age.new-frame { color: var(--color-success); }
+.notice { margin: 0; border-inline-start: .25rem solid var(--color-warning); padding: .35rem .7rem; font-size: 1rem; }
+.surface { padding: .45rem .55rem; }
+.surface h2 { margin: 0 0 .25rem; font-size: 1rem; line-height: 1.2; font-weight: 700; }
+.section-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .08rem .45rem; margin-bottom: .25rem; }
+.section-heading h2 { margin: 0; }
+.section-heading > span { font-size: .88rem; line-height: 1.2; color: var(--muted); }
+#moon-phase { color: var(--color-base-content); font-weight: 600; }
+.moon-events { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .25rem .5rem; margin: 0; }
+.moon-events dt { color: var(--muted); font-size: .88rem; line-height: 1.2; }
+.moon-events dd { margin: .1rem 0 0; }
+.events { width: 100%; border-collapse: collapse; text-align: left; }
+.events th, .events td { padding: .1rem 0; vertical-align: middle; line-height: 1.2; }
+.events thead th { color: var(--muted); font-size: .86rem; font-weight: 550; }
+.events tbody th { font-size: .94rem; font-weight: 550; }
+.events tbody tr + tr { border-top: 1px solid var(--line); }
+.events :is(th, td):not(:first-child) { padding-left: .25rem; text-align: right; }
+.companion .event-time { display: inline-flex; align-items: baseline; justify-content: flex-end; flex-wrap: wrap; gap: 0 .3rem; line-height: 1.12; }
+.event-time strong { font-size: 1.22rem; font-weight: 700; }
+.companion .event-date { color: var(--muted); font-size: .86rem; }
+.chart-slot { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .15rem .45rem; align-items: center; }
+.chart-slot + .chart-slot { margin-top: .35rem; padding-top: .35rem; border-top: 1px solid var(--line); }
+.chart-slot label { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); overflow: hidden; }
+.chart-slot select {
+    grid-column: 1; width: 100%; min-width: 0; min-height: 2.15rem; padding: .12rem .25rem; border-radius: var(--radius-field, .4rem);
+    background: var(--color-base-200); color: var(--color-base-content); border: 1px solid var(--line); font: inherit; font-size: .94rem;
+}
+.chart-slot select:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+.chart-value { grid-column: 2; text-align: right; font-weight: 700; font-size: 1.45rem; line-height: 1.15; }
+.plot, .plot-empty { grid-column: 1 / -1; min-width: 0; }
+.plot { position: relative; height: 5rem; }
+.plot-empty { margin: 0; color: var(--muted); font-size: .9rem; }
+
+/* Two columns when the cards themselves are wide enough, including in the sidebar. */
+@container readings (min-width: 26rem) {
+    .readings-grid { grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); }
+    .history { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .12rem .6rem; }
+    .history .section-heading { grid-column: 1 / -1; }
+    .chart-slot { grid-template-columns: minmax(0, 1fr); gap: .12rem; align-self: start; }
+    .chart-slot + .chart-slot { margin: 0; padding: 0; border: 0; }
+    .chart-value { grid-column: 1; text-align: left; }
+    .plot, .plot-empty { grid-column: 1; grid-row: auto; }
+    .plot { height: 5.5rem; }
+    .moon-events { grid-template-columns: 1fr; gap: .15rem; }
+    .moon-events > div { display: flex; align-items: baseline; justify-content: space-between; gap: .2rem; }
+    .moon-events dd { text-align: right; }
+}
+/* Beside the readings the frame can use the full viewport height. Keep it in
+   view as the user scrolls through the cards in a short landscape window. */
+@media (min-width: 46rem) and (min-aspect-ratio: 6/5) {
+    .companion {
+        grid-template-columns: minmax(0, 1fr) 19rem;
+        grid-template-columns: minmax(0, 1fr) clamp(19rem, 100% - var(--capture-aspect, 1.3333) * (100dvh - 2 * var(--edge)), 29rem);
+        grid-template-rows: max-content 1fr;
+        grid-template-areas: "capture clock" "capture readings";
+    }
+    .overview { display: contents; }
+    .masthead { grid-area: clock; }
+    .capture {
+        grid-area: capture; position: sticky; top: var(--edge);
+        max-height: calc(100vh - 2 * var(--edge));
+        max-height: calc(100dvh - 2 * var(--edge));
+    }
+    .readings { grid-area: readings; }
+}
+@media (max-width: 380px) {
+    .companion { --edge: .45rem; --gap: .35rem; }
+    .masthead h1 { font-size: 1.05rem; overflow-wrap: anywhere; }
+    .clock time { font-size: 2rem; }
+    .caption-label { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); overflow: hidden; }
+    #image-time strong, .age { font-size: 1.2rem; }
+}
+@media (max-width: 18rem) {
+    .masthead { grid-template-columns: minmax(0, 1fr); }
+    .clock time { grid-column: 1; grid-row: 3; text-align: left; }
+    .chart-slot { grid-template-columns: minmax(0, 1fr); }
+    .chart-value { grid-column: 1; text-align: left; }
+    .plot, .plot-empty { grid-column: 1; grid-row: auto; }
+}
