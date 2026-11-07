@@ -7539,6 +7539,11 @@ calendar-select-month::part(option):disabled, calendar-select-year::part(option)
     filter: blur(3px) hue-rotate(360deg);
   }
 }
+.field-highlight {
+  background-color: rgba(255, 193, 7, 0.15);
+  outline: 1px solid rgba(255, 193, 7, 0.5);
+  border-radius: 4px;
+}
 @layer base {
   :where(:root),:root:has(input.theme-controller[value=light]:checked),[data-theme=light] {
     color-scheme: light;

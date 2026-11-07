@@ -3,7 +3,6 @@
 {% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
 {% block head %}
-<link href="{{ url_for('indi_allsky.static', filename='css/style.css') }}" rel="stylesheet">
 <script src="{{ url_for('indi_allsky.static', filename='js/indi-allsky-tabs.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};

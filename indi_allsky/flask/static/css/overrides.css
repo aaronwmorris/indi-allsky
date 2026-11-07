@@ -1,3 +1,13 @@
+/*
+ * INDI-ALLSKY REPOSITORY CSS OVERRIDES
+ * 
+ * This file contains all committed custom styles, third-party component adaptations
+ * (e.g. DataTables, PhotoSwipe, VirtualSky), and application-specific layout rules.
+ * 
+ * NOTE: Do NOT place committed rules into custom.css (which is reserved for dynamic
+ * user UI theme imports and will be overwritten by the application).
+ */
+
 /* DataTables Styling Overrides for Tailwind / DaisyUI */
 .dt-container {
     color: var(--color-base-content, #a6adbb);
@@ -449,4 +459,11 @@ calendar-select-year::part(option):disabled {
     100% {
         filter: blur(3px) hue-rotate(360deg);
     }
+}
+
+/* Form field highlight applied to a container when deep-linked via URL hash */
+.field-highlight {
+    background-color: rgba(255, 193, 7, 0.15);
+    outline: 1px solid rgba(255, 193, 7, 0.5);
+    border-radius: 4px;
 }
