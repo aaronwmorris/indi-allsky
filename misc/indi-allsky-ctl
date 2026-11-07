@@ -372,14 +372,17 @@ ssl_renew() {
     fi
 
     echo "indi-allsky: Renewing TLS leaf certificate for ${web_server}..."
-    local lan_ips
+    local lan_ips sys_host
     lan_ips=$(hostname -I 2>/dev/null || ip addr show 2>/dev/null | grep -Po 'inet \K[\d.]+' | grep -v '^127\.' || true)
+    sys_host=$(hostname -s 2>/dev/null || hostname 2>/dev/null || echo "indi-allsky")
 
     mkdir -p "$(dirname "$key_path")" "$(dirname "$crt_path")"
     CAROOT="$ca_dir" mkcert \
         -cert-file "$crt_path" \
         -key-file "$key_path" \
         "indi-allsky.local" \
+        "${sys_host}.local" \
+        "${sys_host}" \
         "localhost" \
         127.0.0.1 \
         ::1 \

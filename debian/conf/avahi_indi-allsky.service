@@ -5,7 +5,6 @@
   <service>
     <type>_indi-allsky._tcp</type>
     <port>%HTTPS_PORT%</port>
-    <host-name>indi-allsky.local</host-name>
     <txt-record>app=indi-allsky</txt-record>
     <txt-record>path=/indi-allsky</txt-record>
     <txt-record>ssl=true</txt-record>
