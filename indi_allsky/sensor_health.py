@@ -3,6 +3,30 @@ import time
 from multiprocessing import RawArray
 
 
+EXTERNAL_SLOT_BITS = {f'sensor_user_{slot}': 1 << (slot - 10) for slot in range(10, 60)}
+
+
+def custom_chart_values(data, keys):
+    """Yield native chart values; None makes Chart.js break the line."""
+    data = data if isinstance(data, dict) else {}
+    mask = data.get('sensor_valid_mask')
+    if mask is not None:
+        try:
+            mask = max(0, int(mask)) if isinstance(mask, (str, int)) and not isinstance(mask, bool) else 0
+        except ValueError:
+            mask = 0
+    for key in keys:
+        bit = EXTERNAL_SLOT_BITS.get(key)
+        if bit is None:
+            # Keep the established fallback for keys outside the external sensor slots.
+            yield data.get(key, 0)
+        elif mask is not None and not mask & bit:
+            yield None
+        else:
+            # An older frame without validity metadata can still contain a measured zero.
+            yield data.get(key)
+
+
 class SensorHealth:
     def __init__(self):
         # Access these under the lock of the associated sensors_user_av values.

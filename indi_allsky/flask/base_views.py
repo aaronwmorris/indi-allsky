@@ -15,6 +15,8 @@ import ephem
 
 from .. import constants
 from .. import asi676mc
+from ..archive_health import archive_state, BLOCKED, LOW
+from ..sensor_health import ups_problem
 
 from flask import request
 from flask import session
@@ -878,6 +880,25 @@ class BaseView(View):
             return 'TEMPLATE ERROR'
 
 
+        if self.local_indi_allsky and (
+            (current_user.is_authenticated and current_user.is_admin)
+            or (self.login_disabled and self.verify_admin_network())
+        ):
+            archive = archive_state(self.indi_allsky_config)
+            if archive.get('level') == LOW:
+                status_text += '<div class="tw:text-warning">Archive space is low. Video and export jobs are waiting.</div>'
+            elif archive.get('level') == BLOCKED:
+                reason = archive.get('reason')
+                message = {
+                    'checking': 'Checking image archive.',
+                    'mount': 'Archive mount unavailable. Capture paused.',
+                    'missing': 'Archive directory missing. Capture paused.',
+                    'full': 'Archive full. Capture paused.',
+                    'readonly': 'Archive is read-only. Capture paused.',
+                }.get(reason, 'Cannot write to the archive. Capture paused.')
+                status_text += f'<div class="tw:text-warning">{message}</div>'
+            if ups_problem(Path('/run/indi-allsky-ups-watchdog/health.json')):
+                status_text += '<div class="tw:text-warning">No recent valid UPS reading.</div>'
         return status_text
 
 

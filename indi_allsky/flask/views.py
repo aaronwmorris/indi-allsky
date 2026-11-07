@@ -25,6 +25,7 @@ from passlib.hash import argon2
 
 from ..version import __version__
 from .. import constants
+from ..sensor_health import custom_chart_values
 from ..night_movie import attempt_key, prior_attempt, suppress_repair
 from .. import asi676mc
 from .. import asi676mc_calibration
@@ -1865,15 +1866,10 @@ class JsonChartView(JsonView):
             camera_data = dict()
 
 
-        custom_chart_1_key = camera_data.get('custom_chart_1_key', 'sensor_user_10')
-        custom_chart_2_key = camera_data.get('custom_chart_2_key', 'sensor_user_11')
-        custom_chart_3_key = camera_data.get('custom_chart_3_key', 'sensor_user_12')
-        custom_chart_4_key = camera_data.get('custom_chart_4_key', 'sensor_user_13')
-        custom_chart_5_key = camera_data.get('custom_chart_5_key', 'sensor_user_14')
-        custom_chart_6_key = camera_data.get('custom_chart_6_key', 'sensor_user_15')
-        custom_chart_7_key = camera_data.get('custom_chart_7_key', 'sensor_user_16')
-        custom_chart_8_key = camera_data.get('custom_chart_8_key', 'sensor_user_17')
-        custom_chart_9_key = camera_data.get('custom_chart_9_key', 'sensor_user_18')
+        custom_chart_keys = [
+            camera_data.get(f'custom_chart_{n}_key', f'sensor_user_{n + 9}')
+            for n in range(1, 10)
+        ]
 
 
         for i in chart_query:
@@ -1936,121 +1932,8 @@ class JsonChartView(JsonView):
             chart_data['detection'].append(detection_data)
 
 
-            # custom chart 1
-            try:
-                custom_1_y = i.data[custom_chart_1_key]
-            except KeyError:
-                custom_1_y = 0
-
-            custom_1_data = {
-                'x' : x,
-                'y' : custom_1_y,
-            }
-            chart_data['custom_1'].append(custom_1_data)
-
-
-            # custom chart 2
-            try:
-                custom_2_y = i.data[custom_chart_2_key]
-            except KeyError:
-                custom_2_y = 0
-
-            custom_2_data = {
-                'x' : x,
-                'y' : custom_2_y,
-            }
-            chart_data['custom_2'].append(custom_2_data)
-
-
-            # custom chart 3
-            try:
-                custom_3_y = i.data[custom_chart_3_key]
-            except KeyError:
-                custom_3_y = 0
-
-            custom_3_data = {
-                'x' : x,
-                'y' : custom_3_y,
-            }
-            chart_data['custom_3'].append(custom_3_data)
-
-
-            # custom chart 4
-            try:
-                custom_4_y = i.data[custom_chart_4_key]
-            except KeyError:
-                custom_4_y = 0
-
-            custom_4_data = {
-                'x' : x,
-                'y' : custom_4_y,
-            }
-            chart_data['custom_4'].append(custom_4_data)
-
-
-            # custom chart 5
-            try:
-                custom_5_y = i.data[custom_chart_5_key]
-            except KeyError:
-                custom_5_y = 0
-
-            custom_5_data = {
-                'x' : x,
-                'y' : custom_5_y,
-            }
-            chart_data['custom_5'].append(custom_5_data)
-
-
-            # custom chart 6
-            try:
-                custom_6_y = i.data[custom_chart_6_key]
-            except KeyError:
-                custom_6_y = 0
-
-            custom_6_data = {
-                'x' : x,
-                'y' : custom_6_y,
-            }
-            chart_data['custom_6'].append(custom_6_data)
-
-
-            # custom chart 7
-            try:
-                custom_7_y = i.data[custom_chart_7_key]
-            except KeyError:
-                custom_7_y = 0
-
-            custom_7_data = {
-                'x' : x,
-                'y' : custom_7_y,
-            }
-            chart_data['custom_7'].append(custom_7_data)
-
-
-            # custom chart 8
-            try:
-                custom_8_y = i.data[custom_chart_8_key]
-            except KeyError:
-                custom_8_y = 0
-
-            custom_8_data = {
-                'x' : x,
-                'y' : custom_8_y,
-            }
-            chart_data['custom_8'].append(custom_8_data)
-
-
-            # custom chart 9
-            try:
-                custom_9_y = i.data[custom_chart_9_key]
-            except KeyError:
-                custom_9_y = 0
-
-            custom_9_data = {
-                'x' : x,
-                'y' : custom_9_y,
-            }
-            chart_data['custom_9'].append(custom_9_data)
+            for n, value in enumerate(custom_chart_values(i.data, custom_chart_keys), 1):
+                chart_data[f'custom_{n}'].append({'x': x, 'y': value})
 
 
         # build last image histogram
