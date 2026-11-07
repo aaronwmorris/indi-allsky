@@ -21,6 +21,7 @@ from multiprocessing import Process
 import queue
 
 from . import constants
+from .capture_health import CameraImageQueue, ExposureDeadline
 from . import camera as camera_module
 
 from .utils import IndiAllSkyDateCalcs
@@ -219,6 +220,7 @@ class CaptureWorker(Process):
         sensors_user_av,
         night_av,
         astro_av,
+        health,
     ):
 
         super(CaptureWorker, self).__init__()
@@ -229,6 +231,7 @@ class CaptureWorker(Process):
         self.error_q = error_q
         self.capture_q = capture_q
         self.image_q = image_q
+        self.health = health
         self.video_q = video_q
         self.upload_q = upload_q
 
@@ -284,6 +287,7 @@ class CaptureWorker(Process):
         self.sqm_tasks_time = now_time + min(300, self.sqm_tasks_offset)  # take SQM exposure 5 minutes (or less) after starting
 
         self.exposure_timeout = self.config.get('CCD_EXPOSURE_TIMEOUT', 330)
+        self.deadline = ExposureDeadline(self.exposure_timeout)
 
 
         if self.config['IMAGE_FOLDER']:
@@ -337,8 +341,15 @@ class CaptureWorker(Process):
         except Exception as e:
             tb = traceback.format_exc()
             self.error_q.put((str(e), tb))
-            raise e
-
+            raise
+        finally:
+            # Explicitly reap an external camera command before allowing a
+            # replacement capture worker to claim the camera.
+            if self.indiclient and hasattr(self.indiclient, 'closeCameraProcess'):
+                while not self.indiclient.closeCameraProcess():
+                    self.health.unreaped.value = 1
+                    time.sleep(5)
+                self.health.unreaped.value = 0
 
 
     def saferun(self):
@@ -359,17 +370,14 @@ class CaptureWorker(Process):
             self._pre_run_tasks()
 
 
-        next_frame_time = time.time()  # start immediately
-        frame_start_time = time.time()
+        next_frame_time = time.monotonic()  # start immediately
+        frame_start_time = time.monotonic()
         waiting_for_frame = False
         waiting_for_sqm_frame = False
 
-        camera_ready_time = time.time()
         camera_ready = False
-        exposure_aborted = False
-        last_camera_ready = False
         exposure_state = 'unset'
-        next_check_exposure_state = time.time() + self.exposure_timeout
+        self.health.capture_stage('idle')
 
         self.reconfigure_camera = True  # reconfigure on first run
 
@@ -387,7 +395,7 @@ class CaptureWorker(Process):
             loop_start_time = time.time()
 
 
-            logger.info('Camera last ready: %0.1fs', loop_start_time - camera_ready_time)
+            self.health.pulse.value = int(time.monotonic())
             logger.info('Exposure state: %s', exposure_state)
 
 
@@ -532,6 +540,11 @@ class CaptureWorker(Process):
 
 
                 if self.config.get('CAPTURE_PAUSE'):
+                    if self.deadline.until is not None:
+                        self.indiclient.abortCcdExposure()
+                        self.deadline.until = None
+                        waiting_for_frame = waiting_for_sqm_frame = False
+                    self.health.capture_stage('paused')
                     logger.warning('*** CAPTURE PAUSED ***')
 
                     now_time = time.time()
@@ -552,6 +565,11 @@ class CaptureWorker(Process):
                     continue
 
                 elif not self.night and not self.config.get('DAYTIME_CAPTURE'):
+                    if self.deadline.until is not None:
+                        self.indiclient.abortCcdExposure()
+                        self.deadline.until = None
+                        waiting_for_frame = waiting_for_sqm_frame = False
+                    self.health.capture_stage('daytime_disabled')
                     logger.info('Daytime capture disabled')
                     self.generate_timelapse_flag = False
 
@@ -573,59 +591,41 @@ class CaptureWorker(Process):
                     continue
 
 
-                # check exposure state every 5 minutes
-                if next_check_exposure_state < loop_start_time:
-                    next_check_exposure_state = time.time() + self.exposure_timeout
-
-                    camera_last_ready_s = int(loop_start_time - camera_ready_time)
-                    if camera_last_ready_s > self.exposure_timeout:
+                # Poll the driver independently of wall-clock/NTP changes.
+                loop_end = time.monotonic() + 11
+                while time.monotonic() < loop_end:
+                    time.sleep(0.05)
+                    now_time = time.time()  # astronomy and periodic jobs use civil time
+                    monotonic_now = time.monotonic()
+                    self.health.pulse.value = int(monotonic_now)
+                    camera_ready, exposure_state = self.indiclient.getCcdExposureStatus()
+                    action = self.deadline.poll(monotonic_now, camera_ready, self.health.frames.value,
+                                                failed=(exposure_state == 'ERROR'))
+                    if action == 'wait':
+                        continue
+                    if action == 'abort':
+                        self.health.capture_stage('aborting')
+                        self.health.last_failure.value = int(now_time)
+                        logger.error('Capture request failed: state=%s, raw frames since request=%d; aborting',
+                                     exposure_state, self.health.frames.value - self.deadline.initial_frames)
                         self._miscDb.addNotification(
-                            NotificationCategory.CAMERA,
-                            'last_ready',
-                            'Camera last ready {0:d}s ago. Camera might be hung. Aborting exposure.'.format(camera_last_ready_s),
+                            NotificationCategory.CAMERA, 'last_ready',
+                            'Exposure failed to produce a frame or return to READY. Aborting exposure.',
                             expire=timedelta(minutes=60),
                         )
-
                         self.indiclient.abortCcdExposure()
-                        exposure_aborted = True
-
-
-                # Loop to run for 11 seconds (prime number)
-                loop_end = time.time() + 11
-
-                while True:
-                    time.sleep(0.05)
-
-                    now_time = time.time()
-                    if now_time >= loop_end:
-                        break
-
-                    last_camera_ready = camera_ready
-
-
-                    if not exposure_aborted:
-                        camera_ready, exposure_state = self.indiclient.getCcdExposureStatus()
-                    else:
-                        # Aborted exposure, bypass next checks
-                        exposure_aborted = False  # reset
-                        camera_ready = True
-                        exposure_state = 'Aborted'
-                        waiting_for_frame = False
-                        waiting_for_sqm_frame = False
-
-
-                    if not camera_ready:
                         continue
-
-                    ###########################################
-                    # Camera is ready, not taking an exposure #
-                    ###########################################
-                    if not last_camera_ready:
-                        camera_ready_time = now_time
-
+                    if action == 'reconnect':
+                        logger.error('Exposure recovery failed; disconnecting and restarting the capture worker')
+                        self.indiclient.disconnectServer()
+                        return
+                    if action == 'retry':
+                        waiting_for_frame = waiting_for_sqm_frame = False
+                        next_frame_time = max(next_frame_time, monotonic_now + 5)
+                    self.health.capture_stage('idle')
 
                     if waiting_for_frame:
-                        frame_elapsed = now_time - frame_start_time
+                        frame_elapsed = monotonic_now - frame_start_time
                         frame_delta = frame_elapsed - self._expUtils.EXPOSURE_CURRENT
 
                         waiting_for_frame = False
@@ -691,28 +691,14 @@ class CaptureWorker(Process):
                             self.setTimeSystemd(new_time_utc)
                         except dbus.exceptions.DBusException as e:
                             logger.error('DBus Error: %s', str(e))
+                        break  # refresh civil timestamps after a clock correction
 
-                        # time change, need to update next frame time
-                        if self.night:
-                            next_frame_time = time.time() + self.config['EXPOSURE_PERIOD']
-                        else:
-                            next_frame_time = time.time() + self.config['EXPOSURE_PERIOD_DAY']
-
-                        break  # go ahead and break the loop to update other timestamps
-
-
-                    if now_time >= next_frame_time:
-                        #######################
-                        # Start next exposure #
-                        #######################
-
-                        total_elapsed = now_time - frame_start_time
-
-
+                    if monotonic_now >= next_frame_time:
+                        total_elapsed = monotonic_now - frame_start_time
                         self.capture_pre_hook()
 
 
-                        frame_start_time = now_time
+                        frame_start_time = time.monotonic()
 
 
                         if not self.sqm_camera_enable or self.focus_mode:
@@ -809,7 +795,7 @@ class CaptureWorker(Process):
                         if self.focus_mode:
                             # Start frame immediately in focus mode
                             logger.warning('*** FOCUS MODE ENABLED ***')
-                            next_frame_time = now_time + self.config.get('FOCUS_DELAY', 4.0) + self.add_period_delay
+                            next_frame_time = frame_start_time + self.config.get('FOCUS_DELAY', 4.0) + self.add_period_delay
                         elif waiting_for_sqm_frame:
                             # take next exposure as quickly as possible
                             next_frame_time = frame_start_time
@@ -832,7 +818,7 @@ class CaptureWorker(Process):
         # instantiate the client
         self.indiclient = camera_interface(
             self.config,
-            self.image_q,
+            CameraImageQueue(self.image_q, self.health),
             self.position_av,
             self.exposure_av,
             self.gain_av,
@@ -2285,6 +2271,12 @@ class CaptureWorker(Process):
         # sqm used for an image taking at a specific exposure/gain for a controlled SQM measurement
         logger.info('Taking %0.6fs exposure (gain %0.3f / bin %d)', exposure, gain, binning)
 
+        if not sync:
+            self.health.exposure_started.value = int(time.time())
+            self.health.capture_stage('exposing')
+            # Passive INDI observes another controller's acquisitions.
+            if self.config.get('CAMERA_INTERFACE') != 'indi_passive':
+                self.deadline.start(time.monotonic(), exposure, self.health.frames.value)
         self.indiclient.setCcdExposure(exposure, gain, binning, sync=sync, timeout=timeout, sqm_exposure=sqm_exposure)
 
 

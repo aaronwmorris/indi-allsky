@@ -6,6 +6,7 @@ import fcntl
 import os
 import shutil
 import time
+import json
 import io
 import re
 import psutil
@@ -28,6 +29,7 @@ from .version import __config_level__
 from .config import IndiAllSkyConfig
 
 from . import constants
+from .capture_health import CaptureHealth, RestartDelay
 
 from .exceptions import TimeOutException
 from .exceptions import ConfigSaveException
@@ -53,7 +55,7 @@ from .flask.models import IndiAllSkyDbTleDataTable
 
 from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.sql.expression import false as sa_false
 
 
@@ -241,6 +243,11 @@ class IndiAllSky(object):
         ])
 
 
+        self.capture_health = CaptureHealth()
+        self.pending_recovery = None
+        self.restart_delay = {role: RestartDelay() for role in ('capture', 'image')}
+        self.recovery_history = {role: [] for role in self.restart_delay}
+        self.health_write_time = 0
         self.capture_q = Queue()
         self.capture_error_q = Queue()
         self.capture_worker = None
@@ -460,6 +467,9 @@ class IndiAllSky(object):
                 pass
 
 
+        if not self.restart_delay['capture'].ready(self.capture_worker, time.monotonic(), self.capture_health.frames.value):
+            return
+        self.capture_health.capture_stage('starting')
         self.capture_worker_idx += 1
 
         logger.info('Starting Capture-%d worker', self.capture_worker_idx)
@@ -479,6 +489,7 @@ class IndiAllSky(object):
             self.sensors_user_av,
             self.night_av,
             self.astro_av,
+            self.capture_health,
         )
         self.capture_worker.start()
 
@@ -497,7 +508,8 @@ class IndiAllSky(object):
         logger.info('Stopping Capture worker')
 
         self.capture_q.put({'stop' : True})
-        self.capture_worker.join()
+        self._join_worker(self.capture_worker)
+        self.capture_worker = None
 
 
     def _startImageWorker(self):
@@ -515,6 +527,11 @@ class IndiAllSky(object):
                 pass
 
 
+        if not self.restart_delay['image'].ready(self.image_worker, time.monotonic(), self.capture_health.publications.value):
+            return
+        self.capture_health.misses.value = 0
+        self.capture_health.image_busy.value = 0
+        self.capture_health.image_pulse.value = int(time.monotonic())
         self.image_worker_idx += 1
 
         logger.info('Starting Image-%d worker', self.image_worker_idx)
@@ -532,6 +549,7 @@ class IndiAllSky(object):
             self.sensors_user_av,
             self.night_av,
             self.astro_av,
+            self.capture_health,
         )
         self.image_worker.start()
 
@@ -561,7 +579,77 @@ class IndiAllSky(object):
         logger.info('Stopping Image worker')
 
         self.image_q.put({'stop' : True})
-        self.image_worker.join()
+        self._join_worker(self.image_worker)
+        self.image_worker = None
+
+
+    def _exit_service(self, code):
+        # Killing a single worker mid-write can leave multiprocessing queues
+        # or shared locks unusable. Start a fresh service incarnation instead.
+        if os.environ.get('INDI_ALLSKY_SUPERVISED') != '1':
+            # Manual foreground runs have no systemd control group to reap.
+            children = psutil.Process().children(recursive=True)
+            for proc in children:
+                try:
+                    proc.terminate()
+                except psutil.NoSuchProcess:
+                    pass
+            _, remaining = psutil.wait_procs(children, timeout=5)
+            for proc in remaining:
+                try:
+                    proc.kill()
+                except psutil.NoSuchProcess:
+                    pass
+            psutil.wait_procs(remaining, timeout=5)
+        os._exit(code)
+
+
+    def _join_worker(self, worker):
+        # A planned stop/reload gets a full configured exposure to finish.
+        worker.join(timeout=max(60, self.config.get('CCD_EXPOSURE_TIMEOUT', 330) + 30))
+        if worker.is_alive():
+            logger.error('%s did not exit during stop/reload; ending the service', worker.name)
+            self._exit_service(0 if self._shutdown else 75)
+
+
+    def _check_capture_health(self):
+        now = time.monotonic()
+        stalled = self.capture_health.stalled(now, self.config.get('CCD_EXPOSURE_TIMEOUT', 330))
+        if self._shutdown or self._reload:
+            return
+        if self.pending_recovery:
+            role, pid, started = self.pending_recovery
+            worker = getattr(self, role + '_worker')
+            if not worker or not worker.is_alive() or worker.pid != pid:
+                self.pending_recovery = None
+            elif now - started >= 30:
+                logger.error('%s did not exit after TERM; ending service for clean recovery', worker.name)
+                self._exit_service(75)
+        recovery = None
+        if stalled and not self.pending_recovery:
+            history = self.recovery_history[stalled]
+            history[:] = [attempt for attempt in history if now - attempt < 3600]
+            worker = getattr(self, stalled + '_worker')
+            if len(history) >= 2:
+                recovery = stalled + '_backoff'
+            elif worker and worker.is_alive():
+                history.append(now)
+                logger.error('%s has made no progress; requesting graceful exit (pid %d)', worker.name, worker.pid)
+                self.capture_health.last_failure.value = int(time.time())
+                self.pending_recovery = (stalled, worker.pid, now)
+                self.health_write_time = 0
+                worker.terminate()
+
+        if now >= self.health_write_time:
+            self.health_write_time = now + 30
+            if self.pending_recovery:
+                recovery = self.pending_recovery[0]
+            with app.app_context():
+                try:
+                    self._miscDb.setState('CAPTURE_HEALTH', json.dumps(self.capture_health.status(recovery)))
+                except SQLAlchemyError as e:
+                    db.session.rollback()
+                    logger.error('Cannot publish capture health: %s', e)
 
 
     def _startVideoWorker(self):
@@ -811,6 +899,7 @@ class IndiAllSky(object):
             self._startVideoWorker()
             self._startSensorWorker()
             self._startFileUploadWorkers()
+            self._check_capture_health()
 
 
             # Queue externally defined tasks
