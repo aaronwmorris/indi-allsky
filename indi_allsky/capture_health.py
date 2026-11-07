@@ -9,6 +9,7 @@ class ExposureDeadline:
     def __init__(self, timeout):
         self.timeout = timeout
         self.until = None
+        self.previous_until = None
         self.aborting = False
         self.failures = 0
 
@@ -17,7 +18,22 @@ class ExposureDeadline:
         self.initial_frames = frames
         self.aborting = False
 
-    def poll(self, now, ready, frames, failed=False):
+    def poll(self, now, ready, frames, failed=False, *, stopping=False, unfinished=False):
+        if stopping:
+            if self.until is None:
+                return 'stop_abort' if unfinished and not ready else 'stop'
+            if ready and (self.aborting or frames != self.initial_frames):
+                return 'stop'
+            return 'stop_abort' if failed or now >= self.until else 'wait'
+        if unfinished:
+            # Only a BUSY state left by our own unsuccessful abort can be
+            # retried on reconnect. Leave unrelated exposures alone.
+            if ready:
+                self.previous_until = None
+                return 'ready'
+            if self.previous_until is None:
+                self.previous_until = now + self.timeout
+            return 'reconnect' if now >= self.previous_until else 'wait'
         if self.until is None:
             return 'ready' if ready else 'wait'
         if self.aborting:
@@ -46,7 +62,7 @@ class CaptureHealth:
         # Each field is an aligned, single-word observation. Do not take a
         # multiprocessing lock from a worker that may be blocked or dying.
         for name in ('stage', 'pulse', 'exposure_started', 'raw_received', 'frames', 'image_started',
-                     'image_busy', 'image_pulse', 'image_published', 'last_failure', 'unreaped',
+                     'image_busy', 'image_pulse', 'image_published', 'last_failure', 'unreaped', 'unfinished',
                      'misses', 'first_miss', 'last_miss', 'publications'):
             setattr(self, name, RawValue('I', 0))
 

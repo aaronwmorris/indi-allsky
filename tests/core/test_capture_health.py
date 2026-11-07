@@ -34,6 +34,27 @@ def test_abort_retry_then_reconnect_without_faking_ready():
     assert d.poll(197, False, 4) == 'reconnect'
 
 
+def test_planned_stop_drains_its_request_and_never_reports_failure():
+    d = ExposureDeadline(60)
+    assert d.poll(10, False, 4, stopping=True) == 'stop'
+    d.start(100, 10, 4)
+    assert d.poll(110, False, 4, stopping=True) == 'wait'
+    assert d.poll(120, True, 5, stopping=True) == 'stop'
+    assert d.poll(161, False, 4, stopping=True) == 'stop_abort'
+    assert not d.aborting and d.failures == 0
+
+
+def test_reconnect_only_times_a_previously_owned_busy_exposure():
+    d = ExposureDeadline(60)
+    assert d.poll(100, False, 4) == d.poll(1000, False, 4) == 'wait'
+    assert d.poll(1010, False, 4, unfinished=True) == 'wait'
+    assert d.poll(1069, False, 4, unfinished=True) == 'wait'
+    assert d.poll(1070, False, 4, unfinished=True) == 'reconnect'
+    assert d.poll(1071, False, 4, unfinished=True, stopping=True) == 'stop_abort'
+    assert d.poll(1072, True, 4, unfinished=True) == 'ready'
+    assert d.previous_until is None
+
+
 def test_queue_records_only_nonempty_capture_files(tmp_path):
     q, health = Queue(), CaptureHealth()
     proxy = CameraImageQueue(q, health)

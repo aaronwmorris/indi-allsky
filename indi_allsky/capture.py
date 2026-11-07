@@ -540,6 +540,7 @@ class CaptureWorker(Process):
 
 
                 if self.config.get('CAPTURE_PAUSE'):
+                    self.deadline.previous_until = None
                     if self.deadline.until is not None:
                         self.indiclient.abortCcdExposure()
                         self.deadline.until = None
@@ -565,6 +566,7 @@ class CaptureWorker(Process):
                     continue
 
                 elif not self.night and not self.config.get('DAYTIME_CAPTURE'):
+                    self.deadline.previous_until = None
                     if self.deadline.until is not None:
                         self.indiclient.abortCcdExposure()
                         self.deadline.until = None
@@ -600,7 +602,15 @@ class CaptureWorker(Process):
                     self.health.pulse.value = int(monotonic_now)
                     camera_ready, exposure_state = self.indiclient.getCcdExposureStatus()
                     action = self.deadline.poll(monotonic_now, camera_ready, self.health.frames.value,
-                                                failed=(exposure_state == 'ERROR'))
+                                                failed=(exposure_state == 'ERROR'), stopping=self._shutdown,
+                                                unfinished=bool(self.health.unfinished.value))
+                    if action in ('stop', 'stop_abort'):
+                        logger.info('Finishing planned capture shutdown')
+                        if action == 'stop_abort':
+                            self.indiclient.abortCcdExposure()
+                        self.indiclient.disableCcdCooler()
+                        self.indiclient.disconnectServer()
+                        return
                     if action == 'wait':
                         continue
                     if action == 'abort':
@@ -617,8 +627,12 @@ class CaptureWorker(Process):
                         continue
                     if action == 'reconnect':
                         logger.error('Exposure recovery failed; disconnecting and restarting the capture worker')
+                        if self.health.unfinished.value and not camera_ready:
+                            self.indiclient.abortCcdExposure()
+                        self.health.unfinished.value = int(not camera_ready)
                         self.indiclient.disconnectServer()
                         return
+                    self.health.unfinished.value = 0
                     if action == 'retry':
                         waiting_for_frame = waiting_for_sqm_frame = False
                         next_frame_time = max(next_frame_time, monotonic_now + 5)
@@ -656,18 +670,6 @@ class CaptureWorker(Process):
                     ##########################################################################
                     # Here we know the camera is not busy and we are not waiting for a frame #
                     ##########################################################################
-
-                    # shutdown here to ensure camera is not taking images
-                    if self._shutdown:
-                        logger.warning('Shutting down')
-
-                        self.indiclient.disableCcdCooler()  # safety
-
-                        self.indiclient.disconnectServer()
-
-                        logger.warning('Goodbye')
-                        return
-
 
                     # reconfigure if needed
                     if self.reconfigure_camera:
