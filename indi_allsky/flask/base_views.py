@@ -80,6 +80,7 @@ class BaseView(View):
 
         self.local_indi_allsky = self.camera.local
         self.sun_set_date = None
+        self.camera_is_night = True
         if include_sunset:
             self.getSunSetDate()
 
@@ -236,6 +237,7 @@ class BaseView(View):
 
         obs.horizon = math.radians(self.camera.nightSunAlt)
         sun.compute(obs)
+        self.camera_is_night = sun.alt <= obs.horizon
 
         try:
             self.sun_set_date = obs.next_setting(sun, use_center=True).datetime()

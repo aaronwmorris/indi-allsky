@@ -15,14 +15,12 @@
     let clock = null;
     let formats;
     let displayed = null;
-    let candidate = null;
     let imageMessage = '';
-    let offline = false;
-    let timer;
-    let request;
+    let imageServiceMessage = '';
+    let detailMessage = '';
+    let capturePaused = false;
     let lastPayload;
-    let nextDetails = 0;
-    const imageCheckMs = 2000;
+    const staleAfter = Number(page.dataset.staleMs) || 90000;
 
     try {
         const saved = JSON.parse(localStorage.getItem(storageKey));
@@ -83,13 +81,19 @@
         cell.replaceChildren(time);
     }
 
+    function imageIsLate() {
+        return displayed && clock && cameraNow() - displayed.timestamp > staleAfter;
+    }
+
     function updateStatus() {
         const lines = [];
-        if (offline) lines.push('Verbindung zur Kamera unterbrochen.');
-        else if (imageMessage) lines.push(imageMessage);
-        if (displayed && clock && (cameraNow() - displayed.timestamp) > 900000) {
-            lines.push('Letztes Bild älter als 15 Minuten.');
-        }
+        if (imageServiceMessage) lines.push(imageServiceMessage);
+        else if (frames.active && performance.now() - frames.active.startedAt > 800) {
+            lines.push('Neue Aufnahme vorhanden · Bild lädt');
+        } else if (imageMessage) lines.push(imageMessage);
+        else if (capturePaused) lines.push('Pi erreichbar · Aufnahme pausiert');
+        else if (imageIsLate()) lines.push('Pi erreichbar · keine neue Aufnahme');
+        if (detailMessage && !lines.includes(detailMessage)) lines.push(detailMessage);
         const message = byId('connection-message');
         const text = lines.join(' ');
         if (message.textContent !== text) message.textContent = text;
@@ -108,59 +112,49 @@
             const badge = byId('image-age');
             badge.textContent = 'vor ' + age.replace(/^1 Tagen$/, '1 Tag');
             badge.classList.toggle('new-frame', performance.now() < displayed.highlightUntil);
+            badge.title = imageIsLate() ? 'Zeit seit der letzten bekannten Aufnahme' : 'Aktuelle Aufnahme';
         }
         updateStatus();
     }
 
-    function updateImage(entry) {
-        if (!entry || !entry.url || !dateAndTime(entry.captured_at)) {
-            candidate = null;
-            imageMessage = 'Kein aktuelles Bild verfügbar.';
-            if (!displayed) byId('empty-image').textContent = 'Keine Aufnahme verfügbar';
-            updateStatus();
-            return;
-        }
-        const key = JSON.stringify([entry.url, entry.captured_at]);
-        if (displayed && displayed.key === key) {
-            candidate = null;
-            imageMessage = '';
-            return;
-        }
-        if (candidate && candidate.key === key) return;
-
-        const image = new Image();
-        candidate = {key, image};
+    const frames = new LiveFrameLoader((image, entry) => {
+        imageMessage = '';
+        image.id = 'capture-image';
         image.alt = 'Letzte Aufnahme der Allsky-Kamera';
-        image.onload = () => {
-            if (!candidate || candidate.image !== image) return;
-            candidate = null;
-            imageMessage = '';
-            image.id = 'capture-image';
-            byId('capture-image').replaceWith(image);
-            page.style.setProperty('--capture-aspect', image.naturalWidth / image.naturalHeight);
-            byId('empty-image').hidden = true;
-            const timestamp = Date.parse(entry.captured_at);
-            const advanced = displayed && timestamp > displayed.timestamp && cameraNow() - timestamp < 60000;
-            displayed = {key, timestamp, highlightUntil: advanced ? performance.now() + 3000 : 0};
-            const time = byId('image-time');
-            const formatted = dateAndTime(entry.captured_at);
-            const date = document.createElement('span');
-            date.textContent = formatted.date;
-            const hour = document.createElement('strong');
-            hour.textContent = formatted.time + ':' + formatted.seconds;
-            time.replaceChildren(hour, date);
-            time.dateTime = entry.captured_at;
-            document.querySelector('.caption-label').textContent = entry.time_source === 'file' ? 'Dateizeit' : 'Aufnahme';
-            tick();
-        };
-        image.onerror = () => {
-            if (!candidate || candidate.image !== image) return;
-            candidate = null;
-            imageMessage = 'Bild konnte nicht geladen werden.';
-            if (!displayed) byId('empty-image').textContent = 'Bild nicht verfügbar';
-            updateStatus();
-        };
-        image.src = entry.url;
+        byId('capture-image').replaceWith(image);
+        page.style.setProperty('--capture-aspect', image.naturalWidth / image.naturalHeight);
+        byId('empty-image').hidden = true;
+        const timestamp = Date.parse(entry.captured_at);
+        const advanced = displayed && timestamp > displayed.timestamp && cameraNow() - timestamp < 60000;
+        displayed = {timestamp, highlightUntil: advanced ? performance.now() + 3000 : 0};
+        const time = byId('image-time');
+        const formatted = dateAndTime(entry.captured_at);
+        const date = document.createElement('span');
+        date.textContent = formatted.date;
+        const hour = document.createElement('strong');
+        hour.textContent = formatted.time + ':' + formatted.seconds;
+        time.replaceChildren(hour, date);
+        time.dateTime = entry.captured_at;
+        document.querySelector('.caption-label').textContent = entry.time_source === 'file' ? 'Dateizeit' : 'Aufnahme';
+        tick();
+    }, issue => {
+        imageMessage = issue === 'timeout' ? 'Bildabruf dauert zu lange · neuer Versuch folgt' : 'Bild konnte nicht geladen werden · neuer Versuch folgt';
+        if (!displayed) byId('empty-image').textContent = 'Bild nicht verfügbar';
+        updateStatus();
+    });
+
+    function updateImage(entry) {
+        if (entry === null) {
+            frames.stop();
+            imageMessage = capturePaused ? 'Pi erreichbar · Aufnahme pausiert' : 'Pi erreichbar · keine neue Aufnahme';
+            if (!displayed) byId('empty-image').textContent = 'Keine Aufnahme verfügbar';
+            return;
+        }
+        if (!entry || typeof entry.url !== 'string' || !entry.url || !dateAndTime(entry.captured_at)
+            || !Number.isFinite(Date.parse(entry.captured_at))) throw new Error('Invalid image data');
+        const key = JSON.stringify([entry.url, entry.captured_at]);
+        if (frames.displayedKey === key) imageMessage = '';
+        frames.offer(key, entry.url, entry);
     }
 
     function updateSelects(metrics, defaults) {
@@ -250,17 +244,50 @@
         selects.forEach((select, slot) => drawChart(slot, payload.series.find(series => series.id === select.value)));
     }
 
-    function render(payload) {
+    function updateClock(payload) {
         const timestamp = Date.parse(payload.now);
         if (!Number.isFinite(timestamp)) throw new Error('Invalid server time');
         if (!formats || formats.zone !== payload.time_zone) formats = clockFormats(payload.time_zone);
         clock = {timestamp, syncedAt: performance.now(), offset: payload.offset_minutes || 0};
-        offline = false;
+    }
+
+    function serviceError(issue, code, details) {
+        if (issue === 'login') return 'Anmeldung erforderlich · bitte erneut anmelden';
+        if (issue === 'forbidden') return 'Zugriff auf die Kameradaten verweigert';
+        if (details) return 'Dämmerung, Mond und Verlauf konnten nicht aktualisiert werden.';
+        if (issue === 'network') return 'Verbindung zum Pi unterbrochen';
+        if (issue === 'timeout') return 'Der Pi antwortet zu langsam · neuer Versuch folgt';
+        if (issue === 'server') return 'Pi erreichbar · Bilddienst meldet HTTP ' + code;
+        return 'Pi erreichbar · unerwartete Antwort des Bilddienstes';
+    }
+
+    const imagePoll = new LiveJsonPoll(() => {
+        const url = new URL(page.dataset.endpoint, document.baseURI);
+        url.searchParams.set('image_only', '1');
+        return url;
+    }, 2000, payload => {
+        updateClock(payload);
+        capturePaused = payload.capture_paused === true;
         updateImage(payload.image);
-        if (!payload.astronomy) {
-            tick();
-            return;
+        imageServiceMessage = '';
+        tick();
+    }, (issue, code) => {
+        imageServiceMessage = serviceError(issue, code, false);
+        if (!displayed) byId('empty-image').textContent = 'Bild nicht verfügbar';
+        updateStatus();
+    });
+
+    const detailPoll = new LiveJsonPoll(() => {
+        const url = new URL(page.dataset.endpoint, document.baseURI);
+        if (choices) {
+            const active = choices.filter(Boolean);
+            for (const id of active.length ? active : ['none']) url.searchParams.append('metric', id);
         }
+        return url;
+    }, interval, payload => {
+        if (!payload?.astronomy || !Array.isArray(payload.metrics) || !Array.isArray(payload.series)
+            || !Array.isArray(payload.defaults)) throw new Error('Invalid detail data');
+        if (!clock) updateClock(payload);
         const astronomy = payload.astronomy;
         for (const id of eventNames) showEvent(id, astronomy[id]);
         const phase = [astronomy.moon_phase];
@@ -268,63 +295,25 @@
         byId('moon-phase').textContent = phase.filter(Boolean).join(' · ') || '–';
         showHistory(payload);
         lastPayload = payload;
+        detailMessage = '';
         tick();
-    }
-
-    async function refresh(forceDetails = false) {
-        clearTimeout(timer);
-        if (document.hidden) return;
-        if (request) request.abort();
-        const controller = new AbortController();
-        request = controller;
-        const deadline = setTimeout(() => controller.abort(), 16000);
-        const url = new URL(page.dataset.endpoint, document.baseURI);
-        const full = forceDetails || performance.now() >= nextDetails;
-        if (!full) url.searchParams.set('image_only', '1');
-        else if (choices) {
-            const active = choices.filter(Boolean);
-            for (const id of active.length ? active : ['none']) url.searchParams.append('metric', id);
-        }
-        try {
-            const result = await fetch(url, {cache: 'no-store', credentials: 'same-origin', signal: controller.signal});
-            if (!result.ok) throw new Error('HTTP ' + result.status);
-            const payload = await result.json();
-            if (request === controller) {
-                render(payload);
-                if (full) nextDetails = performance.now() + interval;
-            }
-        } catch (_) {
-            if (request === controller) {
-                offline = true;
-                if (!displayed) byId('empty-image').textContent = 'Bild nicht verfügbar';
-                updateStatus();
-            }
-        } finally {
-            clearTimeout(deadline);
-            if (request === controller) {
-                request = null;
-                if (!document.hidden) timer = setTimeout(refresh, offline ? Math.max(5000, imageCheckMs) : imageCheckMs);
-            }
-        }
-    }
+    }, (issue, code) => {
+        detailMessage = serviceError(issue, code, true);
+        updateStatus();
+    });
 
     for (const select of selects) {
         select.addEventListener('change', () => {
             choices = selects.map(control => control.value);
             try { localStorage.setItem(storageKey, JSON.stringify(choices)); } catch (_) {}
             if (lastPayload) showHistory(lastPayload);
-            nextDetails = 0;
-            refresh(true);
+            detailPoll.refresh();
         });
     }
     window.addEventListener('storage', event => {
         if (lastPayload && event.key?.startsWith('allsky-')) showHistory(lastPayload);
     });
-    window.addEventListener('online', () => refresh(true));
-    document.addEventListener('visibilitychange', () => {
-        clearTimeout(timer);
-        if (!document.hidden) refresh(true);
-    });
     window.setInterval(tick, 1000);
-    refresh();
+    followLivePage([imagePoll, detailPoll], frames);
+
 })();

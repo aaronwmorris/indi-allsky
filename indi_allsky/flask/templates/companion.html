@@ -20,10 +20,11 @@
     <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='css/dist.css') }}">
     <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='css/companion.css') }}?v=3">
     <script defer src="{{ url_for('indi_allsky.static', filename='js/chart.umd.js') }}"></script>
-    <script defer src="{{ url_for('indi_allsky.static', filename='js/companion.js') }}?v=4"></script>
+    <script defer src="{{ url_for('indi_allsky.static', filename='js/live_frames.js') }}?v=1"></script>
+    <script defer src="{{ url_for('indi_allsky.static', filename='js/companion.js') }}?v=5"></script>
 </head>
 <body class="tw:font-sans">
-<main class="companion" id="companion" data-camera-id="{{ camera_id }}" data-refresh-ms="{{ refresh_ms }}"
+<main class="companion" id="companion" data-camera-id="{{ camera_id }}" data-refresh-ms="{{ refresh_ms }}" data-stale-ms="{{ stale_ms }}"
       data-endpoint="{{ url_for('indi_allsky.js_companion_view', camera_id=camera_id) }}">
     <div class="overview">
         <header class="masthead">

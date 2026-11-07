@@ -8,7 +8,6 @@ from ..companion_astronomy import camera_timezone, night_ephemeris
 from .base_views import BaseView
 from .companion_charts import companion_charts
 from .misc import login_optional_media
-from .models import IndiAllSkyDbCameraTable
 
 
 class CompanionView(BaseView):
@@ -25,10 +24,13 @@ class CompanionView(BaseView):
                 camera_id = -1
 
         period = float(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15))
+        cadence = max(period, float(self.indi_allsky_config.get('EXPOSURE_PERIOD') or 0),
+                      float(self.indi_allsky_config.get('EXPOSURE_PERIOD_DAY') or 0))
         return render_template(
             'companion.html',
             camera_id=camera_id,
             refresh_ms=int(min(30, max(5, period + 1)) * 1000),
+            stale_ms=int(max(90, 2 * cadence + 15) * 1000),
         )
 
 
@@ -47,6 +49,7 @@ def companion_status(view):
         'now': now.isoformat(),
         'time_zone': getattr(zone, 'key', None),
         'offset_minutes': int(now.utcoffset().total_seconds() / 60),
+        'capture_paused': bool(view.camera.capture_pause),
         'image': latest_companion_image(view, now),
     }
     # The browser can discover a published frame promptly without recomputing
@@ -84,15 +87,7 @@ def latest_companion_image(view, now):
     # Focus mode and unsaved daytime frames can exist only as latest.<ext>.
     # It is one local file for the active device, never a remote-camera asset.
     uses_live_file = view.indi_allsky_config.get('FOCUS_MODE') or (view.daytime_capture and not view.daytime_capture_save)
-    if not uses_live_file or not view.local_indi_allsky:
-        return image
-    if not view.local_images_allowed:
-        return image
-
-    active_camera = IndiAllSkyDbCameraTable.query.filter_by(local=True).order_by(
-        IndiAllSkyDbCameraTable.connectDate.desc(), IndiAllSkyDbCameraTable.id.desc(),
-    ).first()
-    if not active_camera or active_camera.id != view.camera.id:
+    if not uses_live_file or not view.live_file_allowed:
         return image
 
     filename = 'latest.' + view.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg')
