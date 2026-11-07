@@ -71,9 +71,10 @@
         const time = document.createElement('time');
         time.className = 'event-time';
         time.dateTime = iso;
+        time.title = formatted.date + ' · ' + formatted.time;
         const date = document.createElement('span');
         date.className = 'event-date';
-        date.textContent = formatted.date;
+        date.textContent = formatted.date.slice(0, 6); // Day and month; the full date is in the tooltip.
         const hour = document.createElement('strong');
         hour.textContent = formatted.time;
         time.append(hour, date);
@@ -132,6 +133,7 @@
             imageMessage = '';
             image.id = 'capture-image';
             byId('capture-image').replaceWith(image);
+            page.style.setProperty('--capture-aspect', image.naturalWidth / image.naturalHeight);
             byId('empty-image').hidden = true;
             displayed = { key, timestamp: Date.parse(entry.captured_at) };
             const time = byId('image-time');
@@ -212,11 +214,12 @@
             scales: {
                 x: { type: 'linear', min: now - 7200000, max: now, grid: {display: false},
                     afterBuildTicks: axis => {
-                        axis.ticks = [axis.min, axis.min + 3600000, axis.max].map(value => ({value}));
+                        const ticks = axis.chart.width < 185 ? [axis.min, axis.max] : [axis.min, axis.min + 3600000, axis.max];
+                        axis.ticks = ticks.map(value => ({value}));
                     },
                     ticks: { color: ink, font: {size: fontSize}, align: 'inner', autoSkip: false,
                         maxRotation: 0, callback: value => localTime(value) } },
-                y: { ticks: { color: ink, font: {size: fontSize}, maxTicksLimit: 4, callback: value => formatReading(value) },
+                y: { ticks: { color: ink, font: {size: fontSize}, maxTicksLimit: 3, callback: value => formatReading(value) },
                     grid: {color: style.getPropertyValue('--line').trim()},
                     title: {display: false} },
             },
