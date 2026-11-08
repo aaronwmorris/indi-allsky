@@ -205,7 +205,8 @@ class VideoWorker(Process):
                 next_movie_check = time.monotonic() + 3600
                 with app.app_context():
                     try:
-                        night_movie.reconcile(self)
+                        if night_movie.reconcile(self):
+                            next_movie_check = time.monotonic() + 60
                     except Exception:
                         db.session.rollback()
                         logger.exception('Unable to check recent night timelapses')
@@ -759,7 +760,7 @@ class VideoWorker(Process):
             with night_movie.staged_movie(video_file, tg.ffmpeg_bin) as stage:
                 tg.generate(stage, timelapse_files)
 
-            if repair and not night_movie.lock_repair(camera.id, d_dayDate, kwargs.get('repair_token')):
+            if repair and not night_movie.lock_repair(camera.id, d_dayDate, kwargs.get('repair_token'), night=night):
                 db.session.rollback()
                 video_file.unlink(missing_ok=True)
                 task.setExpired()
@@ -1251,6 +1252,7 @@ class VideoWorker(Process):
             mini_tg = TimelapseGenerator(
                 self.config,
                 skip_frames=0,
+                panorama=panorama,
             )
 
             mini_tg.codec = codec
@@ -1372,40 +1374,22 @@ class VideoWorker(Process):
         )
 
 
-        try:
-            # delete old video entry if it exists
-            old_panorama_video_entry = IndiAllSkyDbPanoramaVideoTable.query\
-                .join(IndiAllSkyDbPanoramaVideoTable.camera)\
-                .filter(
-                    and_(
-                        IndiAllSkyDbCameraTable.id == camera.id,
-                        IndiAllSkyDbPanoramaVideoTable.dayDate == d_dayDate,
-                        IndiAllSkyDbPanoramaVideoTable.night == night,
-                    )
-                )\
-                .one()
-
-
-            if not self.config.get('TIMELAPSE_OVERWRITE'):
-                logger.error('Panorama Timelapse already exists, overwrite not permitted')
-                task.setFailed('Panorama Timelapse already exists, overwrite not permitted')
+        matches = IndiAllSkyDbPanoramaVideoTable.query.filter_by(camera_id=camera.id, dayDate=d_dayDate, night=night).all()
+        if len(matches) > 1:
+            task.setFailed('Multiple panorama timelapses exist for this camera and period; review before replacing.')
+            return
+        previous = matches[0] if matches else None
+        repair = kwargs.get('repair', False)
+        if previous:
+            if repair:
+                if previous.remote_url or previous.s3_key or night_movie.panorama_playable(Path(previous.getFilesystemPath())):
+                    task.setSuccess('Existing panorama timelapse preserved')
+                    return
+            elif not self.config.get('TIMELAPSE_OVERWRITE'):
+                task.setFailed('Panorama timelapse already exists, overwrite not permitted')
                 return
-
-
-            logger.warning('Removing old panorama video db entry')
-
-            old_panorama_video_entry.deleteAsset()
-
-            db.session.delete(old_panorama_video_entry)
-            db.session.commit()
-        except NoResultFound:
-            pass
-
-
-        if video_file.exists():
-            logger.warning('Removing orphaned panorama video file: %s', video_file)
-            video_file.unlink()
-
+        if video_file.exists() or (previous and Path(previous.getFilesystemPath()) == video_file):
+            video_file = video_file.with_name(video_file.stem.rsplit('_', 1)[0] + '_' + str(time.time_ns()) + video_file.suffix)
 
         # find all files
         timelapse_files_entries = IndiAllSkyDbPanoramaImageTable.query\
@@ -1414,7 +1398,7 @@ class VideoWorker(Process):
             .filter(IndiAllSkyDbPanoramaImageTable.dayDate == d_dayDate)\
             .filter(IndiAllSkyDbPanoramaImageTable.night == night)\
             .filter(IndiAllSkyDbPanoramaImageTable.exclude == sa_false())\
-            .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc())
+            .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc(), IndiAllSkyDbPanoramaImageTable.id.asc())
 
 
         timelapse_files_entries_count = timelapse_files_entries.count()
@@ -1482,6 +1466,24 @@ class VideoWorker(Process):
 
 
         timelapse_skip_frames = self.config.get('TIMELAPSE_SKIP_FRAMES', 4)
+        if repair:
+            timelapse_files = list(night_movie.readable_images(timelapse_files))
+        if len(timelapse_files) <= timelapse_skip_frames:
+            task.setFailed('Panorama {} {}: insufficient readable source images ({} usable, {} skipped).'.format(
+                timeofday, timespec, len(timelapse_files), timelapse_skip_frames))
+            return
+
+        expected_frames = len(timelapse_files) - timelapse_skip_frames
+        if repair and previous:
+            old_path = Path(previous.getFilesystemPath())
+            if night_movie.playable(old_path):
+                old_frames = night_movie.panorama_frames(old_path)
+                if old_frames is None and previous.frames and previous.frames > 0:
+                    old_frames = previous.frames
+                if not old_frames or expected_frames < old_frames:
+                    task.setFailed('Existing panorama retained: {} source frames available after skipping; '
+                                   'previous movie contains {} frames.'.format(expected_frames, old_frames or 'unknown'))
+                    return
 
         video_metadata = {
             'type'          : constants.PANORAMA_VIDEO,
@@ -1490,7 +1492,7 @@ class VideoWorker(Process):
             'dayDate'       : d_dayDate.strftime('%Y%m%d'),
             'night'         : night,
             'framerate'     : self.config['FFMPEG_FRAMERATE'],
-            'frames'        : timelapse_files_entries_count - timelapse_skip_frames,
+            'frames'        : expected_frames,
             'camera_uuid'   : camera.uuid,
         }
 
@@ -1503,14 +1505,6 @@ class VideoWorker(Process):
             'max_moonphase'     : max_moonphase,
             'avg_sqm'           : avg_sqm,
         }
-
-
-        # Create DB entry before creating file
-        video_entry = self._miscDb.addPanoramaVideo(
-            video_file.relative_to(self.image_dir),
-            camera.id,
-            video_metadata,
-        )
 
 
         if self.config.get('TIMELAPSE', {}).get('USE_NIGHT_CONFIG', True):
@@ -1532,42 +1526,45 @@ class VideoWorker(Process):
             panorama_tg = TimelapseGenerator(
                 self.config,
                 skip_frames=timelapse_skip_frames,
+                panorama=True,
             )
 
             panorama_tg.codec = codec
             panorama_tg.framerate = framerate
             panorama_tg.bitrate = bitrate
-            #panorama_tg.vf_scale = vf_scale  # no vfscale for panorama timelapse
             panorama_tg.ffmpeg_extra_options = ffmpeg_extra_options
 
-            panorama_tg.generate(video_file, timelapse_files)
-
-
+            with night_movie.staged_movie(video_file, panorama_tg.ffmpeg_bin, panorama_frames=expected_frames) as stage:
+                panorama_tg.generate(stage, timelapse_files, preserve_order=True)
+            if repair and not night_movie.lock_repair(camera.id, d_dayDate, kwargs.get('repair_token'), night, True):
+                db.session.rollback()
+                video_file.unlink(missing_ok=True)
+                task.setExpired()
+                return
+            video_metadata.update(fileSize=video_file.stat().st_size, framerate=framerate, success=True)
+            previous_path = Path(previous.getFilesystemPath()) if previous else None
             try:
-                fileSize = video_file.stat().st_size
-            except FileNotFoundError:
-                fileSize = None
-
-
-            video_entry.fileSize = fileSize
-            video_metadata['fileSize'] = fileSize
-
-
-            video_entry.success = True
-            db.session.commit()
-        except TimelapseException:
-            self._miscDb.addNotification(
-                NotificationCategory.MEDIA,
-                'timelapse_video',
-                'Timelapse panorama video failed to generate',
-                expire=timedelta(hours=12),
-            )
-
-            task.setFailed('Failed to generate timelapse: {0:s}'.format(str(video_file)))
+                video_entry = self._miscDb.addPanoramaVideo(video_file.relative_to(self.image_dir),
+                    camera.id, video_metadata, replace=previous)
+            except Exception:
+                db.session.rollback()
+                raise
+            if previous_path and previous_path != video_file:
+                try:
+                    previous_path.unlink(missing_ok=True)
+                except OSError:
+                    logger.warning('Could not remove replaced panorama movie %s', previous_path)
+        except (TimelapseException, OSError) as exc:
+            logger.error('Panorama encoding failed: %s', exc)
+            if space_failure(self.config, exc):
+                task.setFailed(DEFERRED)
+                return
+            self._miscDb.addNotification(NotificationCategory.MEDIA, 'timelapse_video',
+                                         'Panorama timelapse failed to generate', expire=timedelta(hours=12))
+            task.setFailed(('Panorama {} {}: {}'.format(timeofday, timespec, exc))[:255])
             return
 
-
-        task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
+        task.setSuccess('Generated panorama timelapse: {}'.format(video_file))
 
         ### Upload ###
         self._miscUpload.syncapi_panorama_video(video_entry, video_metadata)  # syncapi before S3

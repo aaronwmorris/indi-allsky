@@ -501,6 +501,14 @@ class miscDb(object):
 
 
     def addVideo(self, filename, camera_id, metadata, replace=None):
+        return self._addVideo(IndiAllSkyDbVideoTable, filename, camera_id, metadata, replace)
+
+
+    def addPanoramaVideo(self, filename, camera_id, metadata, replace=None):
+        return self._addVideo(IndiAllSkyDbPanoramaVideoTable, filename, camera_id, metadata, replace)
+
+
+    def _addVideo(self, model, filename, camera_id, metadata, replace):
 
         ### expected metadata
         #{
@@ -541,9 +549,6 @@ class miscDb(object):
             fileSize=metadata.get('fileSize'),
             success=metadata.get('success', False),  # original default was true
             dayDate=dayDate,
-            dayDate_year=dayDate.year,
-            dayDate_month=dayDate.month,
-            dayDate_day=dayDate.day,
             night=metadata['night'],
             framerate=float(metadata.get('framerate', 0.0)),
             frames=metadata.get('frames', 0),
@@ -555,8 +560,10 @@ class miscDb(object):
             thumbnail_uuid=metadata.get('thumbnail_uuid'),
         )
 
+        if model is IndiAllSkyDbVideoTable:
+            fields.update(dayDate_year=dayDate.year, dayDate_month=dayDate.month, dayDate_day=dayDate.day)
         if replace is None:
-            video = IndiAllSkyDbVideoTable(**fields)
+            video = model(**fields)
             db.session.add(video)
         else:
             # Keep the public watch URL (database ID) when repairing a movie.
@@ -653,63 +660,6 @@ class miscDb(object):
         db.session.commit()
 
         return mini_video
-
-
-    def addPanoramaVideo(self, filename, camera_id, metadata):
-
-        ### expected metadata
-        #{
-        #    'createDate'  # datetime or timestamp
-        #    'dayDate'  # date or string
-        #    'night'
-        #    'framerate'
-        #    'frames'
-        #    'data'
-        #}
-
-
-        if not filename:
-            return
-
-        filename_p = Path(filename)
-
-
-        logger.info('Adding video %s to DB', filename_p)
-
-        if isinstance(metadata['createDate'], (int, float)):
-            createDate = datetime.fromtimestamp(metadata['createDate'])
-        else:
-            createDate = metadata['createDate']
-
-
-        if isinstance(metadata['dayDate'], str):
-            dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
-        else:
-            dayDate = metadata['dayDate']
-
-
-
-        panorama_video = IndiAllSkyDbPanoramaVideoTable(
-            createDate=createDate,
-            camera_id=camera_id,
-            filename=str(filename_p),
-            success=metadata.get('success', False),  # original default was true
-            dayDate=dayDate,
-            night=metadata['night'],
-            framerate=float(metadata.get('framerate', 0.0)),
-            frames=metadata.get('frames', 0),
-            height=metadata.get('height'),  # optional
-            width=metadata.get('width'),  # optional
-            data=metadata.get('data', {}),
-            remote_url=metadata.get('remote_url'),
-            s3_key=metadata.get('s3_key'),
-            thumbnail_uuid=metadata.get('thumbnail_uuid'),
-        )
-
-        db.session.add(panorama_video)
-        db.session.commit()
-
-        return panorama_video
 
 
     def addKeogram(self, filename, camera_id, metadata):
