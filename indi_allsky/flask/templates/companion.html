@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en" data-theme="forest">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Astrophotography Companion · indi-allsky</title>
+    <link rel="icon" href="{{ url_for('indi_allsky.static', filename='images/favicon_32.png') }}">
+    <script>
+        function applyCompanionTheme() {
+            try {
+                const light = localStorage.getItem('allsky-theme-mode') === 'light';
+                const theme = localStorage.getItem(light ? 'allsky-light-theme' : 'allsky-dark-theme');
+                document.documentElement.dataset.theme = theme || (light ? 'fantasy' : 'forest');
+                document.documentElement.style.fontSize = localStorage.getItem('allsky-font-size') || '100%';
+            } catch (_) { /* The default theme also works without browser storage. */ }
+        }
+        applyCompanionTheme();
+        window.addEventListener('storage', applyCompanionTheme);
+    </script>
+    <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='css/dist.css') }}">
+    <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='css/companion.css') }}?v=3">
+    <script defer src="{{ url_for('indi_allsky.static', filename='js/chart.umd.js') }}"></script>
+    <script defer src="{{ url_for('indi_allsky.static', filename='js/live_frames.js') }}?v=1"></script>
+    <script defer src="{{ url_for('indi_allsky.static', filename='js/companion.js') }}?v=7"></script>
+</head>
+<body class="tw:font-sans">
+<main class="companion" id="companion" data-camera-id="{{ camera_id }}" data-refresh-ms="{{ refresh_ms }}" data-stale-ms="{{ stale_ms }}"
+      data-endpoint="{{ url_for('indi_allsky.js_companion_view', camera_id=camera_id) }}">
+    <div class="overview">
+        <header class="masthead">
+            <div>
+                <h1>Astrophotography Companion</h1>
+            </div>
+            <div class="clock">
+                <time id="clock">–</time>
+                <span>Camera local time</span>
+            </div>
+        </header>
+
+        <figure class="capture">
+            <div class="image-area">
+                <img id="capture-image" alt="Latest all-sky image" hidden>
+                <p id="empty-image">Loading image…</p>
+            </div>
+            <figcaption>
+                <div><span class="caption-label">Captured</span><time id="image-time">–</time></div>
+                <span id="image-age" class="age" title="Time since capture, including image processing"></span>
+            </figcaption>
+        </figure>
+    </div>
+    <div class="readings">
+        <div class="readings-grid">
+            <p id="connection-message" class="notice" role="status" hidden></p>
+
+            <section class="surface history" aria-labelledby="history-title">
+                <div class="section-heading"><h2 id="history-title">History</h2><span>Last 2 hours</span></div>
+                <div class="chart-slot" id="chart-slot-1">
+                    <label for="series-1">Chart 1</label>
+                    <select id="series-1"><option value="">Off</option></select>
+                    <output class="chart-value" hidden></output>
+                    <div class="plot" hidden><canvas aria-label="History for the first metric" role="img"></canvas></div>
+                    <p class="plot-empty" hidden>No readings in this period.</p>
+                </div>
+                <div class="chart-slot" id="chart-slot-2">
+                    <label for="series-2">Chart 2</label>
+                    <select id="series-2"><option value="">Off</option></select>
+                    <output class="chart-value" hidden></output>
+                    <div class="plot" hidden><canvas aria-label="History for the second metric" role="img"></canvas></div>
+                    <p class="plot-empty" hidden>No readings in this period.</p>
+                </div>
+            </section>
+            <section class="surface twilight" aria-labelledby="conditions-title">
+                <h2 id="conditions-title">Astronomical twilight</h2>
+                <div class="events-wrap">
+                    <table class="events">
+                        <thead><tr><th scope="col">Period</th><th scope="col">Start</th><th scope="col">End</th></tr></thead>
+                        <tbody>
+                            <tr><th scope="row">Evening</th><td id="evening_start">–</td><td id="evening_end">–</td></tr>
+                            <tr><th scope="row">Morning</th><td id="morning_start">–</td><td id="morning_end">–</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            <section class="surface moon" aria-labelledby="moon-title">
+                <div class="section-heading"><h2 id="moon-title">Moon</h2><span id="moon-phase">–</span></div>
+                <dl class="moon-events">
+                    <div><dt>Moonrise</dt><dd id="moon_rise">–</dd></div>
+                    <div><dt>Moonset</dt><dd id="moon_set">–</dd></div>
+                </dl>
+            </section>
+        </div>
+    </div>
+    <noscript>Enable JavaScript to view the camera image and sensor readings.</noscript>
+</main>
+</body>
+</html>

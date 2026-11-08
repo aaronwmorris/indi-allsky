@@ -7,7 +7,7 @@ import tempfile
 import json
 import hashlib
 from collections import OrderedDict
-from functools import wraps
+from functools import cached_property, wraps
 import time
 import math
 import base64
@@ -127,6 +127,7 @@ from .forms import IndiAllskyConfigRestoreForm
 from .forms import IndiAllskyIndiServerChangeForm
 from .forms import IndiAllskyAsi676mcCalibrationForm
 
+from .companion import CompanionView, companion_status
 from .base_views import BaseView
 from .base_views import TemplateView
 from .base_views import FormView
@@ -312,7 +313,7 @@ class JsonLatestImageView(JsonView):
     def get_objects(self):
         camera_id = int(request.args['camera_id'])
         history_seconds = int(request.args.get('limit_s', self.history_seconds))
-        night = bool(int(request.args.get('night', 1)))
+        requested_night = request.args.get('night', '1')
 
         # sanity check
         if history_seconds > 86400:
@@ -320,6 +321,7 @@ class JsonLatestImageView(JsonView):
 
 
         self.cameraSetup(camera_id=camera_id)
+        night = self.camera_is_night if requested_night == 'auto' else bool(int(requested_night))
 
 
         no_image_message = 'No Image for 15 minutes'
@@ -339,24 +341,10 @@ class JsonLatestImageView(JsonView):
         }
 
 
-        if self.indi_allsky_config.get('FOCUS_MODE', False):
-            latest_image_uri = Path('images/latest.{0}'.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg')))
-
-            image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
-            latest_image_p = image_dir.joinpath(latest_image_uri.name)
-
-            if latest_image_p.exists():
-                # use latest image if it exists
-                max_age = self.camera_now - timedelta(seconds=history_seconds)
-                if latest_image_p.stat().st_mtime > max_age.timestamp():
-
-                    data['latest_image']['url'] = '{0:s}?{1:d}'.format(str(latest_image_uri), int(datetime.timestamp(self.camera_now)))
-                    data['latest_image']['message'] = ''
-                    return data
-                else:
-                    return data
-            else:
-                return data
+        if self.indi_allsky_config.get('FOCUS_MODE', False) and self.local_indi_allsky:
+            if self.live_file_allowed:
+                self.setLiveFile(data['latest_image'], history_seconds)
+            return data
 
 
         if self.capture_pause:
@@ -383,38 +371,16 @@ class JsonLatestImageView(JsonView):
                     data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="tw:text-warning">Night starts in {0:0.1f} hours.</div>'.format(delta_sun_set.total_seconds() / 3600)
                 else:
                     data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="tw:text-warning">Sun never sets.</div>'
+                return data
 
             elif self.daytime_capture and not self.daytime_capture_save:
-                if self.web_nonlocal_images:
-                    if not self.verify_admin_network():
-                        # only show locally hosted assets if coming from admin networks
-                        return data
-
-                # images are not stored in the DB in this condition
-                latest_image_uri = Path(self.latest_image_t.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg')))
-
-                image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
-                latest_image_p = image_dir.joinpath(latest_image_uri.name)
-
-
-                if not latest_image_p.exists():
-                    return data
-
-
-                # use latest image if it exists
-                data['latest_image']['url'] = '{0:s}?{1:d}'.format(str(latest_image_uri), int(time.time()))
-
-                max_age = self.camera_now - timedelta(seconds=history_seconds)
-                if latest_image_p.stat().st_mtime > max_age.timestamp():
-                    data['latest_image']['message'] = ''
-                else:
-                    data['latest_image']['message'] = 'Image is out of date'
-
+                if self.live_file_allowed:
+                    self.setLiveFile(data['latest_image'], history_seconds, allow_stale=True)
                 return data
 
 
         # use database
-        latest_image_data = self.getLatestImage(camera_id, history_seconds)
+        latest_image_data = self.getLatestImage(camera_id, history_seconds, not_after=self.camera_now)
         if latest_image_data.get('url'):
             data['latest_image']['url'] = latest_image_data['url']
             data['latest_image']['width'] = latest_image_data['width']
@@ -425,38 +391,53 @@ class JsonLatestImageView(JsonView):
         return data
 
 
-    def getLatestImage(self, camera_id, history_seconds):
-        camera_now_minus_seconds = self.camera_now - timedelta(seconds=history_seconds)
+    @cached_property
+    def local_images_allowed(self):
+        return not self.web_nonlocal_images or (
+            self.web_local_images_admin and self.verify_admin_network()
+        )
 
+    @cached_property
+    def live_file_allowed(self):
+        if not self.local_indi_allsky or not self.local_images_allowed:
+            return False
+        active = IndiAllSkyDbCameraTable.query.filter_by(local=True).order_by(
+            IndiAllSkyDbCameraTable.connectDate.desc(), IndiAllSkyDbCameraTable.id.desc(),
+        ).first()
+        return active is not None and active.id == self.camera.id
+
+    def setLiveFile(self, entry, history_seconds, allow_stale=False):
+        uri = Path(self.latest_image_t.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg')))
+        try:
+            stamp = (Path(self.indi_allsky_config['IMAGE_FOLDER']) / uri.name).stat()
+        except OSError:
+            return
+        stale = stamp.st_mtime <= (self.camera_now - timedelta(seconds=history_seconds)).timestamp()
+        if stamp.st_mtime > self.camera_now.timestamp() or (stale and not allow_stale):
+            return
+        entry['url'] = '{0}?v={1}'.format(uri, stamp.st_mtime_ns)
+        entry['message'] = 'Image is out of date' if stale else ''
+
+
+    def getLatestImage(self, camera_id, history_seconds, not_after=None):
         latest_image_q = self.model.query\
             .join(self.model.camera)\
-            .filter(
-                and_(
-                    IndiAllSkyDbCameraTable.id == camera_id,
-                    self.model.createDate > camera_now_minus_seconds,
-                )
-            )
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)
+        if history_seconds is not None:
+            latest_image_q = latest_image_q.filter(self.model.createDate > self.camera_now - timedelta(seconds=history_seconds))
+        if not_after is not None:
+            latest_image_q = latest_image_q.filter(self.model.createDate <= not_after)
 
 
-        local = True  # default to local assets
-        if self.web_nonlocal_images:
-            if self.web_local_images_admin and self.verify_admin_network():
-                pass
-            else:
-                local = False
-
-                # Do not serve local assets
-                latest_image_q = latest_image_q\
-                    .filter(
-                        or_(
-                            self.model.remote_url != sa_null(),
-                            self.model.s3_key != sa_null(),
-                        )
-                    )
+        if not self.local_images_allowed:
+            latest_image_q = latest_image_q.filter(or_(
+                self.model.remote_url != sa_null(),
+                self.model.s3_key != sa_null(),
+            ))
 
 
         latest_image = latest_image_q\
-            .order_by(self.model.createDate.desc())\
+            .order_by(self.model.createDate.desc(), self.model.id.desc())\
             .first()
 
 
@@ -465,7 +446,7 @@ class JsonLatestImageView(JsonView):
 
 
         try:
-            url = latest_image.getUrl(s3_prefix=self.s3_prefix, local=local)
+            url = latest_image.getUrl(s3_prefix=self.s3_prefix, local=self.local_images_allowed)
         except ValueError as e:
             app.logger.error('Error determining relative file name: %s', str(e))
             return {'url': None}
@@ -477,7 +458,17 @@ class JsonLatestImageView(JsonView):
             'height' : latest_image.height,
         }
 
+        if not_after is not None:
+            image_data['create_date'] = latest_image.createDate
+            image_data['utc_offset'] = latest_image.data.get('utc_offset') if isinstance(latest_image.data, dict) else None
         return image_data
+
+
+class JsonCompanionView(JsonLatestImageView):
+    decorators = [login_optional_media]
+
+    def get_objects(self):
+        return companion_status(self)
 
 
 class IndexImgView(TemplateView):
@@ -14771,6 +14762,8 @@ bp_allsky.add_url_rule('/', view_func=IndexImgView.as_view('index_view', templat
 bp_allsky.add_url_rule('/index_canvas', view_func=IndexCanvasView.as_view('index_canvas_view', template_name='index_canvas.html'))
 bp_allsky.add_url_rule('/index_img', view_func=IndexImgView.as_view('index_img_view', template_name='index_img.html'))
 bp_allsky.add_url_rule('/js/latest', view_func=JsonLatestImageView.as_view('js_latest_image_view'))
+bp_allsky.add_url_rule('/companion', view_func=CompanionView.as_view('companion_view'))
+bp_allsky.add_url_rule('/js/companion', view_func=JsonCompanionView.as_view('js_companion_view'))
 bp_allsky.add_url_rule('/panorama', view_func=LatestPanoramaImgView.as_view('latest_panorama_view', template_name='index_img.html'))
 bp_allsky.add_url_rule('/panorama_canvas', view_func=LatestPanoramaCanvasView.as_view('latest_panorama_canvas_view', template_name='index_canvas.html'))
 bp_allsky.add_url_rule('/panorama_img', view_func=LatestPanoramaImgView.as_view('latest_panorama_img_view', template_name='index_img.html'))

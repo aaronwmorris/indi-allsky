@@ -2287,6 +2287,9 @@ class ImageWorker(Process):
         folder = self._getImageFolder(i_ref.exp_date, i_ref.day_date, camera, 'exposures')
 
         date_str = i_ref.exp_date.strftime('%Y%m%d_%H%M%S')
+        if i_ref.exp_date.fold:
+            # Local wall time occurs twice when the clocks go back.
+            date_str += '_{0:d}'.format(int(i_ref.exp_date.timestamp()))
         filename = folder.joinpath(self.filename_t.format(i_ref.camera_id, date_str, self.config['IMAGE_FILE_TYPE']))
 
         #logger.info('Image filename: %s', filename)
