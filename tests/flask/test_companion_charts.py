@@ -90,9 +90,9 @@ def test_off_unknown_duplicate_and_selection_limit(station):
         assert charts(requested)[2] == []
         assert sql == []
     series = charts(['none','sensor_user_11'])[2]
-    assert [(s['label'],s['unit'],s['points'][0][1]) for s in series] == [('Relative Luftfeuchte','%',64.0)]
+    assert [(s['label'],s['unit'],s['points'][0][1]) for s in series] == [('Relative Humidity','%',64.0)]
     series = charts(['sensor_user_10','sensor_user_10'])[2]
-    assert len(series) == 1 and series[0]['label'] == 'Lufttemperatur'
+    assert len(series) == 1 and series[0]['label'] == 'Air Temperature'
 
 
 def test_remote_uses_its_own_probe_names_and_units(station):

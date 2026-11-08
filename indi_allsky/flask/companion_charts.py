@@ -10,13 +10,13 @@ from .models import IndiAllSkyDbImageTable as Image
 
 
 _LABELS = {
-    'sky': 'Himmelstemperatur',
-    'lux': 'Himmelshelligkeit (Lux)',
-    'sqm': 'Himmelshelligkeit (Sensor-SQM)',
-    'camera_sqm': 'Himmelshelligkeit (Kamera-SQM)',
-    'jsqm': 'Relative Himmelshelligkeit (jSQM)',
-    'air': 'Lufttemperatur',
-    'humidity': 'Relative Luftfeuchte',
+    'sky': 'Sky Temperature',
+    'lux': 'Sky Brightness (lux)',
+    'sqm': 'Sky Brightness (sensor SQM)',
+    'camera_sqm': 'Sky Brightness (camera SQM)',
+    'jsqm': 'Relative Sky Brightness (jSQM)',
+    'air': 'Air Temperature',
+    'humidity': 'Relative Humidity',
 }
 _UNITS = {'lux': 'lx', 'sqm': 'mag/arcsec²', 'camera_sqm': 'mag/arcsec²',
           'jsqm': 'rel.', 'humidity': '%'}

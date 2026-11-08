@@ -38,7 +38,7 @@ function browser(view) {
             displays.push(other.src);
         }
         replaceChildren(...children) { this.options = children; }
-        append() {}
+        append(...children) { this.options.push(...children); }
         removeAttribute(key) { delete this[key]; }
     }
     function el(id) {
@@ -97,7 +97,7 @@ function browser(view) {
 const latest = filename => ({latest_image: {url: filename, message: ''}});
 const frame = (id = 0) => ({url: 'images/' + id + '.jpg', captured_at: '2026-11-07T21:00:0' + id + '+01:00', time_source: 'capture'});
 const status = image => ({image, now: '2026-11-07T21:00:10+01:00', time_zone: 'Europe/Berlin', offset_minutes: 60});
-const full = image => ({...status(image), astronomy: {moon_phase: 'Neumond', moon_illumination: 0}, metrics: [], defaults: [], series: []});
+const full = image => ({...status(image), astronomy: {moon_phase: 'New Moon', moon_illumination: 0}, metrics: [], defaults: [], series: []});
 
 for (const view of ['image', 'canvas']) {
     test(view + ': login HTML cannot kill the loop, recovered data draws immediately', async () => {
@@ -176,7 +176,7 @@ test('companion image checks proceed through repeated or slow detail failures', 
     }
     assert.equal(details().length, 1);
     details()[0].reply(null, 'application/json', 503); await b.flush();
-    assert.match(b.el('connection-message').textContent, /Verlauf/);
+    assert.match(b.el('connection-message').textContent, /history/);
     await b.advance(2000); only()[4].reply(status(frame(4))); await b.flush();
     b.images[4].onload();
     assert.equal(b.el('image-time').dateTime, frame(4).captured_at);
@@ -188,18 +188,51 @@ test('companion differentiates missing, transferring, paused, offline and authen
     let read = b.requests[0];
     const message = () => b.el('connection-message').textContent;
     read.reply(status(null)); b.requests[1].reply(full(null)); await b.flush();
-    assert.match(message(), /Pi erreichbar · keine neue Aufnahme/);
+    assert.match(message(), /Pi online · no new image/);
     await b.advance(2000); read = b.requests.at(-1);
     read.reply(status(frame())); await b.flush(); await b.advance(1000);
-    assert.match(message(), /Neue Aufnahme vorhanden · Bild lädt/);
+    assert.match(message(), /New capture available · loading image/);
     b.images[0].onload(); assert.equal(message(), '');
     await b.advance(1000); b.requests.at(-1).fail(); await b.flush();
-    assert.match(message(), /Verbindung zum Pi unterbrochen/);
+    assert.match(message(), /Lost connection to the Pi/);
     b.emit('online');
     b.requests.at(-2).reply({...status(frame()), capture_paused: true}); b.requests.at(-1).reply(full(null)); await b.flush();
-    assert.match(message(), /Aufnahme pausiert/);
+    assert.match(message(), /capture paused/);
     assert.equal(b.displays.length, 1);
     await b.advance(2000); b.requests.at(-1).reply('login', 'text/html', 200, true); await b.flush();
-    assert.match(message(), /Anmeldung erforderlich/);
+    assert.match(message(), /Sign in again/);
     assert.equal(b.displays.length, 1);
+});
+
+test('companion formats English readings and keeps the date and offset of each camera event', async () => {
+    const b = browser('companion');
+    const image = {...frame(), captured_at: '2026-10-25T00:00:00+02:00'};
+    const payload = {...full(image), now: '2026-10-25T00:00:10+02:00', offset_minutes: 120};
+    Object.assign(payload.astronomy, {moon_rise: '2026-10-25T00:15:00+02:00', moon_illumination: 0.5});
+    const metric = {id: 'sensor_user_35', label: 'Sky brightness', unit: 'lx'};
+    payload.metrics = [metric];
+    payload.defaults = [metric.id];
+    payload.series = [{...metric, points: [['2026-10-25T02:30:00+02:00', 1.25]]}];
+    b.requests[0].reply(payload);
+    b.requests[1].reply(payload);
+    await b.flush();
+    b.images[0].onload();
+    assert.equal(b.el('clock').textContent, '00:00:10');
+    assert.equal(b.el('image-time').options[1].textContent, '2026-10-25');
+    assert.equal(b.el('image-age').textContent, '10 s ago');
+    const rise = b.el('moon_rise').options[0];
+    assert.equal(rise.dateTime, payload.astronomy.moon_rise);
+    assert.deepEqual(rise.options.map(child => child.textContent), ['00:15', 'Oct 25']);
+    assert.equal(b.el('moon-phase').textContent, 'New Moon · 0.5%');
+    const reading = b.el('chart-slot-1.chart-value');
+    assert.equal(reading.textContent, '1.25 lx');
+    assert.equal(reading.title, 'Last reading at 02:30 UTC+02:00');
+    // The same local time occurs again after the camera switches to standard time.
+    payload.series[0].points.push(['2026-10-25T02:30:00+01:00', 0.025]);
+    b.emit('online');
+    b.requests.at(-2).reply(payload);
+    b.requests.at(-1).reply(payload);
+    await b.flush();
+    assert.equal(reading.textContent, '0.025 lx');
+    assert.equal(reading.title, 'Last reading at 02:30 UTC+01:00');
 });

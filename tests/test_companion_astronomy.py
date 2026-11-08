@@ -75,7 +75,7 @@ def test_lunar_events_are_future_events_with_dates():
     assert now < setting < rise
     assert rise.date() == setting.date() == now.date() + timedelta(days=1)
     assert rise.utcoffset() == setting.utcoffset() == timedelta(hours=1)
-    assert data['moon_phase'] == 'Zunehmender Mond'
+    assert data['moon_phase'] == 'Waxing Gibbous'
     assert 95 < data['moon_illumination'] < 100
 
 
@@ -84,7 +84,7 @@ def test_full_moon_name_uses_camera_calendar_date_without_coordinates():
     tz = ZoneInfo('Pacific/Auckland')
     now = instant.astimezone(tz).replace(hour=0, minute=0, second=0)
     data = night_ephemeris(now, tz, None, None, None)
-    assert data['moon_phase'] == 'Vollmond'
+    assert data['moon_phase'] == 'Full Moon'
     assert 98 < data['moon_illumination'] <= 100
     assert all(data[key] is None for key in (*TWILIGHT, 'moon_rise', 'moon_set'))
 

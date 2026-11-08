@@ -64,16 +64,16 @@ def _event(method, body, start, tz, *, center=False, stop=None):
 def _moon_phase(local_now, moon, sun):
     # Name the exact quarter on its camera-local calendar day.
     day_start = datetime.combine(local_now.date(), time.min, tzinfo=local_now.tzinfo)
-    for event, name in ((ephem.next_new_moon, 'Neumond'),
-                        (ephem.next_first_quarter_moon, 'Erstes Viertel'),
-                        (ephem.next_full_moon, 'Vollmond'),
-                        (ephem.next_last_quarter_moon, 'Letztes Viertel')):
+    for event, name in ((ephem.next_new_moon, 'New Moon'),
+                        (ephem.next_first_quarter_moon, 'First Quarter'),
+                        (ephem.next_full_moon, 'Full Moon'),
+                        (ephem.next_last_quarter_moon, 'Last Quarter')):
         stamp = event(day_start).datetime().replace(tzinfo=timezone.utc)
         if stamp.astimezone(local_now.tzinfo).date() == local_now.date():
             return name
 
     angle = (float(ephem.Ecliptic(moon).lon) - float(ephem.Ecliptic(sun).lon)) % math.tau
-    names = ('Zunehmende Sichel', 'Zunehmender Mond', 'Abnehmender Mond', 'Abnehmende Sichel')
+    names = ('Waxing Crescent', 'Waxing Gibbous', 'Waning Gibbous', 'Waning Crescent')
     return names[int(angle / (math.pi / 2))]
 
 
