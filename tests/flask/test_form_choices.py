@@ -83,3 +83,19 @@ def test_config_form_grouped_choices_are_tuples(test_app):
         for item in items:
             assert isinstance(item, tuple), f'Item {item} in SENSOR_SLOT_choices[{group_name}] is not a tuple'
             assert len(item) == 2
+
+
+def test_cloudiness_chart_choice_is_preserved_and_renders(test_app):
+    from wtforms import Form, SelectField
+
+    class ChartForm(Form):
+        chart = SelectField(choices=IndiAllskyConfigForm.CUSTOM_CHART_choices)
+
+    with test_app.test_request_context():
+        form = ChartForm(chart='cloudiness_index')
+
+        assert form.validate()
+        assert ('cloudiness_index', 'Cloudiness Index') in IndiAllskyConfigForm.CUSTOM_CHART_choices['Cloud']
+        rendered = form.chart()
+        assert '<optgroup label="Cloud">' in rendered
+        assert 'value="cloudiness_index"' in rendered
