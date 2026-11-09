@@ -152,6 +152,7 @@ class ImageProcessor(object):
         self._text_anchor_pillow = 'la'
         self._text_size_pillow = 0
         self._text_font_height = 0
+        self.chart_label_bounds = []
 
         self._libcamera_raw = False
 
@@ -3415,6 +3416,7 @@ class ImageProcessor(object):
 
 
     def label_image(self, adsb_aircraft_list=[], custom_hook_data={}):
+        self.chart_label_bounds = []
         # this needs to be enabled during focus mode
 
 
@@ -3561,6 +3563,12 @@ class ImageProcessor(object):
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
 
+        if text:
+            (width, height), baseline = cv2.getTextSize(
+                text, fontFace, self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+                self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + int(self.config['TEXT_PROPERTIES']['FONT_OUTLINE']))
+            self.chart_label_bounds.append((pt[0], pt[1] - height, pt[0] + width, pt[1] + baseline))
+
         if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
             cv2.putText(
                 img=data,
@@ -3664,6 +3672,9 @@ class ImageProcessor(object):
             stroke_width = 4
         else:
             stroke_width = 0
+
+        if text:
+            self.chart_label_bounds.append(draw.textbbox(pt, text, font=font, stroke_width=stroke_width, anchor=anchor))
 
         draw.text(
             pt,

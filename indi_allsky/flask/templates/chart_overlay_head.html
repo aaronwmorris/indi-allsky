@@ -1,0 +1,5 @@
+{% if chart_overlays.OVERLAY_IDS %}
+<link href="{{ url_for('indi_allsky.static', filename='css/charts.css') }}" rel="stylesheet">
+<script src="{{ url_for('indi_allsky.static', filename='js/chart.umd.js') }}"></script>
+<script defer src="{{ url_for('indi_allsky.static', filename='js/allsky-charts.js') }}"></script>
+{% endif %}

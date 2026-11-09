@@ -6,6 +6,7 @@
 
 {% block head %}
 <meta charset="UTF-8">
+{% include 'chart_overlay_head.html' %}
 <style>
 canvas {
     width: 100%;
@@ -57,6 +58,9 @@ function showImage(entry) {
 
         context.drawImage(this, 0, 0, this.width, this.height,
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+        document.getElementById('latest-image-stage').dispatchEvent(new CustomEvent('chart-image-loaded', {
+            detail: {...entry, width: this.width, height: this.height}
+        }));
     };
 
     img.src = entry["url"];
@@ -152,7 +156,7 @@ function closeFullscreen() {
 
 $( document ).ready(function() {
     $('#canvas').on("click", function() {
-        goFullscreen(this);
+        goFullscreen(document.getElementById('latest-image-stage'));
     });
     init();
 });
@@ -161,7 +165,7 @@ $( document ).ready(function() {
 
 {% block content %}
 <div class="tw:flex tw:flex-col tw:h-full tw:gap-4">
-    <div class="tw:flex-1 tw:bg-base-300 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-inner tw:flex tw:items-center tw:justify-center tw:overflow-hidden tw:min-h-[50vh] tw:relative">
+    <div id="latest-image-stage" class="tw:flex-1 tw:bg-base-300 tw:rounded-[var(--radius-box)] tw:border tw:border-base-300 tw:shadow-inner tw:flex tw:items-center tw:justify-center tw:overflow-hidden tw:min-h-[50vh] tw:relative">
         <div class="tw:absolute tw:inset-0 tw:bg-base-content/2 tw:pointer-events-none"></div>
         
         <!-- Status Overlay -->
@@ -174,13 +178,14 @@ $( document ).ready(function() {
 
         <!-- Control Overlay -->
         <div class="tw:absolute tw:top-4 tw:right-4 tw:z-20">
-            <button onclick="goFullscreen(document.getElementById('canvas'))" 
+            <button onclick="goFullscreen(document.getElementById('latest-image-stage'))"
                     title="Toggle Fullscreen"
                     class="tw:btn tw:btn-square tw:btn-sm tw:bg-base-100/50 tw:backdrop-blur-md tw:border-base-300 hover:tw:bg-base-100 tw:rounded-[var(--radius-box)] tw:cursor-pointer tw:transition-all shadow-sm">
                 <i class="tw:icon-[lucide--maximize] tw:w-4 tw:h-4 tw:opacity-70"></i>
             </button>
         </div>
 
+        {% include 'chart_overlay.html' %}
         <canvas id="canvas" class="tw:mx-auto tw:max-h-full tw:max-w-full tw:object-contain tw:rounded-[var(--radius-box)] tw:shadow-2xl tw:cursor-zoom-in"></canvas>
     </div>
 </div>
