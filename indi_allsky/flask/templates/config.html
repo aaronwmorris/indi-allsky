@@ -1964,6 +1964,20 @@ $( document ).ready(function() {
 
     updateFc37ActiveLowState();
 
+    function updateRainSensorI2cState() {
+        ['A', 'B', 'C', 'D', 'E', 'F'].forEach(function(letter) {
+            const prefix = 'TEMP_SENSOR__' + letter;
+            const classname = $('#' + prefix + '_CLASSNAME').val();
+            const gpioSensor = ['blinka_rain_sensor_fc37', 'blinka_rain_sensor_wh_sp_rg'].includes(classname);
+            const $address = $('#' + prefix + '_I2C_ADDRESS');
+            $address.prop('disabled', gpioSensor);
+            $address.toggleClass('bg-dark text-secondary', gpioSensor);
+        });
+    }
+
+    $('#TEMP_SENSOR__A_CLASSNAME, #TEMP_SENSOR__B_CLASSNAME, #TEMP_SENSOR__C_CLASSNAME, #TEMP_SENSOR__D_CLASSNAME, #TEMP_SENSOR__E_CLASSNAME, #TEMP_SENSOR__F_CLASSNAME').on('change', updateRainSensorI2cState);
+    updateRainSensorI2cState();
+
 
     // Open the camera settings accordion section that matches the selected
     // CAMERA_INTERFACE value, both on page load and when the selection changes.

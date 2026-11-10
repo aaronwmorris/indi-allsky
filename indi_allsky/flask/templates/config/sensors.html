@@ -422,6 +422,12 @@
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-[var(--radius-box)] shadow-sm">
             <div class="tw:card-body tw:p-6 tw:flex tw:flex-col tw:gap-4">
                 <span class="tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-widest tw:text-base-content/50">Specific Sensor Hardware Adjustments (Heaters & Logic)</span>
+                <p class="tw:text-xs tw:text-base-content/60">
+                    MISOL WH-SP-RG uses Pin/Port 1 and two consecutive user slots:
+                    Rain Rate (last hour, mm/hr) and Rain 24h (mm), at 0.3 mm per tip.
+                    Use {rain_rate:0.1f} and {rain_24h:0.1f} in image labels.
+                    Recorded tips survive restarts; rain while the service is stopped cannot be measured.
+                </p>
 
                 <!-- FC37 & DHT PulseIO -->
                 <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4 tw:py-3 tw:border-b tw:border-base-300/60">
