@@ -25,15 +25,15 @@ def login_optional(func):
     return decorated_view
 
 
+def media_access_allowed():
+    return (app.config.get('LOGIN_DISABLED') or current_user.is_authenticated
+            or not (app.config.get('INDI_ALLSKY_AUTH_ALL_VIEWS') or app.config.get('INDI_ALLSKY_AUTH_MEDIA_VIEWS')))
+
+
 def login_optional_media(func):
     @wraps(func)
     def decorated_view(*args, **kwargs):
-        if app.config.get("LOGIN_DISABLED"):
-            pass
-        elif not app.config.get('INDI_ALLSKY_AUTH_ALL_VIEWS') and not app.config.get('INDI_ALLSKY_AUTH_MEDIA_VIEWS'):
-            # allow some views to be unauthenticated
-            pass
-        elif not current_user.is_authenticated:
+        if not media_access_allowed():
             return app.login_manager.unauthorized()
 
         # flask 1.x compatibility

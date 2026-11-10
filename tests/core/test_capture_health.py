@@ -1,7 +1,9 @@
 import ast
 from contextlib import nullcontext
+from datetime import datetime
 import json
 import logging
+from multiprocessing import Array
 from pathlib import Path
 from queue import Queue
 from types import SimpleNamespace
@@ -10,6 +12,27 @@ from unittest.mock import Mock
 import pytest
 
 from indi_allsky.capture_health import CameraImageQueue, CaptureHealth, ExposureDeadline, RestartDelay
+from indi_allsky import constants
+
+
+@pytest.mark.parametrize(('server_lost', 'status'), [
+    (True, constants.STATUS_NOINDISERVER), (False, constants.STATUS_NOCAMERA),
+])
+def test_worker_reports_device_loss_before_exiting(server_lost, status):
+    # Run the actual capture loop without loading camera drivers on the test host.
+    path = Path(__file__).resolve().parents[2] / 'indi_allsky/capture.py'
+    klass = next(n for n in ast.parse(path.read_text()).body if isinstance(n, ast.ClassDef) and n.name == 'CaptureWorker')
+    loop = next(n for n in klass.body if isinstance(n, ast.FunctionDef) and n.name == 'saferun')
+    scope = dict(constants=constants, datetime=datetime, app=SimpleNamespace(app_context=nullcontext),
+                 time=SimpleNamespace(time=lambda: 1000, monotonic=lambda: 1000), logger=logging.getLogger('indi_allsky'))
+    exec(compile(ast.Module(body=[loop], type_ignores=[]), str(path), 'exec'), scope)
+    worker = Mock(night=True, moonmode=False, night_av=Array('i', 2), health=CaptureHealth())
+    worker.indiclient.disconnected = server_lost
+    worker.indiclient.ccd_removed = not server_lost
+    worker._dateCalcs.getNextDayNightTransition.return_value = datetime.fromtimestamp(2000)
+    scope['saferun'](worker)
+    worker._miscDb.setState.assert_called_once_with('STATUS', status)
+    worker.capture_q.get.assert_not_called()
 
 
 def test_deadline_requires_a_real_frame_and_a_ready_driver():

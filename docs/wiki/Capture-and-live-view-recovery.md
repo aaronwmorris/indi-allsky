@@ -6,6 +6,10 @@ For a Wi-Fi-only Pi that travels between networks, see [Wi-Fi recovery](Wi-Fi-Re
 
 * If the Pi responds but the image is old, compare the last stored capture with the current time. Allow for exposure, the configured capture interval and processing. A scheduled pause or disabled daytime capture is expected.
 
+Open **Status** at the bottom of the sidebar to see the capture state and image age together, for example **RUNNING · Last image 12 s ago**. On the live view, the age refers to the picture on screen and changes to the new frame’s age once that frame has loaded. On other pages it refers to the latest available image for the selected camera.
+
+If the capture worker loses its INDI connection, it publishes **NO INDISERVER** before exiting for a retry. A camera removal is reported as **NO CAMERA**. These states appear in the same status field even if the last image is still recent. If the browser loses contact with the web server, the field shows the connection error until a fresh report arrives. The browser retries automatically, and **Retry now** checks again immediately.
+
 On a source installation, `systemctl --user status indi-allsky.service gunicorn-indi-allsky.service` separates the capture service from the web application. In the default SQLite installation you can inspect the capture supervisor's status without modifying the database:
 
 ```sh

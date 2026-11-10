@@ -401,6 +401,8 @@ class CaptureWorker(Process):
 
             if self.indiclient.disconnected:
                 logger.error('indiclient indicates indiserver disconnected, restarting capture process')
+                with app.app_context():
+                    self._miscDb.setState('STATUS', constants.STATUS_NOINDISERVER)
                 return
 
 
@@ -409,6 +411,8 @@ class CaptureWorker(Process):
                 # If a [USB] camera is disconnected, it should automatically be detected when reconnected
                 # Older than 2.1.7 requires indiserver to be restarted
                 logger.error('indiclient indicates the camera has been removed, restarting capture process')
+                with app.app_context():
+                    self._miscDb.setState('STATUS', constants.STATUS_NOCAMERA)
                 return
 
 
