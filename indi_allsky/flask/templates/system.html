@@ -951,6 +951,15 @@ $(document).ready(function() {
         $('#' + target).show();
     });
 
+    function openLinkedTab() {
+        const target = location.hash.slice(1);
+        if (target) {
+            $('.sys-tab-btn').filter(function() { return this.dataset.target === target; }).trigger('click');
+        }
+    }
+    openLinkedTab();
+    window.addEventListener('hashchange', openLinkedTab);
+
     function updateSystemStats() {
         $.ajax({
             type: "GET",

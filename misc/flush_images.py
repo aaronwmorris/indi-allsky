@@ -117,6 +117,11 @@ class FlushImages(object):
 
         signal.signal(signal.SIGINT, self.sigint_handler_main)
 
+        if self.flush_videos:
+            # Record source-only periods before a combined images/videos flush removes them.
+            from indi_allsky.config import IndiAllSkyConfig
+            from indi_allsky.media_delete import suppress_flushed_periods
+            suppress_flushed_periods(IndiAllSkyConfig().config, self.camera_id)
 
         if self.flush_images:
             self.flushImages(self.camera_id)

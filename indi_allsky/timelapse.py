@@ -6,6 +6,7 @@ import logging
 
 from . import timelapse_preprocessor
 from .exceptions import TimelapseException
+from .panorama import panoramaVideoOptions
 
 
 logger = logging.getLogger('indi_allsky')
@@ -26,9 +27,11 @@ class TimelapseGenerator(object):
         config,
         skip_frames=0,
         pre_processor_class='standard',
+        panorama=False,
     ):
         self.config = config
         self.skip_frames = skip_frames
+        self.panorama = panorama
 
         self._codec = 'libx264'
         self._framerate = 25
@@ -154,20 +157,17 @@ class TimelapseGenerator(object):
         ])
 
 
-        # add video filter if defined
-        if self.video_filter:
-            logger.warning('Setting FFMPEG video filter: %s', self.video_filter)
-            cmd.append('-vf')
-            cmd.append(self.video_filter)
-        elif self.vf_scale:
-            logger.warning('Setting FFMPEG scaling option: %s', self.vf_scale)
-            cmd.append('-vf')
-            cmd.append('scale={0:s}'.format(self.vf_scale))
-
-
-        # add extra options
-        if self.ffmpeg_extra_options:
-            cmd.extend(self.ffmpeg_extra_options.split(' '))
+        extra_options = self.ffmpeg_extra_options.split(' ') if self.ffmpeg_extra_options else []
+        if self.panorama:
+            cmd.extend(panoramaVideoOptions(self.codec, self.video_filter, extra_options))
+        else:
+            if self.video_filter:
+                logger.warning('Setting FFMPEG video filter: %s', self.video_filter)
+                cmd.extend(['-vf', self.video_filter])
+            elif self.vf_scale:
+                logger.warning('Setting FFMPEG scaling option: %s', self.vf_scale)
+                cmd.extend(['-vf', 'scale={0:s}'.format(self.vf_scale)])
+            cmd.extend(extra_options)
 
 
         # finally add filename

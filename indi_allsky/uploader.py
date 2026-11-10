@@ -11,6 +11,7 @@ import queue
 import threading
 
 from . import constants
+from .archive_health import archive_paused, DEFERRED
 
 from .flask import create_app
 from .flask import db
@@ -155,6 +156,11 @@ class FileUploader(Thread):
             return
 
 
+        if archive_paused(self.config):
+            task.state = models.TaskQueueState.MANUAL
+            task.result = DEFERRED
+            db.session.commit()
+            return
         task.setRunning()
 
 

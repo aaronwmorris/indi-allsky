@@ -6,6 +6,7 @@ import fcntl
 import os
 import shutil
 import time
+import json
 import io
 import re
 import psutil
@@ -28,6 +29,11 @@ from .version import __config_level__
 from .config import IndiAllSkyConfig
 
 from . import constants
+from .capture_health import CaptureHealth, RestartDelay
+from .archive_health import (ArchiveMonitor, ArchiveUnavailable, BLOCKED, DEFERRED, LOW, OK,
+                             VIDEO_ACTIONS, image_dir, require_writable_archive, storage_errno)
+from .storage_startup import retry_storage_start
+from .sensor_health import SensorHealth
 
 from .exceptions import TimeOutException
 from .exceptions import ConfigSaveException
@@ -53,7 +59,7 @@ from .flask.models import IndiAllSkyDbTleDataTable
 
 from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.sql.expression import false as sa_false
 
 
@@ -188,6 +194,7 @@ class IndiAllSky(object):
         # 108 reserved for future use
         # 109 reserved for future use
         self.sensors_user_av = Array('f', [0.0 for x in range(110)])
+        self.sensor_health = SensorHealth()
 
 
         ### all values in microseconds (0.000001 second)
@@ -241,6 +248,11 @@ class IndiAllSky(object):
         ])
 
 
+        self.capture_health = CaptureHealth()
+        self.pending_recovery = None
+        self.restart_delay = {role: RestartDelay() for role in ('capture', 'image')}
+        self.recovery_history = {role: [] for role in self.restart_delay}
+        self.health_write_time = 0
         self.capture_q = Queue()
         self.capture_error_q = Queue()
         self.capture_worker = None
@@ -284,6 +296,8 @@ class IndiAllSky(object):
         varlib_folder = self.config.get('VARLIB_FOLDER', '/var/lib/indi-allsky')
         self.varlib_folder_p = Path(varlib_folder)
 
+        self.archive_monitor = ArchiveMonitor(self.config)
+        self.archive_scratch_pending = True
         self._pid_file = self.varlib_folder_p.joinpath('indi-allsky.pid')
 
 
@@ -338,27 +352,22 @@ class IndiAllSky(object):
     def write_pid(self):
         pid = os.getpid()
 
-        try:
-            with io.open(str(self.pid_file), 'w') as pid_f:
-                pid_f.write('{0:d}'.format(pid))
-        except PermissionError as e:
-            logger.error('Unable to write pid file: %s', str(e))
-            sys.exit(1)
-
-
+        if self.pid_lock is None:
+            # Lock before changing the PID file. Reuse the lock when database
+            # initialization has to retry; never truncate another live PID.
+            lock = io.open(self.pid_file, 'a+')
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                lock.close()
+                logger.error('Failed to get lock, indi-allsky may already be running')
+                sys.exit(1)
+            self.pid_lock = lock
+        self.pid_lock.seek(0)
+        self.pid_lock.truncate()
+        self.pid_lock.write(str(pid))
+        self.pid_lock.flush()
         self.pid_file.chmod(0o644)
-
-        try:
-            self.pid_lock = io.open(self.pid_file, 'w+')
-            fcntl.flock(self.pid_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
-            logger.error('Failed to get lock, indi-allsky may already be running')
-            sys.exit(1)
-        except PermissionError as e:
-            logger.error('Failed to get lock: %s', e.strerror)
-            sys.exit(1)
-
-
         self._miscDb.setState('PID', pid)
         self._miscDb.setState('PID_FILE', self.pid_file)
 
@@ -460,6 +469,9 @@ class IndiAllSky(object):
                 pass
 
 
+        if not self.restart_delay['capture'].ready(self.capture_worker, time.monotonic(), self.capture_health.frames.value):
+            return
+        self.capture_health.capture_stage('starting')
         self.capture_worker_idx += 1
 
         logger.info('Starting Capture-%d worker', self.capture_worker_idx)
@@ -479,6 +491,7 @@ class IndiAllSky(object):
             self.sensors_user_av,
             self.night_av,
             self.astro_av,
+            self.capture_health,
         )
         self.capture_worker.start()
 
@@ -497,7 +510,8 @@ class IndiAllSky(object):
         logger.info('Stopping Capture worker')
 
         self.capture_q.put({'stop' : True})
-        self.capture_worker.join()
+        self._join_worker(self.capture_worker)
+        self.capture_worker = None
 
 
     def _startImageWorker(self):
@@ -515,6 +529,11 @@ class IndiAllSky(object):
                 pass
 
 
+        if not self.restart_delay['image'].ready(self.image_worker, time.monotonic(), self.capture_health.publications.value):
+            return
+        self.capture_health.misses.value = 0
+        self.capture_health.image_busy.value = 0
+        self.capture_health.image_pulse.value = int(time.monotonic())
         self.image_worker_idx += 1
 
         logger.info('Starting Image-%d worker', self.image_worker_idx)
@@ -532,6 +551,8 @@ class IndiAllSky(object):
             self.sensors_user_av,
             self.night_av,
             self.astro_av,
+            self.capture_health,
+            self.sensor_health,
         )
         self.image_worker.start()
 
@@ -561,7 +582,78 @@ class IndiAllSky(object):
         logger.info('Stopping Image worker')
 
         self.image_q.put({'stop' : True})
-        self.image_worker.join()
+        self._join_worker(self.image_worker)
+        self.image_worker = None
+
+
+    def _exit_service(self, code):
+        # Killing a single worker mid-write can leave multiprocessing queues
+        # or shared locks unusable. Start a fresh service incarnation instead.
+        if os.environ.get('INDI_ALLSKY_SUPERVISED') != '1':
+            # Manual foreground runs have no systemd control group to reap.
+            children = psutil.Process().children(recursive=True)
+            for proc in children:
+                try:
+                    proc.terminate()
+                except psutil.NoSuchProcess:
+                    pass
+            _, remaining = psutil.wait_procs(children, timeout=5)
+            for proc in remaining:
+                try:
+                    proc.kill()
+                except psutil.NoSuchProcess:
+                    pass
+            psutil.wait_procs(remaining, timeout=5)
+        os._exit(code)
+
+
+    def _join_worker(self, worker):
+        # A planned stop/reload gets a full configured exposure to finish.
+        worker.join(timeout=max(60, self.config.get('CCD_EXPOSURE_TIMEOUT', 330) + 30))
+        if worker.is_alive():
+            logger.error('%s did not exit during stop/reload; ending the service', worker.name)
+            self._exit_service(0 if self._shutdown else 75)
+
+
+    def _check_capture_health(self):
+        now = time.monotonic()
+        stalled = self.capture_health.stalled(now, self.config.get('CCD_EXPOSURE_TIMEOUT', 330))
+        if self._shutdown or self._reload:
+            return
+        if self.pending_recovery:
+            role, pid, started = self.pending_recovery
+            worker = getattr(self, role + '_worker')
+            if not worker or not worker.is_alive() or worker.pid != pid:
+                self.pending_recovery = None
+            elif now - started >= 30:
+                logger.error('%s did not exit after TERM; ending service for clean recovery', worker.name)
+                self._exit_service(75)
+        recovery = None
+        if stalled and not self.pending_recovery:
+            history = self.recovery_history[stalled]
+            history[:] = [attempt for attempt in history if now - attempt < 3600]
+            worker = getattr(self, stalled + '_worker')
+            if len(history) >= 2:
+                recovery = stalled + '_backoff'
+            elif worker and worker.is_alive():
+                history.append(now)
+                logger.error('%s has made no progress; requesting graceful exit (pid %d)', worker.name, worker.pid)
+                self.capture_health.last_failure.value = int(time.time())
+                self.pending_recovery = (stalled, worker.pid, now)
+                self.health_write_time = 0
+                worker.terminate()
+
+        if now >= self.health_write_time:
+            self.health_write_time = now + 30
+            if self.pending_recovery:
+                recovery = self.pending_recovery[0]
+            with app.app_context():
+                try:
+                    self._miscDb.setState('CAPTURE_HEALTH', json.dumps(self.capture_health.status(recovery)))
+                except SQLAlchemyError as e:
+                    db.session.rollback()
+                    self._storage_failed(e)
+                    logger.error('Cannot publish capture health: %s', e)
 
 
     def _startVideoWorker(self):
@@ -651,6 +743,7 @@ class IndiAllSky(object):
             self.sensors_user_av,
             self.night_av,
             self.astro_av,
+            self.sensor_health,
         )
         self.sensor_worker.start()
 
@@ -754,20 +847,44 @@ class IndiAllSky(object):
         uw_dict['worker'].join()
 
 
-    def run(self):
+    def _prepare_run(self):
         with app.app_context():
             self.write_pid()
-
             self._expireOrphanedTasks()
-            self._deleteScratchFolder()
-
             self._startup()
 
+    def _storage_failed(self, error):
+        number = storage_errno(error)
+        if number:
+            self.capture_health.archive_error.value = number
+            self.capture_health.archive_blocked.value = 1
+        return bool(number)
+
+    def _stop_state(self, status):
+        # A full/readonly SQLite database must not interrupt a planned stop.
+        with app.app_context():
+            try:
+                self._miscDb.setState('STATUS', status)
+            except SQLAlchemyError as exc:
+                db.session.rollback()
+                if not storage_errno(exc):
+                    raise
+                logger.warning('Cannot store the shutdown status while storage is unavailable')
+
+    def _reload_config(self):
+        with app.app_context():
+            self.reload_handler()
+
+    def run(self):
+        retry_storage_start(self._prepare_run, lambda: self._shutdown)
+        if self._shutdown:  # stopped before starting any worker
+            if self.pid_lock:
+                self.pid_lock.close()
+            return
 
         while True:
             if self._shutdown:
-                with app.app_context():
-                    self._miscDb.setState('STATUS', constants.STATUS_STOPPING)
+                self._stop_state(constants.STATUS_STOPPING)
 
 
                 logger.warning('Shutting down')
@@ -778,8 +895,7 @@ class IndiAllSky(object):
                 self._stopFileUploadWorkers()
 
 
-                with app.app_context():
-                    self._miscDb.setState('STATUS', constants.STATUS_STOPPED)
+                self._stop_state(constants.STATUS_STOPPED)
 
 
                 if self.pid_lock:
@@ -798,25 +914,45 @@ class IndiAllSky(object):
                 self._stopFileUploadWorkers()
                 # processes will start at the next loop
 
-                with app.app_context():
-                    self.reload_handler()
+                retry_storage_start(self._reload_config, lambda: self._shutdown)
+                continue
 
 
             # do *NOT* start workers inside of a flask context
             # doing so will cause TLS/SSL problems connecting to databases
 
             # restart worker if it has failed
-            self._startCaptureWorker()
-            self._startImageWorker()
+            error = self.capture_health.archive_error.value
+            self.capture_health.archive_error.value = 0
+            level = self.archive_monitor.tick(error)
+            self.capture_health.archive_blocked.value = int(level == BLOCKED)
+            self.capture_health.archive_device.value = self.archive_monitor.device or 0
+            if level == OK and self.archive_scratch_pending:
+                self.archive_scratch_pending = False
+                try:
+                    require_writable_archive(self.config)
+                    self._deleteScratchFolder()
+                except (OSError, ArchiveUnavailable) as exc:
+                    logger.error('Archive scratch cleanup skipped: %s', exc)
+            if level != BLOCKED:
+                self._startCaptureWorker()
+                self._startImageWorker()
             self._startVideoWorker()
             self._startSensorWorker()
             self._startFileUploadWorkers()
+            self._check_capture_health()
 
 
             # Queue externally defined tasks
             with app.app_context():
-                self._queueManualTasks()
-                self._periodic_tasks()
+                try:
+                    self._queueManualTasks()
+                    self._periodic_tasks()
+                except SQLAlchemyError as exc:
+                    db.session.rollback()
+                    if not self._storage_failed(exc):
+                        raise
+                    logger.warning('Database tasks are waiting for writable storage')
 
 
             time.sleep(13)
@@ -844,6 +980,9 @@ class IndiAllSky(object):
             return
 
 
+        self.archive_monitor.reconfigure(self.config)
+        self.image_dir = Path(image_dir(self.config))
+        self.scratch_base_dir = self.image_dir / 'scratch'
         # indicate newer config is loaded
         self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
 
@@ -1352,6 +1491,9 @@ class IndiAllSky(object):
             .filter(IndiAllSkyDbTaskQueueTable.state.in_(orphaned_statuses))
 
         for task in old_task_list:
+            if task.result == DEFERRED and task.state in (TaskQueueState.MANUAL, TaskQueueState.QUEUED):
+                task.state = TaskQueueState.MANUAL
+                continue
             logger.warning('Expiring orphaned task %d', task.id)
             task.state = TaskQueueState.EXPIRED
 
@@ -1365,7 +1507,9 @@ class IndiAllSky(object):
             .filter(IndiAllSkyDbTaskQueueTable.createDate < now_minus_3d)
 
         logger.warning('Found %d expired tasks to delete', flush_old_tasks.count())
-        flush_old_tasks.delete()
+        flush_old_tasks.filter(or_(IndiAllSkyDbTaskQueueTable.result.is_(None),
+                                  IndiAllSkyDbTaskQueueTable.result != DEFERRED,
+                                  ~IndiAllSkyDbTaskQueueTable.state.in_((TaskQueueState.QUEUED, TaskQueueState.MANUAL)))).delete(synchronize_session=False)
         db.session.commit()
 
 
@@ -1395,7 +1539,23 @@ class IndiAllSky(object):
         reload_received = False
         pause_received = False
 
+        paused = self.archive_monitor.level != OK
+        # Resume in batches, while normal control tasks keep their own priority.
+        resume_ids = [] if paused else [
+            task_id for (task_id,) in manual_tasks.with_entities(IndiAllSkyDbTaskQueueTable.id)
+            .filter(IndiAllSkyDbTaskQueueTable.result == DEFERRED).limit(32)]
+        manual_tasks = manual_tasks.filter(or_(IndiAllSkyDbTaskQueueTable.result.is_(None),
+                                               IndiAllSkyDbTaskQueueTable.result != DEFERRED,
+                                               ((IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.VIDEO)
+                                                & (IndiAllSkyDbTaskQueueTable.data['action'].as_string() == 'expireData'))
+                                               if self.archive_monitor.level == LOW else False,
+                                               IndiAllSkyDbTaskQueueTable.id.in_(resume_ids)))
         for task in manual_tasks:
+            if paused and (task.queue == TaskQueueQueue.UPLOAD or
+                           (task.queue == TaskQueueQueue.VIDEO and task.data.get('action') in VIDEO_ACTIONS)):
+                task.result = DEFERRED
+                db.session.commit()
+                continue
             if task.queue == TaskQueueQueue.VIDEO:
                 logger.info('Queuing manual video task %d', task.id)
                 task.setQueued()

@@ -4,7 +4,12 @@ Requires=gunicorn-indi-allsky.socket
 After=network-online.target
 Wants=network-online.target
 
+StartLimitIntervalSec=15min
+StartLimitBurst=3
+
 [Service]
+Restart=on-failure
+RestartSec=15s
 Type=simple
 User=indi-allsky
 Group=www-data

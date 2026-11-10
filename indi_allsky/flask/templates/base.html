@@ -61,6 +61,10 @@
 
     <link href="{{ url_for('indi_allsky.static', filename='css/dist.css') }}?v={{ release if release else 'v2026.11.01' }}" rel="stylesheet">
     <script src="{{ url_for('indi_allsky.static', filename='js/jquery-3.7.1.min.js') }}"></script>
+    {% if (camera_id|default(0, true)|int) > 0 or latest_image_view is defined %}
+    <script defer src="{{ url_for('indi_allsky.static', filename='js/live_frames.js') }}?v=2"></script>
+    <script defer src="{{ url_for('indi_allsky.static', filename='js/latest_view.js') }}?v=4"></script>
+    {% endif %}
 
     <style>
         #sidebar a, #sidebar a:hover, #sidebar a:focus {
@@ -71,6 +75,16 @@
             list-style: none;
             padding-left: 0;
             margin-bottom: 0;
+        }
+
+        #status_text > div:has(#sidebar-image-age) { grid-column: 1 / -1; }
+        #sidebar-image-age { white-space: nowrap; font-variant-numeric: tabular-nums; }
+        #sidebar-image-age:not(:empty)::before { content: ' · '; }
+        #sidebar-image-age[href]:hover { text-decoration: underline; }
+        #sidebar-status-fallback, #sidebar-live-detail:not(:empty) {
+            margin: .25rem;
+            font-size: .75rem;
+            line-height: 1.3;
         }
 
         #sidebar {
@@ -291,9 +305,24 @@
                     </div>
                     <i class="tw:icon-[lucide--chevron-down] status-chevron tw:w-3.5 tw:h-3.5 tw:opacity-50"></i>
                 </summary>
-                <div id="status_text"
-                    class="tw:pt-2 tw:px-1 tw:text-[0.6875rem] tw:opacity-85 tw:grid tw:grid-cols-[auto_1fr] tw:gap-x-3 tw:leading-relaxed [&_br]:tw:hidden [&_b]:tw:font-semibold [&_b]:tw:text-base-content/70 [&_b]:after:tw:content-[':']">
-                    {{ status_text|safe }}
+                <div id="sidebar-live-status"{% if (camera_id|default(0, true)|int) > 0 %} data-endpoint="{{ url_for('indi_allsky.js_latest_image_view', camera_id=camera_id, limit_s=900, night='auto') }}"{% endif %}>
+                    <div id="status_text"
+                        class="tw:pt-2 tw:px-1 tw:text-[0.6875rem] tw:opacity-85 tw:grid tw:grid-cols-[auto_1fr] tw:gap-x-3 tw:leading-relaxed [&_br]:tw:hidden [&_b]:tw:font-semibold [&_b]:tw:text-base-content/70 [&_b]:after:tw:content-[':']">
+                        {{ status_text|safe }}
+                    </div>
+                    {% if (camera_id|default(0, true)|int) > 0 %}
+                    <div id="sidebar-status-fallback" hidden>
+                        Status: <span id="sidebar-station-fallback">Checking…</span><a id="sidebar-image-age" href="{{ url_for('indi_allsky.index_view') }}">Waiting for image</a>
+                    </div>
+                    <div id="sidebar-live-detail" role="status"></div>
+                    <button type="button" class="tw:btn tw:btn-xs tw:btn-outline" id="live-retry" hidden>Retry now</button>
+                    <a class="tw:btn tw:btn-xs tw:btn-outline" id="live-login"
+                       href="{{ url_for('auth_indi_allsky.login_view', next=request.full_path.rstrip('?')) }}" hidden>Sign in</a>
+                    {% if login_disabled or (current_user.is_authenticated and current_user.is_admin) %}
+                    <a class="tw:btn tw:btn-xs tw:btn-outline" id="live-settings" href="{{ url_for('indi_allsky.config_view', _anchor='nav-image') }}" hidden>Camera settings</a>
+                    <a class="tw:btn tw:btn-xs tw:btn-outline" id="live-services" href="{{ url_for('indi_allsky.system_view', _anchor='tab-services') }}" hidden>System services</a>
+                    {% endif %}
+                    {% endif %}
                 </div>
             </details>
             <div class="tw:flex tw:gap-2 tw:w-full tw:items-center">
@@ -455,27 +484,6 @@
             });
         }
 
-        function getStatusText() {
-            $.ajax({
-                type: "GET",
-                url: "{{ url_for('indi_allsky.ajax_status_update_view') }}",
-                data: { 'camera_id': camera_id },
-                success: function(rdata) { updateStatus(rdata); },
-                timeout: 10000,
-                complete: function () { setTimeout(getStatusText, 60000); },
-            });
-        }
-
-        function updateStatus(data) {
-            let html = data['status_text'];
-            if (html) {
-                html = html.replace(/class="text-success"/g, 'class="tw:text-success"');
-                html = html.replace(/class="text-danger"/g, 'class="tw:text-error"');
-                html = html.replace(/class="text-error"/g, 'class="tw:text-error"');
-                $("#status_text").html(html);
-            }
-        }
-
         window.applyAllskyTheme = function() {
             var mode = localStorage.getItem('allsky-theme-mode') || 'dark';
             var lightT = localStorage.getItem('allsky-light-theme') || 'fantasy';
@@ -551,7 +559,6 @@
 
             loadNotification();
             setInterval(loadNotification, 60000);
-            getStatusText();
             $("#CAMERA_SELECT").on("change", changeCamera);
         });
     </script>

@@ -30,6 +30,7 @@ from PIL import Image
 from fractions import Fraction
 
 from . import constants
+from .archive_health import device_error, storage_errno
 from . import asi676mc
 
 from .processing import ImageProcessor
@@ -51,6 +52,7 @@ from .flask.models import IndiAllSkyDbImageTable
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy import func
+from sqlalchemy.exc import SQLAlchemyError
 #from sqlalchemy.orm.exc import NoResultFound
 
 from .exceptions import TimeOutException
@@ -85,6 +87,8 @@ class ImageWorker(Process):
         sensors_user_av,
         night_av,
         astro_av,
+        health,
+        sensor_health=None,
     ):
         super(ImageWorker, self).__init__()
 
@@ -94,6 +98,8 @@ class ImageWorker(Process):
 
         self.error_q = error_q
         self.image_q = image_q
+        self.health = health
+        self.sensor_health = sensor_health
         self.upload_q = upload_q
 
         self.position_av = position_av
@@ -248,6 +254,10 @@ class ImageWorker(Process):
             try:
                 i_dict = self.image_q.get(timeout=23)  # prime number
             except queue.Empty:
+                self.health.image_pulse.value = int(time.monotonic())
+                if self._shutdown:
+                    self.image_processor.realtimeKeogramDataSave()
+                    return
                 continue
 
 
@@ -264,8 +274,42 @@ class ImageWorker(Process):
 
 
             # new context for every task, reduces the effects of caching
-            with app.app_context():
-                self.processImage(i_dict)
+            self.health.image_pulse.value = int(time.monotonic())
+            if not self.health.archive_blocked.value and self.health.archive_device.value:
+                error = device_error(self.image_dir, self.health.archive_device.value)
+                if error:
+                    self.health.archive_error.value = error
+                    self.health.archive_blocked.value = 1
+            if self.health.archive_blocked.value:
+                # These jobs reference camera-owned temporary input files.
+                Path(i_dict['filename']).unlink(missing_ok=True)
+                continue
+            self.health.image_started.value = int(time.time())
+            self.health.image_busy.value = 1
+            self._expects_publication = (bool(i_dict.get('capture_file_present'))
+                                         and not i_dict.get('sqm_exposure')
+                                         and not self.config.get('FOCUS_MODE', False))
+            before = self.health.publications.value
+            try:
+                with app.app_context():
+                    self.processImage(i_dict)
+            except (OSError, SQLAlchemyError) as exc:
+                error = storage_errno(exc)
+                if error is None:
+                    raise
+                self.health.archive_error.value = error
+                self.health.archive_blocked.value = 1
+                self._expects_publication = False
+                Path(i_dict['filename']).unlink(missing_ok=True)
+                logger.error('Archive write failed; pausing for a storage check: %s', exc)
+            finally:
+                if self._expects_publication:
+                    self.health.publication_result(
+                        self.health.publications.value != before, time.monotonic(),
+                        max(300, self.config.get('CCD_EXPOSURE_TIMEOUT', 330) + 60),
+                    )
+                self.health.image_busy.value = 0
+                self.health.image_pulse.value = int(time.monotonic())
 
 
     def processImage(self, i_dict):
@@ -365,6 +409,7 @@ class ImageWorker(Process):
             return
 
 
+        self._expects_publication = not self.config.get('FOCUS_MODE', False)
         processing_start = time.time()
 
 
@@ -373,8 +418,9 @@ class ImageWorker(Process):
 
 
         ### start fetching ADSB info
-        if self.config.get('ADSB', {}).get('ENABLE'):
+        if self.config.get('ADSB', {}).get('ENABLE') and self.adsb_worker is None:
             self.adsb_aircraft_q = Queue()
+            self.adsb_deadline = time.monotonic() + 5
             self.adsb_worker_idx += 1
             self.adsb_worker = AdsbAircraftHttpWorker(
                 self.adsb_worker_idx,
@@ -382,6 +428,7 @@ class ImageWorker(Process):
                 self.adsb_aircraft_q,
                 self.position_av,
             )
+            self.adsb_worker.daemon = True
             self.adsb_worker.start()
 
 
@@ -767,15 +814,18 @@ class ImageWorker(Process):
         # get ADS-B data
         if self.adsb_worker:
             try:
-                self.adsb_aircraft_list = self.adsb_aircraft_q.get(timeout=5.0)
+                remaining = max(0, self.adsb_deadline - time.monotonic())
+                self.adsb_aircraft_list = self.adsb_aircraft_q.get(timeout=remaining)
             except queue.Empty:
                 self.adsb_aircraft_list = []
 
-            self.adsb_aircraft_q.close()
-            self.adsb_aircraft_q = None
-
-            self.adsb_worker.join()
-            self.adsb_worker = None
+            # An optional HTTP lookup must not stall publication or start
+            # unlimited replacement threads if its endpoint stops replying.
+            self.adsb_worker.join(timeout=0)
+            if not self.adsb_worker.is_alive():
+                self.adsb_aircraft_q.close()
+                self.adsb_aircraft_q = None
+                self.adsb_worker = None
 
 
         # wait on the pre-hook to finish
@@ -899,11 +949,11 @@ class ImageWorker(Process):
                 image_add_data['sensor_temp_{0:d}'.format(i)] = v_temp
 
 
-            for i in range(60):
-                image_add_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
-
-            for i in range(100, 110):
-                image_add_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
+            with self.sensors_user_av.get_lock():
+                for i in (*range(60), *range(100, 110)):
+                    image_add_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
+                if self.sensor_health is not None:
+                    image_add_data.update(self.sensor_health.metadata(time.monotonic()))
 
             image_add_data['temp_display'] = self.config.get('TEMP_DISPLAY', 'c')
             image_add_data['pressure_display'] = self.config.get('PRESSURE_DISPLAY', 'hPa')
@@ -2248,6 +2298,10 @@ class ImageWorker(Process):
 
 
         file_size_bytes = tmpfile_name.stat().st_size
+        if file_size_bytes == 0:
+            logger.error('Encoder produced an empty image; keeping the previous capture')
+            tmpfile_name.unlink()
+            return None, None
         if file_size_bytes < 1024000:
             logger.info('Compressed image file size: %0.2f KB', file_size_bytes / 1024)
         else:
@@ -2257,14 +2311,21 @@ class ImageWorker(Process):
         ### Always write the latest file for web access
         latest_file = self.image_dir.joinpath('latest.{0:s}'.format(self.config['IMAGE_FILE_TYPE']))
 
+        # Readers may have latest.jpg open while the next capture is written.
+        # Publish a complete file on the same filesystem in one rename.
+        with tempfile.NamedTemporaryFile(dir=latest_file.parent, prefix='.latest-', delete=False) as staged:
+            staged_path = Path(staged.name)
         try:
-            latest_file.unlink()
-        except FileNotFoundError:
-            pass
-
-
-        shutil.copy2(str(tmpfile_name), str(latest_file))
-        latest_file.chmod(0o644)
+            shutil.copy2(tmpfile_name, staged_path)
+            staged_path.chmod(0o644)
+            os.replace(staged_path, latest_file)
+            self.health.image_published.value = int(time.time())
+            self.health.publications.value += 1
+        except OSError:
+            tmpfile_name.unlink(missing_ok=True)
+            raise
+        finally:
+            staged_path.unlink(missing_ok=True)
 
 
         ### disable timelapse images in focus mode

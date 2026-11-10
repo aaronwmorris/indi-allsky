@@ -1,6 +1,8 @@
 #import time
 #import random
 import logging
+import threading
+import time
 
 from .sensorBase import SensorBase
 from ... import constants
@@ -84,7 +86,8 @@ class MqttBrokerSensor(SensorBase):
         logger.warning('Initializing [%s] MQTT Broker Sensor', self.name)
 
         self.data = {
-            'data' : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            'data' : [0.0] * 10,
+            'observed' : [0.0] * 10,
         }
 
 
@@ -112,6 +115,8 @@ class MqttBrokerSensor(SensorBase):
         )
 
 
+        self.client = client
+        self.sample_lock = threading.Lock()
         client.on_connect = self.on_connect
         client.on_disconnect = self.on_disconnect
         client.on_message = self.on_message
@@ -148,9 +153,13 @@ class MqttBrokerSensor(SensorBase):
 
 
     def update(self):
-        logger.info('[%s] MQTT Broker - values: %0.3f, %0.3f, %0.3f, %0.3f, %0.3f, %0.3f, %0.3f, %0.3f, %0.3f, %0.3f', self.name, *self.data['data'])
+        with self.sample_lock:
+            return {key: tuple(values) for key, values in self.data.items()}
 
-        return self.data
+
+    def deinit(self):
+        self.client.disconnect()
+        self.client.loop_stop()
 
 
     def on_subscribe(self, client, userdata, mid, reason_code_list, properties):
@@ -186,7 +195,9 @@ class MqttBrokerSensor(SensorBase):
             return
 
         logger.info('MQTT Sensor received: %0.3f (%s)', val, message.topic)
-        userdata['data'][idx] = val
+        with self.sample_lock:
+            userdata['data'][idx] = val
+            userdata['observed'][idx] = time.monotonic()
 
 
     def on_connect(self, client, userdata, flags, reason_code, properties):

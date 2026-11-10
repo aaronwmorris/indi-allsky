@@ -3,6 +3,42 @@ from pathlib import Path
 
 import numpy
 
+from .exceptions import TimelapseException
+
+
+PANORAMA_VIDEO_MAX_WIDTH = 1920
+PANORAMA_VIDEO_MAX_HEIGHT = 1080
+
+
+def panoramaVideoOptions(codec, crop_filter, extra_options):
+    """Apply the web size limit after any panorama crop/pan and user filters."""
+    filters = [crop_filter] if crop_filter else []
+    options = []
+    h264 = codec == 'libx264' or codec.startswith('h264_')
+    args = iter(extra_options)
+    user_filter = None
+    for option in args:
+        if option in ('-vf', '-filter:v', '-filter:v:0'):
+            # ffmpeg uses the last -vf for this stream.
+            user_filter = next(args, None)
+            if not user_filter:
+                raise TimelapseException('Missing video filter after ' + option)
+        elif h264 and option in ('-level', '-level:v', '-level:v:0'):
+            # The camera's general H.264 level (3.1 by default) may not fit
+            # the output dimensions, frame rate or bitrate. Let the encoder choose.
+            if next(args, None) is None:
+                raise TimelapseException('Missing H.264 level after ' + option)
+        else:
+            options.append(option)
+    if user_filter:
+        filters.append(user_filter)
+    filters.extend((
+        f"scale=w='min(iw,{PANORAMA_VIDEO_MAX_WIDTH})':h='min(ih,{PANORAMA_VIDEO_MAX_HEIGHT})'"
+        ":force_original_aspect_ratio=decrease:force_divisible_by=2",
+        'setsar=1',
+    ))
+    return ['-vf', ','.join(filters), *options]
+
 
 PANORAMA_ASPECT_RATIOS = {
     'free' : None,

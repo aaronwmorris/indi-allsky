@@ -7,7 +7,7 @@ import tempfile
 import json
 import hashlib
 from collections import OrderedDict
-from functools import wraps
+from functools import cached_property, wraps
 import time
 import math
 import base64
@@ -25,6 +25,11 @@ from passlib.hash import argon2
 
 from ..version import __version__
 from .. import constants
+from ..archive_health import archive_state, BLOCKED
+from ..live_status import camera_timezone, capture_time, health_reason, latest_live_row
+from ..sensor_health import custom_chart_values
+from ..night_movie import attempt_key, prior_attempt
+from ..media_delete import suppress_flushed_periods, suppress_movie_repair
 from .. import asi676mc
 from .. import asi676mc_calibration
 from ..processing import ImageProcessor
@@ -52,12 +57,13 @@ from flask import current_app as app
 from flask_login import login_required
 from flask_login import current_user
 
-from .misc import login_optional_media
+from .misc import login_optional_media, media_access_allowed
 
 from . import db
 
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
+from .models import IndiAllSkyDbStateTable
 from .models import IndiAllSkyDbVideoTable
 from .models import IndiAllSkyDbMiniVideoTable
 from .models import IndiAllSkyDbKeogramTable
@@ -245,41 +251,9 @@ class AjaxStatusUpdateView(BaseView):
     methods = ['GET']
 
     def dispatch_request(self):
-        camera_id = int(request.args['camera_id'])
-
-
-        self.cameraSetup(camera_id=camera_id)
-
-        # query the latest image entry
-        camera_now_minus_15m = self.camera_now - timedelta(minutes=15)
-        self.latest_image_entry = db.session.query(
-            IndiAllSkyDbImageTable,
-        )\
-            .join(IndiAllSkyDbImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
-            .filter(IndiAllSkyDbImageTable.createDate > camera_now_minus_15m)\
-            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
-            .first()
-
-
-        status_data = dict()
-        status_data.update(self.get_indi_allsky_status())
-        status_data.update(self.get_camera_info())
-        status_data.update(self.get_astrometric_info())
-        status_data.update(self.get_smoke_info())
-        status_data.update(self.get_aurora_info())
-        status_data.update(self.get_image_data())
-
-
-        status_data['uptime'] = int(time.time() - psutil.boot_time())
-        status_data['uptime_str'] = self.getUptime()
-
-
-        data = {
-            'status_text' : self.get_status_text(status_data) + self.get_web_extra_text(),
-        }
-
-        return jsonify(data)
+        self.cameraSetup(camera_id=int(request.args['camera_id']))
+        station = self.get_indi_allsky_status()
+        return jsonify(status_text=self.render_status_panel(station))
 
 
 class IndexCanvasView(TemplateView):
@@ -312,7 +286,7 @@ class JsonLatestImageView(JsonView):
     def get_objects(self):
         camera_id = int(request.args['camera_id'])
         history_seconds = int(request.args.get('limit_s', self.history_seconds))
-        night = bool(int(request.args.get('night', 1)))
+        requested_night = request.args.get('night', '1')
 
         # sanity check
         if history_seconds > 86400:
@@ -320,7 +294,15 @@ class JsonLatestImageView(JsonView):
 
 
         self.cameraSetup(camera_id=camera_id)
+        night = self.camera_is_night if requested_night == 'auto' else bool(int(requested_night))
 
+
+        live = request.args.get('live_status') == '1'
+        history_allowed = live and media_access_allowed()
+        now = None
+        if live:
+            zone = camera_timezone(self.camera) if self.camera.id > 0 else timezone.utc
+            now = datetime.now(timezone.utc).astimezone(zone)
 
         no_image_message = 'No Image for 15 minutes'
 
@@ -339,125 +321,192 @@ class JsonLatestImageView(JsonView):
         }
 
 
-        if self.indi_allsky_config.get('FOCUS_MODE', False):
-            latest_image_uri = Path('images/latest.{0}'.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg')))
+        entry = data['latest_image']
+        if live:
+            entry.update(captured_at=None, time_source=None, frame_key=None)
 
-            image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
-            latest_image_p = image_dir.joinpath(latest_image_uri.name)
-
-            if latest_image_p.exists():
-                # use latest image if it exists
-                max_age = self.camera_now - timedelta(seconds=history_seconds)
-                if latest_image_p.stat().st_mtime > max_age.timestamp():
-
-                    data['latest_image']['url'] = '{0:s}?{1:d}'.format(str(latest_image_uri), int(datetime.timestamp(self.camera_now)))
-                    data['latest_image']['message'] = ''
-                    return data
-                else:
-                    return data
-            else:
-                return data
-
-
-        if self.capture_pause:
-            data['latest_image']['message'] = 'Capture paused'
+        def respond(reason=None):
+            if live:
+                if history_allowed and reason in ('paused', 'daytime_disabled', 'daytime_unsaved_remote', 'local_file_restricted'):
+                    self.set_last_permitted_image(entry, now, history_seconds)
+                data['live_status'] = self.get_live_status(entry, now, night, reason)
+                include_details = request.args.get('status_details') == '1'
+                station = self.get_indi_allsky_status(notify=include_details)
+                data['live_status']['station'] = station
+                if include_details:
+                    data['status_text'] = self.render_status_panel(station)
             return data
 
+        if live and self.camera.id < 1:
+            return respond('no_camera')
+
+        if self.indi_allsky_config.get('FOCUS_MODE', False) and self.local_indi_allsky:
+            if not self.live_file_allowed:
+                return respond('local_file_restricted')
+            self.setLiveFile(entry, history_seconds, allow_stale=history_allowed, now=now)
+            if live and not entry['url'] and self.live_archive_state.get('level') != BLOCKED:
+                return respond('focus_waiting')
+            return respond()
+
+        if self.capture_pause:
+            entry['message'] = 'Capture paused'
+            return respond('paused')
 
         if not night:
-            ### day
-            if not self.local_indi_allsky and self.daytime_capture and not self.daytime_capture_save:
-                # remote cameras will not receive daytime images when save is disabled
+            remote_unsaved = not self.local_indi_allsky and self.daytime_capture and not self.daytime_capture_save
+            if not self.daytime_capture or remote_unsaved:
                 if self.sun_set_date:
                     utcnow = datetime.now(tz=timezone.utc)
                     delta_sun_set = self.sun_set_date - utcnow.replace(tzinfo=None)
-                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="tw:text-warning">Night starts in {0:0.1f} hours.</div>'.format(delta_sun_set.total_seconds() / 3600)
+                    entry['message'] = 'Daytime capture disabled.<br><div class="tw:text-warning">Night starts in {0:0.1f} hours.</div>'.format(delta_sun_set.total_seconds() / 3600)
                 else:
-                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="tw:text-warning">Sun never sets.</div>'
+                    entry['message'] = 'Daytime capture disabled.<br><div class="tw:text-warning">Sun never sets.</div>'
+                return respond('daytime_unsaved_remote' if remote_unsaved else 'daytime_disabled')
 
-                return data
-            elif not self.daytime_capture:
-                if self.sun_set_date:
-                    utcnow = datetime.now(tz=timezone.utc)
-                    delta_sun_set = self.sun_set_date - utcnow.replace(tzinfo=None)
-                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="tw:text-warning">Night starts in {0:0.1f} hours.</div>'.format(delta_sun_set.total_seconds() / 3600)
-                else:
-                    data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="tw:text-warning">Sun never sets.</div>'
+            if not self.daytime_capture_save:
+                if not self.live_file_allowed:
+                    return respond('local_file_restricted')
+                self.setLiveFile(entry, history_seconds, allow_stale=True, now=now)
+                return respond()
 
-            elif self.daytime_capture and not self.daytime_capture_save:
-                if self.web_nonlocal_images:
-                    if not self.verify_admin_network():
-                        # only show locally hosted assets if coming from admin networks
-                        return data
-
-                # images are not stored in the DB in this condition
-                latest_image_uri = Path(self.latest_image_t.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg')))
-
-                image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
-                latest_image_p = image_dir.joinpath(latest_image_uri.name)
+        if live:
+            limit = None if history_allowed else min(history_seconds, self.history_seconds)
+            self.set_archive_frame(entry, now, limit)
+        else:
+            latest = self.getLatestImage(camera_id, history_seconds, not_after=self.camera_now)
+            if latest.get('url'):
+                entry.update(url=latest['url'], width=latest['width'], height=latest['height'], message='')
+        return respond()
 
 
-                if not latest_image_p.exists():
-                    return data
+    def set_archive_frame(self, entry, now, limit=None):
+        latest = self.getLatestImage(self.camera.id, None, live_now=now)
+        if not latest.get('url'):
+            return
+        captured = capture_time(latest['create_date'], latest['utc_offset'], now)
+        if limit is not None and (captured is None or now.timestamp() - captured.timestamp() >= limit):
+            return  # A public live page must not disclose a media-protected older URL.
+        entry.update(url=latest['url'], width=latest['width'], height=latest['height'], message='',
+                     captured_at=captured.isoformat() if captured is not None else None,
+                     time_source='capture', frame_key='{}:{}'.format(self.camera.id, latest['id']))
 
 
-                # use latest image if it exists
-                data['latest_image']['url'] = '{0:s}?{1:d}'.format(str(latest_image_uri), int(time.time()))
-
-                max_age = self.camera_now - timedelta(seconds=history_seconds)
-                if latest_image_p.stat().st_mtime > max_age.timestamp():
-                    data['latest_image']['message'] = ''
-                else:
-                    data['latest_image']['message'] = 'Image is out of date'
-
-                return data
-
-
-        # use database
-        latest_image_data = self.getLatestImage(camera_id, history_seconds)
-        if latest_image_data.get('url'):
-            data['latest_image']['url'] = latest_image_data['url']
-            data['latest_image']['width'] = latest_image_data['width']
-            data['latest_image']['height'] = latest_image_data['height']
-            data['latest_image']['message'] = ''
+    def set_last_permitted_image(self, entry, now, history_seconds):
+        # Show the previous frame when opening a paused station in a new tab.
+        message = entry['message']
+        self.set_archive_frame(entry, now)
+        uses_file = self.indi_allsky_config.get('FOCUS_MODE') or not self.daytime_capture_save
+        if uses_file and self.live_file_allowed:
+            file = {}
+            self.setLiveFile(file, history_seconds, allow_stale=True, now=now)
+            if file.get('url'):
+                archive_time = entry.get('captured_at')
+                if not archive_time or datetime.fromisoformat(file['captured_at']) > datetime.fromisoformat(archive_time):
+                    entry.update(file)
+        entry['message'] = message
 
 
-        return data
+    def get_live_status(self, entry, now, night, reason):
+        config = self.indi_allsky_config
+        if self.local_indi_allsky:
+            cadence = max(float(config.get('CCD_EXPOSURE_MAX') or 15),
+                          float(config.get('EXPOSURE_PERIOD' if night else 'EXPOSURE_PERIOD_DAY') or 0))
+            stale_after = max(90, int(2 * cadence + 15))
+        else:
+            # A synchronized camera does not publish its capture interval.
+            stale_after = self.history_seconds
+
+        status = {'now': now.isoformat(), 'stale_after_s': stale_after, 'reason': reason,
+                  'can_manage': False, 'can_sign_in_to_manage': False}
+        captured = entry.get('captured_at')
+        delayed = not captured or now.timestamp() - datetime.fromisoformat(captured).timestamp() > stale_after
+        if entry.get('url') and not captured and not reason:
+            status['reason'] = 'capture_time_unknown'
+            delayed = False
+        elif delayed and not reason:
+            status['reason'] = 'no_recent_image'
+        if not self.local_indi_allsky or self.camera.id < 1:
+            return status
+        admin = current_user.is_authenticated and current_user.is_admin
+        trusted = not admin and self.verify_admin_network()
+        if not admin and not (trusted and (not self.web_nonlocal_images or self.web_local_images_admin)):
+            return status
+        active = self.live_states.get('DB_CAMERA_ID')
+        if active is None or active.value != str(self.camera.id):
+            return status  # Supervisor state belongs to the active local camera only.
+        status['can_manage'] = bool(admin or (self.login_disabled and trusted))
+        status['can_sign_in_to_manage'] = bool(trusted and not self.login_disabled and not current_user.is_authenticated)
+        if delayed and not reason:
+            health = self.live_states.get('CAPTURE_HEALTH')
+            if health is not None and health.createDate < active.createDate:
+                health = None  # A newly connected camera has not reported yet.
+            issue = health_reason(health, self.live_archive_state, now)
+            status['reason'] = issue or status['reason']
+        return status
 
 
-    def getLatestImage(self, camera_id, history_seconds):
-        camera_now_minus_seconds = self.camera_now - timedelta(seconds=history_seconds)
+    @cached_property
+    def live_archive_state(self):
+        return archive_state(self.indi_allsky_config)
 
+    @cached_property
+    def local_images_allowed(self):
+        return not self.web_nonlocal_images or (
+            self.web_local_images_admin and self.verify_admin_network()
+        )
+
+    @cached_property
+    def live_file_allowed(self):
+        if not self.local_indi_allsky or not self.local_images_allowed:
+            return False
+        active = IndiAllSkyDbCameraTable.query.filter_by(local=True).order_by(
+            IndiAllSkyDbCameraTable.connectDate.desc(), IndiAllSkyDbCameraTable.id.desc(),
+        ).first()
+        return active is not None and active.id == self.camera.id
+
+    def setLiveFile(self, entry, history_seconds, allow_stale=False, now=None):
+        if now is not None:
+            active = self.live_states.get('DB_CAMERA_ID')
+            if (active is None or active.value != str(self.camera.id)
+                    or self.live_archive_state.get('level') == BLOCKED):
+                return
+        uri = Path(self.latest_image_t.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg')))
+        try:
+            stamp = (Path(self.indi_allsky_config['IMAGE_FOLDER']) / uri.name).stat()
+        except OSError:
+            return
+        now_s = now.timestamp() if now is not None else self.camera_now.timestamp()
+        stale = stamp.st_mtime <= now_s - history_seconds
+        if stamp.st_mtime > now_s or (stale and not allow_stale) or not stamp.st_size:
+            return
+        entry['url'] = '{0}?v={1}'.format(uri, stamp.st_mtime_ns)
+        entry['message'] = 'Image is out of date' if stale else ''
+        if now is not None:
+            entry.update(captured_at=datetime.fromtimestamp(stamp.st_mtime, now.tzinfo).isoformat(),
+                         time_source='file', frame_key='file:{}'.format(stamp.st_mtime_ns))
+
+
+    def getLatestImage(self, camera_id, history_seconds, not_after=None, *, live_now=None):
         latest_image_q = self.model.query\
             .join(self.model.camera)\
-            .filter(
-                and_(
-                    IndiAllSkyDbCameraTable.id == camera_id,
-                    self.model.createDate > camera_now_minus_seconds,
-                )
-            )
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)
+        if history_seconds is not None:
+            latest_image_q = latest_image_q.filter(self.model.createDate > self.camera_now - timedelta(seconds=history_seconds))
+        if not_after is not None:
+            latest_image_q = latest_image_q.filter(self.model.createDate <= not_after)
 
 
-        local = True  # default to local assets
-        if self.web_nonlocal_images:
-            if self.web_local_images_admin and self.verify_admin_network():
-                pass
-            else:
-                local = False
-
-                # Do not serve local assets
-                latest_image_q = latest_image_q\
-                    .filter(
-                        or_(
-                            self.model.remote_url != sa_null(),
-                            self.model.s3_key != sa_null(),
-                        )
-                    )
+        if not self.local_images_allowed:
+            latest_image_q = latest_image_q.filter(or_(
+                self.model.remote_url != sa_null(),
+                self.model.s3_key != sa_null(),
+            ))
 
 
-        latest_image = latest_image_q\
-            .order_by(self.model.createDate.desc())\
-            .first()
+        if live_now is not None:
+            latest_image = latest_live_row(latest_image_q, self.model, live_now)
+        else:
+            latest_image = latest_image_q.order_by(self.model.createDate.desc(), self.model.id.desc()).first()
 
 
         if not latest_image:
@@ -465,7 +514,9 @@ class JsonLatestImageView(JsonView):
 
 
         try:
-            url = latest_image.getUrl(s3_prefix=self.s3_prefix, local=local)
+            url = latest_image.getUrl(s3_prefix=self.s3_prefix, local=self.local_images_allowed)
+            if live_now is not None and isinstance(url, Path) and url.is_absolute():
+                return {'url': None}  # The browser cannot serve a path outside the archive.
         except ValueError as e:
             app.logger.error('Error determining relative file name: %s', str(e))
             return {'url': None}
@@ -477,6 +528,11 @@ class JsonLatestImageView(JsonView):
             'height' : latest_image.height,
         }
 
+        if live_now is not None:
+            image_data['id'] = latest_image.id
+        if not_after is not None or live_now is not None:
+            image_data['create_date'] = latest_image.createDate
+            image_data['utc_offset'] = latest_image.data.get('utc_offset') if isinstance(latest_image.data, dict) else None
         return image_data
 
 
@@ -1863,15 +1919,10 @@ class JsonChartView(JsonView):
             camera_data = dict()
 
 
-        custom_chart_1_key = camera_data.get('custom_chart_1_key', 'sensor_user_10')
-        custom_chart_2_key = camera_data.get('custom_chart_2_key', 'sensor_user_11')
-        custom_chart_3_key = camera_data.get('custom_chart_3_key', 'sensor_user_12')
-        custom_chart_4_key = camera_data.get('custom_chart_4_key', 'sensor_user_13')
-        custom_chart_5_key = camera_data.get('custom_chart_5_key', 'sensor_user_14')
-        custom_chart_6_key = camera_data.get('custom_chart_6_key', 'sensor_user_15')
-        custom_chart_7_key = camera_data.get('custom_chart_7_key', 'sensor_user_16')
-        custom_chart_8_key = camera_data.get('custom_chart_8_key', 'sensor_user_17')
-        custom_chart_9_key = camera_data.get('custom_chart_9_key', 'sensor_user_18')
+        custom_chart_keys = [
+            camera_data.get(f'custom_chart_{n}_key', f'sensor_user_{n + 9}')
+            for n in range(1, 10)
+        ]
 
 
         for i in chart_query:
@@ -1934,121 +1985,8 @@ class JsonChartView(JsonView):
             chart_data['detection'].append(detection_data)
 
 
-            # custom chart 1
-            try:
-                custom_1_y = i.data[custom_chart_1_key]
-            except KeyError:
-                custom_1_y = 0
-
-            custom_1_data = {
-                'x' : x,
-                'y' : custom_1_y,
-            }
-            chart_data['custom_1'].append(custom_1_data)
-
-
-            # custom chart 2
-            try:
-                custom_2_y = i.data[custom_chart_2_key]
-            except KeyError:
-                custom_2_y = 0
-
-            custom_2_data = {
-                'x' : x,
-                'y' : custom_2_y,
-            }
-            chart_data['custom_2'].append(custom_2_data)
-
-
-            # custom chart 3
-            try:
-                custom_3_y = i.data[custom_chart_3_key]
-            except KeyError:
-                custom_3_y = 0
-
-            custom_3_data = {
-                'x' : x,
-                'y' : custom_3_y,
-            }
-            chart_data['custom_3'].append(custom_3_data)
-
-
-            # custom chart 4
-            try:
-                custom_4_y = i.data[custom_chart_4_key]
-            except KeyError:
-                custom_4_y = 0
-
-            custom_4_data = {
-                'x' : x,
-                'y' : custom_4_y,
-            }
-            chart_data['custom_4'].append(custom_4_data)
-
-
-            # custom chart 5
-            try:
-                custom_5_y = i.data[custom_chart_5_key]
-            except KeyError:
-                custom_5_y = 0
-
-            custom_5_data = {
-                'x' : x,
-                'y' : custom_5_y,
-            }
-            chart_data['custom_5'].append(custom_5_data)
-
-
-            # custom chart 6
-            try:
-                custom_6_y = i.data[custom_chart_6_key]
-            except KeyError:
-                custom_6_y = 0
-
-            custom_6_data = {
-                'x' : x,
-                'y' : custom_6_y,
-            }
-            chart_data['custom_6'].append(custom_6_data)
-
-
-            # custom chart 7
-            try:
-                custom_7_y = i.data[custom_chart_7_key]
-            except KeyError:
-                custom_7_y = 0
-
-            custom_7_data = {
-                'x' : x,
-                'y' : custom_7_y,
-            }
-            chart_data['custom_7'].append(custom_7_data)
-
-
-            # custom chart 8
-            try:
-                custom_8_y = i.data[custom_chart_8_key]
-            except KeyError:
-                custom_8_y = 0
-
-            custom_8_data = {
-                'x' : x,
-                'y' : custom_8_y,
-            }
-            chart_data['custom_8'].append(custom_8_data)
-
-
-            # custom chart 9
-            try:
-                custom_9_y = i.data[custom_chart_9_key]
-            except KeyError:
-                custom_9_y = 0
-
-            custom_9_data = {
-                'x' : x,
-                'y' : custom_9_y,
-            }
-            chart_data['custom_9'].append(custom_9_data)
+            for n, value in enumerate(custom_chart_values(i.data, custom_chart_keys), 1):
+                chart_data[f'custom_{n}'].append({'x': x, 'y': value})
 
 
         # build last image histogram
@@ -6609,6 +6547,7 @@ class AjaxSystemInfoView(BaseView):
 
 
     def flushTimelapses(self, camera_id):
+        suppress_flushed_periods(self.indi_allsky_config, camera_id)
         video_query = IndiAllSkyDbVideoTable.query\
             .join(IndiAllSkyDbVideoTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
@@ -6670,6 +6609,7 @@ class AjaxSystemInfoView(BaseView):
 
 
     def flushDaytime(self, camera_id):
+        suppress_flushed_periods(self.indi_allsky_config, camera_id, daytime_only=True)
         ### Images
         image_query = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
@@ -7356,6 +7296,12 @@ class AjaxTimelapseGeneratorView(BaseView):
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .one()
 
+
+        if camera.local:
+            if night and action in ('delete_video_k_st_p', 'delete_video'):
+                suppress_movie_repair(camera.id, day_date, night, panorama=False)
+            if action in ('delete_video_k_st_p', 'delete_panorama_video'):
+                suppress_movie_repair(camera.id, day_date, night, panorama=True)
 
         if action == 'delete_video_k_st_p':
             video_entry = IndiAllSkyDbVideoTable.query\
@@ -11531,6 +11477,12 @@ class TimelapseVideoView(TemplateView):
             context['timeofday'] = 'Night'
         else:
             context['timeofday'] = 'Day'
+
+        panorama = self.model is IndiAllSkyDbPanoramaVideoTable
+        if local and video.camera.local and (panorama or (self.model is IndiAllSkyDbVideoTable and video.night)):
+            key = attempt_key(video.camera_id, video.dayDate, video.night, panorama)
+            record = db.session.get(IndiAllSkyDbStateTable, key)
+            context['night_movie_status'] = prior_attempt(record, video.dayDate).get('result')
 
         context['dayDate_full'] = video.dayDate.strftime('%B %d, %Y')
         context['video_url'] = video.getUrl(s3_prefix=self.s3_prefix, local=local)
