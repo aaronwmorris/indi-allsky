@@ -45,6 +45,7 @@ class IndiAllSkyConfigBase(object):
         "OWNER" : "",
         "WEBSITE" : {
             "TITLE" : "indi-allsky",
+            "PUBLIC_URL" : "",
         },
         "LOCAL_AUTH_ENABLE" : True,
         "LENS_NAME" : "AllSky Lens",
@@ -585,6 +586,11 @@ class IndiAllSkyConfigBase(object):
             "TLS"                    : True,
             "CERT_BYPASS"            : True,
             "PUBLISH_IMAGE"          : True,
+        },
+        "GLOBAL_ALLSKY_MAP" : {
+            "ENABLE" : False,
+            "IMAGE_URL" : "",
+            "EQUIPMENT" : "",
         },
         "ALLSKYMAP" : {
             "ENABLE"                 : False,

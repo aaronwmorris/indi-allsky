@@ -36,7 +36,7 @@ from wtforms import DateTimeLocalField
 from wtforms import FileField
 from wtforms.widgets import PasswordInput
 from wtforms.widgets import NumberInput
-from wtforms.validators import DataRequired
+from wtforms.validators import Length, DataRequired
 from wtforms.validators import NumberRange
 #from wtforms.validators import regexp as validator_regexp
 from wtforms.validators import ValidationError
@@ -2903,6 +2903,16 @@ def SYNCAPI__BASEURL_validator(form, field):
         raise ValidationError('Do not sync to localhost, bad things happen')
 
 
+def GLOBAL_ALLSKY_MAP_urls_validator(form, field):
+    from ..global_allsky_map import validate_urls, MapError
+    try:
+        validate_urls(form.WEBSITE__PUBLIC_URL.data or '', form.GLOBAL_ALLSKY_MAP__IMAGE_URL.data or '')
+    except MapError as exc:
+        # The shared public site URL can be saved before this integration is enabled.
+        if form.GLOBAL_ALLSKY_MAP__ENABLE.data:
+            raise ValidationError(str(exc))
+
+
 def ALLSKYMAP__API_URL_validator(form, field):
     if form.ALLSKYMAP__ENABLE.data and not field.data:
         raise ValidationError('API URL is required when Allsky Map integration is enabled')
@@ -5069,6 +5079,10 @@ class IndiAllskyConfigForm(FlaskForm):
     SYNCAPI__UPLOAD_VIDEO            = BooleanField('Transfer videos', render_kw={'disabled' : 'disabled'})
     SYNCAPI__CONNECT_TIMEOUT         = FloatField('Connect Timeout', validators=[DataRequired(), SYNCAPI__TIMEOUT_validator])
     SYNCAPI__TIMEOUT                 = FloatField('Read Timeout', validators=[DataRequired(), SYNCAPI__TIMEOUT_validator])
+    GLOBAL_ALLSKY_MAP__ENABLE       = BooleanField('Enable Global Allsky Map publication')
+    GLOBAL_ALLSKY_MAP__IMAGE_URL    = StringField('Public Image URL', validators=[GLOBAL_ALLSKY_MAP_urls_validator, Length(max=2048)])
+    GLOBAL_ALLSKY_MAP__EQUIPMENT    = StringField('Equipment', validators=[Length(max=512)])
+    WEBSITE__PUBLIC_URL            = StringField('Public Website URL', validators=[GLOBAL_ALLSKY_MAP_urls_validator, Length(max=2048)])
     ALLSKYMAP__ENABLE                = BooleanField('Enable Allsky Map Ping')
     ALLSKYMAP__API_URL               = StringField('API URL', validators=[ALLSKYMAP__API_URL_validator])
     ALLSKYMAP__API_KEY               = PasswordField('API Key', widget=PasswordInput(hide_value=False), validators=[ALLSKYMAP__API_KEY_validator], render_kw={'autocomplete' : 'new-password'})

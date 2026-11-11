@@ -2458,6 +2458,16 @@ class VideoWorker(Process):
         self._miscUpload.upload_db_backup(backup_file)
 
 
+    def publishGlobalAllskyMap(self, task, **kwargs):
+        from .global_allsky_map import GlobalMapService
+        result = GlobalMapService().execute(task, **kwargs)
+        if result['ok']:
+            self._miscDb.clearNotification(NotificationCategory.STATE, 'global_allsky_map')
+        elif result['status'] not in ('NOT_SENT', 'STALE', 'DISABLED'):
+            self._miscDb.addNotification(NotificationCategory.STATE, 'global_allsky_map',
+                'Global Allsky Map: ' + result['message'], expire=timedelta(days=1))
+
+
     def sendAllskyMapPing(self, task, **kwargs):
         task.setRunning()
 

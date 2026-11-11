@@ -1,0 +1,68 @@
+<div class="tab-pane fade" id="nav-global-allsky-map" role="tabpanel" aria-labelledby="nav-global-allsky-map-tab">
+  <div class="tw:card tw:bg-base-200 tw:my-4"><div class="tw:card-body">
+    <h2 class="tw:card-title">Global Allsky Map — AllskyTeam</h2>
+    <p>This is the Allsky project's public map, separate from allsky-map.com.</p>
+    <p>Publication shares the coordinates shown in Preview, location, owner, camera, lens, computer, equipment, public URLs and INDI-AllSky version. Coordinates are rounded to two decimals, or whole degrees in Privacy Mode. Public images/text can still identify your location.</p>
+    <p>No image bytes, host machine ID or INDI-AllSky configuration are uploaded. A random persistent installation identifier is sent as the map record key; it is not authentication or an API key.</p>
+    <label>{{ form_config.GLOBAL_ALLSKY_MAP__ENABLE() }} {{ form_config.GLOBAL_ALLSKY_MAP__ENABLE.label }}</label>
+    <div id="GLOBAL_ALLSKY_MAP__ENABLE-error" class="tw:text-error" style="display:none"></div>
+    <label>{{ form_config.WEBSITE__PUBLIC_URL.label }} {{ form_config.WEBSITE__PUBLIC_URL(class='tw:input tw:input-bordered tw:w-full') }}</label>
+    <p>Optional shared public website address. A website requires an image URL on the same domain; an image alone is valid. Public URLs must not require a login.</p>
+    <div id="WEBSITE__PUBLIC_URL-error" class="tw:text-error" style="display:none"></div>
+    <label>{{ form_config.GLOBAL_ALLSKY_MAP__IMAGE_URL.label }} {{ form_config.GLOBAL_ALLSKY_MAP__IMAGE_URL(class='tw:input tw:input-bordered tw:w-full') }}</label>
+    <div id="GLOBAL_ALLSKY_MAP__IMAGE_URL-error" class="tw:text-error" style="display:none"></div>
+    <label>{{ form_config.GLOBAL_ALLSKY_MAP__EQUIPMENT.label }} {{ form_config.GLOBAL_ALLSKY_MAP__EQUIPMENT(class='tw:input tw:input-bordered tw:w-full') }}</label>
+    <div id="GLOBAL_ALLSKY_MAP__EQUIPMENT-error" class="tw:text-error" style="display:none"></div>
+    <p>Location, owner and lens reuse their existing Config settings; camera/computer/version are automatic. Save changes first, then Preview the saved metadata. Preview stores an installation identifier locally but sends nothing. First registration always requires Register.</p>
+    <div class="tw:flex tw:flex-wrap tw:gap-2">
+      <button type="button" class="tw:btn" data-global-map="preview">Preview saved metadata</button>
+      <button type="button" class="tw:btn" data-global-map="register" disabled>Register / Update</button>
+      <button type="button" class="tw:btn" data-global-map="force" disabled>Force update…</button>
+      <button type="button" class="tw:btn" data-global-map="remove">Remove and disable…</button>
+      <button type="button" class="tw:btn" id="global-map-refresh">Refresh status</button>
+    </div>
+    <p>Registered, enabled installations refresh about every 48 hours and after metadata changes. Ordinary requests are limited to five attempts in a rolling 24 hours. Force is a deliberate server-quota override, never automatic. Failures with unknown outcomes need manual review, not automatic retry.</p>
+    <p>Disabling stops future publication but does not remove an existing listing. Remove and disable saves Disable immediately and queues removal; if removal fails, publication stays disabled. Re-enabling never changes the installation identifier.</p>
+    <pre id="global-map-preview" class="tw:whitespace-pre-wrap"></pre>
+    <pre id="global-map-status" class="tw:whitespace-pre-wrap" role="status"></pre>
+  </div></div>
+</div>
+<script>
+$(function () {
+  let previewToken = null;
+  const endpoint = {{ url_for('indi_allsky.global_allsky_map_view') | tojson }};
+  const buttons = $('[data-global-map]');
+  function show(data) {
+    $('#global-map-status').text(JSON.stringify(data.error || data.status || data, null, 2));
+  }
+  $('#global-map-refresh').on('click', function () {
+    $.getJSON(endpoint).done(show).fail(function (xhr) { show(xhr.responseJSON || {error: 'Unable to read status'}); });
+  });
+  buttons.on('click', function () {
+    const operation = $(this).data('global-map');
+    if (operation === 'force' && !window.confirm('Force a public update and override the server quota? This is never required for normal refresh.')) return;
+    if (operation === 'remove' && !window.confirm('Disable future publication and request removal of this installation from the public map?')) return;
+    buttons.prop('disabled', true);
+    $.ajax({url: endpoint, method: 'POST', contentType: 'application/json',
+      data: JSON.stringify({operation: operation, preview_token: previewToken, confirm: true})
+    }).done(function (data) {
+      if (operation === 'preview') {
+        previewToken = data.preview_token;
+        $('#global-map-preview').text(JSON.stringify(data.metadata, null, 2));
+      }
+      if (operation === 'remove') {
+        $('#GLOBAL_ALLSKY_MAP__ENABLE').prop('checked', false);
+        previewToken = null;
+      }
+      show(data);
+    }).fail(function (xhr) {
+      const data = xhr.responseJSON || {error: 'Request failed; refresh status before retrying'};
+      if (operation === 'remove' && data.enabled === false) $('#GLOBAL_ALLSKY_MAP__ENABLE').prop('checked', false);
+      show(data);
+    }).always(function () {
+      buttons.prop('disabled', false);
+      $('[data-global-map="register"], [data-global-map="force"]').prop('disabled', !previewToken);
+    });
+  });
+});
+</script>

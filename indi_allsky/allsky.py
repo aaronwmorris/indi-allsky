@@ -1485,6 +1485,14 @@ class IndiAllSky(object):
 
         logger.warning('Periodic tasks triggered')
 
+        # Metadata-only publication uses the existing manual VIDEO task dispatcher.
+        from .global_allsky_map import GlobalMapService, MapError
+        try:
+            GlobalMapService().schedule()
+        except MapError as exc:
+            logger.warning('Global Allsky Map scheduling: %s', str(exc))
+
+
 
         # cleanup data
         if self.cleanup_tasks_time < now_time:
