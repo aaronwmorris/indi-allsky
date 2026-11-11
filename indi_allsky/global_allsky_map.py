@@ -365,8 +365,29 @@ class GlobalMapService:
         if not config.get('GLOBAL_ALLSKY_MAP', {}).get('ENABLE', False):
             return None
         state = self.state()
-        if not state.get('registered') or state.get('needs_review') or state.get('pending'):
+        if not state.get('registered') or state.get('needs_review'):
             return None
+        pending = state.get('pending')
+        if pending:
+            from .flask import db
+            from .flask.models import IndiAllSkyDbTaskQueueTable, TaskQueueState
+            task = db.session.get(IndiAllSkyDbTaskQueueTable, pending)
+            if task and task.state in (TaskQueueState.MANUAL, TaskQueueState.QUEUED, TaskQueueState.RUNNING):
+                return None
+            def reconcile(current):
+                if current.get('pending') != pending:
+                    return
+                if current.get('attempted_task') == pending:
+                    current['needs_review'] = True
+                    current['last_status'] = 'Interrupted request; manual review required, not retried'
+                else:
+                    # Parent restart expires queued jobs. A never-attempted job is safe
+                    # to replace; the old task can no longer claim the pending slot.
+                    current.pop('pending', None)
+            self._change(reconcile)
+            state = self.state()
+            if state.get('pending') or state.get('needs_review'):
+                return None
         if self.clock() < state.get('auto_not_before', 0):
             return None
         data = self._payload(config)

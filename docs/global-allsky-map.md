@@ -49,7 +49,8 @@ scheduled attempts for 24 hours. **Force update** requires preview and explicit
 confirmation; it overrides only quota, never automatically runs or retries.
 Errors with uncertain outcomes pause automatic publication for manual review.
 A durable pre-I/O task claim prevents repeating an attempted POST after restart.
-A stopped/expired attempted task remains visible as requiring review; preview and
+A queued refresh expired by parent restart can be replaced only if it was never
+attempted. A stopped/expired attempted task remains visible as requiring review; preview and
 an explicit subsequent Update/Remove are required to resolve uncertainty.
 
 Disabling stops future queued/scheduled publication (an already transmitted request

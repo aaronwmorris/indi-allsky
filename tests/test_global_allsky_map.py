@@ -256,6 +256,24 @@ class GlobalMapTest(unittest.TestCase):
         self.assertEqual(IndiAllSkyDbTaskQueueTable.query.count(),1)
         self.assertFalse(self.calls)
 
+    def test_parent_restart_replaces_only_never_attempted_registered_refresh(self):
+        self.run_job()
+        self.now+=G.REFRESH_SECONDS
+        old_id=self.s.schedule()
+        old=db.session.get(IndiAllSkyDbTaskQueueTable,old_id)
+        old.state=TaskQueueState.EXPIRED;db.session.commit()
+        new_id=self.s.schedule()
+        self.assertIsNotNone(new_id);self.assertNotEqual(old_id,new_id)
+        self.assertIsNone(self.s.schedule())
+        old.setRunning()
+        result=self.s.execute(old,**old.data['kwargs'])
+        self.assertEqual(result['status'],'NOT_SENT')
+        self.assertEqual(self.s.state()['pending'],new_id)
+        self.assertEqual(len(self.calls),1)
+        new=db.session.get(IndiAllSkyDbTaskQueueTable,new_id);new.setRunning()
+        self.assertTrue(self.s.execute(new,**new.data['kwargs'])['ok'])
+        self.assertEqual(len(self.calls),2)
+
 
 if __name__ == '__main__':
     unittest.main()
