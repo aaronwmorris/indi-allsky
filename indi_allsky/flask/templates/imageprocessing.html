@@ -451,7 +451,7 @@ var fullscreen = false;  //initial state
                                     {{ form_image_processing.IMAGE_DENOISE_STRENGTH(class='tw:input tw:input-bordered tw:input-sm tw:h-10 tw:w-full') }}
                                     <div id="IMAGE_DENOISE_STRENGTH-error" class="tw:text-error tw:text-xs tw:mt-1" style="display: none;"></div>
                                 </div>
-                                <div class="tw:grid tw:grid-cols-2 tw:gap-4">
+                                <div id="bilateral-settings" class="tw:grid tw:grid-cols-2 tw:gap-4" style="display: none;">
                                     <div class="tw:form-control">
                                         <label class="tw:label tw:py-1">
                                             <span class="tw:label-text tw:text-[0.625rem] tw:font-bold tw:uppercase tw:tracking-wide tw:text-base-content/60">Bilateral Color</span>
@@ -1426,6 +1426,7 @@ function init() {
 
 $('#IMAGE_DENOISE').on('change', function() {
     var val = $(this).val();
+    $('#bilateral-settings').toggle(val === 'bilateral');
     var $str = $('#IMAGE_DENOISE_STRENGTH');
     var $bCol = $('#BILATERAL_SIGMA_COLOR');
     var $bSpa = $('#BILATERAL_SIGMA_SPACE');
@@ -1447,6 +1448,7 @@ $(document).ready(function() {
     $('#fits-image').on("click", function() { goFullscreen(this); });
     
     // Initial denoise state
+    $('#bilateral-settings').toggle($('#IMAGE_DENOISE').val() === 'bilateral');
     if (!$('#IMAGE_DENOISE').val()) {
         $('#IMAGE_DENOISE_STRENGTH').attr({'readonly': true, 'disabled': true}).addClass('tw:opacity-50 tw:bg-base-300');
     }
