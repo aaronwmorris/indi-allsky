@@ -1,5 +1,7 @@
 """Optional AllskyTeam map client. No capture code, image upload or host ID access."""
 import hashlib
+import html
+import http.client
 import ipaddress
 import json
 import math
@@ -18,6 +20,7 @@ from .version import __version__
 ENDPOINT = 'https://www.thomasjacquin.com/allsky-map/postToMap.php'
 ID_KEY = 'GLOBAL_MAP_ID'
 STATE_KEY = 'GLOBAL_MAP_STATE'
+RESPONSE_KEY = 'GLOBAL_MAP_RESPONSE'
 ACTION = 'publishGlobalAllskyMap'
 REFRESH_SECONDS = 48 * 3600
 QUOTA_SECONDS = 24 * 3600
@@ -25,6 +28,7 @@ MIN_INTERVAL = 60
 MAX_UPDATES = 5
 TIMEOUT = 15
 MAX_RESPONSE = 8192
+MAX_DIAGNOSTIC_BODY = 2048
 
 
 class MapError(ValueError):
@@ -109,6 +113,27 @@ def computer_description():
     return '{0}, {1}'.format(model or 'Unknown computer', ram)
 
 
+def canonical_version(version=None):
+    """Map identity uses the dated application release, not package provenance."""
+    value = __version__ if version is None else version
+    match = re.fullmatch(r'(indi_v\d{4}\.\d{2}\.\d{2})(?:[+~.-].*)?', value)
+    if not match:
+        raise MapError('Cannot determine canonical INDI-AllSky application version')
+    return match.group(1)
+
+
+def _redact_response(text, identifier):
+    if not identifier:
+        return text
+    text = re.sub(re.escape(identifier), '[installation-id]', text, flags=re.IGNORECASE)
+    # Do not retain an echoed identifier hidden by common HTML/URL/JSON escaping.
+    normalized = html.unescape(parse.unquote(text))
+    normalized = re.sub(r'\\u([0-9a-fA-F]{4})', lambda m: chr(int(m[1], 16)), normalized)
+    if identifier.lower() in normalized.lower():
+        return '[body withheld: encoded installation identifier]'
+    return text
+
+
 def payload(config, camera, identifier, computer=None):
     """Build an explicit metadata allowlist; never serialize config/camera objects."""
     if not re.fullmatch('[0-9a-f]{32}', identifier):
@@ -134,7 +159,7 @@ def payload(config, camera, identifier, computer=None):
         'lens': str(config.get('LENS_NAME', '') or ''),
         'computer': computer if computer is not None else computer_description(),
         'equipmentinfo': str(options.get('EQUIPMENT', '') or ''),
-        'allsky_version': __version__, 'website_settings': {}, 'allsky_settings': {},
+        'allsky_version': canonical_version(), 'website_settings': {}, 'allsky_settings': {},
     }
 
 
@@ -175,25 +200,70 @@ def parse_response(text, deleting=False):
     return terminal
 
 
-def post(data, opener=None):
-    """One bounded attempt. No redirects, image fetches or automatic retries."""
+def post(data, opener=None, record=None):
+    """One attempt; retain bounded, redacted evidence before protocol validation."""
+    identifier = data.get('machine_id')
     req = request.Request(ENDPOINT, data=json.dumps(data).encode('utf-8'), method='POST', headers={
         'Accept': 'application/json', 'Content-Type': 'application/json',
-        'User-Agent': 'indi-allsky/' + __version__,
+        'User-Agent': 'indi-allsky/' + canonical_version(),
     })
     opener = opener or request.build_opener(_NoRedirect()).open
-    try:
-        with opener(req, timeout=TIMEOUT) as response:
-            if response.status != 200:
-                raise MapError('Map HTTP status {0}'.format(response.status))
-            body = response.read(MAX_RESPONSE + 1)
+
+    def retain(evidence):
+        if record:
+            record(dict(evidence))
+
+    def read_response(response, http_error=False):
+        status = response.code if http_error else response.status
+        content_type = getattr(response, 'headers', {}).get('Content-Type', '')
+        evidence = {'http_status': status,
+                    'content_type': _redact_response(content_type, identifier)[:256],
+                    'body': '', 'body_truncated': False, 'bytes_read': 0,
+                    'outcome': 'awaiting_body'}
+        retain(evidence)  # Even a subsequent read failure retains status/content type.
+        try:
+            body = response.read(MAX_RESPONSE + 1) or b''
+        except (OSError, http.client.HTTPException) as exc:
+            evidence.update(outcome='transport_ambiguous', body_read_failed=True)
+            retain(evidence)
+            raise MapError('Response read failed; outcome may be unknown. No retry was made.') from exc
+        text = body.decode('utf-8', errors='replace')
+        redacted = _redact_response(text, identifier).encode('utf-8')
+        evidence.update(body=redacted[:MAX_DIAGNOSTIC_BODY].decode('utf-8', errors='replace'),
+                        body_truncated=len(body) > MAX_DIAGNOSTIC_BODY or len(redacted) > MAX_DIAGNOSTIC_BODY,
+                        bytes_read=len(body), response_limit_exceeded=len(body) > MAX_RESPONSE,
+                        outcome='unparsed')
+        retain(evidence)
+        if http_error or status != 200:
+            evidence['outcome'] = 'http_error'
+            retain(evidence)
+            raise MapError('Map HTTP error {0}'.format(status))
+        try:
             if len(body) > MAX_RESPONSE:
                 raise MapError('Map response exceeds the size limit')
-            return parse_response(body.decode('utf-8', errors='replace'), data.get('website_url') == 'DELETE')
+            result = parse_response(text, data.get('website_url') == 'DELETE')
+        except MapError as exc:
+            evidence.update(outcome='protocol_ambiguous', protocol_error=str(exc))
+            retain(evidence)  # Durable before the failure is recorded by the worker.
+            raise
+        result['message'] = _redact_response(result['message'], identifier)
+        result['messages'] = [_redact_response(m, identifier) for m in result['messages']]
+        evidence.update(outcome='success' if result['ok'] else 'server_result',
+                        terminal_result={k: result[k] for k in ('status', 'ok', 'updates', 'maximum') if k in result})
+        retain(evidence)
+        return result
+
+    try:
+        response = opener(req, timeout=TIMEOUT)
     except error.HTTPError as exc:
-        raise MapError('Map HTTP error {0}'.format(exc.code)) from exc
-    except (error.URLError, TimeoutError, OSError) as exc:
+        with exc:
+            return read_response(exc, http_error=True)
+    except (error.URLError, OSError, http.client.HTTPException) as exc:
+        retain({'http_status': None, 'content_type': None, 'body': '',
+                'body_truncated': False, 'bytes_read': 0, 'outcome': 'transport_ambiguous'})
         raise MapError('Transport failed or timed out; outcome may be unknown. No retry was made.') from exc
+    with response:
+        return read_response(response)
 
 
 class GlobalMapService:
@@ -298,6 +368,9 @@ class GlobalMapService:
             if not task or task.state in (TaskQueueState.EXPIRED, TaskQueueState.FAILED):
                 public['needs_review'] = True
                 public['last_status'] = 'Interrupted request; manual review required, not retried'
+        latest_response = self._read(RESPONSE_KEY)
+        if latest_response:
+            public['response_evidence'] = json.loads(latest_response)
         public['dirty'] = False
         if state.get('registered'):
             try:
@@ -425,7 +498,24 @@ class GlobalMapService:
                 state.update(attempts=attempts[-16:], last_attempt=now, attempted_task=task.id,
                              last_status='Sending ' + operation)
             self._change(claim)  # Commits before network wait; no write transaction held.
-            result = post(data, self.opener)
+            def record_response(evidence):
+                # Keep per-task history and the latest response beyond routine task cleanup.
+                # The separate state row has a 4096-character JSON budget, including escapes.
+                from .flask.models import IndiAllSkyDbStateTable
+                stored = dict(evidence, task_id=task.id)
+                value = json.dumps(stored)
+                while len(value) > 4096:
+                    if not stored['body']:
+                        raise MapError('Map diagnostic metadata exceeds storage limit')
+                    stored['body'] = stored['body'][:len(stored['body']) // 2]
+                    stored['body_truncated'] = True
+                    value = json.dumps(stored)
+                self._ensure(RESPONSE_KEY, '{}')
+                IndiAllSkyDbStateTable.query.filter_by(key=RESPONSE_KEY).update(
+                    {'value': value}, synchronize_session=False)
+                task.data = dict(task.data, response_evidence=stored)
+                db.session.commit()
+            result = post(data, self.opener, record=record_response)
         except _AlreadyAttempted as exc:
             db.session.rollback()
             return {'ok': False, 'status': 'NOT_SENT', 'message': str(exc)}

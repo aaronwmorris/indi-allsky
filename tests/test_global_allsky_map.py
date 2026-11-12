@@ -28,6 +28,7 @@ APP = create_app()
 
 class Response(io.BytesIO):
     status = 200
+    headers = {'Content-Type': 'text/plain; charset=utf-8'}
 
 
 class GlobalMapTest(unittest.TestCase):
@@ -73,7 +74,7 @@ class GlobalMapTest(unittest.TestCase):
             'website_url','image_url','camera','lens','computer','equipmentinfo','allsky_version',
             'website_settings','allsky_settings'})
         self.assertEqual(data['allsky_settings'], {}); self.assertEqual(data['website_settings'], {})
-        self.assertEqual(data['camera'], 'Detected CCD'); self.assertEqual(data['allsky_version'], __version__)
+        self.assertEqual(data['camera'], 'Detected CCD'); self.assertEqual(data['allsky_version'], G.canonical_version(__version__))
         self.assertNotIn('NEVER-PUBLISH', json.dumps(data)); self.assertNotIn('OTHER-KEY', json.dumps(data))
         self.assertNotIn('imageBase64', data); self.assertFalse(data['force'])
 
@@ -118,7 +119,7 @@ class GlobalMapTest(unittest.TestCase):
         self.assertEqual(data['owner'],'');self.assertEqual(data['location'],'')
         self.assertEqual(json.loads(json.dumps(data))['equipmentinfo'],self.cfg['GLOBAL_ALLSKY_MAP']['EQUIPMENT'])
         with patch.object(G,'__version__','indi_v2026.11.01+development.test'):
-            self.assertEqual(self.s._payload(self.cfg)['allsky_version'],'indi_v2026.11.01+development.test')
+            self.assertEqual(self.s._payload(self.cfg)['allsky_version'],'indi_v2026.11.01')
 
     def test_remote_or_missing_camera_does_not_publish(self):
         self.camera.local=False;db.session.commit()

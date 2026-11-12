@@ -55,7 +55,7 @@ class GlobalMapWebTest(unittest.TestCase):
         from indi_allsky.video import VideoWorker
         task=db.session.get(IndiAllSkyDbTaskQueueTable,task_id);task.setQueued()
         worker=VideoWorker.__new__(VideoWorker);worker._miscDb=Mock()
-        def send(data,opener=None):
+        def send(data,opener=None,record=None):
             self.assertFalse(db.session().in_transaction())
             self.sent=data
             return response or {'ok':True,'status':'UPDATED','message':'1 5'}

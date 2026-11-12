@@ -18,7 +18,12 @@ Location, owner and lens reuse `LOCATION_NAME`, `OWNER` and `LENS_NAME`. Coordin
 reuse `LOCATION_LATITUDE`/`LOCATION_LONGITUDE`, rounded to two decimal degrees, or
 whole degrees with `PRIVACY_MODE`. Camera name comes from active local database
 metadata. Computer model/architecture and memory are derived locally. The actual
-`indi_allsky.version.__version__` is used unchanged, including package suffixes.
+`indi_allsky.version.__version__` supplies the canonical dated application version
+for this integration: `indi_v2026.11.11+trixie.qhy.globalmap.<commit>` becomes
+`indi_v2026.11.11`. A dated release is unchanged; development/package suffixes
+(`+`, `-`, `~` or `.` after the date) are omitted. The Global Map HTTP User-Agent
+uses that same canonical version. Other application/package version reporting is
+unchanged.
 
 Save, then **Preview saved metadata**. Review the public location, owner, camera,
 lens, computer, equipment, URLs and software version. Images and descriptive text
@@ -74,9 +79,35 @@ There are no redirects or automatic retries. The network socket timeout is
 transaction across the network call. Status is available in the panel and ordinary
 Video tasks/notifications. The identifier is hidden from the preview/status output.
 
+Each attempted task stores `data.response_evidence`. The latest response is also
+retained in the existing state table as `GLOBAL_MAP_RESPONSE`, so a paused failure
+survives the normal three-day task cleanup. This adds no schema migration or file.
+Evidence contains HTTP status, Content-Type only
+(up to 256 characters), a UTF-8 body excerpt of at most 2 KiB, byte count/truncation
+flags and any terminal status/counters. A 4096-character JSON storage budget can
+further shorten control-character-heavy excerpts; truncation remains explicit.
+Evidence is committed before parsing/failure
+handling and available through the administrator's Refresh status action. The full
+8 KiB protocol limit is unchanged; a truncated diagnostic is not used for parsing.
+No request body or other response headers (cookies, authentication, etc.) are stored.
+Literal echoed installation identifiers are redacted before truncation; detected
+common escaped-ID bodies are withheld. HTML/JSON/BOM/MESSAGE-only/empty responses
+remain failures, not invented successes. Transport failures distinguish missing
+status from a known HTTP response; uncertain outcomes continue to pause scheduling.
+Historical tasks without captured bodies cannot be retrospectively reconstructed.
+
+After reviewing an ambiguous first attempt, **no SQL edit/reset/acknowledgement is
+needed**. Once separately authorized to try again: install the corrected build,
+Preview saved metadata anew (canonical version changes the fingerprint), then click
+Register / Update exactly once, with force=false. The previous needs_review stays
+set while this explicit manual task queues; only confirmed protocol success clears
+it and establishes registered=true. Another unknown response keeps review required.
+Ordinary quota/cooldown and the persistent identifier are retained. The old task
+and its evidence are not rewritten. Do not use Force to bypass uncertainty.
+
 ## Development validation
 
-Run the two `tests/test_global_allsky_map*.py` unittest modules in an isolated
+Run the three `tests/test_global_allsky_map*.py` unittest modules in an isolated
 process with application dependencies. They use in-memory SQLite, synthetic users
 and cameras, actual Flask routes/forms and synchronous VideoWorker dispatch, with
 external HTTP denied. Upstream form tests should run separately where their global
