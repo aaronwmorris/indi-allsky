@@ -125,10 +125,21 @@ body { background: var(--color-base-300); color: var(--color-base-content); marg
     .caption-label { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); overflow: hidden; }
     #image-time strong, .age { font-size: 1.2rem; }
 }
-@media (max-width: 18rem) {
-    .masthead { grid-template-columns: minmax(0, 1fr); }
-    .clock time { grid-column: 1; grid-row: 3; text-align: left; }
+@container masthead (max-width: 18rem) {
+    .clock time { grid-column: 1 / -1; grid-row: 3; text-align: left; }
+}
+@container readings (max-width: 18rem) {
     .chart-slot { grid-template-columns: minmax(0, 1fr); }
-    .chart-value { grid-column: 1; text-align: left; }
+    .chart-value { grid-column: 1; text-align: left; overflow-wrap: anywhere; }
     .plot, .plot-empty { grid-column: 1; grid-row: auto; }
+}
+
+/* Keep both twilight times visible beside another observing app. */
+@container readings (max-width: 14rem) {
+    .events, .events :is(thead, tbody) { display: block; }
+    .events tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .events thead th:first-child { position: absolute; clip-path: inset(50%); }
+    .events tbody th { grid-column: 1 / -1; }
+    .events :is(th, td):not(:first-child) { padding-left: 0; text-align: left; }
+    .events .event-time { justify-content: flex-start; }
 }
