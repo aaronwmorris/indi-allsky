@@ -8,6 +8,10 @@ from contextlib import contextmanager
 import errno
 import fcntl
 import os
+import stat
+import struct
+import tempfile
+import time
 from pathlib import Path
 
 
@@ -48,14 +52,120 @@ def media_phase(action, kwargs):
     }.get(action)
 
 
+# Only these application stages cross the web boundary. A single fixed-size
+# pread/pwrite transfers a snapshot; frames never write to VARLIB_FOLDER.
+_STAGES = ('Checking source images', 'Preparing frames', 'Stacking frames', 'Encoding frames')
+_PROGRESS = struct.Struct('!8sBQQdd')
+_PUBLISH_INTERVAL = 1.0
+
+
+def _progress_file(state_fd, phase_index):
+    marker = os.fstat(state_fd)
+    # Linux stations share /dev/shm across the capture and web service users.
+    root = Path('/dev/shm') if os.uname().sysname == 'Linux' else Path(tempfile.gettempdir())
+    return root / f'indi-allsky-progress-{marker.st_dev:x}-{marker.st_ino:x}-{phase_index}'
+
+
+def _read_progress(state_fd, phase_index, token):
+    if len(token) != 8:
+        return {}  # Includes older stations with just a date in the marker.
+    path = _progress_file(state_fd, phase_index)
+    try:
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        try:
+            info = os.fstat(fd)
+            if info.st_uid != os.fstat(state_fd).st_uid or not stat.S_ISREG(info.st_mode):
+                return {}
+            data = os.pread(fd, _PROGRESS.size, 0)
+        finally:
+            os.close(fd)
+        if len(data) != _PROGRESS.size:
+            return {}
+        owner, stage, done, total, started, updated = _PROGRESS.unpack(data)
+        if owner != token or stage >= len(_STAGES) or not 0 <= done <= total or not total:
+            return {}
+        now = time.monotonic()
+        if not 0 <= started <= updated <= now:
+            return {}
+        elapsed = updated - started
+        age = now - updated
+        eta = None
+        if done >= 2 and elapsed >= 1 and 0 <= age <= max(30, 3 * elapsed / done):
+            eta = round(elapsed * (total - done) / done)
+        return {'stage': _STAGES[stage], 'completed': done, 'total': total, 'eta_seconds': eta}
+    except OSError:
+        return {}
+
+
 class WorkerActivity:
     def __init__(self, config, role):
         self.directory = Path(config.get('VARLIB_FOLDER', '/var/lib/indi-allsky')) / 'worker-activity'
         self.role = role
         self.key = None
         self.fd = None
+        self.token = b''
+        self.progress_fd = None
+        self.progress_path = None
+        self.stage = None
+
+    def finish_progress(self):
+        """Stop reporting counts while a job finalizes or leaves its phase."""
+        fd, self.progress_fd = self.progress_fd, None
+        self.stage = None
+        if fd is not None:
+            try:
+                self.progress_path.unlink()
+            except OSError:
+                pass
+            finally:
+                self.progress_path = None
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
+
+    def progress(self, stage, completed, total):
+        """Count actual work. Publish at most once a second, plus both endpoints."""
+        if (self.role != 'media' or self.fd is None or stage not in _STAGES or
+                type(completed) is not int or type(total) is not int or not 0 <= completed <= total
+                or not 0 < total < 2**63):
+            return
+        now = time.monotonic()
+        if self.stage != (stage, total) or (completed == 0 and self.last_done > 0):
+            self.started = now
+            self.last_done = -1
+            self.published = float('-inf')
+            self.stage = (stage, total)
+        if completed <= self.last_done or (completed != total and now - self.published < _PUBLISH_INTERVAL):
+            return
+        self.published = now
+        try:
+            if self.progress_fd is None:
+                path = _progress_file(self.fd, PHASES['media'].index(self.key[1]))
+                fd = os.open(path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK, 0o644)
+                info = os.fstat(fd)
+                if info.st_uid != os.geteuid() or not stat.S_ISREG(info.st_mode):
+                    os.close(fd)
+                    return
+                self.progress_path = path
+                self.progress_fd = fd
+            snapshot = _PROGRESS.pack(self.token, _STAGES.index(stage), completed, total, self.started, now)
+            os.pwrite(self.progress_fd, snapshot, 0)
+            self.last_done = completed
+        except OSError:
+            pass  # Optional reporting must never interrupt generation.
+
+    def track(self, stage, items, total):
+        self.progress(stage, 0, total)
+        try:
+            for completed, item in enumerate(items, 1):
+                yield item
+                self.progress(stage, completed, total)
+        finally:
+            self.finish_progress()
 
     def clear(self):
+        self.finish_progress()
         fd, self.fd = self.fd, None
         self.key = None
         if fd is not None:
@@ -81,7 +191,8 @@ class WorkerActivity:
             if self.role == 'media':
                 # Only a session date may be exposed, never task payloads or paths.
                 stamp = day if isinstance(day, str) and len(day) == 8 and day.isascii() and day.isdecimal() else ''
-                os.pwrite(self.fd, stamp.ljust(8).encode('ascii'), 0)
+                self.token = os.urandom(8)
+                os.pwrite(self.fd, stamp.ljust(8).encode('ascii') + self.token, 0)
             self.key = key
         except OSError:
             # Telemetry must not interrupt a frame, or block on another worker.
@@ -100,7 +211,7 @@ class WorkerActivity:
                 self.set(*previous)
 
 
-def read_worker_activity(config, camera_id, *, include_capture=True):
+def read_worker_activity(config, camera_id, *, include_capture=True, detailed=False):
     """Read active phases from a separate process, in capture/image/media order."""
     if type(camera_id) is not int or camera_id <= 0:
         return []
@@ -121,12 +232,20 @@ def read_worker_activity(config, camera_id, *, include_capture=True):
                         except OSError as exc:
                             if exc.errno not in (errno.EAGAIN, errno.EACCES):
                                 raise
+                            entry = {'role': role, 'label': phase}
                             if role == 'media':
-                                day = os.pread(state.fileno(), 8, 0)
+                                header = os.pread(state.fileno(), 16, 0)
+                                day = header[:8]
                                 if len(day) == 8 and day.isdigit():
-                                    phase += ' · {}-{}-{}'.format(day[:4].decode(), day[4:6].decode(), day[6:].decode())
-                            messages.append(phase)
+                                    entry['day'] = '{}-{}-{}'.format(day[:4].decode(), day[4:6].decode(), day[6:].decode())
+                                if detailed:
+                                    entry.update(_read_progress(state.fileno(), offset - 16, header[8:]))
+                            messages.append(entry if detailed else activity_label(entry))
                             break
             except OSError:
                 continue
     return messages
+
+
+def activity_label(entry):
+    return entry['label'] + (' · ' + entry['day'] if entry.get('day') else '')

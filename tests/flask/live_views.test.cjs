@@ -59,6 +59,7 @@ function browser(view, {sidebar = true, livePath = 'latest'} = {}) {
             for (const child of children) if (child instanceof Element) child.parentElement = this;
         }
         removeAttribute(key) { delete this[key]; }
+        setAttribute(key, value) { this[key] = value; }
     }
     function el(id) {
         if (!elements.has(id)) elements.set(id, new Element(id));
@@ -270,28 +271,70 @@ test('the main status shows simultaneous current work, clears stale work and rec
     data.live_status.activities = ['Capturing an exposure', 'Generating star trails'];
     b.requests[0].reply(data); await b.flush();
     const work = b.el('sidebar-worker-activity');
-    assert.equal(b.el('sidebar-image-age').nextElementSibling, work);
     assert.equal(work.hidden, false);
-    assert.equal(work.textContent, 'Capturing an exposure\nGenerating star trails');
+    assert.deepEqual(Array.from(work.options, row => row.textContent), ['Capturing an exposure', 'Generating star trails']);
     await b.advance(2000);
     assert.equal(b.requests.length, 2);
     data.live_status.activities = ['Analyzing the latest image'];
     b.requests[1].reply(data); await b.flush();
-    assert.equal(work.textContent, 'Analyzing the latest image');
+    assert.equal(work.options[0].textContent, 'Analyzing the latest image');
     await b.advance(8000); // A hanging request must not leave the old work visible.
     assert.equal(work.hidden, true);
     b.requests[2].fail(); await b.flush();
-    assert.equal(work.textContent, '');
+    assert.equal(work.options.length, 0);
     b.el('live-retry').click();
     data.status_text = '<div>Custom status without a placeholder</div>';
     data.live_status.activities = ['Generating a panorama'];
     b.requests.at(-1).reply(data); await b.flush();
     assert.equal(b.el('sidebar-status-fallback').hidden, false);
-    assert.equal(work.textContent, 'Generating a panorama');
+    assert.equal(work.options[0].textContent, 'Generating a panorama');
     await b.advance(2000);
     delete data.live_status.activities; // A remote camera or older capture service.
     b.requests.at(-1).reply(data); await b.flush();
     assert.equal(work.hidden, true);
+});
+
+test('media progress shows actual counts and a step estimate, then clears them on phase changes', async () => {
+    const b = browser('image');
+    const data = detailed(null, null);
+    const list = b.el('sidebar-worker-activity');
+    const job = {role:'media', label:'Generating nighttime panorama timelapse', day:'2026-11-14',
+        stage:'Encoding frames', completed:344, total:1800, eta_seconds:4620};
+    data.live_status.activities = ['Older-server activity'];
+    data.live_status.activity_details = [{role:'capture', label:'Capturing an image'}, job];
+    async function update() {
+        b.requests.at(-1).reply(data);
+        await b.flush();
+        await b.advance(2000);
+    }
+    await update();
+    assert.equal(list.options.length, 2);
+    assert.equal(list.options[0].textContent, 'Capturing an image');
+    let [header, phase, meter, figures] = list.options[1].options;
+    assert.equal(header.options[1].dateTime, job.day);
+    assert.equal(phase.textContent, job.stage);
+    assert.equal(meter.value, 344);
+    assert.equal(meter.max, 1800);
+    assert.equal(meter['aria-valuetext'], '344 / 1,800 frames');
+    assert.equal(figures.options[1].textContent, '≈ 1 h 17 min left in this step');
+    Object.assign(job, {stage:'Preparing frames', completed:0, total:3600, eta_seconds:null});
+    await update();
+    [,phase,meter,figures] = list.options[1].options;
+    assert.equal(phase.textContent, 'Preparing frames');
+    assert.equal(meter.value, 0);
+    assert.equal(figures.options[1].textContent, 'Step ETA —');
+    Object.assign(job, {completed:3600, eta_seconds:0});
+    await update();
+    assert.equal(list.options[1].options[3].options.length, 1);
+    delete job.completed;
+    delete job.total;
+    delete job.stage;
+    await update();
+    assert.equal(list.options[1].options.length, 1);
+    data.live_status.activity_details = [];
+    await update();
+    assert.equal(list.hidden, true);
+    assert.equal(list.options.length, 0);
 });
 
 test('specific remedies require a current authorization, and deliberate pauses are never retried manually', async () => {

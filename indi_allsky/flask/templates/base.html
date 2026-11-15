@@ -63,7 +63,7 @@
     <script src="{{ url_for('indi_allsky.static', filename='js/jquery-3.7.1.min.js') }}"></script>
     {% if (camera_id|default(0, true)|int) > 0 or latest_image_view is defined %}
     <script defer src="{{ url_for('indi_allsky.static', filename='js/live_frames.js') }}?v=2"></script>
-    <script defer src="{{ url_for('indi_allsky.static', filename='js/latest_view.js') }}?v=5"></script>
+    <script defer src="{{ url_for('indi_allsky.static', filename='js/latest_view.js') }}?v=6"></script>
     {% endif %}
 
     <style>
@@ -77,26 +77,61 @@
             margin-bottom: 0;
         }
 
-        #status_text > div:has(#sidebar-image-age) { grid-column: 1 / -1; }
-        #sidebar-image-age { white-space: nowrap; font-variant-numeric: tabular-nums; }
+        #sidebar-footer { max-height: 65vh; max-height: 65dvh; overflow-y: auto; overscroll-behavior: contain; }
+        #sidebar-live-status[data-endpoint] {
+            display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .15rem .5rem;
+            padding: .15rem .25rem; font-size: .75rem; line-height: 1.35;
+            overflow-wrap: anywhere;
+        }
+        #sidebar-live-status[data-endpoint] #status_text:not([hidden]) { display: contents; }
+        #sidebar-live-status[data-endpoint] #status_text > div { order: 3; font-size: .7rem; }
+        #sidebar-live-status[data-endpoint] #status_text > div:has(#sidebar-image-age), #sidebar-status-fallback {
+            grid-column: 1 / -1; order: -4; font-size: .79rem;
+        }
+        #sidebar-image-age { font-variant-numeric: tabular-nums; }
         #sidebar-image-age:not(:empty)::before { content: ' · '; }
         #sidebar-image-age[href]:hover { text-decoration: underline; }
-        #sidebar-worker-activity:not([hidden]) {
-            display: block;
-            white-space: pre-line;
-            line-height: 1.35;
-            margin-block: .15rem;
+        #sidebar-worker-activity { grid-column: 1 / -1; order: -3; margin-block: .15rem; }
+        #sidebar-worker-activity:not([hidden]) { display: grid; gap: .15rem; }
+        .worker-line { display: flex; align-items: baseline; gap: .45rem; }
+        .worker-line::before {
+            content: ''; width: .35rem; height: .35rem; flex: none; align-self: baseline;
+            background: currentColor; opacity: .55; border-radius: 50%;
         }
-        #sidebar-status-fallback, #sidebar-live-detail:not(:empty) {
-            margin: .25rem;
-            font-size: .75rem;
-            line-height: 1.3;
+        .media-activity {
+            margin-block: .15rem; padding: .45rem .55rem; min-width: 0; border-radius: min(var(--radius-box, .5rem), .55rem);
+            background: var(--color-base-100); border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
         }
+        .media-activity header { display: flex; align-items: baseline; flex-wrap: wrap; gap: .1rem .45rem; }
+        .media-activity strong { flex: 1 1 9rem; font-size: .81rem; }
+        .media-activity time, .media-stage { color: color-mix(in srgb, var(--color-base-content) 77%, var(--color-base-100)); }
+        .media-activity time { white-space: nowrap; font-size: .69rem; }
+        .media-stage { margin-top: .28rem; }
+        .media-activity progress {
+            display: block; width: 100%; height: .38rem; margin: .3rem 0; overflow: hidden;
+            appearance: none; border: 0; border-radius: 1rem; background: var(--color-base-300); color: var(--color-primary);
+        }
+        .media-activity progress::-webkit-progress-bar { background: var(--color-base-300); }
+        .media-activity progress::-webkit-progress-value { background: var(--color-primary); border-radius: inherit; }
+        .media-activity progress::-moz-progress-bar { background: var(--color-primary); border-radius: inherit; }
+        .media-figures { display: flex; justify-content: space-between; gap: .15rem .55rem; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+        #sidebar-live-detail:not(:empty), #sidebar-live-actions, #sidebar-live-status[data-endpoint] #status_text > [class~="tw:text-warning"] {
+            grid-column: 1 / -1; order: -2;
+        }
+        #sidebar-live-actions:has(> :not([hidden])) { display: flex; flex-wrap: wrap; gap: .25rem; }
+        #sidebar-live-actions:not(:has(> :not([hidden]))), #sidebar-live-detail:empty { display: none; }
+        #station-extra-toggle {
+            grid-column: 1 / -1; order: 2; justify-self: start; font-size: .7rem; cursor: pointer;
+            min-height: 1.4rem; padding: .12rem 0; font-weight: 600;
+        }
+        #station-extra-toggle::before { content: '▸'; display: inline-block; margin-inline-end: .35rem; }
+        #station-extra-toggle[aria-expanded="true"]::before { transform: rotate(90deg); }
+        #sidebar-live-status[data-extras="closed"] #status_text > div:not(:has(#sidebar-image-age)):not([class~="tw:text-warning"]) { display: none; }
 
         #sidebar {
             transition: width 0.25s ease, opacity 0.25s ease, transform 0.25s ease;
-            width: 320px;
-            min-width: 320px;
+            width: min(320px, 100vw);
+            min-width: min(320px, 100vw);
         }
 
         #status-accordion summary .status-chevron,
@@ -119,6 +154,10 @@
             overflow: hidden;
         }
 
+        @media (max-height: 42rem) {
+            #sidebar > div:first-child img { max-height: 2.75rem; width: auto; }
+        }
+
         @media (max-width: 1000px) {
             #sidebar {
                 position: fixed;
@@ -131,8 +170,8 @@
 
             #sidebar.collapsed {
                 transform: translateX(-100%);
-                width: 320px;
-                min-width: 320px;
+                width: min(320px, 100vw);
+                min-width: min(320px, 100vw);
                 opacity: 1;
             }
 
@@ -283,7 +322,7 @@
                 {% endfor %}
             </ul>
         </div>
-        <div class="tw:px-4 tw:pt-2.5 tw:pb-2.5 tw:bg-base-200/60 tw:border-t tw:border-base-content/10 tw:flex-shrink-0">
+        <div id="sidebar-footer" class="tw:px-4 tw:pt-2.5 tw:pb-2.5 tw:bg-base-200/60 tw:border-t tw:border-base-content/10 tw:flex-shrink-0">
             <details id="camera-accordion" class="tw:w-full tw:group [&_summary::-webkit-details-marker]:tw:hidden tw:mb-1">
                 <summary
                     class="tw:flex tw:items-center tw:justify-between tw:w-full tw:px-1 tw:py-1 tw:rounded-[var(--radius-selector)] tw:cursor-pointer tw:list-none tw:text-base-content/70 hover:tw:text-base-content tw:transition-all">
@@ -319,16 +358,19 @@
                     {% if (camera_id|default(0, true)|int) > 0 %}
                     <div id="sidebar-status-fallback" hidden>
                         Status: <span id="sidebar-station-fallback">Checking…</span><a id="sidebar-image-age" href="{{ url_for('indi_allsky.index_view') }}">Waiting for image</a>
-                        <span id="sidebar-worker-activity" role="status" aria-label="Camera activity" aria-atomic="true" hidden></span>
                     </div>
+                    <div id="sidebar-worker-activity" role="group" aria-label="Current camera activity" hidden></div>
                     <div id="sidebar-live-detail" role="status"></div>
-                    <button type="button" class="tw:btn tw:btn-xs tw:btn-outline" id="live-retry" hidden>Retry now</button>
-                    <a class="tw:btn tw:btn-xs tw:btn-outline" id="live-login"
-                       href="{{ url_for('auth_indi_allsky.login_view', next=request.full_path.rstrip('?')) }}" hidden>Sign in</a>
-                    {% if login_disabled or (current_user.is_authenticated and current_user.is_admin) %}
-                    <a class="tw:btn tw:btn-xs tw:btn-outline" id="live-settings" href="{{ url_for('indi_allsky.config_view', _anchor='nav-image') }}" hidden>Camera settings</a>
-                    <a class="tw:btn tw:btn-xs tw:btn-outline" id="live-services" href="{{ url_for('indi_allsky.system_view', _anchor='tab-services') }}" hidden>System services</a>
-                    {% endif %}
+                    <div id="sidebar-live-actions">
+                        <button type="button" class="tw:btn tw:btn-xs tw:btn-outline" id="live-retry" hidden>Retry now</button>
+                        <a class="tw:btn tw:btn-xs tw:btn-outline" id="live-login"
+                           href="{{ url_for('auth_indi_allsky.login_view', next=request.full_path.rstrip('?')) }}" hidden>Sign in</a>
+                        {% if login_disabled or (current_user.is_authenticated and current_user.is_admin) %}
+                        <a class="tw:btn tw:btn-xs tw:btn-outline" id="live-settings" href="{{ url_for('indi_allsky.config_view', _anchor='nav-image') }}" hidden>Camera settings</a>
+                        <a class="tw:btn tw:btn-xs tw:btn-outline" id="live-services" href="{{ url_for('indi_allsky.system_view', _anchor='tab-services') }}" hidden>System services</a>
+                        {% endif %}
+                    </div>
+                    <button id="station-extra-toggle" type="button" aria-controls="status_text" aria-expanded="false" hidden>Station details</button>
                     {% endif %}
                 </div>
             </details>
@@ -526,7 +568,6 @@
             // Exclusive sidebar accordion behavior & status accordion rules
             const navMenus = document.querySelectorAll('#sidebar details[id^="menu-group-"]');
             const cameraAccordion = document.getElementById('camera-accordion');
-            const statusAccordion = document.getElementById('status-accordion');
 
             navMenus.forEach(menu => {
                 menu.addEventListener('toggle', function() {
@@ -536,16 +577,8 @@
                                 other.open = false;
                             }
                         });
-                        if (statusAccordion && statusAccordion.open) {
-                            statusAccordion.open = false;
-                        }
                         if (cameraAccordion && cameraAccordion.open) {
                             cameraAccordion.open = false;
-                        }
-                    } else {
-                        const anyNavOpen = Array.from(navMenus).some(m => m.open);
-                        if (!anyNavOpen && statusAccordion && !statusAccordion.open) {
-                            statusAccordion.open = true;
                         }
                     }
                 });
@@ -557,9 +590,6 @@
                         navMenus.forEach(m => {
                             if (m.open) m.open = false;
                         });
-                        if (statusAccordion && !statusAccordion.open) {
-                            statusAccordion.open = true;
-                        }
                     }
                 });
             }

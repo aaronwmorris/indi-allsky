@@ -68,6 +68,64 @@
         return (entry.time_source === 'file' ? 'File time ' : '') + parts[1] + ' ' + parts[2] + ' ' + offset;
     }
 
+    const frameNumber = new Intl.NumberFormat('en-US');
+
+    function remainingTime(seconds) {
+        if (seconds < 60) return Math.max(1, Math.round(seconds)) + ' s';
+        const minutes = Math.round(seconds / 60);
+        if (minutes < 60) return minutes + ' min';
+        const tail = minutes % 60;
+        return Math.floor(minutes / 60) + ' h' + (tail ? ' ' + tail + ' min' : '');
+    }
+
+    function workRow(job) {
+        const row = document.createElement('div');
+        const media = job.role === 'media' || job.role === 'calibration';
+        if (!media) {
+            row.className = 'worker-line';
+            row.textContent = job.label;
+            return row;
+        }
+        row.className = 'media-activity';
+        const header = document.createElement('header');
+        const label = document.createElement('strong');
+        label.textContent = job.label;
+        header.append(label);
+        if (job.day) {
+            const date = document.createElement('time');
+            date.dateTime = date.textContent = job.day;
+            header.append(date);
+        }
+        row.append(header);
+        if (job.stage) {
+            const phase = document.createElement('div');
+            phase.className = 'media-stage';
+            phase.textContent = job.stage;
+            row.append(phase);
+        }
+        if (!Number.isSafeInteger(job.total) || job.total < 1 || !Number.isSafeInteger(job.completed)
+                || job.completed < 0 || job.completed > job.total) return row;
+        const meter = document.createElement('progress');
+        meter.max = job.total;
+        meter.value = job.completed;
+        meter.setAttribute('aria-label', job.stage || job.label);
+        const count = document.createElement('span');
+        count.textContent = frameNumber.format(job.completed) + ' / ' + frameNumber.format(job.total) + ' frames';
+        meter.setAttribute('aria-valuetext', count.textContent);
+        const figures = document.createElement('div');
+        figures.className = 'media-figures';
+        figures.append(count);
+        if (job.completed < job.total) {
+            const eta = document.createElement('span');
+            eta.textContent = Number.isFinite(job.eta_seconds) && job.eta_seconds >= 0
+                ? '≈ ' + remainingTime(job.eta_seconds) + ' left in this step'
+                : 'Step ETA —';
+            figures.append(eta);
+        }
+        row.append(meter, figures);
+        return row;
+    }
+
     function follow(view, indicator, endpoint) {
         const canvas = view?.querySelector('canvas');
         let image = null;
@@ -84,6 +142,16 @@
         const statusText = indicator && byId('status_text');
         const ageLink = indicator && byId('sidebar-image-age');
         const activities = indicator && byId('sidebar-worker-activity');
+        const extraToggle = indicator && byId('station-extra-toggle');
+        let lastWork = null;
+        if (extraToggle) {
+            indicator.dataset.extras = 'closed';
+            extraToggle.addEventListener('click', () => {
+                const open = indicator.dataset.extras === 'closed';
+                indicator.dataset.extras = open ? 'open' : 'closed';
+                extraToggle.setAttribute('aria-expanded', String(open));
+            });
+        }
         const fallback = indicator && byId('sidebar-status-fallback');
         let lastMarkup = null;
         let haveDetails = true; // The template renders the first status report.
@@ -137,12 +205,26 @@
             } else if (ageLink.parentElement !== fallback) {
                 fallback.append(ageLink);
             }
+            if (extraToggle) {
+                extraToggle.hidden = statusText.hidden || !statusText.querySelector(
+                    ':scope > div:not(:has(#sidebar-image-age)):not([class~="tw:text-warning"])'
+                );
+            }
             if (activities) {
-                if (ageLink.nextElementSibling !== activities) ageLink.after(activities);
                 const recent = performance.now() - activitySnapshotAt < interval + 5000;
-                const currentWork = station && recent && Array.isArray(report.activities) ? report.activities.join('\n') : '';
-                if (activities.textContent !== currentWork) activities.textContent = currentWork;
-                activities.hidden = !currentWork;
+                const jobs = station && recent ? report.activity_details ?? report.activities : null;
+                // The one-second image age tick needn't replace progress that hasn't changed.
+                const key = JSON.stringify(jobs);
+                if (key !== lastWork) {
+                    lastWork = key;
+                    const rows = [];
+                    for (const item of Array.isArray(jobs) ? jobs : []) {
+                        const job = typeof item === 'string' ? {label: item} : item;
+                        if (job && typeof job.label === 'string' && job.label) rows.push(workRow(job));
+                    }
+                    activities.replaceChildren(...rows);
+                    activities.hidden = !rows.length;
+                }
             }
             const text = !requestError && summary ? age + ' · ' + summary : age;
             if (ageLink.textContent !== text) ageLink.textContent = text;

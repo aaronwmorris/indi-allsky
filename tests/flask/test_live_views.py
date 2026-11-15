@@ -12,6 +12,7 @@ from unittest.mock import Mock
 from zoneinfo import ZoneInfo
 import json
 
+from indi_allsky.worker_activity import activity_label
 from indi_allsky.archive_health import BLOCKED
 from indi_allsky import constants
 from indi_allsky.live_status import CAPTURE_STATES, camera_timezone, capture_time, health_reason, latest_live_row, station_status
@@ -57,7 +58,7 @@ def latest(tmp_path):
 
     activity_reader = Mock(return_value=[])
     scope = dict(Path=Path, constants=constants, CAPTURE_STATES=CAPTURE_STATES, station_status=station_status,
-                 read_worker_activity=activity_reader,
+                 read_worker_activity=activity_reader, activity_label=activity_label,
                  time=SimpleNamespace(time=lambda: now.timestamp()),
                  psutil=SimpleNamespace(boot_time=lambda: now.timestamp() - 10),
                  archive_state=lambda cfg: {}, ups_problem=lambda path: False, timedelta=timedelta,
@@ -247,17 +248,21 @@ def test_stale_worker_does_not_report_recovery_or_old_archive_state(latest):
 def test_fast_status_shows_concurrent_work_and_keeps_media_during_capture_outage(latest):
     client, view, _, _ = latest
     endpoint = '/latest?camera_id=3&live_status=1'
-    view.read_activity.return_value = ['Capturing an exposure', 'Generating star trails']
+    media = {'role': 'media', 'label': 'Generating star trails', 'day': '2026-11-14',
+             'stage': 'Stacking frames', 'completed': 12, 'total': 100, 'eta_seconds': 88}
+    view.read_activity.return_value = [{'role': 'capture', 'label': 'Capturing an exposure'}, media]
     status = client.get(endpoint).get_json()['live_status']
-    assert status['activities'] == view.read_activity.return_value
-    view.read_activity.assert_called_once_with(view.indi_allsky_config, 3, include_capture=True)
+    assert status['activity_details'] == view.read_activity.return_value
+    assert status['activities'] == ['Capturing an exposure', 'Generating star trails · 2026-11-14']
+    view.read_activity.assert_called_once_with(view.indi_allsky_config, 3, include_capture=True, detailed=True)
 
     view.live_states['STATUS'].value = str(constants.STATUS_NOINDISERVER)
-    view.read_activity.return_value = ['Generating star trails']
+    view.read_activity.return_value = [media]
     status = client.get(endpoint).get_json()['live_status']
     assert status['station']['code'] == 'no_indiserver'
-    assert status['activities'] == ['Generating star trails']
-    view.read_activity.assert_called_with(view.indi_allsky_config, 3, include_capture=False)
+    assert status['activities'] == ['Generating star trails · 2026-11-14']
+    assert status['activity_details'] == [media]
+    view.read_activity.assert_called_with(view.indi_allsky_config, 3, include_capture=False, detailed=True)
 
 
 @pytest.mark.parametrize('condition', ['remote', 'inactive', 'no_access', 'stopped', 'down'])
