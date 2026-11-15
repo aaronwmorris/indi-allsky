@@ -1,7 +1,6 @@
 import os
 import time
 import math
-import io
 import json
 import cv2
 #import numpy
@@ -75,7 +74,6 @@ import queue
 
 from .exceptions import TimelapseException
 from .exceptions import TimeOutException
-from .exceptions import KeogramMismatchException
 from .exceptions import BackupFailure
 
 
@@ -1669,6 +1667,17 @@ class VideoWorker(Process):
         )
 
 
+        timelapse_skip_frames = self.config.get('TIMELAPSE_SKIP_FRAMES', 4)
+        source_rows = IndiAllSkyDbImageTable.query.filter_by(
+            camera_id=camera.id, dayDate=d_dayDate, night=night, exclude=False,
+        ).order_by(IndiAllSkyDbImageTable.createDate, IndiAllSkyDbImageTable.id)
+        files_entries, image_count = derived_media.stack_entries(source_rows)
+        if image_count <= timelapse_skip_frames:
+            task.setFailed('Insufficient source images for keogram and star trails')
+            return
+        logger.info('Found %d images for keogram/star trails', image_count)
+
+
         try:
             # delete old keogram entry if it exists
             old_keogram_entry = IndiAllSkyDbKeogramTable.query\
@@ -1772,20 +1781,6 @@ class VideoWorker(Process):
             startrail_video_file.unlink()
 
 
-        # find all files
-        files_entries = IndiAllSkyDbImageTable.query\
-            .join(IndiAllSkyDbImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
-            .filter(IndiAllSkyDbImageTable.dayDate == d_dayDate)\
-            .filter(IndiAllSkyDbImageTable.night == night)\
-            .filter(IndiAllSkyDbImageTable.exclude == sa_false())\
-            .order_by(IndiAllSkyDbImageTable.createDate.asc())
-
-
-        image_count = files_entries.count()
-        logger.info('Found %d images for keogram/star trails', image_count)
-
-
         # some of these values might be NULL which might cause other problems
         image_data = IndiAllSkyDbImageTable.query\
             .add_columns(
@@ -1831,9 +1826,6 @@ class VideoWorker(Process):
 
 
         logger.info('Max kpindex: %0.2f, ovation: %d, smoke rating: %s', max_kpindex, max_ovation_max, constants.SMOKE_RATING_MAP_STR[max_smoke_rating])
-
-
-        timelapse_skip_frames = self.config.get('TIMELAPSE_SKIP_FRAMES', 4)
 
 
         processing_start = time.time()
@@ -1937,71 +1929,11 @@ class VideoWorker(Process):
             logger.warning('Recalculating values for ADU and Star counts')
 
 
-        # Files are presorted from the DB
-        stack_frames = self.activity.track('Stacking frames', files_entries, image_count)
-        for i, entry in enumerate(stack_frames):
-            if i % 50 == 0:
-                processing_elapsed_s = time.time() - processing_start
-                logger.info('Processed %d of %d images (%0.2f images/s)', i, image_count, (i + 1) / processing_elapsed_s)
-
-            image_file_p = Path(entry.getFilesystemPath())
-
-            if not image_file_p.exists():
-                logger.error('File not found: %s', image_file_p)
-                continue
-
-            if image_file_p.stat().st_size == 0:
-                continue
-
-
-            #logger.info('Reading file: %s', p_entry)
-            if image_file_p.suffix in ('.jpg', '.jpeg'):
-                import simplejpeg
-
-                try:
-                    with io.open(str(image_file_p), 'rb') as f_img:
-                        image_data = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
-                except ValueError as e:
-                    logger.error('Unable to read image - %s: %s', str(e), image_file_p)
-                    continue
-            elif image_file_p.suffix in ('.png',):
-                # opencv is faster than Pillow with PNG
-                image_data = cv2.imread(str(image_file_p), cv2.IMREAD_COLOR)
-
-                if isinstance(image_data, type(None)):
-                    logger.error('Unable to read %s', image_file_p)
-                    continue
-
-            else:
-                # Pillow supports remaining image types
-                import numpy
-                import PIL
-                from PIL import Image
-
-                try:
-                    with Image.open(str(image_file_p)) as img_pil:
-                        image_data = cv2.cvtColor(numpy.array(img_pil), cv2.COLOR_RGB2BGR)
-                except PIL.UnidentifiedImageError:
-                    logger.error('Unable to read image: %s', image_file_p)
-                    continue
-
-
-            try:
-                image_ts = image_file_p.stat().st_mtime
-                kg.processImage(image_data, image_ts)
-            except KeogramMismatchException as e:
-                logger.error('Error processing keogram image: %s', str(e))
-
-
-            if night:
-                if self.config.get('STARTRAILS_USE_DB_DATA', True):
-                    adu = entry.adu
-                    star_count = entry.stars  # can be None
-                else:
-                    adu, star_count = None, None
-
-                stg.processImage(image_file_p, image_data, entry.binmode, adu=adu, star_count=star_count)
-
+        frames = self.activity.track('Stacking frames', files_entries, image_count)
+        derived_media.process_frames(self.config, frames, kg, stg)
+        if kg.keogram_data is None:
+            task.setFailed('No usable source images after skips for keogram and star trails')
+            return
 
         kg.finalize(keogram_file, camera)
 

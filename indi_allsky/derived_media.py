@@ -75,6 +75,14 @@ def read_frame(path):
         return cv2.cvtColor(numpy.array(image), cv2.COLOR_RGB2BGR)
 
 
+def stack_entries(entries):
+    """Select one coordinate system and count the rows before processing the stack."""
+    if aligned_media is None:
+        return entries, entries.count()
+    from .flask.models import IndiAllSkyDbImageTable
+    return aligned_media.stack_entries(entries, IndiAllSkyDbImageTable)
+
+
 def process_frames(config, entries, kg, stg, checkpoint=None):
     """Use the same ordered sources, skip and quality filters as normal generation."""
     remap = aligned_media.SkyRemap() if aligned_media is not None else None
@@ -95,19 +103,26 @@ def process_frames(config, entries, kg, stg, checkpoint=None):
             continue
         if data is None:
             continue
-        if remap is not None:
-            aligned_media.process_stack_frame(entry, path, data, remap, kg, stg,
-                                              config.get('STARTRAILS_USE_DB_DATA', True))
-            continue
-        if kg is not None:
-            try:
-                kg.processImage(data, path.stat().st_mtime)
-            except KeogramMismatchException as exc:
-                logger.warning('Skipping incompatible keogram image: %s', exc)
-        if stg is not None:
-            saved = config.get('STARTRAILS_USE_DB_DATA', True)
-            stg.processImage(path, data, entry.binmode, adu=entry.adu if saved else None,
-                             star_count=entry.stars if saved else None)
+        try:
+            if remap is not None:
+                aligned_media.process_stack_frame(entry, path, data, remap, kg, stg,
+                                                  config.get('STARTRAILS_USE_DB_DATA', True))
+                continue
+            if kg is not None:
+                try:
+                    kg.processImage(data, path.stat().st_mtime)
+                except KeogramMismatchException as exc:
+                    logger.warning('Skipping incompatible keogram image: %s', exc)
+            if stg is not None:
+                saved = config.get('STARTRAILS_USE_DB_DATA', True)
+                stg.processImage(path, data, entry.binmode, adu=entry.adu if saved else None,
+                                 star_count=entry.stars if saved else None)
+        except FileNotFoundError as exc:
+            # A source may expire after decoding. Missing output or scratch
+            # directories are storage errors and must still reach the caller.
+            if exc.filename != str(path):
+                raise
+            logger.warning('Source image disappeared while stacking: %s', path)
 
 
 def key(camera_id, date, night):
@@ -216,11 +231,7 @@ def render(worker, camera, date, night, entries, missing, scratch):
     def checkpoint():
         if worker._shutdown or archive_paused(cfg):
             raise RepairPaused
-    if aligned_media is None:
-        frames, count = entries, entries.count()
-    else:
-        from .flask.models import IndiAllSkyDbImageTable
-        frames, count = aligned_media.stack_entries(entries, IndiAllSkyDbImageTable)
+    frames, count = stack_entries(entries)
     process_frames(cfg, worker.activity.track('Stacking frames', frames, count), kg, stg, checkpoint)
     checkpoint()
     completed = {}

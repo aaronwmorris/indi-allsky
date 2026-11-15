@@ -1,5 +1,6 @@
 """Recovery of only the absent products from a completed camera period."""
 from datetime import datetime, date, timedelta
+import errno
 from pathlib import Path
 import shutil
 from unittest.mock import Mock
@@ -185,3 +186,64 @@ def test_a_failed_startrail_encode_preserves_the_finished_stills(station,monkeyp
     assert media.reconcile(w,c,day,True)
     assert Keogram.query.one().success and Startrail.query.one().success and not StarMovie.query.count()
     assert not media.reconcile(w,c,day,True)
+
+@pytest.mark.parametrize('remove_all', [False, True])
+def test_scheduled_stack_survives_sources_expiring_after_decode(station, monkeypatch, remove_all):
+    worker, camera, _, day, _, add_frames = station
+    add_frames(8)
+    task = Mock()
+    original_read = media.read_frame
+    keogram = media.make_keogram(worker.config, worker.config['TIMELAPSE_SKIP_FRAMES'])
+    monkeypatch.setattr(media, 'make_keogram', lambda *args: keogram)
+    expired = worker.image_dir / f'{camera.id}-False-4.jpg'
+    progress = []
+    original_progress = worker.activity.progress
+
+    def remove_after_read(path):
+        image = original_read(path)
+        if remove_all or path == expired:
+            path.unlink()
+        return image
+
+    def record_progress(*sample):
+        progress.append(sample)
+        original_progress(*sample)
+
+    monkeypatch.setattr(media, 'read_frame', remove_after_read)
+    monkeypatch.setattr(worker.activity, 'progress', record_progress)
+    worker.generateKeogramStarTrails(task, camera_id=camera.id, timespec=day.strftime('%Y%m%d'), night=False)
+    assert ('Stacking frames', 0, 8) in progress and ('Stacking frames', 8, 8) in progress
+    product = Keogram.query.one()
+    if remove_all:
+        task.setFailed.assert_called_once()
+        assert not product.success
+    else:
+        task.setSuccess.assert_called_once()
+        # Four valid inputs are skipped and the fifth expired after decoding.
+        assert product.success and len(keogram.timestamps) == 3
+        with Image.open(product.getFilesystemPath()) as image:
+            image.verify()
+
+
+def test_scheduled_stack_reports_storage_error_after_decode(station, monkeypatch):
+    worker, camera, _, day, _, add_frames = station
+    add_frames(6)
+    original_read, original_stat = media.read_frame, Path.stat
+    failed = None
+
+    def fail_next_stat(path):
+        nonlocal failed
+        image = original_read(path)
+        failed = path
+        return image
+
+    def stat(path, *args, **kwargs):
+        if path == failed:
+            raise OSError(errno.EIO, 'archive read failed', str(path))
+        return original_stat(path, *args, **kwargs)
+
+    monkeypatch.setattr(media, 'read_frame', fail_next_stat)
+    monkeypatch.setattr(Path, 'stat', stat)
+    with pytest.raises(OSError) as exc:
+        worker.generateKeogramStarTrails(Mock(), camera_id=camera.id, timespec=day.strftime('%Y%m%d'), night=False)
+    assert exc.value.errno == errno.EIO

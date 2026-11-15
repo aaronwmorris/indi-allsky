@@ -6,7 +6,9 @@ For a Wi-Fi-only Pi that travels between networks, see [Wi-Fi recovery](Wi-Fi-Re
 
 * If the Pi responds but the image is old, compare the last stored capture with the current time. Allow for exposure, the configured capture interval and processing. A scheduled pause or disabled daytime capture is expected.
 
-Open **Status** at the bottom of the sidebar to see the capture state and image age together, for example **RUNNING · Last image 12 s ago**. On the live view, the age refers to the picture on screen and changes to the new frame’s age once that frame has loaded. On other pages it refers to the latest available image for the selected camera.
+Open **Status** at the bottom of the sidebar to see the capture state and image age together, for example **RUNNING · Last image 12 s ago**. On the live view, the age refers to the picture on screen and changes to the new frame’s age once that frame has loaded. On other pages it refers to the latest available image for the selected camera. Hover over the image age to see the capture time on the camera.
+
+If your station includes the Astrophotography Companion, leave its window open during a Wi-Fi outage. It keeps the last decoded image on screen and checks again when the connection returns or the window becomes visible. The charts refresh independently, and leave gaps where a sensor reading was unavailable.
 
 If the capture worker loses its INDI connection, it publishes **NO INDISERVER** before exiting for a retry. A camera removal is reported as **NO CAMERA**. These states appear in the same status field even if the last image is still recent. If the browser loses contact with the web server, the field shows the connection error until a fresh report arrives. The browser retries automatically, and **Retry now** checks again immediately.
 
