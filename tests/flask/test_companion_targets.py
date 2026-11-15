@@ -25,6 +25,18 @@ def test_catalogue_lookup(name, ra, dec):
     assert target['label']
 
 
+@pytest.mark.parametrize('name', [
+    "Thor’s Lightning", 'thors lightning nebula', 'SNR G150.3+4.5', 'G150.3+4.5',
+])
+def test_thors_lightning_aliases(name):
+    assert resolve_name(name) == {'label': "Thor's Lightning", 'ra_deg': 66.75, 'dec_deg': 55.466667}
+
+
+@pytest.mark.parametrize('name', ['Giant Squid Nebula', 'Squid Nebula', 'Tintenfischnebel', 'Ou4', 'Outters 4'])
+def test_squid_nebula_aliases(name):
+    assert resolve_name(name) == {'label': 'Squid Nebula', 'ra_deg': 317.95075, 'dec_deg': 59.985833}
+
+
 @pytest.mark.parametrize('ra,dec,expected', [
     ('12:30:00', '-00:30:00', (187.5, -.5)),
     ('12h30m00s', '−00°30′00″', (187.5, -.5)),
@@ -83,7 +95,7 @@ def call(client, frame, pairs):
     {'ra':'nan', 'dec':'5'}, {'ra':'24:00:00', 'dec':'0'}, {'ra':'5', 'dec':'90:00:01'},
     {'ra':'5', 'dec':'0h'}, {'ra':'1:60', 'dec':'5'}, {'ra':'-1', 'dec':'5'}, {'ra':'1'},
     {'resolve':'unknown imaginary object'}, {'frame':'999999999999999999999', 'target':'1,0'},
-    {'frame':1, 'target':'1,nan'}, {'frame':1, 'target':'360,0'}, {'frame':'1'},
+    {'resolve':'G150.3-4.5'}, {'frame':1, 'target':'1,nan'}, {'frame':1, 'target':'360,0'}, {'frame':'1'},
 ])
 def test_invalid_input_returns_actionable_json(station, query):
     client, _ = station
@@ -115,6 +127,14 @@ def test_missing_companion_alignment_support(station, monkeypatch):
     client, _ = station
     monkeypatch.delattr(views, 'virtualsky_frame_alignment', raising=False)
     assert call(client, 1, ['0,90']).json == {'frame':1, 'state':'unavailable', 'points':[None]}
+
+
+@pytest.mark.skipif(not hasattr(views, 'virtualsky_frame_alignment'), reason='requires automatic stellar alignment')
+@pytest.mark.parametrize('private_location', [(None, None), (None, 10), (50, None)])
+def test_markers_require_both_visible_observer_coordinates(station, private_location):
+    client, view = station
+    view.getCameraPrivacyLatLong = lambda site: private_location
+    assert call(client, 1, ['0,90']).json == {'frame':1, 'state':'orientation_pending', 'points':[None]}
 
 
 @pytest.mark.skipif(not hasattr(views, 'virtualsky_frame_alignment'), reason='requires automatic stellar alignment')

@@ -11,6 +11,13 @@ from ephem.stars import stars
 
 
 _DIRECTORY = Path(__file__).resolve().parent
+# J2000 centres for extended targets outside the NGC/IC catalogue.
+# Green (2024), Table I: https://www.mrao.cam.ac.uk/surveys/snrs/snr-catalogue2024-tables.pdf
+# Outters (2012), Ou4 discovery: https://outters.fr/wp-content/uploads/2015/12/decouverte-OU4-eu.pdf
+_ADDITIONAL_TARGETS = (
+    ("Thor's Lightning", 66.75, 55.466667, ("Thor's Lightning Nebula", 'SNR G150.3+4.5')),
+    ('Squid Nebula', 317.95075, 59.985833, ('Giant Squid Nebula', 'Tintenfischnebel', 'Ou4', 'Outters 4')),
+)
 _COMMON_NAMES = {
     'Andromeda': 'M31', 'Andromedagalaxie': 'M31', 'Andromedanebel': 'M31',
     'Orionnebel': 'M42', 'Plejaden': 'M45', 'Pleiades': 'M45',
@@ -22,6 +29,10 @@ _COMMON_NAMES = {
 
 def _name_key(name):
     text = unicodedata.normalize('NFKD', name.casefold())
+    galactic = re.fullmatch(r'\s*(?:snr\s*)?g\s*(\d+(?:\.\d+)?)\s*([+−-])\s*(\d+(?:\.\d+)?)\s*', text)
+    if galactic:
+        # The latitude sign distinguishes otherwise different Galactic sources.
+        return 'g' + ''.join(galactic.groups()).replace('−', '-')
     key = ''.join(c for c in text if c.isalnum())
     number = re.fullmatch(r'(messier|m|ic|ngc|c)0*([0-9]+)([a-z]*)', key)
     if number:
@@ -51,6 +62,11 @@ def _catalog():
             objects[_name_key(name)] = (name, row['ra']['decimal'], row['dec']['decimal'])
     for name, star in stars.items():
         objects[_name_key(name)] = (name, math.degrees(star._ra), math.degrees(star._dec))
+    for name, ra, dec, names in _ADDITIONAL_TARGETS:
+        key = _name_key(name)
+        objects[key] = (name, ra, dec)
+        for alias in names:
+            aliases[_name_key(alias)] = (key, name)
     for name, source in _COMMON_NAMES.items():
         aliases[_name_key(name)] = (_name_key(source), name)
     return objects, aliases
@@ -141,7 +157,9 @@ def project_targets(coordinates, model):
     if not model or not model.get('location') or model.get('observed_at') is None:
         return None
     width, height = model['image_size']
-    if not width or not height:
+    lat, lon = model['location']
+    if (not width or not height or type(lat) not in (int, float) or not -90 <= lat <= 90
+            or type(lon) not in (int, float) or not -180 <= lon <= 180):
         return None
     # Imported only for a frame that carries a verified stellar solution.
     import numpy
@@ -150,7 +168,6 @@ def project_targets(coordinates, model):
     from .lens_solver.projection import precessCatalog, predictAltAz
 
     timestamp = model['observed_at']
-    lat, lon = model['location']
     values = model['values']
     catalog = numpy.asarray(coordinates, dtype=float)
     if values['PRECESSION']:
