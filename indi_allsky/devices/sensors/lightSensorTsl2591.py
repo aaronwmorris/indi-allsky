@@ -1,5 +1,6 @@
 import time
 import logging
+import math
 
 from .sensorBase import SensorBase
 from ... import constants
@@ -13,46 +14,32 @@ logger = logging.getLogger('indi_allsky')
 class LightSensorTsl2591(SensorBase):
 
     def update(self):
-        astro_darkness = self.astro_av[constants.ASTRO_SUN_ALT] <= -18.0
-        if self.astro_darkness != astro_darkness:
-            self.astro_darkness = astro_darkness
-            self.update_sensor_settings()
+        sun_alt = self.astro_av[constants.ASTRO_SUN_ALT]
+        self.astro_darkness = sun_alt <= -18.0
 
-
-        #gain = self.tsl2591.gain
-        #integration = self.tsl2591.integration_time
-        #logger.info('[%s] TSL2591 settings - Gain: %d, Integration: %d', gain, integration)
-
-
-        if self.disable_day:
+        if self.disable_day and not self.astro_darkness:
             data = {
+                'sample_disabled': True,
                 'data' : (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
             }
 
             return data
 
 
-        try:
-            lux = float(self.tsl2591.lux)
-            infrared = int(self.tsl2591.infrared)
-            visible = int(self.tsl2591.visible)
-            full_spectrum = int(self.tsl2591.full_spectrum)
-        except RuntimeError as e:
-            raise SensorReadException(str(e)) from e
+        lux, visible, infrared, full_spectrum = self.read_channels(sun_alt)
 
 
         logger.info('[%s] TSL2591 - lux: %0.4f, visible: %d, ir: %d, full: %d', self.name, lux, visible, infrared, full_spectrum)
 
 
-        if self.astro_darkness:
-            try:
-                sqm_mag, raw_mag = self.lux2mag(lux)
-            except ValueError as e:
-                logger.error('SQM calculation error - ValueError: %s', str(e))
-                sqm_mag = 0.0
-                raw_mag = 0.0
+        # The library's lux approximation can become negative under IR-heavy
+        # light. Keep the raw channels usable and mark that measurement missing.
+        if not math.isfinite(lux) or lux < 0:
+            lux = None
+
+        if self.astro_darkness and lux is not None and lux > 0:
+            sqm_mag, raw_mag = self.lux2mag(lux)
         else:
-            # disabled outside astronomical darkness
             sqm_mag = 0.0
             raw_mag = 0.0
 
@@ -72,18 +59,78 @@ class LightSensorTsl2591(SensorBase):
         return data
 
 
-    def update_sensor_settings(self):
-        if self.astro_darkness:
-            logger.info('[%s] Switching TSL2591 to night mode - Gain %d, Integration: %d', self.name, self.gain_night, self.integration_night)
-            self.tsl2591.gain = self.gain_night
-            self.tsl2591.integration_time = self.integration_night
-        else:
-            logger.info('[%s] Switching TSL2591 to day mode - Gain %d, Integration: %d', self.name, self.gain_day, self.integration_day)
-            self.tsl2591.gain = self.gain_day
-            self.tsl2591.integration_time = self.integration_day
+    def exposure_settings(self, sun_alt):
+        # Below the horizon, twilight may still need night sensitivity. Include
+        # both profiles there and let the ADC counts determine the exposure.
+        profiles = []
+        if sun_alt < 0:
+            profiles.append((self.gain_night, self.integration_night))
+        if sun_alt > -18:
+            profiles.append((self.gain_day, self.integration_day))
 
-        time.sleep(1.0)
+        settings = {(self.gain_levels[0], 0)}  # shortest exposure for sunlight
+        for max_gain, integration in profiles:
+            for gain in self.gain_levels[:self.gain_levels.index(max_gain) + 1]:
+                settings.add((gain, integration))
+        return sorted(settings, key=self.sensitivity)
 
+
+    def sensitivity(self, setting):
+        gain, integration = setting
+        multiplier = (1, 25, 428, 9876)[self.gain_levels.index(gain)]
+        return multiplier * (1 + integration)
+
+
+    def read_channels(self, sun_alt):
+        sensor = self.tsl2591
+        settings = self.exposure_settings(sun_alt)
+        current = (sensor.gain, sensor.integration_time)
+        # Keep the previous working exposure across sunrise and twilight if
+        # possible. On startup or a profile change, limit it to the new range.
+        index = max(i for i, setting in enumerate(settings)
+                    if self.sensitivity(setting) <= self.sensitivity(current))
+        upper = len(settings) - 1
+        while True:
+            setting = settings[index]
+            gain, integration = setting
+            if setting != current:
+                sensor.gain = gain
+                sensor.integration_time = integration
+                # An integration at the old setting may still be in flight.
+                time.sleep(0.1 * (2 + current[1] + integration))
+                current = setting
+
+            limit = 36863 if integration == 0 else 65535
+            try:
+                lux = float(sensor.lux)
+                broadband, infrared = sensor.raw_luminosity
+                counts = max(broadband, infrared)
+            except RuntimeError as e:
+                if 'overflow' not in str(e).lower():
+                    raise SensorReadException(str(e)) from e
+                counts = limit
+
+            if counts >= limit:
+                if index == 0:
+                    raise SensorReadException('TSL2591 saturated at minimum exposure')
+                upper = index - 1
+                index = upper
+                continue
+
+            # Allow ample headroom before increasing sensitivity. Read the
+            # adjusted exposure in this poll, including when both ADCs are zero.
+            # Never revisit a setting that already clipped during this poll.
+            for next_index in range(upper, index, -1):
+                candidate = settings[next_index]
+                next_limit = 36863 if candidate[1] == 0 else 65535
+                predicted = counts * self.sensitivity(candidate) / self.sensitivity(setting)
+                if predicted < next_limit / 3:
+                    index = next_index
+                    break
+            else:
+                # Retain the installed library's public channel conventions.
+                # Older releases include the IR high word in these two values.
+                return lux, int(sensor.visible), int(infrared), int(sensor.full_spectrum)
 
 
 class LightSensorTsl2591_I2C(LightSensorTsl2591):
@@ -119,6 +166,9 @@ class LightSensorTsl2591_I2C(LightSensorTsl2591):
         import board
         #import busio
         import adafruit_tsl2591
+
+        self.gain_levels = (adafruit_tsl2591.GAIN_LOW, adafruit_tsl2591.GAIN_MED,
+                            adafruit_tsl2591.GAIN_HIGH, adafruit_tsl2591.GAIN_MAX)
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
