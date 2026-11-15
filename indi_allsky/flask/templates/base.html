@@ -63,7 +63,7 @@
     <script src="{{ url_for('indi_allsky.static', filename='js/jquery-3.7.1.min.js') }}"></script>
     {% if (camera_id|default(0, true)|int) > 0 or latest_image_view is defined %}
     <script defer src="{{ url_for('indi_allsky.static', filename='js/live_frames.js') }}?v=2"></script>
-    <script defer src="{{ url_for('indi_allsky.static', filename='js/latest_view.js') }}?v=4"></script>
+    <script defer src="{{ url_for('indi_allsky.static', filename='js/latest_view.js') }}?v=5"></script>
     {% endif %}
 
     <style>
@@ -81,6 +81,12 @@
         #sidebar-image-age { white-space: nowrap; font-variant-numeric: tabular-nums; }
         #sidebar-image-age:not(:empty)::before { content: ' · '; }
         #sidebar-image-age[href]:hover { text-decoration: underline; }
+        #sidebar-worker-activity:not([hidden]) {
+            display: block;
+            white-space: pre-line;
+            line-height: 1.35;
+            margin-block: .15rem;
+        }
         #sidebar-status-fallback, #sidebar-live-detail:not(:empty) {
             margin: .25rem;
             font-size: .75rem;
@@ -313,6 +319,7 @@
                     {% if (camera_id|default(0, true)|int) > 0 %}
                     <div id="sidebar-status-fallback" hidden>
                         Status: <span id="sidebar-station-fallback">Checking…</span><a id="sidebar-image-age" href="{{ url_for('indi_allsky.index_view') }}">Waiting for image</a>
+                        <span id="sidebar-worker-activity" role="status" aria-label="Camera activity" aria-atomic="true" hidden></span>
                     </div>
                     <div id="sidebar-live-detail" role="status"></div>
                     <button type="button" class="tw:btn tw:btn-xs tw:btn-outline" id="live-retry" hidden>Retry now</button>

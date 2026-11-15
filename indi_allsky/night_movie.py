@@ -317,7 +317,8 @@ def _repair_movie(worker, camera, date, night, panorama, frame_model, movie_mode
             task.setFailed('{} {}: insufficient local source images ({} available, {} skipped).'.format(
                 label, date, len(sources), skip))
         else:
-            getattr(worker, action)(task, repair_token=token, **args)
+            with worker.taskActivity(action, args):
+                getattr(worker, action)(task, repair_token=token, **args)
     except Exception:
         logger.exception('%s repair failed for %s', label, date)
         db.session.rollback()

@@ -264,6 +264,36 @@ test('custom status templates without a station placeholder keep their content a
     assert.equal(b.el('status_text').innerHTML, '<div><b>Battery:</b> 100%</div>');
 });
 
+test('the main status shows simultaneous current work, clears stale work and recovers in the same poll', async () => {
+    const b = browser('image');
+    const data = detailed(null, null);
+    data.live_status.activities = ['Capturing an exposure', 'Generating star trails'];
+    b.requests[0].reply(data); await b.flush();
+    const work = b.el('sidebar-worker-activity');
+    assert.equal(b.el('sidebar-image-age').nextElementSibling, work);
+    assert.equal(work.hidden, false);
+    assert.equal(work.textContent, 'Capturing an exposure\nGenerating star trails');
+    await b.advance(2000);
+    assert.equal(b.requests.length, 2);
+    data.live_status.activities = ['Analyzing the latest image'];
+    b.requests[1].reply(data); await b.flush();
+    assert.equal(work.textContent, 'Analyzing the latest image');
+    await b.advance(8000); // A hanging request must not leave the old work visible.
+    assert.equal(work.hidden, true);
+    b.requests[2].fail(); await b.flush();
+    assert.equal(work.textContent, '');
+    b.el('live-retry').click();
+    data.status_text = '<div>Custom status without a placeholder</div>';
+    data.live_status.activities = ['Generating a panorama'];
+    b.requests.at(-1).reply(data); await b.flush();
+    assert.equal(b.el('sidebar-status-fallback').hidden, false);
+    assert.equal(work.textContent, 'Generating a panorama');
+    await b.advance(2000);
+    delete data.live_status.activities; // A remote camera or older capture service.
+    b.requests.at(-1).reply(data); await b.flush();
+    assert.equal(work.hidden, true);
+});
+
 test('specific remedies require a current authorization, and deliberate pauses are never retried manually', async () => {
     const b = browser('sidebar');
     const pause = detailed(null, null, 'paused');

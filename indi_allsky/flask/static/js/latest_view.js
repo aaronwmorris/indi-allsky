@@ -75,6 +75,7 @@
         let report = {};
         let clock = null;
         let online = null;
+        let activitySnapshotAt = -Infinity;
         let requestError = null;
         let requestIssue = '';
         let transferError = null;
@@ -82,6 +83,7 @@
         let nextDetailsAt = 0;
         const statusText = indicator && byId('status_text');
         const ageLink = indicator && byId('sidebar-image-age');
+        const activities = indicator && byId('sidebar-worker-activity');
         const fallback = indicator && byId('sidebar-status-fallback');
         let lastMarkup = null;
         let haveDetails = true; // The template renders the first status report.
@@ -135,6 +137,13 @@
             } else if (ageLink.parentElement !== fallback) {
                 fallback.append(ageLink);
             }
+            if (activities) {
+                if (ageLink.nextElementSibling !== activities) ageLink.after(activities);
+                const recent = performance.now() - activitySnapshotAt < interval + 5000;
+                const currentWork = station && recent && Array.isArray(report.activities) ? report.activities.join('\n') : '';
+                if (activities.textContent !== currentWork) activities.textContent = currentWork;
+                activities.hidden = !currentWork;
+            }
             const text = !requestError && summary ? age + ' · ' + summary : age;
             if (ageLink.textContent !== text) ageLink.textContent = text;
             ageLink.title = [label, age, server, cameraTime(shown), detail].filter(Boolean).join(' · ');
@@ -180,7 +189,10 @@
 
         const url = new URL(endpoint, document.baseURI);
         url.searchParams.set('live_status', '1');
-        const interval = view ? Math.max(2000, Math.min(5000, Number(view.dataset.interval))) : 15000;
+        // The main page uses one poll for the live frame, station and active work.
+        // Other pages keep their slower, status-only refresh.
+        const maxInterval = indicator ? 2000 : 5000;
+        const interval = view ? Math.max(2000, Math.min(maxInterval, Number(view.dataset.interval))) : 15000;
         const poll = new LiveJsonPoll(() => {
             if (indicator && performance.now() >= nextDetailsAt) {
                 url.searchParams.set('status_details', '1');
@@ -195,6 +207,7 @@
                 throw new Error('Invalid latest image');
             }
             report = payload.live_status || {};
+            activitySnapshotAt = performance.now();
             if (indicator && typeof payload.status_text === 'string') {
                 if (payload.status_text !== lastMarkup) {
                     // Custom templates may contain trusted HTML and legacy Bootstrap colors.

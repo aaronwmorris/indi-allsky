@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import subprocess
 from types import SimpleNamespace
+from unittest.mock import Mock
 from zoneinfo import ZoneInfo
 import json
 
@@ -54,7 +55,9 @@ def latest(tmp_path):
     station_methods = ('get_indi_allsky_status', 'render_status_panel', 'get_status_text')
     methods.extend(n for n in base.body if isinstance(n, ast.FunctionDef) and n.name in station_methods)
 
+    activity_reader = Mock(return_value=[])
     scope = dict(Path=Path, constants=constants, CAPTURE_STATES=CAPTURE_STATES, station_status=station_status,
+                 read_worker_activity=activity_reader,
                  time=SimpleNamespace(time=lambda: now.timestamp()),
                  psutil=SimpleNamespace(boot_time=lambda: now.timestamp() - 10),
                  archive_state=lambda cfg: {}, ups_problem=lambda path: False, timedelta=timedelta,
@@ -67,6 +70,7 @@ def latest(tmp_path):
                            live_file_allowed=True, latest_image_t='images/latest.{0}', sun_set_date=None)
     view.cameraSetup = lambda **kwargs: None
     view.camera = SimpleNamespace(id=3, local=True)
+    view.read_activity = activity_reader
     view.live_archive_state = {}
     view.login_disabled = False
     view.web_local_images_admin = False
@@ -238,6 +242,40 @@ def test_stale_worker_does_not_report_recovery_or_old_archive_state(latest):
     view.indi_allsky_config.update(EXPOSURE_PERIOD_DAY=150, EXPOSURE_PERIOD=30, CCD_EXPOSURE_MAX=10)
     assert client.get('/latest?camera_id=3&live_status=1&night=0').get_json()['live_status']['stale_after_s'] == 315
     assert client.get('/latest?camera_id=3&live_status=1&night=1').get_json()['live_status']['stale_after_s'] == 90
+
+
+def test_fast_status_shows_concurrent_work_and_keeps_media_during_capture_outage(latest):
+    client, view, _, _ = latest
+    endpoint = '/latest?camera_id=3&live_status=1'
+    view.read_activity.return_value = ['Capturing an exposure', 'Generating star trails']
+    status = client.get(endpoint).get_json()['live_status']
+    assert status['activities'] == view.read_activity.return_value
+    view.read_activity.assert_called_once_with(view.indi_allsky_config, 3, include_capture=True)
+
+    view.live_states['STATUS'].value = str(constants.STATUS_NOINDISERVER)
+    view.read_activity.return_value = ['Generating star trails']
+    status = client.get(endpoint).get_json()['live_status']
+    assert status['station']['code'] == 'no_indiserver'
+    assert status['activities'] == ['Generating star trails']
+    view.read_activity.assert_called_with(view.indi_allsky_config, 3, include_capture=False)
+
+
+@pytest.mark.parametrize('condition', ['remote', 'inactive', 'no_access', 'stopped', 'down'])
+def test_fast_status_does_not_expose_worker_activity_without_active_local_station(latest, condition):
+    client, view, _, _ = latest
+    if condition == 'remote':
+        view.local_indi_allsky = False
+    elif condition == 'inactive':
+        view.live_states['DB_CAMERA_ID'].value = '4'
+    elif condition == 'no_access':
+        view.verify_admin_network = lambda: False
+    elif condition == 'stopped':
+        view.live_states['STATUS'].value = str(constants.STATUS_STOPPED)
+    else:
+        view.live_states['WATCHDOG'].value = '0'
+    data = client.get('/latest?camera_id=3&live_status=1').get_json()
+    assert 'activities' not in data['live_status']
+    view.read_activity.assert_not_called()
 
 
 def test_live_view_orders_the_repeated_hour_by_real_time(tmp_path):

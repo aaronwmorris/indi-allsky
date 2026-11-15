@@ -20,6 +20,7 @@ from multiprocessing import Process
 #from threading import Thread
 import queue
 
+from .worker_activity import WorkerActivity
 from . import constants
 from .capture_health import CameraImageQueue, ExposureDeadline
 from . import camera as camera_module
@@ -228,6 +229,7 @@ class CaptureWorker(Process):
         self.name = 'Capture-{0:d}'.format(idx)
 
         self.config = config
+        self.activity = WorkerActivity(config, 'capture')
         self.error_q = error_q
         self.capture_q = capture_q
         self.image_q = image_q
@@ -343,6 +345,7 @@ class CaptureWorker(Process):
             self.error_q.put((str(e), tb))
             raise
         finally:
+            self.activity.clear()
             # Explicitly reap an external camera command before allowing a
             # replacement capture worker to claim the camera.
             if self.indiclient and hasattr(self.indiclient, 'closeCameraProcess'):
@@ -550,6 +553,7 @@ class CaptureWorker(Process):
                         self.indiclient.abortCcdExposure()
                         self.deadline.until = None
                         waiting_for_frame = waiting_for_sqm_frame = False
+                    self.activity.clear()
                     self.health.capture_stage('paused')
                     if not archive_blocked:
                         logger.warning('*** CAPTURE PAUSED ***')
@@ -576,6 +580,7 @@ class CaptureWorker(Process):
                         self.indiclient.abortCcdExposure()
                         self.deadline.until = None
                         waiting_for_frame = waiting_for_sqm_frame = False
+                    self.activity.clear()
                     self.health.capture_stage('daytime_disabled')
                     logger.info('Daytime capture disabled')
                     self.generate_timelapse_flag = False
@@ -617,8 +622,11 @@ class CaptureWorker(Process):
                         self.indiclient.disconnectServer()
                         return
                     if action == 'wait':
+                        if waiting_for_frame and camera_ready and not self.deadline.aborting:
+                            self.activity.set(self.camera_id, 'Waiting for camera image')
                         continue
                     if action == 'abort':
+                        self.activity.set(self.camera_id, 'Recovering exposure')
                         self.health.capture_stage('aborting')
                         self.health.last_failure.value = int(now_time)
                         logger.error('Capture request failed: state=%s, raw frames since request=%d; aborting',
@@ -641,6 +649,7 @@ class CaptureWorker(Process):
                     if action == 'retry':
                         waiting_for_frame = waiting_for_sqm_frame = False
                         next_frame_time = max(next_frame_time, monotonic_now + 5)
+                    self.activity.set(self.camera_id, 'Waiting for next exposure')
                     self.health.capture_stage('idle')
 
                     if waiting_for_frame:
@@ -678,7 +687,8 @@ class CaptureWorker(Process):
 
                     # reconfigure if needed
                     if self.reconfigure_camera:
-                        self.reconfigureCcd()
+                        with self.activity.during(self.camera_id, 'Configuring camera'):
+                            self.reconfigureCcd()
 
 
                     # these tasks run every ~5 minutes
@@ -2280,6 +2290,11 @@ class CaptureWorker(Process):
 
         if not sync:
             self.health.exposure_started.value = int(time.time())
+            if self.config.get('CAMERA_INTERFACE') == 'indi_passive':
+                phase = 'Waiting for external exposure'
+            else:
+                phase = 'Capturing an SQM exposure' if sqm_exposure else 'Capturing an image'
+            self.activity.set(self.camera_id, phase)
             self.health.capture_stage('exposing')
             # Passive INDI observes another controller's acquisitions.
             if self.config.get('CAMERA_INTERFACE') != 'indi_passive':

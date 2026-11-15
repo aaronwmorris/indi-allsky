@@ -29,6 +29,7 @@ from PIL import Image
 
 from fractions import Fraction
 
+from .worker_activity import WorkerActivity
 from . import constants
 from .archive_health import device_error, storage_errno
 from . import asi676mc
@@ -95,6 +96,7 @@ class ImageWorker(Process):
         self.name = 'Image-{0:d}'.format(idx)
 
         self.config = config
+        self.activity = WorkerActivity(config, 'image')
 
         self.error_q = error_q
         self.image_q = image_q
@@ -291,7 +293,8 @@ class ImageWorker(Process):
                                          and not self.config.get('FOCUS_MODE', False))
             before = self.health.publications.value
             try:
-                with app.app_context():
+                phase = 'Measuring sky brightness' if i_dict.get('sqm_exposure') else 'Analyzing image'
+                with self.activity.during(i_dict['camera_id'], phase), app.app_context():
                     self.processImage(i_dict)
             except (OSError, SQLAlchemyError) as exc:
                 error = storage_errno(exc)
@@ -845,6 +848,7 @@ class ImageWorker(Process):
 
         #task.setSuccess('Image processed')
 
+        self.activity.set(camera_id, 'Saving image')
         self.write_status_json(i_ref, adu, adu_average)  # write json status file
 
 

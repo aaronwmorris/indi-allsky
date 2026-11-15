@@ -8,6 +8,8 @@ import cv2
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
+from contextlib import nullcontext
+from functools import cached_property
 from pathlib import Path
 import psutil
 import tempfile
@@ -18,6 +20,7 @@ import logging
 
 import ephem
 
+from .worker_activity import WorkerActivity, media_phase
 from . import constants
 from .archive_health import (archive_paused, DEFERRED, VIDEO_ACTIONS, ArchiveUnavailable,
                              require_writable_archive, space_failure, storage_errno)
@@ -230,6 +233,18 @@ class VideoWorker(Process):
                 self.processTask(v_dict)
 
 
+    @cached_property
+    def activity(self):
+        return WorkerActivity(self.config, 'media')
+
+
+    def taskActivity(self, action, kwargs):
+        phase = media_phase(action, kwargs)
+        if phase is None:
+            return nullcontext()
+        return self.activity.during(kwargs.get('camera_id', 0), phase, kwargs.get('timespec', ''))
+
+
     def processTask(self, v_dict):
         task_id = v_dict['task_id']
 
@@ -266,7 +281,8 @@ class VideoWorker(Process):
         try:
             if action == 'expireData':
                 require_writable_archive(self.config)
-            action_method(task, **kwargs)
+            with self.taskActivity(action, kwargs):
+                action_method(task, **kwargs)
             if action in VIDEO_ACTIONS and task.state == TaskQueueState.FAILED and space_failure(self.config):
                 raise ArchiveUnavailable('Storage unavailable during video job')
         except OSError as exc:
@@ -463,7 +479,9 @@ class VideoWorker(Process):
                     )
                     continue
                 try:
-                    self._runAsi676mcCalibration(task, session_id)
+                    camera_id = task.data.get('kwargs', {}).get('camera_id', 0)
+                    with WorkerActivity(self.config, 'calibration').during(camera_id, 'Calibrating ASI676MC images'):
+                        self._runAsi676mcCalibration(task, session_id)
                 except Exception:
                     # A database/task update failure must not permanently
                     # terminate the dedicated calibration consumer.
@@ -2141,7 +2159,8 @@ class VideoWorker(Process):
                     st_tg.vf_scale = vf_scale
                     st_tg.ffmpeg_extra_options = ffmpeg_extra_options
 
-                    st_tg.generate(startrail_video_file, stg.timelapse_frame_list)
+                    with self.activity.during(camera_id, 'Encoding star-trail timelapse', timespec):
+                        st_tg.generate(startrail_video_file, stg.timelapse_frame_list)
 
 
                     try:

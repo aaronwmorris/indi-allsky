@@ -27,6 +27,7 @@ from ..version import __version__
 from .. import constants
 from ..archive_health import archive_state, BLOCKED
 from ..live_status import camera_timezone, capture_time, health_reason, latest_live_row
+from ..worker_activity import read_worker_activity
 from ..sensor_health import custom_chart_values
 from ..night_movie import attempt_key, prior_attempt
 from ..media_delete import suppress_flushed_periods, suppress_movie_repair
@@ -329,9 +330,9 @@ class JsonLatestImageView(JsonView):
             if live:
                 if history_allowed and reason in ('paused', 'daytime_disabled', 'daytime_unsaved_remote', 'local_file_restricted'):
                     self.set_last_permitted_image(entry, now, history_seconds)
-                data['live_status'] = self.get_live_status(entry, now, night, reason)
                 include_details = request.args.get('status_details') == '1'
                 station = self.get_indi_allsky_status(notify=include_details)
+                data['live_status'] = self.get_live_status(entry, now, night, reason, station)
                 data['live_status']['station'] = station
                 if include_details:
                     data['status_text'] = self.render_status_panel(station)
@@ -406,7 +407,7 @@ class JsonLatestImageView(JsonView):
         entry['message'] = message
 
 
-    def get_live_status(self, entry, now, night, reason):
+    def get_live_status(self, entry, now, night, reason, station):
         config = self.indi_allsky_config
         if self.local_indi_allsky:
             cadence = max(float(config.get('CCD_EXPOSURE_MAX') or 15),
@@ -434,6 +435,12 @@ class JsonLatestImageView(JsonView):
         active = self.live_states.get('DB_CAMERA_ID')
         if active is None or active.value != str(self.camera.id):
             return status  # Supervisor state belongs to the active local camera only.
+        if station['code'] not in ('stopped', 'down', 'unknown'):
+            # A paused or disconnected camera can still have images or movies
+            # in production. Show its outstanding work without claiming an exposure.
+            status['activities'] = read_worker_activity(
+                config, self.camera.id, include_capture=station['code'] in ('running', 'focus'),
+            )
         status['can_manage'] = bool(admin or (self.login_disabled and trusted))
         status['can_sign_in_to_manage'] = bool(trusted and not self.login_disabled and not current_user.is_authenticated)
         if delayed and not reason:
